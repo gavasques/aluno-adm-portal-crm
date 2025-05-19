@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +36,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Download, Filter, ArrowUp, ArrowDown, Save, Pencil } from "lucide-react";
+import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Download, Filter, ArrowUp, ArrowDown, Save, Pencil, CreditCard, Plus, Minus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -75,7 +74,8 @@ const USERS = [
     registrationDate: "15/03/2023",
     storageValue: 45,
     storageLimit: 100,
-    observations: "Cliente interessado em expandir para marketplace."
+    observations: "Cliente interessado em expandir para marketplace.",
+    credits: 500
   },
   {
     id: 2,
@@ -89,7 +89,8 @@ const USERS = [
     registrationDate: "22/05/2023",
     storageValue: 78,
     storageLimit: 100,
-    observations: ""
+    observations: "",
+    credits: 250
   },
   {
     id: 3,
@@ -103,7 +104,8 @@ const USERS = [
     registrationDate: "10/01/2023",
     storageValue: 23,
     storageLimit: 100,
-    observations: "Administrador principal da plataforma."
+    observations: "Administrador principal da plataforma.",
+    credits: 0
   },
   {
     id: 4,
@@ -117,7 +119,8 @@ const USERS = [
     registrationDate: "05/02/2023",
     storageValue: 12,
     storageLimit: 100,
-    observations: "Cliente em processo de renovação."
+    observations: "Cliente em processo de renovação.",
+    credits: 100
   },
   {
     id: 5,
@@ -131,7 +134,8 @@ const USERS = [
     registrationDate: "18/04/2023",
     storageValue: 89,
     storageLimit: 100,
-    observations: "Aguardando confirmação de dados bancários."
+    observations: "Aguardando confirmação de dados bancários.",
+    credits: 50
   }
 ];
 
@@ -145,7 +149,19 @@ const userFormSchema = z.object({
   observations: z.string().optional()
 });
 
+// Schema para validação do formulário de créditos
+const creditsFormSchema = z.object({
+  amount: z.string().refine(value => {
+    const num = parseInt(value);
+    return !isNaN(num) && num > 0;
+  }, {
+    message: "O valor deve ser um número positivo"
+  }),
+  operation: z.enum(["add", "subtract"])
+});
+
 type UserFormValues = z.infer<typeof userFormSchema>;
+type CreditsFormValues = z.infer<typeof creditsFormSchema>;
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,6 +172,7 @@ const Users = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDirection, setSortDirection] = useState("asc");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false);
   
   // Filter users based on search query and status filter
   const filteredUsers = useMemo(() => {
@@ -242,6 +259,7 @@ const Users = () => {
   const handleCloseUserDetails = () => {
     setSelectedUser(null);
     setIsEditingUserInfo(false);
+    setShowCreditsDialog(false);
   };
 
   const handleSaveUserInfo = (data) => {
@@ -253,6 +271,41 @@ const Users = () => {
     
     // In a real app, update user data in the database
     console.log("Updated user data:", data);
+  };
+  
+  // Formulário para adicionar/editar créditos
+  const creditsForm = useForm<CreditsFormValues>({
+    resolver: zodResolver(creditsFormSchema),
+    defaultValues: {
+      amount: "",
+      operation: "add"
+    }
+  });
+
+  const handleManageCredits = (data: CreditsFormValues) => {
+    const amount = parseInt(data.amount);
+    const operation = data.operation;
+    
+    if (selectedUser) {
+      let message = "";
+      if (operation === "add") {
+        message = `Adicionado ${amount} créditos para ${selectedUser.name}`;
+      } else {
+        message = `Removido ${amount} créditos de ${selectedUser.name}`;
+      }
+      
+      toast({
+        title: "Créditos atualizados",
+        description: message
+      });
+      
+      // In a real app, update the user's credits in the database
+      console.log("Credits operation:", { userId: selectedUser.id, operation, amount });
+      
+      // Close the dialog
+      setShowCreditsDialog(false);
+      creditsForm.reset();
+    }
   };
   
   // Formulário para adicionar novo usuário
@@ -777,9 +830,10 @@ const Users = () => {
             </DialogHeader>
 
             <Tabs defaultValue="info" className="w-full">
-              <TabsList className="w-full grid grid-cols-2">
+              <TabsList className="w-full grid grid-cols-3">
                 <TabsTrigger value="info">Informações</TabsTrigger>
                 <TabsTrigger value="storage">Armazenamento</TabsTrigger>
+                <TabsTrigger value="credits">Créditos</TabsTrigger>
               </TabsList>
               
               {/* User Info Tab */}
@@ -1074,11 +1128,134 @@ const Users = () => {
                   </div>
                 </div>
               </TabsContent>
+              
+              {/* Credits Tab (NEW) */}
+              <TabsContent value="credits" className="pt-4">
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-3">
+                    <CreditCard className="h-5 w-5 text-portal-primary mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Saldo de Créditos</h3>
+                      <div className="flex items-center mt-2">
+                        <div className="text-3xl font-bold text-portal-primary">
+                          {selectedUser.credits}
+                        </div>
+                        <div className="ml-2 text-sm text-muted-foreground">
+                          créditos disponíveis
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-3">Gerenciar Créditos</h3>
+                    <Button 
+                      onClick={() => setShowCreditsDialog(true)}
+                      className="bg-portal-primary hover:bg-portal-primary/90"
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Adicionar/Remover Créditos
+                    </Button>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-2">Histórico de Transações</h3>
+                    <div className="bg-gray-50 rounded-md p-4">
+                      <div className="text-center text-sm text-muted-foreground py-6">
+                        Nenhuma transação de créditos registrada.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
             </Tabs>
             
             <DialogFooter>
               <Button variant="outline" onClick={handleCloseUserDetails}>Fechar</Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {/* Credits Dialog (NEW) */}
+      {selectedUser && (
+        <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Gerenciar Créditos</DialogTitle>
+              <DialogDescription>
+                Adicione ou remova créditos para {selectedUser.name}.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...creditsForm}>
+              <form onSubmit={creditsForm.handleSubmit(handleManageCredits)} className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-medium">Saldo Atual</h3>
+                    <p className="text-2xl font-bold text-portal-primary">{selectedUser.credits} créditos</p>
+                  </div>
+                </div>
+                
+                <FormField
+                  control={creditsForm.control}
+                  name="operation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Operação</FormLabel>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={field.value === "add" ? "default" : "outline"}
+                          className={field.value === "add" ? "bg-green-600 hover:bg-green-700" : ""}
+                          onClick={() => field.onChange("add")}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={field.value === "subtract" ? "default" : "outline"}
+                          className={field.value === "subtract" ? "bg-red-600 hover:bg-red-700" : ""}
+                          onClick={() => field.onChange("subtract")}
+                        >
+                          <Minus className="h-4 w-4 mr-2" />
+                          Remover
+                        </Button>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={creditsForm.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade de Créditos</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Quantidade" 
+                          min="1" 
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter className="pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowCreditsDialog(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    Confirmar
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       )}
