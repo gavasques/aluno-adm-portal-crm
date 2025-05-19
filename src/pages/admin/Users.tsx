@@ -19,9 +19,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, MoreHorizontal, UserPlus } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Plus, Minus } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 // Sample user data
 const USERS = [
@@ -32,7 +41,12 @@ const USERS = [
     role: "Aluno",
     status: "Ativo",
     lastLogin: "Hoje, 10:45",
-    storage: "45MB / 100MB"
+    storage: "45MB / 100MB",
+    phone: "(11) 98765-4321",
+    registrationDate: "15/03/2023",
+    courses: ["Curso Básico de E-commerce", "Mentoria Individual"],
+    storageValue: 45,
+    storageLimit: 100
   },
   {
     id: 2,
@@ -41,7 +55,12 @@ const USERS = [
     role: "Aluno",
     status: "Ativo",
     lastLogin: "Ontem, 15:30",
-    storage: "78MB / 100MB"
+    storage: "78MB / 100MB",
+    phone: "(21) 97654-3210",
+    registrationDate: "22/05/2023",
+    courses: ["Curso Avançado de E-commerce"],
+    storageValue: 78,
+    storageLimit: 100
   },
   {
     id: 3,
@@ -50,7 +69,12 @@ const USERS = [
     role: "Administrador",
     status: "Ativo",
     lastLogin: "Hoje, 09:15",
-    storage: "23MB / 100MB"
+    storage: "23MB / 100MB",
+    phone: "(31) 98877-6655",
+    registrationDate: "10/01/2023",
+    courses: ["Curso Básico de E-commerce", "Curso Avançado de E-commerce", "Mentoria Individual"],
+    storageValue: 23,
+    storageLimit: 100
   },
   {
     id: 4,
@@ -59,7 +83,12 @@ const USERS = [
     role: "Aluno",
     status: "Inativo",
     lastLogin: "15/05/2023, 14:20",
-    storage: "12MB / 100MB"
+    storage: "12MB / 100MB",
+    phone: "(41) 99988-7766",
+    registrationDate: "05/02/2023",
+    courses: ["Curso Básico de E-commerce"],
+    storageValue: 12,
+    storageLimit: 100
   },
   {
     id: 5,
@@ -68,12 +97,19 @@ const USERS = [
     role: "Aluno",
     status: "Ativo",
     lastLogin: "Hoje, 11:05",
-    storage: "89MB / 100MB"
+    storage: "89MB / 100MB",
+    phone: "(51) 98765-4321",
+    registrationDate: "18/04/2023",
+    courses: ["Mentoria em Grupo"],
+    storageValue: 89,
+    storageLimit: 100
   }
 ];
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("info");
   
   // Filter users based on search query
   const filteredUsers = USERS.filter(user => 
@@ -82,14 +118,14 @@ const Users = () => {
     user.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleResetPassword = (userId: number, userName: string) => {
+  const handleResetPassword = (userId, userName) => {
     toast({
       title: "Reset de senha enviado",
       description: `Um e-mail com instruções foi enviado para ${userName}.`
     });
   };
   
-  const handleToggleStatus = (userId: number, currentStatus: string, userName: string) => {
+  const handleToggleStatus = (userId, currentStatus, userName) => {
     const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
     toast({
       title: `Status alterado para ${newStatus}`,
@@ -97,18 +133,36 @@ const Users = () => {
     });
   };
   
-  const handleIncreaseStorage = (userId: number, userName: string) => {
+  const handleIncreaseStorage = (userId, userName) => {
     toast({
       title: "Armazenamento aumentado",
       description: `O limite de armazenamento de ${userName} foi aumentado em 100MB.`
     });
+    // In a real app, update the user's storage limit here
+  };
+
+  const handleDecreaseStorage = (userId, userName) => {
+    toast({
+      title: "Armazenamento reduzido",
+      description: `O limite de armazenamento de ${userName} foi reduzido em 100MB.`
+    });
+    // In a real app, update the user's storage limit here
   };
   
-  const handleSendMagicLink = (userId: number, userName: string) => {
+  const handleSendMagicLink = (userId, userName) => {
     toast({
       title: "Link mágico enviado",
       description: `Um link de acesso direto foi enviado para ${userName}.`
     });
+  };
+
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+  };
+
+  const handleCloseUserDetails = () => {
+    setSelectedUser(null);
+    setActiveTab("info");
   };
   
   return (
@@ -144,13 +198,16 @@ const Users = () => {
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Último Login</TableHead>
-                  <TableHead>Armazenamento</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow 
+                    key={user.id} 
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleUserClick(user)}
+                  >
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
@@ -167,21 +224,7 @@ const Users = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>{user.lastLogin}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <div className="w-24 h-2 bg-gray-200 rounded-full mr-2">
-                          <div 
-                            className="h-2 bg-portal-primary rounded-full"
-                            style={{ 
-                              width: `${parseInt(user.storage.split('/')[0]) / 
-                                parseInt(user.storage.split('/')[1].trim().replace('MB', '')) * 100}%` 
-                            }}
-                          ></div>
-                        </div>
-                        <span className="text-xs whitespace-nowrap">{user.storage}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
@@ -197,9 +240,6 @@ const Users = () => {
                           <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status, user.name)}>
                             {user.status === "Ativo" ? "Desativar usuário" : "Ativar usuário"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleIncreaseStorage(user.id, user.name)}>
-                            Aumentar armazenamento
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleSendMagicLink(user.id, user.name)}>
                             Enviar magic link
                           </DropdownMenuItem>
@@ -211,7 +251,7 @@ const Users = () => {
                 
                 {filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                       Nenhum usuário encontrado com os critérios de busca.
                     </TableCell>
                   </TableRow>
@@ -221,6 +261,195 @@ const Users = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* User Details Dialog */}
+      {selectedUser && (
+        <Dialog open={!!selectedUser} onOpenChange={handleCloseUserDetails}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl flex items-center">
+                <User className="mr-2 h-5 w-5" /> 
+                {selectedUser.name}
+                <Badge variant={selectedUser.role === "Administrador" ? "default" : "outline"} className="ml-3">
+                  {selectedUser.role}
+                </Badge>
+              </DialogTitle>
+              <DialogDescription>
+                Informações e gerenciamento do usuário
+              </DialogDescription>
+            </DialogHeader>
+
+            <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full grid grid-cols-3">
+                <TabsTrigger value="info">Informações</TabsTrigger>
+                <TabsTrigger value="storage">Armazenamento</TabsTrigger>
+                <TabsTrigger value="courses">Cursos</TabsTrigger>
+              </TabsList>
+              
+              {/* User Info Tab */}
+              <TabsContent value="info" className="pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <Mail className="h-5 w-5 text-portal-primary mt-1" />
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground">Email</h3>
+                        <p>{selectedUser.email}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Phone className="h-5 w-5 text-portal-primary mt-1" />
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground">Telefone</h3>
+                        <p>{selectedUser.phone}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Calendar className="h-5 w-5 text-portal-primary mt-1" />
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground">Data de Registro</h3>
+                        <p>{selectedUser.registrationDate}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Status</h3>
+                      <div className="flex items-center">
+                        <Badge 
+                          variant={selectedUser.status === "Ativo" ? "default" : "secondary"}
+                          className={selectedUser.status === "Ativo" ? "bg-green-500" : "bg-gray-500"}
+                        >
+                          {selectedUser.status}
+                        </Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="ml-2"
+                          onClick={() => handleToggleStatus(selectedUser.id, selectedUser.status, selectedUser.name)}
+                        >
+                          {selectedUser.status === "Ativo" ? "Desativar" : "Ativar"}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
+                      <p>{selectedUser.lastLogin}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 space-y-2">
+                  <h3 className="text-lg font-semibold border-b pb-2">Ações</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleResetPassword(selectedUser.id, selectedUser.name)}>
+                      Resetar senha
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleSendMagicLink(selectedUser.id, selectedUser.name)}>
+                      Enviar magic link
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Storage Tab */}
+              <TabsContent value="storage" className="pt-4">
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-3">
+                    <HardDrive className="h-5 w-5 text-portal-primary mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Armazenamento Utilizado</h3>
+                      <div className="flex items-center mt-2">
+                        <div className="w-full h-3 bg-gray-200 rounded-full mr-2">
+                          <div 
+                            className="h-3 bg-portal-primary rounded-full"
+                            style={{ 
+                              width: `${(selectedUser.storageValue / selectedUser.storageLimit) * 100}%` 
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-sm whitespace-nowrap">{selectedUser.storage}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-3">Gerenciar Limite de Armazenamento</h3>
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDecreaseStorage(selectedUser.id, selectedUser.name)}
+                        disabled={selectedUser.storageLimit <= 100}
+                      >
+                        <Minus className="h-4 w-4 mr-1" /> Reduzir 100MB
+                      </Button>
+                      <div className="text-sm font-medium">
+                        Limite atual: {selectedUser.storageLimit}MB
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleIncreaseStorage(selectedUser.id, selectedUser.name)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Aumentar 100MB
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-2">Detalhes de Uso</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex justify-between">
+                        <span>Documentos</span>
+                        <span className="font-medium">12MB</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Imagens</span>
+                        <span className="font-medium">28MB</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Outros arquivos</span>
+                        <span className="font-medium">5MB</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Courses Tab */}
+              <TabsContent value="courses" className="pt-4">
+                <h3 className="text-lg font-semibold mb-4">Cursos Adquiridos</h3>
+                
+                {selectedUser.courses && selectedUser.courses.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedUser.courses.map((course, index) => (
+                      <div key={index} className="p-3 border rounded-md">
+                        <p className="font-medium">{course}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground italic">Nenhum curso adquirido.</p>
+                )}
+                
+                <Button className="mt-4" variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Curso
+                </Button>
+              </TabsContent>
+            </Tabs>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseUserDetails}>Fechar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
