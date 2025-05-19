@@ -4,13 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, IdCard } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 // Tipos para a mentoria
 interface Mentoring {
   id: string;
+  mentoringId: string; // Campo ID único
   name: string;
   duration: string;
   type: string;
@@ -23,6 +24,7 @@ const Mentoring = () => {
   const [mentorings, setMentorings] = useState<Mentoring[]>([
     {
       id: "1",
+      mentoringId: "MNT001",
       name: "Mentoria de E-commerce",
       duration: "3 meses",
       type: "Individual",
@@ -31,6 +33,7 @@ const Mentoring = () => {
     },
     {
       id: "2",
+      mentoringId: "MNT002",
       name: "Mentoria de Marketing Digital",
       duration: "6 meses",
       type: "Grupo",
@@ -41,6 +44,21 @@ const Mentoring = () => {
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [mentoringToDelete, setMentoringToDelete] = useState<string | null>(null);
+
+  // Função para gerar IDs únicos para mentorias
+  const generateMentoringId = () => {
+    const prefix = "MNT";
+    const existingIds = mentorings.map(mentoring => mentoring.mentoringId);
+    let counter = existingIds.length + 1;
+    let newId;
+    
+    do {
+      newId = `${prefix}${counter.toString().padStart(3, '0')}`;
+      counter++;
+    } while (existingIds.includes(newId));
+    
+    return newId;
+  };
 
   const handleAddMentoring = () => {
     navigate("/admin/mentoring/new");
@@ -83,6 +101,7 @@ const Mentoring = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead><div className="flex items-center"><IdCard className="mr-1 h-4 w-4" /> ID</div></TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead>Duração</TableHead>
                   <TableHead>Tipo</TableHead>
@@ -93,6 +112,7 @@ const Mentoring = () => {
               <TableBody>
                 {mentorings.map((mentoring) => (
                   <TableRow key={mentoring.id} className="cursor-pointer hover:bg-gray-50">
+                    <TableCell onClick={() => handleViewMentoring(mentoring.id)}>{mentoring.mentoringId}</TableCell>
                     <TableCell onClick={() => handleViewMentoring(mentoring.id)}>{mentoring.name}</TableCell>
                     <TableCell onClick={() => handleViewMentoring(mentoring.id)}>{mentoring.duration}</TableCell>
                     <TableCell onClick={() => handleViewMentoring(mentoring.id)}>{mentoring.type}</TableCell>

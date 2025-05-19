@@ -36,7 +36,7 @@ const formSchema = z.object({
 });
 
 type CourseFormProps = {
-  onSubmit: (data: Omit<Course, "id" | "createdAt">) => void;
+  onSubmit: (data: Omit<Course, "id" | "createdAt" | "courseId">) => void;
   onCancel: () => void;
   initialData?: Partial<Course>;
 };
@@ -58,6 +58,14 @@ const CourseForm = ({ onSubmit, onCancel, initialData }: CourseFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {initialData?.courseId && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
+            <span className="font-medium text-sm text-gray-600">ID:</span>
+            <span className="text-sm">{initialData.courseId}</span>
+            <span className="text-xs text-gray-400 ml-auto">(Gerado automaticamente)</span>
+          </div>
+        )}
+
         <FormField
           control={form.control}
           name="name"

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, IdCard } from "lucide-react";
 import { toast } from "sonner";
 import { 
   Card,
@@ -33,6 +33,7 @@ export type CourseStatus = "active" | "inactive" | "coming_soon";
 
 export interface Course {
   id: string;
+  courseId: string; // Campo ID único
   name: string;
   status: CourseStatus;
   platform: string;
@@ -48,6 +49,7 @@ const Courses = () => {
   const [courses, setCourses] = useState<Course[]>([
     {
       id: "1",
+      courseId: "CRS001",
       name: "Curso de E-commerce",
       status: "active",
       platform: "Hotmart",
@@ -59,6 +61,7 @@ const Courses = () => {
     },
     {
       id: "2",
+      courseId: "CRS002",
       name: "Dropshipping Avançado",
       status: "inactive",
       platform: "Kiwify",
@@ -73,16 +76,33 @@ const Courses = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
 
+  // Função para gerar IDs únicos para cursos
+  const generateCourseId = () => {
+    const prefix = "CRS";
+    const existingIds = courses.map(course => course.courseId);
+    let counter = existingIds.length + 1;
+    let newId;
+    
+    do {
+      newId = `${prefix}${counter.toString().padStart(3, '0')}`;
+      counter++;
+    } while (existingIds.includes(newId));
+    
+    return newId;
+  };
+
   // Filtrar cursos baseado na pesquisa
   const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.platform.toLowerCase().includes(searchTerm.toLowerCase())
+    course.platform.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.courseId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddCourse = (newCourse: Omit<Course, "id" | "createdAt">) => {
+  const handleAddCourse = (newCourse: Omit<Course, "id" | "createdAt" | "courseId">) => {
     const course: Course = {
       ...newCourse,
       id: Date.now().toString(),
+      courseId: generateCourseId(),
       createdAt: new Date(),
     };
     
@@ -151,6 +171,7 @@ const Courses = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead><div className="flex items-center"><IdCard className="mr-1 h-4 w-4" /> ID</div></TableHead>
                   <TableHead>Nome do Curso</TableHead>
                   <TableHead>Plataforma</TableHead>
                   <TableHead>Status</TableHead>
@@ -167,7 +188,8 @@ const Courses = () => {
                       className="cursor-pointer hover:bg-muted"
                       onClick={() => navigate(`/admin/courses/${course.id}`)}
                     >
-                      <TableCell className="font-medium">{course.name}</TableCell>
+                      <TableCell className="font-medium">{course.courseId}</TableCell>
+                      <TableCell>{course.name}</TableCell>
                       <TableCell>{course.platform}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(course.status)}`}>
@@ -194,7 +216,7 @@ const Courses = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                       Nenhum curso encontrado.
                     </TableCell>
                   </TableRow>
