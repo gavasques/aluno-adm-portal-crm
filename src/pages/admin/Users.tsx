@@ -509,6 +509,56 @@ const Users = () => {
     });
   };
   
+  // Add the missing renderCreditTabContent function
+  const renderCreditTabContent = () => {
+    if (!selectedUser) return null;
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Créditos Mensais</h3>
+            <p className="text-sm text-muted-foreground">
+              Os créditos são renovados para {DEFAULT_CREDITS} no início de cada mês e não são acumuláveis.
+            </p>
+          </div>
+          <div className="text-center">
+            <span className="text-4xl font-bold text-portal-primary block">{selectedUser.credits}</span>
+            <span className="text-sm text-muted-foreground">créditos disponíveis</span>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-semibold">Gerenciar Créditos</h3>
+            <Button 
+              size="sm" 
+              onClick={() => setShowCreditsDialog(true)}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Adicionar/Remover Créditos
+            </Button>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Histórico de Créditos</h4>
+            <p className="text-sm text-muted-foreground">
+              Nenhuma transação de crédito registrada ainda.
+            </p>
+          </div>
+        </div>
+        
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+          <h4 className="font-medium text-yellow-800 mb-1">Sobre os Créditos</h4>
+          <p className="text-sm text-yellow-700">
+            Todos os usuários recebem {DEFAULT_CREDITS} créditos no início de cada mês. 
+            Créditos não utilizados não são acumulados para o próximo mês.
+          </p>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Gestão de Usuários</h1>
