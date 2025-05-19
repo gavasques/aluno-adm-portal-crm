@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, IdCard } from "lucide-react";
 import { toast } from "sonner";
@@ -26,12 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 // Tipos para os bônus
 export type BonusType = "Software" | "Sistema" | "IA" | "Ebook" | "Lista" | "Outros";
@@ -188,6 +183,27 @@ const Bonus = () => {
     }
   ]);
 
+  // Load bonuses from localStorage on component mount
+  useEffect(() => {
+    const storedBonuses = localStorage.getItem("bonuses");
+    if (storedBonuses) {
+      try {
+        const parsedBonuses = JSON.parse(storedBonuses);
+        // Convert string dates back to Date objects
+        const formattedBonuses = parsedBonuses.map((bonus: any) => ({
+          ...bonus,
+          createdAt: new Date(bonus.createdAt)
+        }));
+        setBonuses(formattedBonuses);
+      } catch (error) {
+        console.error("Error parsing bonuses from localStorage:", error);
+      }
+    } else {
+      // Initialize localStorage with default bonuses
+      localStorage.setItem("bonuses", JSON.stringify(bonuses));
+    }
+  }, []);
+
   // Função para gerar IDs únicos para bônus
   const generateBonusId = () => {
     const prefix = "BNS";
@@ -218,13 +234,23 @@ const Bonus = () => {
       createdAt: new Date()
     };
     
-    setBonuses([...bonuses, bonus]);
+    const updatedBonuses = [...bonuses, bonus];
+    setBonuses(updatedBonuses);
+    
+    // Save to localStorage
+    localStorage.setItem("bonuses", JSON.stringify(updatedBonuses));
+    
     setIsAddDialogOpen(false);
     toast.success("Bônus adicionado com sucesso!");
   };
   
   const handleDeleteBonus = (id: string) => {
-    setBonuses(bonuses.filter(bonus => bonus.id !== id));
+    const updatedBonuses = bonuses.filter(bonus => bonus.id !== id);
+    setBonuses(updatedBonuses);
+    
+    // Update localStorage
+    localStorage.setItem("bonuses", JSON.stringify(updatedBonuses));
+    
     setBonusToDelete(null);
     toast.success("Bônus removido com sucesso!");
   };

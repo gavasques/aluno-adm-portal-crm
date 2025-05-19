@@ -22,6 +22,7 @@ import AdminCourses from "./pages/admin/Courses";
 import AdminMentoring from "./pages/admin/Mentoring";
 import MentoringDetail from "./pages/admin/MentoringDetail";
 import AdminBonus from "./pages/admin/Bonus";
+import BonusDetail from "./pages/admin/BonusDetail";
 import AdminTasks from "./pages/admin/Tasks";
 import TaskDetail from "./pages/admin/TaskDetail";
 import AdminCRM from "./pages/admin/CRM";
@@ -64,6 +65,7 @@ const App = () => (
                 <Route path="mentoring" element={<AdminMentoring />} />
                 <Route path="mentoring/:id" element={<MentoringDetail />} />
                 <Route path="bonus" element={<AdminBonus />} />
+                <Route path="bonus/:id" element={<BonusDetail />} />
                 <Route path="tasks" element={<AdminTasks />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />
                 <Route path="crm" element={<AdminCRM />} />
