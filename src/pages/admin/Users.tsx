@@ -160,7 +160,7 @@ const Users = () => {
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        variant={user.status === "Ativo" ? "success" : "secondary"}
+                        variant={user.status === "Ativo" ? "default" : "secondary"}
                         className={user.status === "Ativo" ? "bg-green-500" : "bg-gray-500"}
                       >
                         {user.status}
