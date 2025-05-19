@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -543,7 +544,7 @@ const CRM = () => {
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-auto-fit gap-4" style={{ minWidth: 'max-content' }}>
+                  <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
                     <SortableContext items={columns.map(col => col.id)}>
                       {columns.map(column => {
                         const columnLeads = filteredLeads.filter(lead => lead.column === column.id);
