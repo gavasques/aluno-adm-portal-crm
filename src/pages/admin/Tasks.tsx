@@ -1,10 +1,21 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Clock, Plus, Check, User } from "lucide-react";
+import { Calendar, Clock, Plus, Check, User, Filter, Trash2, Eye } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Mock de usuários administradores para o dropdown de responsáveis
+const adminUsers = [
+  { id: 1, name: "Ana Carolina" },
+  { id: 2, name: "Pedro Santos" },
+  { id: 3, name: "Roberto Silva" },
+  { id: 4, name: "Juliana Costa" },
+];
 
 const Tasks = () => {
   // Mock tasks data
@@ -17,7 +28,8 @@ const Tasks = () => {
       priority: "Alta", 
       completed: false, 
       description: "Discutir novos termos de contrato com o fornecedor ABC.",
-      assignedTo: "Ana Carolina"
+      assignedTo: "Ana Carolina",
+      location: "Sala de Reuniões 3"
     },
     { 
       id: 2, 
@@ -27,7 +39,8 @@ const Tasks = () => {
       priority: "Média", 
       completed: false,
       description: "Revisar propostas comerciais para novos clientes.",
-      assignedTo: "Pedro Santos"
+      assignedTo: "Pedro Santos",
+      location: "Escritório"
     },
     { 
       id: 3, 
@@ -37,7 +50,8 @@ const Tasks = () => {
       priority: "Alta", 
       completed: false,
       description: "Discutir parceria para novo curso.",
-      assignedTo: "Ana Carolina"
+      assignedTo: "Ana Carolina",
+      location: "Videoconferência"
     },
     { 
       id: 4, 
@@ -47,7 +61,8 @@ const Tasks = () => {
       priority: "Baixa", 
       completed: false,
       description: "Preparar material para mentoria em grupo de amanhã.",
-      assignedTo: "Pedro Santos"
+      assignedTo: "Pedro Santos",
+      location: "Home Office"
     },
     { 
       id: 5, 
@@ -57,11 +72,20 @@ const Tasks = () => {
       priority: "Média", 
       completed: true,
       description: "Analisar feedback do último curso para implementar melhorias.",
-      assignedTo: "Ana Carolina"
+      assignedTo: "Ana Carolina",
+      location: "Sala de Estudos"
     }
   ]);
   
-  const [selectedTask, setSelectedTask] = useState(null);
+  // Estados para filtros
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [responsibleFilter, setResponsibleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Estado para abas
+  const [selectedTab, setSelectedTab] = useState("today");
+  
+  const navigate = useNavigate();
   
   // Função para marcar uma tarefa como concluída
   const toggleTaskCompletion = (taskId) => {
@@ -70,19 +94,41 @@ const Tasks = () => {
     ));
   };
   
-  // Função para abrir detalhes da tarefa
-  const openTaskDetails = (task) => {
-    setSelectedTask(task);
+  // Função para excluir uma tarefa
+  const deleteTask = (taskId) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
+  };
+  
+  // Função para visualizar detalhes da tarefa em nova página
+  const viewTaskDetails = (taskId) => {
+    navigate(`/admin/tasks/${taskId}`);
+  };
+  
+  // Filtrar tarefas com base nos filtros selecionados
+  const filterTasks = (tasksArray) => {
+    return tasksArray.filter(task => {
+      // Filtro de prioridade
+      if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
+      
+      // Filtro de responsável
+      if (responsibleFilter !== "all" && task.assignedTo !== responsibleFilter) return false;
+      
+      // Filtro de status
+      if (statusFilter === "completed" && !task.completed) return false;
+      if (statusFilter === "pending" && task.completed) return false;
+      
+      return true;
+    });
   };
   
   // Filtrar tarefas para hoje
-  const todayTasks = tasks.filter(task => task.date === "25/05/2025" && !task.completed);
+  const todayTasks = filterTasks(tasks.filter(task => task.date === "25/05/2025" && !task.completed));
   
   // Filtrar tarefas futuras
-  const upcomingTasks = tasks.filter(task => task.date !== "25/05/2025" && !task.completed);
+  const upcomingTasks = filterTasks(tasks.filter(task => task.date !== "25/05/2025" && !task.completed));
   
   // Filtrar tarefas concluídas
-  const completedTasks = tasks.filter(task => task.completed);
+  const completedTasks = filterTasks(tasks.filter(task => task.completed));
   
   return (
     <div className="container mx-auto py-6">
@@ -109,307 +155,328 @@ const Tasks = () => {
         </Dialog>
       </div>
       
-      {/* Tarefas para hoje */}
+      {/* Filtros */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Tarefas para Hoje</CardTitle>
-          <CardDescription>
-            {todayTasks.length} tarefas agendadas para hoje.
-          </CardDescription>
+          <CardTitle className="text-xl">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">Status</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Horário</TableHead>
-                  <TableHead>Prioridade</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {todayTasks.length > 0 ? (
-                  todayTasks.map(task => (
-                    <TableRow key={task.id}>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0" 
-                          onClick={() => toggleTaskCompletion(task.id)}
-                        >
-                          <span className={`h-6 w-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${task.completed ? 'bg-green-500 border-green-500' : ''}`}>
-                            {task.completed && <Check className="h-4 w-4 text-white" />}
-                          </span>
-                        </Button>
-                      </TableCell>
-                      <TableCell className="font-medium">{task.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.time}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          task.priority === "Alta" ? "bg-red-100 text-red-800" :
-                          task.priority === "Média" ? "bg-amber-100 text-amber-800" :
-                          "bg-green-100 text-green-800"
-                        }`}>
-                          {task.priority}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.assignedTo}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => openTaskDetails(task)}>
-                          Ver Detalhes
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                      Nenhuma tarefa para hoje.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Próximas tarefas */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Próximas Tarefas</CardTitle>
-          <CardDescription>
-            {upcomingTasks.length} tarefas agendadas para os próximos dias.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">Status</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Horário</TableHead>
-                  <TableHead>Prioridade</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upcomingTasks.length > 0 ? (
-                  upcomingTasks.map(task => (
-                    <TableRow key={task.id}>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0" 
-                          onClick={() => toggleTaskCompletion(task.id)}
-                        >
-                          <span className={`h-6 w-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${task.completed ? 'bg-green-500 border-green-500' : ''}`}>
-                            {task.completed && <Check className="h-4 w-4 text-white" />}
-                          </span>
-                        </Button>
-                      </TableCell>
-                      <TableCell className="font-medium">{task.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.date}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.time}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          task.priority === "Alta" ? "bg-red-100 text-red-800" :
-                          task.priority === "Média" ? "bg-amber-100 text-amber-800" :
-                          "bg-green-100 text-green-800"
-                        }`}>
-                          {task.priority}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.assignedTo}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => openTaskDetails(task)}>
-                          Ver Detalhes
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4 text-gray-500">
-                      Nenhuma tarefa futura.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Tarefas concluídas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tarefas Concluídas</CardTitle>
-          <CardDescription>
-            {completedTasks.length} tarefas concluídas recentemente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">Status</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Horário</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {completedTasks.length > 0 ? (
-                  completedTasks.map(task => (
-                    <TableRow key={task.id} className="bg-gray-50">
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0" 
-                          onClick={() => toggleTaskCompletion(task.id)}
-                        >
-                          <span className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-500 flex items-center justify-center">
-                            <Check className="h-4 w-4 text-white" />
-                          </span>
-                        </Button>
-                      </TableCell>
-                      <TableCell className="font-medium line-through text-gray-500">{task.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center text-gray-500">
-                          <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.date}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center text-gray-500">
-                          <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.time}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center text-gray-500">
-                          <User className="h-4 w-4 mr-1 text-gray-400" />
-                          {task.assignedTo}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => openTaskDetails(task)}>
-                          Ver Detalhes
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                      Nenhuma tarefa concluída.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Dialog para detalhes da tarefa */}
-      {selectedTask && (
-        <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Detalhes da Tarefa</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div>
-                <h3 className="font-medium mb-1">Título</h3>
-                <p>{selectedTask.title}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Descrição</h3>
-                <p>{selectedTask.description}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-1">Data</h3>
-                  <p>{selectedTask.date}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-1">Horário</h3>
-                  <p>{selectedTask.time}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-1">Prioridade</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    selectedTask.priority === "Alta" ? "bg-red-100 text-red-800" :
-                    selectedTask.priority === "Média" ? "bg-amber-100 text-amber-800" :
-                    "bg-green-100 text-green-800"
-                  }`}>
-                    {selectedTask.priority}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-1">Status</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    selectedTask.completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
-                  }`}>
-                    {selectedTask.completed ? "Concluída" : "Pendente"}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">Responsável</h3>
-                <p>{selectedTask.assignedTo}</p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Prioridade</label>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas as prioridades" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="Alta">Alta</SelectItem>
+                  <SelectItem value="Média">Média</SelectItem>
+                  <SelectItem value="Baixa">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSelectedTask(null)}>Fechar</Button>
-              <Button onClick={() => toggleTaskCompletion(selectedTask.id)}>
-                {selectedTask.completed ? "Marcar como Pendente" : "Marcar como Concluída"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+            <div>
+              <label className="block text-sm font-medium mb-1">Responsável</label>
+              <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os responsáveis" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {adminUsers.map(user => (
+                    <SelectItem key={user.id} value={user.name}>{user.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendentes</SelectItem>
+                  <SelectItem value="completed">Concluídas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Abas de tarefas */}
+      <Tabs defaultValue="today" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <TabsList className="grid grid-cols-3 mb-6">
+          <TabsTrigger value="today">Tarefas para Hoje ({todayTasks.length})</TabsTrigger>
+          <TabsTrigger value="upcoming">Próximas Tarefas ({upcomingTasks.length})</TabsTrigger>
+          <TabsTrigger value="completed">Concluídas ({completedTasks.length})</TabsTrigger>
+        </TabsList>
+        
+        {/* Conteúdo da aba "Hoje" */}
+        <TabsContent value="today">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tarefas para Hoje</CardTitle>
+              <CardDescription>
+                {todayTasks.length} tarefas agendadas para hoje.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">Status</TableHead>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Horário</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead>Prioridade</TableHead>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {todayTasks.length > 0 ? (
+                      todayTasks.map(task => (
+                        <TableRow key={task.id}>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0" 
+                              onClick={() => toggleTaskCompletion(task.id)}
+                            >
+                              <span className={`h-6 w-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${task.completed ? 'bg-green-500 border-green-500' : ''}`}>
+                                {task.completed && <Check className="h-4 w-4 text-white" />}
+                              </span>
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium">{task.title}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.time}
+                            </div>
+                          </TableCell>
+                          <TableCell>{task.location}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              task.priority === "Alta" ? "bg-red-100 text-red-800" :
+                              task.priority === "Média" ? "bg-amber-100 text-amber-800" :
+                              "bg-green-100 text-green-800"
+                            }`}>
+                              {task.priority}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.assignedTo}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => viewTaskDetails(task.id)}>
+                              <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => deleteTask(task.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                          Nenhuma tarefa para hoje.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Conteúdo da aba "Próximas" */}
+        <TabsContent value="upcoming">
+          <Card>
+            <CardHeader>
+              <CardTitle>Próximas Tarefas</CardTitle>
+              <CardDescription>
+                {upcomingTasks.length} tarefas agendadas para os próximos dias.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">Status</TableHead>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Horário</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead>Prioridade</TableHead>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {upcomingTasks.length > 0 ? (
+                      upcomingTasks.map(task => (
+                        <TableRow key={task.id}>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0" 
+                              onClick={() => toggleTaskCompletion(task.id)}
+                            >
+                              <span className={`h-6 w-6 rounded-full border-2 border-gray-300 flex items-center justify-center ${task.completed ? 'bg-green-500 border-green-500' : ''}`}>
+                                {task.completed && <Check className="h-4 w-4 text-white" />}
+                              </span>
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium">{task.title}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.date}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.time}
+                            </div>
+                          </TableCell>
+                          <TableCell>{task.location}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              task.priority === "Alta" ? "bg-red-100 text-red-800" :
+                              task.priority === "Média" ? "bg-amber-100 text-amber-800" :
+                              "bg-green-100 text-green-800"
+                            }`}>
+                              {task.priority}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.assignedTo}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => viewTaskDetails(task.id)}>
+                              <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => deleteTask(task.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-4 text-gray-500">
+                          Nenhuma tarefa futura.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Conteúdo da aba "Concluídas" */}
+        <TabsContent value="completed">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tarefas Concluídas</CardTitle>
+              <CardDescription>
+                {completedTasks.length} tarefas concluídas recentemente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">Status</TableHead>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Horário</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {completedTasks.length > 0 ? (
+                      completedTasks.map(task => (
+                        <TableRow key={task.id} className="bg-gray-50">
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0" 
+                              onClick={() => toggleTaskCompletion(task.id)}
+                            >
+                              <span className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-500 flex items-center justify-center">
+                                <Check className="h-4 w-4 text-white" />
+                              </span>
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium line-through text-gray-500">{task.title}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center text-gray-500">
+                              <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.date}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center text-gray-500">
+                              <Clock className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.time}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-gray-500">{task.location}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center text-gray-500">
+                              <User className="h-4 w-4 mr-1 text-gray-400" />
+                              {task.assignedTo}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => viewTaskDetails(task.id)}>
+                              <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => deleteTask(task.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                          Nenhuma tarefa concluída.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
