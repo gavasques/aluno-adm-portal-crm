@@ -20,6 +20,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminStudents from "./pages/admin/Students";
 import AdminCourses from "./pages/admin/Courses";
 import AdminMentoring from "./pages/admin/Mentoring";
+import MentoringDetail from "./pages/admin/MentoringDetail";
 import AdminBonus from "./pages/admin/Bonus";
 import AdminTasks from "./pages/admin/Tasks";
 import AdminCRM from "./pages/admin/CRM";
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="courses" element={<AdminCourses />} />
                 <Route path="courses/:id" element={<CourseDetails />} />
                 <Route path="mentoring" element={<AdminMentoring />} />
+                <Route path="mentoring/:id" element={<MentoringDetail />} />
                 <Route path="bonus" element={<AdminBonus />} />
                 <Route path="tasks" element={<AdminTasks />} />
                 <Route path="crm" element={<AdminCRM />} />
