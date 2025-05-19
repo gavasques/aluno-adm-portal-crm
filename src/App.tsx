@@ -55,6 +55,7 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="students" element={<AdminStudents />} />
+                <Route path="gestao-alunos" element={<AdminStudents />} />
                 <Route path="courses" element={<AdminCourses />} />
                 <Route path="mentoring" element={<AdminMentoring />} />
                 <Route path="bonus" element={<AdminBonus />} />

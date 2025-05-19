@@ -11,17 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { User, Users, Book, Calendar, Plus, MessageSquare, Package } from "lucide-react";
+import { User, Users, Book, Calendar, Plus, MessageSquare, Package, Award } from "lucide-react";
 
 const Students = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   
   // Mock data
   const students = [
-    { id: 1, name: "Ana Silva", email: "ana@email.com", phone: "(11) 98765-4321", status: "Ativo", products: ["Curso Básico", "Mentoria Individual"] },
-    { id: 2, name: "Carlos Oliveira", email: "carlos@email.com", phone: "(11) 91234-5678", status: "Ativo", products: ["Curso Avançado"] },
-    { id: 3, name: "Mariana Costa", email: "mariana@email.com", phone: "(11) 93333-4444", status: "Ativo", products: ["Mentoria em Grupo"] },
-    { id: 4, name: "Pedro Santos", email: "pedro@email.com", phone: "(11) 95555-6666", status: "Inativo", products: ["Curso Básico", "Curso Avançado"] },
+    { id: 1, name: "Ana Silva", email: "ana@email.com", phone: "(11) 98765-4321", status: "Ativo", products: ["Curso Básico", "Mentoria Individual"], bonus: ["Acesso Clube VIP", "E-book Marketing Digital"] },
+    { id: 2, name: "Carlos Oliveira", email: "carlos@email.com", phone: "(11) 91234-5678", status: "Ativo", products: ["Curso Avançado"], bonus: [] },
+    { id: 3, name: "Mariana Costa", email: "mariana@email.com", phone: "(11) 93333-4444", status: "Ativo", products: ["Mentoria em Grupo"], bonus: ["Workshop Presencial"] },
+    { id: 4, name: "Pedro Santos", email: "pedro@email.com", phone: "(11) 95555-6666", status: "Inativo", products: ["Curso Básico", "Curso Avançado"], bonus: ["Acesso Clube VIP"] },
   ];
   
   // Mock mentoring data
@@ -86,7 +86,7 @@ const Students = () => {
                   <TableHead>Email</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Produtos</TableHead>
+                  <TableHead>Cursos</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -132,8 +132,9 @@ const Students = () => {
                 <TabsList className="mb-4">
                   <TabsTrigger value="details">Dados do Aluno</TabsTrigger>
                   <TabsTrigger value="communications">Comunicações</TabsTrigger>
-                  <TabsTrigger value="products">Produtos</TabsTrigger>
+                  <TabsTrigger value="products">Cursos Adquiridos</TabsTrigger>
                   <TabsTrigger value="mentoring">Mentorias</TabsTrigger>
+                  <TabsTrigger value="bonus">Bônus Adquiridos</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
@@ -198,7 +199,7 @@ const Students = () => {
                 <TabsContent value="products">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-xl">Produtos Adquiridos</CardTitle>
+                      <CardTitle className="text-xl">Cursos Adquiridos</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -211,7 +212,7 @@ const Students = () => {
                       </div>
                       <Button variant="outline" className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
-                        Adicionar Produto
+                        Adicionar Curso
                       </Button>
                     </CardContent>
                   </Card>
@@ -275,6 +276,32 @@ const Students = () => {
                           Adicionar à Mentoria em Grupo
                         </Button>
                       </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="bonus">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Bônus Adquiridos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedStudent.bonus && selectedStudent.bonus.length > 0 ? (
+                        <div className="space-y-4">
+                          {selectedStudent.bonus.map((bonusItem, index) => (
+                            <div key={index} className="flex items-center p-3 border rounded-md">
+                              <Award className="h-5 w-5 mr-3 text-amber-500" />
+                              <span>{bonusItem}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">Nenhum bônus adquirido.</p>
+                      )}
+                      <Button variant="outline" className="mt-4">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar Bônus
+                      </Button>
                     </CardContent>
                   </Card>
                 </TabsContent>

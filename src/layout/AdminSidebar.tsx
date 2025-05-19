@@ -82,7 +82,7 @@ const AdminSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <NavItem href="/admin/users" icon={Users}>Gestão de Usuários</NavItem>
-              <NavItem href="/admin/students" icon={User}>Gestão de Alunos</NavItem>
+              <NavItem href="/admin/gestao-alunos" icon={User}>Gestão de Alunos</NavItem>
               <NavItem href="/admin/courses" icon={Book}>Cadastro de Cursos</NavItem>
               <NavItem href="/admin/mentoring" icon={Users}>Cadastro de Mentorias</NavItem>
               <NavItem href="/admin/bonus" icon={FolderPlus}>Cadastro de Bônus</NavItem>
