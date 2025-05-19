@@ -25,13 +25,13 @@ const Header = () => {
   const showAreaSpecific = isAdmin || isStudent;
   
   return (
-    <header className="bg-white border-b border-border fixed top-0 left-0 w-full z-50">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="bg-white border-b border-border fixed top-0 left-0 w-full z-50 h-12">
+      <div className="container mx-auto px-4 py-1 flex items-center justify-between h-full">
         {/* Logo and site title */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
-            <span className="text-2xl font-bold text-portal-primary">Portal</span>
-            <span className="ml-1 text-2xl font-normal text-portal-dark">Edu</span>
+            <span className="text-lg font-bold text-portal-primary">Portal</span>
+            <span className="text-lg font-normal text-portal-dark">Edu</span>
           </Link>
         </div>
         
@@ -57,7 +57,7 @@ const Header = () => {
                 <input
                   type="text"
                   placeholder="Pesquisar..."
-                  className="portal-input pl-10"
+                  className="portal-input pl-10 h-8 text-sm"
                   autoFocus
                   onBlur={() => setIsSearchOpen(false)}
                 />
@@ -65,14 +65,14 @@ const Header = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="absolute left-0 z-10"
+                  className="absolute left-0 z-10 h-8 w-8"
                   onClick={() => setIsSearchOpen(true)}
                 >
-                  <Search className="h-5 w-5" />
+                  <Search className="h-4 w-4" />
                 </Button>
               )}
               {isSearchOpen && (
-                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Search className="h-3 w-3 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               )}
             </div>
           )}
@@ -84,8 +84,8 @@ const Header = () => {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8">
+                    <Bell className="h-4 w-4" />
                     <span className="absolute top-0 right-0 h-2 w-2 bg-portal-danger rounded-full"></span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -115,8 +115,8 @@ const Header = () => {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <User className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -142,8 +142,8 @@ const Header = () => {
           )}
           
           {/* Mobile menu button - only visible on small screens */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="md:hidden h-8 w-8">
+            <Menu className="h-4 w-4" />
           </Button>
         </div>
       </div>

@@ -14,7 +14,7 @@ const Layout = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
-      <div className="flex-grow flex">
+      <div className="flex-grow flex pt-12">
         {isStudent && <StudentSidebar />}
         {isAdmin && <AdminSidebar />}
         
