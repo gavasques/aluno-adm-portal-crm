@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,21 @@ import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { FileText, MessageSquare, File, ArrowLeft, Trash2 } from "lucide-react";
+import { FileText, MessageSquare, File, ArrowLeft, Trash2, Edit } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Mentoring {
   id: string;
@@ -41,6 +56,8 @@ const MentoringDetail = () => {
   const navigate = useNavigate();
   const isNewMentoring = id === "new";
   const [activeTab, setActiveTab] = useState("details");
+  const [editMode, setEditMode] = useState(isNewMentoring);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Estado para mentoria
   const [mentoring, setMentoring] = useState<Mentoring>({
@@ -71,6 +88,16 @@ const MentoringDetail = () => {
     }
   });
   
+  // Formulário para edição rápida
+  const editForm = useForm({
+    defaultValues: {
+      name: mentoring.name,
+      duration: mentoring.duration,
+      type: mentoring.type,
+      periodicity: mentoring.periodicity,
+    }
+  });
+  
   // Carrega dados existentes para edição
   useEffect(() => {
     if (!isNewMentoring) {
@@ -80,7 +107,7 @@ const MentoringDetail = () => {
         const mentoringData = {
           id: "1",
           name: "Mentoria de E-commerce",
-          duration: "3 meses",
+          duration: "3 Meses",
           type: "Individual",
           registrationDate: "01/05/2025",
           periodicity: "Semanal",
@@ -99,11 +126,18 @@ const MentoringDetail = () => {
           type: mentoringData.type,
           periodicity: mentoringData.periodicity
         });
+        
+        editForm.reset({
+          name: mentoringData.name,
+          duration: mentoringData.duration,
+          type: mentoringData.type,
+          periodicity: mentoringData.periodicity
+        });
       } else if (id === "2") {
         const mentoringData = {
           id: "2",
           name: "Mentoria de Marketing Digital",
-          duration: "6 meses",
+          duration: "6 Meses",
           type: "Grupo",
           registrationDate: "15/04/2025",
           periodicity: "Quinzenal",
@@ -118,9 +152,16 @@ const MentoringDetail = () => {
           type: mentoringData.type,
           periodicity: mentoringData.periodicity
         });
+        
+        editForm.reset({
+          name: mentoringData.name,
+          duration: mentoringData.duration,
+          type: mentoringData.type,
+          periodicity: mentoringData.periodicity
+        });
       }
     }
-  }, [id, isNewMentoring, form]);
+  }, [id, isNewMentoring, form, editForm]);
 
   const onSubmit = (data: any) => {
     const updatedMentoring = {
@@ -134,6 +175,7 @@ const MentoringDetail = () => {
     };
     
     setMentoring(updatedMentoring);
+    setEditMode(false);
     
     // Em um cenário real, aqui salvaríamos os dados na API
     toast.success(isNewMentoring ? "Mentoria criada com sucesso!" : "Mentoria atualizada com sucesso!");
@@ -141,6 +183,27 @@ const MentoringDetail = () => {
     if (isNewMentoring) {
       navigate("/admin/mentoring");
     }
+  };
+  
+  const handleQuickEdit = (data: any) => {
+    const updatedMentoring = {
+      ...mentoring,
+      name: data.name,
+      duration: data.duration,
+      type: data.type,
+      periodicity: data.periodicity
+    };
+    
+    setMentoring(updatedMentoring);
+    form.reset({
+      name: data.name,
+      duration: data.duration,
+      type: data.type,
+      periodicity: data.periodicity
+    });
+    
+    setEditDialogOpen(false);
+    toast.success("Mentoria atualizada com sucesso!");
   };
 
   const handleAddComment = () => {
@@ -200,23 +263,42 @@ const MentoringDetail = () => {
     toast.success("Arquivo removido com sucesso!");
   };
 
+  const openEditDialog = () => {
+    editForm.reset({
+      name: mentoring.name,
+      duration: mentoring.duration,
+      type: mentoring.type,
+      periodicity: mentoring.periodicity
+    });
+    setEditDialogOpen(true);
+  };
+
   return (
-    <div className="container mx-auto py-6">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate("/admin/mentoring")}
-        className="mb-4"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Voltar para listagem
-      </Button>
+    <div className="container mx-auto py-4">
+      <div className="flex justify-between items-center mb-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/admin/mentoring")}
+          className="flex items-center"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+        
+        {!isNewMentoring && (
+          <Button onClick={openEditDialog} variant="outline" className="flex items-center">
+            <Edit className="mr-2 h-4 w-4" />
+            Editar
+          </Button>
+        )}
+      </div>
       
-      <h1 className="text-3xl font-bold mb-8 text-portal-dark">
+      <h1 className="text-2xl font-bold mb-4 text-portal-dark">
         {isNewMentoring ? "Nova Mentoria" : mentoring.name}
       </h1>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-8 grid w-full grid-cols-3 h-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100vh-200px)]">
+        <TabsList className="mb-4 grid w-full grid-cols-3 h-auto">
           <TabsTrigger value="details" className="flex items-center py-2">
             <FileText className="mr-2 h-4 w-4" />
             Detalhes
@@ -231,135 +313,167 @@ const MentoringDetail = () => {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="details">
+        <TabsContent value="details" className="overflow-auto h-[calc(100vh-270px)]">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle>Dados da Mentoria</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    rules={{ required: "Nome da mentoria é obrigatório" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome da Mentoria</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Mentoria de E-commerce" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      rules={{ required: "Nome da mentoria é obrigatório" }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome da Mentoria</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Mentoria de E-commerce" {...field} readOnly={!isNewMentoring} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="duration"
+                      rules={{ required: "Duração é obrigatória" }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duração</FormLabel>
+                          <FormControl>
+                            <Select 
+                              defaultValue={field.value} 
+                              onValueChange={field.onChange} 
+                              disabled={!isNewMentoring}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a duração" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1 Mês">1 Mês</SelectItem>
+                                <SelectItem value="3 Meses">3 Meses</SelectItem>
+                                <SelectItem value="6 Meses">6 Meses</SelectItem>
+                                <SelectItem value="1 Ano">1 Ano</SelectItem>
+                                <SelectItem value="Vitalício">Vitalício</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="duration"
-                    rules={{ required: "Duração é obrigatória" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Duração</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: 3 meses" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            {...field}
-                          >
-                            <option value="Individual">Individual</option>
-                            <option value="Grupo">Grupo</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="periodicity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Periodicidade</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            {...field}
-                          >
-                            <option value="Semanal">Semanal</option>
-                            <option value="Quinzenal">Quinzenal</option>
-                            <option value="Mensal">Mensal</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo</FormLabel>
+                          <FormControl>
+                            <Select 
+                              defaultValue={field.value} 
+                              onValueChange={field.onChange}
+                              disabled={!isNewMentoring}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Individual">Individual</SelectItem>
+                                <SelectItem value="Grupo">Grupo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="periodicity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Periodicidade</FormLabel>
+                          <FormControl>
+                            <Select 
+                              defaultValue={field.value} 
+                              onValueChange={field.onChange}
+                              disabled={!isNewMentoring}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione a periodicidade" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Semanal">Semanal</SelectItem>
+                                <SelectItem value="Quinzenal">Quinzenal</SelectItem>
+                                <SelectItem value="Mensal">Mensal</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   {!isNewMentoring && (
-                    <div className="space-y-2">
+                    <div>
                       <Label>Data de Cadastro</Label>
-                      <Input readOnly value={mentoring.registrationDate} />
+                      <Input readOnly value={mentoring.registrationDate} className="bg-gray-50" />
                     </div>
                   )}
                   
-                  <div className="flex justify-end">
-                    <Button type="submit">
-                      {isNewMentoring ? "Criar Mentoria" : "Salvar Alterações"}
-                    </Button>
-                  </div>
+                  {isNewMentoring && (
+                    <div className="flex justify-end">
+                      <Button type="submit">
+                        Criar Mentoria
+                      </Button>
+                    </div>
+                  )}
                 </form>
               </Form>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="comments">
+        <TabsContent value="comments" className="overflow-auto h-[calc(100vh-270px)]">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle>Comentários</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Textarea 
-                      placeholder="Digite seu comentário aqui..." 
-                      value={newComment} 
-                      onChange={(e) => setNewComment(e.target.value)}
-                    />
-                  </div>
-                  <Button onClick={handleAddComment}>Adicionar</Button>
+                <div className="flex gap-2">
+                  <Textarea 
+                    placeholder="Digite seu comentário aqui..." 
+                    value={newComment} 
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="min-h-[60px]"
+                  />
+                  <Button onClick={handleAddComment} className="flex-shrink-0">Adicionar</Button>
                 </div>
                 
                 {mentoring.comments.length > 0 ? (
-                  <div className="space-y-4 mt-6">
+                  <div className="space-y-2 mt-4">
                     {mentoring.comments.map((comment) => (
-                      <div key={comment.id} className="bg-gray-50 p-4 rounded-md">
+                      <div key={comment.id} className="bg-gray-50 p-3 rounded-md">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">{comment.author} - {comment.date}</p>
-                            <p className="mt-1">{comment.text}</p>
+                            <p className="font-medium text-sm">{comment.author} - {comment.date}</p>
+                            <p className="mt-1 text-sm">{comment.text}</p>
                           </div>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -368,8 +482,8 @@ const MentoringDetail = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">Nenhum comentário adicionado.</p>
+                  <div className="text-center py-4">
+                    <p className="text-gray-500 text-sm">Nenhum comentário adicionado.</p>
                   </div>
                 )}
               </div>
@@ -377,26 +491,27 @@ const MentoringDetail = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="files">
+        <TabsContent value="files" className="overflow-auto h-[calc(100vh-270px)]">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle>Arquivos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <Label htmlFor="fileTitle">Título do Arquivo</Label>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-2">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label htmlFor="fileTitle" className="text-sm">Título</Label>
                       <Input 
                         id="fileTitle"
                         placeholder="Ex: Material de apoio" 
                         value={newFileTitle} 
                         onChange={(e) => setNewFileTitle(e.target.value)}
+                        className="h-9"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="file">Arquivo</Label>
+                    <div className="flex-1">
+                      <Label htmlFor="file" className="text-sm">Arquivo</Label>
                       <Input 
                         id="file"
                         type="file" 
@@ -405,37 +520,38 @@ const MentoringDetail = () => {
                             setSelectedFile(e.target.files[0]);
                           }
                         }}
+                        className="h-9"
                       />
                     </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <Button onClick={handleAddFile}>Adicionar Arquivo</Button>
+                    <div className="flex items-end">
+                      <Button onClick={handleAddFile} size="sm" className="h-9">Adicionar</Button>
+                    </div>
                   </div>
                 </div>
                 
                 {mentoring.files.length > 0 ? (
-                  <div className="mt-6">
-                    <table className="w-full">
+                  <div className="mt-4">
+                    <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left">
                           <th className="pb-2">Título</th>
                           <th className="pb-2">Arquivo</th>
-                          <th className="pb-2">Data de Upload</th>
-                          <th className="pb-2"></th>
+                          <th className="pb-2 w-24">Data</th>
+                          <th className="pb-2 w-10"></th>
                         </tr>
                       </thead>
                       <tbody>
                         {mentoring.files.map((file) => (
                           <tr key={file.id} className="border-t">
-                            <td className="py-3">{file.title}</td>
-                            <td className="py-3">{file.fileName}</td>
-                            <td className="py-3">{file.uploadDate}</td>
-                            <td className="py-3 text-right">
+                            <td className="py-2">{file.title}</td>
+                            <td className="py-2">{file.fileName}</td>
+                            <td className="py-2 text-sm">{file.uploadDate}</td>
+                            <td className="py-2 text-right">
                               <Button 
                                 variant="ghost" 
                                 size="sm"
                                 onClick={() => handleDeleteFile(file.id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -446,8 +562,8 @@ const MentoringDetail = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">Nenhum arquivo adicionado.</p>
+                  <div className="text-center py-4">
+                    <p className="text-gray-500 text-sm">Nenhum arquivo adicionado.</p>
                   </div>
                 )}
               </div>
@@ -455,6 +571,123 @@ const MentoringDetail = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Dialog para edição rápida */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Mentoria</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleQuickEdit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="name"
+                rules={{ required: "Nome da mentoria é obrigatório" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da Mentoria</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Mentoria de E-commerce" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                    
+              <FormField
+                control={editForm.control}
+                name="duration"
+                rules={{ required: "Duração é obrigatória" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duração</FormLabel>
+                    <FormControl>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a duração" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1 Mês">1 Mês</SelectItem>
+                          <SelectItem value="3 Meses">3 Meses</SelectItem>
+                          <SelectItem value="6 Meses">6 Meses</SelectItem>
+                          <SelectItem value="1 Ano">1 Ano</SelectItem>
+                          <SelectItem value="Vitalício">Vitalício</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                  
+              <FormField
+                control={editForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo</FormLabel>
+                    <FormControl>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Individual">Individual</SelectItem>
+                          <SelectItem value="Grupo">Grupo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                    
+              <FormField
+                control={editForm.control}
+                name="periodicity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Periodicidade</FormLabel>
+                    <FormControl>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a periodicidade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Semanal">Semanal</SelectItem>
+                          <SelectItem value="Quinzenal">Quinzenal</SelectItem>
+                          <SelectItem value="Mensal">Mensal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Salvar Alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
