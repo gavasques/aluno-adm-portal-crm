@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -323,6 +322,20 @@ const CRM = () => {
     }
   };
 
+  // Função para lidar com o reordenamento das colunas na modal de gerenciamento
+  const handleColumnReorder = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) return;
+    
+    const oldIndex = columns.findIndex(col => col.id === active.id);
+    const newIndex = columns.findIndex(col => col.id === over.id);
+    
+    if (oldIndex !== newIndex) {
+      setColumns(arrayMove(columns, oldIndex, newIndex));
+    }
+  };
+
   // Formulário para adicionar comentário
   const commentForm = useForm();
   
@@ -419,20 +432,20 @@ const CRM = () => {
                   <DndContext 
                     sensors={sensors}
                     collisionDetection={closestCenter}
-                    onDragEnd={(event) => {
-                      const { active, over } = event;
-                      if (over && active.id !== over.id) {
-                        const oldIndex = columns.findIndex(col => col.id === active.id);
-                        const newIndex = columns.findIndex(col => col.id === over.id);
-                        setColumns(arrayMove(columns, oldIndex, newIndex));
-                      }
-                    }}
+                    onDragEnd={handleColumnReorder}
                   >
-                    <SortableContext items={columns.map(col => col.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext 
+                      items={columns.map(col => col.id)} 
+                      strategy={verticalListSortingStrategy}
+                    >
                       <div className="space-y-2">
                         {columns.map((column) => {
                           const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
                             id: column.id,
+                            data: {
+                              type: 'column',
+                              column,
+                            },
                           });
                           
                           const style = {
@@ -447,7 +460,7 @@ const CRM = () => {
                               key={column.id} 
                               ref={setNodeRef}
                               style={style}
-                              className="flex items-center justify-between p-3 bg-gray-50 rounded-md border"
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-grab"
                             >
                               <div className="flex items-center">
                                 <Move className="h-4 w-4 mr-3 cursor-grab" {...attributes} {...listeners} />
@@ -457,7 +470,12 @@ const CRM = () => {
                               </div>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-red-500 hover:text-red-700"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </AlertDialogTrigger>
