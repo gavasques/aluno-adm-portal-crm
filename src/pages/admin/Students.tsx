@@ -1,1063 +1,742 @@
-import React, { useState } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { 
-  User, 
-  Users, 
-  Package, 
-  Award, 
-  Calendar,
-  Plus, 
-  MessageSquare, 
-  Trash2,
-  Check,
-  X,
-  Store,
-  FileText,
-  Paperclip,
-  ExternalLink
-} from "lucide-react";
-import { 
-  Form, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormDescription,
-  FormMessage
-} from "@/components/ui/form";
+
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { 
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuItem
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { 
+  User, 
+  Search, 
+  MoreHorizontal, 
+  Download, 
+  Filter, 
+  ArrowUp, 
+  ArrowDown,
+  CalendarDays,
+  Calendar,
+  X,
+  Trash2 
+} from "lucide-react";
 
-// Lista de estados brasileiros
-const brazilianStates = [
-  'Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal',
-  'Espírito Santo', 'Goiás', 'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul',
-  'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco', 'Piauí',
-  'Rio de Janeiro', 'Rio Grande do Norte', 'Rio Grande do Sul', 'Rondônia',
-  'Roraima', 'Santa Catarina', 'São Paulo', 'Sergipe', 'Tocantins'
-];
-
-// Lista de canais de venda
-const salesChannels = ['Amazon', 'Meli', 'MGL', 'Shopee', 'Site', 'Outro'];
-
-// Academia access options
-const academyAccessOptions = ['Sim', 'Não', 'Sim START'];
-
-// Communication channels
-const communicationChannels = [
-  'Telefone', 'Email', 'WhatsApp', 'Instagram', 'TikTok', 'Call', 
-  'Pessoalmente', 'Evento', 'Outro'
+// Sample students data
+const STUDENTS = [
+  {
+    id: 1,
+    name: "João Silva",
+    email: "joao.silva@exemplo.com",
+    phone: "(11) 98765-4321",
+    registrationDate: "15/03/2023",
+    status: "Ativo",
+    lastLogin: "Hoje, 10:45",
+    courses: ["Curso Básico de E-commerce", "Mentoria Individual"],
+    mentorships: ["Mentoria Individual", "Mentoria em Grupo"],
+    bonuses: ["E-book de E-commerce", "Planilha de Controle"],
+    observations: "Cliente interessado em expandir para marketplace."
+  },
+  {
+    id: 2,
+    name: "Maria Oliveira",
+    email: "maria.oliveira@exemplo.com",
+    phone: "(21) 97654-3210",
+    registrationDate: "22/05/2023",
+    status: "Ativo",
+    lastLogin: "Ontem, 15:30",
+    courses: ["Curso Avançado de E-commerce"],
+    mentorships: [],
+    bonuses: ["Planilha de Controle"],
+    observations: ""
+  },
+  {
+    id: 3,
+    name: "Carlos Santos",
+    email: "carlos.santos@exemplo.com",
+    phone: "(31) 98877-6655",
+    registrationDate: "10/01/2023",
+    status: "Ativo",
+    lastLogin: "Hoje, 09:15",
+    courses: ["Curso Básico de E-commerce", "Curso Avançado de E-commerce", "Mentoria Individual"],
+    mentorships: ["Mentoria Individual", "Mentoria Avançada"],
+    bonuses: ["E-book de E-commerce", "Planilha de Controle", "Templates de E-commerce"],
+    observations: "Aluno destaque na turma."
+  },
+  {
+    id: 4,
+    name: "Ana Pereira",
+    email: "ana.pereira@exemplo.com",
+    phone: "(41) 99988-7766",
+    registrationDate: "05/02/2023",
+    status: "Inativo",
+    lastLogin: "15/05/2023, 14:20",
+    courses: ["Curso Básico de E-commerce"],
+    mentorships: [],
+    bonuses: [],
+    observations: "Cliente em processo de renovação."
+  },
+  {
+    id: 5,
+    name: "Roberto Costa",
+    email: "roberto.costa@exemplo.com",
+    phone: "(51) 98765-4321",
+    registrationDate: "18/04/2023",
+    status: "Pendente",
+    lastLogin: "Hoje, 11:05",
+    courses: ["Mentoria em Grupo"],
+    mentorships: ["Mentoria em Grupo"],
+    bonuses: ["E-book de E-commerce"],
+    observations: "Aguardando confirmação de dados bancários."
+  },
+  {
+    id: 6,
+    name: "Fernanda Lima",
+    email: "fernanda.lima@exemplo.com",
+    phone: "(61) 97654-3210",
+    registrationDate: "03/06/2023",
+    status: "Ativo",
+    lastLogin: "Hoje, 08:30",
+    courses: ["Curso Básico de E-commerce", "Mentoria em Grupo"],
+    mentorships: ["Mentoria em Grupo"],
+    bonuses: ["Planilha de Controle"],
+    observations: "Interessada em expandir negócio."
+  },
+  {
+    id: 7,
+    name: "Pedro Alves",
+    email: "pedro.alves@exemplo.com",
+    phone: "(71) 98877-6655",
+    registrationDate: "12/07/2023",
+    status: "Ativo",
+    lastLogin: "Ontem, 16:45",
+    courses: ["Curso Avançado de E-commerce"],
+    mentorships: ["Mentoria Individual"],
+    bonuses: ["Templates de E-commerce"],
+    observations: ""
+  },
+  {
+    id: 8,
+    name: "Juliana Martins",
+    email: "juliana.martins@exemplo.com",
+    phone: "(81) 99988-7766",
+    registrationDate: "25/08/2023",
+    status: "Inativo",
+    lastLogin: "20/04/2023, 09:10",
+    courses: ["Mentoria Individual"],
+    mentorships: ["Mentoria Individual"],
+    bonuses: [],
+    observations: "Cliente aguardando renovação."
+  },
+  {
+    id: 9,
+    name: "Ricardo Souza",
+    email: "ricardo.souza@exemplo.com",
+    phone: "(91) 98765-4321",
+    registrationDate: "14/09/2023",
+    status: "Pendente",
+    lastLogin: "Hoje, 14:20",
+    courses: ["Curso Básico de E-commerce"],
+    mentorships: [],
+    bonuses: ["E-book de E-commerce"],
+    observations: "Aguardando confirmação de pagamento."
+  },
+  {
+    id: 10,
+    name: "Amanda Gomes",
+    email: "amanda.gomes@exemplo.com",
+    phone: "(11) 97654-3210",
+    registrationDate: "30/10/2023",
+    status: "Ativo",
+    lastLogin: "Ontem, 11:30",
+    courses: ["Curso Avançado de E-commerce", "Mentoria em Grupo"],
+    mentorships: ["Mentoria em Grupo"],
+    bonuses: ["Planilha de Controle", "Templates de E-commerce"],
+    observations: "Aluna com potencial para mentorias avançadas."
+  }
 ];
 
 const Students = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [showStoreForm, setShowStoreForm] = useState(false);
-  const [showPartnerForm, setShowPartnerForm] = useState(false);
-  const [showCommunicationForm, setShowCommunicationForm] = useState(false);
-  const [viewingCommunication, setViewingCommunication] = useState(null);
-  
-  // Mock data
-  const students = [
-    { 
-      id: 1, 
-      name: "Ana Silva", 
-      email: "ana@email.com", 
-      phone: "(11) 98765-4321", 
-      status: "Ativo", 
-      products: ["Curso Básico", "Mentoria Individual"], 
-      bonus: ["Acesso Clube VIP", "E-book Marketing Digital"],
-      registrationDate: "2024-04-15",
-      state: "São Paulo",
-      academyAccess: "Sim",
-      stores: [
-        { id: 1, name: "Loja da Ana", channel: "Amazon", link: "https://amazon.com/loja-ana" },
-        { id: 2, name: "Ana Shop", channel: "Site", link: "https://anashop.com" }
-      ],
-      partners: [
-        { id: 1, name: "Carlos Mendes", email: "carlos@email.com", phone: "(11) 97777-8888", role: "Sócio Administrativo" }
-      ]
-    },
-    { 
-      id: 2, 
-      name: "Carlos Oliveira", 
-      email: "carlos@email.com", 
-      phone: "(11) 91234-5678", 
-      status: "Ativo", 
-      products: ["Curso Avançado"], 
-      bonus: [],
-      registrationDate: "2024-03-20",
-      state: "Rio de Janeiro",
-      academyAccess: "Não",
-      stores: [],
-      partners: []
-    },
-    { 
-      id: 3, 
-      name: "Mariana Costa", 
-      email: "mariana@email.com", 
-      phone: "(11) 93333-4444", 
-      status: "Ativo", 
-      products: ["Mentoria em Grupo"], 
-      bonus: ["Workshop Presencial"],
-      registrationDate: "2024-02-10",
-      state: "Minas Gerais",
-      academyAccess: "Sim START",
-      stores: [
-        { id: 1, name: "Mari Store", channel: "Shopee", link: "https://shopee.com/maristore" }
-      ],
-      partners: [
-        { id: 1, name: "João Silva", email: "joao@email.com", phone: "(11) 95555-6666", role: "Sócio Técnico" },
-        { id: 2, name: "Paula Sousa", email: "paula@email.com", phone: "(11) 94444-3333", role: "Sócio Financeiro" }
-      ]
-    },
-    { 
-      id: 4, 
-      name: "Pedro Santos", 
-      email: "pedro@email.com", 
-      phone: "(11) 95555-6666", 
-      status: "Inativo", 
-      products: ["Curso Básico", "Curso Avançado"], 
-      bonus: ["Acesso Clube VIP"],
-      registrationDate: "2023-11-05",
-      state: "Paraná",
-      academyAccess: "Não",
-      stores: [
-        { id: 1, name: "Pedro E-commerce", channel: "Meli", link: "https://mercadolivre.com/pedro-ecommerce" }
-      ],
-      partners: []
-    },
-  ];
-  
-  // Mock mentoring data
-  const mentoringSessions = [
-    { id: 1, date: "25/05/2025", time: "14:00", link: "meet.google.com/abc-defg-hij", status: "Agendada", type: "Individual" },
-    { id: 2, date: "28/05/2025", time: "10:00", link: "meet.google.com/xyz-abcd-efg", status: "Concluída", type: "Grupo" },
-    { id: 3, date: "02/06/2025", time: "16:30", link: "meet.google.com/123-456-789", status: "Agendada", type: "Individual" },
-  ];
-  
-  // Mock communications
-  const [communications, setCommunications] = useState([
-    { id: 1, date: "10/05/2025", channel: "Email", subject: "Boas-vindas", content: "Mensagem de boas-vindas ao novo aluno. Conteúdo completo da comunicação aqui. Este é um exemplo de um texto mais longo que poderia ser incluído em uma comunicação com o aluno." },
-    { id: 2, date: "12/05/2025", channel: "WhatsApp", subject: "Dúvida sobre curso", content: "O aluno teve dúvidas sobre o módulo 3 do curso básico. Foi orientado a assistir novamente às aulas 7 e 8, que cobrem o conteúdo onde ele está com dificuldade." },
-  ]);
-  
-  const handleOpenStudent = (student) => {
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Filter students based on search query and status filter
+  const filteredStudents = useMemo(() => {
+    return STUDENTS.filter(student => {
+      const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || student.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, statusFilter]);
+
+  // Sort students by name
+  const sortedStudents = useMemo(() => {
+    return [...filteredStudents].sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+  }, [filteredStudents, sortDirection]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedStudents.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedStudents.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Handle sort toggle
+  const toggleSort = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  };
+
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Handle student click
+  const handleStudentClick = (student) => {
     setSelectedStudent(student);
   };
-  
-  const handleCloseStudent = () => {
-    setSelectedStudent(null);
-    setShowStoreForm(false);
-    setShowPartnerForm(false);
-    setShowCommunicationForm(false);
-    setViewingCommunication(null);
-  };
-  
-  const handleDeleteStudent = (studentId) => {
-    // Em uma aplicação real, aqui você enviaria uma requisição para deletar o aluno
-    // Como é um exemplo, apenas simulamos a remoção
-    toast({
-      title: "Aluno removido",
-      description: "O aluno foi removido com sucesso.",
-    });
-    setDeleteConfirmOpen(false);
+
+  // Handle close student details
+  const handleCloseStudentDetails = () => {
     setSelectedStudent(null);
   };
 
-  // Formulários
-  const storeFormSchema = z.object({
-    name: z.string().min(1, "O nome da loja é obrigatório"),
-    channel: z.string().min(1, "Selecione um canal de venda"),
-    link: z.string().url("Digite uma URL válida").or(z.string().length(0))
-  });
-
-  const storeForm = useForm({
-    resolver: zodResolver(storeFormSchema),
-    defaultValues: {
-      name: "",
-      channel: "",
-      link: ""
-    }
-  });
-
-  const partnerFormSchema = z.object({
-    name: z.string().min(1, "O nome do sócio é obrigatório"),
-    email: z.string().email("Email inválido"),
-    phone: z.string().min(1, "Telefone é obrigatório"),
-    role: z.string().min(1, "Função é obrigatória")
-  });
-
-  const partnerForm = useForm({
-    resolver: zodResolver(partnerFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      role: ""
-    }
-  });
-
-  const communicationFormSchema = z.object({
-    channel: z.string().min(1, "Selecione um canal"),
-    subject: z.string().min(1, "Assunto é obrigatório"),
-    content: z.string().min(1, "Conteúdo é obrigatório")
-  });
-
-  const communicationForm = useForm({
-    resolver: zodResolver(communicationFormSchema),
-    defaultValues: {
-      channel: "",
-      subject: "",
-      content: ""
-    }
-  });
-
-  const onSubmitStore = (data) => {
-    if (selectedStudent) {
-      // Em uma aplicação real, enviar para API
-      toast({
-        title: "Loja adicionada",
-        description: `A loja ${data.name} foi adicionada com sucesso.`,
-      });
-      setShowStoreForm(false);
-      storeForm.reset();
-    }
+  // Handle delete student
+  const handleDeleteClick = (e, student) => {
+    e.stopPropagation();
+    setStudentToDelete(student);
+    setShowDeleteConfirmation(true);
   };
 
-  const onSubmitPartner = (data) => {
-    if (selectedStudent) {
-      // Em uma aplicação real, enviar para API
-      toast({
-        title: "Sócio adicionado",
-        description: `${data.name} foi adicionado como sócio.`,
-      });
-      setShowPartnerForm(false);
-      partnerForm.reset();
-    }
-  };
-
-  const onSubmitCommunication = (data) => {
-    if (selectedStudent) {
-      // Em uma aplicação real, enviar para API
-      const newCommunication = {
-        id: communications.length + 1,
-        date: format(new Date(), "dd/MM/yyyy"),
-        channel: data.channel,
-        subject: data.subject,
-        content: data.content
-      };
-      
-      setCommunications([...communications, newCommunication]);
-      
-      toast({
-        title: "Comunicação registrada",
-        description: "A comunicação foi registrada com sucesso.",
-      });
-      setShowCommunicationForm(false);
-      communicationForm.reset();
-    }
-  };
-
-  const handleDeleteCommunication = (commId) => {
-    setCommunications(communications.filter(comm => comm.id !== commId));
-    setViewingCommunication(null);
+  const confirmDeleteStudent = () => {
     toast({
-      title: "Comunicação removida",
-      description: "A comunicação foi removida com sucesso.",
+      title: "Aluno excluído",
+      description: `O aluno ${studentToDelete.name} foi excluído com sucesso.`
+    });
+    setShowDeleteConfirmation(false);
+    setStudentToDelete(null);
+    // In a real app, delete the student from the database
+  };
+
+  // Export students to CSV
+  const exportToCSV = () => {
+    // Create CSV header
+    let csvContent = "ID,Nome,Status,Último Login,Data de Cadastro\n";
+
+    // Add data rows
+    sortedStudents.forEach(student => {
+      csvContent += `${student.id},"${student.name}","${student.status}","${student.lastLogin}","${student.registrationDate}"\n`;
+    });
+
+    // Create download link
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "alunos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Exportação concluída",
+      description: "Os dados dos alunos foram exportados com sucesso."
     });
   };
-  
+
+  // Generate pagination items
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxPagesToShow = 5;
+
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages is less than or equal to max pages to show
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Always show first page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink
+            isActive={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      // Calculate start and end pages to show
+      let startPage, endPage;
+      if (currentPage <= 3) {
+        startPage = 2;
+        endPage = 4;
+        items.push(
+          ...[2, 3, 4].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else if (currentPage >= totalPages - 2) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+        items.push(
+          ...[totalPages - 3, totalPages - 2, totalPages - 1].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+      } else {
+        items.push(
+          <PaginationItem key="ellipsis3">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+        items.push(
+          ...[currentPage - 1, currentPage, currentPage + 1].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+        items.push(
+          <PaginationItem key="ellipsis4">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Always show last page
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink
+            isActive={currentPage === totalPages}
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
+
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-portal-dark">Gestão de Alunos</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Aluno
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Novo Aluno</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {/* Formulário seria implementado aqui */}
-              <p>Formulário para adicionar um novo aluno.</p>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-      
+      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Gestão de Alunos</h1>
+
       <Card className="mb-6">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Lista de Alunos</CardTitle>
-          <CardDescription>
-            Gerencie os alunos cadastrados no sistema.
-          </CardDescription>
+          <Button onClick={exportToCSV}>
+            <Download className="mr-2 h-4 w-4" /> Exportar CSV
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input
+                placeholder="Buscar alunos..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
+                  <TableHead className="cursor-pointer" onClick={toggleSort}>
+                    Nome
+                    {sortDirection === "asc" ? (
+                      <ArrowUp className="inline-block ml-1 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                    )}
+                  </TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Cursos</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead>Último Login</TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      <Calendar className="mr-1 h-4 w-4" />
+                      Data de Cadastro
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
+                {currentItems.map((student) => (
+                  <TableRow
+                    key={student.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleStudentClick(student)}
+                  >
                     <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
-                    <TableCell>{student.phone}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        student.status === "Ativo" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                      }`}>
+                      <Badge
+                        variant={student.status === "Ativo" ? "default" : student.status === "Pendente" ? "secondary" : "outline"}
+                        className={
+                          student.status === "Ativo"
+                            ? "bg-green-500"
+                            : student.status === "Pendente"
+                              ? "bg-yellow-500"
+                              : "bg-gray-500"
+                        }
+                      >
                         {student.status}
-                      </span>
+                      </Badge>
                     </TableCell>
-                    <TableCell>{student.products.join(", ")}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenStudent(student)}>
-                        Ver Detalhes
-                      </Button>
+                    <TableCell>{student.lastLogin}</TableCell>
+                    <TableCell>{student.registrationDate}</TableCell>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleStudentClick(student)}>
+                            Ver detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={(e) => handleDeleteClick(e, student)}
+                          >
+                            Excluir aluno
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
+
+                {currentItems.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      Nenhum aluno encontrado com os critérios de busca.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Exibindo {currentItems.length} de {filteredStudents.length} alunos
+            </p>
+            <Select value={String(itemsPerPage)} onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[110px]">
+                <SelectValue placeholder="25 por página" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 por página</SelectItem>
+                <SelectItem value="50">50 por página</SelectItem>
+                <SelectItem value="100">100 por página</SelectItem>
+                <SelectItem value="200">200 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              
+              {renderPaginationItems()}
+              
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </CardFooter>
       </Card>
-      
-      {/* Dialog para detalhes do aluno */}
+
+      {/* Student Details Dialog */}
       {selectedStudent && (
-        <Dialog open={!!selectedStudent} onOpenChange={handleCloseStudent}>
-          <DialogContent className="max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+        <Dialog open={!!selectedStudent} onOpenChange={handleCloseStudentDetails}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <div className="flex justify-between items-center">
-                <DialogTitle className="flex items-center">
-                  <User className="mr-2" />
-                  {selectedStudent.name}
-                </DialogTitle>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => setDeleteConfirmOpen(true)}
-                      className="text-red-500 cursor-pointer"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir Aluno
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DialogTitle className="text-2xl flex items-center">
+                <User className="mr-2 h-5 w-5" /> 
+                {selectedStudent.name}
+              </DialogTitle>
+              <DialogDescription>
+                Informações e gerenciamento do aluno
+              </DialogDescription>
             </DialogHeader>
-            <div className="py-2 flex-grow overflow-y-auto px-1">
-              <Tabs defaultValue="details" className="h-full">
-                <TabsList className="mb-2">
-                  <TabsTrigger value="details">Dados do Aluno</TabsTrigger>
-                  <TabsTrigger value="communications">Comunicações</TabsTrigger>
-                  <TabsTrigger value="products">Cursos Adquiridos</TabsTrigger>
-                  <TabsTrigger value="mentoring">Mentorias</TabsTrigger>
-                  <TabsTrigger value="bonus">Bônus Adquiridos</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="details" className="h-full overflow-y-auto">
-                  <Card>
-                    <CardContent className="pt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Nome Completo</h3>
-                          <p className="mt-1 text-base">{selectedStudent.name}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                          <p className="mt-1 text-base">{selectedStudent.email}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
-                          <p className="mt-1 text-base">{selectedStudent.phone}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                          <div className="mt-1 flex items-center space-x-2">
-                            {selectedStudent.status === "Ativo" ? (
-                              <Check className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <X className="h-5 w-5 text-red-500" />
-                            )}
-                            <span>{selectedStudent.status}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Data de Cadastro</h3>
-                          <div className="mt-1 flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                            <span>{new Date(selectedStudent.registrationDate).toLocaleDateString('pt-BR')}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Estado</h3>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" className="mt-1 w-full text-left justify-start">
-                                {selectedStudent.state || "Selecionar Estado"}
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="max-h-56 overflow-y-auto">
-                              {brazilianStates.map((state) => (
-                                <DropdownMenuItem key={state}>
-                                  {state}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Tem acesso à Academia?</h3>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" className="mt-1 w-full flex items-center justify-start">
-                                {selectedStudent.academyAccess === "Sim" ? (
-                                  <Check className="h-4 w-4 mr-2 text-green-500" />
-                                ) : selectedStudent.academyAccess === "Não" ? (
-                                  <X className="h-4 w-4 mr-2 text-red-500" />
-                                ) : (
-                                  <Check className="h-4 w-4 mr-2 text-blue-500" />
-                                )}
-                                {selectedStudent.academyAccess}
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              {academyAccessOptions.map((option) => (
-                                <DropdownMenuItem key={option}>
-                                  {option === "Sim" ? (
-                                    <><Check className="h-4 w-4 mr-2 text-green-500" />{option}</>
-                                  ) : option === "Não" ? (
-                                    <><X className="h-4 w-4 mr-2 text-red-500" />{option}</>
-                                  ) : (
-                                    <><Check className="h-4 w-4 mr-2 text-blue-500" />{option}</>
-                                  )}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
 
-                      {/* Lojas e Sócios em duas colunas */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Lojas do aluno */}
-                        <div>
-                          <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-base font-medium">Lojas</h3>
-                            <Button 
-                              size="sm" 
-                              onClick={() => setShowStoreForm(!showStoreForm)}
-                            >
-                              <Store className="mr-2 h-4 w-4" />
-                              Adicionar Loja
-                            </Button>
-                          </div>
-                          
-                          {showStoreForm && (
-                            <Card className="mb-4">
-                              <CardHeader className="p-3 pb-1">
-                                <CardTitle className="text-base">Nova Loja</CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-3 pt-0">
-                                <Form {...storeForm}>
-                                  <form onSubmit={storeForm.handleSubmit(onSubmitStore)} className="space-y-3">
-                                    <FormField
-                                      control={storeForm.control}
-                                      name="name"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Nome da Loja</FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="Nome da loja" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <FormField
-                                      control={storeForm.control}
-                                      name="channel"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Canal de Venda</FormLabel>
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button variant="outline" className="w-full justify-between">
-                                                {field.value || "Selecione um canal"}
-                                                <span className="sr-only">Toggle menu</span>
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent className="w-full">
-                                              {salesChannels.map((channel) => (
-                                                <DropdownMenuItem
-                                                  key={channel}
-                                                  onClick={() => storeForm.setValue("channel", channel)}
-                                                >
-                                                  {channel}
-                                                </DropdownMenuItem>
-                                              ))}
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <FormField
-                                      control={storeForm.control}
-                                      name="link"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Link da Loja</FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="https://example.com/loja" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <div className="flex justify-end space-x-2">
-                                      <Button 
-                                        type="button" 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => {
-                                          setShowStoreForm(false);
-                                          storeForm.reset();
-                                        }}
-                                      >
-                                        Cancelar
-                                      </Button>
-                                      <Button type="submit" size="sm">Salvar</Button>
-                                    </div>
-                                  </form>
-                                </Form>
-                              </CardContent>
-                            </Card>
-                          )}
-                          
-                          <div className="max-h-[240px] overflow-y-auto">
-                            {selectedStudent.stores && selectedStudent.stores.length > 0 ? (
-                              <div className="space-y-2">
-                                {selectedStudent.stores.map((store, index) => (
-                                  <div key={index} className="flex items-center p-2 border rounded-md">
-                                    <Store className="h-4 w-4 mr-2 text-portal-primary" />
-                                    <div className="flex-1">
-                                      <p className="font-medium text-sm">{store.name}</p>
-                                      <p className="text-xs text-gray-500">Canal: {store.channel}</p>
-                                    </div>
-                                    <div className="flex items-center">
-                                      {store.link && (
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
-                                          className="h-8 w-8 p-0 mr-1"
-                                          asChild
-                                        >
-                                          <a 
-                                            href={store.link} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            title="Abrir loja"
-                                          >
-                                            <ExternalLink className="h-4 w-4 text-blue-500" />
-                                          </a>
-                                        </Button>
-                                      )}
-                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-gray-500 italic text-sm">Nenhuma loja cadastrada.</p>
-                            )}
-                          </div>
-                        </div>
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="w-full grid grid-cols-4">
+                <TabsTrigger value="info">Informações</TabsTrigger>
+                <TabsTrigger value="courses">Cursos</TabsTrigger>
+                <TabsTrigger value="mentorships">Mentorias</TabsTrigger>
+                <TabsTrigger value="bonuses">Bônus</TabsTrigger>
+              </TabsList>
+              
+              {/* Student Info Tab */}
+              <TabsContent value="info" className="pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Email</h3>
+                      <p>{selectedStudent.email}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Telefone</h3>
+                      <p>{selectedStudent.phone}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Data de Registro</h3>
+                      <div className="flex items-center">
+                        <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <p>{selectedStudent.registrationDate}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Status</h3>
+                      <div className="flex items-center">
+                        <Badge 
+                          variant={selectedStudent.status === "Ativo" ? "default" : selectedStudent.status === "Pendente" ? "secondary" : "outline"}
+                          className={
+                            selectedStudent.status === "Ativo" 
+                              ? "bg-green-500" 
+                              : selectedStudent.status === "Pendente" 
+                                ? "bg-yellow-500" 
+                                : "bg-gray-500"
+                          }
+                        >
+                          {selectedStudent.status}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
+                      <p>{selectedStudent.lastLogin}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Observações</h3>
+                  <div className="bg-gray-50 p-3 rounded-md min-h-[100px]">
+                    {selectedStudent.observations ? (
+                      <p>{selectedStudent.observations}</p>
+                    ) : (
+                      <p className="text-muted-foreground italic">Sem observações.</p>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Courses Tab */}
+              <TabsContent value="courses" className="pt-4">
+                <h3 className="text-lg font-semibold mb-4">Cursos Adquiridos</h3>
+                
+                {selectedStudent.courses && selectedStudent.courses.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedStudent.courses.map((course, index) => (
+                      <div key={index} className="p-3 border rounded-md">
+                        <p className="font-medium">{course}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground italic">Nenhum curso adquirido.</p>
+                )}
+              </TabsContent>
 
-                        {/* Sócios do aluno */}
-                        <div>
-                          <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-base font-medium">Sócios</h3>
-                            <Button 
-                              size="sm" 
-                              onClick={() => setShowPartnerForm(!showPartnerForm)}
-                            >
-                              <Users className="mr-2 h-4 w-4" />
-                              Adicionar Sócio
-                            </Button>
-                          </div>
-                          
-                          {showPartnerForm && (
-                            <Card className="mb-4">
-                              <CardHeader className="p-3 pb-1">
-                                <CardTitle className="text-base">Novo Sócio</CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-3 pt-0">
-                                <Form {...partnerForm}>
-                                  <form onSubmit={partnerForm.handleSubmit(onSubmitPartner)} className="space-y-3">
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <FormField
-                                        control={partnerForm.control}
-                                        name="name"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Nome</FormLabel>
-                                            <FormControl>
-                                              <Input placeholder="Nome completo" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                      <FormField
-                                        control={partnerForm.control}
-                                        name="email"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Email</FormLabel>
-                                            <FormControl>
-                                              <Input placeholder="email@exemplo.com" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <FormField
-                                        control={partnerForm.control}
-                                        name="phone"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Telefone</FormLabel>
-                                            <FormControl>
-                                              <Input placeholder="(00) 00000-0000" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                      <FormField
-                                        control={partnerForm.control}
-                                        name="role"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Função</FormLabel>
-                                            <FormControl>
-                                              <Input placeholder="Ex: Sócio Administrativo" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-                                    <div className="flex justify-end space-x-2">
-                                      <Button 
-                                        type="button" 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => {
-                                          setShowPartnerForm(false);
-                                          partnerForm.reset();
-                                        }}
-                                      >
-                                        Cancelar
-                                      </Button>
-                                      <Button type="submit" size="sm">Salvar</Button>
-                                    </div>
-                                  </form>
-                                </Form>
-                              </CardContent>
-                            </Card>
-                          )}
-                          
-                          <div className="max-h-[240px] overflow-y-auto">
-                            {selectedStudent.partners && selectedStudent.partners.length > 0 ? (
-                              <div className="space-y-2">
-                                {selectedStudent.partners.map((partner, index) => (
-                                  <div key={index} className="p-2 border rounded-md">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center">
-                                        <Users className="h-4 w-4 mr-2 text-portal-primary" />
-                                        <p className="font-medium text-sm">{partner.name}</p>
-                                      </div>
-                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                        <Trash2 className="h-3 w-3 text-red-500" />
-                                      </Button>
-                                    </div>
-                                    <div className="ml-6 mt-1 grid grid-cols-2 gap-1 text-xs">
-                                      <p><strong>Email:</strong> {partner.email}</p>
-                                      <p><strong>Telefone:</strong> {partner.phone}</p>
-                                      <p className="col-span-2"><strong>Função:</strong> {partner.role}</p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-gray-500 italic text-sm">Nenhum sócio cadastrado.</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+              {/* Mentorships Tab */}
+              <TabsContent value="mentorships" className="pt-4">
+                <h3 className="text-lg font-semibold mb-4">Mentorias Vinculadas</h3>
                 
-                <TabsContent value="communications" className="h-full overflow-y-auto">
-                  <Card className="h-full flex flex-col">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-xl">Histórico de Comunicações</CardTitle>
-                        <Button onClick={() => setShowCommunicationForm(true)}>
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Nova Comunicação
-                        </Button>
+                {selectedStudent.mentorships && selectedStudent.mentorships.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedStudent.mentorships.map((mentorship, index) => (
+                      <div key={index} className="p-3 border rounded-md">
+                        <p className="font-medium">{mentorship}</p>
                       </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow overflow-y-auto">
-                      {showCommunicationForm && (
-                        <Card className="mb-4">
-                          <CardHeader className="py-2">
-                            <CardTitle className="text-base">Nova Comunicação</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Form {...communicationForm}>
-                              <form onSubmit={communicationForm.handleSubmit(onSubmitCommunication)} className="space-y-3">
-                                <div className="grid grid-cols-2 gap-3">
-                                  <FormField
-                                    control={communicationForm.control}
-                                    name="channel"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Canal</FormLabel>
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between">
-                                              {field.value || "Selecione um canal"}
-                                              <span className="sr-only">Toggle menu</span>
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent className="w-full">
-                                            {communicationChannels.map((channel) => (
-                                              <DropdownMenuItem
-                                                key={channel}
-                                                onClick={() => communicationForm.setValue("channel", channel)}
-                                              >
-                                                {channel}
-                                              </DropdownMenuItem>
-                                            ))}
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={communicationForm.control}
-                                    name="subject"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Assunto</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="Assunto da comunicação" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-                                <FormField
-                                  control={communicationForm.control}
-                                  name="content"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Conteúdo</FormLabel>
-                                      <FormControl>
-                                        <Textarea 
-                                          placeholder="Detalhes da comunicação" 
-                                          className="min-h-24"
-                                          {...field} 
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <div>
-                                  <FormLabel>Anexos</FormLabel>
-                                  <div className="mt-1 flex items-center justify-between rounded-md border border-dashed border-primary/50 px-3 py-2">
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-medium">Adicionar arquivos</span>
-                                      <span className="text-xs text-gray-500">Arraste arquivos ou clique para selecionar</span>
-                                    </div>
-                                    <Button type="button" variant="outline" size="sm">
-                                      <Paperclip className="mr-2 h-4 w-4" />
-                                      Anexar
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="flex justify-end space-x-2">
-                                  <Button 
-                                    type="button" 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => {
-                                      setShowCommunicationForm(false);
-                                      communicationForm.reset();
-                                    }}
-                                  >
-                                    Cancelar
-                                  </Button>
-                                  <Button type="submit" size="sm">Salvar</Button>
-                                </div>
-                              </form>
-                            </Form>
-                          </CardContent>
-                        </Card>
-                      )}
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground italic">Nenhuma mentoria vinculada.</p>
+                )}
+              </TabsContent>
 
-                      {viewingCommunication && (
-                        <Card className="mb-4">
-                          <CardHeader className="py-3">
-                            <div className="flex justify-between items-center">
-                              <CardTitle className="text-base">{viewingCommunication.subject}</CardTitle>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleDeleteCommunication(viewingCommunication.id)}
-                                className="text-red-500 h-8 w-8 p-0"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <CardDescription>
-                              {viewingCommunication.channel} - {viewingCommunication.date}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <p className="whitespace-pre-line text-sm">{viewingCommunication.content}</p>
-                          </CardContent>
-                          <div className="px-6 pb-3 pt-0">
-                            <Button variant="outline" size="sm" onClick={() => setViewingCommunication(null)}>
-                              Voltar para lista
-                            </Button>
-                          </div>
-                        </Card>
-                      )}
-
-                      {!viewingCommunication && communications.length > 0 ? (
-                        <div className="space-y-2">
-                          {communications.map((comm) => (
-                            <div 
-                              key={comm.id} 
-                              className="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50"
-                              onClick={() => setViewingCommunication(comm)}
-                            >
-                              <FileText className="h-5 w-5 mr-3 text-portal-primary flex-shrink-0" />
-                              <div className="flex-1 truncate">
-                                <p className="font-medium">{comm.subject}</p>
-                                <p className="text-sm text-gray-500">
-                                  {comm.channel} - {comm.date}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        !viewingCommunication && <p className="text-gray-500 italic text-sm">Nenhuma comunicação registrada.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+              {/* Bonuses Tab */}
+              <TabsContent value="bonuses" className="pt-4">
+                <h3 className="text-lg font-semibold mb-4">Bônus Vinculados</h3>
                 
-                <TabsContent value="products" className="h-full overflow-y-auto">
-                  <Card className="h-full">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl">Cursos Adquiridos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {selectedStudent.products.map((product, index) => (
-                          <div key={index} className="flex items-center p-2 border rounded-md">
-                            <Package className="h-5 w-5 mr-2 text-portal-primary" />
-                            <span className="text-sm">{product}</span>
-                          </div>
-                        ))}
+                {selectedStudent.bonuses && selectedStudent.bonuses.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedStudent.bonuses.map((bonus, index) => (
+                      <div key={index} className="p-3 border rounded-md">
+                        <p className="font-medium">{bonus}</p>
                       </div>
-                      <Button variant="outline" size="sm" className="mt-3">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Adicionar Curso
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="mentoring" className="h-full overflow-y-auto">
-                  <Card className="h-full">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl">Mentorias</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Data</TableHead>
-                              <TableHead>Horário</TableHead>
-                              <TableHead>Link</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Tipo</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {mentoringSessions.map((session) => (
-                              <TableRow key={session.id}>
-                                <TableCell>{session.date}</TableCell>
-                                <TableCell>{session.time}</TableCell>
-                                <TableCell>
-                                  <a href={`https://${session.link}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                    {session.link}
-                                  </a>
-                                </TableCell>
-                                <TableCell>
-                                  <span className={`px-2 py-1 rounded-full text-xs ${
-                                    session.status === "Agendada" ? "bg-blue-100 text-blue-800" : 
-                                    session.status === "Concluída" ? "bg-green-100 text-green-800" : 
-                                    "bg-amber-100 text-amber-800"
-                                  }`}>
-                                    {session.status}
-                                  </span>
-                                </TableCell>
-                                <TableCell>
-                                  <span className="flex items-center">
-                                    {session.type === "Grupo" ? 
-                                      <Users className="h-4 w-4 mr-1" /> : 
-                                      <User className="h-4 w-4 mr-1" />
-                                    }
-                                    {session.type}
-                                  </span>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        <Button variant="outline" size="sm">
-                          <Calendar className="mr-2 h-4 w-4" />
-                          Agendar Mentoria
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Users className="mr-2 h-4 w-4" />
-                          Adicionar à Mentoria em Grupo
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="bonus" className="h-full overflow-y-auto">
-                  <Card className="h-full">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl">Bônus Adquiridos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedStudent.bonus && selectedStudent.bonus.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {selectedStudent.bonus.map((bonusItem, index) => (
-                            <div key={index} className="flex items-center p-2 border rounded-md">
-                              <Award className="h-5 w-5 mr-2 text-amber-500" />
-                              <span className="text-sm">{bonusItem}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic text-sm">Nenhum bônus adquirido.</p>
-                      )}
-                      <Button variant="outline" size="sm" className="mt-3">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Adicionar Bônus
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground italic">Nenhum bônus vinculado.</p>
+                )}
+              </TabsContent>
+            </Tabs>
+            
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseStudent}>Fechar</Button>
+              <Button variant="outline" onClick={handleCloseStudentDetails}>Fechar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
-      
-      {/* Dialog de confirmação de exclusão */}
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-red-500">Excluir Aluno</DialogTitle>
+            <DialogTitle className="flex items-center text-red-600">
+              <Trash2 className="mr-2 h-5 w-5" /> 
+              Excluir Aluno
+            </DialogTitle>
             <DialogDescription>
-              Esta ação não pode ser desfeita. O aluno será removido permanentemente do sistema.
+              Esta ação não pode ser desfeita. Tem certeza que deseja excluir este aluno?
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p>Deseja realmente excluir <strong>{selectedStudent?.name}</strong>?</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+          
+          {studentToDelete && (
+            <div className="py-4 border-y">
+              <p className="font-medium">{studentToDelete.name}</p>
+              <p className="text-sm text-muted-foreground">{studentToDelete.email}</p>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={() => handleDeleteStudent(selectedStudent?.id)}>
-              <Trash2 className="mr-2 h-4 w-4" /> Confirmar Exclusão
+            <Button variant="destructive" onClick={confirmDeleteStudent}>
+              Sim, excluir aluno
             </Button>
           </DialogFooter>
         </DialogContent>
