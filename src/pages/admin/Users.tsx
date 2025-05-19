@@ -28,10 +28,29 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Plus, Minus, Award, Gift, CreditCard } from "lucide-react";
+import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Plus, Minus, Award, Gift, CreditCard, Save, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 // Sample user data
 const USERS = [
@@ -51,7 +70,8 @@ const USERS = [
     storageValue: 45,
     storageLimit: 100,
     credits: 3,
-    monthlyCredits: 5
+    monthlyCredits: 5,
+    observations: "Cliente interessado em expandir para marketplace."
   },
   {
     id: 2,
@@ -69,7 +89,8 @@ const USERS = [
     storageValue: 78,
     storageLimit: 100,
     credits: 5,
-    monthlyCredits: 5
+    monthlyCredits: 5,
+    observations: ""
   },
   {
     id: 3,
@@ -87,7 +108,8 @@ const USERS = [
     storageValue: 23,
     storageLimit: 100,
     credits: 5,
-    monthlyCredits: 5
+    monthlyCredits: 5,
+    observations: "Administrador principal da plataforma."
   },
   {
     id: 4,
@@ -105,14 +127,15 @@ const USERS = [
     storageValue: 12,
     storageLimit: 100,
     credits: 0,
-    monthlyCredits: 5
+    monthlyCredits: 5,
+    observations: "Cliente em processo de renovação."
   },
   {
     id: 5,
     name: "Roberto Costa",
     email: "roberto.costa@exemplo.com",
     role: "Aluno",
-    status: "Ativo",
+    status: "Pendente",
     lastLogin: "Hoje, 11:05",
     storage: "89MB / 100MB",
     phone: "(51) 98765-4321",
@@ -123,7 +146,8 @@ const USERS = [
     storageValue: 89,
     storageLimit: 100,
     credits: 4,
-    monthlyCredits: 5
+    monthlyCredits: 5,
+    observations: "Aguardando confirmação de dados bancários."
   }
 ];
 
@@ -145,12 +169,26 @@ const AVAILABLE_BONUSES = [
   "Workshop Exclusivo"
 ];
 
+// Schema de validação para o formulário de adicionar/editar usuário
+const userFormSchema = z.object({
+  name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
+  phone: z.string().min(8, { message: "Telefone inválido" }),
+  role: z.string(),
+  status: z.string(),
+  observations: z.string().optional()
+});
+
+type UserFormValues = z.infer<typeof userFormSchema>;
+
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState("info");
   const [showAddCreditDialog, setShowAddCreditDialog] = useState(false);
   const [creditsToAdd, setCreditsToAdd] = useState(1);
+  const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+  const [isEditingUserInfo, setIsEditingUserInfo] = useState(false);
   
   // Filter users based on search query
   const filteredUsers = USERS.filter(user => 
@@ -241,11 +279,77 @@ const Users = () => {
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
+    setIsEditingUserInfo(false);
   };
 
   const handleCloseUserDetails = () => {
     setSelectedUser(null);
     setActiveTab("info");
+    setIsEditingUserInfo(false);
+  };
+
+  const handleSaveUserInfo = (data) => {
+    toast({
+      title: "Informações salvas",
+      description: "As informações do usuário foram atualizadas com sucesso."
+    });
+    setIsEditingUserInfo(false);
+    
+    // In a real app, update user data in the database
+    console.log("Updated user data:", data);
+  };
+  
+  // Formulário para adicionar novo usuário
+  const addUserForm = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      role: "Aluno",
+      status: "Pendente",
+      observations: ""
+    }
+  });
+
+  // Formulário para editar usuário existente
+  const editUserForm = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      name: selectedUser?.name || "",
+      email: selectedUser?.email || "",
+      phone: selectedUser?.phone || "",
+      role: selectedUser?.role || "Aluno",
+      status: selectedUser?.status || "Ativo",
+      observations: selectedUser?.observations || ""
+    }
+  });
+
+  // Reset form values when selected user changes
+  React.useEffect(() => {
+    if (selectedUser) {
+      editUserForm.reset({
+        name: selectedUser.name,
+        email: selectedUser.email,
+        phone: selectedUser.phone,
+        role: selectedUser.role,
+        status: selectedUser.status,
+        observations: selectedUser.observations || ""
+      });
+    }
+  }, [selectedUser, editUserForm]);
+
+  const handleAddUser = (data: UserFormValues) => {
+    // No mundo real, adicionaríamos o usuário ao banco de dados
+    console.log("New user data:", data);
+    
+    toast({
+      title: "Usuário adicionado",
+      description: `O usuário ${data.name} foi adicionado com sucesso.`
+    });
+    
+    setShowAddUserDialog(false);
+    addUserForm.reset();
   };
   
   return (
@@ -255,7 +359,7 @@ const Users = () => {
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Gerenciar Usuários</CardTitle>
-          <Button>
+          <Button onClick={() => setShowAddUserDialog(true)}>
             <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
           </Button>
         </CardHeader>
@@ -300,8 +404,14 @@ const Users = () => {
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        variant={user.status === "Ativo" ? "default" : "secondary"}
-                        className={user.status === "Ativo" ? "bg-green-500" : "bg-gray-500"}
+                        variant={user.status === "Ativo" ? "default" : user.status === "Pendente" ? "secondary" : "outline"}
+                        className={
+                          user.status === "Ativo" 
+                            ? "bg-green-500" 
+                            : user.status === "Pendente" 
+                              ? "bg-yellow-500" 
+                              : "bg-gray-500"
+                        }
                       >
                         {user.status}
                       </Badge>
@@ -345,6 +455,142 @@ const Users = () => {
         </CardContent>
       </Card>
 
+      {/* Add User Dialog */}
+      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do novo usuário no sistema.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...addUserForm}>
+            <form onSubmit={addUserForm.handleSubmit(handleAddUser)} className="space-y-4">
+              <FormField
+                control={addUserForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome completo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(00) 00000-0000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Função *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma função" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Administrador">Administrador</SelectItem>
+                        <SelectItem value="Aluno">Aluno</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Ativo">Ativo</SelectItem>
+                        <SelectItem value="Inativo">Inativo</SelectItem>
+                        <SelectItem value="Pendente">Pendente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="observations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Observações sobre o usuário (opcional)"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowAddUserDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Adicionar Usuário
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {/* User Details Dialog */}
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={handleCloseUserDetails}>
@@ -374,72 +620,230 @@ const Users = () => {
               
               {/* User Info Tab */}
               <TabsContent value="info" className="pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <Mail className="h-5 w-5 text-portal-primary mt-1" />
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground">Email</h3>
-                        <p>{selectedUser.email}</p>
+                {isEditingUserInfo ? (
+                  <Form {...editUserForm}>
+                    <form onSubmit={editUserForm.handleSubmit(handleSaveUserInfo)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <FormField
+                            control={editUserForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email *</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={editUserForm.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Telefone *</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <FormField
+                            control={editUserForm.control}
+                            name="role"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Função *</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Administrador">Administrador</SelectItem>
+                                    <SelectItem value="Aluno">Aluno</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={editUserForm.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Status *</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Ativo">Ativo</SelectItem>
+                                    <SelectItem value="Inativo">Inativo</SelectItem>
+                                    <SelectItem value="Pendente">Pendente</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Phone className="h-5 w-5 text-portal-primary mt-1" />
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground">Telefone</h3>
-                        <p>{selectedUser.phone}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Calendar className="h-5 w-5 text-portal-primary mt-1" />
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground">Data de Registro</h3>
-                        <p>{selectedUser.registrationDate}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Status</h3>
-                      <div className="flex items-center">
-                        <Badge 
-                          variant={selectedUser.status === "Ativo" ? "default" : "secondary"}
-                          className={selectedUser.status === "Ativo" ? "bg-green-500" : "bg-gray-500"}
+                      
+                      <FormField
+                        control={editUserForm.control}
+                        name="observations"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Observações</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Observações sobre o usuário (opcional)"
+                                className="resize-none h-32"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsEditingUserInfo(false)}
                         >
-                          {selectedUser.status}
-                        </Badge>
+                          Cancelar
+                        </Button>
+                        <Button type="submit">
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start space-x-3">
+                          <Mail className="h-5 w-5 text-portal-primary mt-1" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground">Email</h3>
+                            <p>{selectedUser.email}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                          <Phone className="h-5 w-5 text-portal-primary mt-1" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground">Telefone</h3>
+                            <p>{selectedUser.phone}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                          <Calendar className="h-5 w-5 text-portal-primary mt-1" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground">Data de Registro</h3>
+                            <p>{selectedUser.registrationDate}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-1">Status</h3>
+                          <div className="flex items-center">
+                            <Badge 
+                              variant={selectedUser.status === "Ativo" ? "default" : selectedUser.status === "Pendente" ? "secondary" : "outline"}
+                              className={
+                                selectedUser.status === "Ativo" 
+                                  ? "bg-green-500" 
+                                  : selectedUser.status === "Pendente" 
+                                    ? "bg-yellow-500" 
+                                    : "bg-gray-500"
+                              }
+                            >
+                              {selectedUser.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-1">Função</h3>
+                          <Badge variant={selectedUser.role === "Administrador" ? "default" : "outline"}>
+                            {selectedUser.role}
+                          </Badge>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
+                          <p>{selectedUser.lastLogin}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 border-t pt-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-semibold text-muted-foreground">Observações</h3>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="ml-2"
-                          onClick={() => handleToggleStatus(selectedUser.id, selectedUser.status, selectedUser.name)}
+                          onClick={() => setIsEditingUserInfo(true)}
                         >
-                          {selectedUser.status === "Ativo" ? "Desativar" : "Ativar"}
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Editar
                         </Button>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md min-h-[100px]">
+                        {selectedUser.observations ? (
+                          <p>{selectedUser.observations}</p>
+                        ) : (
+                          <p className="text-muted-foreground italic">Sem observações.</p>
+                        )}
                       </div>
                     </div>
                     
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
-                      <p>{selectedUser.lastLogin}</p>
+                    <div className="mt-6 space-y-2">
+                      <h3 className="text-lg font-semibold border-b pb-2">Ações</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleResetPassword(selectedUser.id, selectedUser.name)}>
+                          Resetar senha
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleSendMagicLink(selectedUser.id, selectedUser.name)}>
+                          Enviar magic link
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleToggleStatus(selectedUser.id, selectedUser.status, selectedUser.name)}
+                        >
+                          {selectedUser.status === "Ativo" ? "Desativar usuário" : "Ativar usuário"}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="mt-6 space-y-2">
-                  <h3 className="text-lg font-semibold border-b pb-2">Ações</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleResetPassword(selectedUser.id, selectedUser.name)}>
-                      Resetar senha
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleSendMagicLink(selectedUser.id, selectedUser.name)}>
-                      Enviar magic link
-                    </Button>
-                  </div>
-                </div>
+                  </>
+                )}
               </TabsContent>
               
               {/* Storage Tab */}
