@@ -82,24 +82,24 @@
 }
 
 /* Cores para as colunas do kanban */
-.bg-blue-100 {
+.kanban-blue {
   @apply bg-blue-100 border-blue-200;
 }
-.bg-purple-100 {
+.kanban-purple {
   @apply bg-purple-100 border-purple-200;
 }
-.bg-amber-100 {
+.kanban-amber {
   @apply bg-amber-100 border-amber-200;
 }
-.bg-green-100 {
+.kanban-green {
   @apply bg-green-100 border-green-200;
 }
-.bg-gray-100 {
+.kanban-gray {
   @apply bg-gray-100 border-gray-200;
 }
-.bg-pink-100 {
+.kanban-pink {
   @apply bg-pink-100 border-pink-200;
 }
-.bg-indigo-100 {
+.kanban-indigo {
   @apply bg-indigo-100 border-indigo-200;
 }
