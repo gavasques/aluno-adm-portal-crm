@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,6 +149,7 @@ const SortableColumn = ({ column, children, leadCount }) => {
   );
 };
 
+// Componente de página CRM
 const CRM = () => {
   // Estados para controlar as colunas e leads
   const [columns, setColumns] = useState<Column[]>([
@@ -440,7 +442,7 @@ const CRM = () => {
                     >
                       <div className="space-y-2">
                         {columns.map((column) => {
-                          const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+                          const sortableProps = useSortable({
                             id: column.id,
                             data: {
                               type: 'column',
@@ -449,8 +451,8 @@ const CRM = () => {
                           });
                           
                           const style = {
-                            transform: CSS.Transform.toString(transform),
-                            transition,
+                            transform: CSS.Transform.toString(sortableProps.transform),
+                            transition: sortableProps.transition,
                           };
                           
                           const leadCount = leads.filter(lead => lead.column === column.id).length;
@@ -458,12 +460,16 @@ const CRM = () => {
                           return (
                             <div 
                               key={column.id} 
-                              ref={setNodeRef}
+                              ref={sortableProps.setNodeRef}
                               style={style}
                               className="flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-grab"
                             >
                               <div className="flex items-center">
-                                <Move className="h-4 w-4 mr-3 cursor-grab" {...attributes} {...listeners} />
+                                <Move 
+                                  className="h-4 w-4 mr-3 cursor-grab" 
+                                  {...sortableProps.attributes} 
+                                  {...sortableProps.listeners} 
+                                />
                                 <div className={`w-3 h-3 rounded-full mr-2 ${column.color}`} />
                                 <span>{column.name}</span>
                                 <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-200 rounded-full">{leadCount}</span>
