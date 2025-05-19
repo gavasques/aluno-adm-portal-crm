@@ -1,15 +1,157 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, Search, Settings, Trash2, Move, MoveHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
+import { SortableContext, arrayMove, sortable, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useForm } from "react-hook-form";
+
+// Interface para a tipagem das colunas e leads
+interface Column {
+  id: string;
+  name: string;
+  color: string;
+}
+
+interface Comment {
+  id: number;
+  text: string;
+  date: string;
+  author: string;
+}
+
+interface Lead {
+  id: number;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  column: string;
+  product: string;
+  responsible: string;
+  lastContact: string;
+  comments: Comment[];
+}
+
+// Componente para o card do lead com funcionalidade de arrastar
+const SortableLeadCard = ({ lead, openLeadDetails }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `lead-${lead.id}`,
+    data: {
+      type: 'lead',
+      lead,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="mb-2"
+    >
+      <Card className="cursor-pointer hover:shadow-md" onClick={() => openLeadDetails(lead)}>
+        <CardContent className="p-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-medium text-base">{lead.name}</h4>
+              <p className="text-sm text-gray-600">{lead.company}</p>
+            </div>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-48">
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Produto:</span> {lead.product}</p>
+                  <p><span className="font-medium">Responsável:</span> {lead.responsible}</p>
+                  <p><span className="font-medium">Último contato:</span> {lead.lastContact}</p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+          
+          <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+            <div className="flex items-center">
+              <User className="h-3 w-3 mr-1" />
+              {lead.responsible}
+            </div>
+            <div className="flex items-center">
+              <Package className="h-3 w-3 mr-1" />
+              {lead.product}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Componente para a coluna do kanban com funcionalidade de arrastar
+const SortableColumn = ({ column, children, leadCount }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: column.id,
+    data: {
+      type: 'column',
+      column,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex flex-col"
+    >
+      <div className={`px-3 py-2 rounded-t-md ${column.color} border-b`}>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <MoveHorizontal className="h-4 w-4 mr-2 cursor-grab" {...attributes} {...listeners} />
+            <h3 className="font-medium">{column.name}</h3>
+          </div>
+          <span className="text-sm bg-white px-2 py-1 rounded-full">
+            {leadCount}
+          </span>
+        </div>
+      </div>
+      
+      <div className={`flex-1 p-2 bg-gray-50 rounded-b-md border border-t-0 min-h-[500px]`}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const CRM = () => {
-  // Estado para controlar as colunas do kanban
-  const [columns, setColumns] = useState([
+  // Estados para controlar as colunas e leads
+  const [columns, setColumns] = useState<Column[]>([
     { id: "lead-in", name: "Lead In", color: "bg-blue-100" },
     { id: "presentation", name: "Call Apresentação", color: "bg-purple-100" },
     { id: "meeting", name: "Reunião", color: "bg-amber-100" },
@@ -17,8 +159,8 @@ const CRM = () => {
     { id: "closed", name: "Fechado", color: "bg-gray-100" }
   ]);
   
-  // Estado para controlar os cards de leads
-  const [leads, setLeads] = useState([
+  // Estado para os leads
+  const [leads, setLeads] = useState<Lead[]>([
     { 
       id: 1, 
       name: "João Silva", 
@@ -91,141 +233,387 @@ const CRM = () => {
     }
   ]);
   
-  const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [activeView, setActiveView] = useState("kanban");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isEditingColumns, setIsEditingColumns] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
+  const [selectedColumnForDeletion, setSelectedColumnForDeletion] = useState<Column | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Função para mover um lead para outra coluna
-  const moveLead = (leadId, targetColumn) => {
-    setLeads(leads.map(lead => 
-      lead.id === leadId ? {...lead, column: targetColumn} : lead
-    ));
-  };
-  
+  // Configuração dos sensores para o drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
+
+  // Função para filtrar leads com base na consulta de busca
+  const filteredLeads = leads.filter(
+    (lead) =>
+      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.responsible.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Função para abrir os detalhes de um lead
-  const openLeadDetails = (lead) => {
+  const openLeadDetails = (lead: Lead) => {
     setSelectedLead(lead);
   };
   
-  // Função para adicionar novo lead (seria implementado com formulário real)
-  const addNewLead = () => {
-    // Implementação real adicionaria um formulário para capturar os dados do novo lead
-    console.log("Adicionar novo lead");
+  // Função para adicionar uma nova coluna
+  const addColumn = () => {
+    if (!newColumnName.trim()) return;
+    
+    const newColumnId = `column-${Date.now()}`;
+    const colors = ["bg-blue-100", "bg-purple-100", "bg-amber-100", "bg-green-100", "bg-gray-100", "bg-pink-100", "bg-indigo-100"];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    setColumns([...columns, { 
+      id: newColumnId, 
+      name: newColumnName, 
+      color: randomColor 
+    }]);
+    
+    setNewColumnName("");
   };
   
-  // Função para adicionar novo comentário (seria implementado com formulário real)
-  const addComment = (leadId, comment) => {
-    // Implementação real adicionaria um formulário para capturar o comentário
-    console.log("Adicionar comentário ao lead", leadId);
+  // Função para remover uma coluna
+  const removeColumn = (column: Column) => {
+    // Mover todos os leads dessa coluna para a primeira coluna
+    const firstColumnId = columns[0].id;
+    const updatedLeads = leads.map(lead => 
+      lead.column === column.id ? { ...lead, column: firstColumnId } : lead
+    );
+    
+    setLeads(updatedLeads);
+    setColumns(columns.filter(col => col.id !== column.id));
+    setSelectedColumnForDeletion(null);
+  };
+  
+  // Função para lidar com o término do arrastar e soltar
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    // Lidar com a movimentação de leads entre colunas
+    if (active.data.current?.type === 'lead' && over.data.current?.type === 'column') {
+      const leadId = parseInt(active.id.toString().split('-')[1]);
+      const targetColumn = over.data.current.column.id;
+      
+      setLeads(prev => 
+        prev.map(lead => 
+          lead.id === leadId ? { ...lead, column: targetColumn } : lead
+        )
+      );
+    }
+    // Lidar com a reordenação de colunas
+    else if (active.data.current?.type === 'column' && over.data.current?.type === 'column') {
+      const oldIndex = columns.findIndex(col => col.id === active.id);
+      const newIndex = columns.findIndex(col => col.id === over.id);
+      
+      if (oldIndex !== newIndex) {
+        setColumns(arrayMove(columns, oldIndex, newIndex));
+      }
+    }
+  };
+
+  // Formulário para adicionar comentário
+  const commentForm = useForm();
+  
+  // Função para adicionar novo comentário
+  const addComment = (commentText: string) => {
+    if (!selectedLead || !commentText.trim()) return;
+    
+    const newComment = {
+      id: Date.now(),
+      text: commentText,
+      date: new Date().toLocaleDateString(),
+      author: "Usuário"
+    };
+    
+    setLeads(prev => 
+      prev.map(lead => 
+        lead.id === selectedLead.id 
+          ? { ...lead, comments: [newComment, ...lead.comments] } 
+          : lead
+      )
+    );
+    
+    setSelectedLead(prev => prev ? { 
+      ...prev, 
+      comments: [newComment, ...prev.comments] 
+    } : null);
+    
+    commentForm.reset();
+  };
+
+  // Função para mover um lead para outra coluna
+  const moveLead = (leadId: number, targetColumn: string) => {
+    setLeads(leads.map(lead => 
+      lead.id === leadId ? {...lead, column: targetColumn} : lead
+    ));
+    
+    if (selectedLead && selectedLead.id === leadId) {
+      setSelectedLead({...selectedLead, column: targetColumn});
+    }
   };
   
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-portal-dark">CRM / Gestão de Leads</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Novo Lead
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Novo Lead</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {/* Formulário seria implementado aqui */}
-              <p>Formulário para adicionar um novo lead.</p>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Novo Lead
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Lead</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                {/* Formulário seria implementado aqui */}
+                <p>Formulário para adicionar um novo lead.</p>
+              </div>
+              <DialogFooter>
+                <Button type="submit">Salvar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline">
+                <Settings className="mr-2 h-4 w-4" /> Colunas
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[400px]">
+              <SheetHeader>
+                <SheetTitle>Gerenciar Colunas</SheetTitle>
+              </SheetHeader>
+              <div className="py-6 space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-base font-medium">Adicionar Nova Coluna</h3>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Nome da coluna" 
+                      value={newColumnName}
+                      onChange={(e) => setNewColumnName(e.target.value)}
+                    />
+                    <Button onClick={addColumn}>Adicionar</Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-base font-medium">Ordenar e Excluir Colunas</h3>
+                  <p className="text-sm text-muted-foreground">Arraste para reordenar ou clique no ícone de lixeira para excluir.</p>
+                  
+                  <DndContext 
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => {
+                      const { active, over } = event;
+                      if (over && active.id !== over.id) {
+                        const oldIndex = columns.findIndex(col => col.id === active.id);
+                        const newIndex = columns.findIndex(col => col.id === over.id);
+                        setColumns(arrayMove(columns, oldIndex, newIndex));
+                      }
+                    }}
+                  >
+                    <SortableContext items={columns.map(col => col.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2">
+                        {columns.map((column) => {
+                          const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+                            id: column.id,
+                          });
+                          
+                          const style = {
+                            transform: CSS.Transform.toString(transform),
+                            transition,
+                          };
+                          
+                          const leadCount = leads.filter(lead => lead.column === column.id).length;
+                          
+                          return (
+                            <div 
+                              key={column.id} 
+                              ref={setNodeRef}
+                              style={style}
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-md border"
+                            >
+                              <div className="flex items-center">
+                                <Move className="h-4 w-4 mr-3 cursor-grab" {...attributes} {...listeners} />
+                                <div className={`w-3 h-3 rounded-full mr-2 ${column.color}`} />
+                                <span>{column.name}</span>
+                                <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-200 rounded-full">{leadCount}</span>
+                              </div>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir coluna</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir a coluna "{column.name}"? Todos os leads desta coluna serão movidos para a primeira coluna.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => removeColumn(column)}
+                                      className="bg-red-500 hover:bg-red-700"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              </div>
+              <SheetFooter>
+                <Button variant="outline" onClick={() => setIsEditingColumns(false)}>Fechar</Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
       
       <Card className="mb-6">
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center flex-col sm:flex-row space-y-2 sm:space-y-0">
             <div>
               <CardTitle>Gestão de Leads</CardTitle>
               <CardDescription>
                 Acompanhe o progresso dos seus leads no pipeline de vendas.
               </CardDescription>
             </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant={activeView === "kanban" ? "default" : "outline"} 
-                onClick={() => setActiveView("kanban")}
-              >
-                Kanban
-              </Button>
-              <Button 
-                variant={activeView === "list" ? "default" : "outline"} 
-                onClick={() => setActiveView("list")}
-              >
-                Lista
-              </Button>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Buscar leads..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  variant={activeView === "kanban" ? "default" : "outline"} 
+                  onClick={() => setActiveView("kanban")}
+                >
+                  Kanban
+                </Button>
+                <Button 
+                  variant={activeView === "list" ? "default" : "outline"} 
+                  onClick={() => setActiveView("list")}
+                >
+                  Lista
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {activeView === "kanban" ? (
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {columns.map(column => (
-                <div key={column.id} className="flex flex-col">
-                  <div className={`px-3 py-2 rounded-t-md ${column.color} border-b`}>
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium">{column.name}</h3>
-                      <span className="text-sm bg-white px-2 py-1 rounded-full">
-                        {leads.filter(lead => lead.column === column.id).length}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className={`flex-1 p-2 bg-gray-50 rounded-b-md border border-t-0 min-h-[500px]`}>
-                    {leads.filter(lead => lead.column === column.id).map(lead => (
-                      <Card key={lead.id} className="mb-2 cursor-pointer hover:shadow-md" onClick={() => openLeadDetails(lead)}>
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium text-base">{lead.name}</h4>
-                              <p className="text-sm text-gray-600">{lead.company}</p>
-                            </div>
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-48">
-                                <div className="space-y-1 text-sm">
-                                  <p><span className="font-medium">Produto:</span> {lead.product}</p>
-                                  <p><span className="font-medium">Responsável:</span> {lead.responsible}</p>
-                                  <p><span className="font-medium">Último contato:</span> {lead.lastContact}</p>
-                                </div>
-                              </HoverCardContent>
-                            </HoverCard>
+            <div className="relative">
+              <div 
+                ref={scrollContainerRef} 
+                className="overflow-x-auto pb-4" 
+                style={{ maxWidth: '100%' }}
+              >
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-auto-fit gap-4" style={{ minWidth: 'max-content' }}>
+                    <SortableContext items={columns.map(col => col.id)}>
+                      {columns.map(column => {
+                        const columnLeads = filteredLeads.filter(lead => lead.column === column.id);
+                        
+                        return (
+                          <div key={column.id} className="w-[280px]">
+                            <SortableColumn 
+                              column={column} 
+                              leadCount={columnLeads.length}
+                            >
+                              <SortableContext items={columnLeads.map(lead => `lead-${lead.id}`)}>
+                                {columnLeads.map(lead => (
+                                  <SortableLeadCard 
+                                    key={lead.id} 
+                                    lead={lead} 
+                                    openLeadDetails={openLeadDetails} 
+                                  />
+                                ))}
+                              </SortableContext>
+                            </SortableColumn>
                           </div>
-                          
-                          <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
-                            <div className="flex items-center">
-                              <User className="h-3 w-3 mr-1" />
-                              {lead.responsible}
-                            </div>
-                            <div className="flex items-center">
-                              <Package className="h-3 w-3 mr-1" />
-                              {lead.product}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                        );
+                      })}
+                    </SortableContext>
                   </div>
-                </div>
-              ))}
+                </DndContext>
+              </div>
+              <div className="absolute top-1/2 -left-4 transform -translate-y-1/2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full bg-white shadow-md"
+                  onClick={() => {
+                    if (scrollContainerRef.current) {
+                      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="absolute top-1/2 -right-4 transform -translate-y-1/2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full bg-white shadow-md"
+                  onClick={() => {
+                    if (scrollContainerRef.current) {
+                      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
+              <div className="mb-4 w-full max-w-sm">
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    placeholder="Buscar leads..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-50">
@@ -239,7 +627,7 @@ const CRM = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {leads.map(lead => {
+                  {filteredLeads.map(lead => {
                     const column = columns.find(col => col.id === lead.column);
                     return (
                       <tr key={lead.id} className="border-b hover:bg-gray-50">
@@ -248,9 +636,11 @@ const CRM = () => {
                         <td className="px-4 py-3">{lead.product}</td>
                         <td className="px-4 py-3">{lead.responsible}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs ${column.color}`}>
-                            {column.name}
-                          </span>
+                          {column && (
+                            <span className={`px-2 py-1 rounded-full text-xs ${column.color}`}>
+                              {column.name}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3">{lead.lastContact}</td>
                         <td className="px-4 py-3">
@@ -263,6 +653,11 @@ const CRM = () => {
                   })}
                 </tbody>
               </table>
+              {filteredLeads.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhum lead encontrado com os critérios de busca.
+                </div>
+              )}
             </div>
           )}
         </CardContent>
