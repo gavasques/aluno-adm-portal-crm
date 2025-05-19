@@ -1,20 +1,452 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users } from "lucide-react";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 
 const CRM = () => {
+  // Estado para controlar as colunas do kanban
+  const [columns, setColumns] = useState([
+    { id: "lead-in", name: "Lead In", color: "bg-blue-100" },
+    { id: "presentation", name: "Call Apresentação", color: "bg-purple-100" },
+    { id: "meeting", name: "Reunião", color: "bg-amber-100" },
+    { id: "follow-up", name: "Acompanhamento", color: "bg-green-100" },
+    { id: "closed", name: "Fechado", color: "bg-gray-100" }
+  ]);
+  
+  // Estado para controlar os cards de leads
+  const [leads, setLeads] = useState([
+    { 
+      id: 1, 
+      name: "João Silva", 
+      company: "TechSolutions", 
+      email: "joao@techsolutions.com",
+      phone: "(11) 98765-4321",
+      column: "lead-in",
+      product: "Curso Avançado",
+      responsible: "Ana Carolina",
+      lastContact: "21/05/2025",
+      comments: [
+        { id: 1, text: "Cliente interessado no curso avançado", date: "20/05/2025", author: "Ana Carolina" }
+      ]
+    },
+    { 
+      id: 2, 
+      name: "Maria Oliveira", 
+      company: "E-commerce Brasil", 
+      email: "maria@ecommercebrasil.com",
+      phone: "(11) 91234-5678",
+      column: "presentation",
+      product: "Mentoria Individual",
+      responsible: "Pedro Santos",
+      lastContact: "18/05/2025",
+      comments: [
+        { id: 1, text: "Cliente solicitou mais informações sobre a mentoria", date: "18/05/2025", author: "Pedro Santos" }
+      ]
+    },
+    { 
+      id: 3, 
+      name: "Carlos Mendes", 
+      company: "Loja Virtual", 
+      email: "carlos@lojavirtual.com",
+      phone: "(11) 93333-4444",
+      column: "meeting",
+      product: "Pacote Completo",
+      responsible: "Ana Carolina",
+      lastContact: "15/05/2025",
+      comments: [
+        { id: 1, text: "Reunião agendada para 25/05", date: "15/05/2025", author: "Ana Carolina" }
+      ]
+    },
+    { 
+      id: 4, 
+      name: "Amanda Costa", 
+      company: "Moda Online", 
+      email: "amanda@modaonline.com",
+      phone: "(11) 95555-6666",
+      column: "follow-up",
+      product: "Mentoria em Grupo",
+      responsible: "Pedro Santos",
+      lastContact: "12/05/2025",
+      comments: [
+        { id: 1, text: "Aguardando retorno sobre proposta", date: "12/05/2025", author: "Pedro Santos" }
+      ]
+    },
+    { 
+      id: 5, 
+      name: "Roberto Almeida", 
+      company: "Super Digital", 
+      email: "roberto@superdigital.com",
+      phone: "(11) 97777-8888",
+      column: "closed",
+      product: "Curso Básico",
+      responsible: "Ana Carolina",
+      lastContact: "08/05/2025",
+      comments: [
+        { id: 1, text: "Contrato assinado", date: "08/05/2025", author: "Ana Carolina" }
+      ]
+    }
+  ]);
+  
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [activeView, setActiveView] = useState("kanban");
+  
+  // Função para mover um lead para outra coluna
+  const moveLead = (leadId, targetColumn) => {
+    setLeads(leads.map(lead => 
+      lead.id === leadId ? {...lead, column: targetColumn} : lead
+    ));
+  };
+  
+  // Função para abrir os detalhes de um lead
+  const openLeadDetails = (lead) => {
+    setSelectedLead(lead);
+  };
+  
+  // Função para adicionar novo lead (seria implementado com formulário real)
+  const addNewLead = () => {
+    // Implementação real adicionaria um formulário para capturar os dados do novo lead
+    console.log("Adicionar novo lead");
+  };
+  
+  // Função para adicionar novo comentário (seria implementado com formulário real)
+  const addComment = (leadId, comment) => {
+    // Implementação real adicionaria um formulário para capturar o comentário
+    console.log("Adicionar comentário ao lead", leadId);
+  };
+  
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8 text-portal-dark">CRM / Gestão de Leads</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-portal-dark">CRM / Gestão de Leads</h1>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Novo Lead
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Adicionar Novo Lead</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {/* Formulário seria implementado aqui */}
+              <p>Formulário para adicionar um novo lead.</p>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
       
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Gerenciar Leads</CardTitle>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Gestão de Leads</CardTitle>
+              <CardDescription>
+                Acompanhe o progresso dos seus leads no pipeline de vendas.
+              </CardDescription>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant={activeView === "kanban" ? "default" : "outline"} 
+                onClick={() => setActiveView("kanban")}
+              >
+                Kanban
+              </Button>
+              <Button 
+                variant={activeView === "list" ? "default" : "outline"} 
+                onClick={() => setActiveView("list")}
+              >
+                Lista
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <p>Conteúdo da página de CRM e gestão de leads em desenvolvimento.</p>
+          {activeView === "kanban" ? (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {columns.map(column => (
+                <div key={column.id} className="flex flex-col">
+                  <div className={`px-3 py-2 rounded-t-md ${column.color} border-b`}>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">{column.name}</h3>
+                      <span className="text-sm bg-white px-2 py-1 rounded-full">
+                        {leads.filter(lead => lead.column === column.id).length}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className={`flex-1 p-2 bg-gray-50 rounded-b-md border border-t-0 min-h-[500px]`}>
+                    {leads.filter(lead => lead.column === column.id).map(lead => (
+                      <Card key={lead.id} className="mb-2 cursor-pointer hover:shadow-md" onClick={() => openLeadDetails(lead)}>
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium text-base">{lead.name}</h4>
+                              <p className="text-sm text-gray-600">{lead.company}</p>
+                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-48">
+                                <div className="space-y-1 text-sm">
+                                  <p><span className="font-medium">Produto:</span> {lead.product}</p>
+                                  <p><span className="font-medium">Responsável:</span> {lead.responsible}</p>
+                                  <p><span className="font-medium">Último contato:</span> {lead.lastContact}</p>
+                                </div>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                          
+                          <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+                            <div className="flex items-center">
+                              <User className="h-3 w-3 mr-1" />
+                              {lead.responsible}
+                            </div>
+                            <div className="flex items-center">
+                              <Package className="h-3 w-3 mr-1" />
+                              {lead.product}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-2 text-left">Nome</th>
+                    <th className="px-4 py-2 text-left">Empresa</th>
+                    <th className="px-4 py-2 text-left">Produto</th>
+                    <th className="px-4 py-2 text-left">Responsável</th>
+                    <th className="px-4 py-2 text-left">Estágio</th>
+                    <th className="px-4 py-2 text-left">Último Contato</th>
+                    <th className="px-4 py-2 text-left">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.map(lead => {
+                    const column = columns.find(col => col.id === lead.column);
+                    return (
+                      <tr key={lead.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3">{lead.name}</td>
+                        <td className="px-4 py-3">{lead.company}</td>
+                        <td className="px-4 py-3">{lead.product}</td>
+                        <td className="px-4 py-3">{lead.responsible}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${column.color}`}>
+                            {column.name}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">{lead.lastContact}</td>
+                        <td className="px-4 py-3">
+                          <Button variant="ghost" size="sm" onClick={() => openLeadDetails(lead)}>
+                            Ver Detalhes
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
+      
+      {/* Dialog para detalhes do lead */}
+      {selectedLead && (
+        <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <User className="mr-2" />
+                {selectedLead.name} - {selectedLead.company}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Tabs defaultValue="details">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="details">Detalhes do Lead</TabsTrigger>
+                  <TabsTrigger value="comments">Comentários</TabsTrigger>
+                  <TabsTrigger value="history">Histórico</TabsTrigger>
+                  <TabsTrigger value="documents">Documentos</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="details">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Nome</h3>
+                          <p className="mt-1 text-base">{selectedLead.name}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Empresa</h3>
+                          <p className="mt-1 text-base">{selectedLead.company}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                          <p className="mt-1 text-base">{selectedLead.email}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
+                          <p className="mt-1 text-base">{selectedLead.phone}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Produto</h3>
+                          <p className="mt-1 text-base">{selectedLead.product}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Responsável</h3>
+                          <p className="mt-1 text-base">{selectedLead.responsible}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Estágio</h3>
+                          <p className="mt-1 text-base">{columns.find(col => col.id === selectedLead.column)?.name}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Último Contato</h3>
+                          <p className="mt-1 text-base">{selectedLead.lastContact}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6">
+                        <h3 className="text-sm font-medium text-gray-500 mb-2">Mover para estágio</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {columns.map(column => (
+                            <Button 
+                              key={column.id}
+                              variant={selectedLead.column === column.id ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => moveLead(selectedLead.id, column.id)}
+                            >
+                              {column.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="comments">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Comentários</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {selectedLead.comments.map(comment => (
+                          <div key={comment.id} className="border rounded-md p-3">
+                            <p className="text-sm">{comment.text}</p>
+                            <div className="flex justify-between mt-2 text-xs text-gray-500">
+                              <span>{comment.author}</span>
+                              <span>{comment.date}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium mb-2">Adicionar comentário</h4>
+                        <textarea 
+                          className="w-full border rounded-md p-2 min-h-[100px]" 
+                          placeholder="Digite seu comentário..."
+                        />
+                        <Button className="mt-2">
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Adicionar Comentário
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="history">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Histórico de Atividades</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="relative border-l-2 border-gray-200 ml-3 pl-8 pb-2">
+                        <div className="mb-8 relative">
+                          <div className="absolute -left-11 mt-1.5 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                            <Calendar className="text-white h-3 w-3" />
+                          </div>
+                          <p className="font-medium">Reunião agendada</p>
+                          <p className="text-sm text-gray-600">25/05/2025 às 14:30</p>
+                          <p className="text-sm mt-1">Apresentação do produto para o cliente.</p>
+                        </div>
+                        
+                        <div className="mb-8 relative">
+                          <div className="absolute -left-11 mt-1.5 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <MessageSquare className="text-white h-3 w-3" />
+                          </div>
+                          <p className="font-medium">Contato por email</p>
+                          <p className="text-sm text-gray-600">20/05/2025</p>
+                          <p className="text-sm mt-1">Envio de proposta comercial.</p>
+                        </div>
+                        
+                        <div className="relative">
+                          <div className="absolute -left-11 mt-1.5 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                            <User className="text-white h-3 w-3" />
+                          </div>
+                          <p className="font-medium">Lead criado</p>
+                          <p className="text-sm text-gray-600">15/05/2025</p>
+                          <p className="text-sm mt-1">Lead adicionado ao sistema.</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="documents">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Documentos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center p-3 border rounded-md">
+                          <span className="flex-1">Proposta_Comercial.pdf</span>
+                          <Button variant="ghost" size="sm">Ver</Button>
+                          <Button variant="ghost" size="sm">Download</Button>
+                        </div>
+                        <div className="flex items-center p-3 border rounded-md">
+                          <span className="flex-1">Contrato.docx</span>
+                          <Button variant="ghost" size="sm">Ver</Button>
+                          <Button variant="ghost" size="sm">Download</Button>
+                        </div>
+                      </div>
+                      <Button variant="outline" className="mt-4">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar Documento
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedLead(null)}>Fechar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
