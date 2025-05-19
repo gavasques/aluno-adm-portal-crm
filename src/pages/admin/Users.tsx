@@ -75,7 +75,7 @@ const USERS = [
     storageValue: 45,
     storageLimit: 100,
     observations: "Cliente interessado em expandir para marketplace.",
-    credits: 500
+    credits: 5 // Updated to default 5 credits
   },
   {
     id: 2,
@@ -90,7 +90,7 @@ const USERS = [
     storageValue: 78,
     storageLimit: 100,
     observations: "",
-    credits: 250
+    credits: 5 // Updated to default 5 credits
   },
   {
     id: 3,
@@ -105,7 +105,7 @@ const USERS = [
     storageValue: 23,
     storageLimit: 100,
     observations: "Administrador principal da plataforma.",
-    credits: 0
+    credits: 5 // Updated to default 5 credits
   },
   {
     id: 4,
@@ -120,7 +120,7 @@ const USERS = [
     storageValue: 12,
     storageLimit: 100,
     observations: "Cliente em processo de renovação.",
-    credits: 100
+    credits: 5 // Updated to default 5 credits
   },
   {
     id: 5,
@@ -135,7 +135,7 @@ const USERS = [
     storageValue: 89,
     storageLimit: 100,
     observations: "Aguardando confirmação de dados bancários.",
-    credits: 50
+    credits: 5 // Updated to default 5 credits
   }
 ];
 
@@ -159,6 +159,11 @@ const creditsFormSchema = z.object({
   }),
   operation: z.enum(["add", "subtract"])
 });
+
+// Configuração para reset mensal de créditos
+// Em um ambiente real, isso seria implementado em um cronjob ou similar no backend
+// para resetar os créditos de todos os usuários no início de cada mês
+const DEFAULT_CREDITS = 5;
 
 type UserFormValues = z.infer<typeof userFormSchema>;
 type CreditsFormValues = z.infer<typeof creditsFormSchema>;
@@ -350,11 +355,17 @@ const Users = () => {
 
   const handleAddUser = (data: UserFormValues) => {
     // No mundo real, adicionaríamos o usuário ao banco de dados
-    console.log("New user data:", data);
+    // com 5 créditos iniciais
+    const newUserData = {
+      ...data,
+      credits: DEFAULT_CREDITS // Define 5 créditos iniciais para novos usuários
+    };
+    
+    console.log("New user data:", newUserData);
     
     toast({
       title: "Usuário adicionado",
-      description: `O usuário ${data.name} foi adicionado com sucesso.`
+      description: `O usuário ${data.name} foi adicionado com sucesso com ${DEFAULT_CREDITS} créditos iniciais.`
     });
     
     setShowAddUserDialog(false);
@@ -682,7 +693,7 @@ const Users = () => {
           <DialogHeader>
             <DialogTitle>Adicionar Novo Usuário</DialogTitle>
             <DialogDescription>
-              Preencha os dados do novo usuário no sistema.
+              Preencha os dados do novo usuário no sistema. O usuário receberá {DEFAULT_CREDITS} créditos iniciais.
             </DialogDescription>
           </DialogHeader>
           
@@ -1129,44 +1140,9 @@ const Users = () => {
                 </div>
               </TabsContent>
               
-              {/* Credits Tab (NEW) */}
+              {/* Credits Tab */}
               <TabsContent value="credits" className="pt-4">
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-3">
-                    <CreditCard className="h-5 w-5 text-portal-primary mt-1" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-muted-foreground">Saldo de Créditos</h3>
-                      <div className="flex items-center mt-2">
-                        <div className="text-3xl font-bold text-portal-primary">
-                          {selectedUser.credits}
-                        </div>
-                        <div className="ml-2 text-sm text-muted-foreground">
-                          créditos disponíveis
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold mb-3">Gerenciar Créditos</h3>
-                    <Button 
-                      onClick={() => setShowCreditsDialog(true)}
-                      className="bg-portal-primary hover:bg-portal-primary/90"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Adicionar/Remover Créditos
-                    </Button>
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold mb-2">Histórico de Transações</h3>
-                    <div className="bg-gray-50 rounded-md p-4">
-                      <div className="text-center text-sm text-muted-foreground py-6">
-                        Nenhuma transação de créditos registrada.
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {renderCreditTabContent()}
               </TabsContent>
             </Tabs>
             
@@ -1177,7 +1153,7 @@ const Users = () => {
         </Dialog>
       )}
       
-      {/* Credits Dialog (NEW) */}
+      {/* Credits Dialog */}
       {selectedUser && (
         <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
           <DialogContent className="max-w-md">
@@ -1185,6 +1161,9 @@ const Users = () => {
               <DialogTitle>Gerenciar Créditos</DialogTitle>
               <DialogDescription>
                 Adicione ou remova créditos para {selectedUser.name}.
+                <p className="text-xs text-muted-foreground mt-2">
+                  Nota: Os créditos são renovados para {DEFAULT_CREDITS} no início de cada mês.
+                </p>
               </DialogDescription>
             </DialogHeader>
             
