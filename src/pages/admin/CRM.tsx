@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, Search, Settings, Trash2, Move, MoveHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
-import { SortableContext, arrayMove, sortable, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useForm } from "react-hook-form";
 
@@ -152,11 +151,11 @@ const SortableColumn = ({ column, children, leadCount }) => {
 const CRM = () => {
   // Estados para controlar as colunas e leads
   const [columns, setColumns] = useState<Column[]>([
-    { id: "lead-in", name: "Lead In", color: "bg-blue-100" },
-    { id: "presentation", name: "Call Apresentação", color: "bg-purple-100" },
-    { id: "meeting", name: "Reunião", color: "bg-amber-100" },
-    { id: "follow-up", name: "Acompanhamento", color: "bg-green-100" },
-    { id: "closed", name: "Fechado", color: "bg-gray-100" }
+    { id: "lead-in", name: "Lead In", color: "kanban-blue" },
+    { id: "presentation", name: "Call Apresentação", color: "kanban-purple" },
+    { id: "meeting", name: "Reunião", color: "kanban-amber" },
+    { id: "follow-up", name: "Acompanhamento", color: "kanban-green" },
+    { id: "closed", name: "Fechado", color: "kanban-gray" }
   ]);
   
   // Estado para os leads
@@ -270,7 +269,7 @@ const CRM = () => {
     if (!newColumnName.trim()) return;
     
     const newColumnId = `column-${Date.now()}`;
-    const colors = ["bg-blue-100", "bg-purple-100", "bg-amber-100", "bg-green-100", "bg-gray-100", "bg-pink-100", "bg-indigo-100"];
+    const colors = ["kanban-blue", "kanban-purple", "kanban-amber", "kanban-green", "kanban-gray", "kanban-pink", "kanban-indigo"];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     
     setColumns([...columns, { 
