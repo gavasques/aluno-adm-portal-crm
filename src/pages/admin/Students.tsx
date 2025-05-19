@@ -322,7 +322,7 @@ const Students = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -364,7 +364,7 @@ const Students = () => {
       {/* Dialog para detalhes do aluno */}
       {selectedStudent && (
         <Dialog open={!!selectedStudent} onOpenChange={handleCloseStudent}>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
             <DialogHeader>
               <div className="flex justify-between items-center">
                 <DialogTitle className="flex items-center">
@@ -391,9 +391,9 @@ const Students = () => {
                 </DropdownMenu>
               </div>
             </DialogHeader>
-            <div className="py-4">
-              <Tabs defaultValue="details">
-                <TabsList className="mb-4">
+            <div className="py-2 flex-grow overflow-y-auto">
+              <Tabs defaultValue="details" className="h-full">
+                <TabsList className="mb-2">
                   <TabsTrigger value="details">Dados do Aluno</TabsTrigger>
                   <TabsTrigger value="communications">Comunicações</TabsTrigger>
                   <TabsTrigger value="products">Cursos Adquiridos</TabsTrigger>
@@ -401,10 +401,10 @@ const Students = () => {
                   <TabsTrigger value="bonus">Bônus Adquiridos</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="details">
+                <TabsContent value="details" className="h-full overflow-y-auto">
                   <Card>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CardContent className="pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Nome Completo</h3>
                           <p className="mt-1 text-base">{selectedStudent.name}</p>
@@ -439,7 +439,7 @@ const Students = () => {
                           <h3 className="text-sm font-medium text-gray-500">Estado</h3>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="outline" className="mt-1">
+                              <Button variant="outline" className="mt-1 w-full text-left justify-start">
                                 {selectedStudent.state || "Selecionar Estado"}
                               </Button>
                             </DropdownMenuTrigger>
@@ -456,7 +456,7 @@ const Students = () => {
                           <h3 className="text-sm font-medium text-gray-500">Tem acesso à Academia?</h3>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="outline" className="mt-1 flex items-center">
+                              <Button variant="outline" className="mt-1 w-full flex items-center justify-start">
                                 {selectedStudent.academyAccess === "Sim" ? (
                                   <Check className="h-4 w-4 mr-2 text-green-500" />
                                 ) : selectedStudent.academyAccess === "Não" ? (
@@ -484,46 +484,268 @@ const Students = () => {
                         </div>
                       </div>
 
-                      {/* Lojas do aluno */}
-                      <div className="mt-8">
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-base font-medium">Lojas</h3>
-                          <Button 
-                            size="sm" 
-                            onClick={() => setShowStoreForm(!showStoreForm)}
-                          >
-                            <Store className="mr-2 h-4 w-4" />
-                            Adicionar Loja
-                          </Button>
+                      {/* Lojas e Sócios em duas colunas */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Lojas do aluno */}
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-base font-medium">Lojas</h3>
+                            <Button 
+                              size="sm" 
+                              onClick={() => setShowStoreForm(!showStoreForm)}
+                            >
+                              <Store className="mr-2 h-4 w-4" />
+                              Adicionar Loja
+                            </Button>
+                          </div>
+                          
+                          {showStoreForm && (
+                            <Card className="mb-4">
+                              <CardHeader className="p-3 pb-1">
+                                <CardTitle className="text-base">Nova Loja</CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-3 pt-0">
+                                <Form {...storeForm}>
+                                  <form onSubmit={storeForm.handleSubmit(onSubmitStore)} className="space-y-3">
+                                    <FormField
+                                      control={storeForm.control}
+                                      name="name"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Nome da Loja</FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="Nome da loja" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={storeForm.control}
+                                      name="channel"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Canal de Venda</FormLabel>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button variant="outline" className="w-full justify-between">
+                                                {field.value || "Selecione um canal"}
+                                                <span className="sr-only">Toggle menu</span>
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent className="w-full">
+                                              {salesChannels.map((channel) => (
+                                                <DropdownMenuItem
+                                                  key={channel}
+                                                  onClick={() => storeForm.setValue("channel", channel)}
+                                                >
+                                                  {channel}
+                                                </DropdownMenuItem>
+                                              ))}
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <div className="flex justify-end space-x-2">
+                                      <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          setShowStoreForm(false);
+                                          storeForm.reset();
+                                        }}
+                                      >
+                                        Cancelar
+                                      </Button>
+                                      <Button type="submit" size="sm">Salvar</Button>
+                                    </div>
+                                  </form>
+                                </Form>
+                              </CardContent>
+                            </Card>
+                          )}
+                          
+                          <div className="max-h-[240px] overflow-y-auto">
+                            {selectedStudent.stores && selectedStudent.stores.length > 0 ? (
+                              <div className="space-y-2">
+                                {selectedStudent.stores.map((store, index) => (
+                                  <div key={index} className="flex items-center p-2 border rounded-md">
+                                    <Store className="h-4 w-4 mr-2 text-portal-primary" />
+                                    <div className="flex-1">
+                                      <p className="font-medium text-sm">{store.name}</p>
+                                      <p className="text-xs text-gray-500">Canal: {store.channel}</p>
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                      <Trash2 className="h-3 w-3 text-red-500" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 italic text-sm">Nenhuma loja cadastrada.</p>
+                            )}
+                          </div>
                         </div>
-                        
-                        {showStoreForm && (
-                          <Card className="mb-4">
-                            <CardHeader>
-                              <CardTitle className="text-lg">Nova Loja</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <Form {...storeForm}>
-                                <form onSubmit={storeForm.handleSubmit(onSubmitStore)} className="space-y-4">
+
+                        {/* Sócios do aluno */}
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-base font-medium">Sócios</h3>
+                            <Button 
+                              size="sm" 
+                              onClick={() => setShowPartnerForm(!showPartnerForm)}
+                            >
+                              <Users className="mr-2 h-4 w-4" />
+                              Adicionar Sócio
+                            </Button>
+                          </div>
+                          
+                          {showPartnerForm && (
+                            <Card className="mb-4">
+                              <CardHeader className="p-3 pb-1">
+                                <CardTitle className="text-base">Novo Sócio</CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-3 pt-0">
+                                <Form {...partnerForm}>
+                                  <form onSubmit={partnerForm.handleSubmit(onSubmitPartner)} className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <FormField
+                                        control={partnerForm.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Nome</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="Nome completo" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={partnerForm.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="email@exemplo.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <FormField
+                                        control={partnerForm.control}
+                                        name="phone"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Telefone</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="(00) 00000-0000" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={partnerForm.control}
+                                        name="role"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Função</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="Ex: Sócio Administrativo" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+                                    <div className="flex justify-end space-x-2">
+                                      <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          setShowPartnerForm(false);
+                                          partnerForm.reset();
+                                        }}
+                                      >
+                                        Cancelar
+                                      </Button>
+                                      <Button type="submit" size="sm">Salvar</Button>
+                                    </div>
+                                  </form>
+                                </Form>
+                              </CardContent>
+                            </Card>
+                          )}
+                          
+                          <div className="max-h-[240px] overflow-y-auto">
+                            {selectedStudent.partners && selectedStudent.partners.length > 0 ? (
+                              <div className="space-y-2">
+                                {selectedStudent.partners.map((partner, index) => (
+                                  <div key={index} className="p-2 border rounded-md">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center">
+                                        <Users className="h-4 w-4 mr-2 text-portal-primary" />
+                                        <p className="font-medium text-sm">{partner.name}</p>
+                                      </div>
+                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                        <Trash2 className="h-3 w-3 text-red-500" />
+                                      </Button>
+                                    </div>
+                                    <div className="ml-6 mt-1 grid grid-cols-2 gap-1 text-xs">
+                                      <p><strong>Email:</strong> {partner.email}</p>
+                                      <p><strong>Telefone:</strong> {partner.phone}</p>
+                                      <p className="col-span-2"><strong>Função:</strong> {partner.role}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 italic text-sm">Nenhum sócio cadastrado.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="communications" className="h-full overflow-y-auto">
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-xl">Histórico de Comunicações</CardTitle>
+                        <Button onClick={() => setShowCommunicationForm(true)}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Nova Comunicação
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow overflow-y-auto">
+                      {showCommunicationForm && (
+                        <Card className="mb-4">
+                          <CardHeader className="py-2">
+                            <CardTitle className="text-base">Nova Comunicação</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Form {...communicationForm}>
+                              <form onSubmit={communicationForm.handleSubmit(onSubmitCommunication)} className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
                                   <FormField
-                                    control={storeForm.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Nome da Loja</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="Nome da loja" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={storeForm.control}
+                                    control={communicationForm.control}
                                     name="channel"
                                     render={({ field }) => (
                                       <FormItem>
-                                        <FormLabel>Canal de Venda</FormLabel>
+                                        <FormLabel>Canal</FormLabel>
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
                                             <Button variant="outline" className="w-full justify-between">
@@ -531,11 +753,11 @@ const Students = () => {
                                               <span className="sr-only">Toggle menu</span>
                                             </Button>
                                           </DropdownMenuTrigger>
-                                          <DropdownMenuContent className="w-56">
-                                            {salesChannels.map((channel) => (
+                                          <DropdownMenuContent className="w-full">
+                                            {communicationChannels.map((channel) => (
                                               <DropdownMenuItem
                                                 key={channel}
-                                                onClick={() => storeForm.setValue("channel", channel)}
+                                                onClick={() => communicationForm.setValue("channel", channel)}
                                               >
                                                 {channel}
                                               </DropdownMenuItem>
@@ -546,227 +768,20 @@ const Students = () => {
                                       </FormItem>
                                     )}
                                   />
-                                  <div className="flex justify-end space-x-2">
-                                    <Button 
-                                      type="button" 
-                                      variant="outline" 
-                                      onClick={() => {
-                                        setShowStoreForm(false);
-                                        storeForm.reset();
-                                      }}
-                                    >
-                                      Cancelar
-                                    </Button>
-                                    <Button type="submit">Salvar</Button>
-                                  </div>
-                                </form>
-                              </Form>
-                            </CardContent>
-                          </Card>
-                        )}
-                        
-                        {selectedStudent.stores && selectedStudent.stores.length > 0 ? (
-                          <div className="space-y-3">
-                            {selectedStudent.stores.map((store, index) => (
-                              <div key={index} className="flex items-center p-3 border rounded-md">
-                                <Store className="h-5 w-5 mr-3 text-portal-primary" />
-                                <div className="flex-1">
-                                  <p className="font-medium">{store.name}</p>
-                                  <p className="text-sm text-gray-500">Canal: {store.channel}</p>
+                                  <FormField
+                                    control={communicationForm.control}
+                                    name="subject"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Assunto</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Assunto da comunicação" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
                                 </div>
-                                <Button variant="ghost" size="sm">
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 italic">Nenhuma loja cadastrada.</p>
-                        )}
-                      </div>
-
-                      {/* Sócios do aluno */}
-                      <div className="mt-8">
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-base font-medium">Sócios</h3>
-                          <Button 
-                            size="sm" 
-                            onClick={() => setShowPartnerForm(!showPartnerForm)}
-                          >
-                            <Users className="mr-2 h-4 w-4" />
-                            Adicionar Sócio
-                          </Button>
-                        </div>
-                        
-                        {showPartnerForm && (
-                          <Card className="mb-4">
-                            <CardHeader>
-                              <CardTitle className="text-lg">Novo Sócio</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <Form {...partnerForm}>
-                                <form onSubmit={partnerForm.handleSubmit(onSubmitPartner)} className="space-y-4">
-                                  <FormField
-                                    control={partnerForm.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Nome do Sócio</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="Nome completo" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={partnerForm.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Email</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="email@exemplo.com" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={partnerForm.control}
-                                    name="phone"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Telefone</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="(00) 00000-0000" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={partnerForm.control}
-                                    name="role"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Função</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="Ex: Sócio Administrativo" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <div className="flex justify-end space-x-2">
-                                    <Button 
-                                      type="button" 
-                                      variant="outline" 
-                                      onClick={() => {
-                                        setShowPartnerForm(false);
-                                        partnerForm.reset();
-                                      }}
-                                    >
-                                      Cancelar
-                                    </Button>
-                                    <Button type="submit">Salvar</Button>
-                                  </div>
-                                </form>
-                              </Form>
-                            </CardContent>
-                          </Card>
-                        )}
-                        
-                        {selectedStudent.partners && selectedStudent.partners.length > 0 ? (
-                          <div className="space-y-3">
-                            {selectedStudent.partners.map((partner, index) => (
-                              <div key={index} className="p-3 border rounded-md">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center">
-                                    <Users className="h-5 w-5 mr-3 text-portal-primary" />
-                                    <p className="font-medium">{partner.name}</p>
-                                  </div>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                                <div className="ml-8 mt-2 space-y-1 text-sm">
-                                  <p><strong>Email:</strong> {partner.email}</p>
-                                  <p><strong>Telefone:</strong> {partner.phone}</p>
-                                  <p><strong>Função:</strong> {partner.role}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 italic">Nenhum sócio cadastrado.</p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="communications">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-xl">Histórico de Comunicações</CardTitle>
-                        <Button onClick={() => setShowCommunicationForm(true)}>
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Nova Comunicação
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {showCommunicationForm && (
-                        <Card className="mb-4">
-                          <CardHeader>
-                            <CardTitle className="text-lg">Nova Comunicação</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Form {...communicationForm}>
-                              <form onSubmit={communicationForm.handleSubmit(onSubmitCommunication)} className="space-y-4">
-                                <FormField
-                                  control={communicationForm.control}
-                                  name="channel"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Canal</FormLabel>
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button variant="outline" className="w-full justify-between">
-                                            {field.value || "Selecione um canal"}
-                                            <span className="sr-only">Toggle menu</span>
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-56">
-                                          {communicationChannels.map((channel) => (
-                                            <DropdownMenuItem
-                                              key={channel}
-                                              onClick={() => communicationForm.setValue("channel", channel)}
-                                            >
-                                              {channel}
-                                            </DropdownMenuItem>
-                                          ))}
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={communicationForm.control}
-                                  name="subject"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Assunto</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="Assunto da comunicação" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
                                 <FormField
                                   control={communicationForm.control}
                                   name="content"
@@ -776,7 +791,7 @@ const Students = () => {
                                       <FormControl>
                                         <Textarea 
                                           placeholder="Detalhes da comunicação" 
-                                          className="min-h-32"
+                                          className="min-h-24"
                                           {...field} 
                                         />
                                       </FormControl>
@@ -786,7 +801,7 @@ const Students = () => {
                                 />
                                 <div>
                                   <FormLabel>Anexos</FormLabel>
-                                  <div className="mt-2 flex items-center justify-between rounded-md border border-dashed border-primary/50 px-4 py-4">
+                                  <div className="mt-1 flex items-center justify-between rounded-md border border-dashed border-primary/50 px-3 py-2">
                                     <div className="flex flex-col">
                                       <span className="text-sm font-medium">Adicionar arquivos</span>
                                       <span className="text-xs text-gray-500">Arraste arquivos ou clique para selecionar</span>
@@ -801,6 +816,7 @@ const Students = () => {
                                   <Button 
                                     type="button" 
                                     variant="outline" 
+                                    size="sm"
                                     onClick={() => {
                                       setShowCommunicationForm(false);
                                       communicationForm.reset();
@@ -808,7 +824,7 @@ const Students = () => {
                                   >
                                     Cancelar
                                   </Button>
-                                  <Button type="submit">Salvar</Button>
+                                  <Button type="submit" size="sm">Salvar</Button>
                                 </div>
                               </form>
                             </Form>
@@ -818,14 +834,14 @@ const Students = () => {
 
                       {viewingCommunication && (
                         <Card className="mb-4">
-                          <CardHeader>
+                          <CardHeader className="py-3">
                             <div className="flex justify-between items-center">
-                              <CardTitle className="text-lg">{viewingCommunication.subject}</CardTitle>
+                              <CardTitle className="text-base">{viewingCommunication.subject}</CardTitle>
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleDeleteCommunication(viewingCommunication.id)}
-                                className="text-red-500"
+                                className="text-red-500 h-8 w-8 p-0"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -834,11 +850,11 @@ const Students = () => {
                               {viewingCommunication.channel} - {viewingCommunication.date}
                             </CardDescription>
                           </CardHeader>
-                          <CardContent>
-                            <p className="whitespace-pre-line">{viewingCommunication.content}</p>
+                          <CardContent className="pt-0">
+                            <p className="whitespace-pre-line text-sm">{viewingCommunication.content}</p>
                           </CardContent>
-                          <div className="px-6 pb-4">
-                            <Button variant="outline" onClick={() => setViewingCommunication(null)}>
+                          <div className="px-6 pb-3 pt-0">
+                            <Button variant="outline" size="sm" onClick={() => setViewingCommunication(null)}>
                               Voltar para lista
                             </Button>
                           </div>
@@ -846,14 +862,14 @@ const Students = () => {
                       )}
 
                       {!viewingCommunication && communications.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {communications.map((comm) => (
                             <div 
                               key={comm.id} 
                               className="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50"
                               onClick={() => setViewingCommunication(comm)}
                             >
-                              <FileText className="h-5 w-5 mr-3 text-portal-primary" />
+                              <FileText className="h-5 w-5 mr-3 text-portal-primary flex-shrink-0" />
                               <div className="flex-1 truncate">
                                 <p className="font-medium">{comm.subject}</p>
                                 <p className="text-sm text-gray-500">
@@ -864,27 +880,27 @@ const Students = () => {
                           ))}
                         </div>
                       ) : (
-                        !viewingCommunication && <p className="text-gray-500 italic">Nenhuma comunicação registrada.</p>
+                        !viewingCommunication && <p className="text-gray-500 italic text-sm">Nenhuma comunicação registrada.</p>
                       )}
                     </CardContent>
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="products">
-                  <Card>
-                    <CardHeader>
+                <TabsContent value="products" className="h-full overflow-y-auto">
+                  <Card className="h-full">
+                    <CardHeader className="pb-3">
                       <CardTitle className="text-xl">Cursos Adquiridos</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {selectedStudent.products.map((product, index) => (
-                          <div key={index} className="flex items-center p-3 border rounded-md">
-                            <Package className="h-5 w-5 mr-3 text-portal-primary" />
-                            <span>{product}</span>
+                          <div key={index} className="flex items-center p-2 border rounded-md">
+                            <Package className="h-5 w-5 mr-2 text-portal-primary" />
+                            <span className="text-sm">{product}</span>
                           </div>
                         ))}
                       </div>
-                      <Button variant="outline" className="mt-4">
+                      <Button variant="outline" size="sm" className="mt-3">
                         <Plus className="mr-2 h-4 w-4" />
                         Adicionar Curso
                       </Button>
@@ -892,60 +908,62 @@ const Students = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="mentoring">
-                  <Card>
-                    <CardHeader>
+                <TabsContent value="mentoring" className="h-full overflow-y-auto">
+                  <Card className="h-full">
+                    <CardHeader className="pb-3">
                       <CardTitle className="text-xl">Mentorias</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Horário</TableHead>
-                            <TableHead>Link</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Tipo</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {mentoringSessions.map((session) => (
-                            <TableRow key={session.id}>
-                              <TableCell>{session.date}</TableCell>
-                              <TableCell>{session.time}</TableCell>
-                              <TableCell>
-                                <a href={`https://${session.link}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                  {session.link}
-                                </a>
-                              </TableCell>
-                              <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                  session.status === "Agendada" ? "bg-blue-100 text-blue-800" : 
-                                  session.status === "Concluída" ? "bg-green-100 text-green-800" : 
-                                  "bg-amber-100 text-amber-800"
-                                }`}>
-                                  {session.status}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <span className="flex items-center">
-                                  {session.type === "Grupo" ? 
-                                    <Users className="h-4 w-4 mr-1" /> : 
-                                    <User className="h-4 w-4 mr-1" />
-                                  }
-                                  {session.type}
-                                </span>
-                              </TableCell>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Data</TableHead>
+                              <TableHead>Horário</TableHead>
+                              <TableHead>Link</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Tipo</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <div className="flex space-x-2 mt-4">
-                        <Button variant="outline">
+                          </TableHeader>
+                          <TableBody>
+                            {mentoringSessions.map((session) => (
+                              <TableRow key={session.id}>
+                                <TableCell>{session.date}</TableCell>
+                                <TableCell>{session.time}</TableCell>
+                                <TableCell>
+                                  <a href={`https://${session.link}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    {session.link}
+                                  </a>
+                                </TableCell>
+                                <TableCell>
+                                  <span className={`px-2 py-1 rounded-full text-xs ${
+                                    session.status === "Agendada" ? "bg-blue-100 text-blue-800" : 
+                                    session.status === "Concluída" ? "bg-green-100 text-green-800" : 
+                                    "bg-amber-100 text-amber-800"
+                                  }`}>
+                                    {session.status}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="flex items-center">
+                                    {session.type === "Grupo" ? 
+                                      <Users className="h-4 w-4 mr-1" /> : 
+                                      <User className="h-4 w-4 mr-1" />
+                                    }
+                                    {session.type}
+                                  </span>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <Button variant="outline" size="sm">
                           <Calendar className="mr-2 h-4 w-4" />
                           Agendar Mentoria
                         </Button>
-                        <Button variant="outline">
+                        <Button variant="outline" size="sm">
                           <Users className="mr-2 h-4 w-4" />
                           Adicionar à Mentoria em Grupo
                         </Button>
@@ -954,25 +972,25 @@ const Students = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="bonus">
-                  <Card>
-                    <CardHeader>
+                <TabsContent value="bonus" className="h-full overflow-y-auto">
+                  <Card className="h-full">
+                    <CardHeader className="pb-3">
                       <CardTitle className="text-xl">Bônus Adquiridos</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {selectedStudent.bonus && selectedStudent.bonus.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {selectedStudent.bonus.map((bonusItem, index) => (
-                            <div key={index} className="flex items-center p-3 border rounded-md">
-                              <Award className="h-5 w-5 mr-3 text-amber-500" />
-                              <span>{bonusItem}</span>
+                            <div key={index} className="flex items-center p-2 border rounded-md">
+                              <Award className="h-5 w-5 mr-2 text-amber-500" />
+                              <span className="text-sm">{bonusItem}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 italic">Nenhum bônus adquirido.</p>
+                        <p className="text-gray-500 italic text-sm">Nenhum bônus adquirido.</p>
                       )}
-                      <Button variant="outline" className="mt-4">
+                      <Button variant="outline" size="sm" className="mt-3">
                         <Plus className="mr-2 h-4 w-4" />
                         Adicionar Bônus
                       </Button>
