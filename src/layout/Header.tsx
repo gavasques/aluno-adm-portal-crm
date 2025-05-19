@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, Menu, Search, User } from "lucide-react";
+import { Bell, Menu, User } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,6 @@ import {
 
 const Header = () => {
   const location = useLocation();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   // Helper to determine area
   const isAdmin = location.pathname.includes("/admin");
@@ -49,32 +48,6 @@ const Header = () => {
                 Área Admin
               </Link>
             </nav>
-          )}
-          
-          {showAreaSpecific && (
-            <div className="relative flex items-center w-full max-w-md">
-              {isSearchOpen ? (
-                <input
-                  type="text"
-                  placeholder="Pesquisar..."
-                  className="portal-input pl-10 h-8 text-sm"
-                  autoFocus
-                  onBlur={() => setIsSearchOpen(false)}
-                />
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute left-0 z-10 h-8 w-8"
-                  onClick={() => setIsSearchOpen(true)}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              )}
-              {isSearchOpen && (
-                <Search className="h-3 w-3 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-              )}
-            </div>
           )}
         </div>
         
