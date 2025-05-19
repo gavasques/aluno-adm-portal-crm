@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -96,6 +95,7 @@ const CourseDetails = () => {
       // Dados fictícios para o curso
       setCourse({
         id: id || "1",
+        courseId: "CRS001", // Adicionando a propriedade courseId que estava faltando
         name: "Curso de E-commerce",
         status: "active" as CourseStatus,
         platform: "Hotmart",
