@@ -10,18 +10,146 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { User, Users, Book, Calendar, Plus, MessageSquare, Package, Award } from "lucide-react";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { 
+  User, 
+  Users, 
+  Package, 
+  Award, 
+  Calendar,
+  Plus, 
+  MessageSquare, 
+  Trash2,
+  Check,
+  X,
+  Store,
+  FileText,
+  Paperclip,
+} from "lucide-react";
+import { 
+  Form, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription,
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem
+} from "@/components/ui/dropdown-menu";
+import { toast } from "@/hooks/use-toast";
+
+// Lista de estados brasileiros
+const brazilianStates = [
+  'Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal',
+  'Espírito Santo', 'Goiás', 'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul',
+  'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco', 'Piauí',
+  'Rio de Janeiro', 'Rio Grande do Norte', 'Rio Grande do Sul', 'Rondônia',
+  'Roraima', 'Santa Catarina', 'São Paulo', 'Sergipe', 'Tocantins'
+];
+
+// Lista de canais de venda
+const salesChannels = ['Amazon', 'Meli', 'MGL', 'Shopee', 'Site', 'Outro'];
+
+// Academia access options
+const academyAccessOptions = ['Sim', 'Não', 'Sim START'];
+
+// Communication channels
+const communicationChannels = [
+  'Telefone', 'Email', 'WhatsApp', 'Instagram', 'TikTok', 'Call', 
+  'Pessoalmente', 'Evento', 'Outro'
+];
 
 const Students = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [showStoreForm, setShowStoreForm] = useState(false);
+  const [showPartnerForm, setShowPartnerForm] = useState(false);
+  const [showCommunicationForm, setShowCommunicationForm] = useState(false);
+  const [viewingCommunication, setViewingCommunication] = useState(null);
   
   // Mock data
   const students = [
-    { id: 1, name: "Ana Silva", email: "ana@email.com", phone: "(11) 98765-4321", status: "Ativo", products: ["Curso Básico", "Mentoria Individual"], bonus: ["Acesso Clube VIP", "E-book Marketing Digital"] },
-    { id: 2, name: "Carlos Oliveira", email: "carlos@email.com", phone: "(11) 91234-5678", status: "Ativo", products: ["Curso Avançado"], bonus: [] },
-    { id: 3, name: "Mariana Costa", email: "mariana@email.com", phone: "(11) 93333-4444", status: "Ativo", products: ["Mentoria em Grupo"], bonus: ["Workshop Presencial"] },
-    { id: 4, name: "Pedro Santos", email: "pedro@email.com", phone: "(11) 95555-6666", status: "Inativo", products: ["Curso Básico", "Curso Avançado"], bonus: ["Acesso Clube VIP"] },
+    { 
+      id: 1, 
+      name: "Ana Silva", 
+      email: "ana@email.com", 
+      phone: "(11) 98765-4321", 
+      status: "Ativo", 
+      products: ["Curso Básico", "Mentoria Individual"], 
+      bonus: ["Acesso Clube VIP", "E-book Marketing Digital"],
+      registrationDate: "2024-04-15",
+      state: "São Paulo",
+      academyAccess: "Sim",
+      stores: [
+        { id: 1, name: "Loja da Ana", channel: "Amazon" },
+        { id: 2, name: "Ana Shop", channel: "Site" }
+      ],
+      partners: [
+        { id: 1, name: "Carlos Mendes", email: "carlos@email.com", phone: "(11) 97777-8888", role: "Sócio Administrativo" }
+      ]
+    },
+    { 
+      id: 2, 
+      name: "Carlos Oliveira", 
+      email: "carlos@email.com", 
+      phone: "(11) 91234-5678", 
+      status: "Ativo", 
+      products: ["Curso Avançado"], 
+      bonus: [],
+      registrationDate: "2024-03-20",
+      state: "Rio de Janeiro",
+      academyAccess: "Não",
+      stores: [],
+      partners: []
+    },
+    { 
+      id: 3, 
+      name: "Mariana Costa", 
+      email: "mariana@email.com", 
+      phone: "(11) 93333-4444", 
+      status: "Ativo", 
+      products: ["Mentoria em Grupo"], 
+      bonus: ["Workshop Presencial"],
+      registrationDate: "2024-02-10",
+      state: "Minas Gerais",
+      academyAccess: "Sim START",
+      stores: [
+        { id: 1, name: "Mari Store", channel: "Shopee" }
+      ],
+      partners: [
+        { id: 1, name: "João Silva", email: "joao@email.com", phone: "(11) 95555-6666", role: "Sócio Técnico" },
+        { id: 2, name: "Paula Sousa", email: "paula@email.com", phone: "(11) 94444-3333", role: "Sócio Financeiro" }
+      ]
+    },
+    { 
+      id: 4, 
+      name: "Pedro Santos", 
+      email: "pedro@email.com", 
+      phone: "(11) 95555-6666", 
+      status: "Inativo", 
+      products: ["Curso Básico", "Curso Avançado"], 
+      bonus: ["Acesso Clube VIP"],
+      registrationDate: "2023-11-05",
+      state: "Paraná",
+      academyAccess: "Não",
+      stores: [
+        { id: 1, name: "Pedro E-commerce", channel: "Meli" }
+      ],
+      partners: []
+    },
   ];
   
   // Mock mentoring data
@@ -32,10 +160,10 @@ const Students = () => {
   ];
   
   // Mock communications
-  const communications = [
-    { id: 1, date: "10/05/2025", channel: "Email", subject: "Boas-vindas", status: "Enviado" },
-    { id: 2, date: "12/05/2025", channel: "WhatsApp", subject: "Dúvida sobre curso", status: "Respondido" },
-  ];
+  const [communications, setCommunications] = useState([
+    { id: 1, date: "10/05/2025", channel: "Email", subject: "Boas-vindas", content: "Mensagem de boas-vindas ao novo aluno. Conteúdo completo da comunicação aqui. Este é um exemplo de um texto mais longo que poderia ser incluído em uma comunicação com o aluno." },
+    { id: 2, date: "12/05/2025", channel: "WhatsApp", subject: "Dúvida sobre curso", content: "O aluno teve dúvidas sobre o módulo 3 do curso básico. Foi orientado a assistir novamente às aulas 7 e 8, que cobrem o conteúdo onde ele está com dificuldade." },
+  ]);
   
   const handleOpenStudent = (student) => {
     setSelectedStudent(student);
@@ -43,6 +171,122 @@ const Students = () => {
   
   const handleCloseStudent = () => {
     setSelectedStudent(null);
+    setShowStoreForm(false);
+    setShowPartnerForm(false);
+    setShowCommunicationForm(false);
+    setViewingCommunication(null);
+  };
+  
+  const handleDeleteStudent = (studentId) => {
+    // Em uma aplicação real, aqui você enviaria uma requisição para deletar o aluno
+    // Como é um exemplo, apenas simulamos a remoção
+    toast({
+      title: "Aluno removido",
+      description: "O aluno foi removido com sucesso.",
+    });
+    setDeleteConfirmOpen(false);
+    setSelectedStudent(null);
+  };
+
+  // Formulários
+  const storeFormSchema = z.object({
+    name: z.string().min(1, "O nome da loja é obrigatório"),
+    channel: z.string().min(1, "Selecione um canal de venda")
+  });
+
+  const storeForm = useForm({
+    resolver: zodResolver(storeFormSchema),
+    defaultValues: {
+      name: "",
+      channel: ""
+    }
+  });
+
+  const partnerFormSchema = z.object({
+    name: z.string().min(1, "O nome do sócio é obrigatório"),
+    email: z.string().email("Email inválido"),
+    phone: z.string().min(1, "Telefone é obrigatório"),
+    role: z.string().min(1, "Função é obrigatória")
+  });
+
+  const partnerForm = useForm({
+    resolver: zodResolver(partnerFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      role: ""
+    }
+  });
+
+  const communicationFormSchema = z.object({
+    channel: z.string().min(1, "Selecione um canal"),
+    subject: z.string().min(1, "Assunto é obrigatório"),
+    content: z.string().min(1, "Conteúdo é obrigatório")
+  });
+
+  const communicationForm = useForm({
+    resolver: zodResolver(communicationFormSchema),
+    defaultValues: {
+      channel: "",
+      subject: "",
+      content: ""
+    }
+  });
+
+  const onSubmitStore = (data) => {
+    if (selectedStudent) {
+      // Em uma aplicação real, enviar para API
+      toast({
+        title: "Loja adicionada",
+        description: `A loja ${data.name} foi adicionada com sucesso.`,
+      });
+      setShowStoreForm(false);
+      storeForm.reset();
+    }
+  };
+
+  const onSubmitPartner = (data) => {
+    if (selectedStudent) {
+      // Em uma aplicação real, enviar para API
+      toast({
+        title: "Sócio adicionado",
+        description: `${data.name} foi adicionado como sócio.`,
+      });
+      setShowPartnerForm(false);
+      partnerForm.reset();
+    }
+  };
+
+  const onSubmitCommunication = (data) => {
+    if (selectedStudent) {
+      // Em uma aplicação real, enviar para API
+      const newCommunication = {
+        id: communications.length + 1,
+        date: format(new Date(), "dd/MM/yyyy"),
+        channel: data.channel,
+        subject: data.subject,
+        content: data.content
+      };
+      
+      setCommunications([...communications, newCommunication]);
+      
+      toast({
+        title: "Comunicação registrada",
+        description: "A comunicação foi registrada com sucesso.",
+      });
+      setShowCommunicationForm(false);
+      communicationForm.reset();
+    }
+  };
+
+  const handleDeleteCommunication = (commId) => {
+    setCommunications(communications.filter(comm => comm.id !== commId));
+    setViewingCommunication(null);
+    toast({
+      title: "Comunicação removida",
+      description: "A comunicação foi removida com sucesso.",
+    });
   };
   
   return (
@@ -122,10 +366,30 @@ const Students = () => {
         <Dialog open={!!selectedStudent} onOpenChange={handleCloseStudent}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center">
-                <User className="mr-2" />
-                {selectedStudent.name}
-              </DialogTitle>
+              <div className="flex justify-between items-center">
+                <DialogTitle className="flex items-center">
+                  <User className="mr-2" />
+                  {selectedStudent.name}
+                </DialogTitle>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="text-red-500 cursor-pointer"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir Aluno
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </DialogHeader>
             <div className="py-4">
               <Tabs defaultValue="details">
@@ -155,8 +419,288 @@ const Students = () => {
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                          <p className="mt-1 text-base">{selectedStudent.status}</p>
+                          <div className="mt-1 flex items-center space-x-2">
+                            {selectedStudent.status === "Ativo" ? (
+                              <Check className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <X className="h-5 w-5 text-red-500" />
+                            )}
+                            <span>{selectedStudent.status}</span>
+                          </div>
                         </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Data de Cadastro</h3>
+                          <div className="mt-1 flex items-center">
+                            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                            <span>{new Date(selectedStudent.registrationDate).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Estado</h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" className="mt-1">
+                                {selectedStudent.state || "Selecionar Estado"}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="max-h-56 overflow-y-auto">
+                              {brazilianStates.map((state) => (
+                                <DropdownMenuItem key={state}>
+                                  {state}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Tem acesso à Academia?</h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" className="mt-1 flex items-center">
+                                {selectedStudent.academyAccess === "Sim" ? (
+                                  <Check className="h-4 w-4 mr-2 text-green-500" />
+                                ) : selectedStudent.academyAccess === "Não" ? (
+                                  <X className="h-4 w-4 mr-2 text-red-500" />
+                                ) : (
+                                  <Check className="h-4 w-4 mr-2 text-blue-500" />
+                                )}
+                                {selectedStudent.academyAccess}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              {academyAccessOptions.map((option) => (
+                                <DropdownMenuItem key={option}>
+                                  {option === "Sim" ? (
+                                    <><Check className="h-4 w-4 mr-2 text-green-500" />{option}</>
+                                  ) : option === "Não" ? (
+                                    <><X className="h-4 w-4 mr-2 text-red-500" />{option}</>
+                                  ) : (
+                                    <><Check className="h-4 w-4 mr-2 text-blue-500" />{option}</>
+                                  )}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+
+                      {/* Lojas do aluno */}
+                      <div className="mt-8">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-base font-medium">Lojas</h3>
+                          <Button 
+                            size="sm" 
+                            onClick={() => setShowStoreForm(!showStoreForm)}
+                          >
+                            <Store className="mr-2 h-4 w-4" />
+                            Adicionar Loja
+                          </Button>
+                        </div>
+                        
+                        {showStoreForm && (
+                          <Card className="mb-4">
+                            <CardHeader>
+                              <CardTitle className="text-lg">Nova Loja</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <Form {...storeForm}>
+                                <form onSubmit={storeForm.handleSubmit(onSubmitStore)} className="space-y-4">
+                                  <FormField
+                                    control={storeForm.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Nome da Loja</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Nome da loja" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={storeForm.control}
+                                    name="channel"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Canal de Venda</FormLabel>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-between">
+                                              {field.value || "Selecione um canal"}
+                                              <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent className="w-56">
+                                            {salesChannels.map((channel) => (
+                                              <DropdownMenuItem
+                                                key={channel}
+                                                onClick={() => storeForm.setValue("channel", channel)}
+                                              >
+                                                {channel}
+                                              </DropdownMenuItem>
+                                            ))}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <div className="flex justify-end space-x-2">
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      onClick={() => {
+                                        setShowStoreForm(false);
+                                        storeForm.reset();
+                                      }}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                    <Button type="submit">Salvar</Button>
+                                  </div>
+                                </form>
+                              </Form>
+                            </CardContent>
+                          </Card>
+                        )}
+                        
+                        {selectedStudent.stores && selectedStudent.stores.length > 0 ? (
+                          <div className="space-y-3">
+                            {selectedStudent.stores.map((store, index) => (
+                              <div key={index} className="flex items-center p-3 border rounded-md">
+                                <Store className="h-5 w-5 mr-3 text-portal-primary" />
+                                <div className="flex-1">
+                                  <p className="font-medium">{store.name}</p>
+                                  <p className="text-sm text-gray-500">Canal: {store.channel}</p>
+                                </div>
+                                <Button variant="ghost" size="sm">
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">Nenhuma loja cadastrada.</p>
+                        )}
+                      </div>
+
+                      {/* Sócios do aluno */}
+                      <div className="mt-8">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-base font-medium">Sócios</h3>
+                          <Button 
+                            size="sm" 
+                            onClick={() => setShowPartnerForm(!showPartnerForm)}
+                          >
+                            <Users className="mr-2 h-4 w-4" />
+                            Adicionar Sócio
+                          </Button>
+                        </div>
+                        
+                        {showPartnerForm && (
+                          <Card className="mb-4">
+                            <CardHeader>
+                              <CardTitle className="text-lg">Novo Sócio</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <Form {...partnerForm}>
+                                <form onSubmit={partnerForm.handleSubmit(onSubmitPartner)} className="space-y-4">
+                                  <FormField
+                                    control={partnerForm.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Nome do Sócio</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Nome completo" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={partnerForm.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Email</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="email@exemplo.com" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={partnerForm.control}
+                                    name="phone"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Telefone</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="(00) 00000-0000" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={partnerForm.control}
+                                    name="role"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Função</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Ex: Sócio Administrativo" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <div className="flex justify-end space-x-2">
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      onClick={() => {
+                                        setShowPartnerForm(false);
+                                        partnerForm.reset();
+                                      }}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                    <Button type="submit">Salvar</Button>
+                                  </div>
+                                </form>
+                              </Form>
+                            </CardContent>
+                          </Card>
+                        )}
+                        
+                        {selectedStudent.partners && selectedStudent.partners.length > 0 ? (
+                          <div className="space-y-3">
+                            {selectedStudent.partners.map((partner, index) => (
+                              <div key={index} className="p-3 border rounded-md">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    <Users className="h-5 w-5 mr-3 text-portal-primary" />
+                                    <p className="font-medium">{partner.name}</p>
+                                  </div>
+                                  <Button variant="ghost" size="sm">
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                                <div className="ml-8 mt-2 space-y-1 text-sm">
+                                  <p><strong>Email:</strong> {partner.email}</p>
+                                  <p><strong>Telefone:</strong> {partner.phone}</p>
+                                  <p><strong>Função:</strong> {partner.role}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">Nenhum sócio cadastrado.</p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -165,33 +709,163 @@ const Students = () => {
                 <TabsContent value="communications">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-xl">Histórico de Comunicações</CardTitle>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-xl">Histórico de Comunicações</CardTitle>
+                        <Button onClick={() => setShowCommunicationForm(true)}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Nova Comunicação
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Canal</TableHead>
-                            <TableHead>Assunto</TableHead>
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                      {showCommunicationForm && (
+                        <Card className="mb-4">
+                          <CardHeader>
+                            <CardTitle className="text-lg">Nova Comunicação</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Form {...communicationForm}>
+                              <form onSubmit={communicationForm.handleSubmit(onSubmitCommunication)} className="space-y-4">
+                                <FormField
+                                  control={communicationForm.control}
+                                  name="channel"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Canal</FormLabel>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="outline" className="w-full justify-between">
+                                            {field.value || "Selecione um canal"}
+                                            <span className="sr-only">Toggle menu</span>
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56">
+                                          {communicationChannels.map((channel) => (
+                                            <DropdownMenuItem
+                                              key={channel}
+                                              onClick={() => communicationForm.setValue("channel", channel)}
+                                            >
+                                              {channel}
+                                            </DropdownMenuItem>
+                                          ))}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={communicationForm.control}
+                                  name="subject"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Assunto</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="Assunto da comunicação" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={communicationForm.control}
+                                  name="content"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Conteúdo</FormLabel>
+                                      <FormControl>
+                                        <Textarea 
+                                          placeholder="Detalhes da comunicação" 
+                                          className="min-h-32"
+                                          {...field} 
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <div>
+                                  <FormLabel>Anexos</FormLabel>
+                                  <div className="mt-2 flex items-center justify-between rounded-md border border-dashed border-primary/50 px-4 py-4">
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-medium">Adicionar arquivos</span>
+                                      <span className="text-xs text-gray-500">Arraste arquivos ou clique para selecionar</span>
+                                    </div>
+                                    <Button type="button" variant="outline" size="sm">
+                                      <Paperclip className="mr-2 h-4 w-4" />
+                                      Anexar
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end space-x-2">
+                                  <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    onClick={() => {
+                                      setShowCommunicationForm(false);
+                                      communicationForm.reset();
+                                    }}
+                                  >
+                                    Cancelar
+                                  </Button>
+                                  <Button type="submit">Salvar</Button>
+                                </div>
+                              </form>
+                            </Form>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {viewingCommunication && (
+                        <Card className="mb-4">
+                          <CardHeader>
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-lg">{viewingCommunication.subject}</CardTitle>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeleteCommunication(viewingCommunication.id)}
+                                className="text-red-500"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <CardDescription>
+                              {viewingCommunication.channel} - {viewingCommunication.date}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="whitespace-pre-line">{viewingCommunication.content}</p>
+                          </CardContent>
+                          <div className="px-6 pb-4">
+                            <Button variant="outline" onClick={() => setViewingCommunication(null)}>
+                              Voltar para lista
+                            </Button>
+                          </div>
+                        </Card>
+                      )}
+
+                      {!viewingCommunication && communications.length > 0 ? (
+                        <div className="space-y-3">
                           {communications.map((comm) => (
-                            <TableRow key={comm.id}>
-                              <TableCell>{comm.date}</TableCell>
-                              <TableCell>{comm.channel}</TableCell>
-                              <TableCell>{comm.subject}</TableCell>
-                              <TableCell>{comm.status}</TableCell>
-                            </TableRow>
+                            <div 
+                              key={comm.id} 
+                              className="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50"
+                              onClick={() => setViewingCommunication(comm)}
+                            >
+                              <FileText className="h-5 w-5 mr-3 text-portal-primary" />
+                              <div className="flex-1 truncate">
+                                <p className="font-medium">{comm.subject}</p>
+                                <p className="text-sm text-gray-500">
+                                  {comm.channel} - {comm.date}
+                                </p>
+                              </div>
+                            </div>
                           ))}
-                        </TableBody>
-                      </Table>
-                      <Button variant="outline" className="mt-4">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Nova Comunicação
-                      </Button>
+                        </div>
+                      ) : (
+                        !viewingCommunication && <p className="text-gray-500 italic">Nenhuma comunicação registrada.</p>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -313,6 +987,29 @@ const Students = () => {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-500">Excluir Aluno</DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. O aluno será removido permanentemente do sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Deseja realmente excluir <strong>{selectedStudent?.name}</strong>?</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={() => handleDeleteStudent(selectedStudent?.id)}>
+              <Trash2 className="mr-2 h-4 w-4" /> Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
