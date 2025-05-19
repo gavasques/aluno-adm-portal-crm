@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,6 +78,12 @@ interface Document {
   uploadedBy: string;
 }
 
+// Definindo o tipo para DragItem para solucionar o erro
+interface DragItem {
+  id: number;
+  type: string;
+}
+
 // Lista de administradores fictícia (seria carregada da API em um caso real)
 const adminUsers = [
   { id: 1, name: "Ana Carolina" },
@@ -116,7 +121,7 @@ const availableBonuses = [
 const LeadCard = ({ lead, openLeadDetails, moveLead }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'LEAD',
-    item: { id: lead.id },
+    item: { id: lead.id, type: 'LEAD' } as DragItem,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -173,7 +178,7 @@ const LeadCard = ({ lead, openLeadDetails, moveLead }) => {
 const KanbanColumn = ({ column, leads, openLeadDetails, moveColumn, moveLead }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'LEAD',
-    drop: (item) => moveLead(item.id, column.id),
+    drop: (item: DragItem) => moveLead(item.id, column.id),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
