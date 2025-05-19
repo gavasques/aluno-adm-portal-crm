@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
@@ -28,7 +28,16 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Plus, Minus, Award, Gift, CreditCard, Save, Pencil } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Download, Filter, ArrowUp, ArrowDown, Save, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -64,13 +73,8 @@ const USERS = [
     storage: "45MB / 100MB",
     phone: "(11) 98765-4321",
     registrationDate: "15/03/2023",
-    courses: ["Curso Básico de E-commerce", "Mentoria Individual"],
-    mentorships: ["Mentoria Individual", "Mentoria em Grupo"],
-    bonuses: ["E-book de E-commerce", "Planilha de Controle"],
     storageValue: 45,
     storageLimit: 100,
-    credits: 3,
-    monthlyCredits: 5,
     observations: "Cliente interessado em expandir para marketplace."
   },
   {
@@ -83,13 +87,8 @@ const USERS = [
     storage: "78MB / 100MB",
     phone: "(21) 97654-3210",
     registrationDate: "22/05/2023",
-    courses: ["Curso Avançado de E-commerce"],
-    mentorships: [],
-    bonuses: ["Planilha de Controle"],
     storageValue: 78,
     storageLimit: 100,
-    credits: 5,
-    monthlyCredits: 5,
     observations: ""
   },
   {
@@ -102,13 +101,8 @@ const USERS = [
     storage: "23MB / 100MB",
     phone: "(31) 98877-6655",
     registrationDate: "10/01/2023",
-    courses: ["Curso Básico de E-commerce", "Curso Avançado de E-commerce", "Mentoria Individual"],
-    mentorships: ["Mentoria Individual", "Mentoria Avançada"],
-    bonuses: ["E-book de E-commerce", "Planilha de Controle", "Templates de E-commerce"],
     storageValue: 23,
     storageLimit: 100,
-    credits: 5,
-    monthlyCredits: 5,
     observations: "Administrador principal da plataforma."
   },
   {
@@ -121,13 +115,8 @@ const USERS = [
     storage: "12MB / 100MB",
     phone: "(41) 99988-7766",
     registrationDate: "05/02/2023",
-    courses: ["Curso Básico de E-commerce"],
-    mentorships: [],
-    bonuses: [],
     storageValue: 12,
     storageLimit: 100,
-    credits: 0,
-    monthlyCredits: 5,
     observations: "Cliente em processo de renovação."
   },
   {
@@ -140,33 +129,10 @@ const USERS = [
     storage: "89MB / 100MB",
     phone: "(51) 98765-4321",
     registrationDate: "18/04/2023",
-    courses: ["Mentoria em Grupo"],
-    mentorships: ["Mentoria em Grupo"],
-    bonuses: ["E-book de E-commerce"],
     storageValue: 89,
     storageLimit: 100,
-    credits: 4,
-    monthlyCredits: 5,
     observations: "Aguardando confirmação de dados bancários."
   }
-];
-
-// Lista de mentórias disponíveis para adicionar
-const AVAILABLE_MENTORSHIPS = [
-  "Mentoria Individual",
-  "Mentoria em Grupo",
-  "Mentoria Avançada",
-  "Mentoria de Negócios",
-  "Mentoria de Marketing"
-];
-
-// Lista de bônus disponíveis para adicionar
-const AVAILABLE_BONUSES = [
-  "E-book de E-commerce",
-  "Planilha de Controle",
-  "Templates de E-commerce",
-  "Acesso a Comunidade VIP",
-  "Workshop Exclusivo"
 ];
 
 // Schema de validação para o formulário de adicionar/editar usuário
@@ -184,18 +150,51 @@ type UserFormValues = z.infer<typeof userFormSchema>;
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("info");
-  const [showAddCreditDialog, setShowAddCreditDialog] = useState(false);
-  const [creditsToAdd, setCreditsToAdd] = useState(1);
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
   const [isEditingUserInfo, setIsEditingUserInfo] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [statusFilter, setStatusFilter] = useState("all");
   
-  // Filter users based on search query
-  const filteredUsers = USERS.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter users based on search query and status filter
+  const filteredUsers = useMemo(() => {
+    return USERS.filter(user => {
+      const matchesSearch = 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, statusFilter]);
+  
+  // Sort users by name
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+  }, [filteredUsers, sortDirection]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedUsers.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Handle sort toggle
+  const toggleSort = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  };
+
+  // Handle pagination change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
   
   const handleResetPassword = (userId, userName) => {
     toast({
@@ -235,48 +234,6 @@ const Users = () => {
     });
   };
 
-  const handleAddMentorship = (mentorship) => {
-    toast({
-      title: "Mentoria adicionada",
-      description: `A mentoria ${mentorship} foi adicionada ao usuário.`
-    });
-    // In a real app, add the mentorship to the user
-  };
-
-  const handleRemoveMentorship = (mentorship) => {
-    toast({
-      title: "Mentoria removida",
-      description: `A mentoria ${mentorship} foi removida do usuário.`
-    });
-    // In a real app, remove the mentorship from the user
-  };
-
-  const handleAddBonus = (bonus) => {
-    toast({
-      title: "Bônus adicionado",
-      description: `O bônus ${bonus} foi adicionado ao usuário.`
-    });
-    // In a real app, add the bonus to the user
-  };
-
-  const handleRemoveBonus = (bonus) => {
-    toast({
-      title: "Bônus removido",
-      description: `O bônus ${bonus} foi removido do usuário.`
-    });
-    // In a real app, remove the bonus from the user
-  };
-
-  const handleAddCredits = () => {
-    toast({
-      title: "Créditos adicionados",
-      description: `${creditsToAdd} crédito(s) foram adicionados ao usuário.`
-    });
-    setShowAddCreditDialog(false);
-    setCreditsToAdd(1);
-    // In a real app, add the credits to the user
-  };
-
   const handleUserClick = (user) => {
     setSelectedUser(user);
     setIsEditingUserInfo(false);
@@ -284,7 +241,6 @@ const Users = () => {
 
   const handleCloseUserDetails = () => {
     setSelectedUser(null);
-    setActiveTab("info");
     setIsEditingUserInfo(false);
   };
 
@@ -351,6 +307,143 @@ const Users = () => {
     setShowAddUserDialog(false);
     addUserForm.reset();
   };
+
+  // Generate pagination items
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxPagesToShow = 5;
+
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages is less than or equal to max pages to show
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Always show first page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink
+            isActive={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      // Calculate start and end pages to show
+      if (currentPage <= 3) {
+        items.push(
+          ...[2, 3, 4].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+        if (totalPages > 4) {
+          items.push(
+            <PaginationItem key="ellipsis1">
+              <PaginationEllipsis />
+            </PaginationItem>
+          );
+        }
+      } else if (currentPage >= totalPages - 2) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+        items.push(
+          ...[totalPages - 3, totalPages - 2, totalPages - 1].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+      } else {
+        items.push(
+          <PaginationItem key="ellipsis3">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+        items.push(
+          ...[currentPage - 1, currentPage, currentPage + 1].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+        items.push(
+          <PaginationItem key="ellipsis4">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Always show last page
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink
+            isActive={currentPage === totalPages}
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
+  
+  // Export users to CSV
+  const exportToCSV = () => {
+    // Create CSV header
+    let csvContent = "ID,Nome,Função,Status,Último Login,Data de Cadastro\n";
+
+    // Add data rows
+    sortedUsers.forEach(user => {
+      csvContent += `${user.id},"${user.name}","${user.role}","${user.status}","${user.lastLogin}","${user.registrationDate}"\n`;
+    });
+
+    // Create download link
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "usuarios.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Exportação concluída",
+      description: "Os dados dos usuários foram exportados com sucesso."
+    });
+  };
   
   return (
     <div className="container mx-auto py-6">
@@ -359,9 +452,14 @@ const Users = () => {
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Gerenciar Usuários</CardTitle>
-          <Button onClick={() => setShowAddUserDialog(true)}>
-            <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={exportToCSV}>
+              <Download className="mr-2 h-4 w-4" /> Exportar CSV
+            </Button>
+            <Button onClick={() => setShowAddUserDialog(true)}>
+              <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -374,29 +472,54 @@ const Users = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
+                  <TableHead className="cursor-pointer" onClick={toggleSort}>
+                    Nome
+                    {sortDirection === "asc" ? (
+                      <ArrowUp className="inline-block ml-1 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                    )}
+                  </TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Último Login</TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      <Calendar className="mr-1 h-4 w-4" />
+                      Data de Cadastro
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {currentItems.map((user) => (
                   <TableRow 
                     key={user.id} 
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => handleUserClick(user)}
                   >
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.role === "Administrador" ? "default" : "outline"}>
                         {user.role}
@@ -417,6 +540,7 @@ const Users = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>{user.lastLogin}</TableCell>
+                    <TableCell>{user.registrationDate}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -427,6 +551,9 @@ const Users = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleUserClick(user)}>
+                            Ver detalhes
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleResetPassword(user.id, user.name)}>
                             Resetar senha
                           </DropdownMenuItem>
@@ -442,7 +569,7 @@ const Users = () => {
                   </TableRow>
                 ))}
                 
-                {filteredUsers.length === 0 && (
+                {currentItems.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                       Nenhum usuário encontrado com os critérios de busca.
@@ -453,6 +580,47 @@ const Users = () => {
             </Table>
           </div>
         </CardContent>
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Exibindo {currentItems.length} de {filteredUsers.length} usuários
+            </p>
+            <Select value={String(itemsPerPage)} onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[110px]">
+                <SelectValue placeholder="25 por página" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 por página</SelectItem>
+                <SelectItem value="50">50 por página</SelectItem>
+                <SelectItem value="100">100 por página</SelectItem>
+                <SelectItem value="200">200 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              
+              {renderPaginationItems()}
+              
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </CardFooter>
       </Card>
 
       {/* Add User Dialog */}
@@ -608,14 +776,10 @@ const Users = () => {
               </DialogDescription>
             </DialogHeader>
 
-            <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full grid grid-cols-6">
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="w-full grid grid-cols-2">
                 <TabsTrigger value="info">Informações</TabsTrigger>
                 <TabsTrigger value="storage">Armazenamento</TabsTrigger>
-                <TabsTrigger value="courses">Cursos</TabsTrigger>
-                <TabsTrigger value="mentorships">Mentorias</TabsTrigger>
-                <TabsTrigger value="bonuses">Bônus</TabsTrigger>
-                <TabsTrigger value="credits">Créditos</TabsTrigger>
               </TabsList>
               
               {/* User Info Tab */}
@@ -876,7 +1040,7 @@ const Users = () => {
                         onClick={() => handleDecreaseStorage(selectedUser.id, selectedUser.name)}
                         disabled={selectedUser.storageLimit <= 100}
                       >
-                        <Minus className="h-4 w-4 mr-1" /> Reduzir 100MB
+                        <ArrowDown className="h-4 w-4 mr-1" /> Reduzir 100MB
                       </Button>
                       <div className="text-sm font-medium">
                         Limite atual: {selectedUser.storageLimit}MB
@@ -886,7 +1050,7 @@ const Users = () => {
                         size="sm"
                         onClick={() => handleIncreaseStorage(selectedUser.id, selectedUser.name)}
                       >
-                        <Plus className="h-4 w-4 mr-1" /> Aumentar 100MB
+                        <ArrowUp className="h-4 w-4 mr-1" /> Aumentar 100MB
                       </Button>
                     </div>
                   </div>
@@ -910,205 +1074,10 @@ const Users = () => {
                   </div>
                 </div>
               </TabsContent>
-              
-              {/* Courses Tab */}
-              <TabsContent value="courses" className="pt-4">
-                <h3 className="text-lg font-semibold mb-4">Cursos Adquiridos</h3>
-                
-                {selectedUser.courses && selectedUser.courses.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedUser.courses.map((course, index) => (
-                      <div key={index} className="p-3 border rounded-md">
-                        <p className="font-medium">{course}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground italic">Nenhum curso adquirido.</p>
-                )}
-                
-                <Button className="mt-4" variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Curso
-                </Button>
-              </TabsContent>
-
-              {/* Mentorships Tab */}
-              <TabsContent value="mentorships" className="pt-4">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Mentorias Vinculadas</h3>
-                    
-                    {selectedUser.mentorships && selectedUser.mentorships.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedUser.mentorships.map((mentorship, index) => (
-                          <div key={index} className="p-3 border rounded-md flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Award className="h-5 w-5 text-portal-primary mr-2" />
-                              <p className="font-medium">{mentorship}</p>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleRemoveMentorship(mentorship)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground italic mb-4">Nenhuma mentoria vinculada.</p>
-                    )}
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-4">Vincular Mentorias</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {AVAILABLE_MENTORSHIPS.filter(mentorship => 
-                        !selectedUser.mentorships || !selectedUser.mentorships.includes(mentorship)
-                      ).map((mentorship, index) => (
-                        <div key={index} className="p-3 border rounded-md flex justify-between items-center">
-                          <p>{mentorship}</p>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleAddMentorship(mentorship)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Bonuses Tab */}
-              <TabsContent value="bonuses" className="pt-4">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Bônus Vinculados</h3>
-                    
-                    {selectedUser.bonuses && selectedUser.bonuses.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedUser.bonuses.map((bonus, index) => (
-                          <div key={index} className="p-3 border rounded-md flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Gift className="h-5 w-5 text-portal-primary mr-2" />
-                              <p className="font-medium">{bonus}</p>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleRemoveBonus(bonus)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground italic mb-4">Nenhum bônus vinculado.</p>
-                    )}
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-4">Vincular Bônus</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {AVAILABLE_BONUSES.filter(bonus => 
-                        !selectedUser.bonuses || !selectedUser.bonuses.includes(bonus)
-                      ).map((bonus, index) => (
-                        <div key={index} className="p-3 border rounded-md flex justify-between items-center">
-                          <p>{bonus}</p>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleAddBonus(bonus)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              {/* Credits Tab */}
-              <TabsContent value="credits" className="pt-4">
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-3">
-                    <CreditCard className="h-5 w-5 text-portal-primary mt-1" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-muted-foreground">Status de Créditos</h3>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex items-center justify-between border-b pb-2">
-                          <span>Créditos disponíveis:</span>
-                          <span className="font-bold text-lg">{selectedUser.credits}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span>Limite mensal:</span>
-                          <span>{selectedUser.monthlyCredits} (renovados mensalmente)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold mb-4">Gerenciar Créditos</h3>
-                    <div className="flex items-center gap-3">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowAddCreditDialog(true)}
-                      >
-                        <Plus className="h-4 w-4 mr-1" /> Adicionar Créditos
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      O usuário recebe {selectedUser.monthlyCredits} créditos por mês, renovados a cada virada de mês, sem acumulação.
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
             </Tabs>
             
             <DialogFooter>
               <Button variant="outline" onClick={handleCloseUserDetails}>Fechar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Add Credits Dialog */}
-      {showAddCreditDialog && selectedUser && (
-        <Dialog open={showAddCreditDialog} onOpenChange={setShowAddCreditDialog}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Adicionar Créditos</DialogTitle>
-              <DialogDescription>
-                Adicione créditos para {selectedUser.name}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="creditsToAdd">Quantidade de créditos</Label>
-                <Input 
-                  id="creditsToAdd" 
-                  type="number" 
-                  min="1"
-                  value={creditsToAdd}
-                  onChange={(e) => setCreditsToAdd(parseInt(e.target.value) || 1)}
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowAddCreditDialog(false)}>Cancelar</Button>
-              <Button onClick={handleAddCredits}>Adicionar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
