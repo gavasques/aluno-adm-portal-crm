@@ -101,7 +101,8 @@ const Tools = () => {
   const calculateAverageRating = (ratings) => {
     if (!ratings.length) return 0;
     const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
-    return (sum / ratings.length).toFixed(1);
+    // Ensure we return a number, not a string
+    return Number((sum / ratings.length).toFixed(1));
   };
   
   return (
