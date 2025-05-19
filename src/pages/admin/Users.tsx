@@ -75,7 +75,9 @@ const USERS = [
     storageValue: 45,
     storageLimit: 100,
     observations: "Cliente interessado em expandir para marketplace.",
-    credits: 5 // Updated to default 5 credits
+    monthlyCredits: 5, // Monthly renewable credits
+    permanentCredits: 0, // Permanent non-expiring credits
+    totalCredits: 5 // Total available credits (sum of both)
   },
   {
     id: 2,
@@ -90,7 +92,9 @@ const USERS = [
     storageValue: 78,
     storageLimit: 100,
     observations: "",
-    credits: 5 // Updated to default 5 credits
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
   },
   {
     id: 3,
@@ -105,7 +109,9 @@ const USERS = [
     storageValue: 23,
     storageLimit: 100,
     observations: "Administrador principal da plataforma.",
-    credits: 5 // Updated to default 5 credits
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
   },
   {
     id: 4,
@@ -120,7 +126,9 @@ const USERS = [
     storageValue: 12,
     storageLimit: 100,
     observations: "Cliente em processo de renovação.",
-    credits: 5 // Updated to default 5 credits
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
   },
   {
     id: 5,
@@ -135,7 +143,9 @@ const USERS = [
     storageValue: 89,
     storageLimit: 100,
     observations: "Aguardando confirmação de dados bancários.",
-    credits: 5 // Updated to default 5 credits
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
   }
 ];
 
@@ -157,12 +167,22 @@ const creditsFormSchema = z.object({
   }, {
     message: "O valor deve ser um número positivo"
   }),
-  operation: z.enum(["add", "subtract"])
+  operation: z.enum(["add", "subtract"]),
+  creditType: z.enum(["permanent", "monthly"])
 });
 
+// Credit transaction type
+type CreditTransaction = {
+  id: number;
+  userId: number;
+  amount: number;
+  operation: "add" | "subtract";
+  creditType: "permanent" | "monthly";
+  date: Date;
+  description: string;
+};
+
 // Configuração para reset mensal de créditos
-// Em um ambiente real, isso seria implementado em um cronjob ou similar no backend
-// para resetar os créditos de todos os usuários no início de cada mês
 const DEFAULT_CREDITS = 5;
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -178,6 +198,7 @@ const Users = () => {
   const [sortDirection, setSortDirection] = useState("asc");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCreditsDialog, setShowCreditsDialog] = useState(false);
+  const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([]);
   
   // Filter users based on search query and status filter
   const filteredUsers = useMemo(() => {
@@ -330,33 +351,108 @@ const Users = () => {
     resolver: zodResolver(creditsFormSchema),
     defaultValues: {
       amount: "",
-      operation: "add"
+      operation: "add",
+      creditType: "permanent"
     }
   });
 
+  // Handle credit management with new permanent and monthly credit separation
   const handleManageCredits = (data: CreditsFormValues) => {
     const amount = parseInt(data.amount);
     const operation = data.operation;
+    const creditType = data.creditType;
     
     if (selectedUser) {
-      let message = "";
-      if (operation === "add") {
-        message = `Adicionado ${amount} créditos para ${selectedUser.name}`;
-      } else {
-        message = `Removido ${amount} créditos de ${selectedUser.name}`;
+      // Find user by ID
+      const userToUpdate = USERS.find(user => user.id === selectedUser.id);
+      
+      if (userToUpdate) {
+        let message = "";
+        const transactionDate = new Date();
+        
+        if (operation === "add") {
+          if (creditType === "permanent") {
+            userToUpdate.permanentCredits += amount;
+            message = `Adicionado ${amount} créditos permanentes para ${selectedUser.name}`;
+          } else {
+            userToUpdate.monthlyCredits += amount;
+            message = `Adicionado ${amount} créditos mensais para ${selectedUser.name}`;
+          }
+        } else {
+          if (creditType === "permanent") {
+            if (userToUpdate.permanentCredits >= amount) {
+              userToUpdate.permanentCredits -= amount;
+              message = `Removido ${amount} créditos permanentes de ${selectedUser.name}`;
+            } else {
+              toast({
+                title: "Operação não permitida",
+                description: "O usuário não possui créditos permanentes suficientes para essa operação.",
+                variant: "destructive"
+              });
+              return;
+            }
+          } else {
+            if (userToUpdate.monthlyCredits >= amount) {
+              userToUpdate.monthlyCredits -= amount;
+              message = `Removido ${amount} créditos mensais de ${selectedUser.name}`;
+            } else {
+              toast({
+                title: "Operação não permitida",
+                description: "O usuário não possui créditos mensais suficientes para essa operação.",
+                variant: "destructive"
+              });
+              return;
+            }
+          }
+        }
+        
+        // Update total credits
+        userToUpdate.totalCredits = userToUpdate.monthlyCredits + userToUpdate.permanentCredits;
+        
+        // Create transaction record
+        const newTransaction: CreditTransaction = {
+          id: Date.now(),
+          userId: userToUpdate.id,
+          amount,
+          operation,
+          creditType,
+          date: transactionDate,
+          description: message
+        };
+        
+        // Add to transaction history
+        setCreditHistory(prev => [newTransaction, ...prev]);
+        
+        // If using selectedUser to display details, update it too
+        if (selectedUser && selectedUser.id === userToUpdate.id) {
+          setSelectedUser({
+            ...selectedUser,
+            monthlyCredits: userToUpdate.monthlyCredits,
+            permanentCredits: userToUpdate.permanentCredits,
+            totalCredits: userToUpdate.totalCredits
+          });
+        }
+        
+        toast({
+          title: "Créditos atualizados",
+          description: message
+        });
+        
+        // Log the operation
+        console.log("Credits operation:", { 
+          userId: selectedUser.id, 
+          operation, 
+          amount,
+          creditType,
+          monthlyCredits: userToUpdate.monthlyCredits,
+          permanentCredits: userToUpdate.permanentCredits,
+          totalCredits: userToUpdate.totalCredits
+        });
+        
+        // Close the dialog
+        setShowCreditsDialog(false);
+        creditsForm.reset();
       }
-      
-      toast({
-        title: "Créditos atualizados",
-        description: message
-      });
-      
-      // In a real app, update the user's credits in the database
-      console.log("Credits operation:", { userId: selectedUser.id, operation, amount });
-      
-      // Close the dialog
-      setShowCreditsDialog(false);
-      creditsForm.reset();
     }
   };
   
@@ -400,19 +496,21 @@ const Users = () => {
     }
   }, [selectedUser, editUserForm]);
 
+  // Updated to add default monthly credits for new users
   const handleAddUser = (data: UserFormValues) => {
     // No mundo real, adicionaríamos o usuário ao banco de dados
-    // com 5 créditos iniciais
     const newUserData = {
       ...data,
-      credits: DEFAULT_CREDITS // Define 5 créditos iniciais para novos usuários
+      monthlyCredits: DEFAULT_CREDITS, // Define 5 créditos mensais iniciais para novos usuários
+      permanentCredits: 0, // Inicialmente sem créditos permanentes
+      totalCredits: DEFAULT_CREDITS // Total inicial de créditos
     };
     
     console.log("New user data:", newUserData);
     
     toast({
       title: "Usuário adicionado",
-      description: `O usuário ${data.name} foi adicionado com sucesso com ${DEFAULT_CREDITS} créditos iniciais.`
+      description: `O usuário ${data.name} foi adicionado com sucesso com ${DEFAULT_CREDITS} créditos mensais iniciais.`
     });
     
     setShowAddUserDialog(false);
@@ -556,56 +654,6 @@ const Users = () => {
     });
   };
   
-  // Add the missing renderCreditTabContent function
-  const renderCreditTabContent = () => {
-    if (!selectedUser) return null;
-    
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">Créditos Mensais</h3>
-            <p className="text-sm text-muted-foreground">
-              Os créditos são renovados para {DEFAULT_CREDITS} no início de cada mês e não são acumuláveis.
-            </p>
-          </div>
-          <div className="text-center">
-            <span className="text-4xl font-bold text-portal-primary block">{selectedUser.credits}</span>
-            <span className="text-sm text-muted-foreground">créditos disponíveis</span>
-          </div>
-        </div>
-        
-        <div className="border-t pt-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold">Gerenciar Créditos</h3>
-            <Button 
-              size="sm" 
-              onClick={() => setShowCreditsDialog(true)}
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Adicionar/Remover Créditos
-            </Button>
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h4 className="font-medium mb-2">Histórico de Créditos</h4>
-            <p className="text-sm text-muted-foreground">
-              Nenhuma transação de crédito registrada ainda.
-            </p>
-          </div>
-        </div>
-        
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-          <h4 className="font-medium text-yellow-800 mb-1">Sobre os Créditos</h4>
-          <p className="text-sm text-yellow-700">
-            Todos os usuários recebem {DEFAULT_CREDITS} créditos no início de cada mês. 
-            Créditos não utilizados não são acumulados para o próximo mês.
-          </p>
-        </div>
-      </div>
-    );
-  };
-  
   // Simulate storage usage monitoring function
   const monitorStorageUsage = (userId, fileSize) => {
     // This function would be called when a user uploads a file
@@ -654,6 +702,90 @@ const Users = () => {
         description: `Um upload de teste de 5MB foi processado para ${selectedUser.name}.`
       });
     }
+  };
+
+  // Updated to display both monthly and permanent credits
+  const renderCreditTabContent = () => {
+    if (!selectedUser) return null;
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold">Créditos do Usuário</h3>
+            <p className="text-sm text-muted-foreground">
+              Os créditos mensais são renovados para {DEFAULT_CREDITS} no início de cada mês e não são acumuláveis.
+              Os créditos permanentes não expiram.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <span className="text-sm text-muted-foreground block">Créditos Mensais</span>
+              <span className="text-2xl font-bold text-portal-primary block">{selectedUser.monthlyCredits}</span>
+              <span className="text-xs text-muted-foreground">Expiram no fim do mês</span>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <span className="text-sm text-muted-foreground block">Créditos Permanentes</span>
+              <span className="text-2xl font-bold text-green-600 block">{selectedUser.permanentCredits}</span>
+              <span className="text-xs text-muted-foreground">Não expiram</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-semibold">Gerenciar Créditos</h3>
+            <Button 
+              size="sm" 
+              onClick={() => setShowCreditsDialog(true)}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Adicionar/Remover Créditos
+            </Button>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Histórico de Créditos</h4>
+            {creditHistory.filter(tx => tx.userId === selectedUser.id).length > 0 ? (
+              <div className="max-h-48 overflow-y-auto">
+                <ul className="space-y-2">
+                  {creditHistory
+                    .filter(tx => tx.userId === selectedUser.id)
+                    .map(tx => (
+                      <li key={tx.id} className="text-sm border-b pb-2">
+                        <div className="flex justify-between items-center">
+                          <span className={tx.operation === "add" ? "text-green-600" : "text-red-600"}>
+                            {tx.operation === "add" ? "+" : "-"}{tx.amount} {tx.creditType === "permanent" ? "permanentes" : "mensais"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {tx.date.toLocaleDateString()} {tx.date.toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{tx.description}</p>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma transação de crédito registrada ainda.
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+          <h4 className="font-medium text-yellow-800 mb-1">Sobre os Créditos</h4>
+          <p className="text-sm text-yellow-700">
+            <span className="font-medium">Créditos Mensais:</span> Todos os usuários recebem {DEFAULT_CREDITS} créditos no início de cada mês. 
+            Créditos mensais não utilizados não são acumulados para o próximo mês.
+            <br /><br />
+            <span className="font-medium">Créditos Permanentes:</span> Estes créditos são adicionados manualmente e não expiram.
+            São consumidos somente após o esgotamento dos créditos mensais.
+          </p>
+        </div>
+      </div>
+    );
   };
   
   return (
@@ -840,7 +972,7 @@ const Users = () => {
           <DialogHeader>
             <DialogTitle>Adicionar Novo Usuário</DialogTitle>
             <DialogDescription>
-              Preencha os dados do novo usuário no sistema. O usuário receberá {DEFAULT_CREDITS} créditos iniciais.
+              Preencha os dados do novo usuário no sistema. O usuário receberá {DEFAULT_CREDITS} créditos mensais iniciais.
             </DialogDescription>
           </DialogHeader>
           
@@ -1317,7 +1449,7 @@ const Users = () => {
         </Dialog>
       )}
       
-      {/* Credits Dialog */}
+      {/* Credits Dialog - Updated for permanent and monthly credits */}
       {selectedUser && (
         <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
           <DialogContent className="max-w-md">
@@ -1326,17 +1458,23 @@ const Users = () => {
               <DialogDescription>
                 Adicione ou remova créditos para {selectedUser.name}.
                 <p className="text-xs text-muted-foreground mt-2">
-                  Nota: Os créditos são renovados para {DEFAULT_CREDITS} no início de cada mês.
+                  Nota: Os créditos mensais são renovados para {DEFAULT_CREDITS} no início de cada mês e não são acumuláveis. Créditos permanentes não expiram.
                 </p>
               </DialogDescription>
             </DialogHeader>
             
             <Form {...creditsForm}>
               <form onSubmit={creditsForm.handleSubmit(handleManageCredits)} className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md mb-4">
                   <div>
-                    <h3 className="font-medium">Saldo Atual</h3>
-                    <p className="text-2xl font-bold text-portal-primary">{selectedUser.credits} créditos</p>
+                    <h3 className="text-sm font-medium">Créditos Mensais</h3>
+                    <p className="text-2xl font-bold text-portal-primary">{selectedUser.monthlyCredits}</p>
+                    <p className="text-xs text-muted-foreground">Expiram fim do mês</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium">Créditos Permanentes</h3>
+                    <p className="text-2xl font-bold text-green-600">{selectedUser.permanentCredits}</p>
+                    <p className="text-xs text-muted-foreground">Não expiram</p>
                   </div>
                 </div>
                 
@@ -1366,6 +1504,31 @@ const Users = () => {
                           Remover
                         </Button>
                       </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={creditsForm.control}
+                  name="creditType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Crédito</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo de crédito" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="permanent">Créditos Permanentes (não expiram)</SelectItem>
+                          <SelectItem value="monthly">Créditos Mensais (expiram fim do mês)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
