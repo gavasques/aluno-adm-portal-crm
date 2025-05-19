@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -129,7 +130,10 @@ const CourseDetails: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="status">Status</Label>
-                                <Select onValueChange={handleStatusChange}>
+                                <Select 
+                                    onValueChange={handleStatusChange}
+                                    defaultValue={course.status}
+                                >
                                     <SelectTrigger className="w-[180px]">
                                         <SelectValue placeholder={course.status} />
                                     </SelectTrigger>
