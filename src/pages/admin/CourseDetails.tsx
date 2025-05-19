@@ -8,7 +8,9 @@ import {
   File, 
   Link, 
   Plus, 
-  Trash2 
+  Trash2,
+  Edit,
+  LinkIcon
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +31,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Course, CourseStatus } from "@/pages/admin/Courses";
+import CourseForm from "@/components/admin/CourseForm";
+import CheckoutForm from "@/components/admin/CheckoutForm";
 
 // Tipos para as abas
 interface Comment {
@@ -55,6 +59,13 @@ interface Checkout {
   priority: number;
 }
 
+interface UtmLink {
+  id: string;
+  name: string;
+  link: string;
+  createdAt: Date;
+}
+
 const CourseDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -66,10 +77,17 @@ const CourseDetails = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [files, setFiles] = useState<CourseFile[]>([]);
   const [checkouts, setCheckouts] = useState<Checkout[]>([]);
+  const [utmLinks, setUtmLinks] = useState<UtmLink[]>([]);
 
   // Estado para diálogos
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditCourseDialog, setShowEditCourseDialog] = useState(false);
+  const [showAddCheckoutDialog, setShowAddCheckoutDialog] = useState(false);
   const [newComment, setNewComment] = useState("");
+  
+  // Estados para UTM Links
+  const [newUtmLinkName, setNewUtmLinkName] = useState("");
+  const [newUtmLink, setNewUtmLink] = useState("");
   
   // Simulando carregamento de dados
   useEffect(() => {
@@ -121,6 +139,16 @@ const CourseDetails = () => {
         }
       ]);
       
+      // Dados fictícios para UTM links
+      setUtmLinks([
+        {
+          id: "utm1",
+          name: "Campanha Instagram",
+          link: "https://pay.hotmart.com/curso-ecommerce?utm_source=instagram&utm_medium=social",
+          createdAt: new Date(2023, 5, 20)
+        }
+      ]);
+      
       setLoading(false);
     }, 500);
   }, [id]);
@@ -129,6 +157,17 @@ const CourseDetails = () => {
     // Em um cenário real, aqui você faria uma chamada à API para excluir o curso
     toast.success("Curso excluído com sucesso!");
     navigate("/admin/courses");
+  };
+
+  const handleEditCourse = (updatedCourseData: Omit<Course, "id" | "createdAt">) => {
+    if (course) {
+      setCourse({
+        ...course,
+        ...updatedCourseData
+      });
+      setShowEditCourseDialog(false);
+      toast.success("Curso atualizado com sucesso!");
+    }
   };
 
   const handleAddComment = () => {
@@ -176,6 +215,60 @@ const CourseDetails = () => {
   const handleDeleteFile = (id: string) => {
     setFiles(files.filter(file => file.id !== id));
     toast.success("Arquivo removido com sucesso!");
+  };
+  
+  const handleAddCheckout = (checkoutData: Omit<Checkout, "id">) => {
+    const newCheckout: Checkout = {
+      id: Date.now().toString(),
+      ...checkoutData
+    };
+    
+    setCheckouts([...checkouts, newCheckout]);
+    setShowAddCheckoutDialog(false);
+    toast.success("Checkout adicionado com sucesso!");
+  };
+  
+  const handleDeleteCheckout = (id: string) => {
+    setCheckouts(checkouts.filter(checkout => checkout.id !== id));
+    toast.success("Checkout removido com sucesso!");
+  };
+  
+  const handleAddUtmLink = () => {
+    // Validação para os campos de UTM
+    if (newUtmLinkName.trim().length === 0) {
+      toast.error("O nome do link é obrigatório");
+      return;
+    }
+    
+    if (newUtmLink.trim().length === 0) {
+      toast.error("O link trackeado é obrigatório");
+      return;
+    }
+    
+    try {
+      // Validar se é uma URL válida
+      new URL(newUtmLink);
+    } catch (e) {
+      toast.error("Link inválido. Insira uma URL completa (ex: https://exemplo.com)");
+      return;
+    }
+    
+    const newLink: UtmLink = {
+      id: Date.now().toString(),
+      name: newUtmLinkName,
+      link: newUtmLink,
+      createdAt: new Date()
+    };
+    
+    setUtmLinks([...utmLinks, newLink]);
+    setNewUtmLinkName("");
+    setNewUtmLink("");
+    toast.success("Link UTM adicionado com sucesso!");
+  };
+  
+  const handleDeleteUtmLink = (id: string) => {
+    setUtmLinks(utmLinks.filter(link => link.id !== id));
+    toast.success("Link UTM removido com sucesso!");
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -252,10 +345,7 @@ const CourseDetails = () => {
           <Button variant="outline" onClick={() => navigate("/admin/courses")}>
             Voltar
           </Button>
-          <Button 
-            variant="destructive"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
+          <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
             <Trash2 className="h-4 w-4 mr-2" /> Excluir Curso
           </Button>
         </div>
@@ -273,13 +363,19 @@ const CourseDetails = () => {
           <TabsTrigger value="checkouts">
             Páginas de Checkout <span className="ml-1 text-xs">({checkouts.length})</span>
           </TabsTrigger>
+          <TabsTrigger value="utmLinks">
+            Links UTM <span className="ml-1 text-xs">({utmLinks.length})</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Aba de Detalhes */}
         <TabsContent value="details">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row justify-between">
               <CardTitle>Informações do Curso</CardTitle>
+              <Button onClick={() => setShowEditCourseDialog(true)} variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-2" /> Editar Informações
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -442,7 +538,7 @@ const CourseDetails = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 <span>Páginas de Checkout</span>
-                <Button>
+                <Button onClick={() => setShowAddCheckoutDialog(true)}>
                   <Plus className="h-4 w-4 mr-2" /> Adicionar Checkout
                 </Button>
               </CardTitle>
@@ -477,9 +573,90 @@ const CourseDetails = () => {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => {
-                                // Implementar exclusão de checkout
-                              }}
+                              onClick={() => handleDeleteCheckout(checkout.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Aba de Links UTM */}
+        <TabsContent value="utmLinks">
+          <Card>
+            <CardHeader>
+              <CardTitle>Links de Checkout UTM</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome do Link
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      placeholder="Ex: Campanha Instagram"
+                      value={newUtmLinkName}
+                      onChange={(e) => setNewUtmLinkName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Link Trackeado
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      placeholder="https://exemplo.com?utm_source=exemplo"
+                      value={newUtmLink}
+                      onChange={(e) => setNewUtmLink(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleAddUtmLink}>
+                    <LinkIcon className="h-4 w-4 mr-2" /> Adicionar Link UTM
+                  </Button>
+                </div>
+              </div>
+              
+              {utmLinks.length === 0 ? (
+                <p className="text-center text-gray-500 py-4">Nenhum link UTM cadastrado.</p>
+              ) : (
+                <div className="rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="h-12 px-4 text-left">Nome</th>
+                        <th className="h-12 px-4 text-left">Link</th>
+                        <th className="h-12 px-4 text-left">Data de Cadastro</th>
+                        <th className="h-12 px-4 text-left">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {utmLinks.map((utmLink) => (
+                        <tr key={utmLink.id} className="border-b">
+                          <td className="p-4">{utmLink.name}</td>
+                          <td className="p-4">
+                            <a href={utmLink.link} target="_blank" rel="noopener noreferrer" className="text-portal-primary hover:underline flex items-center">
+                              {utmLink.link.length > 50 ? `${utmLink.link.substring(0, 50)}...` : utmLink.link} <Link className="h-4 w-4 ml-1" />
+                            </a>
+                          </td>
+                          <td className="p-4">{format(utmLink.createdAt, "dd/MM/yyyy")}</td>
+                          <td className="p-4">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteUtmLink(utmLink.id)}
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
@@ -518,6 +695,41 @@ const CourseDetails = () => {
               Excluir
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog de edição do curso */}
+      <Dialog open={showEditCourseDialog} onOpenChange={setShowEditCourseDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Editar Curso</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do curso conforme necessário.
+            </DialogDescription>
+          </DialogHeader>
+          {course && (
+            <CourseForm 
+              onSubmit={handleEditCourse}
+              onCancel={() => setShowEditCourseDialog(false)}
+              initialData={course}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog de adição de checkout */}
+      <Dialog open={showAddCheckoutDialog} onOpenChange={setShowAddCheckoutDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Página de Checkout</DialogTitle>
+            <DialogDescription>
+              Preencha as informações da página de checkout.
+            </DialogDescription>
+          </DialogHeader>
+          <CheckoutForm 
+            onSubmit={handleAddCheckout}
+            onCancel={() => setShowAddCheckoutDialog(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
