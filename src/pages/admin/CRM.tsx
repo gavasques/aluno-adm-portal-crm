@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, 
-  Edit, Trash2, Filter, X, Search, Mail, Phone, FileText, Clock, Link
+  Edit, Trash2, Filter, X, Search, Mail, Phone, FileText, Clock, Link, Check
 } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { useNavigate } from "react-router-dom";
@@ -596,12 +595,12 @@ const CRM = () => {
     const productString = updatedProducts.map(p => p.itemName).join(", ");
     
     // Atualizar o lead
-    setLeads(leads.map(lead => 
-      lead.id === selectedLead.id ? 
-      {...lead, 
+    setLeads(leads.map(l => 
+      l.id === selectedLead.id ? 
+      {...l, 
         negotiatedProducts: updatedProducts,
         product: productString
-      } : lead
+      } : l
     ));
     
     // Atualizar o lead selecionado
@@ -1593,4 +1592,3 @@ const CRM = () => {
 };
 
 export default CRM;
-

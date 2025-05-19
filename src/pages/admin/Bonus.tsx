@@ -32,6 +32,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 // Tipos para os bônus
 export type BonusType = "Software" | "Sistema" | "IA" | "Ebook" | "Lista" | "Outros";
