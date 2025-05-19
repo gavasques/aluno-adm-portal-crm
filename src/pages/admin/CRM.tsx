@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,6 +144,71 @@ const SortableColumn = ({ column, children, leadCount }) => {
       <div className={`flex-1 p-2 bg-gray-50 rounded-b-md border border-t-0 min-h-[500px]`}>
         {children}
       </div>
+    </div>
+  );
+};
+
+// Componente de item de coluna ordenável para o menu de gerenciamento
+const SortableColumnListItem = ({ column, leadCount, onRemove }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: column.id,
+    data: {
+      type: 'column',
+      column,
+    },
+  });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+  };
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-grab mb-2"
+      {...attributes}
+      {...listeners}
+    >
+      <div className="flex items-center">
+        <Move className="h-4 w-4 mr-3 cursor-grab" />
+        <div className={`w-3 h-3 rounded-full mr-2 ${column.color}`} />
+        <span>{column.name}</span>
+        <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-200 rounded-full">{leadCount}</span>
+      </div>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-red-500 hover:text-red-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir coluna</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a coluna "{column.name}"? Todos os leads desta coluna serão movidos para a primeira coluna.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => onRemove(column)}
+              className="bg-red-500 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -334,6 +398,7 @@ const CRM = () => {
     const newIndex = columns.findIndex(col => col.id === over.id);
     
     if (oldIndex !== newIndex) {
+      console.log(`Reordenando coluna de ${oldIndex} para ${newIndex}`);
       setColumns(arrayMove(columns, oldIndex, newIndex));
     }
   };
@@ -442,68 +507,15 @@ const CRM = () => {
                     >
                       <div className="space-y-2">
                         {columns.map((column) => {
-                          const sortableProps = useSortable({
-                            id: column.id,
-                            data: {
-                              type: 'column',
-                              column,
-                            },
-                          });
-                          
-                          const style = {
-                            transform: CSS.Transform.toString(sortableProps.transform),
-                            transition: sortableProps.transition,
-                          };
-                          
                           const leadCount = leads.filter(lead => lead.column === column.id).length;
                           
                           return (
-                            <div 
-                              key={column.id} 
-                              ref={sortableProps.setNodeRef}
-                              style={style}
-                              className="flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-grab"
-                            >
-                              <div className="flex items-center">
-                                <Move 
-                                  className="h-4 w-4 mr-3 cursor-grab" 
-                                  {...sortableProps.attributes} 
-                                  {...sortableProps.listeners} 
-                                />
-                                <div className={`w-3 h-3 rounded-full mr-2 ${column.color}`} />
-                                <span>{column.name}</span>
-                                <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-200 rounded-full">{leadCount}</span>
-                              </div>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="text-red-500 hover:text-red-700"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Excluir coluna</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja excluir a coluna "{column.name}"? Todos os leads desta coluna serão movidos para a primeira coluna.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => removeColumn(column)}
-                                      className="bg-red-500 hover:bg-red-700"
-                                    >
-                                      Excluir
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
+                            <SortableColumnListItem 
+                              key={column.id}
+                              column={column}
+                              leadCount={leadCount}
+                              onRemove={removeColumn}
+                            />
                           );
                         })}
                       </div>
