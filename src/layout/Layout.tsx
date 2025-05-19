@@ -2,35 +2,29 @@
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
-import { useLocation } from "react-router-dom";
 import StudentSidebar from "./StudentSidebar";
 import AdminSidebar from "./AdminSidebar";
+import { useLocation } from "react-router-dom";
 
 const Layout = () => {
   const location = useLocation();
-  const path = location.pathname;
-  
-  // Determine if we're in admin or student area
-  const isAdmin = path.includes("/admin");
-  const isStudent = path.includes("/student");
-  const isHome = path === "/";
+  const isAdmin = location.pathname.startsWith("/admin");
+  const isStudent = location.pathname.startsWith("/student");
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-white">
       <Header />
-      
-      <div className="flex flex-1 w-full">
-        {/* Show appropriate sidebar based on route */}
-        {isAdmin && <AdminSidebar />}
+      <div className="flex-grow flex">
         {isStudent && <StudentSidebar />}
+        {isAdmin && <AdminSidebar />}
         
-        {/* Main content area */}
-        <main className={`flex-1 p-6 ${!isHome ? 'pt-20' : ''}`}>
-          <Outlet />
+        <main className="flex-1 flex flex-col overflow-x-hidden">
+          <div className="flex-grow p-4">
+            <Outlet />
+          </div>
+          <Footer />
         </main>
       </div>
-      
-      <Footer />
     </div>
   );
 };

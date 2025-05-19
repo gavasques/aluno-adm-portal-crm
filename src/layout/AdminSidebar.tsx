@@ -40,13 +40,13 @@ const NavItem = ({ href, icon: Icon, children }: NavItemProps) => {
         <Link 
           to={href}
           className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 transition-colors",
+            "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
             isActive 
               ? "bg-portal-primary text-white" 
               : "text-portal-dark hover:bg-portal-light hover:text-portal-primary"
           )}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-4 w-4" />
           <span>{children}</span>
         </Link>
       </SidebarMenuButton>
@@ -56,16 +56,16 @@ const NavItem = ({ href, icon: Icon, children }: NavItemProps) => {
 
 const AdminSidebar = () => {
   return (
-    <Sidebar className="border-r border-border w-64 hidden md:block">
+    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0">
       <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
       <SidebarContent className="pt-16 pb-4">
-        <div className="px-4 py-2">
-          <h2 className="text-lg font-semibold text-portal-primary mb-1">Área do Administrador</h2>
-          <p className="text-sm text-gray-500">Painel de controle</p>
+        <div className="px-3 py-2">
+          <h2 className="text-base font-semibold text-portal-primary mb-1">Área do Administrador</h2>
+          <p className="text-xs text-gray-500">Painel de controle</p>
         </div>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-sm font-medium text-gray-500">
+          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
             Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -76,7 +76,7 @@ const AdminSidebar = () => {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-sm font-medium text-gray-500">
+          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
             Gestão
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -91,7 +91,7 @@ const AdminSidebar = () => {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-sm font-medium text-gray-500">
+          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
             Organização
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -103,7 +103,7 @@ const AdminSidebar = () => {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-sm font-medium text-gray-500">
+          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
             Geral ADM
           </SidebarGroupLabel>
           <SidebarGroupContent>

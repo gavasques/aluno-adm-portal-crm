@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -25,6 +24,7 @@ import {
   Store,
   FileText,
   Paperclip,
+  ExternalLink
 } from "lucide-react";
 import { 
   Form, 
@@ -94,8 +94,8 @@ const Students = () => {
       state: "São Paulo",
       academyAccess: "Sim",
       stores: [
-        { id: 1, name: "Loja da Ana", channel: "Amazon" },
-        { id: 2, name: "Ana Shop", channel: "Site" }
+        { id: 1, name: "Loja da Ana", channel: "Amazon", link: "https://amazon.com/loja-ana" },
+        { id: 2, name: "Ana Shop", channel: "Site", link: "https://anashop.com" }
       ],
       partners: [
         { id: 1, name: "Carlos Mendes", email: "carlos@email.com", phone: "(11) 97777-8888", role: "Sócio Administrativo" }
@@ -127,7 +127,7 @@ const Students = () => {
       state: "Minas Gerais",
       academyAccess: "Sim START",
       stores: [
-        { id: 1, name: "Mari Store", channel: "Shopee" }
+        { id: 1, name: "Mari Store", channel: "Shopee", link: "https://shopee.com/maristore" }
       ],
       partners: [
         { id: 1, name: "João Silva", email: "joao@email.com", phone: "(11) 95555-6666", role: "Sócio Técnico" },
@@ -146,7 +146,7 @@ const Students = () => {
       state: "Paraná",
       academyAccess: "Não",
       stores: [
-        { id: 1, name: "Pedro E-commerce", channel: "Meli" }
+        { id: 1, name: "Pedro E-commerce", channel: "Meli", link: "https://mercadolivre.com/pedro-ecommerce" }
       ],
       partners: []
     },
@@ -191,14 +191,16 @@ const Students = () => {
   // Formulários
   const storeFormSchema = z.object({
     name: z.string().min(1, "O nome da loja é obrigatório"),
-    channel: z.string().min(1, "Selecione um canal de venda")
+    channel: z.string().min(1, "Selecione um canal de venda"),
+    link: z.string().url("Digite uma URL válida").or(z.string().length(0))
   });
 
   const storeForm = useForm({
     resolver: zodResolver(storeFormSchema),
     defaultValues: {
       name: "",
-      channel: ""
+      channel: "",
+      link: ""
     }
   });
 
@@ -364,7 +366,7 @@ const Students = () => {
       {/* Dialog para detalhes do aluno */}
       {selectedStudent && (
         <Dialog open={!!selectedStudent} onOpenChange={handleCloseStudent}>
-          <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+          <DialogContent className="max-w-5xl h-[90vh] flex flex-col overflow-hidden">
             <DialogHeader>
               <div className="flex justify-between items-center">
                 <DialogTitle className="flex items-center">
@@ -391,7 +393,7 @@ const Students = () => {
                 </DropdownMenu>
               </div>
             </DialogHeader>
-            <div className="py-2 flex-grow overflow-y-auto">
+            <div className="py-2 flex-grow overflow-y-auto px-1">
               <Tabs defaultValue="details" className="h-full">
                 <TabsList className="mb-2">
                   <TabsTrigger value="details">Dados do Aluno</TabsTrigger>
@@ -485,7 +487,7 @@ const Students = () => {
                       </div>
 
                       {/* Lojas e Sócios em duas colunas */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Lojas do aluno */}
                         <div>
                           <div className="flex justify-between items-center mb-3">
@@ -548,6 +550,19 @@ const Students = () => {
                                         </FormItem>
                                       )}
                                     />
+                                    <FormField
+                                      control={storeForm.control}
+                                      name="link"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Link da Loja</FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="https://example.com/loja" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
                                     <div className="flex justify-end space-x-2">
                                       <Button 
                                         type="button" 
@@ -578,9 +593,28 @@ const Students = () => {
                                       <p className="font-medium text-sm">{store.name}</p>
                                       <p className="text-xs text-gray-500">Canal: {store.channel}</p>
                                     </div>
-                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                      <Trash2 className="h-3 w-3 text-red-500" />
-                                    </Button>
+                                    <div className="flex items-center">
+                                      {store.link && (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-8 w-8 p-0 mr-1"
+                                          asChild
+                                        >
+                                          <a 
+                                            href={store.link} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            title="Abrir loja"
+                                          >
+                                            <ExternalLink className="h-4 w-4 text-blue-500" />
+                                          </a>
+                                        </Button>
+                                      )}
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
