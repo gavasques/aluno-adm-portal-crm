@@ -234,19 +234,66 @@ const Users = () => {
   };
   
   const handleIncreaseStorage = (userId, userName) => {
-    toast({
-      title: "Armazenamento aumentado",
-      description: `O limite de armazenamento de ${userName} foi aumentado em 100MB.`
-    });
-    // In a real app, update the user's storage limit here
+    // Find user by ID
+    const userToUpdate = USERS.find(user => user.id === userId);
+    if (userToUpdate) {
+      // Increase storage limit by 100MB
+      userToUpdate.storageLimit += 100;
+      // Update the storage string representation
+      userToUpdate.storage = `${userToUpdate.storageValue}MB / ${userToUpdate.storageLimit}MB`;
+      
+      // If using selectedUser to display details, update it too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          storageLimit: userToUpdate.storageLimit,
+          storage: userToUpdate.storage
+        });
+      }
+      
+      toast({
+        title: "Armazenamento aumentado",
+        description: `O limite de armazenamento de ${userName} foi aumentado em 100MB para ${userToUpdate.storageLimit}MB.`
+      });
+      
+      console.log(`Storage limit for user ${userId} increased to ${userToUpdate.storageLimit}MB`);
+    }
   };
 
   const handleDecreaseStorage = (userId, userName) => {
-    toast({
-      title: "Armazenamento reduzido",
-      description: `O limite de armazenamento de ${userName} foi reduzido em 100MB.`
-    });
-    // In a real app, update the user's storage limit here
+    // Find user by ID
+    const userToUpdate = USERS.find(user => user.id === userId);
+    
+    if (userToUpdate && userToUpdate.storageLimit > 100) {
+      // Prevent reducing below 100MB
+      userToUpdate.storageLimit -= 100;
+      // Update the storage string representation
+      userToUpdate.storage = `${userToUpdate.storageValue}MB / ${userToUpdate.storageLimit}MB`;
+      
+      // If using selectedUser to display details, update it too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          storageLimit: userToUpdate.storageLimit,
+          storage: userToUpdate.storage
+        });
+      }
+      
+      toast({
+        title: "Armazenamento reduzido",
+        description: `O limite de armazenamento de ${userName} foi reduzido em 100MB para ${userToUpdate.storageLimit}MB.`
+      });
+      
+      console.log(`Storage limit for user ${userId} decreased to ${userToUpdate.storageLimit}MB`);
+    } else {
+      toast({
+        title: "Operação não permitida",
+        description: "O limite mínimo de armazenamento é de 100MB.",
+        variant: "destructive"
+      });
+      
+      console.log(`Cannot decrease storage limit for user ${userId} below 100MB`);
+    }
   };
   
   const handleSendMagicLink = (userId, userName) => {
@@ -557,6 +604,56 @@ const Users = () => {
         </div>
       </div>
     );
+  };
+  
+  // Simulate storage usage monitoring function
+  const monitorStorageUsage = (userId, fileSize) => {
+    // This function would be called when a user uploads a file
+    const userToUpdate = USERS.find(user => user.id === userId);
+    
+    if (userToUpdate) {
+      // Update storage value
+      const newStorageValue = userToUpdate.storageValue + fileSize;
+      userToUpdate.storageValue = newStorageValue;
+      userToUpdate.storage = `${newStorageValue}MB / ${userToUpdate.storageLimit}MB`;
+      
+      // Check if storage limit is exceeded
+      if (newStorageValue > userToUpdate.storageLimit) {
+        console.log(`User ${userId} has exceeded their storage limit!`);
+        toast({
+          title: "Limite de armazenamento excedido",
+          description: `O usuário ${userToUpdate.name} excedeu o limite de armazenamento de ${userToUpdate.storageLimit}MB.`,
+          variant: "destructive"
+        });
+        
+        // Here you would implement logic to handle the exceeded storage
+        // For example, prevent further uploads or notify admins
+      }
+      
+      // If using selectedUser to display details, update it too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          storageValue: newStorageValue,
+          storage: userToUpdate.storage
+        });
+      }
+      
+      console.log(`Storage usage for user ${userId} updated to ${newStorageValue}MB`);
+    }
+  };
+  
+  // Function to demonstrate usage of the monitoring
+  const handleTestUpload = () => {
+    if (selectedUser) {
+      // Simulate a 5MB file upload for the selected user
+      monitorStorageUsage(selectedUser.id, 5);
+      
+      toast({
+        title: "Upload simulado",
+        description: `Um upload de teste de 5MB foi processado para ${selectedUser.name}.`
+      });
+    }
   };
   
   return (
@@ -1148,7 +1245,7 @@ const Users = () => {
                   
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-semibold mb-3">Gerenciar Limite de Armazenamento</h3>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -1157,7 +1254,7 @@ const Users = () => {
                       >
                         <ArrowDown className="h-4 w-4 mr-1" /> Reduzir 100MB
                       </Button>
-                      <div className="text-sm font-medium">
+                      <div className="text-sm font-medium flex items-center">
                         Limite atual: {selectedUser.storageLimit}MB
                       </div>
                       <Button 
@@ -1166,6 +1263,15 @@ const Users = () => {
                         onClick={() => handleIncreaseStorage(selectedUser.id, selectedUser.name)}
                       >
                         <ArrowUp className="h-4 w-4 mr-1" /> Aumentar 100MB
+                      </Button>
+                      
+                      {/* For testing purposes only - could be removed in production */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTestUpload}
+                      >
+                        <Download className="h-4 w-4 mr-1" /> Simular Upload (5MB)
                       </Button>
                     </div>
                   </div>
@@ -1186,6 +1292,14 @@ const Users = () => {
                         <span className="font-medium">5MB</span>
                       </li>
                     </ul>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
+                    <h4 className="font-medium text-blue-800 mb-1">Monitoramento de Armazenamento</h4>
+                    <p className="text-sm text-blue-700">
+                      O sistema monitora automaticamente cada upload, ajustando o uso de armazenamento em tempo real. 
+                      Quando um usuário se aproximar do limite, ele receberá uma notificação.
+                    </p>
                   </div>
                 </div>
               </TabsContent>
