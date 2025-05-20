@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter } from "lucide-react";
@@ -265,6 +266,12 @@ const AdminSuppliers = () => {
   };
   
   const toggleCategoryFilter = (category: string) => {
+    // Se "Todos" foi selecionado, limpar todas as seleções
+    if (category === "Todos") {
+      setSelectedCategories([]);
+      return;
+    }
+    
     setSelectedCategories(prev => 
       prev.includes(category)
         ? prev.filter(c => c !== category)
@@ -273,6 +280,12 @@ const AdminSuppliers = () => {
   };
   
   const toggleTypeFilter = (type: string) => {
+    // Se "Todos" foi selecionado, limpar todas as seleções
+    if (type === "Todos") {
+      setSelectedTypes([]);
+      return;
+    }
+    
     setSelectedTypes(prev => 
       prev.includes(type)
         ? prev.filter(t => t !== type)
@@ -281,6 +294,12 @@ const AdminSuppliers = () => {
   };
   
   const toggleBrandFilter = (brand: string) => {
+    // Se "Todos" foi selecionado, limpar todas as seleções
+    if (brand === "Todos") {
+      setSelectedBrands([]);
+      return;
+    }
+    
     setSelectedBrands(prev => 
       prev.includes(brand)
         ? prev.filter(b => b !== brand)
@@ -289,6 +308,12 @@ const AdminSuppliers = () => {
   };
   
   const toggleStatusFilter = (status: string) => {
+    // Se "Todos" foi selecionado, limpar todas as seleções
+    if (status === "Todos") {
+      setSelectedStatus([]);
+      return;
+    }
+    
     setSelectedStatus(prev => 
       prev.includes(status)
         ? prev.filter(s => s !== status)
@@ -327,6 +352,14 @@ const AdminSuppliers = () => {
                     <DropdownMenuLabel>Selecione as categorias</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
+                      {/* Adicionar opção "Todos" */}
+                      <DropdownMenuCheckboxItem
+                        key="todos-categorias"
+                        checked={selectedCategories.length === 0}
+                        onCheckedChange={() => toggleCategoryFilter("Todos")}
+                      >
+                        Todos
+                      </DropdownMenuCheckboxItem>
                       {CATEGORIES.map((category) => (
                         <DropdownMenuCheckboxItem
                           key={category}
@@ -352,6 +385,14 @@ const AdminSuppliers = () => {
                     <DropdownMenuSeparator />
                     <div className="max-h-60 overflow-y-auto">
                       <DropdownMenuGroup>
+                        {/* Adicionar opção "Todos" */}
+                        <DropdownMenuCheckboxItem
+                          key="todos-marcas"
+                          checked={selectedBrands.length === 0}
+                          onCheckedChange={() => toggleBrandFilter("Todos")}
+                        >
+                          Todos
+                        </DropdownMenuCheckboxItem>
                         {allBrands.map((brand) => (
                           <DropdownMenuCheckboxItem
                             key={brand}
@@ -377,6 +418,14 @@ const AdminSuppliers = () => {
                     <DropdownMenuLabel>Selecione os tipos</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
+                      {/* Adicionar opção "Todos" */}
+                      <DropdownMenuCheckboxItem
+                        key="todos-tipos"
+                        checked={selectedTypes.length === 0}
+                        onCheckedChange={() => toggleTypeFilter("Todos")}
+                      >
+                        Todos
+                      </DropdownMenuCheckboxItem>
                       {SUPPLIER_TYPES.map((type) => (
                         <DropdownMenuCheckboxItem
                           key={type}
@@ -401,6 +450,14 @@ const AdminSuppliers = () => {
                     <DropdownMenuLabel>Selecione os status</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
+                      {/* Adicionar opção "Todos" */}
+                      <DropdownMenuCheckboxItem
+                        key="todos-status"
+                        checked={selectedStatus.length === 0}
+                        onCheckedChange={() => toggleStatusFilter("Todos")}
+                      >
+                        Todos
+                      </DropdownMenuCheckboxItem>
                       {["Ativo", "Inativo"].map((status) => (
                         <DropdownMenuCheckboxItem
                           key={status}
