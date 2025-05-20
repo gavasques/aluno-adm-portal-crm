@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -126,8 +125,8 @@ const Partners = () => {
   
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [partnerTypeFilter, setPartnerTypeFilter] = useState("");
-  const [recommendedFilter, setRecommendedFilter] = useState("");
+  const [partnerTypeFilter, setPartnerTypeFilter] = useState("all");
+  const [recommendedFilter, setRecommendedFilter] = useState("all");
   const [newContactName, setNewContactName] = useState("");
   const [newContactRole, setNewContactRole] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
@@ -141,9 +140,9 @@ const Partners = () => {
     const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          partner.category.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesType = partnerTypeFilter === "" || partner.type === partnerTypeFilter;
+    const matchesType = partnerTypeFilter === "all" || partner.type === partnerTypeFilter;
     
-    const matchesRecommended = recommendedFilter === "" || 
+    const matchesRecommended = recommendedFilter === "all" || 
                              (recommendedFilter === "recommended" && partner.recommended) ||
                              (recommendedFilter === "not-recommended" && !partner.recommended);
     
@@ -394,7 +393,7 @@ const Partners = () => {
               <SelectValue placeholder="Tipo de Parceiro" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="Agência">Agência</SelectItem>
               <SelectItem value="Consultor">Consultor</SelectItem>
               <SelectItem value="Serviço">Serviço</SelectItem>
@@ -406,7 +405,7 @@ const Partners = () => {
               <SelectValue placeholder="Recomendação" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="recommended">Recomendados</SelectItem>
               <SelectItem value="not-recommended">Não Recomendados</SelectItem>
             </SelectContent>
