@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, use
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useForm } from "react-hook-form";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Interface para a tipagem das colunas e leads
 interface Column {
@@ -532,7 +534,7 @@ const CRM = () => {
       </div>
       
       <Card className="mb-6">
-        <CardHeader>
+        <CardHeader className="sticky top-0 z-10 bg-white">
           <div className="flex justify-between items-center flex-col sm:flex-row space-y-2 sm:space-y-0">
             <div>
               <CardTitle>Gestão de Leads</CardTitle>
@@ -567,133 +569,152 @@ const CRM = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {activeView === "kanban" ? (
             <div className="relative">
-              <div 
-                ref={scrollContainerRef} 
-                className="overflow-x-auto pb-4" 
-                style={{ maxWidth: '100%' }}
-              >
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-                    <SortableContext items={columns.map(col => col.id)}>
-                      {columns.map(column => {
-                        const columnLeads = filteredLeads.filter(lead => lead.column === column.id);
-                        
-                        return (
-                          <div key={column.id} className="w-[280px]">
-                            <SortableColumn 
-                              column={column} 
-                              leadCount={columnLeads.length}
-                            >
-                              <SortableContext items={columnLeads.map(lead => `lead-${lead.id}`)}>
-                                {columnLeads.map(lead => (
-                                  <SortableLeadCard 
-                                    key={lead.id} 
-                                    lead={lead} 
-                                    openLeadDetails={openLeadDetails} 
-                                  />
-                                ))}
-                              </SortableContext>
-                            </SortableColumn>
-                          </div>
-                        );
-                      })}
-                    </SortableContext>
+              <div className="sticky top-0 z-10 bg-white border-b p-4">
+                {/* Campos fixos que não rolam com o kanban */}
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-medium">
+                    {filteredLeads.length} leads encontrados
                   </div>
-                </DndContext>
+                </div>
               </div>
-              <div className="absolute top-1/2 -left-4 transform -translate-y-1/2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full bg-white shadow-md"
-                  onClick={() => {
-                    if (scrollContainerRef.current) {
-                      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-                    }
-                  }}
+              <div className="p-4">
+                <div 
+                  ref={scrollContainerRef} 
+                  className="overflow-x-auto pb-4" 
+                  style={{ maxWidth: '100%' }}
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="absolute top-1/2 -right-4 transform -translate-y-1/2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full bg-white shadow-md"
-                  onClick={() => {
-                    if (scrollContainerRef.current) {
-                      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-                    }
-                  }}
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
+                      <SortableContext items={columns.map(col => col.id)}>
+                        {columns.map(column => {
+                          const columnLeads = filteredLeads.filter(lead => lead.column === column.id);
+                          
+                          return (
+                            <div key={column.id} className="w-[280px]">
+                              <SortableColumn 
+                                column={column} 
+                                leadCount={columnLeads.length}
+                              >
+                                <SortableContext items={columnLeads.map(lead => `lead-${lead.id}`)}>
+                                  {columnLeads.map(lead => (
+                                    <SortableLeadCard 
+                                      key={lead.id} 
+                                      lead={lead} 
+                                      openLeadDetails={openLeadDetails} 
+                                    />
+                                  ))}
+                                </SortableContext>
+                              </SortableColumn>
+                            </div>
+                          );
+                        })}
+                      </SortableContext>
+                    </div>
+                  </DndContext>
+                </div>
+                <div className="absolute top-1/2 -left-4 transform -translate-y-1/2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-white shadow-md"
+                    onClick={() => {
+                      if (scrollContainerRef.current) {
+                        scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="absolute top-1/2 -right-4 transform -translate-y-1/2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-white shadow-md"
+                    onClick={() => {
+                      if (scrollContainerRef.current) {
+                        scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="mb-4 w-full max-w-sm">
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input 
-                    placeholder="Buscar leads..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
+            <div>
+              <div className="sticky top-0 z-10 bg-white border-b p-4">
+                {/* Campos fixos que não rolam com a lista */}
+                <div className="mb-4 w-full max-w-sm">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input 
+                      placeholder="Buscar leads..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
                 </div>
               </div>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2 text-left">Nome</th>
-                    <th className="px-4 py-2 text-left">Empresa</th>
-                    <th className="px-4 py-2 text-left">Produto</th>
-                    <th className="px-4 py-2 text-left">Responsável</th>
-                    <th className="px-4 py-2 text-left">Estágio</th>
-                    <th className="px-4 py-2 text-left">Último Contato</th>
-                    <th className="px-4 py-2 text-left">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLeads.map(lead => {
-                    const column = columns.find(col => col.id === lead.column);
-                    return (
-                      <tr key={lead.id} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-3">{lead.name}</td>
-                        <td className="px-4 py-3">{lead.company}</td>
-                        <td className="px-4 py-3">{lead.product}</td>
-                        <td className="px-4 py-3">{lead.responsible}</td>
-                        <td className="px-4 py-3">
-                          {column && (
-                            <span className={`px-2 py-1 rounded-full text-xs ${column.color}`}>
-                              {column.name}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">{lead.lastContact}</td>
-                        <td className="px-4 py-3">
-                          <Button variant="ghost" size="sm" onClick={() => openLeadDetails(lead)}>
-                            Ver Detalhes
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {filteredLeads.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhum lead encontrado com os critérios de busca.
-                </div>
-              )}
+              <div className="p-4">
+                <ScrollArea className="h-[calc(100vh-350px)]">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead className="sticky top-0 bg-white z-10">
+                        <tr className="bg-gray-50">
+                          <th className="px-4 py-2 text-left">Nome</th>
+                          <th className="px-4 py-2 text-left">Empresa</th>
+                          <th className="px-4 py-2 text-left">Produto</th>
+                          <th className="px-4 py-2 text-left">Responsável</th>
+                          <th className="px-4 py-2 text-left">Estágio</th>
+                          <th className="px-4 py-2 text-left">Último Contato</th>
+                          <th className="px-4 py-2 text-left">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredLeads.map(lead => {
+                          const column = columns.find(col => col.id === lead.column);
+                          return (
+                            <tr key={lead.id} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3">{lead.name}</td>
+                              <td className="px-4 py-3">{lead.company}</td>
+                              <td className="px-4 py-3">{lead.product}</td>
+                              <td className="px-4 py-3">{lead.responsible}</td>
+                              <td className="px-4 py-3">
+                                {column && (
+                                  <span className={`px-2 py-1 rounded-full text-xs ${column.color}`}>
+                                    {column.name}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">{lead.lastContact}</td>
+                              <td className="px-4 py-3">
+                                <Button variant="ghost" size="sm" onClick={() => openLeadDetails(lead)}>
+                                  Ver Detalhes
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    {filteredLeads.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        Nenhum lead encontrado com os critérios de busca.
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
           )}
         </CardContent>
