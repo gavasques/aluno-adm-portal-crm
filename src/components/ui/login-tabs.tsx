@@ -50,7 +50,7 @@ export function LoginTabs() {
           <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
         </div>
 
-        <div className="w-full max-w-md mx-auto p-8 space-y-8">
+        <div className="w-full max-w-md mx-auto p-8 space-y-8 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10">
           <Tabs defaultValue="student" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="student">Área Aluno</TabsTrigger>
@@ -58,8 +58,8 @@ export function LoginTabs() {
             </TabsList>
             
             <TabsContent value="student">
-              <form onSubmit={handleStudentLogin} className="space-y-4">
-                <div className="space-y-2">
+              <form onSubmit={handleStudentLogin} className="space-y-6">
+                <div className="space-y-4">
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input 
@@ -109,8 +109,8 @@ export function LoginTabs() {
             </TabsContent>
             
             <TabsContent value="admin">
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div className="space-y-2">
+              <form onSubmit={handleAdminLogin} className="space-y-6">
+                <div className="space-y-4">
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input 
@@ -218,3 +218,4 @@ export function LoginTabs() {
     </div>
   );
 }
+
