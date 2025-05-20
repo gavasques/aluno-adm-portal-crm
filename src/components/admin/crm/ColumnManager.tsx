@@ -13,31 +13,7 @@ import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from 
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Save } from "lucide-react";
 import SortableColumnListItem from "./SortableColumnListItem";
-
-interface Comment {
-  id: number;
-  text: string;
-  date: string;
-  author: string;
-}
-
-interface Lead {
-  id: number;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  column: string;
-  responsible: string;
-  lastContact: string;
-  comments: Comment[];
-}
-
-interface Column {
-  id: string;
-  name: string;
-  color: string;
-}
+import { Column, Lead } from "@/hooks/useCRMState";
 
 interface ColumnManagerProps {
   isOpen: boolean;

@@ -6,25 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { MoreVertical, User } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-interface Comment {
-  id: number;
-  text: string;
-  date: string;
-  author: string;
-}
-
-interface Lead {
-  id: number;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  column: string;
-  responsible: string;
-  lastContact: string;
-  comments: Comment[];
-}
+import { Lead } from "@/hooks/useCRMState";
 
 interface SortableLeadCardProps {
   lead: Lead;

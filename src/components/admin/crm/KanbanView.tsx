@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -6,31 +5,7 @@ import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closest
 import { SortableContext } from "@dnd-kit/sortable";
 import SortableColumn from "./SortableColumn";
 import SortableLeadCard from "./SortableLeadCard";
-
-interface Comment {
-  id: number;
-  text: string;
-  date: string;
-  author: string;
-}
-
-interface Lead {
-  id: number;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  column: string;
-  responsible: string;
-  lastContact: string;
-  comments: Comment[];
-}
-
-interface Column {
-  id: string;
-  name: string;
-  color: string;
-}
+import { Lead, Column } from "@/hooks/useCRMState";
 
 interface KanbanViewProps {
   columns: Column[];

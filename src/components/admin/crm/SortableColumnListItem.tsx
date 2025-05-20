@@ -15,12 +15,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel
 } from "@/components/ui/alert-dialog";
-
-interface Column {
-  id: string;
-  name: string;
-  color: string;
-}
+import { Column } from "@/hooks/useCRMState";
 
 interface SortableColumnListItemProps {
   column: Column;

@@ -6,11 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormLabel } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
-
-interface Administrator {
-  id: number;
-  name: string;
-}
+import { Administrator } from "@/hooks/useCRMState";
 
 interface NewLeadFormProps {
   administrators: Administrator[];

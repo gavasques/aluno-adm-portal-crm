@@ -4,31 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
-
-interface Comment {
-  id: number;
-  text: string;
-  date: string;
-  author: string;
-}
-
-interface Lead {
-  id: number;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  column: string;
-  responsible: string;
-  lastContact: string;
-  comments: Comment[];
-}
-
-interface Column {
-  id: string;
-  name: string;
-  color: string;
-}
+import { Lead, Column } from "@/hooks/useCRMState";
 
 interface ListViewProps {
   filteredLeads: Lead[];

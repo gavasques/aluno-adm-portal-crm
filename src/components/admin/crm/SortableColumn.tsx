@@ -3,12 +3,7 @@ import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MoveHorizontal } from "lucide-react";
-
-interface Column {
-  id: string;
-  name: string;
-  color: string;
-}
+import { Column } from "@/hooks/useCRMState";
 
 interface SortableColumnProps {
   column: Column;

@@ -6,30 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormLabel } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
-
-interface Comment {
-  id: number;
-  text: string;
-  date: string;
-  author: string;
-}
-
-interface Lead {
-  id: number;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  column: string;
-  responsible: string;
-  lastContact: string;
-  comments: Comment[];
-}
-
-interface Administrator {
-  id: number;
-  name: string;
-}
+import { Lead, Administrator } from "@/hooks/useCRMState";
 
 interface EditLeadFormProps {
   lead: Lead | null;
