@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash, ArrowUpDown } from "lucide-react";
+import { Trash } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -22,10 +22,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import StatusBadge from "@/components/ui/status-badge";
 
 export interface ListItem {
   id: string | number;
   name: string;
+  status?: string;
   [key: string]: any;
 }
 
@@ -66,7 +68,7 @@ const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[80%]">
+            <TableHead className="w-[70%]">
               <Button
                 variant="ghost"
                 onClick={handleSort}
@@ -75,13 +77,14 @@ const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
                 Nome <ArrowUpDown className="h-4 w-4" />
               </Button>
             </TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedItems.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={2} className="text-center py-8 text-gray-500">
+              <TableCell colSpan={3} className="text-center py-8 text-gray-500">
                 Nenhum item encontrado.
               </TableCell>
             </TableRow>
@@ -89,6 +92,11 @@ const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
             sortedItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.name}</TableCell>
+                <TableCell>
+                  {item.status && (
+                    <StatusBadge isActive={item.status === "Ativo"} />
+                  )}
+                </TableCell>
                 <TableCell className="text-right">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
