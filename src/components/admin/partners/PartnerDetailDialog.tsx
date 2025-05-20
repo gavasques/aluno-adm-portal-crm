@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsTriggerWithBadge } from "@/components/ui/tabs";
-import { Partner } from "@/hooks/usePartnersState";
+import { Partner } from "@/types/partner.types";
 
 import DetailsTab from "./DetailsTab";
 import ContactsTab from "./ContactsTab";

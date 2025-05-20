@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -8,7 +7,7 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, 
   AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Plus, Trash } from "lucide-react";
-import { Partner } from "@/hooks/usePartnersState";
+import { Partner } from "@/types/partner.types";
 
 interface ContactsTabProps {
   partner: Partner;

@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Star, Users, Trash } from "lucide-react";
-import { Partner } from "@/hooks/usePartnersState";
+import { Partner } from "@/types/partner.types";
 
 interface RatingsTabProps {
   partner: Partner;

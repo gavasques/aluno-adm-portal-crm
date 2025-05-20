@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Card, 
@@ -19,8 +18,13 @@ import {
 } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
 
-// Import custom hook
-import { usePartnersState } from "@/hooks/usePartnersState";
+// Importando os novos hooks após a refatoração
+import { usePartnersList } from "@/hooks/partners/usePartnersList";
+import { usePartnerDetail } from "@/hooks/partners/usePartnerDetail";
+import { usePartnerEdit } from "@/hooks/partners/usePartnerEdit";
+import { usePartnerContacts } from "@/hooks/partners/usePartnerContacts";
+import { usePartnerComments } from "@/hooks/partners/usePartnerComments";
+import { usePartnerRatings } from "@/hooks/partners/usePartnerRatings";
 
 // Import components
 import PartnersTable from "@/components/admin/partners/PartnersTable";
@@ -28,53 +32,66 @@ import PartnerDetailDialog from "@/components/admin/partners/PartnerDetailDialog
 import PartnerEditDialog from "@/components/admin/partners/PartnerEditDialog";
 
 const Partners = () => {
+  // Usando os hooks individuais após a refatoração
   const {
-    // State
     partners,
     filteredPartners,
-    selectedPartner,
-    editingPartner,
     searchQuery,
+    setSearchQuery,
     partnerTypeFilter,
+    setPartnerTypeFilter,
     recommendedFilter,
+    setRecommendedFilter,
+    handleDeletePartner,
+    toggleRecommendedStatus,
+    updatePartner
+  } = usePartnersList();
+  
+  const {
+    selectedPartner,
+    setSelectedPartner,
+    handleOpenPartner,
+    handleClosePartner,
+    calculateAverageRating
+  } = usePartnerDetail();
+  
+  const {
+    editingPartner,
+    setEditingPartner,
+    handleEditPartner,
+    handleSavePartner
+  } = usePartnerEdit(updatePartner);
+  
+  const {
     newContactName,
     newContactRole,
     newContactEmail,
     newContactPhone,
-    commentText,
-    ratingValue,
-    ratingText,
-    
-    // Setters
-    setSearchQuery,
-    setPartnerTypeFilter,
-    setRecommendedFilter,
     setNewContactName,
     setNewContactRole,
     setNewContactEmail,
     setNewContactPhone,
-    setCommentText,
-    setRatingValue,
-    setRatingText,
-    setEditingPartner,
-    
-    // Actions
-    handleOpenPartner,
-    handleClosePartner,
-    calculateAverageRating,
-    handleDeletePartner,
-    handleEditPartner,
-    handleSavePartner,
     handleAddContact,
-    handleDeleteContact,
+    handleDeleteContact
+  } = usePartnerContacts(selectedPartner, setSelectedPartner, updatePartner);
+  
+  const {
+    commentText,
+    setCommentText,
     handleAddComment,
     handleLikeComment,
-    handleDeleteComment,
+    handleDeleteComment
+  } = usePartnerComments(selectedPartner, setSelectedPartner, updatePartner);
+  
+  const {
+    ratingValue,
+    ratingText,
+    setRatingValue,
+    setRatingText,
     handleAddRating,
     handleLikeRating,
-    handleDeleteRating,
-    toggleRecommendedStatus
-  } = usePartnersState();
+    handleDeleteRating
+  } = usePartnerRatings(selectedPartner, setSelectedPartner, updatePartner);
   
   return (
     <div className="container mx-auto py-6">

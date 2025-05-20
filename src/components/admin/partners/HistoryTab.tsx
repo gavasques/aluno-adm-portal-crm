@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Partner } from "@/hooks/usePartnersState";
+import { Partner } from "@/types/partner.types";
 
 interface HistoryTabProps {
   partner: Partner;

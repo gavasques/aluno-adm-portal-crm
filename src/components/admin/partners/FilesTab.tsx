@@ -1,11 +1,10 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Plus, FileText, Trash } from "lucide-react";
-import { Partner } from "@/hooks/usePartnersState";
+import { Partner } from "@/types/partner.types";
 
 interface FilesTabProps {
   partner: Partner;

@@ -6,7 +6,7 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, 
   AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Star, MessageSquare, Users, Trash } from "lucide-react";
-import { Partner } from "@/hooks/usePartnersState";
+import { Partner } from "@/types/partner.types";
 
 interface CommentsTabProps {
   partner: Partner;
