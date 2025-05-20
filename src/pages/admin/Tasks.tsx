@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar, Clock, Plus, Check, User, Filter, Trash2, Eye, Link as LinkIcon } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent, TabsTriggerWithBadge } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -504,9 +503,9 @@ const Tasks = () => {
                   Aluno vinculado
                 </Label>
                 <Select 
-                  defaultValue={currentTask.relatedStudent ? String(currentTask.relatedStudent.id) : ""}
+                  defaultValue={currentTask.relatedStudent ? String(currentTask.relatedStudent.id) : "none"}
                   onValueChange={(value) => {
-                    if (value === "") {
+                    if (value === "none") {
                       updateTask(currentTask.id, { relatedStudent: null });
                       return;
                     }
@@ -529,7 +528,7 @@ const Tasks = () => {
                     <SelectValue placeholder="Selecione um aluno" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {studentUsers.map(user => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.name}
