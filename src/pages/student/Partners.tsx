@@ -208,7 +208,7 @@ const Partners = () => {
               <SelectValue placeholder="Tipo de Parceiro" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="Agência">Agência</SelectItem>
               <SelectItem value="Consultor">Consultor</SelectItem>
               <SelectItem value="Serviço">Serviço</SelectItem>
@@ -220,7 +220,7 @@ const Partners = () => {
               <SelectValue placeholder="Recomendação" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="recommended">Recomendados</SelectItem>
               <SelectItem value="not-recommended">Não Recomendados</SelectItem>
             </SelectContent>
