@@ -103,3 +103,60 @@
 .kanban-indigo {
   @apply bg-indigo-100 border-indigo-200;
 }
+
+/* Novos estilos para o Hero e Demo */
+.hero-container {
+  position: relative;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 10;
+}
+
+.portal-card {
+  transition: all 0.3s ease;
+  border-radius: 1rem;
+}
+
+.portal-card:hover {
+  transform: translateY(-5px);
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.hero-shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.7;
+}
+
+.shape-1 {
+  background: var(--portal-accent);
+  width: 300px;
+  height: 300px;
+  top: -100px;
+  right: -100px;
+}
+
+.shape-2 {
+  background: var(--portal-primary);
+  width: 250px;
+  height: 250px;
+  bottom: -50px;
+  left: -50px;
+}
