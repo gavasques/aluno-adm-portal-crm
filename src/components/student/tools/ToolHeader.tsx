@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Tool } from "lucide-react";
+import { Search, Wrench } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -33,7 +33,7 @@ export function ToolHeader({
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="bg-portal-accent rounded-md p-2 text-white">
-            <Tool size={24} />
+            <Wrench size={24} />
           </div>
           <h1 className="text-3xl font-bold text-portal-dark">Ferramentas</h1>
         </div>
