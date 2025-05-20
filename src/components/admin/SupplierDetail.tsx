@@ -43,7 +43,7 @@ import {
   History
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import SupplierForm from "./SupplierForm";
+import SupplierForm from "./suppliers/SupplierForm";
 import SupplierRatingForm from "./SupplierRatingForm";
 
 // Dados de exemplo
