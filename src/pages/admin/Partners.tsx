@@ -56,6 +56,7 @@ const Partners = () => {
     setCommentText,
     setRatingValue,
     setRatingText,
+    setEditingPartner,
     
     // Actions
     handleOpenPartner,

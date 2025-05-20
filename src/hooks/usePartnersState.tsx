@@ -187,7 +187,7 @@ export const usePartnersState = () => {
   // Filter partners based on search and filters
   const filteredPartners = partners.filter(partner => {
     const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         partner.category.toLowerCase().includes(searchQuery.toLowerCase());
+                          partner.category.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType = partnerTypeFilter === "all" || partner.type === partnerTypeFilter;
     
@@ -207,8 +207,8 @@ export const usePartnersState = () => {
     setSelectedPartner(null);
   };
   
-  const calculateAverageRating = (ratings: Rating[]) => {
-    if (!ratings || !ratings.length) return 0;
+  const calculateAverageRating = (ratings: Rating[]): string => {
+    if (!ratings || !ratings.length) return "0.0";
     const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
     return (sum / ratings.length).toFixed(1);
   };
@@ -216,11 +216,14 @@ export const usePartnersState = () => {
   const handleDeletePartner = (id: number) => {
     setPartners(partners.filter(partner => partner.id !== id));
     setSelectedPartner(null);
-    toast.success("Parceiro excluído com sucesso!");
+    toast({
+      title: "Parceiro excluído com sucesso!",
+      variant: "default",
+    });
   };
 
-  const handleEditPartner = (partner: Partner) => {
-    setEditingPartner({...partner});
+  const handleEditPartner = (partner: Partner | null) => {
+    setEditingPartner(partner ? {...partner} : null);
   };
 
   const handleSavePartner = () => {
@@ -246,7 +249,10 @@ export const usePartnersState = () => {
       }
       
       setEditingPartner(null);
-      toast.success("Parceiro atualizado com sucesso!");
+      toast({
+        title: "Parceiro atualizado com sucesso!",
+        variant: "default",
+      });
     }
   };
 
@@ -282,7 +288,10 @@ export const usePartnersState = () => {
       setNewContactRole("");
       setNewContactEmail("");
       setNewContactPhone("");
-      toast.success("Contato adicionado com sucesso!");
+      toast({
+        title: "Contato adicionado com sucesso!",
+        variant: "default",
+      });
     }
   };
   
@@ -305,7 +314,10 @@ export const usePartnersState = () => {
       
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
-      toast.success("Contato removido com sucesso!");
+      toast({
+        title: "Contato removido com sucesso!",
+        variant: "default",
+      });
     }
   };
   
@@ -336,7 +348,10 @@ export const usePartnersState = () => {
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
       setCommentText("");
-      toast.success("Comentário adicionado com sucesso!");
+      toast({
+        title: "Comentário adicionado com sucesso!",
+        variant: "default",
+      });
     }
   };
   
@@ -377,7 +392,10 @@ export const usePartnersState = () => {
       
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
-      toast.success("Comentário removido com sucesso!");
+      toast({
+        title: "Comentário removido com sucesso!",
+        variant: "default",
+      });
     }
   };
   
@@ -409,7 +427,10 @@ export const usePartnersState = () => {
       setSelectedPartner(updatedPartner);
       setRatingText("");
       setRatingValue(5);
-      toast.success("Avaliação adicionada com sucesso!");
+      toast({
+        title: "Avaliação adicionada com sucesso!",
+        variant: "default",
+      });
     }
   };
   
@@ -450,7 +471,10 @@ export const usePartnersState = () => {
       
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
-      toast.success("Avaliação removida com sucesso!");
+      toast({
+        title: "Avaliação removida com sucesso!",
+        variant: "default",
+      });
     }
   };
   
@@ -508,6 +532,7 @@ export const usePartnersState = () => {
     setCommentText,
     setRatingValue,
     setRatingText,
+    setEditingPartner,
     
     // Actions
     handleOpenPartner,
