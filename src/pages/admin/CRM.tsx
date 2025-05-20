@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -305,6 +305,19 @@ const CRM = () => {
     }
   ]);
   
+  // Load columns from localStorage on component mount
+  useEffect(() => {
+    const savedColumns = localStorage.getItem('crmColumns');
+    if (savedColumns) {
+      try {
+        const parsedColumns = JSON.parse(savedColumns);
+        setColumns(parsedColumns);
+      } catch (error) {
+        console.error('Error parsing saved columns:', error);
+      }
+    }
+  }, []);
+  
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [activeView, setActiveView] = useState("kanban");
   const [searchQuery, setSearchQuery] = useState("");
@@ -392,7 +405,11 @@ const CRM = () => {
       const newIndex = columns.findIndex(col => col.id === over.id);
       
       if (oldIndex !== newIndex) {
-        setColumns(arrayMove(columns, oldIndex, newIndex));
+        const newColumns = arrayMove(columns, oldIndex, newIndex);
+        setColumns(newColumns);
+        
+        // Save to localStorage
+        localStorage.setItem('crmColumns', JSON.stringify(newColumns));
       }
     }
   };
@@ -419,6 +436,9 @@ const CRM = () => {
     setOriginalColumns(columns);
     setColumnsModified(false);
     setIsEditingColumns(false);
+    
+    // Save to localStorage
+    localStorage.setItem('crmColumns', JSON.stringify(columns));
     
     toast({
       title: "Colunas salvas com sucesso",
@@ -825,21 +845,7 @@ const CRM = () => {
                         </div>
                       </div>
                       
-                      <div className="mt-6">
-                        <h3 className="text-sm font-medium text-gray-500 mb-2">Mover para estágio</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {columns.map(column => (
-                            <Button 
-                              key={column.id}
-                              variant={selectedLead.column === column.id ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => moveLead(selectedLead.id, column.id)}
-                            >
-                              {column.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
+                      {/* Seção "Mover para estágio" removida conforme solicitação */}
                     </CardContent>
                   </Card>
                 </TabsContent>
