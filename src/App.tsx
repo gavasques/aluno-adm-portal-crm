@@ -31,6 +31,9 @@ import AdminPartners from "./pages/admin/Partners";
 import AdminTools from "./pages/admin/Tools";
 import CourseDetails from "./pages/admin/CourseDetails";
 import StudentDetail from "./pages/admin/StudentDetail";
+import Categories from "./pages/admin/Categories";
+import SoftwareTypes from "./pages/admin/SoftwareTypes";
+import PartnerTypes from "./pages/admin/PartnerTypes";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +78,9 @@ const App = () => (
                 <Route path="suppliers" element={<AdminSuppliers />} />
                 <Route path="partners" element={<AdminPartners />} />
                 <Route path="tools" element={<AdminTools />} />
+                <Route path="categories" element={<Categories />} />
+                <Route path="software-types" element={<SoftwareTypes />} />
+                <Route path="partner-types" element={<PartnerTypes />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
