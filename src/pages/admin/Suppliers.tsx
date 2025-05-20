@@ -11,8 +11,26 @@ import SupplierForm from "@/components/admin/SupplierForm";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import { toast } from "sonner";
 
+// Tipos de dados
+interface Supplier {
+  id: number;
+  name: string;
+  category: string;
+  categoryId?: number;
+  rating: number;
+  comments: number;
+  cnpj?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  logo?: string;
+  type?: string;
+  brands?: string[];
+}
+
 // Dados de exemplo
-const INITIAL_SUPPLIERS = [
+const INITIAL_SUPPLIERS: Supplier[] = [
   {
     id: 1,
     name: "Distribuidor Nacional",
@@ -100,8 +118,8 @@ const CATEGORIES = ["Produtos Diversos", "Eletrônicos", "Vestuário", "Tecnolog
 const SUPPLIER_TYPES = ["Fabricante", "Distribuidor", "Importador", "Atacadista", "Varejista", "Representante"];
 
 // Extrair todas as marcas dos fornecedores
-const getAllBrands = (suppliers) => {
-  const brandsSet = new Set();
+const getAllBrands = (suppliers: Supplier[]): string[] => {
+  const brandsSet = new Set<string>();
   suppliers.forEach(supplier => {
     if (supplier.brands && Array.isArray(supplier.brands)) {
       supplier.brands.forEach(brand => brandsSet.add(brand));
@@ -111,15 +129,15 @@ const getAllBrands = (suppliers) => {
 };
 
 const AdminSuppliers = () => {
-  const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Estado para filtros
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   
   // Estado para visualização (card ou lista)
   const [viewMode, setViewMode] = useState("card"); // "card" ou "list"
@@ -147,7 +165,7 @@ const AdminSuppliers = () => {
     return nameMatch && categoryMatch && typeMatch && brandMatch;
   });
   
-  const handleAddSupplier = (newSupplier) => {
+  const handleAddSupplier = (newSupplier: Partial<Supplier>) => {
     const id = Math.max(...suppliers.map(s => s.id), 0) + 1;
     const supplierWithId = { 
       ...newSupplier, 
@@ -155,13 +173,13 @@ const AdminSuppliers = () => {
       rating: 0, 
       comments: 0,
       brands: []
-    };
+    } as Supplier;
     setSuppliers([...suppliers, supplierWithId]);
     setIsDialogOpen(false);
     toast.success("Fornecedor adicionado com sucesso!");
   };
   
-  const handleUpdateSupplier = (updatedSupplier) => {
+  const handleUpdateSupplier = (updatedSupplier: Supplier) => {
     setSuppliers(suppliers.map(supplier => 
       supplier.id === updatedSupplier.id ? updatedSupplier : supplier
     ));
@@ -169,7 +187,7 @@ const AdminSuppliers = () => {
     toast.success("Fornecedor atualizado com sucesso!");
   };
   
-  const toggleCategoryFilter = (category) => {
+  const toggleCategoryFilter = (category: string) => {
     setSelectedCategories(prev => 
       prev.includes(category)
         ? prev.filter(c => c !== category)
@@ -177,7 +195,7 @@ const AdminSuppliers = () => {
     );
   };
   
-  const toggleTypeFilter = (type) => {
+  const toggleTypeFilter = (type: string) => {
     setSelectedTypes(prev => 
       prev.includes(type)
         ? prev.filter(t => t !== type)
@@ -185,7 +203,7 @@ const AdminSuppliers = () => {
     );
   };
   
-  const toggleBrandFilter = (brand) => {
+  const toggleBrandFilter = (brand: string) => {
     setSelectedBrands(prev => 
       prev.includes(brand)
         ? prev.filter(b => b !== brand)
@@ -383,7 +401,7 @@ const AdminSuppliers = () => {
                   
                   {filteredSuppliers.map((supplier) => (
                     <div 
-                      key={supplier.id} 
+                      key={supplier.id.toString()} 
                       className="p-4 grid grid-cols-12 items-center border-b hover:bg-gray-50 cursor-pointer"
                       onClick={() => setSelectedSupplier(supplier)}
                     >

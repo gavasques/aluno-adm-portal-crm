@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,8 +9,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import { toast } from "sonner";
 
+// Tipos de dados
+interface Supplier {
+  id: number;
+  name: string;
+  category: string;
+  categoryId?: number;
+  rating: number;
+  comments: number;
+  cnpj?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  logo?: string;
+  type?: string;
+  brands?: string[];
+}
+
 // Dados de exemplo
-const SUPPLIERS = [
+const SUPPLIERS: Supplier[] = [
   {
     id: 1,
     name: "Distribuidor Nacional",
@@ -99,8 +116,8 @@ const CATEGORIES = ["Produtos Diversos", "Eletrônicos", "Vestuário", "Tecnolog
 const SUPPLIER_TYPES = ["Fabricante", "Distribuidor", "Importador", "Atacadista", "Varejista", "Representante"];
 
 // Extrair todas as marcas dos fornecedores
-const getAllBrands = (suppliers) => {
-  const brandsSet = new Set();
+const getAllBrands = (suppliers: Supplier[]): string[] => {
+  const brandsSet = new Set<string>();
   suppliers.forEach(supplier => {
     if (supplier.brands && Array.isArray(supplier.brands)) {
       supplier.brands.forEach(brand => brandsSet.add(brand));
@@ -111,13 +128,13 @@ const getAllBrands = (suppliers) => {
 
 const Suppliers = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
-  const [suppliers, setSuppliers] = useState(SUPPLIERS);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(SUPPLIERS);
   
   // Estado para filtros
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   
   // Estado para visualização (card ou lista)
   const [viewMode, setViewMode] = useState("card"); // "card" ou "list"
@@ -145,7 +162,7 @@ const Suppliers = () => {
     return nameMatch && categoryMatch && typeMatch && brandMatch;
   });
   
-  const handleUpdateSupplier = (updatedSupplier: any) => {
+  const handleUpdateSupplier = (updatedSupplier: Supplier) => {
     setSuppliers(suppliers.map(supplier => 
       supplier.id === updatedSupplier.id ? updatedSupplier : supplier
     ));
@@ -153,7 +170,7 @@ const Suppliers = () => {
     toast.success("Avaliação enviada com sucesso!");
   };
   
-  const toggleCategoryFilter = (category) => {
+  const toggleCategoryFilter = (category: string) => {
     setSelectedCategories(prev => 
       prev.includes(category)
         ? prev.filter(c => c !== category)
@@ -161,7 +178,7 @@ const Suppliers = () => {
     );
   };
   
-  const toggleTypeFilter = (type) => {
+  const toggleTypeFilter = (type: string) => {
     setSelectedTypes(prev => 
       prev.includes(type)
         ? prev.filter(t => t !== type)
@@ -169,7 +186,7 @@ const Suppliers = () => {
     );
   };
   
-  const toggleBrandFilter = (brand) => {
+  const toggleBrandFilter = (brand: string) => {
     setSelectedBrands(prev => 
       prev.includes(brand)
         ? prev.filter(b => b !== brand)
@@ -352,7 +369,7 @@ const Suppliers = () => {
                   
                   {filteredSuppliers.map((supplier) => (
                     <div 
-                      key={supplier.id} 
+                      key={supplier.id.toString()} 
                       className="p-4 grid grid-cols-12 items-center border-b hover:bg-gray-50 cursor-pointer"
                       onClick={() => setSelectedSupplier(supplier)}
                     >
