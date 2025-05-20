@@ -43,7 +43,7 @@ const Registers = () => {
           <TabsTrigger value="mentoring">Mentorias</TabsTrigger>
           <TabsTrigger value="bonus">Bônus</TabsTrigger>
           <TabsTrigger value="categories">Categorias</TabsTrigger>
-          <TabsTrigger value="software-types">Tipos de Software</TabsTrigger>
+          <TabsTrigger value="software-types">Tipos de Ferramentas</TabsTrigger>
           <TabsTrigger value="partner-types">Tipos de Parceiros</TabsTrigger>
           <TabsTrigger value="courses">Cursos</TabsTrigger>
         </TabsList>

@@ -31,7 +31,7 @@ const SoftwareTypes = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastro de Tipos de Softwares</h1>
+      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastro de Tipos de Ferramentas</h1>
       
       <div className="flex justify-between items-center mb-6">
         <p className="text-gray-500">Total: {softwareTypes.length} tipos</p>
@@ -39,16 +39,16 @@ const SoftwareTypes = () => {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Novo Tipo de Software
+              Novo Tipo de Ferramenta
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Novo Tipo de Software</DialogTitle>
+              <DialogTitle>Adicionar Novo Tipo de Ferramenta</DialogTitle>
             </DialogHeader>
             <AddItemForm 
               onSubmit={handleAddSoftwareType} 
-              itemName="Tipo de Software"
+              itemName="Tipo de Ferramenta"
               showDescription={true}
             />
           </DialogContent>
@@ -57,7 +57,7 @@ const SoftwareTypes = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Tipos de Softwares</CardTitle>
+          <CardTitle>Lista de Tipos de Ferramentas</CardTitle>
         </CardHeader>
         <CardContent>
           <ListTable 
