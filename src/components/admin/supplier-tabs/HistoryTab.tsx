@@ -1,22 +1,22 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Partner } from "@/types/partner.types";
+import { Supplier } from "@/types/supplier.types";
 
 interface HistoryTabProps {
-  partner: Partner;
+  supplier: Supplier;
 }
 
-const HistoryTab = ({ partner }: HistoryTabProps) => {
+const HistoryTab = ({ supplier }: HistoryTabProps) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-xl">Histórico</CardTitle>
       </CardHeader>
       <CardContent>
-        {partner.history && partner.history.length > 0 ? (
+        {supplier.history && supplier.history.length > 0 ? (
           <div className="space-y-4">
-            {partner.history.map((item) => (
+            {supplier.history.map((item) => (
               <div key={item.id} className="flex justify-between items-center border-b pb-3">
                 <div>
                   <div className="font-medium">{item.action}</div>

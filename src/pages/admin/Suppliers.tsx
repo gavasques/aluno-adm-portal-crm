@@ -1,17 +1,9 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -33,313 +23,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// Importar componentes
 import SupplierForm from "@/components/admin/SupplierForm";
 import SupplierDetail from "@/components/admin/SupplierDetail";
-import SuppliersTable, { Supplier } from "@/components/admin/SuppliersTable";
+import SuppliersTable from "@/components/admin/SuppliersTable";
 import CsvImportDialog from "@/components/admin/CsvImportDialog";
-import { toast } from "sonner";
 
-// Dados de exemplo (agora com campo status)
-const INITIAL_SUPPLIERS: Supplier[] = [
-  {
-    id: 1,
-    name: "Distribuidor Nacional",
-    category: "Produtos Diversos",
-    categoryId: 1,
-    rating: 4.7,
-    comments: 12,
-    cnpj: "12.345.678/0001-90",
-    email: "contato@distribuidornacional.com",
-    phone: "(11) 98765-4321",
-    website: "www.distribuidornacional.com",
-    address: "Av. Exemplo, 1000 - São Paulo/SP",
-    logo: "DN",
-    type: "Distribuidor",
-    brands: ["Marca A", "Marca B"],
-    status: "Ativo"
-  },
-  {
-    id: 2,
-    name: "Importadora Global",
-    category: "Eletrônicos",
-    categoryId: 2,
-    rating: 4.2,
-    comments: 8,
-    cnpj: "98.765.432/0001-10",
-    email: "contato@importadoraglobal.com",
-    phone: "(11) 91234-5678",
-    website: "www.importadoraglobal.com",
-    address: "Rua Exemplo, 500 - São Paulo/SP",
-    logo: "IG",
-    type: "Importador",
-    brands: ["Marca C", "Marca D"],
-    status: "Ativo"
-  },
-  {
-    id: 3,
-    name: "Manufatura Express",
-    category: "Vestuário",
-    categoryId: 3,
-    rating: 3.9,
-    comments: 15,
-    cnpj: "45.678.901/0001-23",
-    email: "contato@manufaturaexpress.com",
-    phone: "(11) 94567-8901",
-    website: "www.manufaturaexpress.com",
-    address: "Rua dos Exemplos, 200 - São Paulo/SP",
-    logo: "ME",
-    type: "Fabricante",
-    brands: ["Marca E", "Marca F"],
-    status: "Inativo"
-  },
-  {
-    id: 4,
-    name: "Tech Solution Distribuidora",
-    category: "Tecnologia",
-    categoryId: 2,
-    rating: 4.5,
-    comments: 23,
-    cnpj: "34.567.890/0001-12",
-    email: "contato@techsolution.com",
-    phone: "(11) 93456-7890",
-    website: "www.techsolution.com",
-    address: "Av. Exemplar, 300 - São Paulo/SP",
-    logo: "TS",
-    type: "Distribuidor",
-    brands: ["Marca G"],
-    status: "Ativo"
-  },
-  {
-    id: 5,
-    name: "Eco Produtos",
-    category: "Sustentáveis",
-    categoryId: 3,
-    rating: 4.8,
-    comments: 19,
-    cnpj: "23.456.789/0001-01",
-    email: "contato@ecoprodutos.com",
-    phone: "(11) 92345-6789",
-    website: "www.ecoprodutos.com",
-    address: "Rua Sustentável, 100 - São Paulo/SP",
-    logo: "EP",
-    type: "Fabricante",
-    brands: ["Marca H", "Marca I"],
-    status: "Ativo"
-  }
-];
-
-// Categorias e Tipos de Fornecedor
-const CATEGORIES = ["Produtos Diversos", "Eletrônicos", "Vestuário", "Tecnologia", "Sustentáveis"];
-const SUPPLIER_TYPES = ["Fabricante", "Distribuidor", "Importador", "Atacadista", "Varejista", "Representante"];
-
-// Extrair todas as marcas dos fornecedores
-const getAllBrands = (suppliers: Supplier[]): string[] => {
-  const brandsSet = new Set<string>();
-  suppliers.forEach(supplier => {
-    if (supplier.brands && Array.isArray(supplier.brands)) {
-      supplier.brands.forEach(brand => brandsSet.add(brand));
-    }
-  });
-  return Array.from(brandsSet);
-};
+// Importar hooks e dados
+import { useSuppliersList } from "@/hooks/suppliers/useSuppliersList";
+import { useSupplierOperations } from "@/hooks/suppliers/useSupplierOperations";
+import { CATEGORIES, SUPPLIER_TYPES } from "@/data/suppliersData";
 
 const AdminSuppliers = () => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [removeSupplierAlert, setRemoveSupplierAlert] = useState<Supplier | null>(null);
-  
-  // Estado para filtros
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-  
-  // Estado para paginação
-  const [pageSize, setPageSize] = useState(25);
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  // Estado para ordenação
-  const [sortField, setSortField] = useState<"name" | "category">("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  
-  // Gerar lista de marcas dos fornecedores
-  const allBrands = getAllBrands(suppliers);
-  
-  // Filtrar fornecedores com base em todos os critérios
-  const filteredSuppliers = suppliers.filter(supplier => {
-    // Pesquisa por nome
-    const nameMatch = supplier.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Filtro por categoria
-    const categoryMatch = selectedCategories.length === 0 || 
-                          selectedCategories.includes(supplier.category);
-    
-    // Filtro por tipo
-    const typeMatch = selectedTypes.length === 0 || 
-                      selectedTypes.includes(supplier.type || "");
-    
-    // Filtro por marca
-    const brandMatch = selectedBrands.length === 0 || 
-                      (supplier.brands && supplier.brands.some(brand => selectedBrands.includes(brand)));
-    
-    // Filtro por status
-    const statusMatch = selectedStatus.length === 0 ||
-                        selectedStatus.includes(supplier.status || "Ativo");
-    
-    return nameMatch && categoryMatch && typeMatch && brandMatch && statusMatch;
-  });
-  
-  // Ordenar fornecedores
-  const sortedSuppliers = [...filteredSuppliers].sort((a, b) => {
-    if (sortField === "name") {
-      return sortDirection === "asc" 
-        ? a.name.localeCompare(b.name) 
-        : b.name.localeCompare(a.name);
-    } else {
-      return sortDirection === "asc" 
-        ? a.category.localeCompare(b.category) 
-        : b.category.localeCompare(a.category);
-    }
-  });
-  
-  // Paginação
-  const totalPages = Math.max(1, Math.ceil(sortedSuppliers.length / pageSize));
-  const paginatedSuppliers = sortedSuppliers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-  
-  // Resetar paginação quando os filtros mudarem
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategories, selectedTypes, selectedBrands, selectedStatus, pageSize, sortField, sortDirection]);
-  
-  const handleAddSupplier = (newSupplier: Partial<Supplier>) => {
-    const id = Math.max(...suppliers.map(s => Number(s.id)), 0) + 1;
-    const supplierWithId = { 
-      ...newSupplier, 
-      id, 
-      rating: 0, 
-      comments: 0,
-      brands: [],
-      status: "Ativo"
-    } as Supplier;
-    setSuppliers([...suppliers, supplierWithId]);
-    setIsDialogOpen(false);
-    toast.success("Fornecedor adicionado com sucesso!");
-  };
-  
-  const handleUpdateSupplier = (updatedSupplier: Supplier) => {
-    setSuppliers(suppliers.map(supplier => 
-      supplier.id === updatedSupplier.id ? updatedSupplier : supplier
-    ));
-    setSelectedSupplier(updatedSupplier);
-    toast.success("Fornecedor atualizado com sucesso!");
-  };
-  
-  const handleRemoveSupplier = (id: number | string) => {
-    const supplierToRemove = suppliers.find(s => s.id === id);
-    if (supplierToRemove) {
-      setRemoveSupplierAlert(supplierToRemove);
-    }
-  };
-  
-  const confirmRemoveSupplier = () => {
-    if (removeSupplierAlert) {
-      setSuppliers(suppliers.filter(s => s.id !== removeSupplierAlert.id));
-      toast.success("Fornecedor removido com sucesso!");
-      setRemoveSupplierAlert(null);
-    }
-  };
-  
-  const handleSort = (field: "name" | "category") => {
-    if (sortField === field) {
-      // Inverter direção se o campo for o mesmo
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      // Definir novo campo e direção padrão
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-  
-  const toggleCategoryFilter = (category: string) => {
-    // Se "Todos" foi selecionado, limpar todas as seleções
-    if (category === "Todos") {
-      setSelectedCategories([]);
-      return;
-    }
-    
-    setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-  
-  const toggleTypeFilter = (type: string) => {
-    // Se "Todos" foi selecionado, limpar todas as seleções
-    if (type === "Todos") {
-      setSelectedTypes([]);
-      return;
-    }
-    
-    setSelectedTypes(prev => 
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
-  };
-  
-  const toggleBrandFilter = (brand: string) => {
-    // Se "Todos" foi selecionado, limpar todas as seleções
-    if (brand === "Todos") {
-      setSelectedBrands([]);
-      return;
-    }
-    
-    setSelectedBrands(prev => 
-      prev.includes(brand)
-        ? prev.filter(b => b !== brand)
-        : [...prev, brand]
-    );
-  };
-  
-  const toggleStatusFilter = (status: string) => {
-    // Se "Todos" foi selecionado, limpar todas as seleções
-    if (status === "Todos") {
-      setSelectedStatus([]);
-      return;
-    }
-    
-    setSelectedStatus(prev => 
-      prev.includes(status)
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
-    );
-  };
+  // Usar nossos hooks personalizados
+  const {
+    suppliers,
+    setSuppliers,
+    searchQuery,
+    setSearchQuery,
+    selectedCategories,
+    selectedTypes,
+    selectedBrands,
+    selectedStatus,
+    pageSize,
+    setPageSize,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedSuppliers,
+    sortField,
+    sortDirection,
+    allBrands,
+    toggleCategoryFilter,
+    toggleTypeFilter,
+    toggleBrandFilter,
+    toggleStatusFilter,
+    handleSort
+  } = useSuppliersList();
 
-  // Função para lidar com a importação de fornecedores via CSV
-  const handleImportSuppliers = (newSuppliers: Partial<Supplier>[]) => {
-    if (newSuppliers.length === 0) return;
-    
-    const highestId = Math.max(...suppliers.map(s => Number(s.id)), 0);
-    
-    const suppliersToAdd = newSuppliers.map((supplier, index) => {
-      return {
-        ...supplier,
-        id: highestId + index + 1,
-        rating: 0,
-        comments: 0,
-        brands: [],
-        status: "Ativo"
-      } as Supplier;
-    });
-    
-    setSuppliers([...suppliers, ...suppliersToAdd]);
-  };
+  const {
+    selectedSupplier,
+    setSelectedSupplier,
+    isDialogOpen,
+    setIsDialogOpen,
+    removeSupplierAlert,
+    setRemoveSupplierAlert,
+    handleAddSupplier,
+    handleUpdateSupplier,
+    handleRemoveSupplier,
+    confirmRemoveSupplier,
+    handleImportSuppliers
+  } = useSupplierOperations(suppliers, setSuppliers);
 
   return (
     <div className="px-6 py-6 w-full">
@@ -372,7 +107,6 @@ const AdminSuppliers = () => {
                     <DropdownMenuLabel>Selecione as categorias</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      {/* Adicionar opção "Todos" */}
                       <DropdownMenuCheckboxItem
                         key="todos-categorias"
                         checked={selectedCategories.length === 0}
@@ -382,11 +116,11 @@ const AdminSuppliers = () => {
                       </DropdownMenuCheckboxItem>
                       {CATEGORIES.map((category) => (
                         <DropdownMenuCheckboxItem
-                          key={category}
-                          checked={selectedCategories.includes(category)}
-                          onCheckedChange={() => toggleCategoryFilter(category)}
+                          key={category.id}
+                          checked={selectedCategories.includes(category.name)}
+                          onCheckedChange={() => toggleCategoryFilter(category.name)}
                         >
-                          {category}
+                          {category.name}
                         </DropdownMenuCheckboxItem>
                       ))}
                     </DropdownMenuGroup>
@@ -405,7 +139,6 @@ const AdminSuppliers = () => {
                     <DropdownMenuSeparator />
                     <div className="max-h-60 overflow-y-auto">
                       <DropdownMenuGroup>
-                        {/* Adicionar opção "Todos" */}
                         <DropdownMenuCheckboxItem
                           key="todos-marcas"
                           checked={selectedBrands.length === 0}
@@ -438,7 +171,6 @@ const AdminSuppliers = () => {
                     <DropdownMenuLabel>Selecione os tipos</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      {/* Adicionar opção "Todos" */}
                       <DropdownMenuCheckboxItem
                         key="todos-tipos"
                         checked={selectedTypes.length === 0}
@@ -470,7 +202,6 @@ const AdminSuppliers = () => {
                     <DropdownMenuLabel>Selecione os status</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      {/* Adicionar opção "Todos" */}
                       <DropdownMenuCheckboxItem
                         key="todos-status"
                         checked={selectedStatus.length === 0}
