@@ -1,31 +1,20 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Bell, Menu, User } from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 const Header = () => {
   const location = useLocation();
-  
+
   // Helper to determine area
   const isAdmin = location.pathname.includes("/admin");
   const isStudent = location.pathname.includes("/student");
   const isHome = location.pathname === "/";
-  
+
   // Only show area-specific elements when in that area
   const showAreaSpecific = isAdmin || isStudent;
-  
-  return (
-    <header className="bg-white border-b border-border fixed top-0 left-0 w-full z-50 h-12">
-      <div className="container mx-auto px-4 py-1 flex items-center justify-between h-full">
+  return <header className="bg-white border-b border-border fixed top-0 left-0 w-full z-50 h-12">
+      <div className="container mx-auto flex items-center justify-between h-full px-0 py-0">
         {/* Logo and site title */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
@@ -36,8 +25,7 @@ const Header = () => {
         
         {/* Middle section - changes based on route */}
         <div className="hidden md:flex items-center flex-1 mx-8 justify-center">
-          {isHome && (
-            <nav className="flex space-x-6">
+          {isHome && <nav className="flex space-x-6">
               <Link to="/" className="text-portal-dark hover:text-portal-primary transition-colors">
                 Home
               </Link>
@@ -47,14 +35,12 @@ const Header = () => {
               <Link to="/admin" className="text-portal-dark hover:text-portal-primary transition-colors">
                 Área Admin
               </Link>
-            </nav>
-          )}
+            </nav>}
         </div>
         
         {/* Right section - notifications and user menu */}
         <div className="flex items-center space-x-2">
-          {showAreaSpecific && (
-            <>
+          {showAreaSpecific && <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative h-8 w-8">
@@ -111,8 +97,7 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
-          )}
+            </>}
           
           {/* Mobile menu button - only visible on small screens */}
           <Button variant="ghost" size="icon" className="md:hidden h-8 w-8">
@@ -120,8 +105,6 @@ const Header = () => {
           </Button>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
