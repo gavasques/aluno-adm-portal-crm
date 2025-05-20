@@ -5,7 +5,8 @@ import {
   Tabs, 
   TabsContent, 
   TabsList, 
-  TabsTrigger 
+  TabsTrigger,
+  TabsTriggerWithBadge
 } from "@/components/ui/tabs";
 import { 
   Dialog, 
@@ -35,8 +36,10 @@ import {
   Trash, 
   ThumbsUp, 
   Edit,
-  Users 
+  Users,
+  History
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import SupplierForm from "./SupplierForm";
 import SupplierRatingForm from "./SupplierRatingForm";
 
@@ -177,6 +180,45 @@ const SUPPLIER_TYPES = [
   "Representante"
 ];
 
+// Histórico de atividades (apenas para ADM)
+const ACTIVITY_HISTORY = [
+  {
+    id: 1,
+    action: "Marca adicionada",
+    details: "Adicionou a marca 'Marca A'",
+    user: "João Silva",
+    date: "20/05/2023 14:30"
+  },
+  {
+    id: 2,
+    action: "Contato adicionado",
+    details: "Adicionou o contato 'Roberto Santos'",
+    user: "Maria Oliveira",
+    date: "15/05/2023 09:45"
+  },
+  {
+    id: 3,
+    action: "Fornecedor editado",
+    details: "Alterou o tipo de fornecedor para 'Distribuidor'",
+    user: "Carlos Mendes",
+    date: "10/05/2023 16:20"
+  },
+  {
+    id: 4,
+    action: "Arquivo adicionado",
+    details: "Adicionou o arquivo 'Catálogo de Produtos.pdf'",
+    user: "Ana Lima",
+    date: "05/05/2023 11:15"
+  },
+  {
+    id: 5,
+    action: "Avaliação adicionada",
+    details: "Avaliou o fornecedor com 5 estrelas",
+    user: "Pedro Souza",
+    date: "01/05/2023 10:00"
+  }
+];
+
 interface SupplierDetailProps {
   supplier: any;
   onBack: () => void;
@@ -201,6 +243,17 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [supplierType, setSupplierType] = useState(supplier.type || "Distribuidor");
+  const [history] = useState(ACTIVITY_HISTORY);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [isAddingBrand, setIsAddingBrand] = useState(false);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [newContact, setNewContact] = useState({
+    name: "",
+    role: "",
+    email: "",
+    phone: ""
+  });
+  const [likedRatings, setLikedRatings] = useState<number[]>([]);
 
   const handleLikeComment = (commentId: number) => {
     setComments(comments.map(comment => {
@@ -387,6 +440,50 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
     toast.success("Tipo de fornecedor atualizado com sucesso!");
   };
 
+  // Novas funções para gerenciar marcas, contatos e likes
+  const handleAddBrand = () => {
+    if (newBrandName.trim()) {
+      const newBrand = {
+        id: Math.max(...brands.map(b => b.id), 0) + 1,
+        name: newBrandName.trim()
+      };
+      setBrands([...brands, newBrand]);
+      setNewBrandName("");
+      setIsAddingBrand(false);
+      toast.success("Marca adicionada com sucesso!");
+    }
+  };
+
+  const handleDeleteBrand = (brandId: number) => {
+    setBrands(brands.filter(brand => brand.id !== brandId));
+    toast.success("Marca excluída com sucesso!");
+  };
+
+  const handleAddContact = () => {
+    if (newContact.name.trim() && newContact.email.trim()) {
+      const newContactObj = {
+        id: Math.max(...contacts.map(c => c.id), 0) + 1,
+        name: newContact.name,
+        role: newContact.role,
+        email: newContact.email,
+        phone: newContact.phone,
+        initials: newContact.name.split(' ').slice(0, 2).map(n => n[0]).join('')
+      };
+      setContacts([...contacts, newContactObj]);
+      setNewContact({ name: "", role: "", email: "", phone: "" });
+      setIsAddingContact(false);
+      toast.success("Contato adicionado com sucesso!");
+    }
+  };
+
+  const handleLikeRating = (ratingId: number) => {
+    if (likedRatings.includes(ratingId)) {
+      setLikedRatings(likedRatings.filter(id => id !== ratingId));
+    } else {
+      setLikedRatings([...likedRatings, ratingId]);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
@@ -422,9 +519,6 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-lg bg-portal-primary text-white flex items-center justify-center text-xl font-bold">
-              {supplier.logo || supplier.name.substring(0, 2).toUpperCase()}
-            </div>
             <div className="flex-1">
               <CardTitle className="text-2xl">{supplier.name}</CardTitle>
               <p className="text-gray-500">{supplier.category}</p>
@@ -469,6 +563,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
           <TabsTrigger value="comments" className="flex items-center gap-1">
             <MessageCircle className="h-4 w-4" /> Comentários
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="history" className="flex items-center gap-1">
+              <History className="h-4 w-4" /> Histórico
+            </TabsTrigger>
+          )}
         </TabsList>
         
         {/* Aba Dados do Fornecedor */}
@@ -478,7 +577,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
               <CardTitle>Dados do Fornecedor</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Nome</p>
                   <p className="font-medium">{supplier.name}</p>
@@ -549,13 +648,41 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Marcas</CardTitle>
-              {isAdmin && (
-                <Button size="sm" variant="outline">
+              {(isAdmin || !isAdmin) && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setIsAddingBrand(true)}
+                >
                   Adicionar Marca
                 </Button>
               )}
             </CardHeader>
             <CardContent>
+              {isAddingBrand && (
+                <div className="mb-6 p-4 border rounded-md">
+                  <h3 className="font-medium mb-2">Nova Marca</h3>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Nome da marca"
+                      value={newBrandName}
+                      onChange={(e) => setNewBrandName(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleAddBrand}>Adicionar</Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsAddingBrand(false);
+                        setNewBrandName("");
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               {brands.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   Nenhuma marca cadastrada para este fornecedor.
@@ -563,15 +690,12 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {brands.map((brand) => (
-                    <Card key={brand.id} className="p-3">
-                      <div className="text-center relative">
-                        <h3 className="text-sm font-medium truncate">{brand.name}</h3>
+                    <Card key={brand.id} className="relative">
+                      <CardContent className="p-4 flex items-center justify-center h-24">
+                        <h3 className="text-sm font-medium text-center">{brand.name}</h3>
                         
-                        {isAdmin && (
-                          <div className="absolute top-0 right-0 flex space-x-1">
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <Edit className="h-3 w-3 text-gray-500" />
-                            </Button>
+                        {(isAdmin || !isAdmin) && (
+                          <div className="absolute top-2 right-2 flex space-x-1">
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -587,7 +711,10 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction className="bg-red-500 hover:bg-red-600">
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteBrand(brand.id)}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
                                     Excluir
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -595,7 +722,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                             </AlertDialog>
                           </div>
                         )}
-                      </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -609,13 +736,74 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Contatos</CardTitle>
-              {isAdmin && (
-                <Button size="sm" variant="outline">
+              {(isAdmin || !isAdmin) && (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setIsAddingContact(true)}
+                >
                   Adicionar Contato
                 </Button>
               )}
             </CardHeader>
             <CardContent>
+              {isAddingContact && (
+                <div className="mb-6 p-4 border rounded-md">
+                  <h3 className="font-medium mb-4">Novo Contato</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label htmlFor="contact-name">Nome</Label>
+                      <Input
+                        id="contact-name"
+                        placeholder="Nome completo"
+                        value={newContact.name}
+                        onChange={(e) => setNewContact({...newContact, name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-role">Cargo</Label>
+                      <Input
+                        id="contact-role"
+                        placeholder="Cargo ou função"
+                        value={newContact.role}
+                        onChange={(e) => setNewContact({...newContact, role: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-email">Email</Label>
+                      <Input
+                        id="contact-email"
+                        placeholder="Email"
+                        type="email"
+                        value={newContact.email}
+                        onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-phone">Telefone</Label>
+                      <Input
+                        id="contact-phone"
+                        placeholder="Telefone"
+                        value={newContact.phone}
+                        onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button onClick={handleAddContact}>Adicionar</Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsAddingContact(false);
+                        setNewContact({name: "", role: "", email: "", phone: ""});
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               {contacts.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   Nenhum contato cadastrado para este fornecedor.
@@ -627,9 +815,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 rounded-full bg-portal-light flex items-center justify-center mr-3">
-                              <span className="font-medium text-portal-primary">{contact.initials}</span>
-                            </div>
+                            <Avatar className="mr-3">
+                              <AvatarFallback className="bg-portal-light text-portal-primary">
+                                {contact.initials}
+                              </AvatarFallback>
+                            </Avatar>
                             <div>
                               <h3 className="font-medium">{contact.name}</h3>
                               <p className="text-sm text-gray-500">{contact.role}</p>
@@ -637,11 +827,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                             </div>
                           </div>
                           
-                          {isAdmin && (
+                          {(isAdmin || !isAdmin) && (
                             <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4 text-gray-500" />
-                              </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="sm">
@@ -680,7 +867,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Arquivos</CardTitle>
-              {isAdmin && (
+              {(isAdmin || !isAdmin) && (
                 <div>
                   <input 
                     type="file" 
@@ -718,7 +905,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                             <Button variant="outline" size="sm">
                               Ver
                             </Button>
-                            {isAdmin && (
+                            {(isAdmin || !isAdmin) && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="sm">
@@ -837,9 +1024,19 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                         
                         <p className="text-gray-700 text-sm">{rating.text}</p>
                         
-                        {/* Apenas ADM ou o próprio usuário pode excluir avaliações */}
-                        {(isAdmin || rating.user.id === 999) && (
-                          <div className="flex justify-end mt-2">
+                        <div className="flex justify-between mt-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`text-xs flex items-center ${likedRatings.includes(rating.id) ? 'text-portal-primary' : 'text-gray-500'}`}
+                            onClick={() => handleLikeRating(rating.id)}
+                          >
+                            <ThumbsUp className="h-3 w-3 mr-1" />
+                            {likedRatings.includes(rating.id) ? 'Curtido' : 'Curtir'}
+                          </Button>
+                          
+                          {/* Apenas ADM ou o próprio usuário pode excluir avaliações */}
+                          {(isAdmin || rating.user.id === 999) && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="sm" className="text-xs text-red-500">
@@ -864,8 +1061,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </Card>
                     ))}
                   </div>
@@ -890,9 +1087,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                 comments.map((comment) => (
                   <div key={comment.id} className="space-y-4">
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-portal-light text-portal-primary flex items-center justify-center font-medium">
-                        {comment.user.initials}
-                      </div>
+                      <Avatar>
+                        <AvatarFallback className="bg-portal-light text-portal-primary">
+                          {comment.user.initials}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex-1">
                         <div className="bg-gray-100 rounded-lg p-3">
                           <div className="flex justify-between mb-1">
@@ -981,9 +1180,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                           <div className="mt-3 space-y-4 pl-6">
                             {comment.replies.map((reply) => (
                               <div key={reply.id} className="flex items-start space-x-3">
-                                <div className="w-8 h-8 rounded-full bg-portal-light text-portal-primary flex items-center justify-center text-sm font-medium">
-                                  {reply.user.initials}
-                                </div>
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="bg-portal-light text-portal-primary text-sm">
+                                    {reply.user.initials}
+                                  </AvatarFallback>
+                                </Avatar>
                                 <div className="flex-1">
                                   <div className="bg-gray-100 rounded-lg p-3">
                                     <div className="flex justify-between mb-1">
@@ -1056,6 +1257,50 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {/* Aba Histórico (apenas para ADM) */}
+        {isAdmin && (
+          <TabsContent value="history">
+            <Card>
+              <CardHeader>
+                <CardTitle>Histórico de Atividades</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {history.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Nenhuma atividade registrada para este fornecedor.
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="absolute top-0 bottom-0 left-6 w-0.5 bg-gray-200"></div>
+                    
+                    <div className="space-y-6 pl-14 relative">
+                      {history.map((activity) => (
+                        <div key={activity.id} className="relative">
+                          <div className="absolute -left-14 mt-1 flex items-center justify-center">
+                            <div className="h-6 w-6 rounded-full bg-portal-light border-4 border-white"></div>
+                          </div>
+                          <Card>
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium text-portal-primary">{activity.action}</h4>
+                                  <p className="text-sm text-gray-600 mt-1">{activity.details}</p>
+                                  <p className="text-xs text-gray-500 mt-2">Por {activity.user}</p>
+                                </div>
+                                <span className="text-xs text-gray-500 whitespace-nowrap">{activity.date}</span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
