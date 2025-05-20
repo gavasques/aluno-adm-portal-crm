@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 import Layout from "./layout/Layout";
@@ -35,6 +35,7 @@ import StudentDetail from "./pages/admin/StudentDetail";
 import Categories from "./pages/admin/Categories";
 import SoftwareTypes from "./pages/admin/SoftwareTypes";
 import PartnerTypes from "./pages/admin/PartnerTypes";
+import Registers from "./pages/admin/Registers";
 
 const queryClient = new QueryClient();
 
@@ -70,19 +71,25 @@ const App = () => (
                 <Route path="gestao-alunos/:id" element={<StudentDetail />} />
                 <Route path="courses" element={<AdminCourses />} />
                 <Route path="courses/:id" element={<CourseDetails />} />
-                <Route path="mentoring" element={<AdminMentoring />} />
+                
+                {/* Nova rota unificada para os cadastros */}
+                <Route path="registers" element={<Registers />} />
+                
+                {/* Redirecionamentos das rotas antigas para a nova página de cadastros */}
+                <Route path="mentoring" element={<Navigate to="/admin/registers" replace />} />
                 <Route path="mentoring/:id" element={<MentoringDetail />} />
-                <Route path="bonus" element={<AdminBonus />} />
+                <Route path="bonus" element={<Navigate to="/admin/registers" replace />} />
                 <Route path="bonus/:id" element={<BonusDetail />} />
+                <Route path="categories" element={<Navigate to="/admin/registers" replace />} />
+                <Route path="software-types" element={<Navigate to="/admin/registers" replace />} />
+                <Route path="partner-types" element={<Navigate to="/admin/registers" replace />} />
+                
                 <Route path="tasks" element={<AdminTasks />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />
                 <Route path="crm" element={<AdminCRM />} />
                 <Route path="suppliers" element={<AdminSuppliers />} />
                 <Route path="partners" element={<AdminPartners />} />
                 <Route path="tools" element={<AdminTools />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="software-types" element={<SoftwareTypes />} />
-                <Route path="partner-types" element={<PartnerTypes />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
