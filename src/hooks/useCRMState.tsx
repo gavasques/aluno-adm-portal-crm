@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useToast } from "@/hooks/use-toast";
@@ -343,6 +342,8 @@ export const useCRMState = () => {
     setActiveView,
     setSearchQuery,
     setNewColumnName,
+    setIsEditingColumns,
+    setIsEditingLead,
 
     // Actions
     openLeadDetails,

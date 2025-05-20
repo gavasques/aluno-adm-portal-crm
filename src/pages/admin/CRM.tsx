@@ -34,6 +34,8 @@ const CRM = () => {
     
     setActiveView,
     setSearchQuery,
+    setIsEditingColumns, // Added this from useCRMState
+    setIsEditingLead, // Added this from useCRMState
     
     openLeadDetails,
     openLeadEditForm,
