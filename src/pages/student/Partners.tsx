@@ -1,17 +1,6 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
 import { 
   Select, 
   SelectContent, 
@@ -19,15 +8,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger,
-  TabsTriggerWithBadge
-} from "@/components/ui/tabs";
-import { Search, Users, Star, MessageCircle, FileText, History } from "lucide-react";
+import { Search } from "lucide-react";
+import PartnersTable, { Partner } from "@/components/partners/PartnersTable";
+import PartnerDetailDialog from "@/components/partners/PartnerDetailDialog";
 
 // Sample data for partners
 const PARTNERS = [
@@ -102,7 +85,7 @@ const Partners = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [partnerTypeFilter, setPartnerTypeFilter] = useState("");
   const [recommendedFilter, setRecommendedFilter] = useState("");
-  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [ratingText, setRatingText] = useState("");
   const [commentText, setCommentText] = useState("");
   
@@ -122,7 +105,7 @@ const Partners = () => {
 
   // Calculate average rating
   const calculateAverageRating = (ratings) => {
-    if (!ratings || ratings.length === 0) return 0;
+    if (!ratings || ratings.length === 0) return "0.0";
     const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
     return (sum / ratings.length).toFixed(1);
   };
@@ -233,329 +216,28 @@ const Partners = () => {
           <CardTitle>Lista de Parceiros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Avaliação</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPartners.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                      Nenhum parceiro encontrado com os filtros aplicados.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPartners.map((partner) => (
-                    <TableRow key={partner.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {partner.name}
-                          {partner.recommended && (
-                            <Badge className="bg-green-500">Recomendado</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{partner.category}</TableCell>
-                      <TableCell>{partner.type}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                          <span>{calculateAverageRating(partner.ratings)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setSelectedPartner(partner)}
-                        >
-                          Ver Detalhes
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <PartnersTable 
+            partners={filteredPartners}
+            onViewDetails={setSelectedPartner}
+            calculateAverageRating={calculateAverageRating}
+          />
         </CardContent>
       </Card>
       
       {/* Partner Detail Dialog */}
-      {selectedPartner && (
-        <Dialog open={!!selectedPartner} onOpenChange={(open) => !open && setSelectedPartner(null)}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
-                <span>{selectedPartner.name}</span>
-                {selectedPartner.recommended && (
-                  <Badge className="bg-green-500">Recomendado</Badge>
-                )}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="py-4">
-              <Tabs defaultValue="details">
-                <TabsList className="mb-4 flex flex-wrap">
-                  <TabsTrigger value="details">Dados</TabsTrigger>
-                  <TabsTriggerWithBadge 
-                    value="contacts" 
-                    badgeCount={selectedPartner.contacts ? selectedPartner.contacts.length : 0}
-                  >
-                    Contatos
-                  </TabsTriggerWithBadge>
-                  <TabsTriggerWithBadge 
-                    value="comments" 
-                    badgeCount={selectedPartner.comments ? selectedPartner.comments.length : 0}
-                  >
-                    Comentários
-                  </TabsTriggerWithBadge>
-                  <TabsTriggerWithBadge 
-                    value="ratings" 
-                    badgeCount={selectedPartner.ratings ? selectedPartner.ratings.length : 0}
-                  >
-                    Avaliações
-                  </TabsTriggerWithBadge>
-                  <TabsTriggerWithBadge 
-                    value="files" 
-                    badgeCount={selectedPartner.files ? selectedPartner.files.length : 0}
-                  >
-                    Arquivos
-                  </TabsTriggerWithBadge>
-                </TabsList>
-                
-                {/* Details Tab */}
-                <TabsContent value="details">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Nome</h3>
-                          <p className="mt-1 text-base">{selectedPartner.name}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Categoria</h3>
-                          <p className="mt-1 text-base">{selectedPartner.category}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Tipo</h3>
-                          <p className="mt-1 text-base">{selectedPartner.type}</p>
-                        </div>
-                        <div className="col-span-3">
-                          <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
-                          <p className="mt-1 text-base">{selectedPartner.description}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {/* Contacts Tab */}
-                <TabsContent value="contacts">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Contatos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedPartner.contacts && selectedPartner.contacts.length > 0 ? (
-                        <div className="space-y-4">
-                          {selectedPartner.contacts.map((contact, index) => (
-                            <div key={index} className="border p-4 rounded-md">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Nome</h3>
-                                  <p className="mt-1">{contact.name}</p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Cargo</h3>
-                                  <p className="mt-1">{contact.role}</p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                                  <p className="mt-1">{contact.email}</p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
-                                  <p className="mt-1">{contact.phone}</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-center py-4 text-gray-500">Nenhum contato cadastrado.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {/* Comments Tab */}
-                <TabsContent value="comments">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Comentários</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        {selectedPartner.comments && selectedPartner.comments.map((comment) => (
-                          <div key={comment.id} className="border rounded-md p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center">
-                                <Users className="h-5 w-5 mr-2" />
-                                <span className="font-medium">{comment.user}</span>
-                              </div>
-                              <span className="text-sm text-gray-500">{comment.date}</span>
-                            </div>
-                            <p className="mt-2 text-gray-700">{comment.text}</p>
-                            <div className="mt-2 flex items-center">
-                              <Button variant="ghost" size="sm" className="h-8 text-gray-500" onClick={() => handleLikeComment(comment.id)}>
-                                <Star className="h-4 w-4 mr-1" />
-                                {comment.likes} likes
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-
-                        {(!selectedPartner.comments || selectedPartner.comments.length === 0) && (
-                          <p className="text-center py-4 text-gray-500">
-                            Nenhum comentário disponível.
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div className="mt-6">
-                        <h3 className="font-medium mb-2">Adicionar comentário</h3>
-                        <textarea 
-                          className="w-full border rounded-md p-2 min-h-[100px]" 
-                          placeholder="Digite seu comentário..."
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                        />
-                        <Button className="mt-2" onClick={handleAddComment}>
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          Enviar Comentário
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {/* Ratings Tab */}
-                <TabsContent value="ratings">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Avaliações</CardTitle>
-                      <div>
-                        Avaliação média: {calculateAverageRating(selectedPartner.ratings)}/5
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {selectedPartner.ratings && selectedPartner.ratings.map((rating) => (
-                          <div key={rating.id} className="border p-4 rounded-md">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center">
-                                <Users className="h-5 w-5 mr-2" />
-                                <span className="font-medium">{rating.user}</span>
-                              </div>
-                              <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star 
-                                    key={star} 
-                                    className={`h-4 w-4 ${star <= rating.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="mt-2 text-gray-700">{rating.comment}</p>
-                            <div className="mt-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleLikeRating(rating.id)}>
-                                <Star className="h-4 w-4 mr-1" />
-                                {rating.likes} likes
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-
-                        {(!selectedPartner.ratings || selectedPartner.ratings.length === 0) && (
-                          <p className="text-center py-4 text-gray-500">
-                            Nenhuma avaliação disponível.
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div className="mt-6">
-                        <h3 className="font-medium mb-2">Adicionar avaliação</h3>
-                        <div className="flex mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star 
-                              key={star} 
-                              className="h-6 w-6 cursor-pointer text-yellow-400 fill-yellow-400" 
-                            />
-                          ))}
-                        </div>
-                        <textarea 
-                          className="w-full border rounded-md p-2 min-h-[100px]" 
-                          placeholder="Digite sua avaliação..."
-                          value={ratingText}
-                          onChange={(e) => setRatingText(e.target.value)}
-                        />
-                        <Button className="mt-2" onClick={handleAddRating}>
-                          <Star className="mr-2 h-4 w-4" />
-                          Enviar Avaliação
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {/* Files Tab */}
-                <TabsContent value="files">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Arquivos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedPartner.files && selectedPartner.files.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {selectedPartner.files.map((file, index) => (
-                            <div key={index} className="border p-4 rounded-md flex items-center">
-                              <FileText className="h-6 w-6 mr-2" />
-                              <div>
-                                <p className="font-medium">{file.name}</p>
-                                <p className="text-sm text-gray-500">{file.size}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-center py-4 text-gray-500">
-                            Nenhum arquivo disponível.
-                          </p>
-                          <div className="mt-4 flex justify-center">
-                            <Button>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Adicionar Arquivo
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <PartnerDetailDialog
+        partner={selectedPartner}
+        onClose={() => setSelectedPartner(null)}
+        commentText={commentText}
+        ratingText={ratingText}
+        onCommentTextChange={setCommentText}
+        onRatingTextChange={setRatingText}
+        onAddComment={handleAddComment}
+        onAddRating={handleAddRating}
+        onLikeComment={handleLikeComment}
+        onLikeRating={handleLikeRating}
+        calculateAverageRating={calculateAverageRating}
+      />
     </div>
   );
 };

@@ -100,27 +100,21 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome da Ferramenta *</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <FormField 
+              label="Nome da Ferramenta *" 
+              name="name" 
+              value={formData.name} 
+              onChange={handleChange} 
+              required 
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="provider">Fornecedor *</Label>
-              <Input
-                id="provider"
-                name="provider"
-                value={formData.provider}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <FormField 
+              label="Fornecedor *" 
+              name="provider" 
+              value={formData.provider} 
+              onChange={handleChange} 
+              required 
+            />
             
             <div className="space-y-2">
               <Label htmlFor="category">Categoria *</Label>
@@ -143,51 +137,39 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="logo">Iniciais/Logo *</Label>
-              <Input
-                id="logo"
-                name="logo"
-                value={formData.logo}
-                onChange={handleChange}
-                maxLength={1}
-                placeholder="Ex: S para Shopify"
-                required
-              />
-            </div>
+            <FormField 
+              label="Iniciais/Logo *" 
+              name="logo" 
+              value={formData.logo} 
+              onChange={handleChange} 
+              maxLength={1} 
+              placeholder="Ex: S para Shopify"
+              required 
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                name="website"
-                value={formData.website}
-                onChange={handleChange}
-                type="url"
-                placeholder="https://..."
-              />
-            </div>
+            <FormField 
+              label="Website" 
+              name="website" 
+              value={formData.website} 
+              onChange={handleChange} 
+              type="url" 
+              placeholder="https://..." 
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                type="email"
-              />
-            </div>
+            <FormField 
+              label="Email" 
+              name="email" 
+              value={formData.email} 
+              onChange={handleChange} 
+              type="email" 
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
+            <FormField 
+              label="Telefone" 
+              name="phone" 
+              value={formData.phone} 
+              onChange={handleChange} 
+            />
             
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
@@ -205,36 +187,18 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="coupons">Cupons de Desconto</Label>
-              <Input
-                id="coupons"
-                name="coupons"
-                value={formData.coupons}
-                onChange={handleChange}
-                placeholder="Ex: SHOP10, PROMO20"
-              />
-            </div>
+            <FormField 
+              label="Cupons de Desconto" 
+              name="coupons" 
+              value={formData.coupons} 
+              onChange={handleChange} 
+              placeholder="Ex: SHOP10, PROMO20" 
+            />
             
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="recommended"
-                  checked={formData.recommended}
-                  onCheckedChange={(checked) => handleSwitchChange("recommended", checked)}
-                />
-                <Label htmlFor="recommended">Recomendada</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="notRecommended"
-                  checked={formData.notRecommended}
-                  onCheckedChange={(checked) => handleSwitchChange("notRecommended", checked)}
-                />
-                <Label htmlFor="notRecommended">Não Recomendada</Label>
-              </div>
-            </div>
+            <SwitchesField 
+              formData={formData} 
+              handleSwitchChange={handleSwitchChange} 
+            />
           </div>
           
           <div className="space-y-2">
@@ -255,6 +219,78 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
         </form>
       </DialogContent>
     </Dialog>
+  );
+};
+
+// Reusable form field component
+interface FormFieldProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+  type?: string;
+  placeholder?: string;
+  maxLength?: number;
+}
+
+const FormField: React.FC<FormFieldProps> = ({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  required = false,
+  type = "text",
+  placeholder = "",
+  maxLength
+}) => {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name}>{label}</Label>
+      <Input
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        maxLength={maxLength}
+      />
+    </div>
+  );
+};
+
+// Switches component for recommendation toggles
+interface SwitchesFieldProps {
+  formData: {
+    recommended: boolean;
+    notRecommended: boolean;
+  };
+  handleSwitchChange: (name: string, checked: boolean) => void;
+}
+
+const SwitchesField: React.FC<SwitchesFieldProps> = ({ formData, handleSwitchChange }) => {
+  return (
+    <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="recommended"
+          checked={formData.recommended}
+          onCheckedChange={(checked) => handleSwitchChange("recommended", checked)}
+        />
+        <Label htmlFor="recommended">Recomendada</Label>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="notRecommended"
+          checked={formData.notRecommended}
+          onCheckedChange={(checked) => handleSwitchChange("notRecommended", checked)}
+        />
+        <Label htmlFor="notRecommended">Não Recomendada</Label>
+      </div>
+    </div>
   );
 };
 
