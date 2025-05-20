@@ -94,7 +94,7 @@ const AdminSidebar = () => {
               <div className="flex items-center justify-between">
                 <span>Gestão</span>
                 <CollapsibleTrigger asChild>
-                  <button className="hover:bg-portal-light rounded-md p-1">
+                  <button className="hover:bg-portal-light rounded-md p-1 focus:outline-none focus:ring-1 focus:ring-portal-primary">
                     {isManagementOpen ? (
                       <ChevronUp className="h-3 w-3" />
                     ) : (
@@ -104,9 +104,9 @@ const AdminSidebar = () => {
                 </CollapsibleTrigger>
               </div>
               
-              <CollapsibleContent className="mt-1">
+              <CollapsibleContent className="mt-1 overflow-hidden transition-all duration-200">
                 <SidebarGroupContent>
-                  <SidebarMenu>
+                  <SidebarMenu className="flex flex-col space-y-0.5">
                     <NavItem href="/admin/users" icon={Users}>Gestão de Usuários</NavItem>
                     <NavItem href="/admin/gestao-alunos" icon={User}>Gestão de Alunos</NavItem>
                     <NavItem href="/admin/courses" icon={Book}>Cadastro de Cursos</NavItem>
