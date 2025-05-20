@@ -585,9 +585,9 @@ const CRM = () => {
                 </CardDescription>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:items-center w-full">
-              <div className="flex flex-col sm:flex-row sm:space-x-4 w-full">
-                <div className="flex space-x-2 self-start mb-2 sm:mb-0">
+            <div className="flex flex-col sm:flex-row sm:items-center w-full">
+              <div className="flex items-center gap-3">
+                <div className="flex space-x-2">
                   <Button 
                     variant={activeView === "kanban" ? "default" : "outline"} 
                     onClick={() => setActiveView("kanban")}
