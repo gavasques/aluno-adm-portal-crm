@@ -29,7 +29,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
   const [isEditing, setIsEditing] = useState(false);
 
   // Garantir que todas as propriedades necessárias existam
-  if (!editedSupplier.comments) editedSupplier.comments = [];
+  if (!editedSupplier.commentItems) editedSupplier.commentItems = [];
   if (!editedSupplier.ratings) editedSupplier.ratings = [];
   if (!editedSupplier.images) editedSupplier.images = [];
 
@@ -251,9 +251,9 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
         <TabsContent value="comentarios">
           <CommentsTab 
-            comments={editedSupplier.comments}
+            comments={editedSupplier.commentItems || []}
             onUpdate={(updatedComments) => {
-              setEditedSupplier({ ...editedSupplier, comments: updatedComments });
+              setEditedSupplier({ ...editedSupplier, commentItems: updatedComments });
             }}
           />
         </TabsContent>

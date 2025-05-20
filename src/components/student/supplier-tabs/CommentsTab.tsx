@@ -10,6 +10,15 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+interface CommentReply {
+  id: number;
+  userId: number;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  date: string;
+}
+
 interface CommentItem {
   id: number;
   userId: number;
@@ -20,15 +29,6 @@ interface CommentItem {
   likes: number;
   userLiked: boolean;
   replies: CommentReply[];
-}
-
-interface CommentReply {
-  id: number;
-  userId: number;
-  userName: string;
-  userAvatar?: string;
-  content: string;
-  date: string;
 }
 
 interface CommentsTabProps {

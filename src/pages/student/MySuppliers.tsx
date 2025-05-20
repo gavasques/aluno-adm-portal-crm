@@ -57,7 +57,8 @@ const INITIAL_SUPPLIERS = [
     files: [
       { id: 1, name: "Catálogo 2023", type: "PDF", size: "2.5MB", date: "2023-04-10" }
     ],
-    comments: [
+    commentCount: 3, // Renomeado de comments para commentCount para evitar duplicação
+    commentItems: [ // Renomeado de comments para commentItems para evitar duplicação
       { 
         id: 1, 
         userId: 1, 
@@ -149,7 +150,7 @@ const MySuppliers = () => {
         address: data.address || "",
         type: data.type || "Distribuidor",
         rating: 0,
-        comments: 0,
+        commentCount: 0, // Renomeado de comments para commentCount
         logo: data.name.substring(0, 2).toUpperCase(),
         brands: [],
         branches: [],
@@ -158,7 +159,7 @@ const MySuppliers = () => {
         files: [],
         images: [],
         ratings: [],
-        comments: []
+        commentItems: [] // Renomeado de comments para commentItems
       };
       
       setSuppliers([...suppliers, supplier]);
@@ -238,7 +239,7 @@ const MySuppliers = () => {
                     
                     <div className="flex items-center text-gray-500 text-sm">
                       <MessageCircle size={16} className="mr-1" />
-                      {supplier.comments}
+                      {supplier.commentCount}
                     </div>
                   </div>
                   
