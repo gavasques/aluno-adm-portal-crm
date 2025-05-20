@@ -56,7 +56,7 @@ const NavItem = ({ href, icon: Icon, children }: NavItemProps) => {
 
 const AdminSidebar = () => {
   return (
-    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-sm z-30">
+    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-sm z-30 pr-0">
       <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
       <SidebarContent className="pt-16 pb-4">
         <div className="px-3 py-2">

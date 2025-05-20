@@ -582,7 +582,7 @@ const CRM = () => {
     });
   };
   return <div className="container mx-auto py-0">
-      <div className="flex flex-col mb-6">
+      <div className="flex flex-col mb-4">
         <h1 className="text-3xl font-bold text-portal-dark mb-4">CRM / Gestão de Leads</h1>
         <div className="flex gap-2 justify-start">
           <Dialog>
@@ -692,8 +692,8 @@ const CRM = () => {
       </div>
       
       <Card className="mb-6">
-        <CardHeader className="sticky top-0 z-20 bg-white">
-          <div className="flex flex-col space-y-4">
+        <CardHeader className="sticky top-0 z-20 bg-white py-2">
+          <div className="flex flex-col space-y-2">
             <div className="flex justify-between items-baseline">
               <div>
                 
