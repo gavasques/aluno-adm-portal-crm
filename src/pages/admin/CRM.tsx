@@ -9,13 +9,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, Search, Settings, Trash2, Move, MoveHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react";
+import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, Search, Settings, Trash2, Move, MoveHorizontal, X, ArrowLeft, ArrowRight, Save } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useForm } from "react-hook-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 // Interface para a tipagem das colunas e leads
 interface Column {
@@ -165,7 +166,7 @@ const SortableColumnListItem = ({ column, leadCount, onRemove }) => {
     transition,
     zIndex: isDragging ? 10 : 1,
     opacity: isDragging ? 0.5 : 1,
-    position: 'relative' as const, // Usamos 'as const' para tipar corretamente a propriedade position
+    position: 'relative' as const,
   };
   
   return (
@@ -217,6 +218,8 @@ const SortableColumnListItem = ({ column, leadCount, onRemove }) => {
 
 // Componente de página CRM
 const CRM = () => {
+  const { toast } = useToast();
+  
   // Estados para controlar as colunas e leads
   const [columns, setColumns] = useState<Column[]>([
     { id: "lead-in", name: "Lead In", color: "kanban-blue" },
@@ -226,6 +229,9 @@ const CRM = () => {
     { id: "closed", name: "Fechado", color: "kanban-gray" }
   ]);
   
+  const [originalColumns, setOriginalColumns] = useState<Column[]>([]);
+  const [columnsModified, setColumnsModified] = useState(false);
+
   // Estado para os leads
   const [leads, setLeads] = useState<Lead[]>([
     { 
@@ -305,7 +311,6 @@ const CRM = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditingColumns, setIsEditingColumns] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
-  const [selectedColumnForDeletion, setSelectedColumnForDeletion] = useState<Column | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
@@ -340,12 +345,14 @@ const CRM = () => {
     const colors = ["kanban-blue", "kanban-purple", "kanban-amber", "kanban-green", "kanban-gray", "kanban-pink", "kanban-indigo"];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     
-    setColumns([...columns, { 
+    const updatedColumns = [...columns, { 
       id: newColumnId, 
       name: newColumnName, 
       color: randomColor 
-    }]);
+    }];
     
+    setColumns(updatedColumns);
+    setColumnsModified(true);
     setNewColumnName("");
   };
   
@@ -358,8 +365,9 @@ const CRM = () => {
     );
     
     setLeads(updatedLeads);
-    setColumns(columns.filter(col => col.id !== column.id));
-    setSelectedColumnForDeletion(null);
+    const updatedColumns = columns.filter(col => col.id !== column.id);
+    setColumns(updatedColumns);
+    setColumnsModified(true);
   };
   
   // Função para lidar com o término do arrastar e soltar
@@ -401,8 +409,38 @@ const CRM = () => {
     
     if (oldIndex !== newIndex) {
       console.log(`Reordenando coluna de ${oldIndex} para ${newIndex}`);
-      setColumns(arrayMove(columns, oldIndex, newIndex));
+      const updatedColumns = arrayMove(columns, oldIndex, newIndex);
+      setColumns(updatedColumns);
+      setColumnsModified(true);
     }
+  };
+
+  // Função para salvar as alterações nas colunas
+  const saveColumnChanges = () => {
+    setOriginalColumns(columns);
+    setColumnsModified(false);
+    setIsEditingColumns(false);
+    
+    toast({
+      title: "Colunas salvas com sucesso",
+      description: "As alterações nas colunas foram salvas.",
+      duration: 3000,
+    });
+  };
+  
+  // Iniciar edição de colunas
+  const startEditingColumns = () => {
+    setOriginalColumns([...columns]);
+    setIsEditingColumns(true);
+  };
+  
+  // Cancelar edição de colunas
+  const cancelEditingColumns = () => {
+    if (columnsModified) {
+      setColumns(originalColumns);
+      setColumnsModified(false);
+    }
+    setIsEditingColumns(false);
   };
 
   // Formulário para adicionar comentário
@@ -448,12 +486,12 @@ const CRM = () => {
   
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-portal-dark">CRM / Gestão de Leads</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col mb-6">
+        <h1 className="text-3xl font-bold text-portal-dark mb-4">CRM / Gestão de Leads</h1>
+        <div className="flex gap-2 justify-start">
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-neutral-900 hover:bg-neutral-800">
                 <Plus className="mr-2 h-4 w-4" /> Novo Lead
               </Button>
             </DialogTrigger>
@@ -471,9 +509,9 @@ const CRM = () => {
             </DialogContent>
           </Dialog>
           
-          <Sheet>
+          <Sheet open={isEditingColumns} onOpenChange={columnsModified ? undefined : setIsEditingColumns}>
             <SheetTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" onClick={startEditingColumns}>
                 <Settings className="mr-2 h-4 w-4" /> Colunas
               </Button>
             </SheetTrigger>
@@ -525,8 +563,12 @@ const CRM = () => {
                   </DndContext>
                 </div>
               </div>
-              <SheetFooter>
-                <Button variant="outline" onClick={() => setIsEditingColumns(false)}>Fechar</Button>
+              <SheetFooter className="flex flex-row justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={cancelEditingColumns}>Cancelar</Button>
+                <Button onClick={saveColumnChanges} className="flex gap-2">
+                  <Save size={16} />
+                  Salvar
+                </Button>
               </SheetFooter>
             </SheetContent>
           </Sheet>
@@ -534,15 +576,17 @@ const CRM = () => {
       </div>
       
       <Card className="mb-6">
-        <CardHeader className="sticky top-0 z-10 bg-white">
-          <div className="flex justify-between items-center flex-col sm:flex-row space-y-2 sm:space-y-0">
-            <div>
-              <CardTitle>Gestão de Leads</CardTitle>
-              <CardDescription>
-                Acompanhe o progresso dos seus leads no pipeline de vendas.
-              </CardDescription>
+        <CardHeader className="sticky top-0 z-20 bg-white">
+          <div className="flex flex-col space-y-4">
+            <div className="flex justify-between items-baseline">
+              <div>
+                <CardTitle className="text-2xl font-medium">Gestão de Leads</CardTitle>
+                <CardDescription>
+                  Acompanhe o progresso dos seus leads no pipeline de vendas.
+                </CardDescription>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:justify-between items-start sm:items-center w-full">
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input 
@@ -552,16 +596,18 @@ const CRM = () => {
                   className="pl-8"
                 />
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 self-start">
                 <Button 
                   variant={activeView === "kanban" ? "default" : "outline"} 
                   onClick={() => setActiveView("kanban")}
+                  size="sm"
                 >
                   Kanban
                 </Button>
                 <Button 
                   variant={activeView === "list" ? "default" : "outline"} 
                   onClick={() => setActiveView("list")}
+                  size="sm"
                 >
                   Lista
                 </Button>
@@ -572,7 +618,7 @@ const CRM = () => {
         <CardContent className="p-0">
           {activeView === "kanban" ? (
             <div className="relative">
-              <div className="sticky top-0 z-10 bg-white border-b p-4">
+              <div className="sticky top-12 z-10 bg-white border-b p-4 shadow-sm">
                 {/* Campos fixos que não rolam com o kanban */}
                 <div className="flex justify-between items-center">
                   <div className="text-sm font-medium">
