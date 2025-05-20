@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter } from "lucide-react";
@@ -37,6 +36,7 @@ import {
 import SupplierForm from "@/components/admin/SupplierForm";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import SuppliersTable, { Supplier } from "@/components/admin/SuppliersTable";
+import CsvImportDialog from "@/components/admin/CsvImportDialog";
 import { toast } from "sonner";
 
 // Dados de exemplo (agora com campo status)
@@ -321,6 +321,26 @@ const AdminSuppliers = () => {
     );
   };
 
+  // Função para lidar com a importação de fornecedores via CSV
+  const handleImportSuppliers = (newSuppliers: Partial<Supplier>[]) => {
+    if (newSuppliers.length === 0) return;
+    
+    const highestId = Math.max(...suppliers.map(s => Number(s.id)), 0);
+    
+    const suppliersToAdd = newSuppliers.map((supplier, index) => {
+      return {
+        ...supplier,
+        id: highestId + index + 1,
+        rating: 0,
+        comments: 0,
+        brands: [],
+        status: "Ativo"
+      } as Supplier;
+    });
+    
+    setSuppliers([...suppliers, ...suppliersToAdd]);
+  };
+
   return (
     <div className="px-6 py-6 w-full">
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Fornecedores</h1>
@@ -473,20 +493,29 @@ const AdminSuppliers = () => {
               </div>
             </div>
             
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="whitespace-nowrap">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Adicionar Fornecedor
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Novo Fornecedor</DialogTitle>
-                </DialogHeader>
-                <SupplierForm onSubmit={handleAddSupplier} />
-              </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+              {/* Botão para Importar CSV */}
+              <CsvImportDialog 
+                onImport={handleImportSuppliers}
+                existingSuppliers={suppliers}
+              />
+              
+              {/* Botão para Adicionar Fornecedor */}
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar Fornecedor
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Adicionar Novo Fornecedor</DialogTitle>
+                  </DialogHeader>
+                  <SupplierForm onSubmit={handleAddSupplier} />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           
           <SuppliersTable 
