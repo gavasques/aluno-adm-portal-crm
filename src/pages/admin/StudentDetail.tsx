@@ -16,7 +16,8 @@ import {
   Edit, 
   PlusCircle, 
   ArrowLeft, 
-  Trash2 
+  Trash2,
+  AlertCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -48,57 +49,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Sample students data (should be replaced with actual data fetching)
-const STUDENTS = [
-  {
-    id: 1,
-    name: "João Silva",
-    email: "joao.silva@exemplo.com",
-    phone: "(11) 98765-4321",
-    registrationDate: "15/03/2023",
-    status: "Ativo",
-    lastLogin: "Hoje, 10:45",
-    courses: ["Curso Básico de E-commerce", "Mentoria Individual"],
-    mentorships: ["Mentoria Individual", "Mentoria em Grupo"],
-    bonuses: ["E-book de E-commerce", "Planilha de Controle"],
-    observations: "Cliente interessado em expandir para marketplace."
-  },
-  {
-    id: 2,
-    name: "Maria Oliveira",
-    email: "maria.oliveira@exemplo.com",
-    phone: "(21) 97654-3210",
-    registrationDate: "22/05/2023",
-    status: "Ativo",
-    lastLogin: "Ontem, 15:30",
-    courses: ["Curso Avançado de E-commerce"],
-    mentorships: [],
-    bonuses: ["Planilha de Controle"],
-    observations: ""
-  },
-  // ... other students
-];
-
-// Sample data for courses, mentorships, and bonuses
-const AVAILABLE_COURSES = [
-  { id: 1, name: "Curso Básico de E-commerce", price: "R$ 497,00" },
-  { id: 2, name: "Curso Avançado de E-commerce", price: "R$ 997,00" },
-  { id: 3, name: "Mentoria Individual", price: "R$ 1.997,00" },
-  { id: 4, name: "Curso de Marketing Digital", price: "R$ 697,00" }
-];
-
-const AVAILABLE_MENTORSHIPS = [
-  { id: 1, name: "Mentoria Individual", sessions: 4, price: "R$ 1.997,00" },
-  { id: 2, name: "Mentoria em Grupo", sessions: 8, price: "R$ 997,00" },
-  { id: 3, name: "Mentoria Avançada", sessions: 6, price: "R$ 2.497,00" }
-];
-
-const AVAILABLE_BONUSES = [
-  { id: 1, name: "E-book de E-commerce", type: "Digital" },
-  { id: 2, name: "Planilha de Controle", type: "Digital" },
-  { id: 3, name: "Templates de E-commerce", type: "Digital" },
-  { id: 4, name: "Acesso à Comunidade VIP", type: "Serviço" }
-];
+// Import shared student data
+import { STUDENTS, AVAILABLE_COURSES, AVAILABLE_MENTORSHIPS, AVAILABLE_BONUSES } from "@/data/students";
 
 // Form schemas
 const editStudentSchema = z.object({
@@ -151,9 +103,13 @@ const StudentDetail = () => {
   });
 
   useEffect(() => {
-    // Simulate API fetch
+    console.log("Fetching student with ID:", id);
+    // Simulate API fetch - ensuring we're comparing numbers with numbers
     const studentId = parseInt(id, 10);
+    console.log("Parsed student ID:", studentId, "Type:", typeof studentId);
+    
     const foundStudent = STUDENTS.find(s => s.id === studentId);
+    console.log("Found student:", foundStudent);
     
     if (foundStudent) {
       setStudent(foundStudent);
@@ -168,14 +124,17 @@ const StudentDetail = () => {
     } else {
       toast({
         title: "Erro",
-        description: "Aluno não encontrado",
+        description: `Aluno com ID ${id} não encontrado`,
         variant: "destructive"
       });
-      navigate("/admin/gestao-alunos");
+      // Give a short delay before navigating back
+      setTimeout(() => {
+        navigate("/admin/gestao-alunos");
+      }, 1500);
     }
     
     setLoading(false);
-  }, [id, navigate]);
+  }, [id, navigate, editForm]);
 
   const handleEditSubmit = (data) => {
     // Update student data
@@ -336,8 +295,9 @@ const StudentDetail = () => {
         <Card>
           <CardContent className="py-10">
             <div className="text-center">
+              <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
               <h2 className="text-2xl font-bold mb-2">Aluno não encontrado</h2>
-              <p className="text-gray-500 mb-4">O aluno que você está procurando não existe.</p>
+              <p className="text-gray-500 mb-4">O aluno com ID {id} não existe ou foi removido.</p>
               <Button onClick={() => navigate("/admin/gestao-alunos")}>
                 Voltar para a lista
               </Button>
