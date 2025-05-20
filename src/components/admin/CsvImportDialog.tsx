@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FileImport, AlertCircle, CheckCircle2 } from "lucide-react";
+import { FileUp, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Supplier } from "@/components/admin/SuppliersTable";
 import { toast } from "sonner";
 
@@ -143,7 +143,7 @@ const CsvImportDialog: React.FC<CsvImportDialogProps> = ({ onImport, existingSup
     <Dialog open={isOpen} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
-          <FileImport className="h-4 w-4" />
+          <FileUp className="h-4 w-4" />
           Importar CSV
         </Button>
       </DialogTrigger>
