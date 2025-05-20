@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
+import { Trash, ArrowDownUp } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -74,7 +74,7 @@ const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
                 onClick={handleSort}
                 className="flex items-center gap-1 font-medium"
               >
-                Nome <ArrowUpDown className="h-4 w-4" />
+                Nome <ArrowDownUp className="h-4 w-4" />
               </Button>
             </TableHead>
             <TableHead>Status</TableHead>
