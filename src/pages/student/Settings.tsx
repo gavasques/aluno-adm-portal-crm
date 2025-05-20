@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { Moon, Sun, Laptop } from "lucide-react";
-import { useTheme } from "@/components/ui/theme-provider";
 
 const Settings = () => {
-  const { theme, setTheme } = useTheme();
-  
   const handleSaveProfile = () => {
     toast({
       title: "Perfil atualizado",
@@ -35,21 +31,20 @@ const Settings = () => {
   };
   
   return (
-    <div className="container mx-auto py-6 dark-transition">
+    <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6 text-portal-dark">Configurações</h1>
       
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-4 max-w-md">
+          <TabsList className="grid grid-cols-3 max-w-md">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="security">Segurança</TabsTrigger>
             <TabsTrigger value="notifications">Notificações</TabsTrigger>
-            <TabsTrigger value="appearance">Aparência</TabsTrigger>
           </TabsList>
           
           {/* Profile Tab */}
           <TabsContent value="profile">
-            <Card className="dark-transition">
+            <Card>
               <CardHeader>
                 <CardTitle>Informações do Perfil</CardTitle>
                 <CardDescription>
@@ -116,7 +111,7 @@ const Settings = () => {
           
           {/* Security Tab */}
           <TabsContent value="security">
-            <Card className="dark-transition">
+            <Card>
               <CardHeader>
                 <CardTitle>Segurança da Conta</CardTitle>
                 <CardDescription>
@@ -143,14 +138,14 @@ const Settings = () => {
                 
                 <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-medium">Verificação em Duas Etapas</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Adicione uma camada extra de segurança à sua conta usando a verificação em duas etapas.
                   </p>
                   
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Autenticação via SMS</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Receba um código por SMS para fazer login.</p>
+                      <p className="text-sm text-gray-500">Receba um código por SMS para fazer login.</p>
                     </div>
                     <Switch />
                   </div>
@@ -158,7 +153,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Autenticação por Aplicativo</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Use um aplicativo de autenticação para gerar códigos.</p>
+                      <p className="text-sm text-gray-500">Use um aplicativo de autenticação para gerar códigos.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -172,7 +167,7 @@ const Settings = () => {
           
           {/* Notifications Tab */}
           <TabsContent value="notifications">
-            <Card className="dark-transition">
+            <Card>
               <CardHeader>
                 <CardTitle>Preferências de Notificação</CardTitle>
                 <CardDescription>
@@ -186,7 +181,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Atualizações do Portal</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Novos recursos, atualizações importantes e mudanças no sistema.</p>
+                      <p className="text-sm text-gray-500">Novos recursos, atualizações importantes e mudanças no sistema.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -194,7 +189,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Novos Fornecedores</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Notificações quando novos fornecedores forem adicionados.</p>
+                      <p className="text-sm text-gray-500">Notificações quando novos fornecedores forem adicionados.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -202,7 +197,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Comentários e Avaliações</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Respostas aos seus comentários e novas avaliações.</p>
+                      <p className="text-sm text-gray-500">Respostas aos seus comentários e novas avaliações.</p>
                     </div>
                     <Switch />
                   </div>
@@ -214,7 +209,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Atualizações de Fornecedores</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Mudanças em fornecedores que você segue.</p>
+                      <p className="text-sm text-gray-500">Mudanças em fornecedores que você segue.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -222,7 +217,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Menções e Respostas</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Quando alguém menciona você ou responde aos seus comentários.</p>
+                      <p className="text-sm text-gray-500">Quando alguém menciona você ou responde aos seus comentários.</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -246,78 +241,6 @@ const Settings = () => {
               <CardFooter>
                 <Button onClick={handleSaveNotifications}>Salvar Preferências</Button>
               </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          {/* Appearance Tab */}
-          <TabsContent value="appearance">
-            <Card className="dark-transition">
-              <CardHeader>
-                <CardTitle>Aparência</CardTitle>
-                <CardDescription>
-                  Personalize a aparência do portal de acordo com sua preferência.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Tema</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Escolha entre o tema claro, escuro ou siga as configurações do seu sistema.
-                  </p>
-                  
-                  <div className="grid grid-cols-3 gap-4 pt-2">
-                    <div 
-                      className={`flex flex-col items-center gap-2 p-4 rounded-lg border cursor-pointer hover:bg-secondary/50 ${theme === 'light' ? 'bg-secondary border-portal-primary' : 'border-input'}`}
-                      onClick={() => setTheme("light")}
-                    >
-                      <div className="p-2 rounded-full bg-portal-light">
-                        <Sun className="h-5 w-5 text-portal-primary" />
-                      </div>
-                      <span className="font-medium">Claro</span>
-                    </div>
-                    
-                    <div 
-                      className={`flex flex-col items-center gap-2 p-4 rounded-lg border cursor-pointer hover:bg-secondary/50 ${theme === 'dark' ? 'bg-secondary border-portal-primary' : 'border-input'}`}
-                      onClick={() => setTheme("dark")}
-                    >
-                      <div className="p-2 rounded-full bg-gray-800">
-                        <Moon className="h-5 w-5 text-blue-400" />
-                      </div>
-                      <span className="font-medium">Escuro</span>
-                    </div>
-                    
-                    <div 
-                      className={`flex flex-col items-center gap-2 p-4 rounded-lg border cursor-pointer hover:bg-secondary/50 ${theme === 'system' ? 'bg-secondary border-portal-primary' : 'border-input'}`}
-                      onClick={() => setTheme("system")}
-                    >
-                      <div className="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                        <Laptop className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      </div>
-                      <span className="font-medium">Sistema</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4 border-t pt-6">
-                  <h3 className="text-lg font-medium">Layout</h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Exibir Barra Lateral Compacta</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Reduz o tamanho da barra lateral para ganhar mais espaço.</p>
-                    </div>
-                    <Switch />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Ocultar Automaticamente a Barra Lateral</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Oculta a barra lateral quando a janela é redimensionada.</p>
-                    </div>
-                    <Switch />
-                  </div>
-                </div>
-              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>

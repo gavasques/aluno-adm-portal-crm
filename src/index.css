@@ -32,17 +32,6 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
-    /* Portal cores personalizadas */
-    --portal-primary: 200 86% 33%;
-    --portal-secondary: 199 68% 48%;
-    --portal-accent: 187 61% 50%;
-    --portal-background: 192 55% 98%;
-    --portal-dark: 201 84% 24%;
-    --portal-light: 201 100% 92%;
-    --portal-success: 122 39% 49%;
-    --portal-warning: 45 100% 51%;
-    --portal-danger: 0 85% 61%;
  
     --radius: 0.5rem;
   }
@@ -75,17 +64,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-
-    /* Portal cores personalizadas para modo escuro */
-    --portal-primary: 200 70% 25%;
-    --portal-secondary: 199 60% 35%;
-    --portal-accent: 187 55% 40%;
-    --portal-background: 220 20% 10%;
-    --portal-dark: 201 70% 20%;
-    --portal-light: 201 30% 25%;
-    --portal-success: 122 39% 39%;
-    --portal-warning: 45 70% 45%;
-    --portal-danger: 0 70% 50%;
   }
 }
  
@@ -105,25 +83,25 @@
 
 /* Cores para as colunas do kanban */
 .kanban-blue {
-  @apply bg-blue-100 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800;
+  @apply bg-blue-100 border-blue-200;
 }
 .kanban-purple {
-  @apply bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800;
+  @apply bg-purple-100 border-purple-200;
 }
 .kanban-amber {
-  @apply bg-amber-100 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800;
+  @apply bg-amber-100 border-amber-200;
 }
 .kanban-green {
-  @apply bg-green-100 border-green-200 dark:bg-green-900/30 dark:border-green-800;
+  @apply bg-green-100 border-green-200;
 }
 .kanban-gray {
-  @apply bg-gray-100 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700;
+  @apply bg-gray-100 border-gray-200;
 }
 .kanban-pink {
-  @apply bg-pink-100 border-pink-200 dark:bg-pink-900/30 dark:border-pink-800;
+  @apply bg-pink-100 border-pink-200;
 }
 .kanban-indigo {
-  @apply bg-indigo-100 border-indigo-200 dark:bg-indigo-900/30 dark:border-indigo-800;
+  @apply bg-indigo-100 border-indigo-200;
 }
 
 /* Novos estilos para o Hero e Demo */
@@ -168,7 +146,7 @@
 }
 
 .shape-1 {
-  background: hsl(var(--portal-accent));
+  background: var(--portal-accent);
   width: 300px;
   height: 300px;
   top: -100px;
@@ -176,32 +154,9 @@
 }
 
 .shape-2 {
-  background: hsl(var(--portal-primary));
+  background: var(--portal-primary);
   width: 250px;
   height: 250px;
   bottom: -50px;
   left: -50px;
-}
-
-/* Estilos para inputs portalizados */
-.portal-input {
-  @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-portal-primary focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white;
-}
-
-/* Transições suaves para o modo escuro */
-.dark-transition {
-  @apply transition-colors duration-200;
-}
-
-/* Cores específicas do portal para dark mode */
-.dark .text-portal-dark {
-  @apply text-portal-light;
-}
-
-.dark .bg-portal-light {
-  @apply bg-gray-800;
-}
-
-.dark .text-portal-primary {
-  @apply text-blue-400;
 }
