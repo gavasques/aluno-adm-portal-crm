@@ -30,6 +30,7 @@ import AdminSuppliers from "./pages/admin/Suppliers";
 import AdminPartners from "./pages/admin/Partners";
 import AdminTools from "./pages/admin/Tools";
 import CourseDetails from "./pages/admin/CourseDetails";
+import StudentDetail from "./pages/admin/StudentDetail";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="students" element={<AdminStudents />} />
                 <Route path="gestao-alunos" element={<AdminStudents />} />
+                <Route path="student/:id" element={<StudentDetail />} />
                 <Route path="courses" element={<AdminCourses />} />
                 <Route path="courses/:id" element={<CourseDetails />} />
                 <Route path="mentoring" element={<AdminMentoring />} />

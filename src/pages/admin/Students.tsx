@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,19 +45,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { 
-  User, 
   Search, 
   MoreHorizontal, 
   Download, 
   Filter, 
   ArrowUp, 
   ArrowDown,
-  CalendarDays,
   Calendar,
-  X,
   Trash2 
 } from "lucide-react";
 
@@ -195,8 +192,8 @@ const STUDENTS = [
 ];
 
 const Students = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState(null);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDirection, setSortDirection] = useState("asc");
@@ -240,14 +237,9 @@ const Students = () => {
     setCurrentPage(page);
   };
 
-  // Handle student click
+  // Navigate to student details
   const handleStudentClick = (student) => {
-    setSelectedStudent(student);
-  };
-
-  // Handle close student details
-  const handleCloseStudentDetails = () => {
-    setSelectedStudent(null);
+    navigate(`/admin/student/${student.id}`);
   };
 
   // Handle delete student
@@ -568,148 +560,6 @@ const Students = () => {
           </Pagination>
         </CardFooter>
       </Card>
-
-      {/* Student Details Dialog */}
-      {selectedStudent && (
-        <Dialog open={!!selectedStudent} onOpenChange={handleCloseStudentDetails}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center">
-                <User className="mr-2 h-5 w-5" /> 
-                {selectedStudent.name}
-              </DialogTitle>
-              <DialogDescription>
-                Informações e gerenciamento do aluno
-              </DialogDescription>
-            </DialogHeader>
-
-            <Tabs defaultValue="info" className="w-full">
-              <TabsList className="w-full grid grid-cols-4">
-                <TabsTrigger value="info">Informações</TabsTrigger>
-                <TabsTrigger value="courses">Cursos</TabsTrigger>
-                <TabsTrigger value="mentorships">Mentorias</TabsTrigger>
-                <TabsTrigger value="bonuses">Bônus</TabsTrigger>
-              </TabsList>
-              
-              {/* Student Info Tab */}
-              <TabsContent value="info" className="pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Email</h3>
-                      <p>{selectedStudent.email}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Telefone</h3>
-                      <p>{selectedStudent.phone}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Data de Registro</h3>
-                      <div className="flex items-center">
-                        <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <p>{selectedStudent.registrationDate}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Status</h3>
-                      <div className="flex items-center">
-                        <Badge 
-                          variant={selectedStudent.status === "Ativo" ? "default" : selectedStudent.status === "Pendente" ? "secondary" : "outline"}
-                          className={
-                            selectedStudent.status === "Ativo" 
-                              ? "bg-green-500" 
-                              : selectedStudent.status === "Pendente" 
-                                ? "bg-yellow-500" 
-                                : "bg-gray-500"
-                          }
-                        >
-                          {selectedStudent.status}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
-                      <p>{selectedStudent.lastLogin}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-6 border-t pt-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Observações</h3>
-                  <div className="bg-gray-50 p-3 rounded-md min-h-[100px]">
-                    {selectedStudent.observations ? (
-                      <p>{selectedStudent.observations}</p>
-                    ) : (
-                      <p className="text-muted-foreground italic">Sem observações.</p>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-              
-              {/* Courses Tab */}
-              <TabsContent value="courses" className="pt-4">
-                <h3 className="text-lg font-semibold mb-4">Cursos Adquiridos</h3>
-                
-                {selectedStudent.courses && selectedStudent.courses.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedStudent.courses.map((course, index) => (
-                      <div key={index} className="p-3 border rounded-md">
-                        <p className="font-medium">{course}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground italic">Nenhum curso adquirido.</p>
-                )}
-              </TabsContent>
-
-              {/* Mentorships Tab */}
-              <TabsContent value="mentorships" className="pt-4">
-                <h3 className="text-lg font-semibold mb-4">Mentorias Vinculadas</h3>
-                
-                {selectedStudent.mentorships && selectedStudent.mentorships.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedStudent.mentorships.map((mentorship, index) => (
-                      <div key={index} className="p-3 border rounded-md">
-                        <p className="font-medium">{mentorship}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground italic">Nenhuma mentoria vinculada.</p>
-                )}
-              </TabsContent>
-
-              {/* Bonuses Tab */}
-              <TabsContent value="bonuses" className="pt-4">
-                <h3 className="text-lg font-semibold mb-4">Bônus Vinculados</h3>
-                
-                {selectedStudent.bonuses && selectedStudent.bonuses.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedStudent.bonuses.map((bonus, index) => (
-                      <div key={index} className="p-3 border rounded-md">
-                        <p className="font-medium">{bonus}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground italic">Nenhum bônus vinculado.</p>
-                )}
-              </TabsContent>
-            </Tabs>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCloseStudentDetails}>Fechar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
