@@ -215,6 +215,7 @@ const Tools = () => {
   const [isReplyingTo, setIsReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [rating, setRating] = useState(5);
+  const [tools, setTools] = useState(TOOLS);
   
   // Forms
   const contactForm = useForm({
@@ -254,7 +255,7 @@ const Tools = () => {
   
   // Filter and sort tools based on search query and filters
   const filteredTools = useMemo(() => {
-    return TOOLS
+    return tools
       .filter(tool => {
         // Filtro de pesquisa
         const matchesSearch = 
@@ -306,7 +307,7 @@ const Tools = () => {
           return valA < valB ? 1 : -1;
         }
       });
-  }, [searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection]);
+  }, [searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection, tools]);
 
   // Handler functions for forms
   const handleAddComment = () => {
@@ -325,8 +326,13 @@ const Tools = () => {
         replies: [],
       };
       
-      // In a real application, you would update this in the backend
-      // Here we're just showing a success message
+      const updatedTool = {
+        ...selectedTool,
+        comments_list: [...selectedTool.comments_list, newCommentObj]
+      };
+      
+      setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+      setSelectedTool(updatedTool);
       toast.success("Comentário adicionado com sucesso!");
       setNewComment("");
     }
@@ -338,20 +344,52 @@ const Tools = () => {
       return;
     }
 
-    // In a real application, you would update this in the backend
-    toast.success("Resposta adicionada com sucesso!");
-    setReplyText("");
-    setIsReplyingTo(null);
+    if (selectedTool) {
+      const newReply = {
+        id: Date.now(),
+        user: "Usuário Atual",
+        text: replyText,
+        date: new Date().toLocaleDateString(),
+        likes: 0,
+      };
+      
+      const updatedComments = selectedTool.comments_list.map(comment => {
+        if (comment.id === commentId) {
+          return {
+            ...comment,
+            replies: [...comment.replies, newReply]
+          };
+        }
+        return comment;
+      });
+      
+      const updatedTool = {
+        ...selectedTool,
+        comments_list: updatedComments
+      };
+      
+      setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+      setSelectedTool(updatedTool);
+      toast.success("Resposta adicionada com sucesso!");
+      setReplyText("");
+      setIsReplyingTo(null);
+    }
   };
 
   const handleAddContact = (data) => {
     if (selectedTool) {
-      // In a real application, you would send this to the backend
       const newContact = {
         id: Date.now(),
         ...data
       };
       
+      const updatedTool = {
+        ...selectedTool,
+        contacts: [...selectedTool.contacts, newContact]
+      };
+      
+      setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+      setSelectedTool(updatedTool);
       toast.success("Contato adicionado com sucesso!");
       contactForm.reset();
       setIsContactDialogOpen(false);
@@ -360,7 +398,6 @@ const Tools = () => {
 
   const handleAddRating = (data) => {
     if (selectedTool) {
-      // In a real application, you would send this to the backend
       const newRating = {
         id: Date.now(),
         user: "Usuário Atual",
@@ -370,6 +407,13 @@ const Tools = () => {
         likes: 0,
       };
       
+      const updatedTool = {
+        ...selectedTool,
+        ratings_list: [...selectedTool.ratings_list, newRating]
+      };
+      
+      setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+      setSelectedTool(updatedTool);
       toast.success("Avaliação adicionada com sucesso!");
       ratingForm.reset();
       setIsRatingDialogOpen(false);
@@ -393,8 +437,24 @@ const Tools = () => {
       return;
     }
     
-    // In a real application, you would send this file to the backend
-    toast.success(`Arquivo "${file.name}" enviado com sucesso!`);
+    if (selectedTool) {
+      const newFile = {
+        id: Date.now(),
+        name: file.name,
+        type: file.type,
+        size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
+        date: new Date().toLocaleDateString()
+      };
+      
+      const updatedTool = {
+        ...selectedTool,
+        files: [...selectedTool.files, newFile]
+      };
+      
+      setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+      setSelectedTool(updatedTool);
+      toast.success(`Arquivo "${file.name}" enviado com sucesso!`);
+    }
   };
 
   const handleUploadImage = (e) => {
@@ -414,153 +474,201 @@ const Tools = () => {
       return;
     }
     
-    // In a real application, you would send this file to the backend
-    toast.success(`Imagem "${file.name}" enviada com sucesso!`);
+    if (selectedTool) {
+      // In a real app, this would upload to a server and get a URL
+      const imageUrl = URL.createObjectURL(file);
+      
+      const newImage = {
+        id: Date.now(),
+        url: imageUrl,
+        alt: file.name
+      };
+      
+      const updatedTool = {
+        ...selectedTool,
+        images: [...selectedTool.images, newImage]
+      };
+      
+      setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+      setSelectedTool(updatedTool);
+      toast.success(`Imagem "${file.name}" enviada com sucesso!`);
+    }
   };
 
-  const handleLike = () => {
-    toast.success("Like adicionado!");
+  const handleLike = (itemId, type) => {
+    if (selectedTool) {
+      let updatedTool;
+      
+      if (type === "comment") {
+        const updatedComments = selectedTool.comments_list.map(comment => {
+          if (comment.id === itemId) {
+            return { ...comment, likes: comment.likes + 1 };
+          }
+          return comment;
+        });
+        updatedTool = { ...selectedTool, comments_list: updatedComments };
+      } else if (type === "reply") {
+        const updatedComments = selectedTool.comments_list.map(comment => {
+          return {
+            ...comment,
+            replies: comment.replies.map(reply => {
+              if (reply.id === itemId) {
+                return { ...reply, likes: reply.likes + 1 };
+              }
+              return reply;
+            })
+          };
+        });
+        updatedTool = { ...selectedTool, comments_list: updatedComments };
+      } else if (type === "rating") {
+        const updatedRatings = selectedTool.ratings_list.map(rating => {
+          if (rating.id === itemId) {
+            return { ...rating, likes: rating.likes + 1 };
+          }
+          return rating;
+        });
+        updatedTool = { ...selectedTool, ratings_list: updatedRatings };
+      }
+      
+      if (updatedTool) {
+        setTools(tools.map(tool => tool.id === selectedTool.id ? updatedTool : tool));
+        setSelectedTool(updatedTool);
+        toast.success("Like adicionado!");
+      }
+    }
   };
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Ferramentas</h1>
+      <h1 className="text-3xl font-bold mb-8">Ferramentas</h1>
       
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Lista de Ferramentas</CardTitle>
-          <CardDescription>
-            Encontre as melhores ferramentas para seu e-commerce.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative w-full md:w-1/3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                placeholder="Buscar ferramentas..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Select value={softwareTypeFilter} onValueChange={setSoftwareTypeFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Tipo de Ferramenta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Tipos</SelectItem>
-                  <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Logística">Logística</SelectItem>
-                  <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={recommendationFilter} onValueChange={setRecommendationFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Recomendação" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
-                  <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Input
+            placeholder="Buscar ferramentas..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <Select value={softwareTypeFilter} onValueChange={setSoftwareTypeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tipo de Ferramenta" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Tipos</SelectItem>
+              <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
+              <SelectItem value="Marketing">Marketing</SelectItem>
+              <SelectItem value="Logística">Logística</SelectItem>
+              <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
-                    Nome
-                    {sortField === "name" && (
-                      sortDirection === "asc" ? 
-                        <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
-                        <ArrowDown className="ml-1 h-4 w-4 inline" />
-                    )}
-                  </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort("category")}>
-                    Categoria
-                    {sortField === "category" && (
-                      sortDirection === "asc" ? 
-                        <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
-                        <ArrowDown className="ml-1 h-4 w-4 inline" />
-                    )}
-                  </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort("provider")}>
-                    Fornecedor
-                    {sortField === "provider" && (
-                      sortDirection === "asc" ? 
-                        <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
-                        <ArrowDown className="ml-1 h-4 w-4 inline" />
-                    )}
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort("rating")}>
-                    Avaliação
-                    {sortField === "rating" && (
-                      sortDirection === "asc" ? 
-                        <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
-                        <ArrowDown className="ml-1 h-4 w-4 inline" />
-                    )}
-                  </TableHead>
-                  <TableHead>Ações</TableHead>
+          <Select value={recommendationFilter} onValueChange={setRecommendationFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Recomendação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
+              <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
+                  Nome
+                  {sortField === "name" && (
+                    sortDirection === "asc" ? 
+                      <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
+                      <ArrowDown className="ml-1 h-4 w-4 inline" />
+                  )}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("category")}>
+                  Categoria
+                  {sortField === "category" && (
+                    sortDirection === "asc" ? 
+                      <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
+                      <ArrowDown className="ml-1 h-4 w-4 inline" />
+                  )}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("provider")}>
+                  Fornecedor
+                  {sortField === "provider" && (
+                    sortDirection === "asc" ? 
+                      <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
+                      <ArrowDown className="ml-1 h-4 w-4 inline" />
+                  )}
+                </TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("rating")}>
+                  Avaliação
+                  {sortField === "rating" && (
+                    sortDirection === "asc" ? 
+                      <ArrowUp className="ml-1 h-4 w-4 inline" /> : 
+                      <ArrowDown className="ml-1 h-4 w-4 inline" />
+                  )}
+                </TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTools.map((tool) => (
+                <TableRow key={tool.id}>
+                  <TableCell className="font-medium">
+                    {tool.name}
+                    <div className="flex gap-2 mt-1">
+                      {tool.recommended && (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                          Recomendada
+                        </Badge>
+                      )}
+                      {tool.notRecommended && (
+                        <Badge variant="destructive">
+                          Não Recomendado (Corre)
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{tool.category}</TableCell>
+                  <TableCell>{tool.provider}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                      {tool.price}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                      <span>{tool.rating}</span>
+                      <span className="text-gray-400 ml-1">({tool.comments})</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => handleOpenTool(tool)}>
+                      Ver Detalhes
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTools.map((tool) => (
-                  <TableRow key={tool.id}>
-                    <TableCell className="font-medium">
-                      {tool.name}
-                      <div className="flex gap-2 mt-1">
-                        {tool.recommended && (
-                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                            Recomendada
-                          </Badge>
-                        )}
-                        {tool.notRecommended && (
-                          <Badge variant="destructive">
-                            Não Recomendado (Corre)
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{tool.category}</TableCell>
-                    <TableCell>{tool.provider}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
-                        {tool.price}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        <span>{tool.rating}</span>
-                        <span className="text-gray-400 ml-1">({tool.comments})</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenTool(tool)}>
-                        Ver Detalhes
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredTools.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      Nenhuma ferramenta encontrada com os filtros selecionados.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+              {filteredTools.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    Nenhuma ferramenta encontrada com os filtros selecionados.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -816,7 +924,15 @@ const Tools = () => {
                               </div>
                               <p className="mt-3">{comment.text}</p>
                               <div className="mt-3 flex items-center gap-4">
-                                <Button variant="ghost" size="sm" className="text-gray-500" onClick={handleLike}>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-gray-500"
+                                  onClick={(e) => {
+                                    e.preventDefault(); 
+                                    handleLike(comment.id, 'comment');
+                                  }}
+                                >
                                   <ThumbsUp className="h-4 w-4 mr-1" /> {comment.likes}
                                 </Button>
                                 <Button 
@@ -875,7 +991,15 @@ const Tools = () => {
                                         </div>
                                       </div>
                                       <p className="mt-2 text-sm">{reply.text}</p>
-                                      <Button variant="ghost" size="sm" className="text-gray-500 text-xs mt-1" onClick={handleLike}>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-gray-500 text-xs mt-1"
+                                        onClick={(e) => {
+                                          e.preventDefault(); 
+                                          handleLike(reply.id, 'reply');
+                                        }}
+                                      >
                                         <ThumbsUp className="h-3 w-3 mr-1" /> {reply.likes}
                                       </Button>
                                     </div>
@@ -931,19 +1055,25 @@ const Tools = () => {
                                     <p className="text-sm text-gray-500">{rating.date}</p>
                                   </div>
                                 </div>
-                                <div className="flex items-center">
-                                  <div className="flex">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star 
-                                        key={star} 
-                                        className={`h-4 w-4 ${star <= rating.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                                      />
-                                    ))}
-                                  </div>
+                                <div className="flex">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star 
+                                      key={star} 
+                                      className={`h-4 w-4 ${star <= rating.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                    />
+                                  ))}
                                 </div>
                               </div>
                               <p className="mt-2">{rating.comment}</p>
-                              <Button variant="ghost" size="sm" className="text-gray-500 mt-2" onClick={handleLike}>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-gray-500 mt-2"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleLike(rating.id, 'rating');
+                                }}
+                              >
                                 <ThumbsUp className="h-4 w-4 mr-1" /> {rating.likes}
                               </Button>
                             </div>
@@ -1032,7 +1162,7 @@ const Tools = () => {
                             accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt"
                           />
                           <label htmlFor="file-upload">
-                            <Button size="sm" as="span" className="cursor-pointer">
+                            <Button variant="default" size="sm" className="cursor-pointer">
                               <FilePlus className="h-4 w-4 mr-1" /> Upload de Arquivo
                             </Button>
                           </label>
@@ -1096,7 +1226,7 @@ const Tools = () => {
                             accept="image/jpeg,image/png,image/gif,image/webp"
                           />
                           <label htmlFor="image-upload">
-                            <Button size="sm" as="span" className="cursor-pointer">
+                            <Button variant="default" size="sm" className="cursor-pointer">
                               <ImagePlus className="h-4 w-4 mr-1" /> Upload de Imagem
                             </Button>
                           </label>
