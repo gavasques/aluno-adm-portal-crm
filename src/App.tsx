@@ -9,6 +9,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Layout from "./layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 import StudentDashboard from "./pages/student/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Suppliers from "./pages/student/Suppliers";
@@ -47,6 +48,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Index />} />
+              <Route path="reset-password/:token" element={<ResetPassword />} />
               
               {/* Student Routes */}
               <Route path="student">

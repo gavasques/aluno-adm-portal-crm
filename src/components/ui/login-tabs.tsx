@@ -6,11 +6,16 @@ import { Button } from "@/components/ui/button";
 import { GridBackground } from "@/components/ui/grid-background";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 export function LoginTabs() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [magicLinkOpen, setMagicLinkOpen] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,21 +27,30 @@ export function LoginTabs() {
     navigate("/student");
   };
 
+  const handleForgotPassword = () => {
+    // Processar solicitação de recuperação de senha
+    console.log("Enviando recuperação para:", recoveryEmail);
+    setForgotPasswordOpen(false);
+    setRecoveryEmail("");
+  };
+
+  const handleMagicLink = () => {
+    // Processar solicitação de magic link
+    console.log("Enviando magic link para:", recoveryEmail);
+    setMagicLinkOpen(false);
+    setRecoveryEmail("");
+  };
+
   return (
     <div className="relative min-h-screen">
       <GridBackground />
-      <div className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md mx-auto p-8 space-y-12">
-          <div className="space-y-6 text-center">
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-center bg-clip-text text-transparent bg-gradient-to-br from-gray-200 to-gray-600">
-              Portal do Aluno e <br /> Administração
-            </h2>
-            <p className="text-xl text-gray-400 max-w-lg mx-auto">
-              Acesse o portal e confira todos os recursos disponíveis para fornecedores, 
-              parceiros e ferramentas para e-commerce.
-            </p>
-          </div>
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+        {/* Logo no centro superior */}
+        <div className="mb-12">
+          <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
+        </div>
 
+        <div className="w-full max-w-md mx-auto p-8 space-y-8">
           <Tabs defaultValue="student" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="student">Área Aluno</TabsTrigger>
@@ -68,6 +82,22 @@ export function LoginTabs() {
                       required
                     />
                   </div>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <button 
+                    type="button" 
+                    onClick={() => setForgotPasswordOpen(true)} 
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    Esqueci a senha
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setMagicLinkOpen(true)} 
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    Enviar Magic Link
+                  </button>
                 </div>
                 <Button 
                   type="submit" 
@@ -104,6 +134,22 @@ export function LoginTabs() {
                     />
                   </div>
                 </div>
+                <div className="flex justify-between items-center text-sm">
+                  <button 
+                    type="button" 
+                    onClick={() => setForgotPasswordOpen(true)} 
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    Esqueci a senha
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setMagicLinkOpen(true)} 
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    Enviar Magic Link
+                  </button>
+                </div>
                 <Button 
                   type="submit" 
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white"
@@ -113,19 +159,62 @@ export function LoginTabs() {
               </form>
             </TabsContent>
           </Tabs>
-
-          <div className="flex flex-col items-center gap-8">
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-3">
-                <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center border-2 border-white/20 text-sm font-semibold">JD</div>
-                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center border-2 border-white/20 text-sm font-semibold">AS</div>
-                <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center border-2 border-white/20 text-sm font-semibold">MK</div>
-              </div>
-              <span className="font-bold text-gray-300">100+ pessoas no portal</span>
-            </div>
-          </div>
         </div>
       </div>
+
+      {/* Dialog para Esqueci a senha */}
+      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Recuperar senha</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="recovery-email">Email</Label>
+              <Input
+                id="recovery-email"
+                type="email"
+                placeholder="seu@email.com"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                className="bg-gray-950/50 border-gray-800"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleForgotPassword}>
+              Enviar link de recuperação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para Magic Link */}
+      <Dialog open={magicLinkOpen} onOpenChange={setMagicLinkOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Enviar Magic Link</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="magic-email">Email</Label>
+              <Input
+                id="magic-email"
+                type="email"
+                placeholder="seu@email.com"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                className="bg-gray-950/50 border-gray-800"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleMagicLink}>
+              Enviar Magic Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
