@@ -42,9 +42,9 @@ export function LoginTabs() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative w-full min-h-screen">
       <GridBackground />
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen w-full">
         {/* Logo no centro superior */}
         <div className="mb-12">
           <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
@@ -218,4 +218,3 @@ export function LoginTabs() {
     </div>
   );
 }
-
