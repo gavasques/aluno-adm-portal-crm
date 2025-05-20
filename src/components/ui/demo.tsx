@@ -1,101 +1,77 @@
 
-import React from "react";
-import { motion } from "framer-motion";
+import { GridBackground } from "@/components/ui/grid-background";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Icons } from "@/components/ui/icons";
 
-interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  delay: number;
-}
-
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, delay }) => {
+export function Demo() {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ delay: delay * 0.1, duration: 0.6 }}
-      viewport={{ once: true, margin: "-100px" }}
-      className="portal-card flex flex-col items-center text-center p-6 rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow"
-    >
-      <div className="w-16 h-16 rounded-full bg-portal-light flex items-center justify-center mb-6">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold mb-3 text-portal-dark">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </motion.div>
-  );
-};
+    <div className="relative min-h-screen">
+      <GridBackground />
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-xl mx-auto p-8 space-y-12">
+          <div className="space-y-6 text-center">
+            <h2 className="text-4xl sm:text-5xl font-extrabold text-center bg-clip-text text-transparent bg-gradient-to-br from-gray-200 to-gray-600">
+              Join Our Product Launch Waitlist
+            </h2>
+            <p className="text-xl text-gray-400 max-w-lg mx-auto">
+              Be part of something truly extraordinary. Join thousands of others
+              already gaining early access to our revolutionary new product.
+            </p>
+          </div>
 
-const Demo = () => {
-  const features = [
-    {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-portal-primary">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      ),
-      title: "Gestão de Fornecedores",
-      description: "Gerencie seus fornecedores com um micro CRM completo, incluindo contatos, filiais, marcas e avaliações."
-    },
-    {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-portal-primary">
-          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-          <line x1="16" x2="16" y1="2" y2="6"></line>
-          <line x1="8" x2="8" y1="2" y2="6"></line>
-          <line x1="3" x2="21" y1="10" y2="10"></line>
-        </svg>
-      ),
-      title: "Mentorias e Cursos",
-      description: "Organize e acompanhe cursos e mentorias com controle de agenda, participantes e status de cada sessão."
-    },
-    {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-portal-primary">
-          <path d="M17 18a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12z"></path>
-          <path d="M9 22h6"></path>
-          <path d="M9 6h.01"></path>
-          <path d="M9 10h.01"></path>
-        </svg>
-      ),
-      title: "CRM para Gestão de Leads",
-      description: "Acompanhe seus leads em um sistema estilo Kanban com personalização de colunas e fluxos de vendas."
-    }
-  ];
-
-  return (
-    <section className="py-20 px-4 bg-portal-background">
-      <div className="container mx-auto">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl font-bold text-portal-dark">
-            Características do Portal
-          </h2>
-        </motion.div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard 
-              key={index}
-              icon={feature.icon}
-              title={feature.title}
-              description={feature.description}
-              delay={index + 2}
+          <div className="flex gap-2 max-w-md mx-auto">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              className="h-12 bg-gray-950/50 border-gray-800"
             />
-          ))}
+            <Button
+              className="h-12 px-6 bg-black hover:bg-black/90 text-white"
+              variant="ghost"
+            >
+              Get Notified
+            </Button>
+          </div>
+
+          <div className="flex flex-col items-center gap-8">
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                <Avatar className="border-2 w-12 h-12">
+                  <AvatarFallback className="text-sm font-semibold border-white/20 bg-purple-600">JD</AvatarFallback>
+                </Avatar>
+                <Avatar className="border-2 w-12 h-12">
+                  <AvatarFallback className="text-sm font-semibold border-white/20 bg-blue-600">AS</AvatarFallback>
+                </Avatar>
+                <Avatar className="border-2 w-12 h-12">
+                  <AvatarFallback className="text-sm font-semibold border-white/20 bg-blue-700">MK</AvatarFallback>
+                </Avatar>
+              </div>
+              <span className="font-bold">100+ people on the waitlist</span>
+            </div>
+
+            <div className="flex gap-6 justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-400 hover:text-gray-300"
+              >
+                <Icons.twitter className="w-5 h-5 fill-current" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-400 hover:text-gray-300"
+              >
+                <Icons.gitHub className="w-5 h-5 fill-current" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
-};
+}
 
 export default Demo;
