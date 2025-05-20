@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { USERS } from "@/data/users";
 import { toast } from "@/hooks/use-toast";
+import { useForm, Controller } from "react-hook-form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 // Mock de usuários administradores para o dropdown de responsáveis
 const adminUsers = [
@@ -23,7 +25,34 @@ const adminUsers = [
 // Constante para selecionar os usuários do tipo "Usuário"
 const studentUsers = USERS.filter(user => user.role === "Usuário");
 
+// Interface para o formulário de tarefas
+interface TaskFormValues {
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  priority: "Baixa" | "Normal" | "Alta";
+  assignedTo: string;
+  relatedStudentId: string | "none";
+}
+
 const Tasks = () => {
+  // Estado para controlar abertura do modal de nova tarefa
+  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
+  
+  // Inicialização do hook do formulário
+  const form = useForm<TaskFormValues>({
+    defaultValues: {
+      title: "",
+      date: "",
+      time: "",
+      location: "",
+      priority: "Normal",
+      assignedTo: "",
+      relatedStudentId: "none"
+    }
+  });
+  
   // Mock tasks data
   const [tasks, setTasks] = useState([
     { 
@@ -148,6 +177,55 @@ const Tasks = () => {
     });
   };
   
+  // Função para adicionar uma nova tarefa
+  const addTask = (data: TaskFormValues) => {
+    // Gerar ID único para a nova tarefa
+    const newTaskId = Math.max(...tasks.map(task => task.id)) + 1;
+    
+    // Encontrar o nome do responsável baseado no ID selecionado
+    const assignedToName = adminUsers.find(user => user.id.toString() === data.assignedTo)?.name || "";
+    
+    // Verificar se existe um aluno vinculado
+    let relatedStudent = null;
+    if (data.relatedStudentId && data.relatedStudentId !== "none") {
+      const selectedStudent = studentUsers.find(
+        student => student.id.toString() === data.relatedStudentId
+      );
+      if (selectedStudent) {
+        relatedStudent = {
+          id: selectedStudent.id,
+          name: selectedStudent.name
+        };
+      }
+    }
+    
+    // Criar nova tarefa
+    const newTask = {
+      id: newTaskId,
+      title: data.title,
+      date: data.date,
+      time: data.time,
+      priority: data.priority,
+      completed: false,
+      description: "",
+      assignedTo: assignedToName,
+      location: data.location,
+      relatedStudent
+    };
+    
+    // Adicionar à lista de tarefas
+    setTasks([...tasks, newTask]);
+    
+    // Fechar o modal e exibir toast de sucesso
+    setIsNewTaskDialogOpen(false);
+    form.reset();
+    
+    toast({
+      title: "Tarefa adicionada",
+      description: "A tarefa foi adicionada com sucesso."
+    });
+  };
+  
   // Filtrar tarefas com base nos filtros selecionados
   const filterTasks = (tasksArray) => {
     return tasksArray.filter(task => {
@@ -260,7 +338,7 @@ const Tasks = () => {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-portal-dark">Lista de Tarefas</h1>
-        <Dialog>
+        <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Nova Tarefa
@@ -270,13 +348,158 @@ const Tasks = () => {
             <DialogHeader>
               <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {/* Formulário seria implementado aqui */}
-              <p>Formulário para adicionar uma nova tarefa.</p>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Salvar</Button>
-            </DialogFooter>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(addTask)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  rules={{ required: "O título da tarefa é obrigatório" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tarefa</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Digite o título da tarefa" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    rules={{ required: "A data é obrigatória" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="time"
+                    rules={{ required: "O horário é obrigatório" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Horário</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="location"
+                  rules={{ required: "O local é obrigatório" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Sala de Reuniões, Online, etc" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prioridade</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a prioridade" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Baixa">Baixa</SelectItem>
+                            <SelectItem value="Normal">Normal</SelectItem>
+                            <SelectItem value="Alta">Alta</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="assignedTo"
+                    rules={{ required: "O responsável é obrigatório" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Responsável</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o responsável" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {adminUsers.map(user => (
+                              <SelectItem key={user.id} value={user.id.toString()}>
+                                {user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="relatedStudentId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aluno vinculado (opcional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um aluno" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhum</SelectItem>
+                          {studentUsers.map(user => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              {user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setIsNewTaskDialogOpen(false);
+                    form.reset();
+                  }}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Salvar</Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
