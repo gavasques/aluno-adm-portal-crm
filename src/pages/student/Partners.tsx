@@ -37,7 +37,7 @@ const PARTNERS = [
     category: "Marketing Digital",
     type: "Agência",
     rating: 4.8,
-    comments: 14,
+    commentCount: 14,
     recommended: true,
     contacts: [
       { name: "Maria Silva", role: "Gerente de Contas", email: "maria@marketingpro.com", phone: "(11) 98765-4321" }
@@ -51,7 +51,8 @@ const PARTNERS = [
       { id: 1, user: "Maria Oliveira", text: "Vocês poderiam compartilhar mais detalhes sobre os serviços deste parceiro?", date: "15/05/2025", likes: 3 },
       { id: 2, user: "Carlos Mendes", text: "Tive uma ótima experiência com eles no meu projeto de e-commerce.", date: "12/05/2025", likes: 2 }
     ],
-    files: []
+    files: [],
+    history: []
   },
   {
     id: 2,
@@ -59,7 +60,7 @@ const PARTNERS = [
     category: "Logística",
     type: "Serviço",
     rating: 4.3,
-    comments: 7,
+    commentCount: 7,
     recommended: false,
     contacts: [
       { name: "João Oliveira", role: "Diretor Comercial", email: "joao@logisticaexpress.com", phone: "(11) 97654-3210" }
@@ -71,7 +72,8 @@ const PARTNERS = [
     comments: [
       { id: 1, user: "Amanda Costa", text: "Eles atendem entregas para todo o Brasil?", date: "08/05/2025", likes: 0 }
     ],
-    files: []
+    files: [],
+    history: []
   },
   {
     id: 3,
@@ -79,7 +81,7 @@ const PARTNERS = [
     category: "Contabilidade",
     type: "Consultor",
     rating: 4.6,
-    comments: 9,
+    commentCount: 9,
     recommended: true,
     contacts: [
       { name: "Ana Paula", role: "Contadora Chefe", email: "ana@contabilidadeonline.com", phone: "(11) 99876-5432" }
@@ -91,7 +93,8 @@ const PARTNERS = [
     comments: [
       { id: 1, user: "Fernanda Lima", text: "Qual o valor médio da consultoria mensal?", date: "05/05/2025", likes: 1 }
     ],
-    files: []
+    files: [],
+    history: []
   },
 ];
 
