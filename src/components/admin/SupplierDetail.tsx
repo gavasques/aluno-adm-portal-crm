@@ -1,6 +1,9 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";  // Add missing import
+import { Label } from "@/components/ui/label";  // Add missing import
 import { 
   Tabs, 
   TabsContent, 
@@ -694,7 +697,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                       <CardContent className="p-4 flex items-center justify-center h-24">
                         <h3 className="text-sm font-medium text-center">{brand.name}</h3>
                         
-                        {(isAdmin || !isAdmin) && (
+                        {/* Only show delete option to admin users */}
+                        {isAdmin && (
                           <div className="absolute top-2 right-2 flex space-x-1">
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -827,7 +831,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                             </div>
                           </div>
                           
-                          {(isAdmin || !isAdmin) && (
+                          {/* Only show delete option to admin users */}
+                          {isAdmin && (
                             <div className="flex space-x-2">
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
@@ -905,7 +910,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                             <Button variant="outline" size="sm">
                               Ver
                             </Button>
-                            {(isAdmin || !isAdmin) && (
+                            {/* Only show delete option to admin users */}
+                            {isAdmin && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="sm">
