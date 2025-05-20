@@ -69,20 +69,20 @@ const App = () => (
                 <Route path="gestao-alunos" element={<AdminStudents />} />
                 <Route path="student/:id" element={<StudentDetail />} />
                 <Route path="gestao-alunos/:id" element={<StudentDetail />} />
-                <Route path="courses" element={<AdminCourses />} />
-                <Route path="courses/:id" element={<CourseDetails />} />
                 
                 {/* Nova rota unificada para os cadastros */}
                 <Route path="registers" element={<Registers />} />
                 
                 {/* Redirecionamentos das rotas antigas para a nova página de cadastros */}
+                <Route path="courses" element={<Navigate to="/admin/registers?tab=courses" replace />} />
+                <Route path="courses/:id" element={<CourseDetails />} />
                 <Route path="mentoring" element={<Navigate to="/admin/registers" replace />} />
                 <Route path="mentoring/:id" element={<MentoringDetail />} />
-                <Route path="bonus" element={<Navigate to="/admin/registers" replace />} />
+                <Route path="bonus" element={<Navigate to="/admin/registers?tab=bonus" replace />} />
                 <Route path="bonus/:id" element={<BonusDetail />} />
-                <Route path="categories" element={<Navigate to="/admin/registers" replace />} />
-                <Route path="software-types" element={<Navigate to="/admin/registers" replace />} />
-                <Route path="partner-types" element={<Navigate to="/admin/registers" replace />} />
+                <Route path="categories" element={<Navigate to="/admin/registers?tab=categories" replace />} />
+                <Route path="software-types" element={<Navigate to="/admin/registers?tab=software-types" replace />} />
+                <Route path="partner-types" element={<Navigate to="/admin/registers?tab=partner-types" replace />} />
                 
                 <Route path="tasks" element={<AdminTasks />} />
                 <Route path="tasks/:id" element={<TaskDetail />} />

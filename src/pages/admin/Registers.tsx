@@ -1,14 +1,33 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useLocation, useNavigate } from "react-router-dom";
 import Mentoring from "./Mentoring";
 import Bonus from "./Bonus";
 import Categories from "./Categories";
 import SoftwareTypes from "./SoftwareTypes";
 import PartnerTypes from "./PartnerTypes";
+import Courses from "./Courses";
 
 const Registers = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("mentoring");
+  
+  // Extrair o parâmetro 'tab' da URL, se existir
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
+  
+  // Atualizar a URL quando a aba mudar
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/admin/registers?tab=${value}`, { replace: true });
+  };
   
   return (
     <div className="px-6 py-6 w-full">
@@ -18,14 +37,15 @@ const Registers = () => {
         defaultValue="mentoring" 
         className="w-full" 
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
       >
-        <TabsList className="grid grid-cols-5 mb-8">
+        <TabsList className="grid grid-cols-6 mb-8">
           <TabsTrigger value="mentoring">Mentorias</TabsTrigger>
           <TabsTrigger value="bonus">Bônus</TabsTrigger>
           <TabsTrigger value="categories">Categorias</TabsTrigger>
           <TabsTrigger value="software-types">Tipos de Software</TabsTrigger>
           <TabsTrigger value="partner-types">Tipos de Parceiros</TabsTrigger>
+          <TabsTrigger value="courses">Cursos</TabsTrigger>
         </TabsList>
         
         <TabsContent value="mentoring" className="mt-0">
@@ -46,6 +66,10 @@ const Registers = () => {
         
         <TabsContent value="partner-types" className="mt-0">
           <PartnerTypes />
+        </TabsContent>
+
+        <TabsContent value="courses" className="mt-0">
+          <Courses />
         </TabsContent>
       </Tabs>
     </div>
