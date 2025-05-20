@@ -52,11 +52,14 @@ const Header = () => {
         initial="hidden"
         animate="show"
       >
-        {/* Logo and site title */}
+        {/* Logo */}
         <motion.div className="flex items-center" variants={itemAnimation}>
           <Link to="/" className="flex items-center group">
-            <span className={`text-lg font-bold transition-all duration-300 ${isAdmin ? 'text-blue-600' : 'text-portal-primary'} group-hover:scale-110`}>Portal</span>
-            <span className={`text-lg font-normal transition-all duration-300 ${isAdmin ? 'text-indigo-600' : 'text-portal-dark'} group-hover:text-portal-primary`}>Edu</span>
+            <img 
+              src="/lovable-uploads/e94f154c-7d60-4856-980c-56cf04c607ac.png" 
+              alt="Guilherme Vasques Logo" 
+              className="h-7 transition-transform duration-300 group-hover:scale-105"
+            />
           </Link>
         </motion.div>
         

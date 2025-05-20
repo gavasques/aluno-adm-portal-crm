@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -86,9 +85,13 @@ const AdminSidebar = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-600 text-base font-bold mb-1">
-            Área do Administrador
-          </h2>
+          <div className="flex items-center mb-2">
+            <img 
+              src="/lovable-uploads/fbac4170-483c-412d-9780-ee060d5a652c.png" 
+              alt="Área do Administrador" 
+              className="h-12 w-auto"
+            />
+          </div>
           <p className="text-xs text-gray-500">Painel de controle</p>
         </motion.div>
         

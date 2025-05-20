@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Book, Home, Settings, Users, BarChart, FileText } from "lucide-react";
@@ -73,6 +72,13 @@ const StudentSidebar = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
+          <div className="flex items-center mb-2">
+            <img 
+              src="/lovable-uploads/e94f154c-7d60-4856-980c-56cf04c607ac.png" 
+              alt="Logo" 
+              className="h-8 w-auto"
+            />
+          </div>
           <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-portal-primary to-portal-accent text-base font-bold mb-1">
             Área do Aluno
           </h2>
