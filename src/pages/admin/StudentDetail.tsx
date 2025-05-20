@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -17,7 +18,15 @@ import {
   PlusCircle, 
   ArrowLeft, 
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Building,
+  Link,
+  MapPin,
+  Package,
+  Users,
+  MessageSquare,
+  FileText,
+  Paperclip
 } from "lucide-react";
 import {
   Dialog,
@@ -29,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import {
   Form,
@@ -50,7 +60,14 @@ import {
 } from "@/components/ui/select";
 
 // Import shared student data
-import { STUDENTS, AVAILABLE_COURSES, AVAILABLE_MENTORSHIPS, AVAILABLE_BONUSES } from "@/data/students";
+import { 
+  STUDENTS, 
+  AVAILABLE_COURSES, 
+  AVAILABLE_MENTORSHIPS, 
+  AVAILABLE_BONUSES,
+  BRAZILIAN_STATES,
+  COMMUNICATION_CHANNELS
+} from "@/data/students";
 
 // Form schemas
 const editStudentSchema = z.object({
@@ -58,11 +75,35 @@ const editStudentSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().min(8, { message: "Telefone inválido" }),
   status: z.string(),
-  observations: z.string().optional()
+  observations: z.string().optional(),
+  // Novos campos
+  company: z.string().optional(),
+  amazonStoreLink: z.string().optional(),
+  studentState: z.string().optional(),
+  companyState: z.string().optional(),
+  usesFBA: z.string().optional()
 });
 
 const addItemSchema = z.object({
   itemId: z.string().min(1, { message: "Selecione um item" })
+});
+
+const addPartnerSchema = z.object({
+  name: z.string().min(2, { message: "Nome é obrigatório" }),
+  email: z.string().email({ message: "Email inválido" }),
+  phone: z.string().min(8, { message: "Telefone inválido" }),
+  observations: z.string().optional()
+});
+
+const addCommunicationSchema = z.object({
+  channel: z.string().min(1, { message: "Canal de comunicação é obrigatório" }),
+  message: z.string().min(1, { message: "Mensagem é obrigatória" }),
+  attachment: z.any().optional() // Para o anexo de arquivo
+});
+
+const addFileSchema = z.object({
+  name: z.string().min(1, { message: "Nome do arquivo é obrigatório" }),
+  file: z.any().refine(file => file && file instanceof File, { message: "Arquivo é obrigatório" })
 });
 
 const StudentDetail = () => {
@@ -76,6 +117,12 @@ const StudentDetail = () => {
   const [showAddBonusDialog, setShowAddBonusDialog] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   
+  // Novos estados para os novos diálogos
+  const [showAddPartnerDialog, setShowAddPartnerDialog] = useState(false);
+  const [showAddCommunicationDialog, setShowAddCommunicationDialog] = useState(false);
+  const [showAddFileDialog, setShowAddFileDialog] = useState(false);
+  const [expandedCommunication, setExpandedCommunication] = useState(null);
+  
   const editForm = useForm({
     resolver: zodResolver(editStudentSchema),
     defaultValues: {
@@ -83,7 +130,12 @@ const StudentDetail = () => {
       email: "",
       phone: "",
       status: "",
-      observations: ""
+      observations: "",
+      company: "",
+      amazonStoreLink: "",
+      studentState: "",
+      companyState: "",
+      usesFBA: ""
     }
   });
 
@@ -100,6 +152,34 @@ const StudentDetail = () => {
   const addBonusForm = useForm({
     resolver: zodResolver(addItemSchema),
     defaultValues: { itemId: "" }
+  });
+
+  // Novos formulários para as novas funcionalidades
+  const addPartnerForm = useForm({
+    resolver: zodResolver(addPartnerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      observations: ""
+    }
+  });
+
+  const addCommunicationForm = useForm({
+    resolver: zodResolver(addCommunicationSchema),
+    defaultValues: {
+      channel: "",
+      message: "",
+      attachment: null
+    }
+  });
+
+  const addFileForm = useForm({
+    resolver: zodResolver(addFileSchema),
+    defaultValues: {
+      name: "",
+      file: null
+    }
   });
 
   useEffect(() => {
@@ -119,7 +199,12 @@ const StudentDetail = () => {
         email: foundStudent.email,
         phone: foundStudent.phone,
         status: foundStudent.status,
-        observations: foundStudent.observations || ""
+        observations: foundStudent.observations || "",
+        company: foundStudent.company || "",
+        amazonStoreLink: foundStudent.amazonStoreLink || "",
+        studentState: foundStudent.studentState || "",
+        companyState: foundStudent.companyState || "",
+        usesFBA: foundStudent.usesFBA || ""
       });
     } else {
       toast({
@@ -241,6 +326,143 @@ const StudentDetail = () => {
     addBonusForm.reset();
   };
 
+  // Novas funções para manipulação de sócios, comunicações e arquivos
+  const handleAddPartner = (data) => {
+    if (student) {
+      const newPartner = {
+        id: student.partners.length > 0 ? Math.max(...student.partners.map(p => p.id)) + 1 : 1,
+        ...data
+      };
+      
+      const updatedStudent = {
+        ...student,
+        partners: [...student.partners, newPartner]
+      };
+      
+      setStudent(updatedStudent);
+      
+      toast({
+        title: "Sócio adicionado",
+        description: `${data.name} foi adicionado como sócio com sucesso.`
+      });
+      
+      setShowAddPartnerDialog(false);
+      addPartnerForm.reset();
+    }
+  };
+
+  const handleDeletePartner = (partnerId) => {
+    if (student) {
+      const updatedPartners = student.partners.filter(partner => partner.id !== partnerId);
+      const updatedStudent = {
+        ...student,
+        partners: updatedPartners
+      };
+      
+      setStudent(updatedStudent);
+      
+      toast({
+        title: "Sócio removido",
+        description: "O sócio foi removido com sucesso."
+      });
+    }
+  };
+
+  const handleAddCommunication = (data) => {
+    if (student) {
+      const today = new Date();
+      const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      
+      const newCommunication = {
+        id: student.communications.length > 0 ? Math.max(...student.communications.map(c => c.id)) + 1 : 1,
+        channel: data.channel,
+        date: formattedDate,
+        message: data.message,
+        attachments: data.attachment ? [data.attachment.name] : []
+      };
+      
+      const updatedStudent = {
+        ...student,
+        communications: [...student.communications, newCommunication]
+      };
+      
+      setStudent(updatedStudent);
+      
+      toast({
+        title: "Comunicação registrada",
+        description: "A comunicação foi registrada com sucesso."
+      });
+      
+      setShowAddCommunicationDialog(false);
+      addCommunicationForm.reset();
+    }
+  };
+
+  const handleDeleteCommunication = (communicationId) => {
+    if (student) {
+      const updatedCommunications = student.communications.filter(
+        communication => communication.id !== communicationId
+      );
+      const updatedStudent = {
+        ...student,
+        communications: updatedCommunications
+      };
+      
+      setStudent(updatedStudent);
+      
+      toast({
+        title: "Comunicação removida",
+        description: "A comunicação foi removida com sucesso."
+      });
+    }
+  };
+
+  const handleAddFile = (data) => {
+    if (student) {
+      const today = new Date();
+      const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      
+      const newFile = {
+        id: student.files.length > 0 ? Math.max(...student.files.map(f => f.id)) + 1 : 1,
+        name: data.name,
+        file: data.file.name,
+        uploadDate: formattedDate
+      };
+      
+      const updatedStudent = {
+        ...student,
+        files: [...student.files, newFile]
+      };
+      
+      setStudent(updatedStudent);
+      
+      toast({
+        title: "Arquivo adicionado",
+        description: `${data.name} foi adicionado com sucesso.`
+      });
+      
+      setShowAddFileDialog(false);
+      addFileForm.reset();
+    }
+  };
+
+  const handleDeleteFile = (fileId) => {
+    if (student) {
+      const updatedFiles = student.files.filter(file => file.id !== fileId);
+      const updatedStudent = {
+        ...student,
+        files: updatedFiles
+      };
+      
+      setStudent(updatedStudent);
+      
+      toast({
+        title: "Arquivo removido",
+        description: "O arquivo foi removido com sucesso."
+      });
+    }
+  };
+
   const handleDeleteItem = (type, itemName) => {
     if (student) {
       let updatedItems;
@@ -341,11 +563,14 @@ const StudentDetail = () => {
         
         <CardContent>
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="w-full grid grid-cols-4">
+            <TabsList className="w-full grid grid-cols-7">
               <TabsTrigger value="info">Informações</TabsTrigger>
               <TabsTrigger value="courses">Cursos</TabsTrigger>
               <TabsTrigger value="mentorships">Mentorias</TabsTrigger>
               <TabsTrigger value="bonuses">Bônus</TabsTrigger>
+              <TabsTrigger value="partners">Sócios</TabsTrigger>
+              <TabsTrigger value="communications">Comunicações</TabsTrigger>
+              <TabsTrigger value="files">Arquivos</TabsTrigger>
             </TabsList>
             
             {/* Student Info Tab */}
@@ -377,6 +602,28 @@ const StudentDetail = () => {
                       <p>{student.registrationDate}</p>
                     </div>
                   </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-1">Empresa</h3>
+                    <div className="flex items-center">
+                      <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <p>{student.company || "Não informado"}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-1">Link da Loja na Amazon</h3>
+                    <div className="flex items-center">
+                      <Link className="h-4 w-4 mr-2 text-muted-foreground" />
+                      {student.amazonStoreLink ? (
+                        <a href={student.amazonStoreLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                          {student.amazonStoreLink}
+                        </a>
+                      ) : (
+                        <p>Não informado</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="space-y-4">
@@ -401,6 +648,30 @@ const StudentDetail = () => {
                   <div>
                     <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
                     <p>{student.lastLogin}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-1">Estado do Aluno</h3>
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <p>{student.studentState || "Não informado"}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-1">Estado da Empresa</h3>
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <p>{student.companyState || "Não informado"}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-1">Trabalha com FBA</h3>
+                    <div className="flex items-center">
+                      <Package className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <p>{student.usesFBA || "Não informado"}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -537,6 +808,182 @@ const StudentDetail = () => {
                 <p className="text-muted-foreground italic">Nenhum bônus vinculado.</p>
               )}
             </TabsContent>
+
+            {/* Partners Tab */}
+            <TabsContent value="partners" className="pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Sócios</h3>
+                <Button onClick={() => setShowAddPartnerDialog(true)}>
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Adicionar Sócio
+                </Button>
+              </div>
+              
+              {student.partners && student.partners.length > 0 ? (
+                <div className="space-y-3">
+                  {student.partners.map((partner) => (
+                    <div key={partner.id} className="p-4 border rounded-md">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center">
+                          <Users className="h-5 w-5 mr-2 text-muted-foreground" />
+                          <h4 className="font-medium">{partner.name}</h4>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-red-500 hover:text-red-700"
+                          onClick={() => handleDeletePartner(partner.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Email:</p>
+                          <p>{partner.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Telefone:</p>
+                          <p>{partner.phone}</p>
+                        </div>
+                      </div>
+                      
+                      {partner.observations && (
+                        <div className="mt-3">
+                          <p className="text-sm text-muted-foreground">Observações:</p>
+                          <p className="bg-gray-50 p-2 rounded-md mt-1">{partner.observations}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic">Nenhum sócio cadastrado.</p>
+              )}
+            </TabsContent>
+
+            {/* Communications Tab */}
+            <TabsContent value="communications" className="pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Histórico de Comunicações</h3>
+                <Button onClick={() => setShowAddCommunicationDialog(true)}>
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Adicionar Comunicação
+                </Button>
+              </div>
+              
+              {student.communications && student.communications.length > 0 ? (
+                <div className="space-y-3">
+                  {student.communications.map((communication) => (
+                    <div 
+                      key={communication.id} 
+                      className="p-4 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => setExpandedCommunication(expandedCommunication === communication.id ? null : communication.id)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center">
+                          <MessageSquare className="h-5 w-5 mr-2 text-muted-foreground" />
+                          <div>
+                            <h4 className="font-medium">{communication.channel}</h4>
+                            <p className="text-xs text-muted-foreground">{communication.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {communication.attachments && communication.attachments.length > 0 && (
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-red-500 hover:text-red-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCommunication(communication.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <p className={expandedCommunication === communication.id ? "" : "line-clamp-1"}>
+                          {communication.message}
+                        </p>
+                      </div>
+                      
+                      {communication.attachments && communication.attachments.length > 0 && expandedCommunication === communication.id && (
+                        <div className="mt-3 border-t pt-2">
+                          <p className="text-sm font-medium mb-1">Anexos:</p>
+                          {communication.attachments.map((attachment, index) => (
+                            <div key={index} className="flex items-center">
+                              <FileText className="h-4 w-4 mr-1.5 text-muted-foreground" />
+                              <span className="text-sm">{attachment}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic">Nenhuma comunicação registrada.</p>
+              )}
+            </TabsContent>
+
+            {/* Files Tab */}
+            <TabsContent value="files" className="pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Arquivos</h3>
+                <Button onClick={() => setShowAddFileDialog(true)}>
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Adicionar Arquivo
+                </Button>
+              </div>
+              
+              {student.files && student.files.length > 0 ? (
+                <div className="space-y-2">
+                  {student.files.map((file) => (
+                    <div key={file.id} className="p-3 border rounded-md flex justify-between items-center">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">Adicionado em: {file.uploadDate}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            // Simulação de download
+                            toast({
+                              title: "Download iniciado",
+                              description: `Baixando ${file.file}...`
+                            });
+                          }}
+                        >
+                          Baixar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-red-500 hover:text-red-700"
+                          onClick={() => handleDeleteFile(file.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic">Nenhum arquivo cadastrado.</p>
+              )}
+            </TabsContent>
           </Tabs>
         </CardContent>
         
@@ -623,6 +1070,107 @@ const StudentDetail = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Novos campos */}
+              <FormField
+                control={editForm.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Empresa</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="amazonStoreLink"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link da Loja na Amazon</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="url" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="studentState"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado do Aluno</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BRAZILIAN_STATES.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="companyState"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado da Empresa</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BRAZILIAN_STATES.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="usesFBA"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Trabalha com FBA</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma opção" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Sim">Sim</SelectItem>
+                        <SelectItem value="Não">Não</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={editForm.control}
@@ -631,7 +1179,7 @@ const StudentDetail = () => {
                   <FormItem>
                     <FormLabel>Observações</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Textarea {...field} rows={3} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -793,6 +1341,230 @@ const StudentDetail = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Add Partner Dialog */}
+      <Dialog open={showAddPartnerDialog} onOpenChange={setShowAddPartnerDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Sócio</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do sócio que deseja adicionar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...addPartnerForm}>
+            <form onSubmit={addPartnerForm.handleSubmit(handleAddPartner)} className="space-y-4">
+              <FormField
+                control={addPartnerForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addPartnerForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addPartnerForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addPartnerForm.control}
+                name="observations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setShowAddPartnerDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Adicionar Sócio</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Communication Dialog */}
+      <Dialog open={showAddCommunicationDialog} onOpenChange={setShowAddCommunicationDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Comunicação</DialogTitle>
+            <DialogDescription>
+              Registre uma nova comunicação com o aluno.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...addCommunicationForm}>
+            <form onSubmit={addCommunicationForm.handleSubmit(handleAddCommunication)} className="space-y-4">
+              <FormField
+                control={addCommunicationForm.control}
+                name="channel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Canal de Comunicação</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um canal" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COMMUNICATION_CHANNELS.map((channel) => (
+                          <SelectItem key={channel} value={channel}>
+                            {channel}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addCommunicationForm.control}
+                name="message"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mensagem</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={5} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addCommunicationForm.control}
+                name="attachment"
+                render={({ field: { onChange, value, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Anexo (opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="file" 
+                        {...field} 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            onChange(file);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setShowAddCommunicationDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Adicionar Comunicação</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add File Dialog */}
+      <Dialog open={showAddFileDialog} onOpenChange={setShowAddFileDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Arquivo</DialogTitle>
+            <DialogDescription>
+              Adicione um novo arquivo relacionado ao aluno.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...addFileForm}>
+            <form onSubmit={addFileForm.handleSubmit(handleAddFile)} className="space-y-4">
+              <FormField
+                control={addFileForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Arquivo</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addFileForm.control}
+                name="file"
+                render={({ field: { onChange, value, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Arquivo</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="file" 
+                        {...field} 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            onChange(file);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setShowAddFileDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Adicionar Arquivo</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
         <DialogContent className="max-w-md">
@@ -826,3 +1598,4 @@ const StudentDetail = () => {
 };
 
 export default StudentDetail;
+
