@@ -696,10 +696,8 @@ const CRM = () => {
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-baseline">
               <div>
-                <CardTitle className="text-2xl font-medium">Gestão de Leads</CardTitle>
-                <CardDescription>
-                  Acompanhe o progresso dos seus leads no pipeline de vendas.
-                </CardDescription>
+                
+                
               </div>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center w-full">
@@ -723,13 +721,7 @@ const CRM = () => {
         </CardHeader>
         <CardContent className="p-0">
           {activeView === "kanban" ? <div className="relative">
-              <div className="sticky top-12 z-10 bg-white border-b p-4 shadow-sm">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm font-medium">
-                    {filteredLeads.length} leads encontrados
-                  </div>
-                </div>
-              </div>
+              
               <div className="p-4">
                 <div ref={scrollContainerRef} className="overflow-x-auto pb-4" style={{
               maxWidth: '100%'
