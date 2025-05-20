@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Plus, Users, Star, MessageCircle, Trash } from "lucide-react";
+import { Search, Plus, Trash, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import SupplierDetail from "@/components/student/SupplierDetail";
@@ -12,6 +12,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Esquema de validação com zod para o formulário de fornecedor
 const supplierSchema = z.object({
@@ -89,7 +99,7 @@ const INITIAL_SUPPLIERS: Supplier[] = [
       { id: 1, name: "Marca Regional", description: "Produtos locais" }
     ],
     branches: [
-      { id: 1, name: "Filial SP Centro", address: "Rua Central, 123 - São Paulo/SP", phone: "(11) 3456-7890", email: "centro@meufornecedor.com" }
+      { id: 1, name: "Filial SP Centro", address: "Rua Central, 123 - São Paulo/SP", phone: "(11) 3456-7890", email: "centro@meufornecedor.com", cnpj: "12.345.678/0002-71" }
     ],
     contacts: [
       { id: 1, name: "João Silva", role: "Gerente Comercial", phone: "(11) 97654-3210", email: "joao@meufornecedor.com" }
@@ -147,19 +157,37 @@ const INITIAL_SUPPLIERS: Supplier[] = [
   }
 ];
 
+// Categorias para o campo dropdown
+const CATEGORIES = [
+  "Produtos Regionais",
+  "Tecnologia",
+  "Vestuário",
+  "Alimentos",
+  "Bebidas",
+  "Eletrônicos",
+  "Sustentáveis",
+  "Decoração",
+  "Produtos Diversos"
+];
+
 const MySuppliers = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
+  const [cnpjFilter, setCnpjFilter] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
+  const [contactFilter, setContactFilter] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sortField, setSortField] = useState<"name" | "category">("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   
   // Configurar react-hook-form com validação zod
   const form = useForm<SupplierFormValues>({
     resolver: zodResolver(supplierSchema),
     defaultValues: {
       name: "",
-      category: "",
+      category: CATEGORIES[0],
       cnpj: "",
       email: "",
       phone: "",
@@ -169,11 +197,50 @@ const MySuppliers = () => {
     }
   });
   
-  // Filter suppliers based on search query
-  const filteredSuppliers = suppliers.filter(supplier => 
-    supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter suppliers based on search filters
+  const filteredSuppliers = suppliers.filter(supplier => {
+    // Nome do Fornecedor
+    const nameMatch = supplier.name.toLowerCase().includes(nameFilter.toLowerCase());
+    
+    // CNPJ do Fornecedor ou Filial
+    const cnpjMatch = supplier.cnpj.replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")) || 
+                      supplier.branches.some(branch => 
+                        branch.cnpj && branch.cnpj.replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")));
+    
+    // Marcas
+    const brandMatch = brandFilter === "" || 
+                       supplier.brands.some(brand => 
+                         brand.name.toLowerCase().includes(brandFilter.toLowerCase()));
+    
+    // Nome do contato
+    const contactMatch = contactFilter === "" || 
+                         supplier.contacts.some(contact => 
+                           contact.name.toLowerCase().includes(contactFilter.toLowerCase()));
+    
+    return nameMatch && cnpjMatch && brandMatch && contactMatch;
+  });
+  
+  // Sort suppliers
+  const sortedSuppliers = [...filteredSuppliers].sort((a, b) => {
+    if (sortField === "name") {
+      return sortDirection === "asc" 
+        ? a.name.localeCompare(b.name) 
+        : b.name.localeCompare(a.name);
+    } else {
+      return sortDirection === "asc" 
+        ? a.category.localeCompare(b.category) 
+        : b.category.localeCompare(a.category);
+    }
+  });
+  
+  const handleSort = (field: "name" | "category") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
   
   const handleAddSupplier = (data: SupplierFormValues) => {
     setIsSubmitting(true);
@@ -227,104 +294,170 @@ const MySuppliers = () => {
     toast.success("Fornecedor atualizado com sucesso!");
   };
   
+  // Função para limpar os filtros
+  const clearFilters = () => {
+    setNameFilter("");
+    setCnpjFilter("");
+    setBrandFilter("");
+    setContactFilter("");
+  };
+  
   return (
     <div className="container mx-auto py-6">
       {!selectedSupplier ? (
         <>
           <h1 className="text-3xl font-bold mb-8 text-portal-dark">Meus Fornecedores</h1>
           
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                placeholder="Buscar meus fornecedores..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Input
+                  placeholder="Filtrar por Fornecedor..."
+                  className="pl-10"
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                />
+              </div>
+              
+              <div className="relative">
+                <Input
+                  placeholder="Filtrar por CNPJ..."
+                  value={cnpjFilter}
+                  onChange={(e) => setCnpjFilter(e.target.value)}
+                />
+              </div>
+              
+              <div className="relative">
+                <Input
+                  placeholder="Filtrar por Marca..."
+                  value={brandFilter}
+                  onChange={(e) => setBrandFilter(e.target.value)}
+                />
+              </div>
+              
+              <div className="relative">
+                <Input
+                  placeholder="Filtrar por Contato..."
+                  value={contactFilter}
+                  onChange={(e) => setContactFilter(e.target.value)}
+                />
+              </div>
             </div>
             
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Fornecedor
-            </Button>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={clearFilters} size="sm">
+                  Limpar Filtros
+                </Button>
+              </div>
+              
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Adicionar Fornecedor
+              </Button>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSuppliers.map((supplier) => (
-              <Card 
-                key={supplier.id} 
-                className="hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-14 h-14 rounded-lg bg-portal-primary text-white flex items-center justify-center text-xl font-bold">
-                      {supplier.logo}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">{supplier.name}</h3>
-                      <p className="text-sm text-gray-500">{supplier.category}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center text-yellow-500">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={16} 
-                          className="mr-0.5" 
-                          fill={i < Math.floor(supplier.rating) ? "currentColor" : "none"} 
-                        />
-                      ))}
-                      <span className="ml-1 text-sm text-gray-600">({supplier.rating})</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <MessageCircle size={16} className="mr-1" />
-                      {supplier.commentCount}
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 flex gap-2">
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">
                     <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => setSelectedSupplier(supplier)}
+                      variant="ghost" 
+                      onClick={() => handleSort("name")}
+                      className="flex items-center gap-1 font-medium"
                     >
-                      Gerenciar
+                      Nome <ArrowUpDown className="h-4 w-4" />
                     </Button>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="icon" className="text-red-500">
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir fornecedor</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir {supplier.name}? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => handleDeleteSupplier(supplier.id)}
-                            className="bg-red-500 hover:bg-red-600"
+                  </TableHead>
+                  <TableHead>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => handleSort("category")}
+                      className="flex items-center gap-1 font-medium"
+                    >
+                      Categoria <ArrowUpDown className="h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead>CNPJ</TableHead>
+                  <TableHead>Marcas</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedSuppliers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      Nenhum fornecedor encontrado.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sortedSuppliers.map((supplier) => (
+                    <TableRow key={supplier.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full bg-portal-primary text-white flex items-center justify-center text-sm font-medium mr-3">
+                            {supplier.logo}
+                          </div>
+                          {supplier.name}
+                        </div>
+                      </TableCell>
+                      <TableCell>{supplier.category}</TableCell>
+                      <TableCell>{supplier.cnpj}</TableCell>
+                      <TableCell>
+                        {supplier.brands.map((brand, index) => (
+                          <span key={brand.id} className="inline-block bg-gray-100 rounded-full px-2 py-1 text-xs font-medium text-gray-800 mr-1">
+                            {brand.name}
+                          </span>
+                        ))}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setSelectedSupplier(supplier)}
                           >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {/* Add Supplier Card */}
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed" onClick={() => setIsAddDialogOpen(true)}>
+                            Gerenciar
+                          </Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-red-500">
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir fornecedor</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir {supplier.name}? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteSupplier(supplier.id)}
+                                  className="bg-red-500 hover:bg-red-600"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {/* Add Supplier Card for Empty State */}
+          {sortedSuppliers.length === 0 && (
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed mt-6" onClick={() => setIsAddDialogOpen(true)}>
               <CardContent className="p-6 flex flex-col items-center justify-center min-h-[200px]">
                 <div className="w-14 h-14 rounded-full bg-portal-light flex items-center justify-center mb-4">
                   <Plus className="h-6 w-6 text-portal-primary" />
@@ -335,7 +468,7 @@ const MySuppliers = () => {
                 </p>
               </CardContent>
             </Card>
-          </div>
+          )}
         </>
       ) : (
         <SupplierDetail 
@@ -375,7 +508,16 @@ const MySuppliers = () => {
                   <FormItem>
                     <FormLabel>Categoria*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Categoria principal" {...field} />
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
+                      >
+                        {CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -389,7 +531,26 @@ const MySuppliers = () => {
                   <FormItem>
                     <FormLabel>CNPJ</FormLabel>
                     <FormControl>
-                      <Input placeholder="00.000.000/0000-00" {...field} />
+                      <Input 
+                        placeholder="00.000.000/0000-00" 
+                        {...field} 
+                        onChange={(e) => {
+                          // Permitir apenas números
+                          const value = e.target.value.replace(/\D/g, '');
+                          
+                          // Formatar o CNPJ
+                          let formattedValue = value;
+                          if (value.length > 2) formattedValue = value.substring(0, 2) + '.' + value.substring(2);
+                          if (value.length > 5) formattedValue = formattedValue.substring(0, 6) + '.' + value.substring(5);
+                          if (value.length > 8) formattedValue = formattedValue.substring(0, 10) + '/' + value.substring(8);
+                          if (value.length > 12) formattedValue = formattedValue.substring(0, 15) + '-' + value.substring(12, 14);
+                          
+                          // Limitar ao tamanho máximo
+                          if (value.length <= 14) {
+                            field.onChange(formattedValue);
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -3,19 +3,36 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Plus, Trash } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import BrandsTab from "./supplier-tabs/BrandsTab";
 import BranchesTab from "./supplier-tabs/BranchesTab";
 import ContactsTab from "./supplier-tabs/ContactsTab";
 import CommunicationsTab from "./supplier-tabs/CommunicationsTab";
 import FilesTab from "./supplier-tabs/FilesTab";
-import CommentsTab from "./supplier-tabs/CommentsTab";
-import RatingsTab from "./supplier-tabs/RatingsTab";
 import ImagesTab from "./supplier-tabs/ImagesTab";
+import { Badge } from "@/components/ui/badge";
+
+// Estados brasileiros para o dropdown
+const ESTADOS_BRASILEIROS = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", 
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+  "Outro Local"
+];
+
+// Categorias para o dropdown
+const CATEGORIAS = [
+  "Produtos Regionais",
+  "Tecnologia",
+  "Vestuário",
+  "Alimentos",
+  "Bebidas",
+  "Eletrônicos",
+  "Sustentáveis", 
+  "Decoração",
+  "Produtos Diversos"
+];
 
 interface SupplierDetailProps {
   supplier: any;
@@ -29,8 +46,6 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
   const [isEditing, setIsEditing] = useState(false);
 
   // Garantir que todas as propriedades necessárias existam
-  if (!editedSupplier.commentItems) editedSupplier.commentItems = [];
-  if (!editedSupplier.ratings) editedSupplier.ratings = [];
   if (!editedSupplier.images) editedSupplier.images = [];
 
   const handleSave = () => {
@@ -48,6 +63,28 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     setEditedSupplier({ ...editedSupplier, [id]: value });
+  };
+
+  // Formatar CNPJ com máscara
+  const formatCNPJ = (value: string) => {
+    const cnpjClean = value.replace(/\D/g, '');
+    let formattedCNPJ = cnpjClean;
+    
+    if (cnpjClean.length > 2) formattedCNPJ = cnpjClean.substring(0, 2) + '.' + cnpjClean.substring(2);
+    if (cnpjClean.length > 5) formattedCNPJ = formattedCNPJ.substring(0, 6) + '.' + cnpjClean.substring(5);
+    if (cnpjClean.length > 8) formattedCNPJ = formattedCNPJ.substring(0, 10) + '/' + cnpjClean.substring(8);
+    if (cnpjClean.length > 12) formattedCNPJ = formattedCNPJ.substring(0, 15) + '-' + cnpjClean.substring(12, 14);
+    
+    return formattedCNPJ;
+  };
+
+  // Formatar CEP com máscara
+  const formatCEP = (value: string) => {
+    const cepClean = value.replace(/\D/g, '');
+    if (cepClean.length > 5) {
+      return cepClean.substring(0, 5) + '-' + cepClean.substring(5, 8);
+    }
+    return cepClean;
   };
 
   return (
@@ -85,15 +122,13 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-9 mb-8">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 mb-8">
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="marcas">Marcas</TabsTrigger>
           <TabsTrigger value="filiais">Filiais</TabsTrigger>
           <TabsTrigger value="contatos">Contatos</TabsTrigger>
           <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
           <TabsTrigger value="arquivos">Arquivos</TabsTrigger>
-          <TabsTrigger value="comentarios">Comentários</TabsTrigger>
-          <TabsTrigger value="avaliacoes">Avaliações</TabsTrigger>
           <TabsTrigger value="imagens">Imagens</TabsTrigger>
         </TabsList>
 
@@ -117,13 +152,19 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
                 <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Categoria*</label>
-                  <Input
+                  <select
                     id="category"
                     value={editedSupplier.category}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    required
-                  />
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10"
+                  >
+                    {CATEGORIAS.map(categoria => (
+                      <option key={categoria} value={categoria}>
+                        {categoria}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -131,7 +172,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
                   <Input
                     id="cnpj"
                     value={editedSupplier.cnpj}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      // Formatar o CNPJ
+                      const formattedValue = formatCNPJ(e.target.value);
+                      setEditedSupplier({ ...editedSupplier, cnpj: formattedValue });
+                    }}
                     disabled={!isEditing}
                     placeholder="00.000.000/0000-00"
                   />
@@ -205,12 +250,33 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
         </TabsContent>
 
         <TabsContent value="marcas">
-          <BrandsTab 
-            brands={editedSupplier.brands}
-            onUpdate={(updatedBrands) => {
-              setEditedSupplier({ ...editedSupplier, brands: updatedBrands });
-            }}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Marcas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {editedSupplier.brands && editedSupplier.brands.length > 0 ? (
+                  editedSupplier.brands.map((brand) => (
+                    <Badge key={brand.id} variant="secondary" className="text-sm py-2">
+                      {brand.name}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-gray-500">Nenhuma marca cadastrada.</p>
+                )}
+              </div>
+              
+              {isEditing && (
+                <BrandsTab 
+                  brands={editedSupplier.brands}
+                  onUpdate={(updatedBrands) => {
+                    setEditedSupplier({ ...editedSupplier, brands: updatedBrands });
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="filiais">
@@ -219,6 +285,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             onUpdate={(updatedBranches) => {
               setEditedSupplier({ ...editedSupplier, branches: updatedBranches });
             }}
+            isEditing={isEditing}
+            states={ESTADOS_BRASILEIROS}
           />
         </TabsContent>
 
@@ -228,6 +296,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             onUpdate={(updatedContacts) => {
               setEditedSupplier({ ...editedSupplier, contacts: updatedContacts });
             }}
+            isEditing={isEditing}
           />
         </TabsContent>
 
@@ -237,6 +306,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             onUpdate={(updatedCommunications) => {
               setEditedSupplier({ ...editedSupplier, communications: updatedCommunications });
             }}
+            isEditing={isEditing}
           />
         </TabsContent>
 
@@ -246,24 +316,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             onUpdate={(updatedFiles) => {
               setEditedSupplier({ ...editedSupplier, files: updatedFiles });
             }}
-          />
-        </TabsContent>
-
-        <TabsContent value="comentarios">
-          <CommentsTab 
-            comments={editedSupplier.commentItems || []}
-            onUpdate={(updatedComments) => {
-              setEditedSupplier({ ...editedSupplier, commentItems: updatedComments });
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="avaliacoes">
-          <RatingsTab 
-            ratings={editedSupplier.ratings}
-            onUpdate={(updatedRatings) => {
-              setEditedSupplier({ ...editedSupplier, ratings: updatedRatings });
-            }}
+            isEditing={isEditing}
           />
         </TabsContent>
 
@@ -273,6 +326,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             onUpdate={(updatedImages) => {
               setEditedSupplier({ ...editedSupplier, images: updatedImages });
             }}
+            isEditing={isEditing}
           />
         </TabsContent>
       </Tabs>

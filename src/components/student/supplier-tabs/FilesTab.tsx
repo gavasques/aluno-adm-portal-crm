@@ -1,83 +1,102 @@
 
-import React, { useState, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Trash, Download, FileText, Image, File } from "lucide-react";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
+import { Download, Trash, FileText, FilePlus, FileArchive } from "lucide-react";
 
-interface FileItem {
+interface File {
   id: number;
   name: string;
   type: string;
   size: string;
   date: string;
-  url?: string; // URL for download (would be actual file URL in a real app)
 }
 
 interface FilesTabProps {
-  files: FileItem[];
-  onUpdate: (files: FileItem[]) => void;
+  files: File[];
+  onUpdate: (files: File[]) => void;
+  isEditing?: boolean;
 }
 
-const FilesTab: React.FC<FilesTabProps> = ({ files, onUpdate }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
+// Função para converter tamanho string para bytes
+const stringToBytes = (sizeStr: string): number => {
+  const size = parseFloat(sizeStr);
+  if (sizeStr.includes("KB")) return size * 1024;
+  if (sizeStr.includes("MB")) return size * 1024 * 1024;
+  if (sizeStr.includes("GB")) return size * 1024 * 1024 * 1024;
+  return size;
+};
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+// Função para formatar bytes para string legível
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles || selectedFiles.length === 0) return;
-    
-    setIsLoading(true);
-    
-    // Process each file
-    Array.from(selectedFiles).forEach(file => {
-      // Get file size in KB or MB
-      let fileSize;
-      if (file.size < 1024 * 1024) {
-        fileSize = (file.size / 1024).toFixed(1) + "KB";
-      } else {
-        fileSize = (file.size / (1024 * 1024)).toFixed(1) + "MB";
+// Total de armazenamento disponível em bytes (100MB)
+const STORAGE_LIMIT = 100 * 1024 * 1024;
+
+const FilesTab: React.FC<FilesTabProps> = ({ 
+  files = [], 
+  onUpdate,
+  isEditing = true
+}) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Calcular armazenamento usado
+  const usedStorage = files.reduce((total, file) => total + stringToBytes(file.size), 0);
+  const usedPercentage = (usedStorage / STORAGE_LIMIT) * 100;
+  
+  const handleAddFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const fileSize = file.size;
+      
+      // Verificar se tem espaço suficiente
+      if (usedStorage + fileSize > STORAGE_LIMIT) {
+        toast.error("Limite de armazenamento excedido! Remova alguns arquivos antes de adicionar novos.");
+        return;
       }
-      
-      // Determine file type category
-      let fileType;
-      if (file.type.startsWith('image/')) {
-        fileType = 'Imagem';
-      } else if (file.type === 'application/pdf') {
-        fileType = 'PDF';
-      } else if (file.type.includes('word')) {
-        fileType = 'Documento';
-      } else if (file.type.includes('excel') || file.type.includes('spreadsheet')) {
-        fileType = 'Planilha';
-      } else {
-        fileType = 'Outro';
-      }
-      
-      // Create a new file record
-      const newFile: FileItem = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        name: file.name,
-        type: fileType,
-        size: fileSize,
-        date: new Date().toISOString().split('T')[0],
-        // In a real app, this would be a URL to the uploaded file
-        url: URL.createObjectURL(file)
-      };
-      
-      // Add to files list
-      onUpdate([...files, newFile]);
-    });
-    
-    // Reset the file input
-    e.target.value = '';
-    setIsLoading(false);
-    toast.success("Arquivo(s) adicionado(s) com sucesso!");
+
+      // Simular upload
+      setIsUploading(true);
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setUploadProgress(progress);
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          
+          // Adicionar novo arquivo
+          const newFile = {
+            id: Date.now(),
+            name: file.name,
+            type: file.type.split('/')[1]?.toUpperCase() || 'FILE',
+            size: formatBytes(file.size),
+            date: new Date().toISOString().split('T')[0]
+          };
+          
+          onUpdate([...files, newFile]);
+          toast.success("Arquivo enviado com sucesso!");
+          setIsUploading(false);
+          setUploadProgress(0);
+          
+          // Limpar o input
+          e.target.value = '';
+        }
+      }, 100);
+    }
   };
 
   const handleDeleteFile = (id: number) => {
@@ -85,97 +104,122 @@ const FilesTab: React.FC<FilesTabProps> = ({ files, onUpdate }) => {
     toast.success("Arquivo excluído com sucesso!");
   };
   
-  const getFileIcon = (fileType: string) => {
-    switch (fileType.toLowerCase()) {
-      case 'pdf':
-        return <FileText className="h-5 w-5 text-red-500" />;
-      case 'imagem':
-        return <Image className="h-5 w-5 text-blue-500" />;
-      case 'documento':
-        return <FileText className="h-5 w-5 text-blue-400" />;
-      case 'planilha':
-        return <FileText className="h-5 w-5 text-green-500" />;
-      default:
-        return <File className="h-5 w-5 text-gray-500" />;
+  // Função para selecionar ícone baseado no tipo de arquivo
+  const getFileIcon = (type: string) => {
+    const typeLC = type.toLowerCase();
+    if (['pdf', 'doc', 'docx', 'txt'].includes(typeLC)) {
+      return <FileText className="h-6 w-6" />;
+    } else if (['zip', 'rar', '7z'].includes(typeLC)) {
+      return <FileArchive className="h-6 w-6" />;
+    } else {
+      return <FileText className="h-6 w-6" />;
     }
   };
-
-  const handleDownload = (file: FileItem) => {
-    // In a real app, this would actually download the file from the server
-    toast.info(`Download do arquivo ${file.name} iniciado.`);
-  };
-
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Arquivos</CardTitle>
-        <div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            multiple
-          />
-          <Button onClick={handleUploadClick} disabled={isLoading}>
-            <Plus className="mr-2 h-4 w-4" /> 
-            {isLoading ? "Carregando..." : "Adicionar Arquivo"}
-          </Button>
+        <div className="flex flex-col items-end">
+          <div className="text-sm text-gray-500 mb-1">
+            {formatBytes(usedStorage)} de {formatBytes(STORAGE_LIMIT)} usados
+          </div>
+          <div className="w-40">
+            <Progress value={usedPercentage} className="h-2" />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        {files.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            Nenhum arquivo cadastrado. Clique no botão acima para adicionar.
+        {isEditing && (
+          <div className="mb-6">
+            <div className="border-2 border-dashed rounded-md p-6 text-center">
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleAddFile}
+                disabled={isUploading || usedStorage >= STORAGE_LIMIT}
+              />
+              <label
+                htmlFor="file-upload"
+                className={`flex flex-col items-center justify-center cursor-pointer ${
+                  usedStorage >= STORAGE_LIMIT ? 'opacity-50' : ''
+                }`}
+              >
+                <FilePlus className="h-10 w-10 text-portal-primary mb-2" />
+                <span className="text-portal-primary font-medium">
+                  {usedStorage >= STORAGE_LIMIT ? 
+                    "Limite de armazenamento atingido" : 
+                    "Clique para enviar um arquivo"}
+                </span>
+                <span className="text-sm text-gray-500 mt-1">
+                  ou arraste e solte aqui
+                </span>
+              </label>
+            </div>
+            
+            {isUploading && (
+              <div className="mt-4">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Enviando...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tamanho</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {files.map((file) => (
-                <TableRow key={file.id}>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {getFileIcon(file.type)}
-                      <span className="ml-2">{file.type}</span>
+        )}
+        
+        {files.length > 0 ? (
+          <div className="space-y-2">
+            {files.map((file) => (
+              <div 
+                key={file.id} 
+                className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
+              >
+                <div className="flex items-center">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100 text-portal-primary">
+                    {getFileIcon(file.type)}
+                  </div>
+                  <div className="ml-3">
+                    <div className="font-medium">{file.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {file.type} • {file.size} • {file.date}
                     </div>
-                  </TableCell>
-                  <TableCell>{file.name}</TableCell>
-                  <TableCell>{file.size}</TableCell>
-                  <TableCell>{file.date}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleDownload(file)}
-                    >
-                      <Download className="h-4 w-4 text-blue-500" />
-                    </Button>
-                    
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-600"
+                    onClick={() => toast.info("Download iniciado.")}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  
+                  {isEditing && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <Trash className="h-4 w-4 text-red-500" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500"
+                        >
+                          <Trash className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tem certeza que deseja excluir o arquivo {file.name}? Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir "{file.name}"? Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogAction
                             onClick={() => handleDeleteFile(file.id)}
                             className="bg-red-500 hover:bg-red-600"
                           >
@@ -184,11 +228,15 @@ const FilesTab: React.FC<FilesTabProps> = ({ files, onUpdate }) => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 py-8">
+            Nenhum arquivo cadastrado.
+          </p>
         )}
       </CardContent>
     </Card>
