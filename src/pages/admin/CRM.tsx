@@ -163,7 +163,7 @@ const SortableColumnListItem = ({ column, leadCount, onRemove }) => {
     transition,
     zIndex: isDragging ? 10 : 1,
     opacity: isDragging ? 0.5 : 1,
-    position: 'relative',
+    position: 'relative' as const, // Usamos 'as const' para tipar corretamente a propriedade position
   };
   
   return (
