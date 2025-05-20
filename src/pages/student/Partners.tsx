@@ -1,8 +1,10 @@
 
 import React from "react";
+import { motion } from "framer-motion";
 import { PartnerHeader } from "@/components/student/partners/PartnerHeader";
 import { PartnerContent } from "@/components/student/partners/PartnerContent";
 import { usePartners } from "@/hooks/student/usePartners";
+import { Toaster } from "@/components/ui/sonner";
 
 const Partners = () => {
   const {
@@ -27,7 +29,12 @@ const Partners = () => {
   } = usePartners();
   
   return (
-    <div className="container mx-auto py-6">
+    <motion.div 
+      className="container mx-auto py-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {!selectedPartner && (
         <PartnerHeader
           searchQuery={searchQuery}
@@ -53,7 +60,9 @@ const Partners = () => {
         handleLikeRating={handleLikeRating}
         calculateAverageRating={calculateAverageRating}
       />
-    </div>
+
+      <Toaster />
+    </motion.div>
   );
 };
 

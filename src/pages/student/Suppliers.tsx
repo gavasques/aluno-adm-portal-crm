@@ -1,10 +1,12 @@
 
 import React from "react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { useSuppliersList } from "@/hooks/suppliers/useSuppliersList";
 import { useSupplierOperations } from "@/hooks/suppliers/useSupplierOperations";
 import { SupplierHeader } from "@/components/student/suppliers/SupplierHeader";
 import { SupplierContent } from "@/components/student/suppliers/SupplierContent";
+import { Toaster } from "@/components/ui/sonner";
 
 const Suppliers = () => {
   // Usar nossos hooks personalizados
@@ -44,7 +46,12 @@ const Suppliers = () => {
   };
 
   return (
-    <div className="px-6 py-6 w-full">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="px-6 py-6 w-full"
+    >
       {!selectedSupplier && (
         <SupplierHeader
           searchQuery={searchQuery}
@@ -73,7 +80,9 @@ const Suppliers = () => {
         sortDirection={sortDirection}
         handleSort={handleSort}
       />
-    </div>
+
+      <Toaster />
+    </motion.div>
   );
 };
 
