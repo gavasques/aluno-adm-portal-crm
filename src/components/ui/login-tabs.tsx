@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function LoginTabs() {
   const navigate = useNavigate();
@@ -42,15 +43,18 @@ export function LoginTabs() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen dark-transition">
       <GridBackground />
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
         {/* Logo no centro superior */}
-        <div className="mb-12">
-          <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
+        <div className="mb-8 flex flex-col items-center">
+          <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12 mb-4" />
+          <div className="absolute top-4 right-4">
+            <ThemeToggle />
+          </div>
         </div>
 
-        <div className="w-full max-w-md mx-auto p-8 space-y-8 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10">
+        <div className="w-full max-w-md mx-auto p-8 space-y-8 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 dark:bg-gray-900/40 dark:border-gray-700/30">
           <Tabs defaultValue="student" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="student">Área Aluno</TabsTrigger>
@@ -65,7 +69,7 @@ export function LoginTabs() {
                     <Input 
                       type="email" 
                       placeholder="Email" 
-                      className="pl-10 bg-gray-950/50 border-gray-800"
+                      className="pl-10 bg-gray-950/50 border-gray-800 dark:bg-gray-800/60 dark:border-gray-600"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -76,7 +80,7 @@ export function LoginTabs() {
                     <Input 
                       type="password" 
                       placeholder="Senha" 
-                      className="pl-10 bg-gray-950/50 border-gray-800"
+                      className="pl-10 bg-gray-950/50 border-gray-800 dark:bg-gray-800/60 dark:border-gray-600"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -116,7 +120,7 @@ export function LoginTabs() {
                     <Input 
                       type="email" 
                       placeholder="Email" 
-                      className="pl-10 bg-gray-950/50 border-gray-800"
+                      className="pl-10 bg-gray-950/50 border-gray-800 dark:bg-gray-800/60 dark:border-gray-600"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -127,7 +131,7 @@ export function LoginTabs() {
                     <Input 
                       type="password" 
                       placeholder="Senha" 
-                      className="pl-10 bg-gray-950/50 border-gray-800"
+                      className="pl-10 bg-gray-950/50 border-gray-800 dark:bg-gray-800/60 dark:border-gray-600"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -164,7 +168,7 @@ export function LoginTabs() {
 
       {/* Dialog para Esqueci a senha */}
       <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] dark-transition">
           <DialogHeader>
             <DialogTitle>Recuperar senha</DialogTitle>
           </DialogHeader>
@@ -177,7 +181,7 @@ export function LoginTabs() {
                 placeholder="seu@email.com"
                 value={recoveryEmail}
                 onChange={(e) => setRecoveryEmail(e.target.value)}
-                className="bg-gray-950/50 border-gray-800"
+                className="bg-gray-950/50 border-gray-800 dark:bg-gray-800/80 dark:border-gray-700"
               />
             </div>
           </div>
@@ -191,7 +195,7 @@ export function LoginTabs() {
 
       {/* Dialog para Magic Link */}
       <Dialog open={magicLinkOpen} onOpenChange={setMagicLinkOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] dark-transition">
           <DialogHeader>
             <DialogTitle>Enviar Magic Link</DialogTitle>
           </DialogHeader>
@@ -204,7 +208,7 @@ export function LoginTabs() {
                 placeholder="seu@email.com"
                 value={recoveryEmail}
                 onChange={(e) => setRecoveryEmail(e.target.value)}
-                className="bg-gray-950/50 border-gray-800"
+                className="bg-gray-950/50 border-gray-800 dark:bg-gray-800/80 dark:border-gray-700"
               />
             </div>
           </div>
