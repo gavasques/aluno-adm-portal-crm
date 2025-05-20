@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Star, MessageCircle } from "lucide-react";
 import SupplierDetail from "@/components/admin/SupplierDetail";
+import { toast } from "sonner";
 
 // Dados de exemplo
 const SUPPLIERS = [
@@ -96,6 +97,7 @@ const Suppliers = () => {
       supplier.id === updatedSupplier.id ? updatedSupplier : supplier
     ));
     setSelectedSupplier(updatedSupplier);
+    toast.success("Avaliação enviada com sucesso!");
   };
   
   return (
