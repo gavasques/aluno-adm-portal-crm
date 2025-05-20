@@ -212,7 +212,7 @@ const AdminSuppliers = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="px-6 py-6 w-full">
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Fornecedores</h1>
       
       {!selectedSupplier ? (
@@ -327,16 +327,16 @@ const AdminSuppliers = () => {
           
           {/* Visualização em Cards */}
           {viewMode === "card" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {filteredSuppliers.map((supplier) => (
                 <Card 
                   key={supplier.id.toString()} 
                   className="hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => setSelectedSupplier(supplier)}
                 >
-                  <CardContent className="p-6">
+                  <CardContent className="p-4">
                     <div className="flex items-center space-x-4 mb-4">
-                      <div className="w-14 h-14 rounded-lg bg-portal-primary text-white flex items-center justify-center text-xl font-bold">
+                      <div className="w-12 h-12 rounded-lg bg-portal-primary text-white flex items-center justify-center text-xl font-bold">
                         {supplier.logo || supplier.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -384,7 +384,7 @@ const AdminSuppliers = () => {
           
           {/* Visualização em Lista */}
           {viewMode === "list" && (
-            <div className="border rounded-md overflow-hidden">
+            <div className="border rounded-md overflow-hidden w-full">
               {filteredSuppliers.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   Nenhum fornecedor encontrado. Tente outra busca ou ajuste os filtros.
