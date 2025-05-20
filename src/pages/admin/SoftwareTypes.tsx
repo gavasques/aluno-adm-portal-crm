@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 
 const SoftwareTypes = () => {
   const [softwareTypes, setSoftwareTypes] = useState<ListItem[]>([
@@ -45,6 +45,9 @@ const SoftwareTypes = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Adicionar Novo Tipo de Ferramenta</DialogTitle>
+              <DialogDescription>
+                Preencha as informações para adicionar um novo tipo de ferramenta ao sistema.
+              </DialogDescription>
             </DialogHeader>
             <AddItemForm 
               onSubmit={handleAddSoftwareType} 
@@ -58,6 +61,9 @@ const SoftwareTypes = () => {
       <Card>
         <CardHeader>
           <CardTitle>Lista de Tipos de Ferramentas</CardTitle>
+          <CardDescription>
+            Aqui você pode visualizar e gerenciar todos os tipos de ferramentas cadastrados.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ListTable 

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Card, 
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsTriggerWithBadge } from "@/components/ui/tabs";
 import { 
@@ -26,7 +27,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { User, Plus, Star, MessageSquare, Search, Trash, FileText, History, MoreHorizontal, Users } from "lucide-react";
+import { User, Plus, Star, MessageSquare, Search, Trash, FileText, History, MoreHorizontal, Users, Edit, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
 const Partners = () => {
   // Mock data for partners
@@ -124,6 +126,7 @@ const Partners = () => {
   ]);
   
   const [selectedPartner, setSelectedPartner] = useState(null);
+  const [editingPartner, setEditingPartner] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [partnerTypeFilter, setPartnerTypeFilter] = useState("all");
   const [recommendedFilter, setRecommendedFilter] = useState("all");
@@ -167,6 +170,38 @@ const Partners = () => {
   const handleDeletePartner = (id) => {
     setPartners(partners.filter(partner => partner.id !== id));
     setSelectedPartner(null);
+    toast.success("Parceiro excluído com sucesso!");
+  };
+
+  const handleEditPartner = (partner) => {
+    setEditingPartner({...partner});
+  };
+
+  const handleSavePartner = () => {
+    if (editingPartner) {
+      // Adicionar registro ao histórico
+      const updatedHistory = [...(editingPartner.history || []), {
+        id: Date.now(),
+        action: "Parceiro editado",
+        user: "Admin",
+        date: new Date().toLocaleDateString()
+      }];
+
+      const updatedPartner = {
+        ...editingPartner,
+        history: updatedHistory
+      };
+      
+      setPartners(partners.map(p => p.id === editingPartner.id ? updatedPartner : p));
+      
+      // Se o parceiro editado for o selecionado, atualize a visualização
+      if (selectedPartner && selectedPartner.id === editingPartner.id) {
+        setSelectedPartner(updatedPartner);
+      }
+      
+      setEditingPartner(null);
+      toast.success("Parceiro atualizado com sucesso!");
+    }
   };
 
   const handleAddContact = () => {
@@ -201,6 +236,7 @@ const Partners = () => {
       setNewContactRole("");
       setNewContactEmail("");
       setNewContactPhone("");
+      toast.success("Contato adicionado com sucesso!");
     }
   };
   
@@ -223,6 +259,7 @@ const Partners = () => {
       
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
+      toast.success("Contato removido com sucesso!");
     }
   };
   
@@ -253,6 +290,7 @@ const Partners = () => {
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
       setCommentText("");
+      toast.success("Comentário adicionado com sucesso!");
     }
   };
   
@@ -272,6 +310,28 @@ const Partners = () => {
       
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
+    }
+  };
+
+  const handleDeleteComment = (commentId) => {
+    if (selectedPartner) {
+      const updatedComments = selectedPartner.comments.filter(comment => comment.id !== commentId);
+      const updatedHistory = [...(selectedPartner.history || []), {
+        id: Date.now(),
+        action: "Comentário removido",
+        user: "Admin",
+        date: new Date().toLocaleDateString()
+      }];
+      
+      const updatedPartner = {
+        ...selectedPartner,
+        comments: updatedComments,
+        history: updatedHistory
+      };
+      
+      setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
+      setSelectedPartner(updatedPartner);
+      toast.success("Comentário removido com sucesso!");
     }
   };
   
@@ -303,6 +363,7 @@ const Partners = () => {
       setSelectedPartner(updatedPartner);
       setRatingText("");
       setRatingValue(5);
+      toast.success("Avaliação adicionada com sucesso!");
     }
   };
   
@@ -322,6 +383,28 @@ const Partners = () => {
       
       setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
       setSelectedPartner(updatedPartner);
+    }
+  };
+
+  const handleDeleteRating = (ratingId) => {
+    if (selectedPartner) {
+      const updatedRatings = selectedPartner.ratings.filter(rating => rating.id !== ratingId);
+      const updatedHistory = [...(selectedPartner.history || []), {
+        id: Date.now(),
+        action: "Avaliação removida",
+        user: "Admin",
+        date: new Date().toLocaleDateString()
+      }];
+      
+      const updatedPartner = {
+        ...selectedPartner,
+        ratings: updatedRatings,
+        history: updatedHistory
+      };
+      
+      setPartners(partners.map(p => p.id === selectedPartner.id ? updatedPartner : p));
+      setSelectedPartner(updatedPartner);
+      toast.success("Avaliação removida com sucesso!");
     }
   };
   
@@ -390,10 +473,10 @@ const Partners = () => {
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <Select value={partnerTypeFilter} onValueChange={setPartnerTypeFilter}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Tipo de Parceiro" />
+              <SelectValue placeholder="Filtro: Tipo de Parceiro" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="all">Todos os Tipos</SelectItem>
               <SelectItem value="Agência">Agência</SelectItem>
               <SelectItem value="Consultor">Consultor</SelectItem>
               <SelectItem value="Serviço">Serviço</SelectItem>
@@ -402,10 +485,10 @@ const Partners = () => {
           
           <Select value={recommendedFilter} onValueChange={setRecommendedFilter}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Recomendação" />
+              <SelectValue placeholder="Filtro: Recomendação" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="all">Todas Recomendações</SelectItem>
               <SelectItem value="recommended">Recomendados</SelectItem>
               <SelectItem value="not-recommended">Não Recomendados</SelectItem>
             </SelectContent>
@@ -478,6 +561,12 @@ const Partners = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem 
+                                onClick={() => handleEditPartner(partner)}
+                              >
+                                <Pencil className="h-4 w-4 mr-2" /> Editar parceiro
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
                                 onClick={() => toggleRecommendedStatus(partner.id)}
                               >
                                 {partner.recommended ? "Remover recomendação" : "Marcar como recomendado"}
@@ -486,7 +575,9 @@ const Partners = () => {
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    <span className="text-red-500">Excluir parceiro</span>
+                                    <span className="text-red-500 flex items-center">
+                                      <Trash className="h-4 w-4 mr-2" /> Excluir parceiro
+                                    </span>
                                   </DropdownMenuItem>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -519,6 +610,113 @@ const Partners = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Partner Edit Dialog */}
+      {editingPartner && (
+        <Dialog open={!!editingPartner} onOpenChange={() => setEditingPartner(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Editar Parceiro</DialogTitle>
+              <DialogDescription>
+                Atualize as informações do parceiro. Clique em salvar quando terminar.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                  <Input 
+                    value={editingPartner.name} 
+                    onChange={(e) => setEditingPartner({...editingPartner, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                  <Input 
+                    value={editingPartner.category} 
+                    onChange={(e) => setEditingPartner({...editingPartner, category: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                  <Select 
+                    value={editingPartner.type} 
+                    onValueChange={(value) => setEditingPartner({...editingPartner, type: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Agência">Agência</SelectItem>
+                      <SelectItem value="Consultor">Consultor</SelectItem>
+                      <SelectItem value="Serviço">Serviço</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contato Principal</label>
+                  <Input 
+                    value={editingPartner.contact} 
+                    onChange={(e) => setEditingPartner({...editingPartner, contact: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <Input 
+                    value={editingPartner.email} 
+                    onChange={(e) => setEditingPartner({...editingPartner, email: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                  <Input 
+                    value={editingPartner.phone} 
+                    onChange={(e) => setEditingPartner({...editingPartner, phone: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                  <Input 
+                    value={editingPartner.website} 
+                    onChange={(e) => setEditingPartner({...editingPartner, website: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Recomendado</label>
+                  <div className="flex items-center mt-2">
+                    <input 
+                      type="checkbox"
+                      checked={editingPartner.recommended}
+                      onChange={(e) => setEditingPartner({...editingPartner, recommended: e.target.checked})}
+                      className="mr-2"
+                    />
+                    <span>Marcar como recomendado</span>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+                  <Input 
+                    value={editingPartner.address} 
+                    onChange={(e) => setEditingPartner({...editingPartner, address: e.target.value})}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                  <textarea 
+                    className="w-full rounded-md border border-gray-300 p-2 min-h-[100px]"
+                    value={editingPartner.description} 
+                    onChange={(e) => setEditingPartner({...editingPartner, description: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingPartner(null)}>Cancelar</Button>
+              <Button onClick={handleSavePartner}>Salvar alterações</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       
       {/* Partner Detail Dialog */}
       {selectedPartner && (
@@ -609,6 +807,14 @@ const Partners = () => {
                           <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
                           <p className="mt-1 text-base">{selectedPartner.description}</p>
                         </div>
+                      </div>
+                      <div className="mt-6 flex justify-end space-x-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => handleEditPartner(selectedPartner)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" /> Editar Parceiro
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -756,6 +962,31 @@ const Partners = () => {
                                 <MessageSquare className="h-4 w-4 mr-1" />
                                 Responder
                               </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 text-red-500">
+                                    <Trash className="h-4 w-4 mr-1" />
+                                    Excluir
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteComment(comment.id)}
+                                      className="bg-red-500 hover:bg-red-600"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                             
                             {comment.replies && comment.replies.length > 0 && (
@@ -829,11 +1060,36 @@ const Partners = () => {
                               </div>
                             </div>
                             <p className="mt-2 text-gray-700">{rating.comment}</p>
-                            <div className="mt-2">
+                            <div className="mt-2 flex items-center space-x-2">
                               <Button variant="ghost" size="sm" onClick={() => handleLikeRating(rating.id)}>
                                 <Star className="h-4 w-4 mr-1" />
                                 {rating.likes} likes
                               </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-red-500">
+                                    <Trash className="h-4 w-4 mr-1" />
+                                    Excluir
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteRating(rating.id)}
+                                      className="bg-red-500 hover:bg-red-600"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         ))}
