@@ -10,6 +10,7 @@ import { Star, ThumbsUp, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface RatingItem {
   id: number;
@@ -81,6 +82,8 @@ const RatingsTab: React.FC<RatingsTabProps> = ({ ratings, onUpdate }) => {
   const handleLikeRating = (ratingId: number) => {
     const updatedRatings = ratings.map(rating => {
       if (rating.id === ratingId) {
+        // Se o usuário já curtiu, remover o like
+        // Se não curtiu, adicionar o like (limitado a 1)
         return {
           ...rating,
           likes: rating.userLiked ? rating.likes - 1 : rating.likes + 1,
@@ -183,71 +186,74 @@ const RatingsTab: React.FC<RatingsTabProps> = ({ ratings, onUpdate }) => {
             Nenhuma avaliação ainda. Seja o primeiro a avaliar!
           </div>
         ) : (
-          <div className="space-y-6">
-            {sortedRatings.map((rating) => (
-              <div key={rating.id} className="border-b pb-6 last:border-b-0">
-                <div className="flex gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{rating.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    {rating.userAvatar && <AvatarImage src={rating.userAvatar} alt={rating.userName} />}
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{rating.userName}</h4>
-                        <div className="flex items-center gap-2">
-                          {renderStars(rating.rating)}
-                          <span className="text-xs text-gray-500">{formatDate(rating.date)}</span>
+          <ScrollArea className="h-[400px]">
+            <div className="space-y-6">
+              {sortedRatings.map((rating) => (
+                <div key={rating.id} className="border-b pb-6 last:border-b-0">
+                  <div className="flex gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{rating.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      {rating.userAvatar && <AvatarImage src={rating.userAvatar} alt={rating.userName} />}
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{rating.userName}</h4>
+                          <div className="flex items-center gap-2">
+                            {renderStars(rating.rating)}
+                            <span className="text-xs text-gray-500">{formatDate(rating.date)}</span>
+                          </div>
                         </div>
-                      </div>
-                      {rating.userId === currentUser.id && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Trash className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Excluir avaliação</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => handleDeleteRating(rating.id)}
-                                className="bg-red-500 hover:bg-red-600"
-                              >
-                                Excluir
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                    
-                    <p className="mt-2">{rating.comment}</p>
-                    
-                    <div className="flex gap-4 mt-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className={`flex gap-1 h-7 ${rating.userLiked ? 'text-blue-500' : 'text-gray-500'}`}
-                        onClick={() => handleLikeRating(rating.id)}
-                      >
-                        <ThumbsUp className="h-4 w-4" />
-                        {rating.likes > 0 && (
-                          <span>{rating.likes}</span>
+                        {rating.userId === currentUser.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Trash className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir avaliação</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteRating(rating.id)}
+                                  className="bg-red-500 hover:bg-red-600"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
-                      </Button>
+                      </div>
+                      
+                      <p className="mt-2">{rating.comment}</p>
+                      
+                      <div className="flex gap-4 mt-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={`flex gap-1 h-7 ${rating.userLiked ? 'text-blue-500' : 'text-gray-500'}`}
+                          onClick={() => handleLikeRating(rating.id)}
+                          disabled={rating.userId === currentUser.id} // Não permitir like em sua própria avaliação
+                        >
+                          <ThumbsUp className="h-4 w-4" />
+                          {rating.likes > 0 && (
+                            <span>{rating.likes}</span>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollArea>
         )}
 
         {/* Dialog para adicionar avaliação */}

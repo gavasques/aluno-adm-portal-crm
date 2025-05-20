@@ -13,6 +13,7 @@ import CommunicationsTab from "./supplier-tabs/CommunicationsTab";
 import FilesTab from "./supplier-tabs/FilesTab";
 import ImagesTab from "./supplier-tabs/ImagesTab";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Estados brasileiros para o dropdown
 const ESTADOS_BRASILEIROS = [
@@ -122,14 +123,12 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-7 mb-8">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-8">
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="marcas">Marcas</TabsTrigger>
           <TabsTrigger value="filiais">Filiais</TabsTrigger>
           <TabsTrigger value="contatos">Contatos</TabsTrigger>
           <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
-          <TabsTrigger value="arquivos">Arquivos</TabsTrigger>
-          <TabsTrigger value="imagens">Imagens</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados">
@@ -138,113 +137,134 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
               <CardTitle>Dados do Fornecedor</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nome*</label>
-                  <Input
-                    id="name"
-                    value={editedSupplier.name}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    required
-                  />
-                </div>
+              <ScrollArea className="h-[500px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nome*</label>
+                    <Input
+                      id="name"
+                      value={editedSupplier.name}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Categoria*</label>
-                  <select
-                    id="category"
-                    value={editedSupplier.category}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10"
-                  >
-                    {CATEGORIAS.map(categoria => (
-                      <option key={categoria} value={categoria}>
-                        {categoria}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Categoria*</label>
+                    <select
+                      id="category"
+                      value={editedSupplier.category}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10"
+                    >
+                      {CATEGORIAS.map(categoria => (
+                        <option key={categoria} value={categoria}>
+                          {categoria}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label htmlFor="cnpj" className="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
-                  <Input
-                    id="cnpj"
-                    value={editedSupplier.cnpj}
-                    onChange={(e) => {
-                      // Formatar o CNPJ
-                      const formattedValue = formatCNPJ(e.target.value);
-                      setEditedSupplier({ ...editedSupplier, cnpj: formattedValue });
-                    }}
-                    disabled={!isEditing}
-                    placeholder="00.000.000/0000-00"
-                  />
-                </div>
+                  <div>
+                    <label htmlFor="cnpj" className="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+                    <Input
+                      id="cnpj"
+                      value={editedSupplier.cnpj}
+                      onChange={(e) => {
+                        // Formatar o CNPJ
+                        const formattedValue = formatCNPJ(e.target.value);
+                        setEditedSupplier({ ...editedSupplier, cnpj: formattedValue });
+                      }}
+                      disabled={!isEditing}
+                      placeholder="00.000.000/0000-00"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                  <select
-                    id="type"
-                    value={editedSupplier.type}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10"
-                  >
-                    <option value="Distribuidor">Distribuidor</option>
-                    <option value="Fabricante">Fabricante</option>
-                    <option value="Importador">Importador</option>
-                    <option value="Atacadista">Atacadista</option>
-                    <option value="Varejista">Varejista</option>
-                    <option value="Representante">Representante</option>
-                  </select>
-                </div>
+                  <div>
+                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                    <select
+                      id="type"
+                      value={editedSupplier.type}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10"
+                    >
+                      <option value="Distribuidor">Distribuidor</option>
+                      <option value="Fabricante">Fabricante</option>
+                      <option value="Importador">Importador</option>
+                      <option value="Atacadista">Atacadista</option>
+                      <option value="Varejista">Varejista</option>
+                      <option value="Representante">Representante</option>
+                    </select>
+                  </div>
 
-                <div className="md:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-                  <Input
-                    id="address"
-                    value={editedSupplier.address}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Rua, número, bairro - cidade/estado"
-                  />
-                </div>
+                  <div className="md:col-span-2">
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+                    <Input
+                      id="address"
+                      value={editedSupplier.address}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Rua, número, bairro - cidade/estado"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={editedSupplier.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="email@exemplo.com"
-                  />
-                </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editedSupplier.email}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                  <Input
-                    id="phone"
-                    value={editedSupplier.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                    <Input
+                      id="phone"
+                      value={editedSupplier.phone}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
 
-                <div className="md:col-span-2">
-                  <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                  <Input
-                    id="website"
-                    value={editedSupplier.website}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="www.example.com"
-                  />
+                  <div className="md:col-span-2">
+                    <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                    <Input
+                      id="website"
+                      value={editedSupplier.website}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="www.example.com"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      id="status"
+                      value={editedSupplier.isActive ? "true" : "false"}
+                      onChange={(e) => {
+                        setEditedSupplier({ 
+                          ...editedSupplier, 
+                          isActive: e.target.value === "true"
+                        });
+                      }}
+                      disabled={!isEditing}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10"
+                    >
+                      <option value="true">Ativo</option>
+                      <option value="false">Inativo</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
@@ -255,26 +275,28 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
               <CardTitle>Marcas</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {editedSupplier.brands && editedSupplier.brands.length > 0 ? (
-                  editedSupplier.brands.map((brand) => (
-                    <Badge key={brand.id} variant="secondary" className="text-sm py-2">
-                      {brand.name}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-gray-500">Nenhuma marca cadastrada.</p>
+              <ScrollArea className="h-[400px]">
+                <div className="flex flex-wrap gap-2">
+                  {editedSupplier.brands && editedSupplier.brands.length > 0 ? (
+                    editedSupplier.brands.map((brand) => (
+                      <Badge key={brand.id} variant="secondary" className="text-sm py-2">
+                        {brand.name}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">Nenhuma marca cadastrada.</p>
+                  )}
+                </div>
+                
+                {isEditing && (
+                  <BrandsTab 
+                    brands={editedSupplier.brands}
+                    onUpdate={(updatedBrands) => {
+                      setEditedSupplier({ ...editedSupplier, brands: updatedBrands });
+                    }}
+                  />
                 )}
-              </div>
-              
-              {isEditing && (
-                <BrandsTab 
-                  brands={editedSupplier.brands}
-                  onUpdate={(updatedBrands) => {
-                    setEditedSupplier({ ...editedSupplier, brands: updatedBrands });
-                  }}
-                />
-              )}
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
@@ -305,26 +327,6 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             communications={editedSupplier.communications}
             onUpdate={(updatedCommunications) => {
               setEditedSupplier({ ...editedSupplier, communications: updatedCommunications });
-            }}
-            isEditing={isEditing}
-          />
-        </TabsContent>
-
-        <TabsContent value="arquivos">
-          <FilesTab 
-            files={editedSupplier.files}
-            onUpdate={(updatedFiles) => {
-              setEditedSupplier({ ...editedSupplier, files: updatedFiles });
-            }}
-            isEditing={isEditing}
-          />
-        </TabsContent>
-
-        <TabsContent value="imagens">
-          <ImagesTab 
-            images={editedSupplier.images}
-            onUpdate={(updatedImages) => {
-              setEditedSupplier({ ...editedSupplier, images: updatedImages });
             }}
             isEditing={isEditing}
           />

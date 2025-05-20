@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Download, Trash, FileText, FilePlus, FileArchive } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface File {
   id: number;
@@ -171,68 +172,70 @@ const FilesTab: React.FC<FilesTabProps> = ({
         )}
         
         {files.length > 0 ? (
-          <div className="space-y-2">
-            {files.map((file) => (
-              <div 
-                key={file.id} 
-                className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
-              >
-                <div className="flex items-center">
-                  <div className="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100 text-portal-primary">
-                    {getFileIcon(file.type)}
-                  </div>
-                  <div className="ml-3">
-                    <div className="font-medium">{file.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {file.type} • {file.size} • {file.date}
+          <ScrollArea className="h-[400px]">
+            <div className="space-y-2">
+              {files.map((file) => (
+                <div 
+                  key={file.id} 
+                  className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
+                >
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100 text-portal-primary">
+                      {getFileIcon(file.type)}
+                    </div>
+                    <div className="ml-3">
+                      <div className="font-medium">{file.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {file.type} • {file.size} • {file.date}
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-blue-600"
-                    onClick={() => toast.info("Download iniciado.")}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
                   
-                  {isEditing && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-500"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir "{file.name}"? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteFile(file.id)}
-                            className="bg-red-500 hover:bg-red-600"
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600"
+                      onClick={() => toast.info("Download iniciado.")}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    
+                    {isEditing && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500"
                           >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir "{file.name}"? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteFile(file.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollArea>
         ) : (
           <p className="text-center text-gray-500 py-8">
             Nenhum arquivo cadastrado.
