@@ -33,6 +33,7 @@ const SoftwareTypes = () => {
 
   const handleDeleteSoftwareType = (id: string | number) => {
     setSoftwareTypes(softwareTypes.filter((type) => type.id !== id));
+    toast.success("Tipo de ferramenta excluído com sucesso!");
   };
 
   return (

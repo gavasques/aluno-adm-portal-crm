@@ -3,7 +3,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown, Trash2, Plus, FileText, Image, Clock, Users, ExternalLink, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import {
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 // Sample data for tools
 const TOOLS = [
@@ -29,7 +31,34 @@ const TOOLS = [
     price: "R$ 249,90/mês",
     recommended: true,
     notRecommended: false,
-    description: "Software integrado para gerenciamento de lojas online e físicas."
+    description: "Software integrado para gerenciamento de lojas online e físicas.",
+    website: "www.erpcommerce.com.br",
+    phone: "(11) 9999-8888",
+    email: "contato@erpcommerce.com.br",
+    status: "Ativo",
+    coupons: "DESCONTO10 - 10% de desconto\nPROMO2025 - 3 meses grátis",
+    contacts: [
+      { id: 1, name: "João Silva", role: "Gestor de Contas", email: "joao@erpcommerce.com.br", phone: "(11) 97777-6666", notes: "Disponível para suporte técnico." },
+      { id: 2, name: "Maria Oliveira", role: "Suporte", email: "maria@erpcommerce.com.br", phone: "(11) 96666-5555", notes: "Especialista em implementação." }
+    ],
+    comments_list: [
+      { id: 1, user: "Carlos Mendes", text: "Vocês recomendam essa ferramenta para uma loja média com cerca de 500 produtos?", date: "15/05/2025", likes: 2, replies: [
+        { id: 101, user: "Ana Costa", text: "Sim, utilizamos para uma loja com 600 produtos e funciona muito bem!", date: "16/05/2025", likes: 1 }
+      ]},
+      { id: 2, user: "Pedro Santos", text: "Alguém sabe se tem integração com o ERP XYZ?", date: "10/05/2025", likes: 0, replies: [] }
+    ],
+    ratings_list: [
+      { id: 1, user: "João Silva", rating: 5, comment: "Excelente ferramenta, atendeu todas as necessidades do meu negócio.", date: "18/04/2025", likes: 3 },
+      { id: 2, user: "Maria Oliveira", rating: 4, comment: "Bom custo-benefício, mas poderia ter mais recursos de marketing.", date: "10/04/2025", likes: 1 }
+    ],
+    files: [
+      { id: 1, name: "Manual do Usuário.pdf", type: "application/pdf", size: "2.5 MB", date: "05/04/2025" },
+      { id: 2, name: "Planilha de Integração.xlsx", type: "application/xlsx", size: "1.8 MB", date: "02/04/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+ERP", alt: "Dashboard ERP" },
+      { id: 2, url: "https://placehold.co/600x400?text=Relatórios", alt: "Relatórios" }
+    ]
   },
   {
     id: 2,
@@ -42,7 +71,29 @@ const TOOLS = [
     price: "R$ 99,00/mês",
     recommended: false,
     notRecommended: true,
-    description: "Ferramenta completa de automação de email marketing."
+    description: "Ferramenta completa de automação de email marketing.",
+    website: "www.emailmarketingpro.com",
+    phone: "(11) 8888-7777",
+    email: "contato@emailmarketingpro.com",
+    status: "Ativo",
+    coupons: "WELCOME20 - 20% de desconto no primeiro mês",
+    contacts: [
+      { id: 1, name: "Ricardo Almeida", role: "Suporte Técnico", email: "ricardo@emailmarketingpro.com", phone: "(11) 95555-4444", notes: "Especialista em integrações." }
+    ],
+    comments_list: [
+      { id: 1, user: "Juliana Mendes", text: "Qual o limite de envio mensal no plano básico?", date: "12/05/2025", likes: 1, replies: [
+        { id: 101, user: "Roberto Almeida", text: "No plano básico são 10.000 emails por mês.", date: "13/05/2025", likes: 0 }
+      ]}
+    ],
+    ratings_list: [
+      { id: 1, user: "Carlos Santos", rating: 3, comment: "Funciona bem, mas tem muitas limitações no plano básico.", date: "20/04/2025", likes: 2 }
+    ],
+    files: [
+      { id: 1, name: "Comparativo de Planos.pdf", type: "application/pdf", size: "1.2 MB", date: "15/03/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Interface+Email", alt: "Interface de Email" }
+    ]
   },
   {
     id: 3,
@@ -55,7 +106,28 @@ const TOOLS = [
     price: "R$ 199,00/mês",
     recommended: true,
     notRecommended: false,
-    description: "Controle completo de estoque para e-commerce."
+    description: "Controle completo de estoque para e-commerce.",
+    website: "www.gestordeestoque.com.br",
+    phone: "(11) 7777-6666",
+    email: "contato@gestordeestoque.com.br",
+    status: "Ativo",
+    coupons: "ESTOQUE15 - 15% de desconto nos planos anuais",
+    contacts: [
+      { id: 1, name: "Fernanda Lima", role: "Consultora", email: "fernanda@gestordeestoque.com.br", phone: "(11) 94444-3333", notes: "Especialista em implementação para e-commerces." }
+    ],
+    comments_list: [
+      { id: 1, user: "Amanda Costa", text: "A ferramenta permite integração com marketplaces?", date: "08/05/2025", likes: 3, replies: [] }
+    ],
+    ratings_list: [
+      { id: 1, user: "Marcelo Oliveira", rating: 4, comment: "Ótima ferramenta para gestão de múltiplos estoques.", date: "25/04/2025", likes: 1 }
+    ],
+    files: [
+      { id: 1, name: "Guia de Integração.pdf", type: "application/pdf", size: "3.5 MB", date: "20/03/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Estoque", alt: "Dashboard de Estoque" },
+      { id: 2, url: "https://placehold.co/600x400?text=Relatório+de+Inventário", alt: "Relatório de Inventário" }
+    ]
   },
   {
     id: 4,
@@ -68,7 +140,30 @@ const TOOLS = [
     price: "R$ 149,00/mês",
     recommended: true,
     notRecommended: false,
-    description: "Dashboard completo para análise de dados de e-commerce."
+    description: "Dashboard completo para análise de dados de e-commerce.",
+    website: "www.analyticsdashboard.com",
+    phone: "(11) 6666-5555",
+    email: "contato@analyticsdashboard.com",
+    status: "Ativo",
+    coupons: "ANALYTICS10 - 10% de desconto em qualquer plano",
+    contacts: [
+      { id: 1, name: "Roberto Santos", role: "Analista de Dados", email: "roberto@analyticsdashboard.com", phone: "(11) 93333-2222", notes: "Especialista em implementação e treinamento." }
+    ],
+    comments_list: [
+      { id: 1, user: "Luciana Silva", text: "É possível integrar com o Google Analytics?", date: "05/05/2025", likes: 2, replies: [
+        { id: 101, user: "Paulo Mendes", text: "Sim, a integração é nativa e muito fácil de configurar.", date: "06/05/2025", likes: 1 }
+      ]}
+    ],
+    ratings_list: [
+      { id: 1, user: "Camila Ferreira", rating: 5, comment: "Excelente ferramenta para análise de dados, interface intuitiva e relatórios completos.", date: "30/04/2025", likes: 4 }
+    ],
+    files: [
+      { id: 1, name: "Manual de Integrações.pdf", type: "application/pdf", size: "2.8 MB", date: "15/03/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Analytics", alt: "Dashboard Analytics" },
+      { id: 2, url: "https://placehold.co/600x400?text=Relatório+de+Conversão", alt: "Relatório de Conversão" }
+    ]
   },
 ];
 
@@ -79,6 +174,7 @@ const Tools = () => {
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedTool, setSelectedTool] = useState(null);
+  const [newComment, setNewComment] = useState("");
   
   const handleSort = (field) => {
     const newDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
@@ -92,6 +188,7 @@ const Tools = () => {
   
   const handleCloseTool = () => {
     setSelectedTool(null);
+    setNewComment("");
   };
   
   // Filter and sort tools based on search query and filters
@@ -149,7 +246,37 @@ const Tools = () => {
         }
       });
   }, [searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection]);
+
+  const handleAddComment = () => {
+    if (newComment.trim() === "") {
+      toast.error("O comentário não pode estar vazio");
+      return;
+    }
+
+    toast.success("Comentário adicionado com sucesso!");
+    setNewComment("");
+  };
+
+  const handleAddRating = () => {
+    toast.success("Avaliação adicionada com sucesso!");
+  };
+
+  const handleAddContact = () => {
+    toast.success("Contato adicionado com sucesso!");
+  };
   
+  const handleUploadFile = () => {
+    toast.success("Arquivo enviado com sucesso!");
+  };
+
+  const handleUploadImage = () => {
+    toast.success("Imagem enviada com sucesso!");
+  };
+
+  const handleLike = () => {
+    toast.success("Like adicionado!");
+  };
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Ferramentas</h1>
@@ -193,7 +320,7 @@ const Tools = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="recommended">Recomendadas</SelectItem>
+                  <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
                   <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
                 </SelectContent>
               </Select>
@@ -320,8 +447,11 @@ const Tools = () => {
               <Tabs defaultValue="details">
                 <TabsList className="mb-4">
                   <TabsTrigger value="details">Dados da Ferramenta</TabsTrigger>
-                  <TabsTrigger value="reviews">Avaliações</TabsTrigger>
+                  <TabsTrigger value="contacts">Contatos</TabsTrigger>
                   <TabsTrigger value="comments">Comentários</TabsTrigger>
+                  <TabsTrigger value="reviews">Avaliações</TabsTrigger>
+                  <TabsTrigger value="files">Arquivos</TabsTrigger>
+                  <TabsTrigger value="images">Imagens</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
@@ -345,6 +475,28 @@ const Tools = () => {
                           <p className="mt-1 text-base">{selectedTool.price}</p>
                         </div>
                         <div>
+                          <h3 className="text-sm font-medium text-gray-500">Website</h3>
+                          <a href={`https://${selectedTool.website}`} 
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="mt-1 text-base flex items-center text-blue-600 hover:underline">
+                            {selectedTool.website}
+                            <ExternalLink className="h-4 w-4 ml-1" />
+                          </a>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
+                          <p className="mt-1 text-base">{selectedTool.phone}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                          <p className="mt-1 text-base">{selectedTool.email}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                          <p className="mt-1 text-base">{selectedTool.status}</p>
+                        </div>
+                        <div>
                           <h3 className="text-sm font-medium text-gray-500">Avaliação</h3>
                           <div className="mt-1 flex items-center">
                             <span className="mr-2">{selectedTool.rating}/5</span>
@@ -366,21 +518,60 @@ const Tools = () => {
                           <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
                           <p className="mt-1 text-base">{selectedTool.description}</p>
                         </div>
+                        <div className="col-span-2">
+                          <h3 className="text-sm font-medium text-gray-500">Cupons e Descontos</h3>
+                          <pre className="mt-1 p-3 bg-gray-50 rounded-md text-sm whitespace-pre-wrap">{selectedTool.coupons}</pre>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="reviews">
+                <TabsContent value="contacts">
                   <Card>
                     <CardContent className="py-6">
-                      <div className="text-center py-6 text-gray-500">
-                        Detalhes das avaliações serão mostrados aqui.
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-medium">Contatos</h3>
+                        <Button size="sm" onClick={handleAddContact}>
+                          <Plus className="h-4 w-4 mr-1" /> Adicionar Contato
+                        </Button>
                       </div>
                       
-                      <div className="mt-4">
-                        <Button className="w-full">Adicionar Avaliação</Button>
-                      </div>
+                      {selectedTool.contacts && selectedTool.contacts.length > 0 ? (
+                        <div className="space-y-4">
+                          {selectedTool.contacts.map((contact) => (
+                            <div key={contact.id} className="border p-4 rounded-md">
+                              <div className="flex justify-between">
+                                <h4 className="font-medium text-lg">{contact.name}</h4>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <div>
+                                  <p className="text-sm text-gray-500">Função</p>
+                                  <p>{contact.role}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Email</p>
+                                  <p>{contact.email}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Telefone</p>
+                                  <p>{contact.phone}</p>
+                                </div>
+                              </div>
+                              {contact.notes && (
+                                <div className="mt-2">
+                                  <p className="text-sm text-gray-500">Observações</p>
+                                  <p className="text-sm mt-1">{contact.notes}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 text-gray-500">
+                          Nenhum contato cadastrado.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -388,20 +579,211 @@ const Tools = () => {
                 <TabsContent value="comments">
                   <Card>
                     <CardContent className="py-6">
-                      <div className="text-center py-6 text-gray-500">
-                        Comentários serão mostrados aqui.
-                      </div>
+                      {selectedTool.comments_list && selectedTool.comments_list.length > 0 ? (
+                        <div className="space-y-6 mb-6">
+                          {selectedTool.comments_list.map((comment) => (
+                            <div key={comment.id} className="border rounded-lg p-4">
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                    {comment.user.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{comment.user}</p>
+                                    <p className="text-sm text-gray-500">{comment.date}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="mt-3">{comment.text}</p>
+                              <div className="mt-3 flex items-center gap-4">
+                                <Button variant="ghost" size="sm" className="text-gray-500" onClick={handleLike}>
+                                  <ThumbsUp className="h-4 w-4 mr-1" /> {comment.likes}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="text-gray-500">
+                                  <MessageCircle className="h-4 w-4 mr-1" /> Responder
+                                </Button>
+                              </div>
+                              
+                              {comment.replies && comment.replies.length > 0 && (
+                                <div className="mt-4 ml-8 space-y-4">
+                                  {comment.replies.map((reply) => (
+                                    <div key={reply.id} className="border-l-2 pl-4">
+                                      <div className="flex items-center">
+                                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                                          {reply.user.charAt(0)}
+                                        </div>
+                                        <div>
+                                          <p className="font-medium">{reply.user}</p>
+                                          <p className="text-xs text-gray-500">{reply.date}</p>
+                                        </div>
+                                      </div>
+                                      <p className="mt-2 text-sm">{reply.text}</p>
+                                      <Button variant="ghost" size="sm" className="text-gray-500 text-xs mt-1" onClick={handleLike}>
+                                        <ThumbsUp className="h-3 w-3 mr-1" /> {reply.likes}
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-gray-500 mb-6">
+                          Nenhum comentário disponível.
+                        </div>
+                      )}
                       
                       <div className="mt-4">
-                        <textarea 
-                          className="w-full border rounded-md p-2 min-h-[100px]" 
+                        <h3 className="font-medium mb-2">Adicionar comentário</h3>
+                        <Textarea 
+                          className="min-h-[100px]" 
                           placeholder="Digite seu comentário..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
                         />
-                        <Button className="mt-2">
+                        <Button className="mt-2" onClick={handleAddComment}>
                           <MessageCircle className="mr-2 h-4 w-4" />
                           Enviar Comentário
                         </Button>
                       </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="reviews">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Avaliações</CardTitle>
+                      <CardDescription>
+                        Avaliação média: {selectedTool.rating}/5
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedTool.ratings_list && selectedTool.ratings_list.length > 0 ? (
+                        <div className="space-y-4 mb-6">
+                          {selectedTool.ratings_list.map((rating) => (
+                            <div key={rating.id} className="border p-4 rounded-md">
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                    {rating.user.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{rating.user}</p>
+                                    <p className="text-sm text-gray-500">{rating.date}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className="flex">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star 
+                                        key={star} 
+                                        className={`h-4 w-4 ${star <= rating.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="mt-2">{rating.comment}</p>
+                              <Button variant="ghost" size="sm" className="text-gray-500 mt-2" onClick={handleLike}>
+                                <ThumbsUp className="h-4 w-4 mr-1" /> {rating.likes}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-gray-500 mb-6">
+                          Nenhuma avaliação disponível.
+                        </div>
+                      )}
+                      
+                      <div className="mt-4">
+                        <Button className="w-full" onClick={handleAddRating}>Adicionar Avaliação</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="files">
+                  <Card>
+                    <CardContent className="py-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-medium">Arquivos</h3>
+                        <Button size="sm" onClick={handleUploadFile}>
+                          <Plus className="h-4 w-4 mr-1" /> Upload de Arquivo
+                        </Button>
+                      </div>
+                      
+                      {selectedTool.files && selectedTool.files.length > 0 ? (
+                        <div className="border rounded-md">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Tipo</TableHead>
+                                <TableHead>Tamanho</TableHead>
+                                <TableHead>Data</TableHead>
+                                <TableHead>Ações</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedTool.files.map((file) => (
+                                <TableRow key={file.id}>
+                                  <TableCell className="font-medium flex items-center">
+                                    <FileText className="h-4 w-4 mr-2 text-blue-600" />
+                                    {file.name}
+                                  </TableCell>
+                                  <TableCell>{file.type.split('/')[1].toUpperCase()}</TableCell>
+                                  <TableCell>{file.size}</TableCell>
+                                  <TableCell>{file.date}</TableCell>
+                                  <TableCell>
+                                    <Button variant="ghost" size="sm">Download</Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 text-gray-500">
+                          Nenhum arquivo disponível.
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="images">
+                  <Card>
+                    <CardContent className="py-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-medium">Imagens</h3>
+                        <Button size="sm" onClick={handleUploadImage}>
+                          <Plus className="h-4 w-4 mr-1" /> Upload de Imagem
+                        </Button>
+                      </div>
+                      
+                      {selectedTool.images && selectedTool.images.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {selectedTool.images.map((image) => (
+                            <div key={image.id} className="border rounded-md overflow-hidden">
+                              <img 
+                                src={image.url} 
+                                alt={image.alt} 
+                                className="w-full h-48 object-cover" 
+                              />
+                              <div className="p-2">
+                                <p className="text-sm font-medium">{image.alt}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 text-gray-500">
+                          Nenhuma imagem disponível.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
