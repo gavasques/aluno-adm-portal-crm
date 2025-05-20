@@ -1,6 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { 
   Book, 
   Calendar, 
@@ -10,11 +11,10 @@ import {
   Users,
   User, 
   BookOpen,
-  FolderPlus,
-  Tags, // Replacing Category with Tags
-  Type,
-  Handshake, // Replacing Partner with Handshake
-  Database
+  Database, 
+  FileText,
+  BarChart,
+  Tool
 } from "lucide-react";
 import {
   Sidebar,
@@ -44,13 +44,13 @@ const NavItem = ({ href, icon: Icon, children }: NavItemProps) => {
         <Link 
           to={href}
           className={cn(
-            "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
             isActive 
-              ? "bg-portal-primary text-white" 
-              : "text-portal-dark hover:bg-portal-light hover:text-portal-primary"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
+              : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700"
           )}
         >
-          <Icon className="h-4 w-4" />
+          <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-blue-700 opacity-80")} />
           <span>{children}</span>
         </Link>
       </SidebarMenuButton>
@@ -58,64 +58,113 @@ const NavItem = ({ href, icon: Icon, children }: NavItemProps) => {
   );
 };
 
+const sidebarAnimation = {
+  hidden: { opacity: 0, x: -20 },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemAnimation = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0 },
+};
+
 const AdminSidebar = () => {
   return (
-    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-sm z-30 pr-0">
+    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
       <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
       <SidebarContent className="pt-16 pb-4">
-        <div className="px-3 py-2">
-          <h2 className="text-base font-semibold text-portal-primary mb-1">Área do Administrador</h2>
+        <motion.div 
+          className="px-3 py-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-600 text-base font-bold mb-1">
+            Área do Administrador
+          </h2>
           <p className="text-xs text-gray-500">Painel de controle</p>
-        </div>
+        </motion.div>
         
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
-            Principal
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <NavItem href="/admin" icon={Home}>Dashboard</NavItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
-            Gestão
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <NavItem href="/admin/users" icon={Users}>Gestão de Usuários</NavItem>
-              <NavItem href="/admin/gestao-alunos" icon={User}>Gestão de Alunos</NavItem>
-              <NavItem href="/admin/registers" icon={Database}>Cadastros</NavItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
-            Organização
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <NavItem href="/admin/tasks" icon={List}>Lista de Tarefas</NavItem>
-              <NavItem href="/admin/crm" icon={BookOpen}>CRM / Gestão de Leads</NavItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 py-1.5 text-xs font-medium text-gray-500">
-            Geral ADM
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <NavItem href="/admin/suppliers" icon={Users}>Fornecedores</NavItem>
-              <NavItem href="/admin/partners" icon={Users}>Parceiros</NavItem>
-              <NavItem href="/admin/tools" icon={Settings}>Ferramentas</NavItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <motion.div
+          variants={sidebarAnimation}
+          initial="hidden"
+          animate="show"
+          className="mt-4"
+        >
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
+              Principal
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin" icon={Home}>Dashboard</NavItem>
+                </motion.div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
+              Gestão
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/users" icon={Users}>Gestão de Usuários</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/gestao-alunos" icon={User}>Gestão de Alunos</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/registers" icon={Database}>Cadastros</NavItem>
+                </motion.div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
+              Organização
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/tasks" icon={List}>Lista de Tarefas</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/crm" icon={BookOpen}>CRM / Gestão de Leads</NavItem>
+                </motion.div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
+              Geral ADM
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/suppliers" icon={Users}>Fornecedores</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/partners" icon={BarChart}>Parceiros</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/tools" icon={Tool}>Ferramentas</NavItem>
+                </motion.div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </motion.div>
       </SidebarContent>
     </Sidebar>
   );

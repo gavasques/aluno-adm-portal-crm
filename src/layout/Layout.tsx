@@ -1,5 +1,6 @@
 
 import { Outlet } from "react-router-dom";
+import { motion } from "framer-motion";
 import Header from "./Header";
 import StudentSidebar from "./StudentSidebar";
 import AdminSidebar from "./AdminSidebar";
@@ -18,11 +19,21 @@ const Layout = () => {
         {isStudent && <StudentSidebar />}
         {isAdmin && <AdminSidebar />}
         
-        <main className="flex-1 overflow-x-hidden">
-          <div className="flex-grow">
+        <motion.main 
+          className="flex-1 overflow-x-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div 
+            className="flex-grow"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
             <Outlet />
-          </div>
-        </main>
+          </motion.div>
+        </motion.main>
       </div>
     </div>
   );
