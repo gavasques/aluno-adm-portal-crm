@@ -50,7 +50,7 @@ const Suppliers = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="px-6 py-6 w-full"
+      className="container mx-auto py-6 px-4"
     >
       {!selectedSupplier && (
         <SupplierHeader

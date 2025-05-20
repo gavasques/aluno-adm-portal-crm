@@ -5,6 +5,7 @@ import { Supplier } from "@/types/supplier.types";
 import SuppliersTable from "@/components/admin/SuppliersTable";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SupplierContentProps {
   selectedSupplier: Supplier | null;
@@ -53,44 +54,48 @@ export function SupplierContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-gradient-to-br from-white to-portal-light/20 rounded-lg shadow-md p-1"
         >
-          {isLoading ? (
-            <div className="p-6 space-y-4 bg-white rounded-lg">
-              <div className="flex justify-between">
-                <Skeleton className="h-8 w-40" />
-                <Skeleton className="h-8 w-32" />
-              </div>
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <div className="flex justify-between">
-                <Skeleton className="h-10 w-20" />
-                <Skeleton className="h-10 w-40" />
-              </div>
-            </div>
-          ) : (
-            <SuppliersTable 
-              suppliers={paginatedSuppliers}
-              isAdmin={false}
-              onSelectSupplier={setSelectedSupplier}
-              pageSize={pageSize}
-              onPageSizeChange={setPageSize}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-            />
-          )}
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-white to-amber-50">
+            <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+              <CardTitle className="flex items-center justify-between">
+                <span>Lista de Fornecedores</span>
+                <span className="text-sm bg-white/20 px-2 py-1 rounded-full">
+                  {paginatedSuppliers.length} encontrado(s)
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {isLoading ? (
+                <div className="p-4">
+                  <Skeleton className="h-10 w-full mb-4" />
+                  <Skeleton className="h-12 w-full mb-2" />
+                  <Skeleton className="h-12 w-full mb-2" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : (
+                <SuppliersTable 
+                  suppliers={paginatedSuppliers}
+                  isAdmin={false}
+                  onSelectSupplier={setSelectedSupplier}
+                  pageSize={pageSize}
+                  onPageSizeChange={setPageSize}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+              )}
+            </CardContent>
+          </Card>
         </motion.div>
       ) : (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
+          className="bg-white p-6 rounded-lg shadow-lg border border-amber-100"
         >
           <SupplierDetail 
             supplier={selectedSupplier}
