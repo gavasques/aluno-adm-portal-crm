@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
@@ -25,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Importar componentes
-import SupplierForm from "@/components/admin/SupplierForm";
+import SupplierForm from "@/components/admin/suppliers/SupplierForm";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import SuppliersTable from "@/components/admin/SuppliersTable";
 import CsvImportDialog from "@/components/admin/CsvImportDialog";
