@@ -34,7 +34,8 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
     coupons: "",
     recommended: false,
     notRecommended: false,
-    logo: ""
+    logo: "",
+    canal: "" // New field for canal
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -87,7 +88,8 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
       coupons: "",
       recommended: false,
       notRecommended: false,
-      logo: ""
+      logo: "",
+      canal: ""
     });
   };
 
@@ -137,12 +139,31 @@ const AddToolDialog: React.FC<AddToolDialogProps> = ({
               </Select>
             </div>
             
+            <div className="space-y-2">
+              <Label htmlFor="canal">Canal</Label>
+              <Select 
+                value={formData.canal} 
+                onValueChange={(value) => handleSelectChange("canal", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um canal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Amazon">Amazon</SelectItem>
+                  <SelectItem value="Meli">Meli</SelectItem>
+                  <SelectItem value="Magalu">Magalu</SelectItem>
+                  <SelectItem value="Shopee">Shopee</SelectItem>
+                  <SelectItem value="Ecommerce">Ecommerce</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             <FormField 
               label="Iniciais/Logo *" 
               name="logo" 
               value={formData.logo} 
               onChange={handleChange} 
-              maxLength={1} 
+              maxLength={2} 
               placeholder="Ex: S para Shopify"
               required 
             />

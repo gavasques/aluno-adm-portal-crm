@@ -19,6 +19,9 @@ interface ToolHeaderProps {
   setSoftwareTypeFilter: (type: string) => void;
   recommendationFilter: string;
   setRecommendationFilter: (value: string) => void;
+  canalFilter: string;
+  setCanalFilter: (value: string) => void;
+  canals: string[];
 }
 
 export function ToolHeader({
@@ -27,7 +30,10 @@ export function ToolHeader({
   softwareTypeFilter,
   setSoftwareTypeFilter,
   recommendationFilter,
-  setRecommendationFilter
+  setRecommendationFilter,
+  canalFilter,
+  setCanalFilter,
+  canals
 }: ToolHeaderProps) {
   return (
     <div className="animate-fade-in">
@@ -93,6 +99,25 @@ export function ToolHeader({
                     <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
                     <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={canalFilter} onValueChange={setCanalFilter}>
+                  <SelectTrigger className="w-[180px] bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-300 transition-colors">
+                    <SelectValue placeholder="Canal" />
+                  </SelectTrigger>
+                  <SelectContent className="border-blue-200">
+                    <SelectItem value="all">Todos os Canais</SelectItem>
+                    <SelectItem value="Amazon">Amazon</SelectItem>
+                    <SelectItem value="Meli">Meli</SelectItem>
+                    <SelectItem value="Magalu">Magalu</SelectItem>
+                    <SelectItem value="Shopee">Shopee</SelectItem>
+                    <SelectItem value="Ecommerce">Ecommerce</SelectItem>
+                    {canals.filter(canal => 
+                      !["Amazon", "Meli", "Magalu", "Shopee", "Ecommerce"].includes(canal)
+                    ).map(canal => (
+                      <SelectItem key={canal} value={canal}>{canal}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

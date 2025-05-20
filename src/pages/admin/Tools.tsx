@@ -23,6 +23,7 @@ const mockTools = [
     comments: 120,
     logo: "S",
     recommended: true,
+    canal: "Ecommerce",
     description: "Plataforma completa para criar e gerenciar lojas online.",
     website: "https://www.shopify.com",
     phone: "+1 123-456-7890",
@@ -93,6 +94,7 @@ const mockTools = [
     comments: 95,
     logo: "W",
     recommended: true,
+    canal: "Amazon",
     description: "Plugin de comércio eletrônico para WordPress.",
     website: "https://woocommerce.com",
     phone: "+1 234-567-8901",
@@ -113,6 +115,7 @@ const mockTools = [
     rating: 4.2,
     comments: 78,
     logo: "M",
+    canal: "Magalu",
     description: "Plataforma de e-commerce open source.",
     website: "https://magento.com",
     phone: "+1 345-678-9012",
@@ -134,6 +137,7 @@ const mockTools = [
     comments: 45,
     logo: "F",
     notRecommended: true,
+    canal: "Meli",
     description: "Serviço de logística para e-commerce.",
     website: "https://ffetch.com",
     phone: "+1 456-789-0123",
@@ -155,6 +159,7 @@ const Tools = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [recommendationFilter, setRecommendationFilter] = useState("all");
+  const [canalFilter, setCanalFilter] = useState("all"); // New canal filter
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -163,6 +168,9 @@ const Tools = () => {
 
   // Get unique categories
   const categories = Array.from(new Set(tools.map((tool) => tool.category)));
+  
+  // Get unique canals
+  const canals = Array.from(new Set(tools.filter(tool => tool.canal).map((tool) => tool.canal))) as string[];
 
   // Filter and sort tools
   useEffect(() => {
@@ -201,6 +209,11 @@ const Tools = () => {
         return true;
       });
     }
+    
+    // Apply canal filter
+    if (canalFilter && canalFilter !== "all") {
+      result = result.filter((tool) => tool.canal === canalFilter);
+    }
 
     // Apply sorting
     result.sort((a, b) => {
@@ -227,6 +240,7 @@ const Tools = () => {
     categoryFilter,
     statusFilter,
     recommendationFilter,
+    canalFilter,
     sortField,
     sortDirection,
   ]);
@@ -237,6 +251,7 @@ const Tools = () => {
     setCategoryFilter("all");
     setStatusFilter("all");
     setRecommendationFilter("all");
+    setCanalFilter("all");
     setSortField("name");
     setSortDirection("asc");
   };
@@ -295,7 +310,7 @@ const Tools = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
               <Input
@@ -347,6 +362,30 @@ const Tools = () => {
                   <SelectItem value="all">Todas as recomendações</SelectItem>
                   <SelectItem value="Recomendado">Recomendadas</SelectItem>
                   <SelectItem value="Não Recomendado">Não Recomendadas</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={canalFilter}
+              onValueChange={setCanalFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Canal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">Todos os canais</SelectItem>
+                  <SelectItem value="Amazon">Amazon</SelectItem>
+                  <SelectItem value="Meli">Meli</SelectItem>
+                  <SelectItem value="Magalu">Magalu</SelectItem>
+                  <SelectItem value="Shopee">Shopee</SelectItem>
+                  <SelectItem value="Ecommerce">Ecommerce</SelectItem>
+                  {canals.filter(canal => 
+                    !["Amazon", "Meli", "Magalu", "Shopee", "Ecommerce"].includes(canal)
+                  ).map(canal => (
+                    <SelectItem key={canal} value={canal}>{canal}</SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>

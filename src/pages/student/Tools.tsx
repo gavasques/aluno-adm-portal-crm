@@ -18,6 +18,9 @@ const Tools = () => {
     setSoftwareTypeFilter,
     recommendationFilter,
     setRecommendationFilter,
+    canalFilter,
+    setCanalFilter,
+    canals,
     sortField,
     sortDirection,
     handleSort,
@@ -42,6 +45,9 @@ const Tools = () => {
           setSoftwareTypeFilter={setSoftwareTypeFilter}
           recommendationFilter={recommendationFilter}
           setRecommendationFilter={setRecommendationFilter}
+          canalFilter={canalFilter}
+          setCanalFilter={setCanalFilter}
+          canals={canals}
         />
       )}
       

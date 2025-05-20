@@ -22,6 +22,7 @@ export interface Tool {
   email: string;
   status: string;
   coupons: string;
+  canal?: string; // New field for canal (marketplace)
   contacts: Array<{
     id: number;
     name: string;

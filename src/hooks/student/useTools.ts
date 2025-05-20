@@ -14,6 +14,7 @@ const TOOLS: Tool[] = [
     logo: "EC",
     recommended: true,
     notRecommended: false,
+    canal: "Ecommerce",
     description: "Software integrado para gerenciamento de lojas online e físicas.",
     website: "www.erpcommerce.com.br",
     phone: "(11) 9999-8888",
@@ -53,6 +54,7 @@ const TOOLS: Tool[] = [
     logo: "EM",
     recommended: false,
     notRecommended: true,
+    canal: "Amazon",
     description: "Ferramenta completa de automação de email marketing.",
     website: "www.emailmarketingpro.com",
     phone: "(11) 8888-7777",
@@ -87,6 +89,7 @@ const TOOLS: Tool[] = [
     logo: "GE",
     recommended: true,
     notRecommended: false,
+    canal: "Magalu",
     description: "Controle completo de estoque para e-commerce.",
     website: "www.gestordeestoque.com.br",
     phone: "(11) 7777-6666",
@@ -120,6 +123,7 @@ const TOOLS: Tool[] = [
     logo: "AD",
     recommended: true,
     notRecommended: false,
+    canal: "Shopee",
     description: "Dashboard completo para análise de dados de e-commerce.",
     website: "www.analyticsdashboard.com",
     phone: "(11) 6666-5555",
@@ -151,10 +155,17 @@ export const useTools = (isAdmin: boolean) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [softwareTypeFilter, setSoftwareTypeFilter] = useState("all");
   const [recommendationFilter, setRecommendationFilter] = useState("all");
+  const [canalFilter, setCanalFilter] = useState("all"); // New canal filter
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [tools, setTools] = useState<Tool[]>(TOOLS);
+  
+  // Get unique canals
+  const canals = useMemo(() => {
+    const uniqueCanals = Array.from(new Set(tools.filter(tool => tool.canal).map(tool => tool.canal))) as string[];
+    return uniqueCanals;
+  }, [tools]);
   
   // Handler para ordenação
   const handleSort = (field: string) => {
@@ -191,8 +202,13 @@ export const useTools = (isAdmin: boolean) => {
           recommendationFilter === "all" || 
           (recommendationFilter === "recommended" && tool.recommended) ||
           (recommendationFilter === "not-recommended" && tool.notRecommended);
+          
+        // Filtro por canal
+        const matchesCanal =
+          canalFilter === "all" ||
+          tool.canal === canalFilter;
         
-        return matchesSearch && matchesType && matchesRecommendation;
+        return matchesSearch && matchesType && matchesRecommendation && matchesCanal;
       })
       .sort((a, b) => {
         let valA, valB;
@@ -225,7 +241,7 @@ export const useTools = (isAdmin: boolean) => {
           return valA < valB ? 1 : -1;
         }
       });
-  }, [searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection, tools]);
+  }, [searchQuery, softwareTypeFilter, recommendationFilter, canalFilter, sortField, sortDirection, tools]);
   
   return {
     searchQuery,
@@ -234,6 +250,9 @@ export const useTools = (isAdmin: boolean) => {
     setSoftwareTypeFilter,
     recommendationFilter,
     setRecommendationFilter,
+    canalFilter, // New canal filter
+    setCanalFilter, // New canal filter setter
+    canals, // Available canals list
     sortField,
     sortDirection,
     handleSort,
