@@ -1,316 +1,49 @@
 
-import React, { useState, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import React from "react";
 import { useLocation } from "react-router-dom";
-import { Tool } from "@/components/tools/ToolsTable";
-import ToolsTable from "@/components/tools/ToolsTable";
-import ToolDetailDialog from "@/components/tools/ToolDetailDialog";
-
-// Sample data for tools
-const TOOLS: Tool[] = [
-  {
-    id: 1,
-    name: "ERP Commerce",
-    category: "Gestão Empresarial",
-    provider: "Sistema ERP",
-    rating: 4.7,
-    comments: 18,
-    logo: "EC",
-    recommended: true,
-    notRecommended: false,
-    description: "Software integrado para gerenciamento de lojas online e físicas.",
-    website: "www.erpcommerce.com.br",
-    phone: "(11) 9999-8888",
-    email: "contato@erpcommerce.com.br",
-    status: "Ativo",
-    coupons: "DESCONTO10 - 10% de desconto\nPROMO2025 - 3 meses grátis",
-    contacts: [
-      { id: 1, name: "João Silva", role: "Gestor de Contas", email: "joao@erpcommerce.com.br", phone: "(11) 97777-6666", notes: "Disponível para suporte técnico." },
-      { id: 2, name: "Maria Oliveira", role: "Suporte", email: "maria@erpcommerce.com.br", phone: "(11) 96666-5555", notes: "Especialista em implementação." }
-    ],
-    comments_list: [
-      { id: 1, user: "Carlos Mendes", text: "Vocês recomendam essa ferramenta para uma loja média com cerca de 500 produtos?", date: "15/05/2025", likes: 2, replies: [
-        { id: 101, user: "Ana Costa", text: "Sim, utilizamos para uma loja com 600 produtos e funciona muito bem!", date: "16/05/2025", likes: 1 }
-      ]},
-      { id: 2, user: "Pedro Santos", text: "Alguém sabe se tem integração com o ERP XYZ?", date: "10/05/2025", likes: 0, replies: [] }
-    ],
-    ratings_list: [
-      { id: 1, user: "João Silva", rating: 5, comment: "Excelente ferramenta, atendeu todas as necessidades do meu negócio.", date: "18/04/2025", likes: 3 },
-      { id: 2, user: "Maria Oliveira", rating: 4, comment: "Bom custo-benefício, mas poderia ter mais recursos de marketing.", date: "10/04/2025", likes: 1 }
-    ],
-    files: [
-      { id: 1, name: "Manual do Usuário.pdf", type: "application/pdf", size: "2.5 MB", date: "05/04/2025" },
-      { id: 2, name: "Planilha de Integração.xlsx", type: "application/xlsx", size: "1.8 MB", date: "02/04/2025" }
-    ],
-    images: [
-      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+ERP", alt: "Dashboard ERP" },
-      { id: 2, url: "https://placehold.co/600x400?text=Relatórios", alt: "Relatórios" }
-    ]
-  },
-  {
-    id: 2,
-    name: "Email Marketing Pro",
-    category: "Marketing",
-    provider: "Marketing Digital",
-    rating: 4.5,
-    comments: 12,
-    logo: "EM",
-    recommended: false,
-    notRecommended: true,
-    description: "Ferramenta completa de automação de email marketing.",
-    website: "www.emailmarketingpro.com",
-    phone: "(11) 8888-7777",
-    email: "contato@emailmarketingpro.com",
-    status: "Ativo",
-    coupons: "WELCOME20 - 20% de desconto no primeiro mês",
-    contacts: [
-      { id: 1, name: "Ricardo Almeida", role: "Suporte Técnico", email: "ricardo@emailmarketingpro.com", phone: "(11) 95555-4444", notes: "Especialista em integrações." }
-    ],
-    comments_list: [
-      { id: 1, user: "Juliana Mendes", text: "Qual o limite de envio mensal no plano básico?", date: "12/05/2025", likes: 1, replies: [
-        { id: 101, user: "Roberto Almeida", text: "No plano básico são 10.000 emails por mês.", date: "13/05/2025", likes: 0 }
-      ]}
-    ],
-    ratings_list: [
-      { id: 1, user: "Carlos Santos", rating: 3, comment: "Funciona bem, mas tem muitas limitações no plano básico.", date: "20/04/2025", likes: 2 }
-    ],
-    files: [
-      { id: 1, name: "Comparativo de Planos.pdf", type: "application/pdf", size: "1.2 MB", date: "15/03/2025" }
-    ],
-    images: [
-      { id: 1, url: "https://placehold.co/600x400?text=Interface+Email", alt: "Interface de Email" }
-    ]
-  },
-  {
-    id: 3,
-    name: "Gestor de Estoque",
-    category: "Logística",
-    provider: "Supply Chain Co.",
-    rating: 4.2,
-    comments: 9,
-    logo: "GE",
-    recommended: true,
-    notRecommended: false,
-    description: "Controle completo de estoque para e-commerce.",
-    website: "www.gestordeestoque.com.br",
-    phone: "(11) 7777-6666",
-    email: "contato@gestordeestoque.com.br",
-    status: "Ativo",
-    coupons: "ESTOQUE15 - 15% de desconto nos planos anuais",
-    contacts: [
-      { id: 1, name: "Fernanda Lima", role: "Consultora", email: "fernanda@gestordeestoque.com.br", phone: "(11) 94444-3333", notes: "Especialista em implementação para e-commerces." }
-    ],
-    comments_list: [
-      { id: 1, user: "Amanda Costa", text: "A ferramenta permite integração com marketplaces?", date: "08/05/2025", likes: 3, replies: [] }
-    ],
-    ratings_list: [
-      { id: 1, user: "Marcelo Oliveira", rating: 4, comment: "Ótima ferramenta para gestão de múltiplos estoques.", date: "25/04/2025", likes: 1 }
-    ],
-    files: [
-      { id: 1, name: "Guia de Integração.pdf", type: "application/pdf", size: "3.5 MB", date: "20/03/2025" }
-    ],
-    images: [
-      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Estoque", alt: "Dashboard de Estoque" },
-      { id: 2, url: "https://placehold.co/600x400?text=Relatório+de+Inventário", alt: "Relatório de Inventário" }
-    ]
-  },
-  {
-    id: 4,
-    name: "Analytics Dashboard",
-    category: "Análise de Dados",
-    provider: "Data Insights",
-    rating: 4.8,
-    comments: 15,
-    logo: "AD",
-    recommended: true,
-    notRecommended: false,
-    description: "Dashboard completo para análise de dados de e-commerce.",
-    website: "www.analyticsdashboard.com",
-    phone: "(11) 6666-5555",
-    email: "contato@analyticsdashboard.com",
-    status: "Ativo",
-    coupons: "ANALYTICS10 - 10% de desconto em qualquer plano",
-    contacts: [
-      { id: 1, name: "Roberto Santos", role: "Analista de Dados", email: "roberto@analyticsdashboard.com", phone: "(11) 93333-2222", notes: "Especialista em implementação e treinamento." }
-    ],
-    comments_list: [
-      { id: 1, user: "Luciana Silva", text: "É possível integrar com o Google Analytics?", date: "05/05/2025", likes: 2, replies: [
-        { id: 101, user: "Paulo Mendes", text: "Sim, a integração é nativa e muito fácil de configurar.", date: "06/05/2025", likes: 1 }
-      ]}
-    ],
-    ratings_list: [
-      { id: 1, user: "Camila Ferreira", rating: 5, comment: "Excelente ferramenta para análise de dados, interface intuitiva e relatórios completos.", date: "30/04/2025", likes: 4 }
-    ],
-    files: [
-      { id: 1, name: "Manual de Integrações.pdf", type: "application/pdf", size: "2.8 MB", date: "15/03/2025" }
-    ],
-    images: [
-      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Analytics", alt: "Dashboard Analytics" },
-      { id: 2, url: "https://placehold.co/600x400?text=Relatório+de+Conversão", alt: "Relatório de Conversão" }
-    ]
-  },
-];
+import { useTools } from "@/hooks/student/useTools";
+import { ToolHeader } from "@/components/student/tools/ToolHeader";
+import { ToolContent } from "@/components/student/tools/ToolContent";
 
 const Tools = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [softwareTypeFilter, setSoftwareTypeFilter] = useState("all");
-  const [recommendationFilter, setRecommendationFilter] = useState("all");
-  const [sortField, setSortField] = useState("name");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
-  const [tools, setTools] = useState<Tool[]>(TOOLS);
-  
-  // Check if current user is admin based on route
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   
-  // Handler functions
-  const handleSort = (field: string) => {
-    const newDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
-    setSortField(field);
-    setSortDirection(newDirection);
-  };
-
-  const handleOpenTool = (tool: Tool) => {
-    setSelectedTool(tool);
-  };
-  
-  const handleCloseTool = () => {
-    setSelectedTool(null);
-  };
-  
-  const handleUpdateTool = (updatedTool: Tool) => {
-    setTools(tools.map(tool => 
-      tool.id === updatedTool.id ? updatedTool : tool
-    ));
-    setSelectedTool(updatedTool);
-  };
-  
-  // Filter and sort tools based on search query and filters
-  const filteredTools = useMemo(() => {
-    return tools
-      .filter(tool => {
-        // Filtro de pesquisa
-        const matchesSearch = 
-          tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          tool.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          tool.provider.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        // Filtro por tipo
-        const matchesType = 
-          softwareTypeFilter === "all" || 
-          tool.category === softwareTypeFilter;
-        
-        // Filtro por recomendação
-        const matchesRecommendation = 
-          recommendationFilter === "all" || 
-          (recommendationFilter === "recommended" && tool.recommended) ||
-          (recommendationFilter === "not-recommended" && tool.notRecommended);
-        
-        return matchesSearch && matchesType && matchesRecommendation;
-      })
-      .sort((a, b) => {
-        let valA, valB;
-        
-        switch (sortField) {
-          case "name":
-            valA = a.name;
-            valB = b.name;
-            break;
-          case "category":
-            valA = a.category;
-            valB = b.category;
-            break;
-          case "provider":
-            valA = a.provider;
-            valB = b.provider;
-            break;
-          case "rating":
-            valA = a.rating;
-            valB = b.rating;
-            break;
-          default:
-            valA = a.name;
-            valB = b.name;
-        }
-        
-        if (sortDirection === "asc") {
-          return valA > valB ? 1 : -1;
-        } else {
-          return valA < valB ? 1 : -1;
-        }
-      });
-  }, [searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection, tools]);
+  const {
+    searchQuery,
+    setSearchQuery,
+    softwareTypeFilter,
+    setSoftwareTypeFilter,
+    recommendationFilter,
+    setRecommendationFilter,
+    sortField,
+    sortDirection,
+    handleSort,
+    selectedTool,
+    setSelectedTool,
+    filteredTools,
+    handleUpdateTool
+  } = useTools(isAdmin);
   
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8">Ferramentas</h1>
+      <ToolHeader 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        softwareTypeFilter={softwareTypeFilter}
+        setSoftwareTypeFilter={setSoftwareTypeFilter}
+        recommendationFilter={recommendationFilter}
+        setRecommendationFilter={setRecommendationFilter}
+      />
       
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input
-            placeholder="Buscar ferramentas..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Select value={softwareTypeFilter} onValueChange={setSoftwareTypeFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Tipo de Ferramenta" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Tipos</SelectItem>
-              <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
-              <SelectItem value="Marketing">Marketing</SelectItem>
-              <SelectItem value="Logística">Logística</SelectItem>
-              <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={recommendationFilter} onValueChange={setRecommendationFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Recomendação" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
-              <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <Card>
-        <CardContent className="p-0">
-          <ToolsTable 
-            tools={filteredTools}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            onOpenTool={handleOpenTool}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Dialog para detalhes da ferramenta */}
-      <ToolDetailDialog
-        tool={selectedTool}
+      <ToolContent 
+        tools={filteredTools}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSort={handleSort}
+        selectedTool={selectedTool}
+        setSelectedTool={setSelectedTool}
         isAdmin={isAdmin}
-        isOpen={!!selectedTool}
-        onClose={handleCloseTool}
         onUpdateTool={handleUpdateTool}
       />
     </div>
