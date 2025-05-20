@@ -14,7 +14,7 @@ import {
   Database, 
   FileText,
   BarChart,
-  Tool
+  Wrench
 } from "lucide-react";
 import {
   Sidebar,
@@ -159,7 +159,7 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/partners" icon={BarChart}>Parceiros</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/tools" icon={Tool}>Ferramentas</NavItem>
+                  <NavItem href="/admin/tools" icon={Wrench}>Ferramentas</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
