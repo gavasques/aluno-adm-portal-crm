@@ -6,12 +6,17 @@ import { Plus } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const SoftwareTypes = () => {
   const [softwareTypes, setSoftwareTypes] = useState<ListItem[]>([
     { id: "1", name: "CRM", description: "Customer Relationship Management" },
     { id: "2", name: "ERP", description: "Enterprise Resource Planning" },
     { id: "3", name: "CMS", description: "Content Management System" },
+    { id: "4", name: "Plataforma E-commerce", description: "Plataformas para criação de lojas virtuais" },
+    { id: "5", name: "Marketing", description: "Ferramentas de marketing digital" },
+    { id: "6", name: "Logística", description: "Soluções para logística e gestão de estoque" },
+    { id: "7", name: "Análise de Dados", description: "Ferramentas para análise de dados e BI" },
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -23,6 +28,7 @@ const SoftwareTypes = () => {
     };
     setSoftwareTypes([...softwareTypes, newType]);
     setIsDialogOpen(false);
+    toast.success("Tipo de ferramenta adicionado com sucesso!");
   };
 
   const handleDeleteSoftwareType = (id: string | number) => {
