@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown, Trash2, Plus, FileText, Image, Clock, Users, ExternalLink, ThumbsUp, UserPlus, MessageSquarePlus, FilePlus, ImagePlus } from "lucide-react";
+import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown, Trash2, Plus, FileText, Image, Clock, Users, ExternalLink, ThumbsUp, UserPlus, MessageSquarePlus, FilePlus, ImagePlus, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import {
@@ -21,6 +21,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import StatusBadge from "@/components/ui/status-badge";
+import { useLocation } from "react-router-dom";
 
 // Sample data for tools
 const TOOLS = [
@@ -216,6 +218,11 @@ const Tools = () => {
   const [replyText, setReplyText] = useState("");
   const [rating, setRating] = useState(5);
   const [tools, setTools] = useState(TOOLS);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Check if current user is admin based on route
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
   
   // Forms
   const contactForm = useForm({
@@ -237,6 +244,35 @@ const Tools = () => {
     }
   });
   
+  // Form for editing tool data
+  const editToolForm = useForm({
+    resolver: zodResolver(
+      z.object({
+        name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+        category: z.string().min(2, "Categoria é obrigatória"),
+        provider: z.string().min(2, "Fornecedor é obrigatório"),
+        description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
+        website: z.string().url("Website deve ser uma URL válida").or(z.string().min(0)),
+        phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+        email: z.string().email("E-mail inválido"),
+        status: z.enum(["Ativo", "Inativo"]),
+        coupons: z.string().optional(),
+      })
+    ),
+    defaultValues: {
+      name: "",
+      category: "",
+      provider: "",
+      description: "",
+      website: "",
+      phone: "",
+      email: "",
+      status: "Ativo",
+      coupons: "",
+    }
+  });
+  
+  // Handler functions
   const handleSort = (field) => {
     const newDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
     setSortField(field);
@@ -245,6 +281,21 @@ const Tools = () => {
 
   const handleOpenTool = (tool) => {
     setSelectedTool(tool);
+    
+    // If admin, populate edit form with tool data
+    if (isAdmin) {
+      editToolForm.reset({
+        name: tool.name,
+        category: tool.category,
+        provider: tool.provider,
+        description: tool.description,
+        website: tool.website,
+        phone: tool.phone,
+        email: tool.email,
+        status: tool.status,
+        coupons: tool.coupons,
+      });
+    }
   };
   
   const handleCloseTool = () => {
@@ -538,6 +589,22 @@ const Tools = () => {
     }
   };
 
+  const handleSaveToolEdit = (data) => {
+    if (selectedTool) {
+      const updatedTool = {
+        ...selectedTool,
+        ...data
+      };
+      
+      setTools(tools.map(tool => 
+        tool.id === selectedTool.id ? updatedTool : tool
+      ));
+      setSelectedTool(updatedTool);
+      setIsEditing(false);
+      toast.success("Dados da ferramenta atualizados com sucesso!");
+    }
+  };
+  
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-8">Ferramentas</h1>
@@ -642,9 +709,7 @@ const Tools = () => {
                   <TableCell>{tool.category}</TableCell>
                   <TableCell>{tool.provider}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
-                      {tool.price}
-                    </Badge>
+                    <StatusBadge isActive={tool.status === "Ativo"} />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
@@ -675,7 +740,7 @@ const Tools = () => {
       {/* Dialog para detalhes da ferramenta */}
       {selectedTool && (
         <Dialog open={!!selectedTool} onOpenChange={handleCloseTool}>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center">
                 <div className="w-8 h-8 rounded-md bg-portal-accent text-white flex items-center justify-center text-lg font-bold mr-2">
@@ -707,80 +772,215 @@ const Tools = () => {
                   <TabsTrigger value="images">Imagens</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="details">
+                <TabsContent value="details" className="max-h-[60vh] overflow-y-auto">
                   <Card>
                     <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Nome</h3>
-                          <p className="mt-1 text-base">{selectedTool.name}</p>
+                      {isAdmin && !isEditing && (
+                        <div className="flex justify-end mb-4">
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsEditing(true)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" /> Editar
+                          </Button>
                         </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Categoria</h3>
-                          <p className="mt-1 text-base">{selectedTool.category}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Fornecedor</h3>
-                          <p className="mt-1 text-base">{selectedTool.provider}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Preço</h3>
-                          <p className="mt-1 text-base">{selectedTool.price}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Website</h3>
-                          <a href={`https://${selectedTool.website}`} 
-                             target="_blank" 
-                             rel="noopener noreferrer" 
-                             className="mt-1 text-base flex items-center text-blue-600 hover:underline">
-                            {selectedTool.website}
-                            <ExternalLink className="h-4 w-4 ml-1" />
-                          </a>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
-                          <p className="mt-1 text-base">{selectedTool.phone}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                          <p className="mt-1 text-base">{selectedTool.email}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                          <p className="mt-1 text-base">{selectedTool.status}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Avaliação</h3>
-                          <div className="mt-1 flex items-center">
-                            <span className="mr-2">{selectedTool.rating}/5</span>
-                            <div className="flex">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star 
-                                  key={star} 
-                                  className={`h-4 w-4 ${
-                                    star <= Math.round(selectedTool.rating) 
-                                      ? 'fill-yellow-400 text-yellow-400' 
-                                      : 'text-gray-300'
-                                  }`} 
-                                />
-                              ))}
+                      )}
+                      
+                      {isAdmin && isEditing ? (
+                        <form onSubmit={editToolForm.handleSubmit(handleSaveToolEdit)}>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <Label htmlFor="name">Nome*</Label>
+                              <Input 
+                                id="name"
+                                {...editToolForm.register("name")} 
+                                className="mt-1"
+                              />
+                              {editToolForm.formState.errors.name && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.name.message}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="category">Categoria*</Label>
+                              <Select 
+                                defaultValue={editToolForm.getValues("category")}
+                                onValueChange={(value) => editToolForm.setValue("category", value)}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue placeholder="Selecione a categoria" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
+                                  <SelectItem value="Marketing">Marketing</SelectItem>
+                                  <SelectItem value="Logística">Logística</SelectItem>
+                                  <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {editToolForm.formState.errors.category && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.category.message}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="provider">Fornecedor*</Label>
+                              <Input 
+                                id="provider"
+                                {...editToolForm.register("provider")} 
+                                className="mt-1"
+                              />
+                              {editToolForm.formState.errors.provider && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.provider.message}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="status">Status*</Label>
+                              <Select 
+                                defaultValue={editToolForm.getValues("status")}
+                                onValueChange={(value) => editToolForm.setValue("status", value)}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Ativo">Ativo</SelectItem>
+                                  <SelectItem value="Inativo">Inativo</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label htmlFor="website">Website</Label>
+                              <Input 
+                                id="website"
+                                {...editToolForm.register("website")} 
+                                className="mt-1"
+                              />
+                              {editToolForm.formState.errors.website && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.website.message}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="phone">Telefone*</Label>
+                              <Input 
+                                id="phone"
+                                {...editToolForm.register("phone")} 
+                                className="mt-1"
+                              />
+                              {editToolForm.formState.errors.phone && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.phone.message}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="email">Email*</Label>
+                              <Input 
+                                id="email"
+                                {...editToolForm.register("email")} 
+                                className="mt-1"
+                              />
+                              {editToolForm.formState.errors.email && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.email.message}
+                                </p>
+                              )}
+                            </div>
+                            <div className="col-span-2">
+                              <Label htmlFor="description">Descrição*</Label>
+                              <Textarea 
+                                id="description"
+                                {...editToolForm.register("description")}
+                                className="mt-1" 
+                                rows={4}
+                              />
+                              {editToolForm.formState.errors.description && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  {editToolForm.formState.errors.description.message}
+                                </p>
+                              )}
+                            </div>
+                            <div className="col-span-2">
+                              <Label htmlFor="coupons">Cupons e Descontos</Label>
+                              <Textarea 
+                                id="coupons"
+                                {...editToolForm.register("coupons")}
+                                className="mt-1" 
+                                rows={4}
+                              />
                             </div>
                           </div>
+                          <div className="flex justify-end gap-2 mt-6">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => setIsEditing(false)}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button type="submit">
+                              Salvar Alterações
+                            </Button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Nome</h3>
+                            <p className="mt-1 text-base">{selectedTool.name}</p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Categoria</h3>
+                            <p className="mt-1 text-base">{selectedTool.category}</p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Fornecedor</h3>
+                            <p className="mt-1 text-base">{selectedTool.provider}</p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                            <p className="mt-1 text-base">
+                              <StatusBadge isActive={selectedTool.status === "Ativo"} />
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Website</h3>
+                            <a href={`https://${selectedTool.website}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="mt-1 text-base flex items-center text-blue-600 hover:underline">
+                              {selectedTool.website}
+                              <ExternalLink className="h-4 w-4 ml-1" />
+                            </a>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
+                            <p className="mt-1 text-base">{selectedTool.phone}</p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                            <p className="mt-1 text-base">{selectedTool.email}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
+                            <p className="mt-1 text-base">{selectedTool.description}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <h3 className="text-sm font-medium text-gray-500">Cupons e Descontos</h3>
+                            <pre className="mt-1 p-3 bg-gray-50 rounded-md text-sm whitespace-pre-wrap">{selectedTool.coupons}</pre>
+                          </div>
                         </div>
-                        <div className="col-span-2">
-                          <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
-                          <p className="mt-1 text-base">{selectedTool.description}</p>
-                        </div>
-                        <div className="col-span-2">
-                          <h3 className="text-sm font-medium text-gray-500">Cupons e Descontos</h3>
-                          <pre className="mt-1 p-3 bg-gray-50 rounded-md text-sm whitespace-pre-wrap">{selectedTool.coupons}</pre>
-                        </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="contacts">
+                <TabsContent value="contacts" className="max-h-[60vh] overflow-y-auto">
                   <Card>
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
@@ -904,7 +1104,7 @@ const Tools = () => {
                   </Dialog>
                 </TabsContent>
                 
-                <TabsContent value="comments">
+                <TabsContent value="comments" className="max-h-[60vh] overflow-y-auto">
                   <Card>
                     <CardContent className="py-6">
                       {selectedTool.comments_list && selectedTool.comments_list.length > 0 ? (
@@ -1032,7 +1232,7 @@ const Tools = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="reviews">
+                <TabsContent value="reviews" className="max-h-[60vh] overflow-y-auto">
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-xl">Avaliações</CardTitle>
@@ -1148,7 +1348,7 @@ const Tools = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="files">
+                <TabsContent value="files" className="max-h-[60vh] overflow-y-auto">
                   <Card>
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
@@ -1212,7 +1412,7 @@ const Tools = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="images">
+                <TabsContent value="images" className="max-h-[60vh] overflow-y-auto">
                   <Card>
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
