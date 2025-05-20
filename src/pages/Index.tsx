@@ -1,10 +1,10 @@
 
-import { Demo } from "@/components/ui/demo";
+import { LoginTabs } from "@/components/ui/login-tabs";
 
 const Index = () => {
   return (
     <div className="min-h-screen w-full flex flex-col">
-      <Demo />
+      <LoginTabs />
     </div>
   );
 };
