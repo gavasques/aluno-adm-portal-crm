@@ -27,14 +27,57 @@ const supplierSchema = z.object({
 
 type SupplierFormValues = z.infer<typeof supplierSchema>;
 
+// Definindo interfaces para manter consistência de tipos
+interface Comment {
+  id: number;
+  userId: number;
+  userName: string;
+  userAvatar: string;
+  content: string;
+  date: string;
+  likes: number;
+  userLiked: boolean;
+  replies: {
+    id: number;
+    userId: number;
+    userName: string;
+    userAvatar: string;
+    content: string;
+    date: string;
+  }[];
+}
+
+interface Supplier {
+  id: number;
+  name: string;
+  category: string;
+  rating: number;
+  commentCount: number; // Número de comentários
+  logo: string;
+  cnpj: string;
+  email: string;
+  phone: string;
+  website: string;
+  address: string;
+  type: string;
+  brands: any[];
+  branches: any[];
+  contacts: any[];
+  communications: any[];
+  files: any[];
+  commentItems: Comment[]; // Array com os comentários
+  ratings: any[];
+  images: any[];
+}
+
 // Sample data for my suppliers
-const INITIAL_SUPPLIERS = [
+const INITIAL_SUPPLIERS: Supplier[] = [
   {
     id: 1,
     name: "Meu Fornecedor Local",
     category: "Produtos Regionais",
     rating: 4.5,
-    comments: 3,
+    commentCount: 3,
     logo: "ML",
     cnpj: "12.345.678/0001-90",
     email: "contato@meufornecedor.com",
@@ -57,8 +100,7 @@ const INITIAL_SUPPLIERS = [
     files: [
       { id: 1, name: "Catálogo 2023", type: "PDF", size: "2.5MB", date: "2023-04-10" }
     ],
-    commentCount: 3, // Renomeado de comments para commentCount para evitar duplicação
-    commentItems: [ // Renomeado de comments para commentItems para evitar duplicação
+    commentItems: [ 
       { 
         id: 1, 
         userId: 1, 
@@ -108,8 +150,8 @@ const INITIAL_SUPPLIERS = [
 const MySuppliers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
-  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Configurar react-hook-form com validação zod
@@ -139,7 +181,7 @@ const MySuppliers = () => {
     // Simular um atraso de rede
     setTimeout(() => {
       // Create new supplier with all required properties
-      const supplier = {
+      const supplier: Supplier = {
         id: Date.now(),
         name: data.name,
         category: data.category,
@@ -150,7 +192,7 @@ const MySuppliers = () => {
         address: data.address || "",
         type: data.type || "Distribuidor",
         rating: 0,
-        commentCount: 0, // Renomeado de comments para commentCount
+        commentCount: 0,
         logo: data.name.substring(0, 2).toUpperCase(),
         brands: [],
         branches: [],
@@ -159,7 +201,7 @@ const MySuppliers = () => {
         files: [],
         images: [],
         ratings: [],
-        commentItems: [] // Renomeado de comments para commentItems
+        commentItems: []
       };
       
       setSuppliers([...suppliers, supplier]);
@@ -172,12 +214,12 @@ const MySuppliers = () => {
     }, 500);
   };
   
-  const handleDeleteSupplier = (id) => {
+  const handleDeleteSupplier = (id: number) => {
     setSuppliers(suppliers.filter(supplier => supplier.id !== id));
     toast.success("Fornecedor excluído com sucesso.");
   };
 
-  const handleUpdateSupplier = (updatedSupplier) => {
+  const handleUpdateSupplier = (updatedSupplier: Supplier) => {
     setSuppliers(suppliers.map(supplier => 
       supplier.id === updatedSupplier.id ? updatedSupplier : supplier
     ));
