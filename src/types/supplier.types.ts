@@ -56,3 +56,18 @@ export interface SupplierCommunication {
   description: string;
   user: string;
 }
+
+export interface SuppliersTableProps {
+  suppliers: Supplier[];
+  isAdmin?: boolean;
+  onSelectSupplier: (supplier: Supplier) => void;
+  onRemoveSupplier?: (id: number | string) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  sortField: "name" | "category";
+  sortDirection: "asc" | "desc";
+  onSort: (field: "name" | "category") => void;
+}
