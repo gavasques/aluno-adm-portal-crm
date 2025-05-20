@@ -11,9 +11,9 @@ import {
   User, 
   BookOpen,
   FolderPlus,
-  Category,
+  Tags, // Replacing Category with Tags
   Type,
-  Partner
+  Handshake // Replacing Partner with Handshake
 } from "lucide-react";
 import {
   Sidebar,
@@ -89,9 +89,9 @@ const AdminSidebar = () => {
               <NavItem href="/admin/courses" icon={Book}>Cadastro de Cursos</NavItem>
               <NavItem href="/admin/mentoring" icon={Users}>Cadastro de Mentorias</NavItem>
               <NavItem href="/admin/bonus" icon={FolderPlus}>Cadastro de Bônus</NavItem>
-              <NavItem href="/admin/categories" icon={Category}>Cadastro de Categorias</NavItem>
+              <NavItem href="/admin/categories" icon={Tags}>Cadastro de Categorias</NavItem>
               <NavItem href="/admin/software-types" icon={Type}>Cadastro de Tipos de Softwares</NavItem>
-              <NavItem href="/admin/partner-types" icon={Partner}>Cadastro de Tipos de Parceiros</NavItem>
+              <NavItem href="/admin/partner-types" icon={Handshake}>Cadastro de Tipos de Parceiros</NavItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
