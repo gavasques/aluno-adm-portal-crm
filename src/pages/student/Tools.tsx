@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown, Trash2, Plus, FileText, Image, Clock, Users, ExternalLink, ThumbsUp } from "lucide-react";
+import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown, Trash2, Plus, FileText, Image, Clock, Users, ExternalLink, ThumbsUp, UserPlus, MessageSquarePlus, FilePlus, ImagePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import {
@@ -13,10 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 // Sample data for tools
 const TOOLS = [
@@ -167,6 +171,37 @@ const TOOLS = [
   },
 ];
 
+// Form schemas for validation
+const contactFormSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  role: z.string().min(2, "Função é obrigatória"),
+  email: z.string().email("E-mail inválido"),
+  phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  notes: z.string().optional(),
+});
+
+const commentFormSchema = z.object({
+  text: z.string().min(3, "Comentário deve ter pelo menos 3 caracteres"),
+});
+
+const replyFormSchema = z.object({
+  text: z.string().min(3, "Resposta deve ter pelo menos 3 caracteres"),
+});
+
+const ratingFormSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().min(3, "Comentário deve ter pelo menos 3 caracteres"),
+});
+
+const fileUploadSchema = z.object({
+  file: z.instanceof(File),
+});
+
+const imageUploadSchema = z.object({
+  image: z.instanceof(File),
+  alt: z.string().min(3, "Descrição da imagem é obrigatória"),
+});
+
 const Tools = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [softwareTypeFilter, setSoftwareTypeFilter] = useState("all");
@@ -175,6 +210,31 @@ const Tools = () => {
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedTool, setSelectedTool] = useState(null);
   const [newComment, setNewComment] = useState("");
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [isReplyingTo, setIsReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [rating, setRating] = useState(5);
+  
+  // Forms
+  const contactForm = useForm({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: "",
+      role: "",
+      email: "",
+      phone: "",
+      notes: "",
+    }
+  });
+
+  const ratingForm = useForm({
+    resolver: zodResolver(ratingFormSchema),
+    defaultValues: {
+      rating: 5,
+      comment: "",
+    }
+  });
   
   const handleSort = (field) => {
     const newDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
@@ -189,6 +249,7 @@ const Tools = () => {
   const handleCloseTool = () => {
     setSelectedTool(null);
     setNewComment("");
+    setIsReplyingTo(null);
   };
   
   // Filter and sort tools based on search query and filters
@@ -247,30 +308,114 @@ const Tools = () => {
       });
   }, [searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection]);
 
+  // Handler functions for forms
   const handleAddComment = () => {
     if (newComment.trim() === "") {
       toast.error("O comentário não pode estar vazio");
       return;
     }
 
-    toast.success("Comentário adicionado com sucesso!");
-    setNewComment("");
+    if (selectedTool) {
+      const newCommentObj = {
+        id: Date.now(),
+        user: "Usuário Atual",
+        text: newComment,
+        date: new Date().toLocaleDateString(),
+        likes: 0,
+        replies: [],
+      };
+      
+      // In a real application, you would update this in the backend
+      // Here we're just showing a success message
+      toast.success("Comentário adicionado com sucesso!");
+      setNewComment("");
+    }
   };
 
-  const handleAddRating = () => {
-    toast.success("Avaliação adicionada com sucesso!");
+  const handleAddReply = (commentId) => {
+    if (!replyText.trim()) {
+      toast.error("A resposta não pode estar vazia");
+      return;
+    }
+
+    // In a real application, you would update this in the backend
+    toast.success("Resposta adicionada com sucesso!");
+    setReplyText("");
+    setIsReplyingTo(null);
   };
 
-  const handleAddContact = () => {
-    toast.success("Contato adicionado com sucesso!");
+  const handleAddContact = (data) => {
+    if (selectedTool) {
+      // In a real application, you would send this to the backend
+      const newContact = {
+        id: Date.now(),
+        ...data
+      };
+      
+      toast.success("Contato adicionado com sucesso!");
+      contactForm.reset();
+      setIsContactDialogOpen(false);
+    }
+  };
+
+  const handleAddRating = (data) => {
+    if (selectedTool) {
+      // In a real application, you would send this to the backend
+      const newRating = {
+        id: Date.now(),
+        user: "Usuário Atual",
+        rating: data.rating,
+        comment: data.comment,
+        date: new Date().toLocaleDateString(),
+        likes: 0,
+      };
+      
+      toast.success("Avaliação adicionada com sucesso!");
+      ratingForm.reset();
+      setIsRatingDialogOpen(false);
+    }
   };
   
-  const handleUploadFile = () => {
-    toast.success("Arquivo enviado com sucesso!");
+  const handleUploadFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O arquivo não pode ter mais de 5MB");
+      return;
+    }
+    
+    // Check file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip', 'text/plain'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Tipo de arquivo não permitido. Por favor, envie um arquivo PDF, DOC, DOCX, XLS, XLSX, ZIP ou TXT.");
+      return;
+    }
+    
+    // In a real application, you would send this file to the backend
+    toast.success(`Arquivo "${file.name}" enviado com sucesso!`);
   };
 
-  const handleUploadImage = () => {
-    toast.success("Imagem enviada com sucesso!");
+  const handleUploadImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem não pode ter mais de 2MB");
+      return;
+    }
+    
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Tipo de imagem não permitido. Por favor, envie uma imagem JPG, PNG, GIF ou WEBP.");
+      return;
+    }
+    
+    // In a real application, you would send this file to the backend
+    toast.success(`Imagem "${file.name}" enviada com sucesso!`);
   };
 
   const handleLike = () => {
@@ -532,8 +677,8 @@ const Tools = () => {
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium">Contatos</h3>
-                        <Button size="sm" onClick={handleAddContact}>
-                          <Plus className="h-4 w-4 mr-1" /> Adicionar Contato
+                        <Button size="sm" onClick={() => setIsContactDialogOpen(true)}>
+                          <UserPlus className="h-4 w-4 mr-1" /> Adicionar Contato
                         </Button>
                       </div>
                       
@@ -574,6 +719,81 @@ const Tools = () => {
                       )}
                     </CardContent>
                   </Card>
+                  
+                  {/* Dialog para adicionar novo contato */}
+                  <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Adicionar Novo Contato</DialogTitle>
+                        <DialogDescription>
+                          Adicione informações detalhadas do contato.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={contactForm.handleSubmit(handleAddContact)}>
+                        <div className="space-y-4 py-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Nome*</Label>
+                            <Input
+                              id="name"
+                              placeholder="Nome completo"
+                              {...contactForm.register("name")}
+                            />
+                            {contactForm.formState.errors.name && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.name.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="role">Função*</Label>
+                            <Input
+                              id="role"
+                              placeholder="Ex: Gestor de Contas, Suporte, etc."
+                              {...contactForm.register("role")}
+                            />
+                            {contactForm.formState.errors.role && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.role.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email*</Label>
+                            <Input
+                              id="email"
+                              placeholder="email@exemplo.com"
+                              type="email"
+                              {...contactForm.register("email")}
+                            />
+                            {contactForm.formState.errors.email && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.email.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Telefone*</Label>
+                            <Input
+                              id="phone"
+                              placeholder="(00) 00000-0000"
+                              {...contactForm.register("phone")}
+                            />
+                            {contactForm.formState.errors.phone && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.phone.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="notes">Observações</Label>
+                            <Textarea
+                              id="notes"
+                              placeholder="Informações adicionais sobre o contato"
+                              {...contactForm.register("notes")}
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter className="mt-6">
+                          <Button type="button" variant="outline" onClick={() => setIsContactDialogOpen(false)}>
+                            Cancelar
+                          </Button>
+                          <Button type="submit">Adicionar</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </TabsContent>
                 
                 <TabsContent value="comments">
@@ -599,10 +819,47 @@ const Tools = () => {
                                 <Button variant="ghost" size="sm" className="text-gray-500" onClick={handleLike}>
                                   <ThumbsUp className="h-4 w-4 mr-1" /> {comment.likes}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-gray-500">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-gray-500"
+                                  onClick={() => setIsReplyingTo(comment.id)}
+                                >
                                   <MessageCircle className="h-4 w-4 mr-1" /> Responder
                                 </Button>
                               </div>
+                              
+                              {isReplyingTo === comment.id && (
+                                <div className="mt-4 ml-8 bg-gray-50 p-3 rounded-md">
+                                  <div className="flex items-center mb-2">
+                                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                                      {"U"}
+                                    </div>
+                                    <p className="font-medium text-sm">Usuário Atual</p>
+                                  </div>
+                                  <Textarea 
+                                    placeholder="Digite sua resposta..."
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    className="min-h-[80px] mb-2"
+                                  />
+                                  <div className="flex justify-end gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => setIsReplyingTo(null)}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleAddReply(comment.id)}
+                                    >
+                                      <MessageSquarePlus className="h-4 w-4 mr-1" /> Responder
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                               
                               {comment.replies && comment.replies.length > 0 && (
                                 <div className="mt-4 ml-8 space-y-4">
@@ -643,7 +900,7 @@ const Tools = () => {
                           onChange={(e) => setNewComment(e.target.value)}
                         />
                         <Button className="mt-2" onClick={handleAddComment}>
-                          <MessageCircle className="mr-2 h-4 w-4" />
+                          <MessageSquarePlus className="mr-2 h-4 w-4" />
                           Enviar Comentário
                         </Button>
                       </div>
@@ -699,8 +956,64 @@ const Tools = () => {
                       )}
                       
                       <div className="mt-4">
-                        <Button className="w-full" onClick={handleAddRating}>Adicionar Avaliação</Button>
+                        <Button className="w-full" onClick={() => setIsRatingDialogOpen(true)}>
+                          <Star className="h-4 w-4 mr-2" /> Adicionar Avaliação
+                        </Button>
                       </div>
+                      
+                      {/* Dialog para adicionar avaliação */}
+                      <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Avaliar Ferramenta</DialogTitle>
+                            <DialogDescription>
+                              Compartilhe sua experiência com esta ferramenta.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={ratingForm.handleSubmit(handleAddRating)}>
+                            <div className="space-y-4 py-2">
+                              <div className="space-y-2">
+                                <Label htmlFor="rating">Avaliação*</Label>
+                                <div className="flex items-center">
+                                  {[1, 2, 3, 4, 5].map((value) => (
+                                    <Star
+                                      key={value}
+                                      className={`h-8 w-8 cursor-pointer ${
+                                        value <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                      }`}
+                                      onClick={() => {
+                                        setRating(value);
+                                        ratingForm.setValue("rating", value);
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                {ratingForm.formState.errors.rating && (
+                                  <p className="text-sm text-red-500">{ratingForm.formState.errors.rating.message}</p>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="comment">Comentário*</Label>
+                                <Textarea
+                                  id="comment"
+                                  placeholder="Compartilhe sua experiência com esta ferramenta"
+                                  {...ratingForm.register("comment")}
+                                  className="min-h-[100px]"
+                                />
+                                {ratingForm.formState.errors.comment && (
+                                  <p className="text-sm text-red-500">{ratingForm.formState.errors.comment.message}</p>
+                                )}
+                              </div>
+                            </div>
+                            <DialogFooter className="mt-6">
+                              <Button type="button" variant="outline" onClick={() => setIsRatingDialogOpen(false)}>
+                                Cancelar
+                              </Button>
+                              <Button type="submit">Enviar Avaliação</Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -710,9 +1023,24 @@ const Tools = () => {
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium">Arquivos</h3>
-                        <Button size="sm" onClick={handleUploadFile}>
-                          <Plus className="h-4 w-4 mr-1" /> Upload de Arquivo
-                        </Button>
+                        <div>
+                          <input
+                            type="file"
+                            id="file-upload"
+                            className="hidden"
+                            onChange={handleUploadFile}
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt"
+                          />
+                          <label htmlFor="file-upload">
+                            <Button size="sm" as="span" className="cursor-pointer">
+                              <FilePlus className="h-4 w-4 mr-1" /> Upload de Arquivo
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 mb-4">
+                        Tipos permitidos: PDF, DOC, DOCX, XLS, XLSX, ZIP, TXT (máx: 5MB)
                       </div>
                       
                       {selectedTool.files && selectedTool.files.length > 0 ? (
@@ -759,9 +1087,24 @@ const Tools = () => {
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium">Imagens</h3>
-                        <Button size="sm" onClick={handleUploadImage}>
-                          <Plus className="h-4 w-4 mr-1" /> Upload de Imagem
-                        </Button>
+                        <div>
+                          <input
+                            type="file"
+                            id="image-upload"
+                            className="hidden"
+                            onChange={handleUploadImage}
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                          />
+                          <label htmlFor="image-upload">
+                            <Button size="sm" as="span" className="cursor-pointer">
+                              <ImagePlus className="h-4 w-4 mr-1" /> Upload de Imagem
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 mb-4">
+                        Tipos permitidos: JPG, PNG, GIF, WEBP (máx: 2MB)
                       </div>
                       
                       {selectedTool.images && selectedTool.images.length > 0 ? (

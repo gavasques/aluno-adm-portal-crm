@@ -1,206 +1,261 @@
 
 import React, { useState, useMemo } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Settings, Plus, Star, MessageSquare, ExternalLink, Search, Trash2, Filter, ArrowDown, ArrowUp, ThumbsUp, FileText, Image, Clock, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Star, MessageCircle, Filter, ArrowUp, ArrowDown, Trash2, Plus, FileText, Image, Clock, Users, ExternalLink, ThumbsUp, UserPlus, MessageSquarePlus, FilePlus, ImagePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { 
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
+
+// Sample data for tools
+const TOOLS = [
+  {
+    id: 1,
+    name: "ERP Commerce",
+    category: "Gestão Empresarial",
+    provider: "Sistema ERP",
+    rating: 4.7,
+    comments: 18,
+    logo: "EC",
+    price: "R$ 249,90/mês",
+    recommended: true,
+    notRecommended: false,
+    description: "Software integrado para gerenciamento de lojas online e físicas.",
+    website: "www.erpcommerce.com.br",
+    phone: "(11) 9999-8888",
+    email: "contato@erpcommerce.com.br",
+    status: "Ativo",
+    coupons: "DESCONTO10 - 10% de desconto\nPROMO2025 - 3 meses grátis",
+    contacts: [
+      { id: 1, name: "João Silva", role: "Gestor de Contas", email: "joao@erpcommerce.com.br", phone: "(11) 97777-6666", notes: "Disponível para suporte técnico." },
+      { id: 2, name: "Maria Oliveira", role: "Suporte", email: "maria@erpcommerce.com.br", phone: "(11) 96666-5555", notes: "Especialista em implementação." }
+    ],
+    comments_list: [
+      { id: 1, user: "Carlos Mendes", text: "Vocês recomendam essa ferramenta para uma loja média com cerca de 500 produtos?", date: "15/05/2025", likes: 2, replies: [
+        { id: 101, user: "Ana Costa", text: "Sim, utilizamos para uma loja com 600 produtos e funciona muito bem!", date: "16/05/2025", likes: 1 }
+      ]},
+      { id: 2, user: "Pedro Santos", text: "Alguém sabe se tem integração com o ERP XYZ?", date: "10/05/2025", likes: 0, replies: [] }
+    ],
+    ratings_list: [
+      { id: 1, user: "João Silva", rating: 5, comment: "Excelente ferramenta, atendeu todas as necessidades do meu negócio.", date: "18/04/2025", likes: 3 },
+      { id: 2, user: "Maria Oliveira", rating: 4, comment: "Bom custo-benefício, mas poderia ter mais recursos de marketing.", date: "10/04/2025", likes: 1 }
+    ],
+    files: [
+      { id: 1, name: "Manual do Usuário.pdf", type: "application/pdf", size: "2.5 MB", date: "05/04/2025" },
+      { id: 2, name: "Planilha de Integração.xlsx", type: "application/xlsx", size: "1.8 MB", date: "02/04/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+ERP", alt: "Dashboard ERP" },
+      { id: 2, url: "https://placehold.co/600x400?text=Relatórios", alt: "Relatórios" }
+    ],
+    history: [
+      { id: 1, action: "Criação da ferramenta", user: "Admin", date: "01/04/2025" },
+      { id: 2, action: "Alteração de dados", user: "Admin", date: "05/04/2025", details: "Preço atualizado" },
+      { id: 3, action: "Adição de contato", user: "Admin", date: "10/04/2025", details: "Contato: João Silva" },
+    ]
+  },
+  {
+    id: 2,
+    name: "Email Marketing Pro",
+    category: "Marketing",
+    provider: "Marketing Digital",
+    rating: 4.5,
+    comments: 12,
+    logo: "EM",
+    price: "R$ 99,00/mês",
+    recommended: false,
+    notRecommended: true,
+    description: "Ferramenta completa de automação de email marketing.",
+    website: "www.emailmarketingpro.com",
+    phone: "(11) 8888-7777",
+    email: "contato@emailmarketingpro.com",
+    status: "Ativo",
+    coupons: "WELCOME20 - 20% de desconto no primeiro mês",
+    contacts: [
+      { id: 1, name: "Ricardo Almeida", role: "Suporte Técnico", email: "ricardo@emailmarketingpro.com", phone: "(11) 95555-4444", notes: "Especialista em integrações." }
+    ],
+    comments_list: [
+      { id: 1, user: "Juliana Mendes", text: "Qual o limite de envio mensal no plano básico?", date: "12/05/2025", likes: 1, replies: [
+        { id: 101, user: "Roberto Almeida", text: "No plano básico são 10.000 emails por mês.", date: "13/05/2025", likes: 0 }
+      ]}
+    ],
+    ratings_list: [
+      { id: 1, user: "Carlos Santos", rating: 3, comment: "Funciona bem, mas tem muitas limitações no plano básico.", date: "20/04/2025", likes: 2 }
+    ],
+    files: [
+      { id: 1, name: "Comparativo de Planos.pdf", type: "application/pdf", size: "1.2 MB", date: "15/03/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Interface+Email", alt: "Interface de Email" }
+    ],
+    history: [
+      { id: 1, action: "Criação da ferramenta", user: "Admin", date: "01/03/2025" },
+      { id: 2, action: "Adição de comentário", user: "Juliana Mendes", date: "12/05/2025" },
+    ]
+  },
+  {
+    id: 3,
+    name: "Gestor de Estoque",
+    category: "Logística",
+    provider: "Supply Chain Co.",
+    rating: 4.2,
+    comments: 9,
+    logo: "GE",
+    price: "R$ 199,00/mês",
+    recommended: true,
+    notRecommended: false,
+    description: "Controle completo de estoque para e-commerce.",
+    website: "www.gestordeestoque.com.br",
+    phone: "(11) 7777-6666",
+    email: "contato@gestordeestoque.com.br",
+    status: "Ativo",
+    coupons: "ESTOQUE15 - 15% de desconto nos planos anuais",
+    contacts: [
+      { id: 1, name: "Fernanda Lima", role: "Consultora", email: "fernanda@gestordeestoque.com.br", phone: "(11) 94444-3333", notes: "Especialista em implementação para e-commerces." }
+    ],
+    comments_list: [
+      { id: 1, user: "Amanda Costa", text: "A ferramenta permite integração com marketplaces?", date: "08/05/2025", likes: 3, replies: [] }
+    ],
+    ratings_list: [
+      { id: 1, user: "Marcelo Oliveira", rating: 4, comment: "Ótima ferramenta para gestão de múltiplos estoques.", date: "25/04/2025", likes: 1 }
+    ],
+    files: [
+      { id: 1, name: "Guia de Integração.pdf", type: "application/pdf", size: "3.5 MB", date: "20/03/2025" }
+    ],
+    images: [
+      { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Estoque", alt: "Dashboard de Estoque" },
+      { id: 2, url: "https://placehold.co/600x400?text=Relatório+de+Inventário", alt: "Relatório de Inventário" }
+    ],
+    history: [
+      { id: 1, action: "Criação da ferramenta", user: "Admin", date: "01/03/2025" },
+      { id: 2, action: "Alteração de dados", user: "Admin", date: "15/03/2025", details: "Adicionada tag 'Recomendado'" },
+    ]
+  },
+];
+
+// Form schemas for validation
+const contactFormSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  role: z.string().min(2, "Função é obrigatória"),
+  email: z.string().email("E-mail inválido"),
+  phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  notes: z.string().optional(),
+});
+
+const commentFormSchema = z.object({
+  text: z.string().min(3, "Comentário deve ter pelo menos 3 caracteres"),
+});
+
+const replyFormSchema = z.object({
+  text: z.string().min(3, "Resposta deve ter pelo menos 3 caracteres"),
+});
+
+const ratingFormSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().min(3, "Comentário deve ter pelo menos 3 caracteres"),
+});
+
+const fileUploadSchema = z.object({
+  file: z.instanceof(File),
+});
+
+const imageUploadSchema = z.object({
+  image: z.instanceof(File),
+  alt: z.string().min(3, "Descrição da imagem é obrigatória"),
+});
+
+const toolFormSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  category: z.string().min(2, "Categoria é obrigatória"),
+  provider: z.string().min(2, "Fornecedor é obrigatório"),
+  description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
+  website: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email("E-mail inválido").optional(),
+  price: z.string().optional(),
+  status: z.string().optional(),
+  recommended: z.boolean().optional(),
+  notRecommended: z.boolean().optional(),
+  coupons: z.string().optional(),
+});
 
 const Tools = () => {
-  const [selectedTool, setSelectedTool] = useState(null);
+  const [tools, setTools] = useState(TOOLS);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortField, setSortField] = useState("name");
-  const [sortDirection, setSortDirection] = useState("asc");
   const [softwareTypeFilter, setSoftwareTypeFilter] = useState("all");
   const [recommendationFilter, setRecommendationFilter] = useState("all");
+  const [sortField, setSortField] = useState("name");
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [selectedTool, setSelectedTool] = useState(null);
   const [newComment, setNewComment] = useState("");
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [isReplyingTo, setIsReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [rating, setRating] = useState(5);
+  const [isAddToolDialogOpen, setIsAddToolDialogOpen] = useState(false);
+  const [toolToDelete, setToolToDelete] = useState(null);
+  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [ratingToDelete, setRatingToDelete] = useState(null);
+  const [contactToDelete, setContactToDelete] = useState(null);
+  const [fileToDelete, setFileToDelete] = useState(null);
+  const [imageToDelete, setImageToDelete] = useState(null);
   
-  // Mock data para ferramentas
-  const [tools, setTools] = useState([
-    { 
-      id: 1, 
-      name: "E-commerce Builder Pro", 
-      category: "Plataforma", 
-      provider: "Tech Solutions Inc.", 
-      price: "R$ 199,90/mês",
-      website: "www.ecombuilder.com",
-      phone: "(11) 9999-8888",
-      email: "contato@ecombuilder.com",
+  // Forms
+  const contactForm = useForm({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: "",
+      role: "",
+      email: "",
+      phone: "",
+      notes: "",
+    }
+  });
+
+  const ratingForm = useForm({
+    resolver: zodResolver(ratingFormSchema),
+    defaultValues: {
+      rating: 5,
+      comment: "",
+    }
+  });
+
+  const toolForm = useForm({
+    resolver: zodResolver(toolFormSchema),
+    defaultValues: {
+      name: "",
+      category: "",
+      provider: "",
+      description: "",
+      website: "",
+      phone: "",
+      email: "",
+      price: "",
       status: "Ativo",
-      coupons: "DESCONTO10 - 10% de desconto\nPROMO2025 - 3 meses grátis",
-      recommended: true,
-      notRecommended: false,
-      description: "Plataforma completa para criação e gerenciamento de lojas virtuais.",
-      features: [
-        "Criação de loja sem conhecimento técnico",
-        "Integração com marketplaces",
-        "Painel administrativo intuitivo",
-        "Relatórios detalhados de vendas",
-        "Automação de marketing"
-      ],
-      contacts: [
-        { id: 1, name: "João Silva", role: "Gestor de Contas", email: "joao@ecombuilder.com", phone: "(11) 97777-6666", notes: "Disponível para suporte técnico." },
-        { id: 2, name: "Maria Oliveira", role: "Suporte", email: "maria@ecombuilder.com", phone: "(11) 96666-5555", notes: "Especialista em implementação." }
-      ],
-      ratings: [
-        { id: 1, user: "João Silva", rating: 4, comment: "Muito boa plataforma, fácil de usar e com muitos recursos.", date: "15/05/2025", likes: 2 },
-        { id: 2, user: "Maria Oliveira", rating: 5, comment: "Excelente ferramenta para iniciantes.", date: "10/05/2025", likes: 1 }
-      ],
-      comments: [
-        { id: 1, user: "Carlos Mendes", text: "Vocês recomendam essa ferramenta para uma loja média com cerca de 500 produtos?", date: "15/05/2025", likes: 2, replies: [
-          { id: 101, user: "Ana Costa", text: "Sim, utilizamos para uma loja com 600 produtos e funciona muito bem!", date: "16/05/2025", likes: 1 }
-        ]},
-        { id: 2, user: "Ana Carolina", text: "Alguém sabe se tem integração com o ERP XYZ?", date: "10/05/2025", likes: 1, replies: [] }
-      ],
-      files: [
-        { id: 1, name: "Manual do Usuário.pdf", type: "application/pdf", size: "2.5 MB", date: "05/04/2025" },
-        { id: 2, name: "Guia de Integração.pdf", type: "application/pdf", size: "1.8 MB", date: "02/04/2025" }
-      ],
-      images: [
-        { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Plataforma", alt: "Dashboard da Plataforma" },
-        { id: 2, url: "https://placehold.co/600x400?text=Interface+Admin", alt: "Interface de Administração" }
-      ],
-      history: [
-        { id: 1, user: "Admin", action: "Criou a ferramenta", date: "01/04/2025 14:30" },
-        { id: 2, user: "João Silva", action: "Adicionou avaliação", date: "15/05/2025 10:15" },
-        { id: 3, user: "Carlos Mendes", action: "Adicionou comentário", date: "15/05/2025 16:45" },
-        { id: 4, user: "Admin", action: "Atualizou informações", date: "20/05/2025 09:00" },
-      ]
-    },
-    { 
-      id: 2, 
-      name: "Marketing Automation", 
-      category: "Marketing", 
-      provider: "Digital Growth", 
-      price: "R$ 149,00/mês",
-      website: "www.marketingauto.com",
-      phone: "(11) 8888-7777",
-      email: "contato@marketingauto.com",
-      status: "Ativo",
-      coupons: "WELCOME20 - 20% de desconto no primeiro mês",
       recommended: false,
-      notRecommended: true,
-      description: "Ferramenta de automação de marketing para e-commerce.",
-      features: [
-        "Email marketing automatizado",
-        "Segmentação avançada de clientes",
-        "Campanhas personalizadas",
-        "Recuperação de carrinhos abandonados",
-        "Métricas de desempenho em tempo real"
-      ],
-      contacts: [
-        { id: 1, name: "Ricardo Almeida", role: "Suporte Técnico", email: "ricardo@marketingauto.com", phone: "(11) 95555-4444", notes: "Especialista em integrações." }
-      ],
-      ratings: [
-        { id: 1, user: "Pedro Santos", rating: 4, comment: "Ótimas funcionalidades de segmentação de clientes.", date: "08/05/2025", likes: 0 },
-        { id: 2, user: "Amanda Costa", rating: 3, comment: "Boa ferramenta, mas poderia ter melhor interface.", date: "05/05/2025", likes: 1 }
-      ],
-      comments: [
-        { id: 1, user: "Roberto Almeida", text: "É possível integrar com a plataforma de e-commerce XPTO?", date: "08/05/2025", likes: 0, replies: [] }
-      ],
-      files: [
-        { id: 1, name: "Comparativo de Planos.pdf", type: "application/pdf", size: "1.2 MB", date: "15/03/2025" }
-      ],
-      images: [
-        { id: 1, url: "https://placehold.co/600x400?text=Interface+Marketing", alt: "Interface de Marketing" }
-      ],
-      history: [
-        { id: 1, user: "Admin", action: "Criou a ferramenta", date: "15/03/2025 11:20" },
-        { id: 2, user: "Pedro Santos", action: "Adicionou avaliação", date: "08/05/2025 14:30" },
-        { id: 3, user: "Admin", action: "Alterou status para 'Não Recomendado'", date: "10/05/2025 16:00" },
-      ]
-    },
-    { 
-      id: 3, 
-      name: "Logistic Manager", 
-      category: "Logística", 
-      provider: "Supply Solutions", 
-      price: "R$ 299,00/mês",
-      website: "www.logisticmanager.com",
-      phone: "(11) 7777-6666",
-      email: "contato@logisticmanager.com",
-      status: "Ativo",
-      coupons: "FRETE10 - 10% de desconto em planos anuais",
-      recommended: true,
       notRecommended: false,
-      description: "Sistema completo para gestão logística de e-commerce.",
-      features: [
-        "Gestão de estoque em tempo real",
-        "Integração com transportadoras",
-        "Cálculo automático de frete",
-        "Rastreamento de pedidos",
-        "Gestão de notas fiscais"
-      ],
-      contacts: [
-        { id: 1, name: "Ana Silva", role: "Consultora", email: "ana@logisticmanager.com", phone: "(11) 94444-3333", notes: "Especialista em implementação." },
-        { id: 2, name: "Carlos Oliveira", role: "Gestor de Contas", email: "carlos@logisticmanager.com", phone: "(11) 93333-2222", notes: "Responsável por grandes contas." }
-      ],
-      ratings: [
-        { id: 1, user: "Ana Silva", rating: 5, comment: "Transformou a logística da minha loja. Recomendo!", date: "05/05/2025", likes: 1 },
-        { id: 2, user: "Carlos Oliveira", rating: 4, comment: "Excelente para gerenciar múltiplos centros de distribuição.", date: "03/05/2025", likes: 0 }
-      ],
-      comments: [
-        { id: 1, user: "Marina Costa", text: "Funciona bem com pequenas empresas?", date: "05/05/2025", likes: 1, replies: [] }
-      ],
-      files: [
-        { id: 1, name: "Manual Completo.pdf", type: "application/pdf", size: "3.5 MB", date: "20/03/2025" },
-        { id: 2, name: "Guia de Integração.pdf", type: "application/pdf", size: "2.1 MB", date: "15/03/2025" }
-      ],
-      images: [
-        { id: 1, url: "https://placehold.co/600x400?text=Dashboard+Logística", alt: "Dashboard de Logística" },
-        { id: 2, url: "https://placehold.co/600x400?text=Mapa+de+Entregas", alt: "Mapa de Entregas" }
-      ],
-      history: [
-        { id: 1, user: "Admin", action: "Criou a ferramenta", date: "10/03/2025 09:45" },
-        { id: 2, user: "Ana Silva", action: "Adicionou avaliação", date: "05/05/2025 11:30" },
-        { id: 3, user: "Admin", action: "Adicionou novos arquivos", date: "12/05/2025 14:15" },
-      ]
-    },
-  ]);
-  
-  const handleOpenTool = (tool) => {
-    setSelectedTool(tool);
-  };
-  
-  const handleCloseTool = () => {
-    setSelectedTool(null);
-    setNewComment("");
-  };
-  
-  const calculateAverageRating = (ratings) => {
-    if (!ratings.length) return 0;
-    const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
-    return Number((sum / ratings.length).toFixed(1));
-  };
+      coupons: "",
+    }
+  });
   
   const handleSort = (field) => {
     const newDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
@@ -208,173 +263,30 @@ const Tools = () => {
     setSortDirection(newDirection);
   };
 
-  const handleDeleteTool = (id) => {
-    setTools(tools.filter(tool => tool.id !== id));
-    toast.success("Ferramenta excluída com sucesso!");
-  };
-
-  const handleDeleteRating = (toolId, ratingId) => {
-    setTools(tools.map(tool => {
-      if (tool.id === toolId) {
-        return {
-          ...tool,
-          ratings: tool.ratings.filter(rating => rating.id !== ratingId)
-        };
-      }
-      return tool;
-    }));
-
-    if (selectedTool && selectedTool.id === toolId) {
-      setSelectedTool({
-        ...selectedTool,
-        ratings: selectedTool.ratings.filter(rating => rating.id !== ratingId)
-      });
-    }
-
-    toast.success("Avaliação excluída com sucesso!");
-  };
-
-  const handleDeleteComment = (toolId, commentId) => {
-    setTools(tools.map(tool => {
-      if (tool.id === toolId) {
-        return {
-          ...tool,
-          comments: tool.comments.filter(comment => comment.id !== commentId)
-        };
-      }
-      return tool;
-    }));
-
-    if (selectedTool && selectedTool.id === toolId) {
-      setSelectedTool({
-        ...selectedTool,
-        comments: selectedTool.comments.filter(comment => comment.id !== commentId)
-      });
-    }
-
-    toast.success("Comentário excluído com sucesso!");
+  const handleOpenTool = (tool) => {
+    setSelectedTool(tool);
   };
   
-  const handleDeleteCommentReply = (toolId, commentId, replyId) => {
-    setTools(tools.map(tool => {
-      if (tool.id === toolId) {
-        return {
-          ...tool,
-          comments: tool.comments.map(comment => {
-            if (comment.id === commentId) {
-              return {
-                ...comment,
-                replies: comment.replies.filter(reply => reply.id !== replyId)
-              };
-            }
-            return comment;
-          })
-        };
-      }
-      return tool;
-    }));
-
-    if (selectedTool && selectedTool.id === toolId) {
-      setSelectedTool({
-        ...selectedTool,
-        comments: selectedTool.comments.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              replies: comment.replies.filter(reply => reply.id !== replyId)
-            };
-          }
-          return comment;
-        })
-      });
-    }
-
-    toast.success("Resposta excluída com sucesso!");
-  };
-
-  const handleDeleteContact = (toolId, contactId) => {
-    setTools(tools.map(tool => {
-      if (tool.id === toolId) {
-        return {
-          ...tool,
-          contacts: tool.contacts.filter(contact => contact.id !== contactId)
-        };
-      }
-      return tool;
-    }));
-
-    if (selectedTool && selectedTool.id === toolId) {
-      setSelectedTool({
-        ...selectedTool,
-        contacts: selectedTool.contacts.filter(contact => contact.id !== contactId)
-      });
-    }
-
-    toast.success("Contato excluído com sucesso!");
-  };
-
-  const handleDeleteFile = (toolId, fileId) => {
-    setTools(tools.map(tool => {
-      if (tool.id === toolId) {
-        return {
-          ...tool,
-          files: tool.files.filter(file => file.id !== fileId)
-        };
-      }
-      return tool;
-    }));
-
-    if (selectedTool && selectedTool.id === toolId) {
-      setSelectedTool({
-        ...selectedTool,
-        files: selectedTool.files.filter(file => file.id !== fileId)
-      });
-    }
-
-    toast.success("Arquivo excluído com sucesso!");
-  };
-
-  const handleDeleteImage = (toolId, imageId) => {
-    setTools(tools.map(tool => {
-      if (tool.id === toolId) {
-        return {
-          ...tool,
-          images: tool.images.filter(image => image.id !== imageId)
-        };
-      }
-      return tool;
-    }));
-
-    if (selectedTool && selectedTool.id === toolId) {
-      setSelectedTool({
-        ...selectedTool,
-        images: selectedTool.images.filter(image => image.id !== imageId)
-      });
-    }
-
-    toast.success("Imagem excluída com sucesso!");
-  };
-  
-  const handleAddComment = () => {
-    if (newComment.trim() === "") {
-      toast.error("O comentário não pode estar vazio");
-      return;
-    }
-
-    toast.success("Comentário adicionado com sucesso!");
+  const handleCloseTool = () => {
+    setSelectedTool(null);
     setNewComment("");
+    setIsReplyingTo(null);
   };
-
+  
+  // Filter and sort tools based on search query and filters
   const filteredTools = useMemo(() => {
     return tools
       .filter(tool => {
         // Filtro de pesquisa
-        const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const matchesSearch = 
+          tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tool.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tool.provider.toLowerCase().includes(searchQuery.toLowerCase());
         
         // Filtro por tipo
-        const matchesType = softwareTypeFilter === "all" || tool.category === softwareTypeFilter;
+        const matchesType = 
+          softwareTypeFilter === "all" || 
+          tool.category === softwareTypeFilter;
         
         // Filtro por recomendação
         const matchesRecommendation = 
@@ -401,8 +313,8 @@ const Tools = () => {
             valB = b.provider;
             break;
           case "rating":
-            valA = calculateAverageRating(a.ratings);
-            valB = calculateAverageRating(b.ratings);
+            valA = a.rating;
+            valB = b.rating;
             break;
           default:
             valA = a.name;
@@ -415,38 +327,504 @@ const Tools = () => {
           return valA < valB ? 1 : -1;
         }
       });
-  }, [tools, searchQuery, sortField, sortDirection, softwareTypeFilter, recommendationFilter]);
+  }, [tools, searchQuery, softwareTypeFilter, recommendationFilter, sortField, sortDirection]);
+
+  // Handler functions for CRUD operations
+  const handleAddTool = (data) => {
+    const newTool = {
+      id: Date.now(),
+      name: data.name,
+      category: data.category,
+      provider: data.provider,
+      rating: 0,
+      comments: 0,
+      logo: data.name.substring(0, 2).toUpperCase(),
+      price: data.price || "Sob consulta",
+      recommended: data.recommended || false,
+      notRecommended: data.notRecommended || false,
+      description: data.description,
+      website: data.website || "",
+      phone: data.phone || "",
+      email: data.email || "",
+      status: data.status || "Ativo",
+      coupons: data.coupons || "",
+      contacts: [],
+      comments_list: [],
+      ratings_list: [],
+      files: [],
+      images: [],
+      history: [
+        { 
+          id: Date.now(), 
+          action: "Criação da ferramenta", 
+          user: "Admin", 
+          date: new Date().toLocaleDateString() 
+        }
+      ]
+    };
+    
+    setTools([...tools, newTool]);
+    toolForm.reset();
+    setIsAddToolDialogOpen(false);
+    toast.success("Ferramenta adicionada com sucesso!");
+  };
+
+  const handleDeleteTool = (id) => {
+    setTools(tools.filter(tool => tool.id !== id));
+    setToolToDelete(null);
+    toast.success("Ferramenta excluída com sucesso!");
+  };
+
+  const handleAddComment = () => {
+    if (newComment.trim() === "") {
+      toast.error("O comentário não pode estar vazio");
+      return;
+    }
+
+    if (selectedTool) {
+      const newCommentObj = {
+        id: Date.now(),
+        user: "Admin",
+        text: newComment,
+        date: new Date().toLocaleDateString(),
+        likes: 0,
+        replies: [],
+      };
+      
+      // Update the selected tool's comments
+      const updatedTools = tools.map(tool => {
+        if (tool.id === selectedTool.id) {
+          const updatedTool = {
+            ...tool,
+            comments_list: [...tool.comments_list, newCommentObj],
+            comments: tool.comments + 1,
+            history: [...tool.history, {
+              id: Date.now(),
+              action: "Adição de comentário",
+              user: "Admin",
+              date: new Date().toLocaleDateString(),
+              details: newComment.substring(0, 30) + (newComment.length > 30 ? "..." : "")
+            }]
+          };
+          setSelectedTool(updatedTool);
+          return updatedTool;
+        }
+        return tool;
+      });
+      
+      setTools(updatedTools);
+      toast.success("Comentário adicionado com sucesso!");
+      setNewComment("");
+    }
+  };
+
+  const handleDeleteComment = (commentId) => {
+    if (!selectedTool) return;
+
+    const updatedTools = tools.map(tool => {
+      if (tool.id === selectedTool.id) {
+        const updatedComments = tool.comments_list.filter(comment => comment.id !== commentId);
+        const updatedTool = {
+          ...tool,
+          comments_list: updatedComments,
+          comments: updatedComments.length,
+          history: [...tool.history, {
+            id: Date.now(),
+            action: "Remoção de comentário",
+            user: "Admin",
+            date: new Date().toLocaleDateString()
+          }]
+        };
+        setSelectedTool(updatedTool);
+        return updatedTool;
+      }
+      return tool;
+    });
+    
+    setTools(updatedTools);
+    setCommentToDelete(null);
+    toast.success("Comentário excluído com sucesso!");
+  };
+
+  const handleAddReply = (commentId) => {
+    if (!replyText.trim()) {
+      toast.error("A resposta não pode estar vazia");
+      return;
+    }
+
+    if (selectedTool) {
+      const newReply = {
+        id: Date.now(),
+        user: "Admin",
+        text: replyText,
+        date: new Date().toLocaleDateString(),
+        likes: 0
+      };
+
+      const updatedTools = tools.map(tool => {
+        if (tool.id === selectedTool.id) {
+          const updatedCommentsList = tool.comments_list.map(comment => {
+            if (comment.id === commentId) {
+              return {
+                ...comment,
+                replies: [...comment.replies, newReply]
+              };
+            }
+            return comment;
+          });
+          
+          const updatedTool = {
+            ...tool,
+            comments_list: updatedCommentsList,
+            history: [...tool.history, {
+              id: Date.now(),
+              action: "Adição de resposta a comentário",
+              user: "Admin",
+              date: new Date().toLocaleDateString()
+            }]
+          };
+          
+          setSelectedTool(updatedTool);
+          return updatedTool;
+        }
+        return tool;
+      });
+      
+      setTools(updatedTools);
+      toast.success("Resposta adicionada com sucesso!");
+      setReplyText("");
+      setIsReplyingTo(null);
+    }
+  };
+
+  const handleAddContact = (data) => {
+    if (selectedTool) {
+      const newContact = {
+        id: Date.now(),
+        ...data
+      };
+      
+      const updatedTools = tools.map(tool => {
+        if (tool.id === selectedTool.id) {
+          const updatedTool = {
+            ...tool,
+            contacts: [...tool.contacts, newContact],
+            history: [...tool.history, {
+              id: Date.now(),
+              action: "Adição de contato",
+              user: "Admin",
+              date: new Date().toLocaleDateString(),
+              details: `Contato: ${data.name}`
+            }]
+          };
+          
+          setSelectedTool(updatedTool);
+          return updatedTool;
+        }
+        return tool;
+      });
+      
+      setTools(updatedTools);
+      toast.success("Contato adicionado com sucesso!");
+      contactForm.reset();
+      setIsContactDialogOpen(false);
+    }
+  };
+
+  const handleDeleteContact = (contactId) => {
+    if (!selectedTool) return;
+    
+    const contactName = selectedTool.contacts.find(c => c.id === contactId)?.name || "";
+
+    const updatedTools = tools.map(tool => {
+      if (tool.id === selectedTool.id) {
+        const updatedContacts = tool.contacts.filter(contact => contact.id !== contactId);
+        const updatedTool = {
+          ...tool,
+          contacts: updatedContacts,
+          history: [...tool.history, {
+            id: Date.now(),
+            action: "Remoção de contato",
+            user: "Admin",
+            date: new Date().toLocaleDateString(),
+            details: contactName ? `Contato: ${contactName}` : ""
+          }]
+        };
+        
+        setSelectedTool(updatedTool);
+        return updatedTool;
+      }
+      return tool;
+    });
+    
+    setTools(updatedTools);
+    setContactToDelete(null);
+    toast.success("Contato excluído com sucesso!");
+  };
+
+  const handleAddRating = (data) => {
+    if (selectedTool) {
+      const newRating = {
+        id: Date.now(),
+        user: "Admin",
+        rating: data.rating,
+        comment: data.comment,
+        date: new Date().toLocaleDateString(),
+        likes: 0,
+      };
+      
+      const updatedTools = tools.map(tool => {
+        if (tool.id === selectedTool.id) {
+          // Calculate new average rating
+          const ratings = [...tool.ratings_list, newRating];
+          const sum = ratings.reduce((total, r) => total + r.rating, 0);
+          const newAvgRating = ratings.length > 0 ? +(sum / ratings.length).toFixed(1) : 0;
+          
+          const updatedTool = {
+            ...tool,
+            ratings_list: ratings,
+            rating: newAvgRating,
+            history: [...tool.history, {
+              id: Date.now(),
+              action: "Adição de avaliação",
+              user: "Admin",
+              date: new Date().toLocaleDateString(),
+              details: `Avaliação: ${data.rating}/5`
+            }]
+          };
+          
+          setSelectedTool(updatedTool);
+          return updatedTool;
+        }
+        return tool;
+      });
+      
+      setTools(updatedTools);
+      toast.success("Avaliação adicionada com sucesso!");
+      ratingForm.reset();
+      setIsRatingDialogOpen(false);
+    }
+  };
+
+  const handleDeleteRating = (ratingId) => {
+    if (!selectedTool) return;
+
+    const updatedTools = tools.map(tool => {
+      if (tool.id === selectedTool.id) {
+        const updatedRatings = tool.ratings_list.filter(rating => rating.id !== ratingId);
+        
+        // Recalculate average rating
+        const sum = updatedRatings.reduce((total, r) => total + r.rating, 0);
+        const newAvgRating = updatedRatings.length > 0 ? +(sum / updatedRatings.length).toFixed(1) : 0;
+        
+        const updatedTool = {
+          ...tool,
+          ratings_list: updatedRatings,
+          rating: newAvgRating,
+          history: [...tool.history, {
+            id: Date.now(),
+            action: "Remoção de avaliação",
+            user: "Admin",
+            date: new Date().toLocaleDateString()
+          }]
+        };
+        
+        setSelectedTool(updatedTool);
+        return updatedTool;
+      }
+      return tool;
+    });
+    
+    setTools(updatedTools);
+    setRatingToDelete(null);
+    toast.success("Avaliação excluída com sucesso!");
+  };
   
+  const handleUploadFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O arquivo não pode ter mais de 5MB");
+      return;
+    }
+    
+    // Check file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip', 'text/plain'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Tipo de arquivo não permitido. Por favor, envie um arquivo PDF, DOC, DOCX, XLS, XLSX, ZIP ou TXT.");
+      return;
+    }
+    
+    if (selectedTool) {
+      const newFile = {
+        id: Date.now(),
+        name: file.name,
+        type: file.type,
+        size: (file.size / 1024 / 1024).toFixed(1) + " MB",
+        date: new Date().toLocaleDateString()
+      };
+      
+      const updatedTools = tools.map(tool => {
+        if (tool.id === selectedTool.id) {
+          const updatedTool = {
+            ...tool,
+            files: [...tool.files, newFile],
+            history: [...tool.history, {
+              id: Date.now(),
+              action: "Upload de arquivo",
+              user: "Admin",
+              date: new Date().toLocaleDateString(),
+              details: `Arquivo: ${file.name}`
+            }]
+          };
+          
+          setSelectedTool(updatedTool);
+          return updatedTool;
+        }
+        return tool;
+      });
+      
+      setTools(updatedTools);
+      toast.success(`Arquivo "${file.name}" enviado com sucesso!`);
+    }
+  };
+
+  const handleDeleteFile = (fileId) => {
+    if (!selectedTool) return;
+    
+    const fileName = selectedTool.files.find(f => f.id === fileId)?.name || "";
+
+    const updatedTools = tools.map(tool => {
+      if (tool.id === selectedTool.id) {
+        const updatedFiles = tool.files.filter(file => file.id !== fileId);
+        const updatedTool = {
+          ...tool,
+          files: updatedFiles,
+          history: [...tool.history, {
+            id: Date.now(),
+            action: "Remoção de arquivo",
+            user: "Admin",
+            date: new Date().toLocaleDateString(),
+            details: fileName ? `Arquivo: ${fileName}` : ""
+          }]
+        };
+        
+        setSelectedTool(updatedTool);
+        return updatedTool;
+      }
+      return tool;
+    });
+    
+    setTools(updatedTools);
+    setFileToDelete(null);
+    toast.success("Arquivo excluído com sucesso!");
+  };
+
+  const handleUploadImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem não pode ter mais de 2MB");
+      return;
+    }
+    
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Tipo de imagem não permitido. Por favor, envie uma imagem JPG, PNG, GIF ou WEBP.");
+      return;
+    }
+    
+    if (selectedTool) {
+      // In a real app we'd upload to storage and get a URL
+      // Here we'll create a placeholder URL for demo purposes
+      const newImage = {
+        id: Date.now(),
+        url: `https://placehold.co/600x400?text=${file.name.split('.')[0].replace(/\s/g, '+')}`,
+        alt: file.name,
+      };
+      
+      const updatedTools = tools.map(tool => {
+        if (tool.id === selectedTool.id) {
+          const updatedTool = {
+            ...tool,
+            images: [...tool.images, newImage],
+            history: [...tool.history, {
+              id: Date.now(),
+              action: "Upload de imagem",
+              user: "Admin",
+              date: new Date().toLocaleDateString(),
+              details: `Imagem: ${file.name}`
+            }]
+          };
+          
+          setSelectedTool(updatedTool);
+          return updatedTool;
+        }
+        return tool;
+      });
+      
+      setTools(updatedTools);
+      toast.success(`Imagem "${file.name}" enviada com sucesso!`);
+    }
+  };
+
+  const handleDeleteImage = (imageId) => {
+    if (!selectedTool) return;
+    
+    const imageName = selectedTool.images.find(img => img.id === imageId)?.alt || "";
+
+    const updatedTools = tools.map(tool => {
+      if (tool.id === selectedTool.id) {
+        const updatedImages = tool.images.filter(image => image.id !== imageId);
+        const updatedTool = {
+          ...tool,
+          images: updatedImages,
+          history: [...tool.history, {
+            id: Date.now(),
+            action: "Remoção de imagem",
+            user: "Admin",
+            date: new Date().toLocaleDateString(),
+            details: imageName ? `Imagem: ${imageName}` : ""
+          }]
+        };
+        
+        setSelectedTool(updatedTool);
+        return updatedTool;
+      }
+      return tool;
+    });
+    
+    setTools(updatedTools);
+    setImageToDelete(null);
+    toast.success("Imagem excluída com sucesso!");
+  };
+
+  const handleLike = (id, type) => {
+    toast.success("Like adicionado!");
+  };
+
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-portal-dark">Ferramentas</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Ferramenta
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Nova Ferramenta</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {/* Formulário seria implementado aqui */}
-              <p>Formulário para adicionar uma nova ferramenta.</p>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Gerenciar Ferramentas</h1>
+      
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-gray-500">Total: {tools.length} ferramentas</p>
+        <Button onClick={() => setIsAddToolDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Ferramenta
+        </Button>
       </div>
       
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Lista de Ferramentas</CardTitle>
           <CardDescription>
-            Gerencie as ferramentas disponíveis para e-commerce.
+            Gerencie todas as ferramentas disponíveis na plataforma.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -468,9 +846,10 @@ const Tools = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Tipos</SelectItem>
-                  <SelectItem value="Plataforma">Plataforma</SelectItem>
+                  <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
                   <SelectItem value="Marketing">Marketing</SelectItem>
                   <SelectItem value="Logística">Logística</SelectItem>
+                  <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -555,18 +934,19 @@ const Tools = () => {
                     <TableCell>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        <span>{calculateAverageRating(tool.ratings)}</span>
-                        <span className="text-gray-400 ml-1">({tool.ratings.length})</span>
+                        <span>{tool.rating}</span>
+                        <span className="text-gray-400 ml-1">({tool.comments})</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
+                      <div className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={() => handleOpenTool(tool)}>
                           Ver Detalhes
                         </Button>
+                        
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-red-500">
+                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -574,15 +954,12 @@ const Tools = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Excluir Ferramenta</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Tem certeza que deseja excluir a ferramenta "{tool.name}"? Esta ação não pode ser desfeita.
+                                Tem certeza de que deseja excluir a ferramenta "{tool.name}"? Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => handleDeleteTool(tool.id)}
-                                className="bg-red-500 hover:bg-red-600"
-                              >
+                              <AlertDialogAction onClick={() => handleDeleteTool(tool.id)} className="bg-red-500 hover:bg-red-600">
                                 Excluir
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -604,14 +981,178 @@ const Tools = () => {
           </div>
         </CardContent>
       </Card>
-      
+
+      {/* Dialog de Adicionar Nova Ferramenta */}
+      <Dialog open={isAddToolDialogOpen} onOpenChange={setIsAddToolDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Adicionar Nova Ferramenta</DialogTitle>
+            <DialogDescription>
+              Preencha os dados para adicionar uma nova ferramenta ao catálogo.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={toolForm.handleSubmit(handleAddTool)}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome da Ferramenta*</Label>
+                <Input
+                  id="name"
+                  placeholder="Nome"
+                  {...toolForm.register("name")}
+                />
+                {toolForm.formState.errors.name && (
+                  <p className="text-sm text-red-500">{toolForm.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria*</Label>
+                <Select 
+                  onValueChange={(value) => toolForm.setValue("category", value)} 
+                  defaultValue={toolForm.getValues("category")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Logística">Logística</SelectItem>
+                    <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
+                  </SelectContent>
+                </Select>
+                {toolForm.formState.errors.category && (
+                  <p className="text-sm text-red-500">{toolForm.formState.errors.category.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="provider">Fornecedor*</Label>
+                <Input
+                  id="provider"
+                  placeholder="Fornecedor"
+                  {...toolForm.register("provider")}
+                />
+                {toolForm.formState.errors.provider && (
+                  <p className="text-sm text-red-500">{toolForm.formState.errors.provider.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Preço</Label>
+                <Input
+                  id="price"
+                  placeholder="Ex: R$ 99,90/mês"
+                  {...toolForm.register("price")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  placeholder="www.exemplo.com.br"
+                  {...toolForm.register("website")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  placeholder="contato@exemplo.com.br"
+                  {...toolForm.register("email")}
+                />
+                {toolForm.formState.errors.email && (
+                  <p className="text-sm text-red-500">{toolForm.formState.errors.email.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  placeholder="(00) 0000-0000"
+                  {...toolForm.register("phone")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  onValueChange={(value) => toolForm.setValue("status", value)} 
+                  defaultValue={toolForm.getValues("status")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Ativo">Ativo</SelectItem>
+                    <SelectItem value="Inativo">Inativo</SelectItem>
+                    <SelectItem value="Em análise">Em análise</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 mt-4">
+                <Switch
+                  id="recommended"
+                  checked={toolForm.watch("recommended")}
+                  onCheckedChange={(checked) => {
+                    toolForm.setValue("recommended", checked);
+                    if (checked && toolForm.getValues("notRecommended")) {
+                      toolForm.setValue("notRecommended", false);
+                    }
+                  }}
+                />
+                <Label htmlFor="recommended">Ferramenta Recomendada</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-4">
+                <Switch
+                  id="notRecommended"
+                  checked={toolForm.watch("notRecommended")}
+                  onCheckedChange={(checked) => {
+                    toolForm.setValue("notRecommended", checked);
+                    if (checked && toolForm.getValues("recommended")) {
+                      toolForm.setValue("recommended", false);
+                    }
+                  }}
+                />
+                <Label htmlFor="notRecommended">Não Recomendada (Corre)</Label>
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="description">Descrição*</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Descrição detalhada da ferramenta"
+                  className="min-h-[100px]"
+                  {...toolForm.register("description")}
+                />
+                {toolForm.formState.errors.description && (
+                  <p className="text-sm text-red-500">{toolForm.formState.errors.description.message}</p>
+                )}
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="coupons">Cupons e Descontos</Label>
+                <Textarea
+                  id="coupons"
+                  placeholder="Informe cupons e descontos disponíveis"
+                  className="min-h-[80px]"
+                  {...toolForm.register("coupons")}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddToolDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Adicionar Ferramenta</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog para detalhes da ferramenta */}
       {selectedTool && (
         <Dialog open={!!selectedTool} onOpenChange={handleCloseTool}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle className="flex items-center">
-                <Settings className="mr-2" />
+                <div className="w-8 h-8 rounded-md bg-portal-accent text-white flex items-center justify-center text-lg font-bold mr-2">
+                  {selectedTool.logo}
+                </div>
                 {selectedTool.name}
                 <div className="flex gap-2 ml-4">
                   {selectedTool.recommended && (
@@ -633,7 +1174,7 @@ const Tools = () => {
                   <TabsTrigger value="details">Dados da Ferramenta</TabsTrigger>
                   <TabsTrigger value="contacts">Contatos</TabsTrigger>
                   <TabsTrigger value="comments">Comentários</TabsTrigger>
-                  <TabsTrigger value="ratings">Avaliações</TabsTrigger>
+                  <TabsTrigger value="reviews">Avaliações</TabsTrigger>
                   <TabsTrigger value="files">Arquivos</TabsTrigger>
                   <TabsTrigger value="images">Imagens</TabsTrigger>
                   <TabsTrigger value="history">Histórico</TabsTrigger>
@@ -684,13 +1225,13 @@ const Tools = () => {
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Avaliação</h3>
                           <div className="mt-1 flex items-center">
-                            <span className="mr-2">{calculateAverageRating(selectedTool.ratings)}/5</span>
+                            <span className="mr-2">{selectedTool.rating}/5</span>
                             <div className="flex">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star 
                                   key={star} 
                                   className={`h-4 w-4 ${
-                                    star <= Math.round(calculateAverageRating(selectedTool.ratings)) 
+                                    star <= Math.round(selectedTool.rating) 
                                       ? 'fill-yellow-400 text-yellow-400' 
                                       : 'text-gray-300'
                                   }`} 
@@ -707,17 +1248,6 @@ const Tools = () => {
                           <h3 className="text-sm font-medium text-gray-500">Cupons e Descontos</h3>
                           <pre className="mt-1 p-3 bg-gray-50 rounded-md text-sm whitespace-pre-wrap">{selectedTool.coupons}</pre>
                         </div>
-                        <div className="col-span-2">
-                          <h3 className="text-sm font-medium text-gray-500">Funcionalidades</h3>
-                          <ul className="mt-1 list-disc pl-5">
-                            {selectedTool.features.map((feature, index) => (
-                              <li key={index} className="text-base">{feature}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                      <div className="mt-6 flex justify-end">
-                        <Button variant="outline">Editar Dados</Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -728,8 +1258,8 @@ const Tools = () => {
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium">Contatos</h3>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-1" /> Adicionar Contato
+                        <Button size="sm" onClick={() => setIsContactDialogOpen(true)}>
+                          <UserPlus className="h-4 w-4 mr-1" /> Adicionar Contato
                         </Button>
                       </div>
                       
@@ -741,7 +1271,7 @@ const Tools = () => {
                                 <h4 className="font-medium text-lg">{contact.name}</h4>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-red-500 h-8">
+                                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </AlertDialogTrigger>
@@ -749,15 +1279,12 @@ const Tools = () => {
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Excluir Contato</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Tem certeza que deseja excluir o contato {contact.name}? Esta ação não pode ser desfeita.
+                                        Tem certeza de que deseja excluir o contato "{contact.name}"? Esta ação não pode ser desfeita.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => handleDeleteContact(selectedTool.id, contact.id)}
-                                        className="bg-red-500 hover:bg-red-600"
-                                      >
+                                      <AlertDialogAction onClick={() => handleDeleteContact(contact.id)} className="bg-red-500 hover:bg-red-600">
                                         Excluir
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -794,17 +1321,89 @@ const Tools = () => {
                       )}
                     </CardContent>
                   </Card>
+                  
+                  {/* Dialog para adicionar novo contato */}
+                  <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Adicionar Novo Contato</DialogTitle>
+                        <DialogDescription>
+                          Adicione informações detalhadas do contato.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={contactForm.handleSubmit(handleAddContact)}>
+                        <div className="space-y-4 py-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Nome*</Label>
+                            <Input
+                              id="name"
+                              placeholder="Nome completo"
+                              {...contactForm.register("name")}
+                            />
+                            {contactForm.formState.errors.name && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.name.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="role">Função*</Label>
+                            <Input
+                              id="role"
+                              placeholder="Ex: Gestor de Contas, Suporte, etc."
+                              {...contactForm.register("role")}
+                            />
+                            {contactForm.formState.errors.role && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.role.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email*</Label>
+                            <Input
+                              id="email"
+                              placeholder="email@exemplo.com"
+                              type="email"
+                              {...contactForm.register("email")}
+                            />
+                            {contactForm.formState.errors.email && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.email.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Telefone*</Label>
+                            <Input
+                              id="phone"
+                              placeholder="(00) 00000-0000"
+                              {...contactForm.register("phone")}
+                            />
+                            {contactForm.formState.errors.phone && (
+                              <p className="text-sm text-red-500">{contactForm.formState.errors.phone.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="notes">Observações</Label>
+                            <Textarea
+                              id="notes"
+                              placeholder="Informações adicionais sobre o contato"
+                              {...contactForm.register("notes")}
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter className="mt-6">
+                          <Button type="button" variant="outline" onClick={() => setIsContactDialogOpen(false)}>
+                            Cancelar
+                          </Button>
+                          <Button type="submit">Adicionar</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </TabsContent>
                 
                 <TabsContent value="comments">
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Comentários</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedTool.comments && selectedTool.comments.length > 0 ? (
+                    <CardContent className="py-6">
+                      {selectedTool.comments_list && selectedTool.comments_list.length > 0 ? (
                         <div className="space-y-6 mb-6">
-                          {selectedTool.comments.map((comment) => (
+                          {selectedTool.comments_list.map((comment) => (
                             <div key={comment.id} className="border rounded-lg p-4">
                               <div className="flex justify-between">
                                 <div className="flex items-center">
@@ -818,7 +1417,7 @@ const Tools = () => {
                                 </div>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-red-500 h-8">
+                                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </AlertDialogTrigger>
@@ -826,15 +1425,12 @@ const Tools = () => {
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Excluir Comentário</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.
+                                        Tem certeza de que deseja excluir este comentário? Esta ação não pode ser desfeita.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => handleDeleteComment(selectedTool.id, comment.id)}
-                                        className="bg-red-500 hover:bg-red-600"
-                                      >
+                                      <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="bg-red-500 hover:bg-red-600">
                                         Excluir
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -843,55 +1439,66 @@ const Tools = () => {
                               </div>
                               <p className="mt-3">{comment.text}</p>
                               <div className="mt-3 flex items-center gap-4">
-                                <Button variant="ghost" size="sm" className="text-gray-500">
+                                <Button variant="ghost" size="sm" className="text-gray-500" onClick={handleLike}>
                                   <ThumbsUp className="h-4 w-4 mr-1" /> {comment.likes}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-gray-500">
-                                  <MessageSquare className="h-4 w-4 mr-1" /> Responder
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-gray-500"
+                                  onClick={() => setIsReplyingTo(comment.id)}
+                                >
+                                  <MessageCircle className="h-4 w-4 mr-1" /> Responder
                                 </Button>
                               </div>
+                              
+                              {isReplyingTo === comment.id && (
+                                <div className="mt-4 ml-8 bg-gray-50 p-3 rounded-md">
+                                  <div className="flex items-center mb-2">
+                                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                                      {"A"}
+                                    </div>
+                                    <p className="font-medium text-sm">Admin</p>
+                                  </div>
+                                  <Textarea 
+                                    placeholder="Digite sua resposta..."
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    className="min-h-[80px] mb-2"
+                                  />
+                                  <div className="flex justify-end gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => setIsReplyingTo(null)}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleAddReply(comment.id)}
+                                    >
+                                      <MessageSquarePlus className="h-4 w-4 mr-1" /> Responder
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                               
                               {comment.replies && comment.replies.length > 0 && (
                                 <div className="mt-4 ml-8 space-y-4">
                                   {comment.replies.map((reply) => (
                                     <div key={reply.id} className="border-l-2 pl-4">
-                                      <div className="flex justify-between items-start">
-                                        <div className="flex items-center">
-                                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                            {reply.user.charAt(0)}
-                                          </div>
-                                          <div>
-                                            <p className="font-medium">{reply.user}</p>
-                                            <p className="text-xs text-gray-500">{reply.date}</p>
-                                          </div>
+                                      <div className="flex items-center">
+                                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                                          {reply.user.charAt(0)}
                                         </div>
-                                        <AlertDialog>
-                                          <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="text-red-500 h-6">
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          </AlertDialogTrigger>
-                                          <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                              <AlertDialogTitle>Excluir Resposta</AlertDialogTitle>
-                                              <AlertDialogDescription>
-                                                Tem certeza que deseja excluir esta resposta? Esta ação não pode ser desfeita.
-                                              </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                              <AlertDialogAction 
-                                                onClick={() => handleDeleteCommentReply(selectedTool.id, comment.id, reply.id)}
-                                                className="bg-red-500 hover:bg-red-600"
-                                              >
-                                                Excluir
-                                              </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                          </AlertDialogContent>
-                                        </AlertDialog>
+                                        <div>
+                                          <p className="font-medium">{reply.user}</p>
+                                          <p className="text-xs text-gray-500">{reply.date}</p>
+                                        </div>
                                       </div>
                                       <p className="mt-2 text-sm">{reply.text}</p>
-                                      <Button variant="ghost" size="sm" className="text-gray-500 text-xs mt-1">
+                                      <Button variant="ghost" size="sm" className="text-gray-500 text-xs mt-1" onClick={handleLike}>
                                         <ThumbsUp className="h-3 w-3 mr-1" /> {reply.likes}
                                       </Button>
                                     </div>
@@ -916,7 +1523,7 @@ const Tools = () => {
                           onChange={(e) => setNewComment(e.target.value)}
                         />
                         <Button className="mt-2" onClick={handleAddComment}>
-                          <MessageSquare className="mr-2 h-4 w-4" />
+                          <MessageSquarePlus className="mr-2 h-4 w-4" />
                           Enviar Comentário
                         </Button>
                       </div>
@@ -924,75 +1531,133 @@ const Tools = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="ratings">
+                <TabsContent value="reviews">
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-xl">Avaliações</CardTitle>
                       <CardDescription>
-                        Avaliação média: {calculateAverageRating(selectedTool.ratings)}/5
+                        Avaliação média: {selectedTool.rating}/5
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {selectedTool.ratings.map((rating) => (
-                          <div key={rating.id} className="border p-4 rounded-md">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center">
-                                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                  {rating.user.charAt(0)}
+                      {selectedTool.ratings_list && selectedTool.ratings_list.length > 0 ? (
+                        <div className="space-y-4 mb-6">
+                          {selectedTool.ratings_list.map((rating) => (
+                            <div key={rating.id} className="border p-4 rounded-md">
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                    {rating.user.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{rating.user}</p>
+                                    <p className="text-sm text-gray-500">{rating.date}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-medium">{rating.user}</p>
-                                  <p className="text-sm text-gray-500">{rating.date}</p>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star 
+                                        key={star} 
+                                        className={`h-4 w-4 ${star <= rating.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Excluir Avaliação</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Tem certeza de que deseja excluir esta avaliação? Esta ação não pode ser desfeita.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteRating(rating.id)} className="bg-red-500 hover:bg-red-600">
+                                          Excluir
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star 
-                                      key={star} 
-                                      className={`h-4 w-4 ${star <= rating.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                              <p className="mt-2">{rating.comment}</p>
+                              <Button variant="ghost" size="sm" className="text-gray-500 mt-2" onClick={handleLike}>
+                                <ThumbsUp className="h-4 w-4 mr-1" /> {rating.likes}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-gray-500 mb-6">
+                          Nenhuma avaliação disponível.
+                        </div>
+                      )}
+                      
+                      <div className="mt-4">
+                        <Button className="w-full" onClick={() => setIsRatingDialogOpen(true)}>
+                          <Star className="h-4 w-4 mr-2" /> Adicionar Avaliação
+                        </Button>
+                      </div>
+                      
+                      {/* Dialog para adicionar avaliação */}
+                      <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Avaliar Ferramenta</DialogTitle>
+                            <DialogDescription>
+                              Compartilhe sua experiência com esta ferramenta.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={ratingForm.handleSubmit(handleAddRating)}>
+                            <div className="space-y-4 py-2">
+                              <div className="space-y-2">
+                                <Label htmlFor="rating">Avaliação*</Label>
+                                <div className="flex items-center">
+                                  {[1, 2, 3, 4, 5].map((value) => (
+                                    <Star
+                                      key={value}
+                                      className={`h-8 w-8 cursor-pointer ${
+                                        value <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                      }`}
+                                      onClick={() => {
+                                        setRating(value);
+                                        ratingForm.setValue("rating", value);
+                                      }}
                                     />
                                   ))}
                                 </div>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-red-500 h-8">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Excluir Avaliação</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => handleDeleteRating(selectedTool.id, rating.id)}
-                                        className="bg-red-500 hover:bg-red-600"
-                                      >
-                                        Excluir
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                {ratingForm.formState.errors.rating && (
+                                  <p className="text-sm text-red-500">{ratingForm.formState.errors.rating.message}</p>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="comment">Comentário*</Label>
+                                <Textarea
+                                  id="comment"
+                                  placeholder="Compartilhe sua experiência com esta ferramenta"
+                                  {...ratingForm.register("comment")}
+                                  className="min-h-[100px]"
+                                />
+                                {ratingForm.formState.errors.comment && (
+                                  <p className="text-sm text-red-500">{ratingForm.formState.errors.comment.message}</p>
+                                )}
                               </div>
                             </div>
-                            <p className="mt-2 text-gray-700">{rating.comment}</p>
-                            <Button variant="ghost" size="sm" className="text-gray-500 mt-2">
-                              <ThumbsUp className="h-4 w-4 mr-1" /> {rating.likes}
-                            </Button>
-                          </div>
-                        ))}
-                        {selectedTool.ratings.length === 0 && (
-                          <div className="text-center py-6 text-gray-500">
-                            Nenhuma avaliação disponível.
-                          </div>
-                        )}
-                      </div>
+                            <DialogFooter className="mt-6">
+                              <Button type="button" variant="outline" onClick={() => setIsRatingDialogOpen(false)}>
+                                Cancelar
+                              </Button>
+                              <Button type="submit">Enviar Avaliação</Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -1002,9 +1667,24 @@ const Tools = () => {
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium">Arquivos</h3>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-1" /> Upload de Arquivo
-                        </Button>
+                        <div>
+                          <input
+                            type="file"
+                            id="file-upload"
+                            className="hidden"
+                            onChange={handleUploadFile}
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt"
+                          />
+                          <label htmlFor="file-upload">
+                            <Button size="sm" as="span" className="cursor-pointer">
+                              <FilePlus className="h-4 w-4 mr-1" /> Upload de Arquivo
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 mb-4">
+                        Tipos permitidos: PDF, DOC, DOCX, XLS, XLSX, ZIP, TXT (máx: 5MB)
                       </div>
                       
                       {selectedTool.files && selectedTool.files.length > 0 ? (
@@ -1034,7 +1714,7 @@ const Tools = () => {
                                       <Button variant="ghost" size="sm">Download</Button>
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="text-red-500 h-8">
+                                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
                                             <Trash2 className="h-4 w-4" />
                                           </Button>
                                         </AlertDialogTrigger>
@@ -1042,15 +1722,12 @@ const Tools = () => {
                                           <AlertDialogHeader>
                                             <AlertDialogTitle>Excluir Arquivo</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              Tem certeza que deseja excluir o arquivo {file.name}? Esta ação não pode ser desfeita.
+                                              Tem certeza de que deseja excluir o arquivo "{file.name}"? Esta ação não pode ser desfeita.
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
                                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                            <AlertDialogAction 
-                                              onClick={() => handleDeleteFile(selectedTool.id, file.id)}
-                                              className="bg-red-500 hover:bg-red-600"
-                                            >
+                                            <AlertDialogAction onClick={() => handleDeleteFile(file.id)} className="bg-red-500 hover:bg-red-600">
                                               Excluir
                                             </AlertDialogAction>
                                           </AlertDialogFooter>
@@ -1077,46 +1754,62 @@ const Tools = () => {
                     <CardContent className="py-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium">Imagens</h3>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-1" /> Upload de Imagem
-                        </Button>
+                        <div>
+                          <input
+                            type="file"
+                            id="image-upload"
+                            className="hidden"
+                            onChange={handleUploadImage}
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                          />
+                          <label htmlFor="image-upload">
+                            <Button size="sm" as="span" className="cursor-pointer">
+                              <ImagePlus className="h-4 w-4 mr-1" /> Upload de Imagem
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 mb-4">
+                        Tipos permitidos: JPG, PNG, GIF, WEBP (máx: 2MB)
                       </div>
                       
                       {selectedTool.images && selectedTool.images.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {selectedTool.images.map((image) => (
-                            <div key={image.id} className="border rounded-md overflow-hidden relative group">
-                              <img 
-                                src={image.url} 
-                                alt={image.alt} 
-                                className="w-full h-48 object-cover" 
-                              />
-                              <div className="p-2 flex justify-between items-center">
+                            <div key={image.id} className="border rounded-md overflow-hidden">
+                              <div className="relative group">
+                                <img 
+                                  src={image.url} 
+                                  alt={image.alt} 
+                                  className="w-full h-48 object-cover" 
+                                />
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="destructive" size="sm" className="bg-red-500 hover:bg-red-600">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Excluir Imagem</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Tem certeza de que deseja excluir esta imagem? Esta ação não pode ser desfeita.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteImage(image.id)} className="bg-red-500 hover:bg-red-600">
+                                          Excluir
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </div>
+                              <div className="p-2">
                                 <p className="text-sm font-medium">{image.alt}</p>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-red-500 h-8">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Excluir Imagem</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Tem certeza que deseja excluir esta imagem? Esta ação não pode ser desfeita.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => handleDeleteImage(selectedTool.id, image.id)}
-                                        className="bg-red-500 hover:bg-red-600"
-                                      >
-                                        Excluir
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
                               </div>
                             </div>
                           ))}
@@ -1133,25 +1826,40 @@ const Tools = () => {
                 <TabsContent value="history">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-xl">Histórico de Atividades</CardTitle>
+                      <CardTitle className="text-xl">Histórico</CardTitle>
                       <CardDescription>
-                        Registro de todas as alterações realizadas nesta ferramenta.
+                        Registro de todas as alterações realizadas na ferramenta.
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {selectedTool.history && selectedTool.history.map((item) => (
-                          <div key={item.id} className="flex border-l-2 border-gray-200 pl-4 pb-4">
-                            <div className="mr-4">
-                              <div className="w-2 h-2 rounded-full bg-portal-primary mt-2 -ml-5"></div>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">{item.date}</p>
-                              <p className="font-medium">{item.user} <span className="font-normal">{item.action}</span></p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      {selectedTool.history && selectedTool.history.length > 0 ? (
+                        <div className="border rounded-md">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Data</TableHead>
+                                <TableHead>Ação</TableHead>
+                                <TableHead>Usuário</TableHead>
+                                <TableHead>Detalhes</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedTool.history.map((item) => (
+                                <TableRow key={item.id}>
+                                  <TableCell>{item.date}</TableCell>
+                                  <TableCell>{item.action}</TableCell>
+                                  <TableCell>{item.user}</TableCell>
+                                  <TableCell>{item.details || "-"}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 text-gray-500">
+                          Nenhum histórico disponível.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
