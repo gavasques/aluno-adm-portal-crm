@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,6 @@ const TOOLS = [
     rating: 4.7,
     comments: 18,
     logo: "EC",
-    price: "R$ 249,90/mês",
     recommended: true,
     notRecommended: false,
     description: "Software integrado para gerenciamento de lojas online e físicas.",
