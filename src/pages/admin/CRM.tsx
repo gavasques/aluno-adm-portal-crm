@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -586,31 +585,34 @@ const CRM = () => {
                 </CardDescription>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:justify-between items-start sm:items-center w-full">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input 
-                  placeholder="Buscar leads..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <div className="flex space-x-2 self-start">
-                <Button 
-                  variant={activeView === "kanban" ? "default" : "outline"} 
-                  onClick={() => setActiveView("kanban")}
-                  size="sm"
-                >
-                  Kanban
-                </Button>
-                <Button 
-                  variant={activeView === "list" ? "default" : "outline"} 
-                  onClick={() => setActiveView("list")}
-                  size="sm"
-                >
-                  Lista
-                </Button>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:items-center w-full">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 w-full">
+                <div className="flex space-x-2 self-start mb-2 sm:mb-0">
+                  <Button 
+                    variant={activeView === "kanban" ? "default" : "outline"} 
+                    onClick={() => setActiveView("kanban")}
+                    size="sm"
+                  >
+                    Kanban
+                  </Button>
+                  <Button 
+                    variant={activeView === "list" ? "default" : "outline"} 
+                    onClick={() => setActiveView("list")}
+                    size="sm"
+                  >
+                    Lista
+                  </Button>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    placeholder="Buscar leads..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
               </div>
             </div>
           </div>
