@@ -1,11 +1,16 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Search } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import SuppliersTable, { Supplier } from "@/components/admin/SuppliersTable";
 import { toast } from "sonner";
@@ -241,64 +246,82 @@ const Suppliers = () => {
                 />
               </div>
               
-              {/* Filtro */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="flex items-center">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filtros
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <h4 className="font-medium">Categorias</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {CATEGORIES.map((category) => (
-                          <div key={category} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`category-${category}`} 
-                              checked={selectedCategories.includes(category)}
-                              onCheckedChange={() => toggleCategoryFilter(category)}
-                            />
-                            <Label htmlFor={`category-${category}`}>{category}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <h4 className="font-medium">Tipo de Fornecedor</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {SUPPLIER_TYPES.map((type) => (
-                          <div key={type} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`type-${type}`} 
-                              checked={selectedTypes.includes(type)}
-                              onCheckedChange={() => toggleTypeFilter(type)}
-                            />
-                            <Label htmlFor={`type-${type}`}>{type}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <h4 className="font-medium">Marcas</h4>
-                      <div className="max-h-36 overflow-y-auto grid grid-cols-2 gap-2">
+              {/* Filtros em Dropdowns */}
+              <div className="flex gap-2">
+                {/* Dropdown para Categorias */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center">
+                      Categorias {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="start">
+                    <DropdownMenuLabel>Selecione as categorias</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      {CATEGORIES.map((category) => (
+                        <DropdownMenuCheckboxItem
+                          key={category}
+                          checked={selectedCategories.includes(category)}
+                          onCheckedChange={() => toggleCategoryFilter(category)}
+                        >
+                          {category}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Dropdown para Marcas */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center">
+                      Marcas {selectedBrands.length > 0 && `(${selectedBrands.length})`}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="start">
+                    <DropdownMenuLabel>Selecione as marcas</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className="max-h-60 overflow-y-auto">
+                      <DropdownMenuGroup>
                         {allBrands.map((brand) => (
-                          <div key={brand} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`brand-${brand}`} 
-                              checked={selectedBrands.includes(brand)}
-                              onCheckedChange={() => toggleBrandFilter(brand)}
-                            />
-                            <Label htmlFor={`brand-${brand}`}>{brand}</Label>
-                          </div>
+                          <DropdownMenuCheckboxItem
+                            key={brand}
+                            checked={selectedBrands.includes(brand)}
+                            onCheckedChange={() => toggleBrandFilter(brand)}
+                          >
+                            {brand}
+                          </DropdownMenuCheckboxItem>
                         ))}
-                      </div>
+                      </DropdownMenuGroup>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {/* Dropdown para Tipos de Fornecedor */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center">
+                      Tipos {selectedTypes.length > 0 && `(${selectedTypes.length})`}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="start">
+                    <DropdownMenuLabel>Selecione os tipos</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      {SUPPLIER_TYPES.map((type) => (
+                        <DropdownMenuCheckboxItem
+                          key={type}
+                          checked={selectedTypes.includes(type)}
+                          onCheckedChange={() => toggleTypeFilter(type)}
+                        >
+                          {type}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
           
