@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { 
-  Building, 
   File, 
   MessageCircle, 
   Phone, 
@@ -111,31 +109,26 @@ const FILES = [
   }
 ];
 
-const BRANCHES = [
-  {
-    id: 1,
-    name: "Filial São Paulo",
-    address: "Avenida Paulista, 1000 - São Paulo/SP",
-    email: "contato@filial.com"
-  },
-  {
-    id: 2,
-    name: "Filial Rio de Janeiro",
-    address: "Avenida Atlântica, 500 - Rio de Janeiro/RJ",
-    email: "rio@filial.com"
-  }
-];
-
 const BRANDS = [
   {
     id: 1,
-    name: "Marca A",
-    initials: "MA"
+    name: "Marca A"
   },
   {
     id: 2,
-    name: "Marca B",
-    initials: "MB"
+    name: "Marca B"
+  },
+  {
+    id: 3,
+    name: "Marca C"
+  },
+  {
+    id: 4,
+    name: "Marca D"
+  },
+  {
+    id: 5,
+    name: "Marca E"
   }
 ];
 
@@ -155,7 +148,33 @@ const CONTACTS = [
     email: "ana@exemplo.com",
     phone: "(11) 99999-7777",
     initials: "AL"
+  },
+  {
+    id: 3,
+    name: "Carlos Silva",
+    role: "Diretor Comercial",
+    email: "carlos@exemplo.com",
+    phone: "(11) 99999-6666",
+    initials: "CS"
+  },
+  {
+    id: 4,
+    name: "Maria Oliveira",
+    role: "Assistente de Vendas",
+    email: "maria@exemplo.com",
+    phone: "(11) 99999-5555",
+    initials: "MO"
   }
+];
+
+// Lista de tipos de fornecedor
+const SUPPLIER_TYPES = [
+  "Fabricante",
+  "Distribuidor",
+  "Importador",
+  "Atacadista",
+  "Varejista",
+  "Representante"
 ];
 
 interface SupplierDetailProps {
@@ -174,7 +193,6 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
   const [comments, setComments] = useState(COMMENTS);
   const [ratings, setRatings] = useState(RATINGS);
   const [files, setFiles] = useState(FILES);
-  const [branches, setBranches] = useState(BRANCHES);
   const [brands, setBrands] = useState(BRANDS);
   const [contacts, setContacts] = useState(CONTACTS);
   const [newComment, setNewComment] = useState("");
@@ -182,6 +200,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [supplierType, setSupplierType] = useState(supplier.type || "Distribuidor");
 
   const handleLikeComment = (commentId: number) => {
     setComments(comments.map(comment => {
@@ -247,7 +266,12 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
   };
 
   const handleUpdateSupplier = (updatedData: any) => {
-    onUpdate(updatedData);
+    // Adicionar o tipo de fornecedor aos dados atualizados
+    const finalUpdatedData = {
+      ...updatedData,
+      type: supplierType
+    };
+    onUpdate(finalUpdatedData);
     setIsEditDialogOpen(false);
   };
 
@@ -352,6 +376,17 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
   
   const ratingStats = calculateRatingStats();
 
+  // Gerenciamento do tipo de fornecedor
+  const handleSupplierTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSupplierType(e.target.value);
+    // Atualizar o fornecedor com o novo tipo
+    onUpdate({
+      ...supplier,
+      type: e.target.value
+    });
+    toast.success("Tipo de fornecedor atualizado com sucesso!");
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
@@ -419,9 +454,6 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
           <TabsTrigger value="info" className="flex items-center gap-1">
             <Users className="h-4 w-4" /> Dados
           </TabsTrigger>
-          <TabsTrigger value="branches" className="flex items-center gap-1">
-            <Building className="h-4 w-4" /> Filiais
-          </TabsTrigger>
           <TabsTrigger value="brands" className="flex items-center gap-1">
             <Tag className="h-4 w-4" /> Marcas
           </TabsTrigger>
@@ -454,6 +486,22 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Categoria</p>
                   <p className="font-medium">{supplier.category}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Tipo de Fornecedor</p>
+                  {isAdmin ? (
+                    <select
+                      value={supplierType}
+                      onChange={handleSupplierTypeChange}
+                      className="border rounded-md p-1.5 w-full text-sm"
+                    >
+                      {SUPPLIER_TYPES.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="font-medium">{supplierType || "Não especificado"}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">CNPJ</p>
@@ -496,71 +544,6 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
           </Card>
         </TabsContent>
         
-        {/* Aba Filiais */}
-        <TabsContent value="branches">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Filiais</CardTitle>
-              {isAdmin && (
-                <Button size="sm" variant="outline">
-                  Adicionar Filial
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {branches.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhuma filial cadastrada para este fornecedor.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {branches.map((branch) => (
-                    <Card key={branch.id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between">
-                          <div>
-                            <h3 className="font-medium">{branch.name}</h3>
-                            <p className="text-sm text-gray-500">{branch.address}</p>
-                            <p className="text-sm text-gray-500">{branch.email}</p>
-                          </div>
-                          {isAdmin && (
-                            <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4 text-gray-500" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja excluir esta filial? Esta ação não pode ser desfeita.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction className="bg-red-500 hover:bg-red-600">
-                                      Excluir
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
         {/* Aba Marcas */}
         <TabsContent value="brands">
           <Card>
@@ -578,14 +561,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                   Nenhuma marca cadastrada para este fornecedor.
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {brands.map((brand) => (
-                    <Card key={brand.id} className="p-4">
+                    <Card key={brand.id} className="p-3">
                       <div className="text-center relative">
-                        <div className="w-16 h-16 rounded bg-portal-light flex items-center justify-center mx-auto">
-                          <span className="text-lg font-bold text-portal-primary">{brand.initials}</span>
-                        </div>
-                        <h3 className="mt-2 font-medium">{brand.name}</h3>
+                        <h3 className="text-sm font-medium truncate">{brand.name}</h3>
                         
                         {isAdmin && (
                           <div className="absolute top-0 right-0 flex space-x-1">
@@ -641,7 +621,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({
                   Nenhum contato cadastrado para este fornecedor.
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {contacts.map((contact) => (
                     <Card key={contact.id}>
                       <CardContent className="p-4">
