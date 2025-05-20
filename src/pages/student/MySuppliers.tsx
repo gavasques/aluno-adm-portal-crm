@@ -8,6 +8,24 @@ import { Search, Plus, Users, Star, MessageCircle, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import SupplierDetail from "@/components/student/SupplierDetail";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+// Esquema de validação com zod para o formulário de fornecedor
+const supplierSchema = z.object({
+  name: z.string().min(3, { message: "O nome deve ter pelo menos 3 caracteres" }),
+  category: z.string().min(2, { message: "A categoria é obrigatória" }),
+  cnpj: z.string().optional(),
+  email: z.string().email({ message: "Email inválido" }).optional().or(z.literal("")),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  address: z.string().optional(),
+  type: z.string()
+});
+
+type SupplierFormValues = z.infer<typeof supplierSchema>;
 
 // Sample data for my suppliers
 const INITIAL_SUPPLIERS = [
@@ -38,6 +56,50 @@ const INITIAL_SUPPLIERS = [
     ],
     files: [
       { id: 1, name: "Catálogo 2023", type: "PDF", size: "2.5MB", date: "2023-04-10" }
+    ],
+    comments: [
+      { 
+        id: 1, 
+        userId: 1, 
+        userName: "Maria Oliveira", 
+        userAvatar: "", 
+        content: "Ótima qualidade de produtos e entrega rápida.", 
+        date: "2023-06-10T10:30:00", 
+        likes: 3, 
+        userLiked: true, 
+        replies: [
+          { 
+            id: 11, 
+            userId: 2, 
+            userName: "Carlos Silva", 
+            userAvatar: "", 
+            content: "Concordo! Serviço excelente.", 
+            date: "2023-06-10T14:45:00" 
+          }
+        ] 
+      }
+    ],
+    ratings: [
+      { 
+        id: 1, 
+        userId: 3, 
+        userName: "Pedro Santos", 
+        rating: 5, 
+        comment: "Produtos de alta qualidade e atendimento impecável.", 
+        date: "2023-05-20T09:15:00", 
+        likes: 2, 
+        userLiked: false 
+      }
+    ],
+    images: [
+      { 
+        id: 1, 
+        name: "Fachada da loja", 
+        src: "https://images.unsplash.com/photo-1472851294608-062f824d29cc", 
+        date: "2023-04-05", 
+        type: "JPEG", 
+        size: "1.2MB" 
+      }
     ]
   }
 ];
@@ -45,20 +107,24 @@ const INITIAL_SUPPLIERS = [
 const MySuppliers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newSupplier, setNewSupplier] = useState({
-    name: "",
-    category: "",
-    contact: "",
-    email: "",
-    phone: "",
-    website: "",
-    cnpj: "",
-    address: "",
-    type: "Distribuidor"
-  });
-  
   const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Configurar react-hook-form com validação zod
+  const form = useForm<SupplierFormValues>({
+    resolver: zodResolver(supplierSchema),
+    defaultValues: {
+      name: "",
+      category: "",
+      cnpj: "",
+      email: "",
+      phone: "",
+      website: "",
+      address: "",
+      type: "Distribuidor"
+    }
+  });
   
   // Filter suppliers based on search query
   const filteredSuppliers = suppliers.filter(supplier => 
@@ -66,51 +132,43 @@ const MySuppliers = () => {
     supplier.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleAddSupplier = () => {
-    // Validate form
-    if (!newSupplier.name || !newSupplier.category) {
-      toast.error("Por favor, preencha nome e categoria do fornecedor.");
-      return;
-    }
+  const handleAddSupplier = (data: SupplierFormValues) => {
+    setIsSubmitting(true);
     
-    // Create new supplier with all required properties
-    const supplier = {
-      id: Date.now(),
-      name: newSupplier.name,
-      category: newSupplier.category,
-      email: newSupplier.email || "",
-      phone: newSupplier.phone || "",
-      website: newSupplier.website || "",
-      cnpj: newSupplier.cnpj || "",
-      address: newSupplier.address || "",
-      type: newSupplier.type || "Distribuidor",
-      rating: 0,
-      comments: 0,
-      logo: newSupplier.name.substring(0, 2).toUpperCase(),
-      brands: [],
-      branches: [],
-      contacts: [],
-      communications: [],
-      files: []
-    };
-    
-    setSuppliers([...suppliers, supplier]);
-    toast.success(`${newSupplier.name} foi adicionado com sucesso.`);
-    
-    // Reset form and close dialog
-    setNewSupplier({
-      name: "",
-      category: "",
-      contact: "",
-      email: "",
-      phone: "",
-      website: "",
-      cnpj: "",
-      address: "",
-      type: "Distribuidor"
-    });
-    
-    setIsAddDialogOpen(false);
+    // Simular um atraso de rede
+    setTimeout(() => {
+      // Create new supplier with all required properties
+      const supplier = {
+        id: Date.now(),
+        name: data.name,
+        category: data.category,
+        email: data.email || "",
+        phone: data.phone || "",
+        website: data.website || "",
+        cnpj: data.cnpj || "",
+        address: data.address || "",
+        type: data.type || "Distribuidor",
+        rating: 0,
+        comments: 0,
+        logo: data.name.substring(0, 2).toUpperCase(),
+        brands: [],
+        branches: [],
+        contacts: [],
+        communications: [],
+        files: [],
+        images: [],
+        ratings: [],
+        comments: []
+      };
+      
+      setSuppliers([...suppliers, supplier]);
+      toast.success(`${data.name} foi adicionado com sucesso.`);
+      
+      // Reset form and close dialog
+      form.reset();
+      setIsAddDialogOpen(false);
+      setIsSubmitting(false);
+    }, 500);
   };
   
   const handleDeleteSupplier = (id) => {
@@ -244,136 +302,158 @@ const MySuppliers = () => {
         />
       )}
       
-      {/* Add Supplier Dialog */}
+      {/* Add Supplier Dialog with form validation */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Adicionar Novo Fornecedor</DialogTitle>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="name" className="text-right font-medium">
-                Nome*
-              </label>
-              <Input
-                id="name"
-                value={newSupplier.name}
-                onChange={(e) => setNewSupplier({...newSupplier, name: e.target.value})}
-                placeholder="Nome do fornecedor"
-                className="col-span-3"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAddSupplier)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome*</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome do fornecedor" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="category" className="text-right font-medium">
-                Categoria*
-              </label>
-              <Input
-                id="category"
-                value={newSupplier.category}
-                onChange={(e) => setNewSupplier({...newSupplier, category: e.target.value})}
-                placeholder="Categoria principal"
-                className="col-span-3"
-                required
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria*</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Categoria principal" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="cnpj" className="text-right font-medium">
-                CNPJ
-              </label>
-              <Input
-                id="cnpj"
-                value={newSupplier.cnpj}
-                onChange={(e) => setNewSupplier({...newSupplier, cnpj: e.target.value})}
-                placeholder="00.000.000/0000-00"
-                className="col-span-3"
+              
+              <FormField
+                control={form.control}
+                name="cnpj"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00.000.000/0000-00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="email" className="text-right font-medium">
-                E-mail
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={newSupplier.email}
-                onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
-                placeholder="email@exemplo.com"
-                className="col-span-3"
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="phone" className="text-right font-medium">
-                Telefone
-              </label>
-              <Input
-                id="phone"
-                value={newSupplier.phone}
-                onChange={(e) => setNewSupplier({...newSupplier, phone: e.target.value})}
-                placeholder="(00) 00000-0000"
-                className="col-span-3"
+              
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(00) 00000-0000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="website" className="text-right font-medium">
-                Website
-              </label>
-              <Input
-                id="website"
-                value={newSupplier.website}
-                onChange={(e) => setNewSupplier({...newSupplier, website: e.target.value})}
-                placeholder="www.example.com"
-                className="col-span-3"
+              
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website</FormLabel>
+                    <FormControl>
+                      <Input placeholder="www.example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="address" className="text-right font-medium">
-                Endereço
-              </label>
-              <Input
-                id="address"
-                value={newSupplier.address}
-                onChange={(e) => setNewSupplier({...newSupplier, address: e.target.value})}
-                placeholder="Rua, número, bairro - cidade/estado"
-                className="col-span-3"
+              
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Rua, número, bairro - cidade/estado" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="type" className="text-right font-medium">
-                Tipo
-              </label>
-              <select
-                id="type"
-                value={newSupplier.type}
-                onChange={(e) => setNewSupplier({...newSupplier, type: e.target.value})}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="Distribuidor">Distribuidor</option>
-                <option value="Fabricante">Fabricante</option>
-                <option value="Importador">Importador</option>
-                <option value="Atacadista">Atacadista</option>
-                <option value="Varejista">Varejista</option>
-                <option value="Representante">Representante</option>
-              </select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="mr-2">
-              Cancelar
-            </Button>
-            <Button onClick={handleAddSupplier}>
-              Adicionar Fornecedor
-            </Button>
-          </DialogFooter>
+              
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo</FormLabel>
+                    <FormControl>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        {...field}
+                      >
+                        <option value="Distribuidor">Distribuidor</option>
+                        <option value="Fabricante">Fabricante</option>
+                        <option value="Importador">Importador</option>
+                        <option value="Atacadista">Atacadista</option>
+                        <option value="Varejista">Varejista</option>
+                        <option value="Representante">Representante</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="mt-6">
+                <Button 
+                  variant="outline" 
+                  type="button"
+                  onClick={() => {
+                    form.reset();
+                    setIsAddDialogOpen(false);
+                  }}
+                  className="mr-2"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Adicionando..." : "Adicionar Fornecedor"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

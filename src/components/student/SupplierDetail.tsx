@@ -13,6 +13,9 @@ import BranchesTab from "./supplier-tabs/BranchesTab";
 import ContactsTab from "./supplier-tabs/ContactsTab";
 import CommunicationsTab from "./supplier-tabs/CommunicationsTab";
 import FilesTab from "./supplier-tabs/FilesTab";
+import CommentsTab from "./supplier-tabs/CommentsTab";
+import RatingsTab from "./supplier-tabs/RatingsTab";
+import ImagesTab from "./supplier-tabs/ImagesTab";
 
 interface SupplierDetailProps {
   supplier: any;
@@ -25,8 +28,13 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
   const [activeTab, setActiveTab] = useState("dados");
   const [isEditing, setIsEditing] = useState(false);
 
+  // Garantir que todas as propriedades necessárias existam
+  if (!editedSupplier.comments) editedSupplier.comments = [];
+  if (!editedSupplier.ratings) editedSupplier.ratings = [];
+  if (!editedSupplier.images) editedSupplier.images = [];
+
   const handleSave = () => {
-    // Validate required fields
+    // Validar campos obrigatórios
     if (!editedSupplier.name || !editedSupplier.category) {
       toast.error("Nome e categoria são campos obrigatórios.");
       return;
@@ -77,13 +85,16 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-6 mb-8">
+        <TabsList className="grid grid-cols-3 md:grid-cols-9 mb-8">
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="marcas">Marcas</TabsTrigger>
           <TabsTrigger value="filiais">Filiais</TabsTrigger>
           <TabsTrigger value="contatos">Contatos</TabsTrigger>
           <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
           <TabsTrigger value="arquivos">Arquivos</TabsTrigger>
+          <TabsTrigger value="comentarios">Comentários</TabsTrigger>
+          <TabsTrigger value="avaliacoes">Avaliações</TabsTrigger>
+          <TabsTrigger value="imagens">Imagens</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados">
@@ -234,6 +245,33 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             files={editedSupplier.files}
             onUpdate={(updatedFiles) => {
               setEditedSupplier({ ...editedSupplier, files: updatedFiles });
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="comentarios">
+          <CommentsTab 
+            comments={editedSupplier.comments}
+            onUpdate={(updatedComments) => {
+              setEditedSupplier({ ...editedSupplier, comments: updatedComments });
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="avaliacoes">
+          <RatingsTab 
+            ratings={editedSupplier.ratings}
+            onUpdate={(updatedRatings) => {
+              setEditedSupplier({ ...editedSupplier, ratings: updatedRatings });
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="imagens">
+          <ImagesTab 
+            images={editedSupplier.images}
+            onUpdate={(updatedImages) => {
+              setEditedSupplier({ ...editedSupplier, images: updatedImages });
             }}
           />
         </TabsContent>
