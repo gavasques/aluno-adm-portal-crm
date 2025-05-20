@@ -2,6 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Wrench } from "lucide-react";
+import { motion } from "framer-motion";
 import { 
   Select,
   SelectContent,
@@ -30,59 +31,75 @@ export function ToolHeader({
 }: ToolHeaderProps) {
   return (
     <div className="animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+      <motion.div 
+        className="flex flex-col md:flex-row md:items-center justify-between mb-6"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex items-center gap-3">
-          <div className="bg-portal-accent rounded-md p-2 text-white">
-            <Wrench size={24} />
+          <div className="bg-gradient-to-br from-teal-500 to-emerald-500 rounded-md p-3 text-white shadow-md">
+            <Wrench size={28} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-portal-dark">Ferramentas</h1>
         </div>
-        <p className="text-muted-foreground mt-2 md:mt-0">
+        <motion.p 
+          className="text-muted-foreground mt-2 md:mt-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
           Encontre as melhores ferramentas para seu e-commerce
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
       
-      <Card className="bg-white/70 backdrop-blur-sm border border-gray-100 shadow-sm mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                placeholder="Buscar ferramentas..."
-                className="pl-10 transition-all duration-300 border-gray-200 hover:border-portal-accent focus:border-portal-accent focus:ring-1 focus:ring-portal-accent"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Select value={softwareTypeFilter} onValueChange={setSoftwareTypeFilter}>
-                <SelectTrigger className="w-[180px] border-gray-200 hover:border-portal-accent transition-colors">
-                  <SelectValue placeholder="Tipo de Ferramenta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Tipos</SelectItem>
-                  <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Logística">Logística</SelectItem>
-                  <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
-                </SelectContent>
-              </Select>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <Card className="bg-white/80 backdrop-blur-sm border border-teal-100 shadow-md mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-grow group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-teal-500 transition-colors duration-300" size={18} />
+                <Input
+                  placeholder="Buscar ferramentas..."
+                  className="pl-10 transition-all duration-300 border-teal-200 hover:border-teal-400 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               
-              <Select value={recommendationFilter} onValueChange={setRecommendationFilter}>
-                <SelectTrigger className="w-[180px] border-gray-200 hover:border-portal-accent transition-colors">
-                  <SelectValue placeholder="Recomendação" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
-                  <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-2">
+                <Select value={softwareTypeFilter} onValueChange={setSoftwareTypeFilter}>
+                  <SelectTrigger className="w-[180px] bg-gradient-to-r from-teal-50 to-emerald-50 border-teal-200 hover:border-teal-300 transition-colors">
+                    <SelectValue placeholder="Tipo de Ferramenta" />
+                  </SelectTrigger>
+                  <SelectContent className="border-teal-200">
+                    <SelectItem value="all">Todos os Tipos</SelectItem>
+                    <SelectItem value="Gestão Empresarial">Gestão Empresarial</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Logística">Logística</SelectItem>
+                    <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={recommendationFilter} onValueChange={setRecommendationFilter}>
+                  <SelectTrigger className="w-[180px] bg-gradient-to-r from-green-50 to-teal-50 border-green-200 hover:border-green-300 transition-colors">
+                    <SelectValue placeholder="Recomendação" />
+                  </SelectTrigger>
+                  <SelectContent className="border-green-200">
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="recommended">Ferramentas Recomendadas</SelectItem>
+                    <SelectItem value="not-recommended">Não Recomendadas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
