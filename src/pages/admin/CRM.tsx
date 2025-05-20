@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, Search, Settings, Trash2, Move, MoveHorizontal, X, ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { Plus, User, Package, Calendar, MessageSquare, MoreVertical, Users, Search, Settings, Trash2, Move, MoveHorizontal, X, ArrowLeft, ArrowRight, Save, Edit } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -16,6 +16,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useForm } from "react-hook-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Interface para a tipagem das colunas e leads
 interface Column {
@@ -38,7 +39,6 @@ interface Lead {
   email: string;
   phone: string;
   column: string;
-  product: string;
   responsible: string;
   lastContact: string;
   comments: Comment[];
@@ -84,7 +84,6 @@ const SortableLeadCard = ({ lead, openLeadDetails }) => {
               </HoverCardTrigger>
               <HoverCardContent className="w-48">
                 <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Produto:</span> {lead.product}</p>
                   <p><span className="font-medium">Responsável:</span> {lead.responsible}</p>
                   <p><span className="font-medium">Último contato:</span> {lead.lastContact}</p>
                 </div>
@@ -96,10 +95,6 @@ const SortableLeadCard = ({ lead, openLeadDetails }) => {
             <div className="flex items-center">
               <User className="h-3 w-3 mr-1" />
               {lead.responsible}
-            </div>
-            <div className="flex items-center">
-              <Package className="h-3 w-3 mr-1" />
-              {lead.product}
             </div>
           </div>
         </CardContent>
@@ -178,7 +173,6 @@ const SortableColumnListItem = ({ column, leadCount, onRemove }) => {
     >
       <div className="flex items-center">
         <Move className="h-4 w-4 mr-3 cursor-grab" />
-        <div className={`w-3 h-3 rounded-full mr-2 ${column.color}`} />
         <span>{column.name}</span>
         <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-200 rounded-full">{leadCount}</span>
       </div>
@@ -231,6 +225,13 @@ const CRM = () => {
   const [originalColumns, setOriginalColumns] = useState<Column[]>([]);
   const [columnsModified, setColumnsModified] = useState(false);
 
+  // Lista de administradores (simulado - em um sistema real viria do backend)
+  const administrators = [
+    { id: 1, name: "Ana Carolina" },
+    { id: 2, name: "Pedro Santos" },
+    { id: 3, name: "João Silva" }
+  ];
+
   // Estado para os leads
   const [leads, setLeads] = useState<Lead[]>([
     { 
@@ -240,7 +241,6 @@ const CRM = () => {
       email: "joao@techsolutions.com",
       phone: "(11) 98765-4321",
       column: "lead-in",
-      product: "Curso Avançado",
       responsible: "Ana Carolina",
       lastContact: "21/05/2025",
       comments: [
@@ -254,12 +254,9 @@ const CRM = () => {
       email: "maria@ecommercebrasil.com",
       phone: "(11) 91234-5678",
       column: "presentation",
-      product: "Mentoria Individual",
       responsible: "Pedro Santos",
       lastContact: "18/05/2025",
-      comments: [
-        { id: 1, text: "Cliente solicitou mais informações sobre a mentoria", date: "18/05/2025", author: "Pedro Santos" }
-      ]
+      comments: []
     },
     { 
       id: 3, 
@@ -268,12 +265,9 @@ const CRM = () => {
       email: "carlos@lojavirtual.com",
       phone: "(11) 93333-4444",
       column: "meeting",
-      product: "Pacote Completo",
       responsible: "Ana Carolina",
       lastContact: "15/05/2025",
-      comments: [
-        { id: 1, text: "Reunião agendada para 25/05", date: "15/05/2025", author: "Ana Carolina" }
-      ]
+      comments: []
     },
     { 
       id: 4, 
@@ -282,12 +276,9 @@ const CRM = () => {
       email: "amanda@modaonline.com",
       phone: "(11) 95555-6666",
       column: "follow-up",
-      product: "Mentoria em Grupo",
       responsible: "Pedro Santos",
       lastContact: "12/05/2025",
-      comments: [
-        { id: 1, text: "Aguardando retorno sobre proposta", date: "12/05/2025", author: "Pedro Santos" }
-      ]
+      comments: []
     },
     { 
       id: 5, 
@@ -296,14 +287,15 @@ const CRM = () => {
       email: "roberto@superdigital.com",
       phone: "(11) 97777-8888",
       column: "closed",
-      product: "Curso Básico",
       responsible: "Ana Carolina",
       lastContact: "08/05/2025",
-      comments: [
-        { id: 1, text: "Contrato assinado", date: "08/05/2025", author: "Ana Carolina" }
-      ]
+      comments: []
     }
   ]);
+  
+  // Estado para o formulário de edição do lead
+  const [isEditingLead, setIsEditingLead] = useState(false);
+  const [leadToEdit, setLeadToEdit] = useState<Lead | null>(null);
   
   // Load columns from localStorage on component mount
   useEffect(() => {
@@ -324,6 +316,41 @@ const CRM = () => {
   const [isEditingColumns, setIsEditingColumns] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
 
+  // Form para novo lead
+  const newLeadForm = useForm({
+    defaultValues: {
+      name: "",
+      company: "",
+      email: "",
+      phone: "",
+      responsible: ""
+    }
+  });
+
+  // Form para editar lead
+  const editLeadForm = useForm({
+    defaultValues: {
+      name: "",
+      company: "",
+      email: "",
+      phone: "",
+      responsible: ""
+    }
+  });
+
+  // Efeito para preencher o formulário de edição quando um lead é selecionado
+  useEffect(() => {
+    if (leadToEdit) {
+      editLeadForm.reset({
+        name: leadToEdit.name,
+        company: leadToEdit.company,
+        email: leadToEdit.email,
+        phone: leadToEdit.phone,
+        responsible: leadToEdit.responsible
+      });
+    }
+  }, [leadToEdit, editLeadForm]);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // Configuração dos sensores para o drag and drop
@@ -340,7 +367,6 @@ const CRM = () => {
     (lead) =>
       lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.responsible.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -503,6 +529,74 @@ const CRM = () => {
     }
   };
   
+  // Função para abrir a edição de um lead
+  const openLeadEditForm = (lead: Lead) => {
+    setLeadToEdit(lead);
+    setIsEditingLead(true);
+  };
+
+  // Função para adicionar um novo lead
+  const handleAddNewLead = (data) => {
+    const newLead: Lead = {
+      id: leads.length > 0 ? Math.max(...leads.map(l => l.id)) + 1 : 1,
+      name: data.name,
+      company: data.company,
+      email: data.email,
+      phone: data.phone,
+      column: "lead-in", // Definindo automaticamente como "Lead In"
+      responsible: data.responsible,
+      lastContact: new Date().toLocaleDateString(),
+      comments: []
+    };
+
+    setLeads([...leads, newLead]);
+    newLeadForm.reset();
+    toast({
+      title: "Lead adicionado",
+      description: `O lead ${data.name} foi adicionado com sucesso.`,
+    });
+  };
+
+  // Função para salvar a edição de um lead
+  const handleSaveLeadEdit = (data) => {
+    if (!leadToEdit) return;
+
+    const updatedLeads = leads.map(lead => 
+      lead.id === leadToEdit.id 
+        ? { 
+            ...lead, 
+            name: data.name,
+            company: data.company,
+            email: data.email,
+            phone: data.phone,
+            responsible: data.responsible
+          } 
+        : lead
+    );
+
+    setLeads(updatedLeads);
+    
+    // Se o lead editado for o mesmo que está selecionado, atualize também o selectedLead
+    if (selectedLead && selectedLead.id === leadToEdit.id) {
+      setSelectedLead({
+        ...selectedLead,
+        name: data.name,
+        company: data.company,
+        email: data.email,
+        phone: data.phone,
+        responsible: data.responsible
+      });
+    }
+
+    setIsEditingLead(false);
+    setLeadToEdit(null);
+    
+    toast({
+      title: "Lead atualizado",
+      description: `O lead ${data.name} foi atualizado com sucesso.`,
+    });
+  };
+  
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col mb-6">
@@ -518,13 +612,68 @@ const CRM = () => {
               <DialogHeader>
                 <DialogTitle>Adicionar Novo Lead</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                {/* Formulário seria implementado aqui */}
-                <p>Formulário para adicionar um novo lead.</p>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Salvar</Button>
-              </DialogFooter>
+              <form onSubmit={newLeadForm.handleSubmit(handleAddNewLead)}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <FormLabel htmlFor="name">Nome</FormLabel>
+                    <Input 
+                      id="name" 
+                      {...newLeadForm.register('name', { required: true })} 
+                      placeholder="Nome do lead"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <FormLabel htmlFor="company">Empresa</FormLabel>
+                    <Input 
+                      id="company" 
+                      {...newLeadForm.register('company', { required: true })} 
+                      placeholder="Nome da empresa" 
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <FormLabel htmlFor="email">Email</FormLabel>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      {...newLeadForm.register('email', { required: true })} 
+                      placeholder="Email do contato" 
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <FormLabel htmlFor="phone">Telefone</FormLabel>
+                    <Input 
+                      id="phone" 
+                      {...newLeadForm.register('phone')} 
+                      placeholder="Telefone do contato" 
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <FormLabel htmlFor="responsible">Responsável</FormLabel>
+                    <Select 
+                      onValueChange={(value) => newLeadForm.setValue('responsible', value)} 
+                      defaultValue=""
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o responsável" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {administrators.map(admin => (
+                          <SelectItem key={admin.id} value={admin.name}>
+                            {admin.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit">Salvar</Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
           
@@ -641,7 +790,6 @@ const CRM = () => {
           {activeView === "kanban" ? (
             <div className="relative">
               <div className="sticky top-12 z-10 bg-white border-b p-4 shadow-sm">
-                {/* Campos fixos que não rolam com o kanban */}
                 <div className="flex justify-between items-center">
                   <div className="text-sm font-medium">
                     {filteredLeads.length} leads encontrados
@@ -720,7 +868,6 @@ const CRM = () => {
           ) : (
             <div>
               <div className="sticky top-0 z-10 bg-white border-b p-4">
-                {/* Campos fixos que não rolam com a lista */}
                 <div className="mb-4 w-full max-w-sm">
                   <div className="relative">
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -741,7 +888,6 @@ const CRM = () => {
                         <tr className="bg-gray-50">
                           <th className="px-4 py-2 text-left">Nome</th>
                           <th className="px-4 py-2 text-left">Empresa</th>
-                          <th className="px-4 py-2 text-left">Produto</th>
                           <th className="px-4 py-2 text-left">Responsável</th>
                           <th className="px-4 py-2 text-left">Estágio</th>
                           <th className="px-4 py-2 text-left">Último Contato</th>
@@ -755,7 +901,6 @@ const CRM = () => {
                             <tr key={lead.id} className="border-b hover:bg-gray-50">
                               <td className="px-4 py-3">{lead.name}</td>
                               <td className="px-4 py-3">{lead.company}</td>
-                              <td className="px-4 py-3">{lead.product}</td>
                               <td className="px-4 py-3">{lead.responsible}</td>
                               <td className="px-4 py-3">
                                 {column && (
@@ -793,9 +938,24 @@ const CRM = () => {
         <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center">
-                <User className="mr-2" />
-                {selectedLead.name} - {selectedLead.company}
+              <DialogTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <User className="mr-2" />
+                  {selectedLead.name} - {selectedLead.company}
+                </div>
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openLeadEditForm(selectedLead);
+                    setSelectedLead(null);
+                  }} 
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar Lead
+                </Button>
               </DialogTitle>
             </DialogHeader>
             <div className="py-4">
@@ -828,10 +988,6 @@ const CRM = () => {
                           <p className="mt-1 text-base">{selectedLead.phone}</p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-gray-500">Produto</h3>
-                          <p className="mt-1 text-base">{selectedLead.product}</p>
-                        </div>
-                        <div>
                           <h3 className="text-sm font-medium text-gray-500">Responsável</h3>
                           <p className="mt-1 text-base">{selectedLead.responsible}</p>
                         </div>
@@ -844,8 +1000,6 @@ const CRM = () => {
                           <p className="mt-1 text-base">{selectedLead.lastContact}</p>
                         </div>
                       </div>
-                      
-                      {/* Seção "Mover para estágio" removida conforme solicitação */}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -953,6 +1107,74 @@ const CRM = () => {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Dialog para edição de lead */}
+      <Dialog open={isEditingLead} onOpenChange={(open) => !open && setIsEditingLead(false)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Lead</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={editLeadForm.handleSubmit(handleSaveLeadEdit)}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <FormLabel htmlFor="edit-name">Nome</FormLabel>
+                <Input 
+                  id="edit-name" 
+                  {...editLeadForm.register('name', { required: true })} 
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <FormLabel htmlFor="edit-company">Empresa</FormLabel>
+                <Input 
+                  id="edit-company" 
+                  {...editLeadForm.register('company', { required: true })} 
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <FormLabel htmlFor="edit-email">Email</FormLabel>
+                <Input 
+                  id="edit-email" 
+                  type="email" 
+                  {...editLeadForm.register('email', { required: true })} 
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <FormLabel htmlFor="edit-phone">Telefone</FormLabel>
+                <Input 
+                  id="edit-phone" 
+                  {...editLeadForm.register('phone')} 
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <FormLabel htmlFor="edit-responsible">Responsável</FormLabel>
+                <Select 
+                  onValueChange={(value) => editLeadForm.setValue('responsible', value)} 
+                  defaultValue={leadToEdit?.responsible || ""}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {administrators.map(admin => (
+                      <SelectItem key={admin.id} value={admin.name}>
+                        {admin.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditingLead(false)}>Cancelar</Button>
+              <Button type="submit">Salvar</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
