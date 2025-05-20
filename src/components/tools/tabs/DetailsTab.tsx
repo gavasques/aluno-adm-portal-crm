@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +54,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({ tool, isAdmin, onSave }) => {
     }
   });
   
-  const handleSaveToolEdit = (data) => {
+  const handleSaveToolEdit = (data: any) => {
     onSave(data);
     setIsEditing(false);
   };
@@ -104,6 +103,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({ tool, isAdmin, onSave }) => {
                     <SelectItem value="Marketing">Marketing</SelectItem>
                     <SelectItem value="Logística">Logística</SelectItem>
                     <SelectItem value="Análise de Dados">Análise de Dados</SelectItem>
+                    <SelectItem value="E-commerce">E-commerce</SelectItem>
                   </SelectContent>
                 </Select>
                 {editToolForm.formState.errors.category && (

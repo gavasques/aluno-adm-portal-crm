@@ -152,9 +152,9 @@ const Tools = () => {
   const [tools, setTools] = useState<Tool[]>(mockTools);
   const [filteredTools, setFilteredTools] = useState<Tool[]>(mockTools);
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [recommendationFilter, setRecommendationFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [recommendationFilter, setRecommendationFilter] = useState("all");
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -180,12 +180,12 @@ const Tools = () => {
     }
 
     // Apply category filter
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== "all") {
       result = result.filter((tool) => tool.category === categoryFilter);
     }
 
     // Apply status filter
-    if (statusFilter) {
+    if (statusFilter && statusFilter !== "all") {
       result = result.filter((tool) => {
         if (statusFilter === "Ativo") return tool.status === "Ativo";
         if (statusFilter === "Inativo") return tool.status === "Inativo";
@@ -194,7 +194,7 @@ const Tools = () => {
     }
 
     // Apply recommendation filter
-    if (recommendationFilter) {
+    if (recommendationFilter && recommendationFilter !== "all") {
       result = result.filter((tool) => {
         if (recommendationFilter === "Recomendado") return !!tool.recommended;
         if (recommendationFilter === "Não Recomendado") return !!tool.notRecommended;
@@ -234,9 +234,9 @@ const Tools = () => {
   // Clear filters
   const handleClearFilters = () => {
     setSearchTerm("");
-    setCategoryFilter("");
-    setStatusFilter("");
-    setRecommendationFilter("");
+    setCategoryFilter("all");
+    setStatusFilter("all");
+    setRecommendationFilter("all");
     setSortField("name");
     setSortDirection("asc");
   };
@@ -312,7 +312,7 @@ const Tools = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="">Todas as categorias</SelectItem>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -328,7 +328,7 @@ const Tools = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="Ativo">Ativo</SelectItem>
                   <SelectItem value="Inativo">Inativo</SelectItem>
                 </SelectGroup>
@@ -344,7 +344,7 @@ const Tools = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="">Todas as recomendações</SelectItem>
+                  <SelectItem value="all">Todas as recomendações</SelectItem>
                   <SelectItem value="Recomendado">Recomendadas</SelectItem>
                   <SelectItem value="Não Recomendado">Não Recomendadas</SelectItem>
                 </SelectGroup>
