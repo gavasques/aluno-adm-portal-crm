@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FileUp, AlertCircle, CheckCircle2 } from "lucide-react";
-import { Supplier } from "@/components/admin/SuppliersTable";
+import { Supplier } from "@/types/supplier.types";
 import { toast } from "sonner";
 
 interface CsvImportDialogProps {
