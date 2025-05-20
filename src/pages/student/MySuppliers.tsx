@@ -7,7 +7,7 @@ import { useMySuppliers } from "@/hooks/student/useMySuppliers";
 import { SuppliersFilter } from "@/components/student/my-suppliers/SuppliersFilter";
 import { SuppliersList } from "@/components/student/my-suppliers/SuppliersList";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
-import { CircleUserPlus } from "lucide-react";
+import { CircleUser } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MySuppliers = () => {
@@ -53,7 +53,7 @@ const MySuppliers = () => {
             <Card className="border-none shadow-md bg-gradient-to-r from-purple-600 to-blue-500">
               <CardHeader className="text-white pb-2">
                 <div className="flex items-center">
-                  <CircleUserPlus className="mr-2 h-6 w-6" />
+                  <CircleUser className="mr-2 h-6 w-6" />
                   <CardTitle className="text-3xl font-bold">Meus Fornecedores</CardTitle>
                 </div>
                 <p className="text-white/80 mt-1">
