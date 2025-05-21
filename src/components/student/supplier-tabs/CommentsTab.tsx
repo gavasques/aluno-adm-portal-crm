@@ -42,6 +42,9 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Ensure comments is always an array, even if it's undefined or null
+  const safeComments = Array.isArray(comments) ? comments : [];
+
   // Usuário atual (simulado)
   const currentUser = {
     id: 1,
@@ -71,7 +74,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
         replies: []
       };
       
-      onUpdate([newCommentObj, ...comments]);
+      onUpdate([newCommentObj, ...safeComments]);
       setNewComment("");
       setIsSubmitting(false);
       toast.success("Comentário adicionado com sucesso!");
@@ -88,7 +91,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
     
     // Simular atraso de rede
     setTimeout(() => {
-      const updatedComments = comments.map(comment => {
+      const updatedComments = safeComments.map(comment => {
         if (comment.id === commentId) {
           return {
             ...comment,
@@ -117,7 +120,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
   };
 
   const handleLikeComment = (commentId: number) => {
-    const updatedComments = comments.map(comment => {
+    const updatedComments = safeComments.map(comment => {
       if (comment.id === commentId) {
         return {
           ...comment,
@@ -133,7 +136,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
   };
 
   const handleDeleteComment = (commentId: number) => {
-    const updatedComments = comments.filter(comment => comment.id !== commentId);
+    const updatedComments = safeComments.filter(comment => comment.id !== commentId);
     onUpdate(updatedComments);
     toast.success("Comentário excluído com sucesso!");
   };
@@ -184,13 +187,13 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
         </div>
 
         {/* Lista de comentários */}
-        {comments.length === 0 ? (
+        {safeComments.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             Nenhum comentário ainda. Seja o primeiro a comentar!
           </div>
         ) : (
           <div className="space-y-6">
-            {comments.map((comment) => (
+            {safeComments.map((comment) => (
               <div key={comment.id} className="border-b pb-6 last:border-b-0">
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
@@ -289,7 +292,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
                     )}
                     
                     {/* Respostas */}
-                    {comment.replies.length > 0 && (
+                    {comment.replies && comment.replies.length > 0 && (
                       <div className="mt-4 ml-6 space-y-4">
                         {comment.replies.map((reply) => (
                           <div key={reply.id} className="flex gap-3">

@@ -17,6 +17,9 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ tool, onUpdateTool }) => {
   const [isReplyingTo, setIsReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
   
+  // Ensure comments_list is always an array
+  const comments_list = Array.isArray(tool.comments_list) ? tool.comments_list : [];
+  
   const handleAddComment = () => {
     if (newComment.trim() === "") {
       toast.error("O comentário não pode estar vazio");
@@ -34,7 +37,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ tool, onUpdateTool }) => {
     
     const updatedTool = {
       ...tool,
-      comments_list: [...tool.comments_list, newCommentObj]
+      comments_list: [...comments_list, newCommentObj]
     };
     
     onUpdateTool(updatedTool);
@@ -56,11 +59,11 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ tool, onUpdateTool }) => {
       likes: 0,
     };
     
-    const updatedComments = tool.comments_list.map(comment => {
+    const updatedComments = comments_list.map(comment => {
       if (comment.id === commentId) {
         return {
           ...comment,
-          replies: [...comment.replies, newReply]
+          replies: [...(comment.replies || []), newReply]
         };
       }
       return comment;
@@ -81,7 +84,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ tool, onUpdateTool }) => {
     let updatedTool;
     
     if (type === "comment") {
-      const updatedComments = tool.comments_list.map(comment => {
+      const updatedComments = comments_list.map(comment => {
         if (comment.id === itemId) {
           return { ...comment, likes: comment.likes + 1 };
         }
@@ -89,10 +92,10 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ tool, onUpdateTool }) => {
       });
       updatedTool = { ...tool, comments_list: updatedComments };
     } else if (type === "reply") {
-      const updatedComments = tool.comments_list.map(comment => {
+      const updatedComments = comments_list.map(comment => {
         return {
           ...comment,
-          replies: comment.replies.map(reply => {
+          replies: (comment.replies || []).map(reply => {
             if (reply.id === itemId) {
               return { ...reply, likes: reply.likes + 1 };
             }
@@ -112,9 +115,9 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ tool, onUpdateTool }) => {
   return (
     <Card>
       <CardContent className="py-6">
-        {tool.comments_list && tool.comments_list.length > 0 ? (
+        {comments_list && comments_list.length > 0 ? (
           <div className="space-y-6 mb-6">
-            {tool.comments_list.map((comment) => (
+            {comments_list.map((comment) => (
               <div key={comment.id} className="border rounded-lg p-4">
                 <div className="flex justify-between">
                   <div className="flex items-center">
