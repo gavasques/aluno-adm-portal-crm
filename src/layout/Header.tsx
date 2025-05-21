@@ -71,11 +71,11 @@ const Header = () => {
               </Link>
             </DropdownMenuItem>
             
-            {isAdmin && (
+            {!isAdmin && (
               <DropdownMenuItem asChild>
-                <Link to="/student" className="flex cursor-pointer items-center gap-2">
+                <Link to="/admin" className="flex cursor-pointer items-center gap-2">
                   <ExternalLink className="h-4 w-4" />
-                  Ir para Área do Aluno
+                  Ir para Área ADM
                 </Link>
               </DropdownMenuItem>
             )}
