@@ -35,45 +35,79 @@ export function SupplierTableRow({ supplier, index, onSelectSupplier, onDeleteSu
   };
 
   return (
-    <motion.tr
+    <TableRow
       className="border-purple-100 cursor-pointer"
-      variants={tableRowVariants}
-      custom={index}
-      whileHover="hover"
       onClick={() => onSelectSupplier(supplier)}
     >
       {/* COLUNA NOME */}
       <TableCell>
-        <div className="flex items-center gap-2">
+        <motion.div 
+          className="flex items-center gap-2"
+          variants={tableRowVariants}
+          custom={index}
+          initial="hidden"
+          animate="visible"
+          whileHover="hover"
+        >
           <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-blue-600 text-white flex items-center justify-center text-xs font-bold">
             {supplier.logo}
           </div>
           <div className="font-medium text-gray-900">{supplier.name}</div>
-        </div>
+        </motion.div>
       </TableCell>
 
       {/* COLUNA CATEGORIA */}
       <TableCell>
-        <span className="text-gray-700">{supplier.category}</span>
+        <motion.span 
+          className="text-gray-700"
+          variants={tableRowVariants}
+          custom={index}
+          initial="hidden"
+          animate="visible"
+        >
+          {supplier.category}
+        </motion.span>
       </TableCell>
 
       {/* COLUNA TIPO */}
       <TableCell>
-        {supplier.type ? (
-          <Badge variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-100 font-medium">
-            {supplier.type}
-          </Badge>
-        ) : (
-          <span className="text-xs text-gray-400 italic">Não definido</span>
-        )}
+        <motion.div
+          variants={tableRowVariants}
+          custom={index}
+          initial="hidden"
+          animate="visible"
+        >
+          {supplier.type ? (
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-100 font-medium">
+              {supplier.type}
+            </Badge>
+          ) : (
+            <span className="text-xs text-gray-400 italic">Não definido</span>
+          )}
+        </motion.div>
       </TableCell>
 
       {/* COLUNA CNPJ */}
-      <TableCell className="font-mono text-sm text-gray-600">{supplier.cnpj}</TableCell>
+      <TableCell className="font-mono text-sm text-gray-600">
+        <motion.span
+          variants={tableRowVariants}
+          custom={index}
+          initial="hidden"
+          animate="visible"
+        >
+          {supplier.cnpj}
+        </motion.span>
+      </TableCell>
 
       {/* COLUNA MARCAS */}
       <TableCell>
-        <div className="flex flex-wrap gap-1">
+        <motion.div 
+          className="flex flex-wrap gap-1"
+          variants={tableRowVariants}
+          custom={index}
+          initial="hidden"
+          animate="visible"
+        >
           {supplier.brands && supplier.brands.length > 0 ? (
             supplier.brands.slice(0, 2).map((brand, idx) => (
               <Badge key={idx} variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-100 font-medium">
@@ -88,12 +122,19 @@ export function SupplierTableRow({ supplier, index, onSelectSupplier, onDeleteSu
               +{supplier.brands.length - 2}
             </Badge>
           )}
-        </div>
+        </motion.div>
       </TableCell>
 
       {/* COLUNA AÇÕES */}
       <TableCell className="text-right">
-        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+        <motion.div 
+          className="flex justify-end gap-2" 
+          onClick={(e) => e.stopPropagation()}
+          variants={tableRowVariants}
+          custom={index}
+          initial="hidden"
+          animate="visible"
+        >
           <Button
             variant="outline"
             size="sm"
@@ -133,8 +174,8 @@ export function SupplierTableRow({ supplier, index, onSelectSupplier, onDeleteSu
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
+        </motion.div>
       </TableCell>
-    </motion.tr>
+    </TableRow>
   );
 }

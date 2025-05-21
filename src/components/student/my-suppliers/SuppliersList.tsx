@@ -54,11 +54,7 @@ export function SuppliersList({
                 </TableCell>
               </TableRow>
             ) : (
-              <motion.tbody
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
+              <>
                 {suppliers.map((supplier, index) => (
                   <SupplierTableRow
                     key={supplier.id}
@@ -68,7 +64,7 @@ export function SuppliersList({
                     onDeleteSupplier={onDeleteSupplier}
                   />
                 ))}
-              </motion.tbody>
+              </>
             )}
           </TableBody>
         </Table>
