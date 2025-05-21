@@ -67,7 +67,6 @@ const ToolDetailDialog: React.FC<ToolDetailDialogProps> = ({
               <DetailsTab 
                 tool={tool} 
                 isAdmin={isAdmin}
-                onSave={(data) => onUpdateTool({...tool, ...data})}
               />
             </TabsContent>
             
@@ -75,6 +74,7 @@ const ToolDetailDialog: React.FC<ToolDetailDialogProps> = ({
               <ContactsTab 
                 tool={tool}
                 onUpdateTool={onUpdateTool}
+                isAdmin={isAdmin}
               />
             </TabsContent>
             

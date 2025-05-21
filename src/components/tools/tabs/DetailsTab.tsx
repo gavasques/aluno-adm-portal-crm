@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 
 interface DetailsTabProps {
   tool: Tool;
+  isAdmin?: boolean;
+  onSave?: (data: any) => void;
 }
 
-const DetailsTab: React.FC<DetailsTabProps> = ({ tool }) => {
+const DetailsTab: React.FC<DetailsTabProps> = ({ tool, isAdmin, onSave }) => {
   const fadeIn = {
     hidden: { opacity: 0, y: 10 },
     visible: (i) => ({ 

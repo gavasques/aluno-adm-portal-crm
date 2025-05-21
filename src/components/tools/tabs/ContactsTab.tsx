@@ -16,9 +16,10 @@ import { Tool } from "../ToolsTable";
 interface ContactsTabProps {
   tool: Tool;
   onUpdateTool: (updatedTool: Tool) => void;
+  isAdmin?: boolean;
 }
 
-const ContactsTab: React.FC<ContactsTabProps> = ({ tool, onUpdateTool }) => {
+const ContactsTab: React.FC<ContactsTabProps> = ({ tool, onUpdateTool, isAdmin }) => {
   const [isContactDialogOpen, setIsContactDialogOpen] = React.useState(false);
   
   const contactForm = useForm({
