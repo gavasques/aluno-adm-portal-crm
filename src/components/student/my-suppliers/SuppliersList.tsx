@@ -72,7 +72,7 @@ export function SuppliersList({
         <Table>
           <TableHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
             <TableRow className="hover:bg-transparent border-purple-200">
-              <TableHead width="40%" className="font-semibold text-purple-900">
+              <TableHead className="w-[40%] font-semibold text-purple-900">
                 <Button 
                   variant="ghost" 
                   onClick={() => onSort("name")}
@@ -88,7 +88,7 @@ export function SuppliersList({
                   </motion.div>
                 </Button>
               </TableHead>
-              <TableHead width="15%" className="font-semibold text-purple-900">
+              <TableHead className="w-[15%] font-semibold text-purple-900">
                 <Button 
                   variant="ghost" 
                   onClick={() => onSort("category")}
@@ -104,9 +104,9 @@ export function SuppliersList({
                   </motion.div>
                 </Button>
               </TableHead>
-              <TableHead width="15%" className="font-semibold text-purple-900">CNPJ</TableHead>
-              <TableHead width="20%" className="font-semibold text-purple-900">Marcas</TableHead>
-              <TableHead width="10%" className="text-right font-semibold text-purple-900">Ações</TableHead>
+              <TableHead className="w-[15%] font-semibold text-purple-900">CNPJ</TableHead>
+              <TableHead className="w-[20%] font-semibold text-purple-900">Marcas</TableHead>
+              <TableHead className="w-[10%] text-right font-semibold text-purple-900">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
