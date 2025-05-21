@@ -26,8 +26,8 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <Link to="/" className="text-xl font-semibold">
           <img 
-            src="/lovable-uploads/fbac4170-483c-412d-9780-ee060d5a652c.png"
-            alt="PortalEdu Logo" 
+            src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
+            alt="Guilherme Vasques Logo" 
             className="h-8"
           />
         </Link>
