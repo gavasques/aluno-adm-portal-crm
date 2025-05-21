@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,6 +37,8 @@ import SoftwareTypes from "./pages/admin/SoftwareTypes";
 import PartnerTypes from "./pages/admin/PartnerTypes";
 import Registers from "./pages/admin/Registers";
 import AdminSettings from "./pages/admin/Settings";
+import Permissions from "./pages/admin/Permissions";
+import PermissionGroupDetail from "./pages/admin/PermissionGroupDetail";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +72,10 @@ const App = () => (
                 <Route path="gestao-alunos" element={<AdminStudents />} />
                 <Route path="student/:id" element={<StudentDetail />} />
                 <Route path="gestao-alunos/:id" element={<StudentDetail />} />
+                
+                {/* Nova rota para permissões */}
+                <Route path="permissions" element={<Permissions />} />
+                <Route path="permissions/:id" element={<PermissionGroupDetail />} />
                 
                 {/* Nova rota unificada para os cadastros */}
                 <Route path="registers" element={<Registers />} />
