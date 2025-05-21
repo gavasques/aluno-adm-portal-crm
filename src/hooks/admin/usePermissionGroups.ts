@@ -31,7 +31,7 @@ export const usePermissionGroups = () => {
       toast({
         title: "Grupo de permissão criado",
         description: `O grupo "${data.name}" foi criado com sucesso.`,
-        variant: "success"
+        variant: "default"
       });
       
       return newGroup;
@@ -68,7 +68,7 @@ export const usePermissionGroups = () => {
       toast({
         title: "Grupo de permissão atualizado",
         description: `O grupo "${data.name}" foi atualizado com sucesso.`,
-        variant: "success"
+        variant: "default"
       });
       
       return updatedGroups.find(group => group.id === id);
@@ -97,7 +97,7 @@ export const usePermissionGroups = () => {
       toast({
         title: "Grupo de permissão excluído",
         description: `O grupo "${group?.name}" foi excluído com sucesso.`,
-        variant: "success"
+        variant: "default"
       });
       
       return true;
