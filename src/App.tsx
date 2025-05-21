@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 
 import Layout from "./layout/Layout";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
@@ -55,7 +54,7 @@ const App = () => {
       <Router>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Index />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             
