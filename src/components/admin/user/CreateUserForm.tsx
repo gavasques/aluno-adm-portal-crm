@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUserManagement } from "@/hooks/admin/useUserManagement";
 import { UserPlus } from "lucide-react";
@@ -37,7 +36,7 @@ const userFormSchema = z.object({
   permissionGroupId: z.number().optional().nullable().transform(v => v === undefined ? null : v)
 });
 
-type FormValues = z.infer<typeof userFormSchema>;
+type UserFormValues = z.infer<typeof userFormSchema>;
 
 interface CreateUserFormProps {
   open: boolean;
@@ -50,7 +49,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ open, onClose }) => {
   const { createUser, loading } = useUserManagement();
   
   // Criar formulário
-  const form = useForm<FormValues>({
+  const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
       name: "",
@@ -63,7 +62,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ open, onClose }) => {
   });
 
   // Lidar com a submissão do formulário
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: UserFormValues) => {
     // Se for um usuário comum (não Admin), o grupo de permissão é obrigatório
     if (data.role !== "Admin" && !data.permissionGroupId) {
       toast({
@@ -74,7 +73,17 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ open, onClose }) => {
       return;
     }
     
-    const success = await createUser(data);
+    // Garantir que todos os campos obrigatórios tenham valores definidos
+    const userData = {
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: data.role,
+      status: data.status,
+      permissionGroupId: data.permissionGroupId
+    };
+    
+    const success = await createUser(userData);
     if (success) {
       form.reset();
       onClose();
