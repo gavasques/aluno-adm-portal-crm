@@ -96,7 +96,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ comments, onUpdate }) => {
           return {
             ...comment,
             replies: [
-              ...comment.replies,
+              ...(comment.replies || []),
               {
                 id: Date.now(),
                 userId: currentUser.id,
