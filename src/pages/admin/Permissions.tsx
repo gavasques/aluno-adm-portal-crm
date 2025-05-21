@@ -28,7 +28,13 @@ import GroupUsersDialog from "@/components/admin/permissions/GroupUsersDialog";
 
 const Permissions = () => {
   const navigate = useNavigate();
-  const { permissionGroups, deletePermissionGroup, studentMenuItems } = usePermissionGroups();
+  const { 
+    permissionGroups, 
+    deletePermissionGroup, 
+    studentMenuItems,
+    addUserToGroup,
+    removeUserFromGroup
+  } = usePermissionGroups();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<{ id: number; name: string } | null>(null);
   const [showUsersDialog, setShowUsersDialog] = useState(false);
@@ -200,6 +206,8 @@ const Permissions = () => {
           onOpenChange={setShowUsersDialog}
           groupId={selectedGroup.id}
           groupName={selectedGroup.name}
+          onAddUserToGroup={addUserToGroup}
+          onRemoveUserFromGroup={removeUserFromGroup}
         />
       )}
     </div>

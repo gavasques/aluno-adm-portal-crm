@@ -3,11 +3,15 @@ import { useState } from "react";
 import { initialPermissionGroups, studentMenuItems } from "@/data/permissionGroupsData";
 import { PermissionGroup, PermissionGroupFormData } from "@/types/permission.types";
 import { useToast } from "@/components/ui/use-toast";
+import { USERS } from "@/data/users";
 
 export const usePermissionGroups = () => {
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>(initialPermissionGroups);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Estado para os usuários que vamos manipular
+  const [users, setUsers] = useState(USERS);
 
   // Get a single permission group by ID
   const getPermissionGroup = (id: number) => {
@@ -92,7 +96,23 @@ export const usePermissionGroups = () => {
       const group = permissionGroups.find(g => g.id === id);
       const updatedGroups = permissionGroups.filter(group => group.id !== id);
       
+      // Remover todos os usuários deste grupo (definir permissionGroupId como undefined)
+      const updatedUsers = users.map(user => {
+        if (user.permissionGroupId === id) {
+          return { ...user, permissionGroupId: undefined };
+        }
+        return user;
+      });
+      
       setPermissionGroups(updatedGroups);
+      setUsers(updatedUsers);
+      
+      // Atualiza o USERS global para refletir as mudanças
+      for (let i = 0; i < USERS.length; i++) {
+        if (USERS[i].permissionGroupId === id) {
+          USERS[i].permissionGroupId = undefined;
+        }
+      }
       
       toast({
         title: "Grupo de permissão excluído",
@@ -112,14 +132,59 @@ export const usePermissionGroups = () => {
       setLoading(false);
     }
   };
+  
+  // Adiciona um usuário a um grupo de permissão
+  const addUserToGroup = (userId: number, groupId: number) => {
+    // Atualiza o usuário no array local
+    const updatedUsers = users.map(user => {
+      if (user.id === userId) {
+        return { ...user, permissionGroupId: groupId };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // Atualiza o USERS global para refletir as mudanças
+    const userIndex = USERS.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      USERS[userIndex].permissionGroupId = groupId;
+    }
+    
+    return true;
+  };
+  
+  // Remove um usuário de qualquer grupo
+  const removeUserFromGroup = (userId: number) => {
+    // Atualiza o usuário no array local
+    const updatedUsers = users.map(user => {
+      if (user.id === userId) {
+        return { ...user, permissionGroupId: undefined };
+      }
+      return user;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // Atualiza o USERS global para refletir as mudanças
+    const userIndex = USERS.findIndex(user => user.id === userId);
+    if (userIndex !== -1) {
+      USERS[userIndex].permissionGroupId = undefined;
+    }
+    
+    return true;
+  };
 
   return {
     permissionGroups,
     loading,
+    users,
     getPermissionGroup,
     createPermissionGroup,
     updatePermissionGroup,
     deletePermissionGroup,
+    addUserToGroup,
+    removeUserFromGroup,
     studentMenuItems
   };
 };
