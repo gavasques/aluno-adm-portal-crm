@@ -12,7 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface RatingItem {
+export interface RatingItem {
   id: number;
   userId: number;
   userName: string;
@@ -24,7 +24,7 @@ interface RatingItem {
   userLiked: boolean;
 }
 
-interface RatingsTabProps {
+export interface RatingsTabProps {
   ratings: RatingItem[];
   onUpdate: (ratings: RatingItem[]) => void;
 }

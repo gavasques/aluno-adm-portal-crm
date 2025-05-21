@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface CommentReply {
+export interface CommentReply {
   id: number;
   userId: number;
   userName: string;
@@ -19,7 +19,7 @@ interface CommentReply {
   date: string;
 }
 
-interface CommentItem {
+export interface CommentItem {
   id: number;
   userId: number;
   userName: string;
@@ -31,7 +31,7 @@ interface CommentItem {
   replies: CommentReply[];
 }
 
-interface CommentsTabProps {
+export interface CommentsTabProps {
   comments: CommentItem[];
   onUpdate: (comments: CommentItem[]) => void;
 }

@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Star, Heart, Calendar, FileText, MessageSquare, Building, Tag } from "lucide-react";
+import { ArrowLeft, Save, Star, Heart, Calendar, FileText, MessageSquare, Building, Tag, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BrandsTab from "./supplier-tabs/BrandsTab";
@@ -58,6 +57,8 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
   if (!editedSupplier.branches) editedSupplier.branches = [];
   if (!editedSupplier.contacts) editedSupplier.contacts = [];
   if (!editedSupplier.files) editedSupplier.files = [];
+  if (!editedSupplier.ratings) editedSupplier.ratings = [];
+  if (!editedSupplier.comments) editedSupplier.comments = [];
 
   const handleSave = () => {
     // Validar campos obrigatórios
@@ -217,7 +218,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       style={{
-        background: "radial-gradient(circle at 50% 0%, rgba(251, 254, 251, 0.12), rgba(255, 255, 255, 0) 40%)"
+        background: "radial-gradient(circle at 50% 0%, rgba(251, 254, 251, 0.12), rgba(255, 255, 255, 0))"
       }}
     >
       {/* Header with animation */}
@@ -724,9 +725,9 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
                 </CardHeader>
                 <CardContent className="pt-6">
                   <RatingsTab 
-                    supplier={editedSupplier}
-                    onUpdate={(updatedSupplier) => {
-                      setEditedSupplier(updatedSupplier);
+                    ratings={editedSupplier.ratings || []}
+                    onUpdate={(updatedRatings) => {
+                      setEditedSupplier({...editedSupplier, ratings: updatedRatings});
                     }}
                   />
                 </CardContent>
@@ -743,9 +744,9 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
                 </CardHeader>
                 <CardContent className="pt-6">
                   <CommentsTab 
-                    supplier={editedSupplier}
-                    onUpdate={(updatedSupplier) => {
-                      setEditedSupplier(updatedSupplier);
+                    comments={editedSupplier.comments || []}
+                    onUpdate={(updatedComments) => {
+                      setEditedSupplier({...editedSupplier, comments: updatedComments});
                     }}
                   />
                 </CardContent>
