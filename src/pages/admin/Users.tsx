@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Combobox } from "@/components/ui/combobox";
-import { StatusBadge } from "@/components/ui/status-badge";
+import StatusBadge from "@/components/ui/status-badge";
 import { 
   Search, 
   MoreHorizontal, 

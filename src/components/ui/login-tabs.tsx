@@ -1,11 +1,19 @@
+
 import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs as TabsComponent, TabsList as TabsListComponent, TabsTrigger as TabsTriggerComponent, TabsContent as TabsContentComponent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+
+// Exportando os componentes para uso em outros arquivos
+export const Tabs = TabsComponent;
+export const TabsList = TabsListComponent;
+export const TabsTrigger = TabsTriggerComponent;
+export const TabsContent = TabsContentComponent;
+
 export function LoginTabs() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
