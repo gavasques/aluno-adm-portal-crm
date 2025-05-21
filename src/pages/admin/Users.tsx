@@ -59,95 +59,8 @@ import {
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-// Sample user data
-const USERS = [
-  {
-    id: 1,
-    name: "João Silva",
-    email: "joao.silva@exemplo.com",
-    role: "Aluno",
-    status: "Ativo",
-    lastLogin: "Hoje, 10:45",
-    storage: "45MB / 100MB",
-    phone: "(11) 98765-4321",
-    registrationDate: "15/03/2023",
-    storageValue: 45,
-    storageLimit: 100,
-    observations: "Cliente interessado em expandir para marketplace.",
-    monthlyCredits: 5, // Monthly renewable credits
-    permanentCredits: 0, // Permanent non-expiring credits
-    totalCredits: 5 // Total available credits (sum of both)
-  },
-  {
-    id: 2,
-    name: "Maria Oliveira",
-    email: "maria.oliveira@exemplo.com",
-    role: "Aluno",
-    status: "Ativo",
-    lastLogin: "Ontem, 15:30",
-    storage: "78MB / 100MB",
-    phone: "(21) 97654-3210",
-    registrationDate: "22/05/2023",
-    storageValue: 78,
-    storageLimit: 100,
-    observations: "",
-    monthlyCredits: 5,
-    permanentCredits: 0,
-    totalCredits: 5
-  },
-  {
-    id: 3,
-    name: "Carlos Santos",
-    email: "carlos.santos@exemplo.com",
-    role: "Administrador",
-    status: "Ativo",
-    lastLogin: "Hoje, 09:15",
-    storage: "23MB / 100MB",
-    phone: "(31) 98877-6655",
-    registrationDate: "10/01/2023",
-    storageValue: 23,
-    storageLimit: 100,
-    observations: "Administrador principal da plataforma.",
-    monthlyCredits: 5,
-    permanentCredits: 0,
-    totalCredits: 5
-  },
-  {
-    id: 4,
-    name: "Ana Pereira",
-    email: "ana.pereira@exemplo.com",
-    role: "Aluno",
-    status: "Inativo",
-    lastLogin: "15/05/2023, 14:20",
-    storage: "12MB / 100MB",
-    phone: "(41) 99988-7766",
-    registrationDate: "05/02/2023",
-    storageValue: 12,
-    storageLimit: 100,
-    observations: "Cliente em processo de renovação.",
-    monthlyCredits: 5,
-    permanentCredits: 0,
-    totalCredits: 5
-  },
-  {
-    id: 5,
-    name: "Roberto Costa",
-    email: "roberto.costa@exemplo.com",
-    role: "Aluno",
-    status: "Pendente",
-    lastLogin: "Hoje, 11:05",
-    storage: "89MB / 100MB",
-    phone: "(51) 98765-4321",
-    registrationDate: "18/04/2023",
-    storageValue: 89,
-    storageLimit: 100,
-    observations: "Aguardando confirmação de dados bancários.",
-    monthlyCredits: 5,
-    permanentCredits: 0,
-    totalCredits: 5
-  }
-];
+import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { USERS } from "@/data/users";
 
 // Schema de validação para o formulário de adicionar/editar usuário
 const userFormSchema = z.object({
@@ -156,6 +69,7 @@ const userFormSchema = z.object({
   phone: z.string().min(8, { message: "Telefone inválido" }),
   role: z.string(),
   status: z.string(),
+  permissionGroupId: z.number().optional().nullable(),
   observations: z.string().optional()
 });
 
@@ -189,6 +103,7 @@ type UserFormValues = z.infer<typeof userFormSchema>;
 type CreditsFormValues = z.infer<typeof creditsFormSchema>;
 
 const Users = () => {
+  const { permissionGroups } = usePermissionGroups();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
@@ -197,10 +112,11 @@ const Users = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortDirection, setSortDirection] = useState("asc");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [permissionGroupFilter, setPermissionGroupFilter] = useState("all");
   const [showCreditsDialog, setShowCreditsDialog] = useState(false);
   const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([]);
   
-  // Filter users based on search query and status filter
+  // Filter users based on search query, status filter, and permission group filter
   const filteredUsers = useMemo(() => {
     return USERS.filter(user => {
       const matchesSearch = 
@@ -208,9 +124,13 @@ const Users = () => {
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.role.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesPermissionGroup = 
+        permissionGroupFilter === "all" || 
+        (user.permissionGroupId?.toString() === permissionGroupFilter) ||
+        (permissionGroupFilter === "none" && !user.permissionGroupId);
+      return matchesSearch && matchesStatus && matchesPermissionGroup;
     });
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, permissionGroupFilter]);
   
   // Sort users by name
   const sortedUsers = useMemo(() => {
@@ -222,6 +142,13 @@ const Users = () => {
       }
     });
   }, [filteredUsers, sortDirection]);
+
+  // Get permission group name by ID
+  const getPermissionGroupName = (groupId) => {
+    if (!groupId) return "Nenhum";
+    const group = permissionGroups.find(g => g.id === groupId);
+    return group ? group.name : "Desconhecido";
+  };
 
   // Calculate pagination
   const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
@@ -463,11 +390,16 @@ const Users = () => {
       name: "",
       email: "",
       phone: "",
-      role: "Aluno",
+      role: "Usuário",
       status: "Pendente",
+      permissionGroupId: null,
       observations: ""
     }
   });
+
+  // Watch role value to determine if permissionGroupId is required
+  const roleValue = addUserForm.watch("role");
+  const isPermissionGroupRequired = roleValue !== "Admin";
 
   // Formulário para editar usuário existente
   const editUserForm = useForm<UserFormValues>({
@@ -476,8 +408,9 @@ const Users = () => {
       name: selectedUser?.name || "",
       email: selectedUser?.email || "",
       phone: selectedUser?.phone || "",
-      role: selectedUser?.role || "Aluno",
+      role: selectedUser?.role || "Usuário",
       status: selectedUser?.status || "Ativo",
+      permissionGroupId: selectedUser?.permissionGroupId || null,
       observations: selectedUser?.observations || ""
     }
   });
@@ -491,13 +424,24 @@ const Users = () => {
         phone: selectedUser.phone,
         role: selectedUser.role,
         status: selectedUser.status,
+        permissionGroupId: selectedUser.permissionGroupId,
         observations: selectedUser.observations || ""
       });
     }
   }, [selectedUser, editUserForm]);
 
-  // Updated to add default monthly credits for new users
+  // Updated to add default monthly credits for new users and required permission group
   const handleAddUser = (data: UserFormValues) => {
+    // Verificar se o grupo de permissão é obrigatório
+    if (data.role !== "Admin" && !data.permissionGroupId) {
+      toast({
+        title: "Erro ao adicionar usuário",
+        description: "Grupo de permissão é obrigatório para usuários não administradores",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // No mundo real, adicionaríamos o usuário ao banco de dados
     const newUserData = {
       ...data,
@@ -805,8 +749,8 @@ const Users = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div className="relative w-full sm:w-96">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+            <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <Input
                 placeholder="Buscar usuários..."
@@ -815,19 +759,38 @@ const Users = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="Ativo">Ativo</SelectItem>
-                  <SelectItem value="Inativo">Inativo</SelectItem>
-                  <SelectItem value="Pendente">Pendente</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="Ativo">Ativo</SelectItem>
+                    <SelectItem value="Inativo">Inativo</SelectItem>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <Select value={permissionGroupFilter} onValueChange={setPermissionGroupFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filtrar por grupo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Grupos</SelectItem>
+                    <SelectItem value="none">Sem Grupo</SelectItem>
+                    {permissionGroups.map((group) => (
+                      <SelectItem key={group.id} value={group.id.toString()}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           
@@ -845,6 +808,7 @@ const Users = () => {
                   </TableHead>
                   <TableHead>Função</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Grupo de Permissão</TableHead>
                   <TableHead>Último Login</TableHead>
                   <TableHead>
                     <div className="flex items-center">
@@ -882,6 +846,13 @@ const Users = () => {
                         {user.status}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {user.role === "Admin" ? (
+                        <span className="text-sm text-muted-foreground">N/A</span>
+                      ) : (
+                        <span>{getPermissionGroupName(user.permissionGroupId)}</span>
+                      )}
+                    </TableCell>
                     <TableCell>{user.lastLogin}</TableCell>
                     <TableCell>{user.registrationDate}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -914,7 +885,7 @@ const Users = () => {
                 
                 {currentItems.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       Nenhum usuário encontrado com os critérios de busca.
                     </TableCell>
                   </TableRow>
@@ -1036,8 +1007,8 @@ const Users = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Administrador">Administrador</SelectItem>
-                        <SelectItem value="Aluno">Aluno</SelectItem>
+                        <SelectItem value="Admin">Administrador</SelectItem>
+                        <SelectItem value="Usuário">Aluno</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1070,6 +1041,36 @@ const Users = () => {
                   </FormItem>
                 )}
               />
+              
+              {isPermissionGroupRequired && (
+                <FormField
+                  control={addUserForm.control}
+                  name="permissionGroupId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Grupo de Permissão *</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(Number(value))} 
+                        defaultValue={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um grupo de permissão" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {permissionGroups.map((group) => (
+                            <SelectItem key={group.id} value={group.id.toString()}>
+                              {group.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               
               <FormField
                 control={addUserForm.control}
@@ -1179,8 +1180,8 @@ const Users = () => {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="Administrador">Administrador</SelectItem>
-                                    <SelectItem value="Aluno">Aluno</SelectItem>
+                                    <SelectItem value="Admin">Administrador</SelectItem>
+                                    <SelectItem value="Usuário">Aluno</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -1215,6 +1216,36 @@ const Users = () => {
                           />
                         </div>
                       </div>
+                      
+                      {editUserForm.watch("role") !== "Admin" && (
+                        <FormField
+                          control={editUserForm.control}
+                          name="permissionGroupId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Grupo de Permissão *</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(Number(value))}
+                                defaultValue={field.value?.toString()}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um grupo de permissão" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {permissionGroups.map((group) => (
+                                    <SelectItem key={group.id} value={group.id.toString()}>
+                                      {group.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                       
                       <FormField
                         control={editUserForm.control}
@@ -1308,6 +1339,13 @@ const Users = () => {
                           <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
                           <p>{selectedUser.lastLogin}</p>
                         </div>
+                        
+                        {selectedUser.role !== "Admin" && (
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground mb-1">Grupo de Permissão</h3>
+                            <p>{getPermissionGroupName(selectedUser.permissionGroupId)}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
