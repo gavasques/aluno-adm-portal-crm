@@ -1,13 +1,17 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Book, Home, Settings, Users, BarChart, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
+import { useAllowedMenus } from "@/hooks/useAllowedMenus";
+
 interface NavItemProps {
   href: string;
   icon: React.ElementType;
   children: React.ReactNode;
 }
+
 const NavItem = ({
   href,
   icon: Icon,
@@ -26,6 +30,7 @@ const NavItem = ({
       </SidebarMenuButton>
     </SidebarMenuItem>;
 };
+
 const sidebarAnimation = {
   hidden: {
     opacity: 0,
@@ -40,6 +45,7 @@ const sidebarAnimation = {
     }
   }
 };
+
 const itemAnimation = {
   hidden: {
     opacity: 0,
@@ -50,11 +56,23 @@ const itemAnimation = {
     x: 0
   }
 };
+
 const StudentSidebar = () => {
+  const { allowedMenus, loading } = useAllowedMenus();
+
+  // Se estiver carregando, mostrar um sidebar vazio ou spinner
+  if (loading) {
+    return <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30">
+      <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
+      <SidebarContent className="pt-16 pb-4 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </SidebarContent>
+    </Sidebar>;
+  }
+
   return <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30">
       <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
       <SidebarContent className="pt-16 pb-4">
-        
         
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show" className="mt-4">
           <SidebarGroup>
@@ -63,9 +81,11 @@ const StudentSidebar = () => {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student" icon={Home}>Dashboard</NavItem>
-                </motion.div>
+                {allowedMenus.includes('dashboard') && (
+                  <motion.div variants={itemAnimation}>
+                    <NavItem href="/student" icon={Home}>Dashboard</NavItem>
+                  </motion.div>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -76,15 +96,21 @@ const StudentSidebar = () => {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/suppliers" icon={Users}>Fornecedores</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/partners" icon={BarChart}>Parceiros</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/tools" icon={Book}>Ferramentas</NavItem>
-                </motion.div>
+                {allowedMenus.includes('suppliers') && (
+                  <motion.div variants={itemAnimation}>
+                    <NavItem href="/student/suppliers" icon={Users}>Fornecedores</NavItem>
+                  </motion.div>
+                )}
+                {allowedMenus.includes('partners') && (
+                  <motion.div variants={itemAnimation}>
+                    <NavItem href="/student/partners" icon={BarChart}>Parceiros</NavItem>
+                  </motion.div>
+                )}
+                {allowedMenus.includes('tools') && (
+                  <motion.div variants={itemAnimation}>
+                    <NavItem href="/student/tools" icon={Book}>Ferramentas</NavItem>
+                  </motion.div>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -95,12 +121,16 @@ const StudentSidebar = () => {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/my-suppliers" icon={FileText}>Meus Fornecedores</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/settings" icon={Settings}>Configurações</NavItem>
-                </motion.div>
+                {allowedMenus.includes('my-suppliers') && (
+                  <motion.div variants={itemAnimation}>
+                    <NavItem href="/student/my-suppliers" icon={FileText}>Meus Fornecedores</NavItem>
+                  </motion.div>
+                )}
+                {allowedMenus.includes('settings') && (
+                  <motion.div variants={itemAnimation}>
+                    <NavItem href="/student/settings" icon={Settings}>Configurações</NavItem>
+                  </motion.div>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -109,4 +139,5 @@ const StudentSidebar = () => {
       </SidebarContent>
     </Sidebar>;
 };
+
 export default StudentSidebar;

@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GridBackground } from "@/components/ui/grid-background";
 import { useProfile } from "@/hooks/useProfile";
+import { useAllowedMenus } from "@/hooks/useAllowedMenus";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState("Verificando autenticação...");
   const { loadProfile, profile } = useProfile();
+  const { allowedMenus, loading: menuLoading } = useAllowedMenus();
 
   useEffect(() => {
     const handleAuthCallback = async () => {

@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      permission_group_menus: {
+        Row: {
+          id: number
+          menu_key: string
+          permission_group_id: number
+        }
+        Insert: {
+          id?: number
+          menu_key: string
+          permission_group_id: number
+        }
+        Update: {
+          id?: number
+          menu_key?: string
+          permission_group_id?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -50,7 +68,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_allowed_menus: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          menu_key: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

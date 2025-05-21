@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -44,6 +45,7 @@ import StudentTools from "./pages/student/Tools";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProfileProvider } from "./hooks/useProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import StudentRouteGuard from "./components/StudentRouteGuard";
 
 // Create a React Query client
 const queryClient = new QueryClient();
@@ -86,13 +88,15 @@ const App = () => {
                   <Route path="/admin/users" element={<Users />} />
                   <Route path="/admin/settings" element={<Settings />} />
                   
-                  {/* Student routes */}
-                  <Route path="/student" element={<StudentDashboard />} />
-                  <Route path="/student/settings" element={<StudentSettings />} />
-                  <Route path="/student/suppliers" element={<StudentSuppliers />} />
-                  <Route path="/student/my-suppliers" element={<StudentMySuppliers />} />
-                  <Route path="/student/partners" element={<StudentPartners />} />
-                  <Route path="/student/tools" element={<StudentTools />} />
+                  {/* Student routes with permissions guard */}
+                  <Route element={<StudentRouteGuard />}>
+                    <Route path="/student" element={<StudentDashboard />} />
+                    <Route path="/student/settings" element={<StudentSettings />} />
+                    <Route path="/student/suppliers" element={<StudentSuppliers />} />
+                    <Route path="/student/my-suppliers" element={<StudentMySuppliers />} />
+                    <Route path="/student/partners" element={<StudentPartners />} />
+                    <Route path="/student/tools" element={<StudentTools />} />
+                  </Route>
                 </Route>
               </Route>
               

@@ -20,6 +20,7 @@ type ProfileContextType = {
   loading: boolean;
   error: string | null;
   loadProfile: () => Promise<void>;
+  reloadProfile: () => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -63,6 +64,11 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  // Função para recarregar o perfil manualmente
+  const reloadProfile = async () => {
+    await loadProfile();
+  };
+
   useEffect(() => {
     if (user) {
       loadProfile();
@@ -78,7 +84,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         profile,
         loading,
         error,
-        loadProfile
+        loadProfile,
+        reloadProfile
       }}
     >
       {children}
