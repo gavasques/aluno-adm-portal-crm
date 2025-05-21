@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Plus, Search } from "lucide-react";
+import { Shield, Plus, Search, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,11 +24,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import GroupUsersDialog from "@/components/admin/permissions/GroupUsersDialog";
 
 const Permissions = () => {
   const navigate = useNavigate();
   const { permissionGroups, deletePermissionGroup, studentMenuItems } = usePermissionGroups();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState<{ id: number; name: string } | null>(null);
+  const [showUsersDialog, setShowUsersDialog] = useState(false);
 
   const filteredGroups = permissionGroups.filter(group => 
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -41,6 +44,11 @@ const Permissions = () => {
 
   const handleEditGroup = (id: number) => {
     navigate(`/admin/permissions/${id}`);
+  };
+
+  const handleViewUsers = (groupId: number, groupName: string) => {
+    setSelectedGroup({ id: groupId, name: groupName });
+    setShowUsersDialog(true);
   };
 
   const getMenuName = (menuId: string) => {
@@ -127,6 +135,18 @@ const Permissions = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="flex items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewUsers(group.id, group.name);
+                            }}
+                          >
+                            <Users className="h-4 w-4 mr-1" />
+                            Ver Usuários
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditGroup(group.id);
@@ -173,6 +193,15 @@ const Permissions = () => {
           </div>
         </CardContent>
       </Card>
+
+      {selectedGroup && (
+        <GroupUsersDialog
+          open={showUsersDialog}
+          onOpenChange={setShowUsersDialog}
+          groupId={selectedGroup.id}
+          groupName={selectedGroup.name}
+        />
+      )}
     </div>
   );
 };

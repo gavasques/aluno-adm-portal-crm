@@ -95,5 +95,65 @@ export const STUDENTS = [
     registrationDate: "10/05/2023",
     user: null,
     permissionGroupId: 1
+  },
+  {
+    id: 6,
+    name: "Fernanda Lima",
+    email: "fernanda.lima@exemplo.com",
+    phone: "(11) 94567-8901",
+    company: "Lima Ecommerce",
+    amazonStoreLink: "https://amazon.com/shops/lima-ecommerce",
+    studentState: "São Paulo",
+    companyState: "São Paulo",
+    usesFBA: "Sim",
+    status: "Ativo",
+    lastLogin: "Ontem",
+    registrationDate: "25/03/2023",
+    user: {
+      id: 6,
+      name: "Fernanda Lima",
+      email: "fernanda.lima@exemplo.com"
+    },
+    permissionGroupId: 1
+  },
+  {
+    id: 7,
+    name: "Rafael Souza",
+    email: "rafael.souza@exemplo.com",
+    phone: "(31) 95678-9012",
+    company: "Souza Imports",
+    amazonStoreLink: "https://amazon.com/shops/souza-imports",
+    studentState: "Minas Gerais",
+    companyState: "Minas Gerais",
+    usesFBA: "Não",
+    status: "Ativo",
+    lastLogin: "3 dias atrás",
+    registrationDate: "10/02/2023",
+    user: {
+      id: 7,
+      name: "Rafael Souza",
+      email: "rafael.souza@exemplo.com"
+    },
+    permissionGroupId: 2
+  },
+  {
+    id: 8,
+    name: "Carla Oliveira",
+    email: "carla.oliveira@exemplo.com",
+    phone: "(21) 96789-0123",
+    company: "Oliveira Store",
+    amazonStoreLink: "https://amazon.com/shops/oliveira-store",
+    studentState: "Rio de Janeiro",
+    companyState: "Rio de Janeiro",
+    usesFBA: "Sim",
+    status: "Ativo",
+    lastLogin: "Hoje",
+    registrationDate: "15/04/2023",
+    user: {
+      id: 8,
+      name: "Carla Oliveira",
+      email: "carla.oliveira@exemplo.com"
+    },
+    permissionGroupId: 1
   }
 ];
