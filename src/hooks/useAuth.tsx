@@ -44,7 +44,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .eq("id", currentSession?.user?.id)
                 .single();
 
-              if (error) throw error;
+              if (error) {
+                console.error("Erro ao verificar o papel do usuário:", error);
+                navigate("/student"); // Redirecionar para aluno por padrão
+                return;
+              }
               
               if (data?.role === "Admin") {
                 navigate("/admin");
