@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -66,15 +67,13 @@ import {
   Calendar,
   Trash2,
   UserPlus,
-  AlertCircle,
-  Shield
+  AlertCircle
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Import student data from shared file
 import { STUDENTS } from "@/data/students";
 import { USERS } from "@/data/users";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 
 // Schema for student form validation
 const studentFormSchema = z.object({
@@ -87,10 +86,6 @@ const studentFormSchema = z.object({
   companyState: z.string().optional(),
   usesFBA: z.string().optional(),
   userEmail: z.string().email({ message: "Email do usuário inválido" }),
-  permissionGroupId: z.number({ 
-    required_error: "Grupo de permissão é obrigatório",
-    invalid_type_error: "Grupo de permissão é obrigatório" 
-  })
 });
 
 const Students = () => {
@@ -106,8 +101,6 @@ const Students = () => {
   const [userSearchError, setUserSearchError] = useState("");
   const [userFound, setUserFound] = useState(null);
   
-  const { permissionGroups } = usePermissionGroups();
-  
   // Create form
   const form = useForm({
     resolver: zodResolver(studentFormSchema),
@@ -121,7 +114,6 @@ const Students = () => {
       companyState: "",
       usesFBA: "",
       userEmail: "",
-      permissionGroupId: undefined,
     },
   });
 
@@ -168,7 +160,7 @@ const Students = () => {
       return;
     }
     
-    // Create new student with user relation and permission group
+    // Create new student with user relation
     const newStudent = {
       id: STUDENTS.length + 1,
       name: data.name,
@@ -186,8 +178,7 @@ const Students = () => {
         id: userFound.id,
         name: userFound.name,
         email: userFound.email
-      },
-      permissionGroupId: data.permissionGroupId
+      }
     };
 
     // In a real app, save to database
@@ -759,33 +750,6 @@ const Students = () => {
                         <SelectContent>
                           <SelectItem value="Sim">Sim</SelectItem>
                           <SelectItem value="Não">Não</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="permissionGroupId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Grupo de Permissão*</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(Number(value))} 
-                        defaultValue={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um grupo de permissão" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {permissionGroups.map((group) => (
-                            <SelectItem key={group.id} value={group.id.toString()}>
-                              {group.name}
-                            </SelectItem>
-                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

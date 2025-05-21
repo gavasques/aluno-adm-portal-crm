@@ -1,8 +1,7 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Bell, User, LogOut, Settings, ExternalLink } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,99 +9,96 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useLocation } from "react-router-dom";
-import { User, Bell, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
-
-  const isAdmin = location.pathname.startsWith("/admin");
-  const isStudent = location.pathname.startsWith("/student");
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
+  
+  // Detectar se o usuário está na área de admin ou aluno
+  useEffect(() => {
+    setIsAdmin(location.pathname.includes("/admin"));
+  }, [location]);
+  
   return (
-    <header className="fixed top-0 left-0 right-0 h-12 bg-white border-b border-gray-200 z-40 px-4">
-      <div className="flex items-center justify-between h-full">
-        <div className="flex items-center">
-          <div className="lg:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMobileMenu}
-              className="mr-2"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b z-40 px-4 md:px-6 flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <Link to="/" className="text-xl font-semibold">
+          <img 
+            src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
+            alt="Guilherme Vasques Logo" 
+            className="h-8"
+          />
+        </Link>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative rounded-full h-8 w-8 ml-2">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-blue-600 text-white">
+                  {isAdmin ? "A" : "U"}
+                </AvatarFallback>
+              </Avatar>
             </Button>
-          </div>
-          <Link
-            to={isAdmin ? "/admin" : isStudent ? "/student" : "/"}
-            className="font-bold text-lg text-gray-800"
-          >
-            Portal do Aluno
-          </Link>
-        </div>
-
-        <div className="flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell size={18} />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <div className="py-2 px-4">
-                <p className="text-sm font-medium">Notificações</p>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="bg-blue-600 text-white p-4 -mt-1 -mx-1 rounded-t-md">
+              <div className="font-medium">Minha Conta</div>
+              <div className="text-sm text-blue-100">
+                {isAdmin ? "admin@portaledu.com" : "aluno@portaledu.com"}
               </div>
-              <DropdownMenuSeparator />
-              <div className="py-2 px-4">
-                <p className="text-sm text-gray-500">Nenhuma notificação</p>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-2 h-8 w-8 rounded-full"
-              >
-                <User size={18} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {user && (
-                <>
-                  <div className="py-2 px-4">
-                    <p className="text-sm font-medium">{user.email}</p>
-                    <p className="text-xs text-gray-500">Usuário</p>
-                  </div>
-                  <DropdownMenuSeparator />
-                </>
-              )}
+            </div>
+            
+            <DropdownMenuItem asChild>
+              <Link to={isAdmin ? "/admin" : "/student"} className="flex cursor-pointer items-center gap-2">
+                <User className="h-4 w-4" />
+                Dashboard
+              </Link>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem asChild>
+              <Link to={isAdmin ? "/admin/settings" : "/student/settings"} className="flex cursor-pointer items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Configurações
+              </Link>
+            </DropdownMenuItem>
+            
+            {isAdmin && (
               <DropdownMenuItem asChild>
-                <Link
-                  to={isAdmin ? "/admin/settings" : "/student/settings"}
-                  className="cursor-pointer"
-                >
-                  Configurações
+                <Link to="/student" className="flex cursor-pointer items-center gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Ir para Área do Aluno
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer text-red-600"
-                onClick={signOut}
-              >
-                Sair
+            )}
+            
+            {!isAdmin && (
+              <DropdownMenuItem asChild>
+                <Link to="/admin" className="flex cursor-pointer items-center gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Ir para Área ADM
+                </Link>
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            )}
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem asChild className="text-red-600 focus:text-red-600">
+              <Link to="/" className="flex cursor-pointer items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
