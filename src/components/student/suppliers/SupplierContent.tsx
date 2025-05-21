@@ -56,7 +56,7 @@ export function SupplierContent({
       delay: 0.1
     }}>
           <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-white to-amber-50">
-            <CardHeader className="bg-gradient-to-r from-black-500 to-orange-500 text-white">
+            <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-500 text-white">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-xl font-bold">Lista de Fornecedores</span>
