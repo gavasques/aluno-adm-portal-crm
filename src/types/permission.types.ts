@@ -20,3 +20,14 @@ export interface PermissionGroupFormData {
   description: string;
   allowedMenus: string[];
 }
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+  permissionGroupId?: number; // ID do grupo de permissão do usuário
+  tasks: any[];
+}

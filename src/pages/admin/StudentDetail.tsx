@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -7,9 +8,7 @@ import {
   Phone, 
   Building, 
   Calendar, 
-  Star, 
-  Clock,
-  Shield
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,13 +18,11 @@ import { Separator } from "@/components/ui/separator";
 import { STUDENTS } from "@/data/students";
 import { useToast } from "@/hooks/use-toast";
 import EditStudentForm from "@/components/admin/student/EditStudentForm";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 
 const StudentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { permissionGroups } = usePermissionGroups();
   
   // Find student data
   const student = STUDENTS.find((s) => s.id === Number(id));
@@ -53,9 +50,6 @@ const StudentDetail = () => {
       </div>
     );
   }
-
-  // Get permission group name for display
-  const permissionGroup = permissionGroups.find(g => g.id === student.permissionGroupId);
   
   // Handle save student changes
   const handleSaveStudent = (data) => {
@@ -89,12 +83,6 @@ const StudentDetail = () => {
           >
             {student.status}
           </Badge>
-          {permissionGroup && (
-            <Badge variant="outline" className="flex items-center gap-1 border-blue-500 text-blue-500">
-              <Shield className="h-3 w-3" />
-              {permissionGroup.name}
-            </Badge>
-          )}
         </div>
       </header>
       
@@ -144,15 +132,6 @@ const StudentDetail = () => {
                       <p className="font-medium">Usuário Vinculado</p>
                       <p className="text-sm text-gray-600">
                         {student.user ? `${student.user.name} (${student.user.email})` : "Nenhum usuário vinculado"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Shield className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Grupo de Permissão</p>
-                      <p className="text-sm text-gray-600">
-                        {permissionGroup ? permissionGroup.name : "Nenhum grupo atribuído"}
                       </p>
                     </div>
                   </div>

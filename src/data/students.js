@@ -17,8 +17,7 @@ export const STUDENTS = [
       id: 2,
       name: "João Silva",
       email: "joao.silva@exemplo.com"
-    },
-    permissionGroupId: 1
+    }
   },
   {
     id: 2,
@@ -37,8 +36,7 @@ export const STUDENTS = [
       id: 3,
       name: "Maria Santos",
       email: "maria.santos@exemplo.com"
-    },
-    permissionGroupId: 1
+    }
   },
   {
     id: 3,
@@ -57,8 +55,7 @@ export const STUDENTS = [
       id: 4,
       name: "Pedro Oliveira",
       email: "pedro.oliveira@exemplo.com"
-    },
-    permissionGroupId: 2
+    }
   },
   {
     id: 4,
@@ -77,8 +74,7 @@ export const STUDENTS = [
       id: 5,
       name: "Ana Costa",
       email: "ana.costa@exemplo.com"
-    },
-    permissionGroupId: 2
+    }
   },
   {
     id: 5,
@@ -93,8 +89,7 @@ export const STUDENTS = [
     status: "Ativo",
     lastLogin: "Hoje",
     registrationDate: "10/05/2023",
-    user: null,
-    permissionGroupId: 1
+    user: null
   },
   {
     id: 6,
@@ -113,8 +108,7 @@ export const STUDENTS = [
       id: 6,
       name: "Fernanda Lima",
       email: "fernanda.lima@exemplo.com"
-    },
-    permissionGroupId: 1
+    }
   },
   {
     id: 7,
@@ -133,8 +127,7 @@ export const STUDENTS = [
       id: 7,
       name: "Rafael Souza",
       email: "rafael.souza@exemplo.com"
-    },
-    permissionGroupId: 2
+    }
   },
   {
     id: 8,
@@ -153,7 +146,6 @@ export const STUDENTS = [
       id: 8,
       name: "Carla Oliveira",
       email: "carla.oliveira@exemplo.com"
-    },
-    permissionGroupId: 1
+    }
   }
 ];

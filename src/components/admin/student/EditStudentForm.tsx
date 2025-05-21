@@ -20,10 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User } from "lucide-react";
 
 // Brazilian states array
 const brazilianStates = [
@@ -45,10 +44,6 @@ const studentFormSchema = z.object({
   studentState: z.string().optional(),
   companyState: z.string().optional(),
   usesFBA: z.string().optional(),
-  permissionGroupId: z.number({ 
-    required_error: "Grupo de permissão é obrigatório",
-    invalid_type_error: "Grupo de permissão é obrigatório" 
-  })
 });
 
 interface EditStudentFormProps {
@@ -57,7 +52,6 @@ interface EditStudentFormProps {
 }
 
 const EditStudentForm: React.FC<EditStudentFormProps> = ({ student, onSave }) => {
-  const { permissionGroups } = usePermissionGroups();
   const { toast } = useToast();
   
   // Create form
@@ -72,7 +66,6 @@ const EditStudentForm: React.FC<EditStudentFormProps> = ({ student, onSave }) =>
       studentState: student?.studentState || "",
       companyState: student?.companyState || "",
       usesFBA: student?.usesFBA || "",
-      permissionGroupId: student?.permissionGroupId || undefined,
     },
   });
 
@@ -88,23 +81,12 @@ const EditStudentForm: React.FC<EditStudentFormProps> = ({ student, onSave }) =>
         studentState: student.studentState || "",
         companyState: student.companyState || "",
         usesFBA: student.usesFBA || "",
-        permissionGroupId: student.permissionGroupId || undefined,
       });
     }
   }, [student, form]);
 
   // Handle form submission
   const onSubmit = (data) => {
-    // If permissionGroupId is missing, show an error
-    if (!data.permissionGroupId) {
-      toast({
-        title: "Erro ao salvar",
-        description: "Grupo de permissão é obrigatório",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     onSave(data);
   };
 
@@ -112,7 +94,7 @@ const EditStudentForm: React.FC<EditStudentFormProps> = ({ student, onSave }) =>
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-blue-600" />
+          <User className="h-5 w-5 text-blue-600" />
           Editar Informações do Aluno
         </CardTitle>
       </CardHeader>
@@ -257,33 +239,6 @@ const EditStudentForm: React.FC<EditStudentFormProps> = ({ student, onSave }) =>
                       <SelectContent>
                         <SelectItem value="Sim">Sim</SelectItem>
                         <SelectItem value="Não">Não</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="permissionGroupId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grupo de Permissão*</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(Number(value))} 
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um grupo de permissão" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {permissionGroups.map((group) => (
-                          <SelectItem key={group.id} value={group.id.toString()}>
-                            {group.name}
-                          </SelectItem>
-                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

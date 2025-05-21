@@ -15,6 +15,7 @@ export const USERS = [
     email: "joao.silva@exemplo.com",
     role: "Usuário",
     status: "Ativo",
+    permissionGroupId: 1,
     lastLogin: "Ontem, 14:30",
     tasks: [
       { 
@@ -32,6 +33,7 @@ export const USERS = [
     email: "maria.santos@exemplo.com",
     role: "Usuário",
     status: "Ativo",
+    permissionGroupId: 1,
     lastLogin: "22/05/2023, 11:20",
     tasks: [
       { 
@@ -56,6 +58,7 @@ export const USERS = [
     email: "pedro.oliveira@exemplo.com",
     role: "Usuário",
     status: "Inativo",
+    permissionGroupId: 2,
     lastLogin: "15/04/2023, 16:45",
     tasks: []
   },
@@ -65,6 +68,7 @@ export const USERS = [
     email: "ana.costa@exemplo.com",
     role: "Usuário",
     status: "Ativo",
+    permissionGroupId: 2,
     lastLogin: "19/05/2023, 08:30",
     tasks: [
       { 

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { STUDENTS } from "@/data/students";
+import { USERS } from "@/data/users";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -34,18 +34,18 @@ const GroupUsersDialog = ({ open, onOpenChange, groupId, groupName }: GroupUsers
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Filtra estudantes pelo grupo de permissão e pela busca
-  const filteredStudents = STUDENTS.filter(student => 
-    student.permissionGroupId === groupId && 
+  // Filtra usuários pelo grupo de permissão e pela busca
+  const filteredUsers = USERS.filter(user => 
+    user.permissionGroupId === groupId && 
     (
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      student.email.toLowerCase().includes(searchQuery.toLowerCase())
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
 
   // Calcula a paginação
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-  const paginatedStudents = filteredStudents.slice(
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -80,29 +80,29 @@ const GroupUsersDialog = ({ open, onOpenChange, groupId, groupName }: GroupUsers
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedStudents.length === 0 ? (
+              {paginatedUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-8 text-gray-500">
                     Nenhum usuário encontrado neste grupo.
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
+                paginatedUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={student.status === "Ativo" ? "default" : student.status === "Pendente" ? "secondary" : "outline"}
+                        variant={user.status === "Ativo" ? "default" : user.status === "Pendente" ? "secondary" : "outline"}
                         className={
-                          student.status === "Ativo"
+                          user.status === "Ativo"
                             ? "bg-green-500"
-                            : student.status === "Pendente"
+                            : user.status === "Pendente"
                               ? "bg-yellow-500"
                               : "bg-gray-500"
                         }
                       >
-                        {student.status}
+                        {user.status}
                       </Badge>
                     </TableCell>
                   </TableRow>
