@@ -3,14 +3,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GridBackground } from "@/components/ui/grid-background";
-import { useProfile } from "@/hooks/useProfile";
-import { useAllowedMenus } from "@/hooks/useAllowedMenus";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState("Verificando autenticação...");
-  const { loadProfile, profile } = useProfile();
-  const { allowedMenus, loading: menuLoading } = useAllowedMenus();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -20,38 +16,12 @@ const AuthCallback = () => {
         if (error) {
           setMessage("Erro na autenticação. Redirecionando para o login...");
           setTimeout(() => navigate("/"), 2000);
-          return;
-        }
-        
-        if (data.session) {
-          setMessage("Autenticação bem-sucedida! Carregando perfil...");
-          
-          // Carregar o perfil do usuário
-          await loadProfile();
-          
-          // Determinar para onde redirecionar com base no papel do usuário no perfil
-          setTimeout(() => {
-            // Verificamos se o path contém alguma informação sobre para onde redirecionar
-            const path = window.location.hash;
-            
-            // Se tivermos um redirecionamento específico no URL, usamos ele
-            if (path.includes('/admin')) {
-              navigate('/admin');
-              return;
-            }
-            
-            if (path.includes('/student')) {
-              navigate('/student');
-              return;
-            }
-            
-            // Caso contrário, verificamos o papel do usuário no perfil
-            if (profile?.role === 'Admin') {
-              navigate('/admin');
-            } else {
-              navigate('/student');
-            }
-          }, 1000);
+        } else if (data.session) {
+          setMessage("Autenticação bem-sucedida! Redirecionando...");
+          // Check for the last part of the URL to determine where to redirect
+          const path = window.location.hash;
+          const redirectTo = path.includes('/admin') ? '/admin' : '/student';
+          setTimeout(() => navigate(redirectTo), 1000);
         } else {
           setMessage("Nenhuma sessão encontrada. Redirecionando para o login...");
           setTimeout(() => navigate("/"), 2000);
@@ -64,7 +34,7 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, loadProfile, profile]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">

@@ -34,10 +34,8 @@ import {
   Mail, 
   KeyRound, 
   AlertTriangle,
-  CheckCircle,
-  UserPlus
+  CheckCircle
 } from "lucide-react";
-import CreateUserForm from "@/components/admin/user/CreateUserForm";
 
 const Users = () => {
   const { 
@@ -53,7 +51,6 @@ const Users = () => {
   const { permissionGroups } = usePermissionGroups();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState(users);
-  const [createUserOpen, setCreateUserOpen] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -106,13 +103,6 @@ const Users = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestão de Usuários</h1>
-        <Button 
-          onClick={() => setCreateUserOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <UserPlus className="h-4 w-4" />
-          Novo Usuário
-        </Button>
       </div>
 
       <Card className="p-4">
@@ -232,12 +222,6 @@ const Users = () => {
           </div>
         )}
       </Card>
-
-      {/* Formulário de criação de usuário */}
-      <CreateUserForm 
-        open={createUserOpen} 
-        onClose={() => setCreateUserOpen(false)} 
-      />
     </div>
   );
 };
