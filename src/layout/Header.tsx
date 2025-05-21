@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
   
   // Detectar se o usuário está na área de admin ou aluno
   useEffect(() => {
@@ -44,7 +46,7 @@ const Header = () => {
             <Button variant="ghost" className="relative rounded-full h-8 w-8 ml-2">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-blue-600 text-white">
-                  {isAdmin ? "A" : "U"}
+                  {user?.email ? user.email.charAt(0).toUpperCase() : (isAdmin ? "A" : "U")}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -53,7 +55,7 @@ const Header = () => {
             <div className="bg-blue-600 text-white p-4 -mt-1 -mx-1 rounded-t-md">
               <div className="font-medium">Minha Conta</div>
               <div className="text-sm text-blue-100">
-                {isAdmin ? "admin@portaledu.com" : "aluno@portaledu.com"}
+                {user?.email || (isAdmin ? "admin@portaledu.com" : "aluno@portaledu.com")}
               </div>
             </div>
             
@@ -91,11 +93,11 @@ const Header = () => {
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem asChild className="text-red-600 focus:text-red-600">
-              <Link to="/" className="flex cursor-pointer items-center gap-2">
+            <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600 cursor-pointer">
+              <div className="flex items-center gap-2">
                 <LogOut className="h-4 w-4" />
                 Sair
-              </Link>
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

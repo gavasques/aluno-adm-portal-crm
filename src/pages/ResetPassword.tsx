@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
 import { GridBackground } from "@/components/ui/grid-background";
+import { useAuth } from "@/hooks/useAuth";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -13,8 +14,14 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const { token } = useParams();
+  const { updateUserPassword } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // O token é tratado automaticamente pelo Supabase quando chega nesta página
+    console.log("Token de recuperação recebido:", token);
+  }, [token]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
@@ -29,14 +36,18 @@ const ResetPassword = () => {
       return;
     }
     
-    // Simulação de redefinição de senha bem-sucedida
-    console.log("Senha redefinida com sucesso. Token:", token);
-    setSuccess(true);
-    
-    // Redirecionar após 2 segundos
-    setTimeout(() => {
-      navigate("/");
-    }, 2000);
+    try {
+      await updateUserPassword(password);
+      setSuccess(true);
+      
+      // Redirecionar após 2 segundos
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    } catch (error: any) {
+      console.error("Erro ao redefinir senha:", error);
+      setError(error.message || "Ocorreu um erro ao redefinir a senha. Tente novamente.");
+    }
   };
 
   return (
