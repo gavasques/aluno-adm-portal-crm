@@ -20,6 +20,7 @@ export interface Partner {
   rating: number;
   commentCount: number;
   recommended: boolean;
+  website: string;  // Added website property
   contacts: {
     name: string;
     role: string;
