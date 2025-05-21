@@ -1,7 +1,5 @@
-
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
@@ -20,13 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -38,567 +36,1535 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { StarBorder } from "@/components/ui/star-border";
+import { Search, MoreHorizontal, UserPlus, User, Mail, Phone, Calendar, HardDrive, Download, Filter, ArrowUp, ArrowDown, Save, Pencil, CreditCard, Plus, Minus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { USERS } from "@/data/users";
-import { User, UserPlus, Search, MoreHorizontal, Lock, Trash, Eye } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
+// Sample user data
+const USERS = [
+  {
+    id: 1,
+    name: "João Silva",
+    email: "joao.silva@exemplo.com",
+    role: "Aluno",
+    status: "Ativo",
+    lastLogin: "Hoje, 10:45",
+    storage: "45MB / 100MB",
+    phone: "(11) 98765-4321",
+    registrationDate: "15/03/2023",
+    storageValue: 45,
+    storageLimit: 100,
+    observations: "Cliente interessado em expandir para marketplace.",
+    monthlyCredits: 5, // Monthly renewable credits
+    permanentCredits: 0, // Permanent non-expiring credits
+    totalCredits: 5 // Total available credits (sum of both)
+  },
+  {
+    id: 2,
+    name: "Maria Oliveira",
+    email: "maria.oliveira@exemplo.com",
+    role: "Aluno",
+    status: "Ativo",
+    lastLogin: "Ontem, 15:30",
+    storage: "78MB / 100MB",
+    phone: "(21) 97654-3210",
+    registrationDate: "22/05/2023",
+    storageValue: 78,
+    storageLimit: 100,
+    observations: "",
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
+  },
+  {
+    id: 3,
+    name: "Carlos Santos",
+    email: "carlos.santos@exemplo.com",
+    role: "Administrador",
+    status: "Ativo",
+    lastLogin: "Hoje, 09:15",
+    storage: "23MB / 100MB",
+    phone: "(31) 98877-6655",
+    registrationDate: "10/01/2023",
+    storageValue: 23,
+    storageLimit: 100,
+    observations: "Administrador principal da plataforma.",
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
+  },
+  {
+    id: 4,
+    name: "Ana Pereira",
+    email: "ana.pereira@exemplo.com",
+    role: "Aluno",
+    status: "Inativo",
+    lastLogin: "15/05/2023, 14:20",
+    storage: "12MB / 100MB",
+    phone: "(41) 99988-7766",
+    registrationDate: "05/02/2023",
+    storageValue: 12,
+    storageLimit: 100,
+    observations: "Cliente em processo de renovação.",
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
+  },
+  {
+    id: 5,
+    name: "Roberto Costa",
+    email: "roberto.costa@exemplo.com",
+    role: "Aluno",
+    status: "Pendente",
+    lastLogin: "Hoje, 11:05",
+    storage: "89MB / 100MB",
+    phone: "(51) 98765-4321",
+    registrationDate: "18/04/2023",
+    storageValue: 89,
+    storageLimit: 100,
+    observations: "Aguardando confirmação de dados bancários.",
+    monthlyCredits: 5,
+    permanentCredits: 0,
+    totalCredits: 5
   }
+];
+
+// Schema de validação para o formulário de adicionar/editar usuário
+const userFormSchema = z.object({
+  name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
+  phone: z.string().min(8, { message: "Telefone inválido" }),
+  role: z.string(),
+  status: z.string(),
+  observations: z.string().optional()
+});
+
+// Schema para validação do formulário de créditos
+const creditsFormSchema = z.object({
+  amount: z.string().refine(value => {
+    const num = parseInt(value);
+    return !isNaN(num) && num > 0;
+  }, {
+    message: "O valor deve ser um número positivo"
+  }),
+  operation: z.enum(["add", "subtract"]),
+  creditType: z.enum(["permanent", "monthly"])
+});
+
+// Credit transaction type
+type CreditTransaction = {
+  id: number;
+  userId: number;
+  amount: number;
+  operation: "add" | "subtract";
+  creditType: "permanent" | "monthly";
+  date: Date;
+  description: string;
 };
 
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 80 }
-  }
-};
+// Configuração para reset mensal de créditos
+const DEFAULT_CREDITS = 5;
+
+type UserFormValues = z.infer<typeof userFormSchema>;
+type CreditsFormValues = z.infer<typeof creditsFormSchema>;
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+  const [isEditingUserInfo, setIsEditingUserInfo] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
-
-  // Filter users based on search query
-  const filteredUsers = USERS.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false);
+  const [creditHistory, setCreditHistory] = useState<CreditTransaction[]>([]);
+  
+  // Filter users based on search query and status filter
+  const filteredUsers = useMemo(() => {
+    return USERS.filter(user => {
+      const matchesSearch = 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, statusFilter]);
+  
+  // Sort users by name
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+  }, [filteredUsers, sortDirection]);
 
   // Calculate pagination
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const currentItems = sortedUsers.slice(indexOfFirstItem, indexOfLastItem);
 
+  // Handle sort toggle
+  const toggleSort = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  };
+
+  // Handle pagination change
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+  
+  const handleResetPassword = (userId, userName) => {
+    toast({
+      title: "Reset de senha enviado",
+      description: `Um e-mail com instruções foi enviado para ${userName}.`
+    });
+  };
+  
+  const handleToggleStatus = (userId, currentStatus, userName) => {
+    const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
+    toast({
+      title: `Status alterado para ${newStatus}`,
+      description: `O usuário ${userName} agora está ${newStatus.toLowerCase()}.`
+    });
+  };
+  
+  const handleIncreaseStorage = (userId, userName) => {
+    // Find user by ID
+    const userToUpdate = USERS.find(user => user.id === userId);
+    if (userToUpdate) {
+      // Increase storage limit by 100MB
+      userToUpdate.storageLimit += 100;
+      // Update the storage string representation
+      userToUpdate.storage = `${userToUpdate.storageValue}MB / ${userToUpdate.storageLimit}MB`;
+      
+      // If using selectedUser to display details, update it too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          storageLimit: userToUpdate.storageLimit,
+          storage: userToUpdate.storage
+        });
+      }
+      
+      toast({
+        title: "Armazenamento aumentado",
+        description: `O limite de armazenamento de ${userName} foi aumentado em 100MB para ${userToUpdate.storageLimit}MB.`
+      });
+      
+      console.log(`Storage limit for user ${userId} increased to ${userToUpdate.storageLimit}MB`);
+    }
+  };
 
-  const handleViewUser = (user) => {
+  const handleDecreaseStorage = (userId, userName) => {
+    // Find user by ID
+    const userToUpdate = USERS.find(user => user.id === userId);
+    
+    if (userToUpdate && userToUpdate.storageLimit > 100) {
+      // Prevent reducing below 100MB
+      userToUpdate.storageLimit -= 100;
+      // Update the storage string representation
+      userToUpdate.storage = `${userToUpdate.storageValue}MB / ${userToUpdate.storageLimit}MB`;
+      
+      // If using selectedUser to display details, update it too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          storageLimit: userToUpdate.storageLimit,
+          storage: userToUpdate.storage
+        });
+      }
+      
+      toast({
+        title: "Armazenamento reduzido",
+        description: `O limite de armazenamento de ${userName} foi reduzido em 100MB para ${userToUpdate.storageLimit}MB.`
+      });
+      
+      console.log(`Storage limit for user ${userId} decreased to ${userToUpdate.storageLimit}MB`);
+    } else {
+      toast({
+        title: "Operação não permitida",
+        description: "O limite mínimo de armazenamento é de 100MB.",
+        variant: "destructive"
+      });
+      
+      console.log(`Cannot decrease storage limit for user ${userId} below 100MB`);
+    }
+  };
+  
+  const handleSendMagicLink = (userId, userName) => {
+    toast({
+      title: "Link mágico enviado",
+      description: `Um link de acesso direto foi enviado para ${userName}.`
+    });
+  };
+
+  const handleUserClick = (user) => {
     setSelectedUser(user);
-    setIsDetailsOpen(true);
+    setIsEditingUserInfo(false);
   };
 
-  const handleResetPassword = (user) => {
-    setSelectedUser(user);
-    setIsResetDialogOpen(true);
+  const handleCloseUserDetails = () => {
+    setSelectedUser(null);
+    setIsEditingUserInfo(false);
+    setShowCreditsDialog(false);
   };
 
-  const confirmResetPassword = () => {
+  const handleSaveUserInfo = (data) => {
     toast({
-      title: "Senha redefinida",
-      description: `Um e-mail com instruções para redefinir a senha foi enviado para ${selectedUser.email}.`
+      title: "Informações salvas",
+      description: "As informações do usuário foram atualizadas com sucesso."
     });
-    setIsResetDialogOpen(false);
+    setIsEditingUserInfo(false);
+    
+    // In a real app, update user data in the database
+    console.log("Updated user data:", data);
   };
+  
+  // Formulário para adicionar/editar créditos
+  const creditsForm = useForm<CreditsFormValues>({
+    resolver: zodResolver(creditsFormSchema),
+    defaultValues: {
+      amount: "",
+      operation: "add",
+      creditType: "permanent"
+    }
+  });
 
-  const handleDeleteUser = (user) => {
-    setUserToDelete(user);
-    setIsDeleteDialogOpen(true);
+  // Handle credit management with new permanent and monthly credit separation
+  const handleManageCredits = (data: CreditsFormValues) => {
+    const amount = parseInt(data.amount);
+    const operation = data.operation;
+    const creditType = data.creditType;
+    
+    if (selectedUser) {
+      // Find user by ID
+      const userToUpdate = USERS.find(user => user.id === selectedUser.id);
+      
+      if (userToUpdate) {
+        let message = "";
+        const transactionDate = new Date();
+        
+        if (operation === "add") {
+          if (creditType === "permanent") {
+            userToUpdate.permanentCredits += amount;
+            message = `Adicionado ${amount} créditos permanentes para ${selectedUser.name}`;
+          } else {
+            userToUpdate.monthlyCredits += amount;
+            message = `Adicionado ${amount} créditos mensais para ${selectedUser.name}`;
+          }
+        } else {
+          if (creditType === "permanent") {
+            if (userToUpdate.permanentCredits >= amount) {
+              userToUpdate.permanentCredits -= amount;
+              message = `Removido ${amount} créditos permanentes de ${selectedUser.name}`;
+            } else {
+              toast({
+                title: "Operação não permitida",
+                description: "O usuário não possui créditos permanentes suficientes para essa operação.",
+                variant: "destructive"
+              });
+              return;
+            }
+          } else {
+            if (userToUpdate.monthlyCredits >= amount) {
+              userToUpdate.monthlyCredits -= amount;
+              message = `Removido ${amount} créditos mensais de ${selectedUser.name}`;
+            } else {
+              toast({
+                title: "Operação não permitida",
+                description: "O usuário não possui créditos mensais suficientes para essa operação.",
+                variant: "destructive"
+              });
+              return;
+            }
+          }
+        }
+        
+        // Update total credits
+        userToUpdate.totalCredits = userToUpdate.monthlyCredits + userToUpdate.permanentCredits;
+        
+        // Create transaction record
+        const newTransaction: CreditTransaction = {
+          id: Date.now(),
+          userId: userToUpdate.id,
+          amount,
+          operation,
+          creditType,
+          date: transactionDate,
+          description: message
+        };
+        
+        // Add to transaction history
+        setCreditHistory(prev => [newTransaction, ...prev]);
+        
+        // If using selectedUser to display details, update it too
+        if (selectedUser && selectedUser.id === userToUpdate.id) {
+          setSelectedUser({
+            ...selectedUser,
+            monthlyCredits: userToUpdate.monthlyCredits,
+            permanentCredits: userToUpdate.permanentCredits,
+            totalCredits: userToUpdate.totalCredits
+          });
+        }
+        
+        toast({
+          title: "Créditos atualizados",
+          description: message
+        });
+        
+        // Log the operation
+        console.log("Credits operation:", { 
+          userId: selectedUser.id, 
+          operation, 
+          amount,
+          creditType,
+          monthlyCredits: userToUpdate.monthlyCredits,
+          permanentCredits: userToUpdate.permanentCredits,
+          totalCredits: userToUpdate.totalCredits
+        });
+        
+        // Close the dialog
+        setShowCreditsDialog(false);
+        creditsForm.reset();
+      }
+    }
   };
+  
+  // Formulário para adicionar novo usuário
+  const addUserForm = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      role: "Aluno",
+      status: "Pendente",
+      observations: ""
+    }
+  });
 
-  const confirmDeleteUser = () => {
+  // Formulário para editar usuário existente
+  const editUserForm = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      name: selectedUser?.name || "",
+      email: selectedUser?.email || "",
+      phone: selectedUser?.phone || "",
+      role: selectedUser?.role || "Aluno",
+      status: selectedUser?.status || "Ativo",
+      observations: selectedUser?.observations || ""
+    }
+  });
+
+  // Reset form values when selected user changes
+  React.useEffect(() => {
+    if (selectedUser) {
+      editUserForm.reset({
+        name: selectedUser.name,
+        email: selectedUser.email,
+        phone: selectedUser.phone,
+        role: selectedUser.role,
+        status: selectedUser.status,
+        observations: selectedUser.observations || ""
+      });
+    }
+  }, [selectedUser, editUserForm]);
+
+  // Updated to add default monthly credits for new users
+  const handleAddUser = (data: UserFormValues) => {
+    // No mundo real, adicionaríamos o usuário ao banco de dados
+    const newUserData = {
+      ...data,
+      monthlyCredits: DEFAULT_CREDITS, // Define 5 créditos mensais iniciais para novos usuários
+      permanentCredits: 0, // Inicialmente sem créditos permanentes
+      totalCredits: DEFAULT_CREDITS // Total inicial de créditos
+    };
+    
+    console.log("New user data:", newUserData);
+    
     toast({
-      title: "Usuário excluído",
-      description: `O usuário ${userToDelete.name} foi excluído com sucesso.`
+      title: "Usuário adicionado",
+      description: `O usuário ${data.name} foi adicionado com sucesso com ${DEFAULT_CREDITS} créditos mensais iniciais.`
     });
-    setIsDeleteDialogOpen(false);
-    setUserToDelete(null);
+    
+    setShowAddUserDialog(false);
+    addUserForm.reset();
   };
 
-  const sendMagicLink = (user) => {
+  // Generate pagination items
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxPagesToShow = 5;
+
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages is less than or equal to max pages to show
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Always show first page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink
+            isActive={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      // Calculate start and end pages to show
+      if (currentPage <= 3) {
+        items.push(
+          ...[2, 3, 4].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+        if (totalPages > 4) {
+          items.push(
+            <PaginationItem key="ellipsis1">
+              <PaginationEllipsis />
+            </PaginationItem>
+          );
+        }
+      } else if (currentPage >= totalPages - 2) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+        items.push(
+          ...[totalPages - 3, totalPages - 2, totalPages - 1].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+      } else {
+        items.push(
+          <PaginationItem key="ellipsis3">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+        items.push(
+          ...[currentPage - 1, currentPage, currentPage + 1].map(i => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                isActive={currentPage === i}
+                onClick={() => handlePageChange(i)}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          ))
+        );
+        items.push(
+          <PaginationItem key="ellipsis4">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Always show last page
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink
+            isActive={currentPage === totalPages}
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
+  
+  // Export users to CSV
+  const exportToCSV = () => {
+    // Create CSV header
+    let csvContent = "ID,Nome,Função,Status,Último Login,Data de Cadastro\n";
+
+    // Add data rows
+    sortedUsers.forEach(user => {
+      csvContent += `${user.id},"${user.name}","${user.role}","${user.status}","${user.lastLogin}","${user.registrationDate}"\n`;
+    });
+
+    // Create download link
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "usuarios.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
-      title: "Magic Link enviado",
-      description: `Um Magic Link foi enviado para o e-mail ${user.email}.`
+      title: "Exportação concluída",
+      description: "Os dados dos usuários foram exportados com sucesso."
     });
   };
+  
+  // Simulate storage usage monitoring function
+  const monitorStorageUsage = (userId, fileSize) => {
+    // This function would be called when a user uploads a file
+    const userToUpdate = USERS.find(user => user.id === userId);
+    
+    if (userToUpdate) {
+      // Update storage value
+      const newStorageValue = userToUpdate.storageValue + fileSize;
+      userToUpdate.storageValue = newStorageValue;
+      userToUpdate.storage = `${newStorageValue}MB / ${userToUpdate.storageLimit}MB`;
+      
+      // Check if storage limit is exceeded
+      if (newStorageValue > userToUpdate.storageLimit) {
+        console.log(`User ${userId} has exceeded their storage limit!`);
+        toast({
+          title: "Limite de armazenamento excedido",
+          description: `O usuário ${userToUpdate.name} excedeu o limite de armazenamento de ${userToUpdate.storageLimit}MB.`,
+          variant: "destructive"
+        });
+        
+        // Here you would implement logic to handle the exceeded storage
+        // For example, prevent further uploads or notify admins
+      }
+      
+      // If using selectedUser to display details, update it too
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({
+          ...selectedUser,
+          storageValue: newStorageValue,
+          storage: userToUpdate.storage
+        });
+      }
+      
+      console.log(`Storage usage for user ${userId} updated to ${newStorageValue}MB`);
+    }
+  };
+  
+  // Function to demonstrate usage of the monitoring
+  const handleTestUpload = () => {
+    if (selectedUser) {
+      // Simulate a 5MB file upload for the selected user
+      monitorStorageUsage(selectedUser.id, 5);
+      
+      toast({
+        title: "Upload simulado",
+        description: `Um upload de teste de 5MB foi processado para ${selectedUser.name}.`
+      });
+    }
+  };
 
-  return (
-    <div className="container mx-auto py-6">
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-6"
-      >
-        {/* Header Section */}
-        <motion.div 
-          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-          variants={itemVariants}
-        >
+  // Updated to display both monthly and permanent credits
+  const renderCreditTabContent = () => {
+    if (!selectedUser) return null;
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
-              Gestão de Usuários
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gerenciar, monitorar e modificar contas de usuários do sistema
+            <h3 className="text-lg font-semibold">Créditos do Usuário</h3>
+            <p className="text-sm text-muted-foreground">
+              Os créditos mensais são renovados para {DEFAULT_CREDITS} no início de cada mês e não são acumuláveis.
+              Os créditos permanentes não expiram.
             </p>
           </div>
-          <StarBorder 
-            as="div" 
-            className="w-auto" 
-            color="#0C6E9E"
-          >
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <span className="text-sm text-muted-foreground block">Créditos Mensais</span>
+              <span className="text-2xl font-bold text-portal-primary block">{selectedUser.monthlyCredits}</span>
+              <span className="text-xs text-muted-foreground">Expiram no fim do mês</span>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <span className="text-sm text-muted-foreground block">Créditos Permanentes</span>
+              <span className="text-2xl font-bold text-green-600 block">{selectedUser.permanentCredits}</span>
+              <span className="text-xs text-muted-foreground">Não expiram</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-semibold">Gerenciar Créditos</h3>
+            <Button 
+              size="sm" 
+              onClick={() => setShowCreditsDialog(true)}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Adicionar/Remover Créditos
+            </Button>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h4 className="font-medium mb-2">Histórico de Créditos</h4>
+            {creditHistory.filter(tx => tx.userId === selectedUser.id).length > 0 ? (
+              <div className="max-h-48 overflow-y-auto">
+                <ul className="space-y-2">
+                  {creditHistory
+                    .filter(tx => tx.userId === selectedUser.id)
+                    .map(tx => (
+                      <li key={tx.id} className="text-sm border-b pb-2">
+                        <div className="flex justify-between items-center">
+                          <span className={tx.operation === "add" ? "text-green-600" : "text-red-600"}>
+                            {tx.operation === "add" ? "+" : "-"}{tx.amount} {tx.creditType === "permanent" ? "permanentes" : "mensais"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {tx.date.toLocaleDateString()} {tx.date.toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{tx.description}</p>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma transação de crédito registrada ainda.
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+          <h4 className="font-medium text-yellow-800 mb-1">Sobre os Créditos</h4>
+          <p className="text-sm text-yellow-700">
+            <span className="font-medium">Créditos Mensais:</span> Todos os usuários recebem {DEFAULT_CREDITS} créditos no início de cada mês. 
+            Créditos mensais não utilizados não são acumulados para o próximo mês.
+            <br /><br />
+            <span className="font-medium">Créditos Permanentes:</span> Estes créditos são adicionados manualmente e não expiram.
+            São consumidos somente após o esgotamento dos créditos mensais.
+          </p>
+        </div>
+      </div>
+    );
+  };
+  
+  return (
+    <div className="container mx-auto py-6">
+      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Gestão de Usuários</h1>
+      
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Gerenciar Usuários</CardTitle>
+          <div className="flex gap-2">
+            <Button onClick={exportToCSV}>
+              <Download className="mr-2 h-4 w-4" /> Exportar CSV
+            </Button>
+            <Button onClick={() => setShowAddUserDialog(true)}>
               <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
             </Button>
-          </StarBorder>
-        </motion.div>
-
-        {/* Search and Filter Section */}
-        <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-t-4 border-t-blue-600">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
-              <CardTitle className="text-blue-800">Lista de Usuários</CardTitle>
-              <CardDescription>
-                Visualize e gerencie todos os usuários cadastrados no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-                <div className="relative w-full sm:max-w-sm">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    placeholder="Buscar usuários por nome, email ou função..."
-                    className="pl-10 border-blue-200 focus:border-blue-400"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Total: <strong>{filteredUsers.length}</strong> usuários
-                  </span>
-                </div>
-              </div>
-
-              {/* Table Section */}
-              <div className="rounded-md border border-blue-100 overflow-hidden shadow-sm">
-                <Table>
-                  <TableHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <TableRow>
-                      <TableHead className="font-medium text-blue-700">Usuário</TableHead>
-                      <TableHead className="font-medium text-blue-700">Função</TableHead>
-                      <TableHead className="font-medium text-blue-700">Status</TableHead>
-                      <TableHead className="font-medium text-blue-700">Último Acesso</TableHead>
-                      <TableHead className="text-right font-medium text-blue-700">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentUsers.length > 0 ? currentUsers.map((user, index) => (
-                      <TableRow 
-                        key={user.id}
-                        className="cursor-pointer transition-colors hover:bg-blue-50"
-                        onClick={() => handleViewUser(user)}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full p-2">
-                              <User className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{user.name}</p>
-                              <p className="text-sm text-muted-foreground">{user.email}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.role}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            className={
-                              user.status === "Ativo" 
-                                ? "bg-green-100 text-green-800 hover:bg-green-200" 
-                                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            }
-                          >
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.lastLogin}</TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuLabel>Ações de usuário</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={() => handleViewUser(user)}
-                              >
-                                <Eye className="mr-2 h-4 w-4" /> Ver detalhes
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={() => handleResetPassword(user)}
-                              >
-                                <Lock className="mr-2 h-4 w-4" /> Resetar senha
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={() => sendMagicLink(user)}
-                              >
-                                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M15 5L9 12L15 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                                Enviar Magic Link
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="flex items-center text-red-600 cursor-pointer hover:text-red-700"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <Trash className="mr-2 h-4 w-4" /> Excluir usuário
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                          Nenhum usuário encontrado com esses critérios de busca.
-                        </TableCell>
-                      </TableRow>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div className="relative w-full sm:w-96">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input
+                placeholder="Buscar usuários..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="cursor-pointer" onClick={toggleSort}>
+                    Nome
+                    {sortDirection === "asc" ? (
+                      <ArrowUp className="inline-block ml-1 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="inline-block ml-1 h-4 w-4" />
                     )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-
-            {/* Pagination Section */}
-            {filteredUsers.length > 0 && (
-              <CardFooter className="bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-100 flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
-                <div className="text-sm text-muted-foreground">
-                  Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredUsers.length)} de {filteredUsers.length} resultados
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (currentPage > 1) handlePageChange(currentPage - 1);
-                        }}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                    
-                    {/* First page */}
-                    {totalPages > 5 && currentPage > 3 && (
-                      <PaginationItem>
-                        <PaginationLink 
-                          href="#" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(1);
-                          }}
-                          isActive={currentPage === 1}
-                        >
-                          1
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-                    
-                    {/* Ellipsis */}
-                    {totalPages > 5 && currentPage > 3 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-
-                    {/* Pages */}
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const pageNumber = index + 1;
-                      
-                      // Show pages around current page
-                      if (
-                        pageNumber === 1 ||
-                        pageNumber === totalPages ||
-                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
-                      ) {
-                        return (
-                          <PaginationItem key={pageNumber}>
-                            <PaginationLink 
-                              href="#" 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(pageNumber);
-                              }}
-                              isActive={currentPage === pageNumber}
-                            >
-                              {pageNumber}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-                      
-                      // Add ellipsis after first page and around current page
-                      if (
-                        (pageNumber === 2 && currentPage > 3) ||
-                        (pageNumber === totalPages - 1 && currentPage < totalPages - 2)
-                      ) {
-                        return (
-                          <PaginationItem key={pageNumber}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-                      
-                      return null;
-                    })}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                        }}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </CardFooter>
-            )}
-          </Card>
-        </motion.div>
-
-        {/* User Details Dialog */}
-        {selectedUser && (
-          <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
-                  Detalhes do Usuário
-                </DialogTitle>
-                <DialogDescription>
-                  Informações completas e opções de gerenciamento
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* User Profile Section */}
-                <Card className="lg:col-span-1 border-t-4 border-t-blue-600 overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="h-24 w-24 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white mb-3">
-                        <User className="h-12 w-12" />
-                      </div>
-                      <h3 className="text-xl font-bold">{selectedUser.name}</h3>
-                      <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                      <Badge 
-                        className="mt-2"
-                        variant={selectedUser.status === "Ativo" ? "default" : "outline"}
-                      >
-                        {selectedUser.status}
+                  </TableHead>
+                  <TableHead>Função</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Último Login</TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      <Calendar className="mr-1 h-4 w-4" />
+                      Data de Cadastro
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentItems.map((user) => (
+                  <TableRow 
+                    key={user.id} 
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleUserClick(user)}
+                  >
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === "Administrador" ? "default" : "outline"}>
+                        {user.role}
                       </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4 p-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground">Função</h4>
-                      <p>{selectedUser.role}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground">Último Acesso</h4>
-                      <p>{selectedUser.lastLogin}</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={user.status === "Ativo" ? "default" : user.status === "Pendente" ? "secondary" : "outline"}
+                        className={
+                          user.status === "Ativo" 
+                            ? "bg-green-500" 
+                            : user.status === "Pendente" 
+                              ? "bg-yellow-500" 
+                              : "bg-gray-500"
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{user.lastLogin}</TableCell>
+                    <TableCell>{user.registrationDate}</TableCell>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleUserClick(user)}>
+                            Ver detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleResetPassword(user.id, user.name)}>
+                            Resetar senha
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status, user.name)}>
+                            {user.status === "Ativo" ? "Desativar usuário" : "Ativar usuário"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendMagicLink(user.id, user.name)}>
+                            Enviar magic link
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
                 
-                {/* User Details Section */}
-                <Card className="lg:col-span-2 border-t-4 border-t-indigo-600">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
-                    <CardTitle>Ações e Tarefas</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Tarefas Atribuídas</h3>
-                      {selectedUser.tasks && selectedUser.tasks.length > 0 ? (
-                        <div className="space-y-2">
-                          {selectedUser.tasks.map(task => (
-                            <div 
-                              key={task.id}
-                              className="p-3 rounded-lg border border-blue-100 bg-blue-50"
-                            >
-                              <div className="flex justify-between items-center">
-                                <h4 className="font-medium">{task.title}</h4>
-                                <Badge 
-                                  variant="outline"
-                                  className={
-                                    task.priority === "Alta" 
-                                      ? "border-red-500 text-red-500" 
-                                      : task.priority === "Média"
-                                        ? "border-yellow-500 text-yellow-500"
-                                        : "border-green-500 text-green-500"
-                                  }
-                                >
-                                  {task.priority}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {task.date} às {task.time}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-                          <p className="text-muted-foreground">Nenhuma tarefa atribuída</p>
-                        </div>
-                      )}
-                      
-                      <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Button 
-                          variant="outline"
-                          className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                          onClick={() => handleResetPassword(selectedUser)}
-                        >
-                          <Lock className="mr-2 h-4 w-4" /> Resetar Senha
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                          onClick={() => sendMagicLink(selectedUser)}
-                        >
-                          <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M15 5L9 12L15 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          Magic Link
-                        </Button>
-                        <Button
-                          variant="outline" 
-                          className={`border-blue-200 ${selectedUser.status === "Ativo" 
-                            ? "text-yellow-600 hover:bg-yellow-50" 
-                            : "text-green-600 hover:bg-green-50"}`}
-                        >
-                          {selectedUser.status === "Ativo" ? "Inativar Usuário" : "Ativar Usuário"}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          className="border-red-200 text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeleteUser(selectedUser)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" /> Excluir Usuário
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                {currentItems.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      Nenhum usuário encontrado com os critérios de busca.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Exibindo {currentItems.length} de {filteredUsers.length} usuários
+            </p>
+            <Select value={String(itemsPerPage)} onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[110px]">
+                <SelectValue placeholder="25 por página" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 por página</SelectItem>
+                <SelectItem value="50">50 por página</SelectItem>
+                <SelectItem value="100">100 por página</SelectItem>
+                <SelectItem value="200">200 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              
+              {renderPaginationItems()}
+              
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </CardFooter>
+      </Card>
+
+      {/* Add User Dialog */}
+      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do novo usuário no sistema. O usuário receberá {DEFAULT_CREDITS} créditos mensais iniciais.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...addUserForm}>
+            <form onSubmit={addUserForm.handleSubmit(handleAddUser)} className="space-y-4">
+              <FormField
+                control={addUserForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome completo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(00) 00000-0000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Função *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma função" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Administrador">Administrador</SelectItem>
+                        <SelectItem value="Aluno">Aluno</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Ativo">Ativo</SelectItem>
+                        <SelectItem value="Inativo">Inativo</SelectItem>
+                        <SelectItem value="Pendente">Pendente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={addUserForm.control}
+                name="observations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Observações sobre o usuário (opcional)"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDetailsOpen(false)}
-                >
-                  Fechar
+                <Button type="button" variant="outline" onClick={() => setShowAddUserDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Adicionar Usuário
                 </Button>
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-        {/* Reset Password Dialog */}
-        <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-          <DialogContent className="max-w-md">
+      {/* User Details Dialog */}
+      {selectedUser && (
+        <Dialog open={!!selectedUser} onOpenChange={handleCloseUserDetails}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-center text-blue-700">
-                Redefinir Senha
+              <DialogTitle className="text-2xl flex items-center">
+                <User className="mr-2 h-5 w-5" /> 
+                {selectedUser.name}
+                <Badge variant={selectedUser.role === "Administrador" ? "default" : "outline"} className="ml-3">
+                  {selectedUser.role}
+                </Badge>
               </DialogTitle>
-              <DialogDescription className="text-center">
-                Enviar um link para que o usuário redefina sua senha
+              <DialogDescription>
+                Informações e gerenciamento do usuário
               </DialogDescription>
             </DialogHeader>
-            {selectedUser && (
-              <div className="flex flex-col items-center gap-2 py-4">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                  <User className="h-8 w-8" />
+
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="w-full grid grid-cols-3">
+                <TabsTrigger value="info">Informações</TabsTrigger>
+                <TabsTrigger value="storage">Armazenamento</TabsTrigger>
+                <TabsTrigger value="credits">Créditos</TabsTrigger>
+              </TabsList>
+              
+              {/* User Info Tab */}
+              <TabsContent value="info" className="pt-4">
+                {isEditingUserInfo ? (
+                  <Form {...editUserForm}>
+                    <form onSubmit={editUserForm.handleSubmit(handleSaveUserInfo)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <FormField
+                            control={editUserForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email *</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={editUserForm.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Telefone *</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <FormField
+                            control={editUserForm.control}
+                            name="role"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Função *</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Administrador">Administrador</SelectItem>
+                                    <SelectItem value="Aluno">Aluno</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={editUserForm.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Status *</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Ativo">Ativo</SelectItem>
+                                    <SelectItem value="Inativo">Inativo</SelectItem>
+                                    <SelectItem value="Pendente">Pendente</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      
+                      <FormField
+                        control={editUserForm.control}
+                        name="observations"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Observações</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Observações sobre o usuário (opcional)"
+                                className="resize-none h-32"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsEditingUserInfo(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button type="submit">
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start space-x-3">
+                          <Mail className="h-5 w-5 text-portal-primary mt-1" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground">Email</h3>
+                            <p>{selectedUser.email}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                          <Phone className="h-5 w-5 text-portal-primary mt-1" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground">Telefone</h3>
+                            <p>{selectedUser.phone}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start space-x-3">
+                          <Calendar className="h-5 w-5 text-portal-primary mt-1" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-muted-foreground">Data de Registro</h3>
+                            <p>{selectedUser.registrationDate}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-1">Status</h3>
+                          <div className="flex items-center">
+                            <Badge 
+                              variant={selectedUser.status === "Ativo" ? "default" : selectedUser.status === "Pendente" ? "secondary" : "outline"}
+                              className={
+                                selectedUser.status === "Ativo" 
+                                  ? "bg-green-500" 
+                                  : selectedUser.status === "Pendente" 
+                                    ? "bg-yellow-500" 
+                                    : "bg-gray-500"
+                              }
+                            >
+                              {selectedUser.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-1">Função</h3>
+                          <Badge variant={selectedUser.role === "Administrador" ? "default" : "outline"}>
+                            {selectedUser.role}
+                          </Badge>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-1">Último Acesso</h3>
+                          <p>{selectedUser.lastLogin}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 border-t pt-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-semibold text-muted-foreground">Observações</h3>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setIsEditingUserInfo(true)}
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Editar
+                        </Button>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md min-h-[100px]">
+                        {selectedUser.observations ? (
+                          <p>{selectedUser.observations}</p>
+                        ) : (
+                          <p className="text-muted-foreground italic">Sem observações.</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 space-y-2">
+                      <h3 className="text-lg font-semibold border-b pb-2">Ações</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleResetPassword(selectedUser.id, selectedUser.name)}>
+                          Resetar senha
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleSendMagicLink(selectedUser.id, selectedUser.name)}>
+                          Enviar magic link
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleToggleStatus(selectedUser.id, selectedUser.status, selectedUser.name)}
+                        >
+                          {selectedUser.status === "Ativo" ? "Desativar usuário" : "Ativar usuário"}
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </TabsContent>
+              
+              {/* Storage Tab */}
+              <TabsContent value="storage" className="pt-4">
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-3">
+                    <HardDrive className="h-5 w-5 text-portal-primary mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Armazenamento Utilizado</h3>
+                      <div className="flex items-center mt-2">
+                        <div className="w-full h-3 bg-gray-200 rounded-full mr-2">
+                          <div 
+                            className="h-3 bg-portal-primary rounded-full"
+                            style={{ 
+                              width: `${(selectedUser.storageValue / selectedUser.storageLimit) * 100}%` 
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-sm whitespace-nowrap">{selectedUser.storage}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-3">Gerenciar Limite de Armazenamento</h3>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDecreaseStorage(selectedUser.id, selectedUser.name)}
+                        disabled={selectedUser.storageLimit <= 100}
+                      >
+                        <ArrowDown className="h-4 w-4 mr-1" /> Reduzir 100MB
+                      </Button>
+                      <div className="text-sm font-medium flex items-center">
+                        Limite atual: {selectedUser.storageLimit}MB
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleIncreaseStorage(selectedUser.id, selectedUser.name)}
+                      >
+                        <ArrowUp className="h-4 w-4 mr-1" /> Aumentar 100MB
+                      </Button>
+                      
+                      {/* For testing purposes only - could be removed in production */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTestUpload}
+                      >
+                        <Download className="h-4 w-4 mr-1" /> Simular Upload (5MB)
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-2">Detalhes de Uso</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex justify-between">
+                        <span>Documentos</span>
+                        <span className="font-medium">12MB</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Imagens</span>
+                        <span className="font-medium">28MB</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Outros arquivos</span>
+                        <span className="font-medium">5MB</span>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
+                    <h4 className="font-medium text-blue-800 mb-1">Monitoramento de Armazenamento</h4>
+                    <p className="text-sm text-blue-700">
+                      O sistema monitora automaticamente cada upload, ajustando o uso de armazenamento em tempo real. 
+                      Quando um usuário se aproximar do limite, ele receberá uma notificação.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
-                <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-              </div>
-            )}
-            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsResetDialogOpen(false)}
-                className="w-full sm:w-auto"
-              >
-                Cancelar
-              </Button>
-              <Button 
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600"
-                onClick={confirmResetPassword}
-              >
-                Enviar Link de Redefinição
-              </Button>
+              </TabsContent>
+              
+              {/* Credits Tab */}
+              <TabsContent value="credits" className="pt-4">
+                {renderCreditTabContent()}
+              </TabsContent>
+            </Tabs>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseUserDetails}>Fechar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Delete User Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      )}
+      
+      {/* Credits Dialog - Updated for permanent and monthly credits */}
+      {selectedUser && (
+        <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-center text-red-600">
-                Confirmar Exclusão
-              </DialogTitle>
-              <DialogDescription className="text-center">
-                Esta ação não pode ser desfeita. O usuário será removido permanentemente.
+              <DialogTitle>Gerenciar Créditos</DialogTitle>
+              <DialogDescription>
+                Adicione ou remova créditos para {selectedUser.name}.
+                <p className="text-xs text-muted-foreground mt-2">
+                  Nota: Os créditos mensais são renovados para {DEFAULT_CREDITS} no início de cada mês e não são acumuláveis. Créditos permanentes não expiram.
+                </p>
               </DialogDescription>
             </DialogHeader>
-            {userToDelete && (
-              <div className="flex flex-col items-center gap-2 py-4 border-y">
-                <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                  <Trash className="h-8 w-8" />
+            
+            <Form {...creditsForm}>
+              <form onSubmit={creditsForm.handleSubmit(handleManageCredits)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md mb-4">
+                  <div>
+                    <h3 className="text-sm font-medium">Créditos Mensais</h3>
+                    <p className="text-2xl font-bold text-portal-primary">{selectedUser.monthlyCredits}</p>
+                    <p className="text-xs text-muted-foreground">Expiram fim do mês</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium">Créditos Permanentes</h3>
+                    <p className="text-2xl font-bold text-green-600">{selectedUser.permanentCredits}</p>
+                    <p className="text-xs text-muted-foreground">Não expiram</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold">{userToDelete.name}</h3>
-                <p className="text-sm text-muted-foreground">{userToDelete.email}</p>
-              </div>
-            )}
-            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDeleteDialogOpen(false)}
-                className="w-full sm:w-auto"
-              >
-                Cancelar
-              </Button>
-              <Button 
-                variant="destructive"
-                className="w-full sm:w-auto"
-                onClick={confirmDeleteUser}
-              >
-                Excluir Permanentemente
-              </Button>
-            </DialogFooter>
+                
+                <FormField
+                  control={creditsForm.control}
+                  name="operation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Operação</FormLabel>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={field.value === "add" ? "default" : "outline"}
+                          className={field.value === "add" ? "bg-green-600 hover:bg-green-700" : ""}
+                          onClick={() => field.onChange("add")}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={field.value === "subtract" ? "default" : "outline"}
+                          className={field.value === "subtract" ? "bg-red-600 hover:bg-red-700" : ""}
+                          onClick={() => field.onChange("subtract")}
+                        >
+                          <Minus className="h-4 w-4 mr-2" />
+                          Remover
+                        </Button>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={creditsForm.control}
+                  name="creditType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Crédito</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo de crédito" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="permanent">Créditos Permanentes (não expiram)</SelectItem>
+                          <SelectItem value="monthly">Créditos Mensais (expiram fim do mês)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={creditsForm.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade de Créditos</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Quantidade" 
+                          min="1" 
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter className="pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowCreditsDialog(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    Confirmar
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
-      </motion.div>
+      )}
     </div>
   );
 };
