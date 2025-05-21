@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Star, Heart, Calendar, FileText, MessageSquare, Building, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BrandsTab from "./supplier-tabs/BrandsTab";
@@ -12,9 +12,12 @@ import ContactsTab from "./supplier-tabs/ContactsTab";
 import CommunicationsTab from "./supplier-tabs/CommunicationsTab";
 import FilesTab from "./supplier-tabs/FilesTab";
 import ImagesTab from "./supplier-tabs/ImagesTab";
+import RatingsTab from "./supplier-tabs/RatingsTab";
+import CommentsTab from "./supplier-tabs/CommentsTab";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 
 // Estados brasileiros para o dropdown
 const ESTADOS_BRASILEIROS = [
@@ -46,9 +49,15 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
   const [editedSupplier, setEditedSupplier] = useState({ ...supplier });
   const [activeTab, setActiveTab] = useState("dados");
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Garantir que todas as propriedades necessárias existam
   if (!editedSupplier.images) editedSupplier.images = [];
+  if (!editedSupplier.communications) editedSupplier.communications = [];
+  if (!editedSupplier.brands) editedSupplier.brands = [];
+  if (!editedSupplier.branches) editedSupplier.branches = [];
+  if (!editedSupplier.contacts) editedSupplier.contacts = [];
+  if (!editedSupplier.files) editedSupplier.files = [];
 
   const handleSave = () => {
     // Validar campos obrigatórios
@@ -57,9 +66,22 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
       return;
     }
 
-    onUpdate(editedSupplier);
-    setIsEditing(false);
-    toast.success("Dados do fornecedor atualizados com sucesso!");
+    setIsSubmitting(true);
+    
+    // Simular delay de processamento
+    setTimeout(() => {
+      onUpdate(editedSupplier);
+      setIsEditing(false);
+      setIsSubmitting(false);
+      toast.success("Dados do fornecedor atualizados com sucesso!", {
+        position: "top-center",
+        style: {
+          background: "linear-gradient(to right, #8B5CF6, #6366F1)",
+          color: "white",
+          fontSize: "16px",
+        },
+      });
+    }, 800);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -120,10 +142,73 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
         return "from-rose-50 to-pink-50 border-rose-200";
       case "arquivos":
         return "from-gray-50 to-slate-50 border-gray-200";
+      case "avaliacoes":
+        return "from-purple-50 to-fuchsia-50 border-purple-200";
+      case "comentarios":
+        return "from-cyan-50 to-blue-50 border-cyan-200";
       default:
         return "from-purple-50 to-blue-50 border-purple-100";
     }
   };
+
+  // Get header gradient based on tab
+  const getHeaderGradient = (tab: string) => {
+    switch (tab) {
+      case "dados":
+        return "from-violet-500 to-indigo-500 border-violet-300";
+      case "marcas":
+        return "from-blue-500 to-sky-500 border-blue-300";
+      case "filiais":
+        return "from-emerald-500 to-teal-500 border-emerald-300";
+      case "contatos":
+        return "from-amber-500 to-yellow-500 border-amber-300";
+      case "comunicacao":
+        return "from-rose-500 to-pink-500 border-rose-300";
+      case "arquivos":
+        return "from-gray-600 to-slate-500 border-gray-400";
+      case "avaliacoes":
+        return "from-purple-500 to-fuchsia-500 border-purple-300";
+      case "comentarios":
+        return "from-cyan-500 to-blue-500 border-cyan-300";
+      default:
+        return "from-purple-500 to-blue-500 border-purple-300";
+    }
+  };
+
+  // Get icon for tab
+  const getTabIcon = (tab: string) => {
+    switch (tab) {
+      case "dados":
+        return <FileText className="mr-2 h-4 w-4" />;
+      case "marcas":
+        return <Tag className="mr-2 h-4 w-4" />;
+      case "filiais":
+        return <Building className="mr-2 h-4 w-4" />;
+      case "contatos":
+        return <MessageSquare className="mr-2 h-4 w-4" />;
+      case "comunicacao":
+        return <Calendar className="mr-2 h-4 w-4" />;
+      case "arquivos":
+        return <FileText className="mr-2 h-4 w-4" />;
+      case "avaliacoes":
+        return <Star className="mr-2 h-4 w-4" />;
+      case "comentarios":
+        return <MessageSquare className="mr-2 h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
+
+  const tabsData = [
+    { id: "dados", label: "Dados" },
+    { id: "marcas", label: "Marcas" },
+    { id: "filiais", label: "Filiais" },
+    { id: "contatos", label: "Contatos" },
+    { id: "comunicacao", label: "Comunicação" },
+    { id: "arquivos", label: "Arquivos" },
+    { id: "avaliacoes", label: "Avaliações" },
+    { id: "comentarios", label: "Comentários" }
+  ];
 
   return (
     <motion.div
@@ -131,7 +216,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
+      style={{
+        background: "radial-gradient(circle at 50% 0%, rgba(251, 254, 251, 0.12), rgba(255, 255, 255, 0) 40%)"
+      }}
     >
+      {/* Header with animation */}
       <motion.div 
         className="flex items-center mb-6"
         initial={{ y: -20, opacity: 0 }}
@@ -141,18 +230,41 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
         <Button 
           variant="ghost" 
           onClick={onBack} 
-          className="mr-4 group hover:bg-purple-100"
+          className="mr-4 group hover:bg-purple-100 relative overflow-hidden"
         >
-          <ArrowLeft className="mr-2 h-4 w-4 group-hover:text-purple-700" /> 
-          <span className="group-hover:text-purple-700">Voltar</span>
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 opacity-0 group-hover:opacity-100"
+            initial={false}
+            animate={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:text-purple-700 relative z-10" /> 
+          <span className="group-hover:text-purple-700 relative z-10">Voltar</span>
         </Button>
         
-        <div className="relative">
-          <h2 
+        <div className="relative flex flex-col">
+          <motion.h2 
             className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
           >
             {editedSupplier.name}
-          </h2>
+          </motion.h2>
+          
+          <motion.div className="flex items-center gap-2 text-sm text-gray-500">
+            <Badge className="bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-800 border-none hover:from-amber-300 hover:to-yellow-300">
+              {editedSupplier.category}
+            </Badge>
+            
+            {editedSupplier.type && (
+              <Badge className="bg-gradient-to-r from-blue-200 to-indigo-200 text-blue-800 border-none">
+                {editedSupplier.type}
+              </Badge>
+            )}
+          </motion.div>
+          
           <motion.div 
             className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
             initial={{ width: 0 }}
@@ -167,6 +279,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             variant="outline"
             onClick={() => setIsEditing(true)}
           >
+            <Edit className="mr-2 h-4 w-4" />
             Editar Fornecedor
           </Button>
         )}
@@ -179,14 +292,28 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
                 setIsEditing(false);
               }}
               className="border-gray-200 hover:bg-gray-100"
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleSave}
               className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+              disabled={isSubmitting}
             >
-              <Save className="mr-2 h-4 w-4" /> Salvar
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" /> Salvar
+                </>
+              )}
             </Button>
           </div>
         )}
@@ -204,97 +331,30 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          <TabsList className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 mb-8 bg-gradient-to-r from-purple-100 to-blue-100 p-1 rounded-lg">
-            <TabsTrigger 
-              value="dados" 
-              className="relative data-[state=active]:bg-white data-[state=active]:text-purple-700 transition-all duration-300"
-            >
-              <span className="relative z-10">Dados</span>
-              {activeTab === "dados" && (
-                <motion.div 
-                  className="absolute inset-0 bg-white rounded-md"
-                  layoutId="tab-background"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="marcas" 
-              className="relative data-[state=active]:bg-white data-[state=active]:text-purple-700 transition-all duration-300"
-            >
-              <span className="relative z-10">Marcas</span>
-              {activeTab === "marcas" && (
-                <motion.div 
-                  className="absolute inset-0 bg-white rounded-md"
-                  layoutId="tab-background"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="filiais" 
-              className="relative data-[state=active]:bg-white data-[state=active]:text-purple-700 transition-all duration-300"
-            >
-              <span className="relative z-10">Filiais</span>
-              {activeTab === "filiais" && (
-                <motion.div 
-                  className="absolute inset-0 bg-white rounded-md"
-                  layoutId="tab-background"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="contatos" 
-              className="relative data-[state=active]:bg-white data-[state=active]:text-purple-700 transition-all duration-300"
-            >
-              <span className="relative z-10">Contatos</span>
-              {activeTab === "contatos" && (
-                <motion.div 
-                  className="absolute inset-0 bg-white rounded-md"
-                  layoutId="tab-background"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="comunicacao" 
-              className="relative data-[state=active]:bg-white data-[state=active]:text-purple-700 transition-all duration-300"
-            >
-              <span className="relative z-10">Comunicação</span>
-              {activeTab === "comunicacao" && (
-                <motion.div 
-                  className="absolute inset-0 bg-white rounded-md"
-                  layoutId="tab-background"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="arquivos" 
-              className="relative data-[state=active]:bg-white data-[state=active]:text-purple-700 transition-all duration-300"
-            >
-              <span className="relative z-10">Arquivos</span>
-              {activeTab === "arquivos" && (
-                <motion.div 
-                  className="absolute inset-0 bg-white rounded-md"
-                  layoutId="tab-background"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </TabsTrigger>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 mb-8 bg-gradient-to-r from-purple-100 to-blue-100 p-1 rounded-lg">
+            <LayoutGroup>
+              {tabsData.map((tab) => (
+                <TabsTrigger 
+                  key={tab.id}
+                  value={tab.id} 
+                  className="relative data-[state=active]:text-purple-700 transition-all duration-300 flex items-center justify-center"
+                >
+                  <span className="relative z-10 flex items-center justify-center">
+                    {getTabIcon(tab.id)}
+                    {tab.label}
+                  </span>
+                  {activeTab === tab.id && (
+                    <motion.div 
+                      className="absolute inset-0 bg-white rounded-md shadow-md"
+                      layoutId="tab-background"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  )}
+                </TabsTrigger>
+              ))}
+            </LayoutGroup>
           </TabsList>
         </motion.div>
 
@@ -305,10 +365,11 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.4 }}
+            className="space-y-4"
           >
             <TabsContent value="dados">
               <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('dados')}`}>
-                <CardHeader className="bg-gradient-to-r from-violet-500 to-indigo-500 border-b-2 border-violet-300">
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('dados')} border-b-2`}>
                   <CardTitle className="text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -475,7 +536,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
             <TabsContent value="marcas">
               <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('marcas')}`}>
-                <CardHeader className="bg-gradient-to-r from-blue-500 to-sky-500 border-b-2 border-blue-300">
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('marcas')} border-b-2`}>
                   <CardTitle className="text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3">
                       <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
@@ -501,12 +562,25 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
                             transition={{ delay: index * 0.1 }}
                             whileHover={{ scale: 1.05 }}
                           >
-                            <Badge
-                              variant="secondary" 
-                              className="text-sm py-2 bg-gradient-to-r from-blue-100 to-sky-100 text-blue-700 border border-blue-200 shadow-sm"
-                            >
-                              {brand.name}
-                            </Badge>
+                            <HoverCard>
+                              <HoverCardTrigger>
+                                <Badge
+                                  variant="secondary" 
+                                  className="text-sm py-2 bg-gradient-to-r from-blue-100 to-sky-100 text-blue-700 border border-blue-200 shadow-sm hover:shadow-md transition-all"
+                                >
+                                  {brand.name}
+                                </Badge>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-64 bg-white p-4 shadow-lg rounded-lg border border-blue-200">
+                                <div className="flex flex-col gap-2">
+                                  <h4 className="text-lg font-semibold text-blue-700">{brand.name}</h4>
+                                  <div className="text-sm text-gray-600">
+                                    <p>Marca do fornecedor {editedSupplier.name}</p>
+                                    <p className="mt-2 text-blue-600 text-xs">Clique para mais detalhes</p>
+                                  </div>
+                                </div>
+                              </HoverCardContent>
+                            </HoverCard>
                           </motion.div>
                         ))
                       ) : (
@@ -550,7 +624,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
             <TabsContent value="filiais">
               <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('filiais')}`}>
-                <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 border-b-2 border-emerald-300">
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('filiais')} border-b-2`}>
                   <CardTitle className="text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3">
                       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -574,7 +648,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
             <TabsContent value="contatos">
               <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('contatos')}`}>
-                <CardHeader className="bg-gradient-to-r from-amber-500 to-yellow-500 border-b-2 border-amber-300">
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('contatos')} border-b-2`}>
                   <CardTitle className="text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -597,7 +671,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
             <TabsContent value="comunicacao">
               <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('comunicacao')}`}>
-                <CardHeader className="bg-gradient-to-r from-rose-500 to-pink-500 border-b-2 border-rose-300">
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('comunicacao')} border-b-2`}>
                   <CardTitle className="text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -619,7 +693,7 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 
             <TabsContent value="arquivos">
               <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('arquivos')}`}>
-                <CardHeader className="bg-gradient-to-r from-gray-600 to-slate-500 border-b-2 border-gray-400">
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('arquivos')} border-b-2`}>
                   <CardTitle className="text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3">
                       <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
@@ -639,6 +713,44 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
                 </CardContent>
               </Card>
             </TabsContent>
+            
+            <TabsContent value="avaliacoes">
+              <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('avaliacoes')}`}>
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('avaliacoes')} border-b-2`}>
+                  <CardTitle className="text-white flex items-center">
+                    <Star className="mr-3 h-5 w-5" />
+                    Avaliações
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <RatingsTab 
+                    supplier={editedSupplier}
+                    onUpdate={(updatedSupplier) => {
+                      setEditedSupplier(updatedSupplier);
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="comentarios">
+              <Card className={`border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-r ${getTabGradient('comentarios')}`}>
+                <CardHeader className={`bg-gradient-to-r ${getHeaderGradient('comentarios')} border-b-2`}>
+                  <CardTitle className="text-white flex items-center">
+                    <MessageSquare className="mr-3 h-5 w-5" />
+                    Comentários
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <CommentsTab 
+                    supplier={editedSupplier}
+                    onUpdate={(updatedSupplier) => {
+                      setEditedSupplier(updatedSupplier);
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </motion.div>
         </AnimatePresence>
       </Tabs>
@@ -647,4 +759,3 @@ const SupplierDetail: React.FC<SupplierDetailProps> = ({ supplier, onBack, onUpd
 };
 
 export default SupplierDetail;
-

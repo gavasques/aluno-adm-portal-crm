@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Supplier } from "@/types/supplier.types";
 import SuppliersTable from "@/components/admin/SuppliersTable";
-import SupplierDetail from "@/components/admin/SupplierDetail";
+import SupplierDetail from "@/components/student/SupplierDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -130,7 +130,6 @@ export function SupplierContent({
             supplier={selectedSupplier}
             onBack={() => setSelectedSupplier(null)}
             onUpdate={handleUpdateSupplier}
-            isAdmin={false}
           />
         </motion.div>
       )}

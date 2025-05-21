@@ -42,7 +42,14 @@ const Suppliers = () => {
   // Wrapper para adicionar toast na atualização do fornecedor
   const handleSupplierUpdate = (updatedSupplier) => {
     handleUpdateSupplier(updatedSupplier);
-    toast.success("Avaliação enviada com sucesso!");
+    toast.success("Fornecedor atualizado com sucesso!", {
+      position: "top-center",
+      style: {
+        background: "linear-gradient(to right, #8B5CF6, #6366F1)",
+        color: "white",
+        fontWeight: "bold",
+      }
+    });
   };
 
   return (
