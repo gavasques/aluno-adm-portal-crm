@@ -63,7 +63,7 @@ export function SuppliersList({
         <Table>
           <TableHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
             <TableRow className="hover:bg-transparent border-purple-200">
-              <TableHead className="font-semibold text-purple-900 w-[40%]">
+              <TableHead className="font-semibold text-purple-900 w-[30%]">
                 <Button 
                   variant="ghost" 
                   onClick={() => onSort("name")}
@@ -95,8 +95,8 @@ export function SuppliersList({
                   </motion.div>
                 </Button>
               </TableHead>
-              <TableHead className="font-semibold text-purple-900 w-[15%]">CNPJ</TableHead>
-              <TableHead className="font-semibold text-purple-900 w-[20%]">Marcas</TableHead>
+              <TableHead className="font-semibold text-purple-900 w-[20%]">CNPJ</TableHead>
+              <TableHead className="font-semibold text-purple-900 w-[25%]">Marcas</TableHead>
               <TableHead className="text-right font-semibold text-purple-900 w-[10%]">Ações</TableHead>
             </TableRow>
           </TableHeader>
