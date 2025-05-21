@@ -27,15 +27,6 @@ export function SuppliersList({
   onSort,
   onAddSupplier
 }: SuppliersListProps) {
-  const supplierTypes: Record<string, string> = {
-    "Distribuidor": "bg-blue-500",
-    "Fabricante": "bg-green-500",
-    "Importador": "bg-amber-500",
-    "Atacadista": "bg-purple-500",
-    "Varejista": "bg-pink-500",
-    "Representante": "bg-indigo-500"
-  };
-
   // Animation variants for list items
   const tableRowVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -72,7 +63,7 @@ export function SuppliersList({
         <Table>
           <TableHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
             <TableRow className="hover:bg-transparent border-purple-200">
-              <TableHead className="w-[40%] font-semibold text-purple-900">
+              <TableHead className="font-semibold text-purple-900 w-[40%]">
                 <Button 
                   variant="ghost" 
                   onClick={() => onSort("name")}
@@ -88,7 +79,7 @@ export function SuppliersList({
                   </motion.div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[15%] font-semibold text-purple-900">
+              <TableHead className="font-semibold text-purple-900 w-[15%]">
                 <Button 
                   variant="ghost" 
                   onClick={() => onSort("category")}
@@ -104,9 +95,9 @@ export function SuppliersList({
                   </motion.div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[15%] font-semibold text-purple-900">CNPJ</TableHead>
-              <TableHead className="w-[20%] font-semibold text-purple-900">Marcas</TableHead>
-              <TableHead className="w-[10%] text-right font-semibold text-purple-900">Ações</TableHead>
+              <TableHead className="font-semibold text-purple-900 w-[15%]">CNPJ</TableHead>
+              <TableHead className="font-semibold text-purple-900 w-[20%]">Marcas</TableHead>
+              <TableHead className="text-right font-semibold text-purple-900 w-[10%]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -181,7 +172,7 @@ export function SuppliersList({
                     whileHover="hover"
                     onClick={() => onSelectSupplier(supplier)}
                   >
-                    <TableCell className="w-[40%]">
+                    <TableCell>
                       <div className="flex items-center gap-3">
                         <motion.div 
                           className={`w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 text-white flex items-center justify-center text-sm font-medium shadow-sm`}
@@ -192,24 +183,16 @@ export function SuppliersList({
                         </motion.div>
                         <div>
                           <div className="font-medium text-gray-900">{supplier.name}</div>
-                          <div className="text-xs text-gray-500">
-                            <Badge className={`${supplierTypes[supplier.type] || "bg-gray-500"} text-[10px] py-0 px-1.5`}>
-                              {supplier.type}
-                            </Badge>
-                          </div>
+                          <div className="text-xs text-gray-500">{supplier.type}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="w-[15%]">
-                      <div className="flex justify-center">
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-medium px-2.5 py-1 text-center">
-                          {supplier.category}
-                        </Badge>
-                      </div>
+                    <TableCell>
+                      <span className="text-gray-700">{supplier.category}</span>
                     </TableCell>
-                    <TableCell className="w-[15%] font-mono text-sm text-gray-600 text-center">{supplier.cnpj}</TableCell>
-                    <TableCell className="w-[20%]">
-                      <div className="flex flex-wrap justify-center gap-1">
+                    <TableCell className="font-mono text-sm text-gray-600">{supplier.cnpj}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
                         {supplier.brands && supplier.brands.length > 0 ? (
                           supplier.brands.slice(0, 2).map((brand, idx) => (
                             <Badge key={idx} variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-100 font-medium">
@@ -226,7 +209,7 @@ export function SuppliersList({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="w-[10%] text-right">
+                    <TableCell className="text-right">
                       <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button 
                           variant="outline" 
