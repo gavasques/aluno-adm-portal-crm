@@ -12,6 +12,7 @@ const PARTNERS = [
     rating: 4.8,
     commentCount: 14,
     recommended: true,
+    website: "www.marketingdigitalpro.com",
     contacts: [
       { name: "Maria Silva", role: "Gerente de Contas", email: "maria@marketingpro.com", phone: "(11) 98765-4321" }
     ],
@@ -35,6 +36,7 @@ const PARTNERS = [
     rating: 4.3,
     commentCount: 7,
     recommended: false,
+    website: "www.logisticaexpress.com",
     contacts: [
       { name: "João Oliveira", role: "Diretor Comercial", email: "joao@logisticaexpress.com", phone: "(11) 97654-3210" }
     ],
@@ -56,6 +58,7 @@ const PARTNERS = [
     rating: 4.6,
     commentCount: 9,
     recommended: true,
+    website: "www.contabilidadeonline.com",
     contacts: [
       { name: "Ana Paula", role: "Contadora Chefe", email: "ana@contabilidadeonline.com", phone: "(11) 99876-5432" }
     ],
