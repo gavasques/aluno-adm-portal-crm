@@ -14,26 +14,28 @@ export const useAllowedMenus = () => {
   
   useEffect(() => {
     const fetchAllowedMenus = async () => {
-      if (!profile) {
+      if (!profile) return;
+      
+      setLoading(true);
+      
+      // Para admin, acesso completo
+      if (profile.role === 'Admin') {
+        setAllowedMenus(['dashboard', 'suppliers', 'partners', 'tools', 'my-suppliers', 'settings']);
         setLoading(false);
         return;
       }
       
-      setLoading(true);
-      
       try {
-        // Para admin, acesso completo
-        if (profile.role === 'Admin') {
-          setAllowedMenus(['dashboard', 'suppliers', 'partners', 'tools', 'my-suppliers', 'settings']);
-        } else {
-          // Para alunos, retornar com base no grupo de permissão
-          const { data, error } = await supabase.rpc('get_allowed_menus');
-          
-          if (error) {
-            console.error('Erro ao buscar menus permitidos:', error);
-          } else if (data) {
-            setAllowedMenus(data.map((item: AllowedMenusResponse) => item.menu_key));
-          }
+        // Chamar a função RPC
+        const { data, error } = await supabase.rpc('get_allowed_menus');
+        
+        if (error) {
+          console.error('Erro ao buscar menus permitidos:', error);
+          return;
+        }
+        
+        if (data) {
+          setAllowedMenus(data.map((item: AllowedMenusResponse) => item.menu_key));
         }
       } catch (error) {
         console.error('Erro ao buscar menus permitidos:', error);
