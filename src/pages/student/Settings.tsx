@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; 
 import { User } from "lucide-react";
@@ -43,138 +42,98 @@ const Settings = () => {
       <h1 className="text-3xl font-bold mb-6 text-portal-dark">Configurações</h1>
       
       <div className="max-w-4xl mx-auto">
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-3 max-w-md">
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
-            <TabsTrigger value="security">Segurança</TabsTrigger>
-            <TabsTrigger value="notifications">Notificações</TabsTrigger>
-          </TabsList>
-          
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações do Perfil</CardTitle>
-                <CardDescription>
-                  Atualize suas informações pessoais e profissionais.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <Avatar className="w-24 h-24">
-                      {profileImage ? (
-                        <AvatarImage src={profileImage} alt="Foto de perfil" className="object-cover" />
-                      ) : (
-                        <AvatarFallback className="bg-portal-light text-portal-primary text-2xl font-bold">
-                          {fullName?.split(" ").map(name => name[0]).join("").slice(0, 2) || <User className="w-12 h-12" />}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações do Perfil</CardTitle>
+            <CardDescription>
+              Atualize suas informações pessoais e profissionais.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Avatar className="w-24 h-24">
+                  {profileImage ? (
+                    <AvatarImage src={profileImage} alt="Foto de perfil" className="object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-portal-light text-portal-primary text-2xl font-bold">
+                      {fullName?.split(" ").map(name => name[0]).join("").slice(0, 2) || <User className="w-12 h-12" />}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </div>
+              <div>
+                <Label htmlFor="profile-image" className="cursor-pointer">
+                  <div className="bg-portal-primary hover:bg-portal-primary/90 text-white px-3 py-2 rounded-md text-sm transition-colors">
+                    Alterar Foto
                   </div>
-                  <div>
-                    <Label htmlFor="profile-image" className="cursor-pointer">
-                      <div className="bg-portal-primary hover:bg-portal-primary/90 text-white px-3 py-2 rounded-md text-sm transition-colors">
-                        Alterar Foto
-                      </div>
-                      <Input 
-                        id="profile-image" 
-                        type="file" 
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                      />
-                    </Label>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Nome Completo</Label>
-                    <Input 
-                      id="fullName" 
-                      value={fullName} 
-                      onChange={(e) => setFullName(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      defaultValue="joao.silva@exemplo.com" 
-                      disabled
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input 
-                      id="phone" 
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Empresa</Label>
-                    <Input 
-                      id="company" 
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Cargo</Label>
-                    <Input 
-                      id="role" 
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveProfile}>Salvar Alterações</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          {/* Security Tab - Empty */}
-          <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Segurança da Conta</CardTitle>
-                <CardDescription>
-                  Configure as preferências de segurança da sua conta.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="py-10 text-center text-gray-500">
-                <p>Nenhuma configuração de segurança disponível no momento.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Notifications Tab - Empty */}
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências de Notificação</CardTitle>
-                <CardDescription>
-                  Escolha como e quando deseja receber notificações.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="py-10 text-center text-gray-500">
-                <p>Nenhuma configuração de notificação disponível no momento.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  <Input 
+                    id="profile-image" 
+                    type="file" 
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </Label>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nome Completo</Label>
+                <Input 
+                  id="fullName" 
+                  value={fullName} 
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  defaultValue="joao.silva@exemplo.com" 
+                  disabled
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input 
+                  id="phone" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="company">Empresa</Label>
+                <Input 
+                  id="company" 
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="role">Cargo</Label>
+                <Input 
+                  id="role" 
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleSaveProfile}>Salvar Alterações</Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
 };
 
 export default Settings;
+
