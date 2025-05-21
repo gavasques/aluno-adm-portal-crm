@@ -86,7 +86,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
 
   return (
     <motion.div
-      className="relative bg-white z-40 min-h-screen overflow-y-auto"
+      className="w-full bg-white z-10 overflow-y-auto"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -95,7 +95,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
         className="sticky top-0 z-20 bg-gradient-to-r from-teal-600 to-emerald-500 text-white p-4 shadow-md"
         variants={headerVariants}
       >
-        <div className="container mx-auto flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
@@ -127,7 +127,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
         </div>
       </motion.div>
 
-      <div className="container mx-auto py-6 px-4">
+      <div className="py-6 px-4">
         <motion.div 
           className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-6"
           initial={{ opacity: 0, y: 10 }}
