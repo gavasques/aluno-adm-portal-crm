@@ -1,102 +1,86 @@
 
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
-import { Lock } from "lucide-react";
-import { GridBackground } from "@/components/ui/grid-background";
+import { Button } from "@/components/ui/button";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
-  const { token } = useParams();
+  const { resetPassword } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
-    // Validação de senha
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
-      return;
-    }
     
     if (password !== confirmPassword) {
       setError("As senhas não coincidem");
       return;
     }
-    
-    // Simulação de redefinição de senha bem-sucedida
-    console.log("Senha redefinida com sucesso. Token:", token);
-    setSuccess(true);
-    
-    // Redirecionar após 2 segundos
-    setTimeout(() => {
-      navigate("/");
-    }, 2000);
+
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    setLoading(true);
+    await resetPassword(password);
+    setLoading(false);
   };
 
   return (
-    <div className="relative min-h-screen">
-      <GridBackground />
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
-        {/* Logo no centro superior */}
-        <div className="mb-12">
-          <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-md">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Redefinir Senha</h1>
+          <p className="text-gray-600 mt-2">Digite sua nova senha</p>
         </div>
 
-        <div className="w-full max-w-md mx-auto p-8 space-y-6">
-          <h2 className="text-2xl font-semibold text-center text-white">
-            {success ? "Senha redefinida com sucesso!" : "Definir nova senha"}
-          </h2>
-          
-          {!success ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <Input 
-                    type="password" 
-                    placeholder="Nova senha" 
-                    className="pl-10 bg-gray-950/50 border-gray-800"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <Input 
-                    type="password" 
-                    placeholder="Confirmar nova senha" 
-                    className="pl-10 bg-gray-950/50 border-gray-800"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              {error && (
-                <p className="text-red-500 text-sm">{error}</p>
-              )}
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Redefinir Senha
-              </Button>
-            </form>
-          ) : (
-            <p className="text-center text-green-400">
-              Sua senha foi redefinida com sucesso. Você será redirecionado para a página de login.
-            </p>
+        <form onSubmit={handleResetPassword} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
+              {error}
+            </div>
           )}
-        </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Nova Senha
+            </label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Digite sua nova senha"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+              Confirmar Senha
+            </label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              placeholder="Confirme sua nova senha"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? "Redefinindo..." : "Redefinir Senha"}
+          </Button>
+        </form>
       </div>
     </div>
   );
