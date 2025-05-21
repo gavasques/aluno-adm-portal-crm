@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsTriggerWithBadge } from "@/components/ui/tabs";
 import { ChevronLeft, Plus, Edit, User, BookOpen, Gift, MessageSquare, FileText } from "lucide-react";
-import { students as studentsData } from "@/data/students.js";
+import { STUDENTS as studentsData } from "@/data/students.js";
 import { Badge } from "@/components/ui/badge";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
