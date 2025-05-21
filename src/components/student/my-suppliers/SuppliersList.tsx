@@ -167,21 +167,21 @@ export function SuppliersList({
                 </TableCell>
               </TableRow>
             ) : (
-              <motion.tbody
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
+              <>
                 {suppliers.map((supplier, index) => (
-                  <motion.tr 
+                  <TableRow 
                     key={supplier.id} 
                     className="border-purple-100 cursor-pointer"
-                    variants={tableRowVariants}
-                    custom={index}
-                    whileHover="hover"
                     onClick={() => onSelectSupplier(supplier)}
                   >
-                    <TableCell className="w-[40%]">
+                    <motion.td
+                      className="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-[40%]"
+                      variants={tableRowVariants}
+                      custom={index}
+                      initial="hidden"
+                      animate="visible"
+                      whileHover={{ scale: 1.01 }}
+                    >
                       <div className="flex items-center gap-3">
                         <motion.div 
                           className={`w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 text-white flex items-center justify-center text-sm font-medium shadow-sm`}
@@ -199,16 +199,36 @@ export function SuppliersList({
                           </div>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="w-[15%]">
+                    </motion.td>
+                    <motion.td
+                      className="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-[15%]"
+                      variants={tableRowVariants}
+                      custom={index}
+                      initial="hidden"
+                      animate="visible"
+                    >
                       <div className="flex justify-center">
                         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-medium px-2.5 py-1 text-center">
                           {supplier.category}
                         </Badge>
                       </div>
-                    </TableCell>
-                    <TableCell className="w-[15%] font-mono text-sm text-gray-600 text-center">{supplier.cnpj}</TableCell>
-                    <TableCell className="w-[20%]">
+                    </motion.td>
+                    <motion.td
+                      className="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-[15%] font-mono text-sm text-gray-600 text-center"
+                      variants={tableRowVariants}
+                      custom={index}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {supplier.cnpj}
+                    </motion.td>
+                    <motion.td
+                      className="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-[20%]"
+                      variants={tableRowVariants}
+                      custom={index}
+                      initial="hidden"
+                      animate="visible"
+                    >
                       <div className="flex flex-wrap justify-center gap-1">
                         {supplier.brands && supplier.brands.length > 0 ? (
                           supplier.brands.slice(0, 2).map((brand, idx) => (
@@ -225,8 +245,14 @@ export function SuppliersList({
                           </Badge>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell className="w-[10%] text-right">
+                    </motion.td>
+                    <motion.td
+                      className="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-[10%] text-right"
+                      variants={tableRowVariants}
+                      custom={index}
+                      initial="hidden"
+                      animate="visible"
+                    >
                       <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button 
                           variant="outline" 
@@ -269,10 +295,10 @@ export function SuppliersList({
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </TableCell>
-                  </motion.tr>
+                    </motion.td>
+                  </TableRow>
                 ))}
-              </motion.tbody>
+              </>
             )}
           </TableBody>
         </Table>
