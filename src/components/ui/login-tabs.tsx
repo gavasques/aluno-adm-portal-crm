@@ -40,9 +40,7 @@ export function LoginTabs() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-blue-950 z-0"></div>
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/c4cf3193-afb7-47e1-89d9-c162bee68915.png')] bg-cover bg-center opacity-70 z-0"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,20,0.6)_100%)] z-0"></div>
+      <div className="absolute inset-0 bg-black z-0"></div>
       
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-screen-xl mx-auto px-4">
         <div className="w-full max-w-md mx-auto p-6 space-y-6 bg-blue-950/80 backdrop-blur-md rounded-xl border border-blue-800/30 shadow-lg">
