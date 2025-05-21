@@ -35,7 +35,8 @@ export const useAllowedMenus = () => {
         }
         
         if (data) {
-          setAllowedMenus(data.map((item: AllowedMenusResponse) => item.menu_key));
+          const menuKeys = data.map((item: AllowedMenusResponse) => item.menu_key);
+          setAllowedMenus(menuKeys);
         }
       } catch (error) {
         console.error('Erro ao buscar menus permitidos:', error);
