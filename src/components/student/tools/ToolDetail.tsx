@@ -86,7 +86,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
 
   return (
     <motion.div
-      className="fixed inset-0 bg-white z-50 overflow-y-auto"
+      className="relative bg-white z-40 min-h-screen overflow-y-auto"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
