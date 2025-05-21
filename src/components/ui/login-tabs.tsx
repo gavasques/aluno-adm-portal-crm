@@ -40,9 +40,17 @@ export function LoginTabs() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-800 to-black z-0"></div>
       
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-screen-xl mx-auto px-4">
+        <div className="mb-8">
+          <img 
+            src="/lovable-uploads/ac3223f2-8f29-482c-a887-ed1bcabecec0.png" 
+            alt="Guilherme Vasques Logo" 
+            className="h-24 md:h-32"
+          />
+        </div>
+        
         <div className="w-full max-w-md mx-auto p-6 space-y-6 bg-blue-950/80 backdrop-blur-md rounded-xl border border-blue-800/30 shadow-lg">
           <Tabs defaultValue="student" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-blue-900/50">
