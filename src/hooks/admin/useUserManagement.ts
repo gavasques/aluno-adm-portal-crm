@@ -15,6 +15,24 @@ type ProfileWithUser = {
   updated_at: string | null;
 };
 
+type CreateUserData = {
+  email: string;
+  password: string;
+  name: string;
+  role: string;
+  status: string;
+  permissionGroupId: number | null;
+};
+
+type UpdateUserData = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  permissionGroupId: number | null;
+};
+
 export const useUserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<ProfileWithUser[]>([]);
@@ -162,6 +180,115 @@ export const useUserManagement = () => {
     }
   };
 
+  // Nova função para criar usuário
+  const createUser = async (userData: CreateUserData) => {
+    try {
+      setLoading(true);
+      
+      // Primeiro, criar o usuário na auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password,
+        email_confirm: true,
+        user_metadata: {
+          name: userData.name,
+        },
+      });
+      
+      if (authError) throw authError;
+      
+      if (!authData.user) {
+        throw new Error("Falha ao criar usuário");
+      }
+      
+      // Agora, atualizamos o perfil com informações adicionais
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: userData.name,
+          role: userData.role,
+          status: userData.status,
+          permission_group_id: userData.permissionGroupId,
+        })
+        .eq('id', authData.user.id);
+      
+      if (profileError) throw profileError;
+      
+      toast({
+        title: "Usuário criado",
+        description: "O usuário foi criado com sucesso.",
+        variant: "default"
+      });
+      
+      // Recarregue a lista de usuários
+      fetchUsers();
+      
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao criar usuário:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message || "Não foi possível criar o usuário.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para atualizar usuário
+  const updateUser = async (userData: UpdateUserData) => {
+    try {
+      setLoading(true);
+      
+      // Atualizar o perfil do usuário
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          status: userData.status,
+          permission_group_id: userData.permissionGroupId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userData.id);
+      
+      if (error) throw error;
+      
+      // Atualize a lista local
+      setUsers(users.map(user => 
+        user.id === userData.id ? { 
+          ...user, 
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          status: userData.status,
+          permission_group_id: userData.permissionGroupId,
+        } : user
+      ));
+      
+      toast({
+        title: "Usuário atualizado",
+        description: "O usuário foi atualizado com sucesso.",
+        variant: "default"
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao atualizar usuário:', error);
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: error.message || "Não foi possível atualizar o usuário.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     users,
     loading,
@@ -169,6 +296,8 @@ export const useUserManagement = () => {
     updateUserPermissionGroup,
     resetPassword,
     updateUserStatus,
-    sendMagicLink
+    sendMagicLink,
+    createUser,
+    updateUser
   };
 };
