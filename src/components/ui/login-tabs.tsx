@@ -45,11 +45,6 @@ export function LoginTabs() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,20,0.6)_100%)] z-0"></div>
       
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-screen-xl mx-auto px-4">
-        {/* Logo única no centro superior */}
-        <div className="mb-12">
-          <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-16" />
-        </div>
-
         <div className="w-full max-w-md mx-auto p-6 space-y-6 bg-blue-950/80 backdrop-blur-md rounded-xl border border-blue-800/30 shadow-lg">
           <Tabs defaultValue="student" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-blue-900/50">
