@@ -164,22 +164,20 @@ export function SuppliersList({
                 animate="visible"
               >
                 {suppliers.map((supplier, index) => (
-  <motion.tr 
-    key={supplier.id} 
+  <motion.tr
+    key={supplier.id}
     className="border-purple-100 cursor-pointer"
     variants={tableRowVariants}
     custom={index}
     whileHover="hover"
     onClick={() => onSelectSupplier(supplier)}
   >
-    {/* Nome + logo + tipo pequeno */}
+    {/* COLUNA NOME */}
     <TableCell>
-      <div className="flex items-center gap-3">
-        {supplier.logo && (
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-blue-600 text-white flex items-center justify-center text-xs font-bold">
-            {supplier.logo}
-          </div>
-        )}
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-blue-600 text-white flex items-center justify-center text-xs font-bold">
+          {supplier.logo}
+        </div>
         <div>
           <div className="font-medium text-gray-900">{supplier.name}</div>
           {supplier.type && (
@@ -188,13 +186,16 @@ export function SuppliersList({
         </div>
       </div>
     </TableCell>
-    {/* Categoria */}
+
+    {/* COLUNA CATEGORIA */}
     <TableCell>
       <span className="text-gray-700">{supplier.category}</span>
     </TableCell>
-    {/* CNPJ */}
+
+    {/* COLUNA CNPJ */}
     <TableCell className="font-mono text-sm text-gray-600">{supplier.cnpj}</TableCell>
-    {/* Marcas */}
+
+    {/* COLUNA MARCAS */}
     <TableCell>
       <div className="flex flex-wrap gap-1">
         {supplier.brands && supplier.brands.length > 0 ? (
@@ -213,12 +214,13 @@ export function SuppliersList({
         )}
       </div>
     </TableCell>
-    {/* Ações */}
+
+    {/* COLUNA AÇÕES */}
     <TableCell className="text-right">
       <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={(e) => {
             e.stopPropagation();
             onSelectSupplier(supplier);
@@ -229,9 +231,9 @@ export function SuppliersList({
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="border-red-200 hover:border-red-300 hover:bg-red-50 text-red-500 shadow-sm hover:shadow transition-all"
             >
               <Trash className="h-4 w-4" />
@@ -246,7 +248,7 @@ export function SuppliersList({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel className="border-gray-200 text-gray-700 hover:bg-gray-100">Cancelar</AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogAction
                 onClick={() => onDeleteSupplier(supplier.id)}
                 className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
               >
@@ -259,6 +261,7 @@ export function SuppliersList({
     </TableCell>
   </motion.tr>
 ))}
+
 
               </motion.tbody>
             )}
