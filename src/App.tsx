@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,6 +35,7 @@ import Categories from "./pages/admin/Categories";
 import SoftwareTypes from "./pages/admin/SoftwareTypes";
 import PartnerTypes from "./pages/admin/PartnerTypes";
 import Registers from "./pages/admin/Registers";
+import AdminSettings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +90,9 @@ const App = () => (
                 <Route path="suppliers" element={<AdminSuppliers />} />
                 <Route path="partners" element={<AdminPartners />} />
                 <Route path="tools" element={<AdminTools />} />
+                
+                {/* Dentro do elemento Route com path="/admin/*" adicione a nova rota para configurações */}
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
