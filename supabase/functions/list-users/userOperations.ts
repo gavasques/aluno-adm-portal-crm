@@ -1,3 +1,4 @@
+
 import { corsHeaders } from './utils.ts';
 
 // Função para criar um novo usuário
@@ -140,7 +141,9 @@ export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
     
     if (updateError) {
       console.error("Erro ao atualizar status do usuário:", updateError);
-      throw updateError;
+      return {
+        error: updateError.message || "Erro ao atualizar status do usuário"
+      };
     }
     
     // Verificar se a atualização foi aplicada corretamente

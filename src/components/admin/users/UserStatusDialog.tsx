@@ -47,7 +47,7 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         body: {
           action: 'toggleUserStatus',
           userId,
-          active: !isActive
+          active: !isActive // Importante: enviamos o NOVO estado desejado
         }
       });
 
