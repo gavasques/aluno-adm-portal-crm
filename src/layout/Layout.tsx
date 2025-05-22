@@ -6,9 +6,13 @@ import StudentSidebar from "./StudentSidebar";
 import AdminSidebar from "./AdminSidebar";
 import { useLocation } from "react-router-dom";
 
-const Layout = () => {
+interface LayoutProps {
+  isAdmin?: boolean;
+}
+
+const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/admin");
+  const isAdmin = propIsAdmin !== undefined ? propIsAdmin : location.pathname.startsWith("/admin");
   const isStudent = location.pathname.startsWith("/student");
   const isHome = location.pathname === "/";
 
