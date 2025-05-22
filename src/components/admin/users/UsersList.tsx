@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, MoreHorizontal, Search, KeyRound, Info, UserPlus } from "lucide-react";
+import { Loader2, MoreHorizontal, Search, KeyRound, Info, UserPlus, Trash2, UserX, UserCheck } from "lucide-react";
 import UserDetailsDialog from "./UserDetailsDialog";
 
 interface User {
@@ -39,6 +39,8 @@ interface UsersListProps {
   onSearchChange: (query: string) => void;
   onResetPassword: (email: string) => void;
   onAddUser: () => void;
+  onDeleteUser: (userId: string, email: string) => void;
+  onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
 }
 
 const UsersList: React.FC<UsersListProps> = ({
@@ -48,6 +50,8 @@ const UsersList: React.FC<UsersListProps> = ({
   onSearchChange,
   onResetPassword,
   onAddUser,
+  onDeleteUser,
+  onToggleUserStatus,
 }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -147,6 +151,28 @@ const UsersList: React.FC<UsersListProps> = ({
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleViewDetails(user)}>
                           <Info className="mr-2 h-4 w-4" /> Ver detalhes
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {user.status === "Ativo" ? (
+                          <DropdownMenuItem 
+                            onClick={() => onToggleUserStatus(user.id, user.email, true)}
+                            className="text-amber-600"
+                          >
+                            <UserX className="mr-2 h-4 w-4" /> Inativar usuário
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem 
+                            onClick={() => onToggleUserStatus(user.id, user.email, false)}
+                            className="text-green-600"
+                          >
+                            <UserCheck className="mr-2 h-4 w-4" /> Ativar usuário
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem 
+                          onClick={() => onDeleteUser(user.id, user.email)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -12,6 +12,8 @@ import { RefreshCw, Loader2 } from "lucide-react";
 import UsersList from "@/components/admin/users/UsersList";
 import UserAddDialog from "@/components/admin/users/UserAddDialog";
 import ResetPasswordDialog from "@/components/admin/users/ResetPasswordDialog";
+import UserDeleteDialog from "@/components/admin/users/UserDeleteDialog";
+import UserStatusDialog from "@/components/admin/users/UserStatusDialog";
 import { toast } from "@/hooks/use-toast";
 
 interface User {
@@ -29,7 +31,11 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserStatus, setSelectedUserStatus] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -101,6 +107,21 @@ const Users = () => {
     setShowAddDialog(true);
   };
 
+  // Função para abrir o diálogo de excluir usuário
+  const handleDeleteUser = (userId: string, email: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserEmail(email);
+    setShowDeleteDialog(true);
+  };
+
+  // Função para abrir o diálogo de alteração de status do usuário
+  const handleToggleUserStatus = (userId: string, email: string, isActive: boolean) => {
+    setSelectedUserId(userId);
+    setSelectedUserEmail(email);
+    setSelectedUserStatus(isActive);
+    setShowStatusDialog(true);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
@@ -126,6 +147,8 @@ const Users = () => {
             onSearchChange={setSearchQuery}
             onResetPassword={handleResetPassword}
             onAddUser={handleAddUser}
+            onDeleteUser={handleDeleteUser}
+            onToggleUserStatus={handleToggleUserStatus}
           />
         </CardContent>
       </Card>
@@ -141,6 +164,23 @@ const Users = () => {
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
         userEmail={selectedUserEmail}
+      />
+
+      <UserDeleteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        userId={selectedUserId}
+        userEmail={selectedUserEmail}
+        onSuccess={refreshUsersList}
+      />
+
+      <UserStatusDialog
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        userId={selectedUserId}
+        userEmail={selectedUserEmail}
+        isActive={selectedUserStatus}
+        onSuccess={refreshUsersList}
       />
     </div>
   );

@@ -128,6 +128,112 @@ async function createUser(supabaseAdmin, requestData) {
   }
 }
 
+// Função para excluir um usuário ou inativá-lo se tiver referências
+async function deleteUser(supabaseAdmin, requestData) {
+  const { userId, email } = requestData;
+  
+  try {
+    console.log(`Iniciando exclusão do usuário: ${email} (ID: ${userId})`);
+    
+    // Verificar se o usuário existe
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (userError) {
+      console.error("Erro ao buscar usuário:", userError);
+      throw userError;
+    }
+    
+    if (!userData || !userData.user) {
+      console.error("Usuário não encontrado:", userId);
+      throw new Error("Usuário não encontrado");
+    }
+
+    // TODO: Implementar verificações para restrições de exclusão
+    // Por exemplo, verificar se o usuário tem fornecedores, arquivos, etc.
+    
+    // Por enquanto, vamos simular a verificação de dependências
+    // Em um caso real, você deve consultar todas as tabelas que têm referências ao usuário
+    
+    // Verificar fornecedores (exemplo simulado)
+    const hasRelatedData = false; // Em produção, substitua por verificações reais no banco de dados
+    
+    if (hasRelatedData) {
+      // Inativar o usuário em vez de excluí-lo
+      console.log(`Usuário ${email} possui dados relacionados, inativando em vez de excluir`);
+      
+      // Banir o usuário (isso o impede de fazer login)
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { banned: true }
+      );
+      
+      if (banError) {
+        console.error("Erro ao inativar usuário:", banError);
+        throw banError;
+      }
+      
+      console.log(`Usuário ${email} inativado com sucesso`);
+      return { success: true, inactivated: true };
+    } else {
+      // Se não tiver referências, excluir o usuário
+      console.log(`Excluindo usuário ${email} completamente`);
+      
+      // Excluir o usuário
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+      
+      if (deleteError) {
+        console.error("Erro ao excluir usuário:", deleteError);
+        throw deleteError;
+      }
+      
+      console.log(`Usuário ${email} excluído com sucesso`);
+      return { success: true, deleted: true };
+    }
+  } catch (error) {
+    console.error(`Falha ao processar exclusão do usuário ${email}:`, error);
+    throw error;
+  }
+}
+
+// Função para alterar o status (ativar/desativar) de um usuário
+async function toggleUserStatus(supabaseAdmin, requestData) {
+  const { userId, email, active } = requestData;
+  
+  try {
+    console.log(`Alterando status do usuário ${email} para ${active ? 'ativo' : 'inativo'}`);
+    
+    // Verificar se o usuário existe
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (userError) {
+      console.error("Erro ao buscar usuário:", userError);
+      throw userError;
+    }
+    
+    if (!userData || !userData.user) {
+      console.error("Usuário não encontrado:", userId);
+      throw new Error("Usuário não encontrado");
+    }
+    
+    // Atualizar o status do usuário (banned = !active)
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      userId,
+      { banned: !active }
+    );
+    
+    if (updateError) {
+      console.error(`Erro ao ${active ? 'ativar' : 'inativar'} usuário:`, updateError);
+      throw updateError;
+    }
+    
+    console.log(`Usuário ${email} ${active ? 'ativado' : 'inativado'} com sucesso`);
+    return { success: true, active };
+  } catch (error) {
+    console.error(`Falha ao alterar status do usuário ${email}:`, error);
+    throw error;
+  }
+}
+
 // Função para lidar com requisições POST
 async function handlePostRequest(req, supabaseAdmin) {
   try {
@@ -199,6 +305,68 @@ async function handlePostRequest(req, supabaseAdmin) {
         return new Response(
           JSON.stringify({ 
             error: error.message || "Erro ao criar usuário",
+            details: error.details || error.code || "Sem detalhes adicionais" 
+          }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 500
+          }
+        );
+      }
+    } else if (requestData.action === 'deleteUser') {
+      console.log("Excluindo usuário:", requestData.email);
+      try {
+        const result = await deleteUser(supabaseAdmin, requestData);
+        console.log("Usuário excluído/inativado com sucesso!");
+        return new Response(
+          JSON.stringify(result),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
+          }
+        );
+      } catch (error) {
+        console.error("Erro durante exclusão do usuário:", error);
+        return new Response(
+          JSON.stringify({ 
+            error: error.message || "Erro ao excluir usuário",
+            details: error.details || error.code || "Sem detalhes adicionais" 
+          }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 500
+          }
+        );
+      }
+    } else if (requestData.action === 'toggleUserStatus') {
+      console.log("Alterando status do usuário:", requestData.email);
+      try {
+        const result = await toggleUserStatus(supabaseAdmin, requestData);
+        console.log("Status do usuário alterado com sucesso!");
+        return new Response(
+          JSON.stringify(result),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
+          }
+        );
+      } catch (error) {
+        console.error("Erro durante alteração de status do usuário:", error);
+        return new Response(
+          JSON.stringify({ 
+            error: error.message || "Erro ao alterar status do usuário",
             details: error.details || error.code || "Sem detalhes adicionais" 
           }),
           { 
