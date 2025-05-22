@@ -189,7 +189,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Função para atualizar a senha do usuário
-  const updateUserPassword = async (newPassword: string) => {
+  const updateUserPassword = async (newPassword: string): Promise<void> => {
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
@@ -201,7 +201,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Após atualizar a senha com sucesso, podemos atualizar o estado local se necessário
       console.log("Senha atualizada com sucesso");
-      return true;
     } catch (error) {
       console.error("Erro ao atualizar senha:", error);
       throw error;

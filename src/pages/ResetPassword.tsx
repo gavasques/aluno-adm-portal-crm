@@ -52,7 +52,7 @@ const ResetPassword = () => {
       toast({
         title: "Senha atualizada com sucesso",
         description: "Você será redirecionado para a página de login",
-        variant: "success",
+        variant: "default", // Alterado de "success" para "default"
       });
       
       // Redirecionar após 2 segundos
