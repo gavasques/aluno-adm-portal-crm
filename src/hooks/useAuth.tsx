@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -266,7 +267,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const unlinkIdentity = async (provider: Provider, id: string) => {
     try {
       const { error } = await supabase.auth.unlinkIdentity({
-        id,
+        identity_id: id,
         user_id: user?.id || '',
         provider,
       });
