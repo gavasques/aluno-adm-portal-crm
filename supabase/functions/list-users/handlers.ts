@@ -23,9 +23,9 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           .eq('id', user.id)
           .single();
         
-        // Determinar o status do usuário
+        // Determinar o status do usuário usando o atributo 'disabled' em vez de 'banned'
         let status = "Inativo";
-        if (!user.banned) {
+        if (!user.disabled) {
           if (user.user_metadata?.status === 'Convidado') {
             status = "Convidado";
           } else {
@@ -49,7 +49,7 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           name: user.user_metadata?.name || "Usuário sem nome",
           email: user.email,
           role: user.user_metadata?.role || "Student",
-          status: user.banned ? "Inativo" : "Ativo",
+          status: user.disabled ? "Inativo" : "Ativo",
           lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
           tasks: []
         };
