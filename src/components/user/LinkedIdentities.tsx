@@ -32,6 +32,11 @@ export function LinkedIdentities() {
       return; // Impedir desvinculação da única identidade
     }
     
+    // Impedir a remoção do provedor de email
+    if (provider === "email") {
+      return;
+    }
+    
     setIsUnlinking(id);
     try {
       await unlinkIdentity(provider, id);
@@ -81,8 +86,8 @@ export function LinkedIdentities() {
                 variant="outline"
                 size="sm"
                 onClick={() => handleUnlinkProvider(identity.provider as Provider, identity.id)}
-                disabled={isUnlinking === identity.id || linkedIdentities.length <= 1}
-                className={linkedIdentities.length <= 1 ? "cursor-not-allowed opacity-50" : ""}
+                disabled={isUnlinking === identity.id || linkedIdentities.length <= 1 || identity.provider === "email"}
+                className={linkedIdentities.length <= 1 || identity.provider === "email" ? "cursor-not-allowed opacity-50" : ""}
               >
                 {isUnlinking === identity.id ? "Removendo..." : "Remover"}
               </Button>
