@@ -3,19 +3,21 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 export function AuthTabs() {
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, resetPassword, signInWithGoogle } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
@@ -55,6 +57,17 @@ export function AuthTabs() {
       setRecoveryEmail("");
     } catch (error) {
       console.error("Erro ao solicitar recuperação de senha:", error);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Erro no login com Google:", error);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -116,6 +129,29 @@ export function AuthTabs() {
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
+
+                <div className="relative my-4">
+                  <Separator className="bg-blue-700/50" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-950 px-2 text-xs text-blue-300">
+                    ou continue com
+                  </span>
+                </div>
+
+                <Button 
+                  type="button" 
+                  onClick={handleGoogleLogin} 
+                  className="w-full bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 flex items-center justify-center"
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    "Conectando..."
+                  ) : (
+                    <>
+                      <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="w-4 h-4 mr-2" />
+                      Entrar com Google
+                    </>
+                  )}
+                </Button>
               </form>
             </TabsContent>
             
@@ -162,6 +198,29 @@ export function AuthTabs() {
                   disabled={isLoading}
                 >
                   {isLoading ? "Cadastrando..." : "Cadastrar"}
+                </Button>
+
+                <div className="relative my-4">
+                  <Separator className="bg-blue-700/50" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-950 px-2 text-xs text-blue-300">
+                    ou continue com
+                  </span>
+                </div>
+
+                <Button 
+                  type="button" 
+                  onClick={handleGoogleLogin}
+                  className="w-full bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 flex items-center justify-center"
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    "Conectando..."
+                  ) : (
+                    <>
+                      <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="w-4 h-4 mr-2" />
+                      Cadastrar com Google
+                    </>
+                  )}
                 </Button>
               </form>
             </TabsContent>

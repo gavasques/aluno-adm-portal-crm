@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, Provider } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +16,10 @@ interface AuthContextProps {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  linkIdentity: (provider: Provider) => Promise<void>;
+  unlinkIdentity: (provider: Provider, id: string) => Promise<void>;
+  getLinkedIdentities: () => Array<{id: string, provider: string}> | null;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -207,6 +211,89 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Função para login com Google
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${BASE_URL}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      console.error("Erro ao fazer login com Google:", error);
+      toast({
+        title: "Erro ao fazer login com Google",
+        description: error.message || "Ocorreu um erro ao tentar fazer login com o Google.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Função para vincular identidade (Google ou outro provedor)
+  const linkIdentity = async (provider: Provider) => {
+    try {
+      const { error } = await supabase.auth.linkIdentity({
+        provider
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Conta vinculada com sucesso",
+        description: `Sua conta foi vinculada ao provedor ${provider}.`,
+        variant: "default",
+      });
+    } catch (error: any) {
+      console.error(`Erro ao vincular conta com ${provider}:`, error);
+      toast({
+        title: "Erro ao vincular conta",
+        description: error.message || "Ocorreu um erro ao tentar vincular sua conta.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Função para desvincular identidade
+  const unlinkIdentity = async (provider: Provider, id: string) => {
+    try {
+      const { error } = await supabase.auth.unlinkIdentity({
+        provider,
+        id,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Conta desvinculada com sucesso",
+        description: `Sua conta foi desvinculada do provedor ${provider}.`,
+        variant: "default",
+      });
+    } catch (error: any) {
+      console.error(`Erro ao desvincular conta com ${provider}:`, error);
+      toast({
+        title: "Erro ao desvincular conta",
+        description: error.message || "Ocorreu um erro ao tentar desvincular sua conta.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Função para obter identidades vinculadas
+  const getLinkedIdentities = () => {
+    if (!user) return null;
+    return user.identities;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -218,6 +305,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         resetPassword,
         updateUserPassword,
+        signInWithGoogle,
+        linkIdentity,
+        unlinkIdentity,
+        getLinkedIdentities,
       }}
     >
       {children}
