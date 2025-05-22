@@ -51,63 +51,38 @@ const UserInviteForm: React.FC<UserInviteFormProps> = ({ onSuccess, onCancel }) 
       setIsSubmitting(true);
       console.log("Enviando convite:", data);
 
-      // Tentar chamar a edge function para convidar um novo usuário
-      try {
-        const { data: response, error } = await supabase.functions.invoke('list-users', {
-          method: 'POST',
-          body: {
-            action: 'inviteUser',
-            email: data.email,
-            name: data.name,
-            role: data.role
-          }
-        });
-
-        if (error) {
-          console.error("Erro na chamada da função:", error);
-          throw new Error(error.message || "Erro ao enviar convite");
-        }
-        
-        if (response && response.error) {
-          console.error("Erro retornado pela função:", response.error);
-          throw new Error(response.error);
-        }
-        
-        let message = "Convite enviado com sucesso";
-        if (response && response.existed) {
-          message = `O usuário ${data.email} já existe no sistema`;
-        } else {
-          message = `Um email de convite foi enviado para ${data.email}`;
-        }
-        
-        toast({
-          title: "Convite processado com sucesso",
-          description: message,
-        });
-      } catch (functionError) {
-        console.error("Erro ao chamar a edge function:", functionError);
-        
-        // Implementação alternativa: cadastrar diretamente através da API de autenticação
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Chamar a edge function para convidar um novo usuário
+      const { data: response, error } = await supabase.functions.invoke('list-users', {
+        method: 'POST',
+        body: {
+          action: 'inviteUser',
           email: data.email,
-          email_confirm: false,
-          user_metadata: {
-            name: data.name,
-            role: data.role,
-            status: 'Convidado'
-          }
-        });
-        
-        if (authError) {
-          console.error("Erro ao criar usuário diretamente:", authError);
-          throw new Error(authError.message || "Erro ao criar usuário");
+          name: data.name,
+          role: data.role
         }
-        
-        toast({
-          title: "Usuário convidado com sucesso",
-          description: `Usuário ${data.email} foi cadastrado com status de convidado.`,
-        });
+      });
+
+      if (error) {
+        console.error("Erro na chamada da função:", error);
+        throw new Error(error.message || "Erro ao enviar convite");
       }
+      
+      if (response && response.error) {
+        console.error("Erro retornado pela função:", response.error);
+        throw new Error(response.error);
+      }
+      
+      let message = "Convite enviado com sucesso";
+      if (response && response.existed) {
+        message = `O usuário ${data.email} já existe no sistema`;
+      } else {
+        message = `Um email de convite foi enviado para ${data.email}`;
+      }
+      
+      toast({
+        title: "Convite processado com sucesso",
+        description: message,
+      });
       
       form.reset();
       onSuccess();

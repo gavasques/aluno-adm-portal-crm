@@ -1,3 +1,4 @@
+
 import { corsHeaders } from './utils.ts';
 
 // Função para criar um novo usuário
@@ -76,33 +77,89 @@ export const inviteUser = async (supabaseAdmin: any, data: any) => {
       return { error: "Email, nome e role são obrigatórios para convidar um usuário" };
     }
 
-    // Enviar convite para o usuário
-    const { data: invite, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: { name: name, role: role, status: 'Convidado' }
+    // Verificar se o usuário já existe pelo email
+    const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
+      filter: { email }
     });
 
-    if (inviteError) {
-      console.error("Erro ao convidar usuário:", inviteError);
-      return { error: inviteError.message };
+    if (searchError) {
+      console.error("Erro ao verificar se usuário existe:", searchError);
+      return { error: searchError.message };
     }
 
-    // Criar perfil associado na tabela "profiles" com status "Convidado"
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert([
-        { id: invite.user.id, name: name, role: role, email: email }
-      ]);
-
-    if (profileError) {
-      console.error("Erro ao criar perfil:", profileError);
-      return { error: profileError.message };
+    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
+      console.log("Usuário já existe com este email:", email);
+      return { existed: true, message: "Usuário já existe com este email" };
     }
 
-    console.log("Convite enviado com sucesso para:", email);
-    return { success: true, message: "Convite enviado com sucesso" };
+    // Tente enviar o convite
+    try {
+      // Enviar convite para o usuário
+      const { data: invite, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: { name: name, role: role, status: 'Convidado' }
+      });
+
+      if (inviteError) {
+        console.error("Erro ao convidar usuário via email:", inviteError);
+        throw inviteError;
+      }
+
+      // Criar perfil associado na tabela "profiles"
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert([
+          { id: invite.user.id, name: name, role: role, email: email, status: 'Convidado' }
+        ]);
+
+      if (profileError) {
+        console.error("Erro ao criar perfil:", profileError);
+        // Não vamos remover o usuário já que o convite foi enviado
+        // Apenas logamos o erro e continuamos
+        console.log("Perfil não foi criado, mas o convite foi enviado.");
+      }
+
+      console.log("Convite enviado com sucesso para:", email);
+      return { success: true, message: "Convite enviado com sucesso" };
+    } catch (inviteError) {
+      // Se houver erro ao enviar convite, cadastrar o usuário diretamente
+      console.log("Não foi possível enviar convite. Tentando criar usuário diretamente...");
+      
+      // Gerar senha aleatória
+      const temporaryPassword = Math.random().toString(36).slice(-10);
+      
+      // Criar usuário diretamente
+      const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        password: temporaryPassword,
+        email_confirm: false, // Precisa confirmar o email neste caso
+        user_metadata: { name: name, role: role, status: 'Convidado' }
+      });
+      
+      if (userError) {
+        console.error("Erro ao criar usuário após falha de convite:", userError);
+        return { error: "Não foi possível convidar ou criar o usuário: " + userError.message };
+      }
+      
+      // Criar perfil associado na tabela "profiles"
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert([
+          { id: user.user.id, name: name, role: role, email: email, status: 'Convidado' }
+        ]);
+        
+      if (profileError) {
+        console.error("Erro ao criar perfil após criação direta:", profileError);
+      }
+      
+      return { 
+        success: true, 
+        directCreation: true,
+        message: "Usuário foi criado diretamente. Ele precisará usar a opção 'Esqueci minha senha'."
+      };
+    }
 
   } catch (error) {
-    console.error("Erro ao convidar usuário:", error);
+    console.error("Erro ao processar operação de convite:", error);
     return { error: error.message };
   }
 };
