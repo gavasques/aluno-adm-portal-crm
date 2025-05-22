@@ -61,14 +61,28 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         throw new Error(data.error);
       }
 
+      // Verificar explicitamente a resposta da função
+      if (!data.success) {
+        console.error("Resposta da função indica falha:", data);
+        throw new Error("A operação não foi concluída com sucesso");
+      }
+
+      // Log para depuração
+      console.log("Resposta da função toggleUserStatus:", data);
+
       // Mostrar mensagem de sucesso
       toast({
         title: isActive ? "Usuário inativado" : "Usuário ativado",
-        description: `O status do usuário ${userEmail} foi alterado com sucesso.`,
+        description: `O status do usuário ${userEmail} foi ${isActive ? "inativado" : "ativado"} com sucesso.`,
       });
 
+      // Fechar o diálogo e atualizar a lista
       onOpenChange(false);
-      onSuccess(); // Atualizar a lista de usuários
+      
+      // Importante: garantir que a lista seja atualizada
+      setTimeout(() => {
+        onSuccess(); // Atualizar a lista de usuários após um breve delay
+      }, 300);
     } catch (error) {
       console.error("Falha ao alterar status do usuário:", error);
       toast({

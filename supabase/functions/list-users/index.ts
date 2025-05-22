@@ -252,8 +252,22 @@ async function toggleUserStatus(supabaseAdmin, requestData) {
       throw updateError;
     }
     
-    console.log(`Usuário ${email} ${active ? 'ativado' : 'inativado'} com sucesso`);
-    return { success: true, active };
+    // Importante: confirmar que a alteração foi realizada
+    const { data: updatedUser, error: checkError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (checkError) {
+      console.error("Erro ao verificar atualização do usuário:", checkError);
+      throw checkError;
+    }
+    
+    // Verificar se o status foi realmente atualizado
+    if (updatedUser.user.banned === !active) {
+      console.log(`Usuário ${email} ${active ? 'ativado' : 'inativado'} com sucesso. banned=${updatedUser.user.banned}`);
+      return { success: true, active, banned: updatedUser.user.banned };
+    } else {
+      console.error(`Falha na atualização do status: esperado banned=${!active}, recebido banned=${updatedUser.user.banned}`);
+      throw new Error("A atualização do status não foi aplicada corretamente");
+    }
   } catch (error) {
     console.error(`Falha ao alterar status do usuário ${email}:`, error);
     throw error;
@@ -477,12 +491,15 @@ function mapUsers(authUsers, latestProfiles) {
       authUser.user_metadata?.role === 'Admin'
     );
     
+    // Importante: usar diretamente o valor banned do objeto authUser
+    const isActive = !authUser.banned;
+    
     return {
       id: authUser.id,
       name: profile?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
       email: authUser.email || '',
       role: profile?.role || (isAdmin ? 'Admin' : 'Student'),
-      status: authUser.banned ? 'Inativo' : 'Ativo',
+      status: isActive ? 'Ativo' : 'Inativo',
       lastLogin: authUser.last_sign_in_at 
         ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR', { 
             hour: '2-digit', 
