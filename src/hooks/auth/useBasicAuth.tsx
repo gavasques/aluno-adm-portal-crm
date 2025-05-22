@@ -127,6 +127,10 @@ export function useBasicAuth() {
         throw error;
       }
 
+      // Limpar o modo de recuperação ao atualizar a senha com sucesso
+      localStorage.removeItem("supabase_recovery_mode");
+      localStorage.removeItem("supabase_recovery_expiry");
+      
       toast({
         title: "Senha atualizada com sucesso",
         variant: "default",

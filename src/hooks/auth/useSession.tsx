@@ -4,6 +4,12 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 
+// Nome da chave no localStorage para controle de estado de recuperação de senha
+const RECOVERY_MODE_KEY = "supabase_recovery_mode";
+const RECOVERY_EXPIRY_KEY = "supabase_recovery_expiry";
+// Tempo de expiração do modo de recuperação (30 minutos em milissegundos)
+const RECOVERY_TIMEOUT = 30 * 60 * 1000;
+
 export function useSession() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -14,25 +20,57 @@ export function useSession() {
   // Verificar se estamos na página de redefinição de senha
   const isResetPasswordPage = location.pathname === "/reset-password";
 
+  // Função para verificar se estamos em modo de recuperação de senha
+  const isInRecoveryMode = () => {
+    const inRecoveryMode = localStorage.getItem(RECOVERY_MODE_KEY) === "true";
+    const expiryTime = Number(localStorage.getItem(RECOVERY_EXPIRY_KEY) || "0");
+    
+    // Se o tempo de expiração passou, limpar o modo de recuperação
+    if (inRecoveryMode && expiryTime < Date.now()) {
+      localStorage.removeItem(RECOVERY_MODE_KEY);
+      localStorage.removeItem(RECOVERY_EXPIRY_KEY);
+      return false;
+    }
+    
+    return inRecoveryMode;
+  };
+
+  // Função para definir o modo de recuperação
+  const setRecoveryMode = (enabled: boolean) => {
+    if (enabled) {
+      localStorage.setItem(RECOVERY_MODE_KEY, "true");
+      localStorage.setItem(RECOVERY_EXPIRY_KEY, String(Date.now() + RECOVERY_TIMEOUT));
+      console.log("Modo de recuperação de senha ativado");
+    } else {
+      localStorage.removeItem(RECOVERY_MODE_KEY);
+      localStorage.removeItem(RECOVERY_EXPIRY_KEY);
+      console.log("Modo de recuperação de senha desativado");
+    }
+  };
+
   useEffect(() => {
     // Configurar o listener de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth event:", event, "Path:", location.pathname);
         
-        // Se estamos na página de reset de senha e o evento for uma recuperação, 
-        // não definimos o usuário completo ainda
-        if (isResetPasswordPage && (
-          event === "PASSWORD_RECOVERY" || 
-          event === "SIGNED_IN" || 
-          event === "TOKEN_REFRESHED"
-        )) {
-          // Armazenamos a sessão para poder redefinir a senha, mas não consideramos o usuário logado
+        // Detectar eventos de recuperação de senha em qualquer página
+        if (event === "PASSWORD_RECOVERY" || 
+            (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery")) {
+          console.log("Evento de recuperação de senha detectado");
+          setRecoveryMode(true);
+        }
+        
+        // Se estiver em modo de recuperação ou na página de reset, apenas
+        // armazenar a sessão para poder redefinir a senha, mas não considerar o usuário logado
+        if (isResetPasswordPage || isInRecoveryMode()) {
+          console.log("Em modo de recuperação ou na página de reset - não fazendo login automático");
           setSession(currentSession);
           setLoading(false);
           return;
         }
 
+        // Comportamento normal quando não está em recuperação de senha
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setLoading(false);
@@ -73,9 +111,11 @@ export function useSession() {
     const checkSession = async () => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      // Se estamos na página de reset de senha, não autenticamos o usuário automaticamente
-      if (isResetPasswordPage) {
+      // Se estamos na página de reset de senha ou em modo de recuperação, 
+      // não autenticamos o usuário automaticamente
+      if (isResetPasswordPage || isInRecoveryMode()) {
         // Apenas armazenamos a sessão para poder redefinir a senha
+        console.log("Verificação de sessão - em modo de recuperação ou na página de reset");
         setSession(currentSession);
         setLoading(false);
         return;
@@ -97,6 +137,8 @@ export function useSession() {
   return {
     user,
     session,
-    loading
+    loading,
+    isInRecoveryMode,
+    setRecoveryMode
   };
 }

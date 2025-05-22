@@ -9,6 +9,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Nome da chave no localStorage para controle de estado de recuperação de senha
+const RECOVERY_MODE_KEY = "supabase_recovery_mode";
+const RECOVERY_EXPIRY_KEY = "supabase_recovery_expiry";
+
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,7 +22,7 @@ const ResetPassword = () => {
   const [validatingToken, setValidatingToken] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, setRecoveryMode } = useAuth();
   const [searchParams] = useSearchParams();
 
   // Pega o token da URL se estiver usando search params
@@ -41,6 +45,15 @@ const ResetPassword = () => {
           return;
         }
 
+        // Definir modo de recuperação para todas as abas
+        if (setRecoveryMode) {
+          setRecoveryMode(true);
+        } else {
+          // Fallback caso o hook não tenha sido estendido
+          localStorage.setItem(RECOVERY_MODE_KEY, "true");
+          localStorage.setItem(RECOVERY_EXPIRY_KEY, String(Date.now() + 30 * 60 * 1000)); // 30 minutos
+        }
+        
         setTokenValid(true);
       } catch (error) {
         console.error("Erro ao validar token:", error);
@@ -57,7 +70,7 @@ const ResetPassword = () => {
     console.log("Token de recuperação detectado:", tokenFromParams || "Não encontrado em query params");
     console.log("Tipo de ação:", typeFromParams);
     console.log("URL atual:", window.location.href);
-  }, [tokenFromParams, typeFromParams, isRecoveryFlow]);
+  }, [tokenFromParams, typeFromParams, isRecoveryFlow, setRecoveryMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +103,15 @@ const ResetPassword = () => {
         description: "Você será redirecionado para a página de login",
         variant: "default",
       });
+      
+      // Limpar o modo de recuperação após a redefinição bem-sucedida
+      if (setRecoveryMode) {
+        setRecoveryMode(false);
+      } else {
+        // Fallback caso o hook não tenha sido estendido
+        localStorage.removeItem(RECOVERY_MODE_KEY);
+        localStorage.removeItem(RECOVERY_EXPIRY_KEY);
+      }
       
       // Fazer logout para forçar uma nova autenticação
       await supabase.auth.signOut();
