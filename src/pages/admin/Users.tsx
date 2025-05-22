@@ -61,7 +61,8 @@ import {
   AlertTriangle,
   Mail,
   KeyRound,
-  Loader2
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -90,74 +91,34 @@ const Users = () => {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Buscar usuários do Supabase
+  // Buscar usuários da Edge Function
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // Função para buscar os usuários do Supabase
+  // Função para buscar os usuários via Edge Function
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       
-      // Buscar usuários da tabela auth.users (requer função administradora)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Chamar a edge function list-users
+      const { data, error } = await supabase.functions.invoke('list-users');
       
-      if (authError) throw authError;
-      
-      // Buscar perfis dos usuários da tabela profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-      
-      if (profilesError) throw profilesError;
-      
-      // Mapear usuários autenticados para o formato esperado pela interface
-      const mappedUsers: User[] = authUsers.users.map(authUser => {
-        // Encontrar o perfil correspondente ao usuário
-        const profile = profiles?.find(p => p.id === authUser.id);
-        
-        return {
-          id: authUser.id,
-          name: profile?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
-          email: authUser.email || '',
-          role: profile?.role || 'Student',
-          status: authUser.banned ? 'Inativo' : 'Ativo',
-          lastLogin: authUser.last_sign_in_at 
-            ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-              }) 
-            : 'Nunca',
-          tasks: []
-        };
-      });
-
-      // Verificar e criar perfis para usuários que não têm um
-      for (const authUser of authUsers.users) {
-        const hasProfile = profiles?.some(p => p.id === authUser.id);
-        
-        if (!hasProfile) {
-          // Criar um perfil para este usuário
-          await supabase.from('profiles').insert({
-            id: authUser.id,
-            email: authUser.email,
-            name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
-            role: authUser.email?.includes('gavasques') ? 'Admin' : 'Student' // Define gavasques como Admin
-          });
-          console.log(`Perfil criado para o usuário ${authUser.email}`);
-        }
+      if (error) {
+        throw error;
       }
       
-      // Ordenar usuários por email
-      mappedUsers.sort((a, b) => a.email.localeCompare(b.email));
+      if (data && data.users) {
+        setUsers(data.users);
+      } else {
+        console.error("Resposta da função sem dados de usuários");
+        throw new Error("Não foi possível obter a lista de usuários");
+      }
       
-      setUsers(mappedUsers);
       setIsLoading(false);
+      setIsRefreshing(false);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       toast({
@@ -166,7 +127,14 @@ const Users = () => {
         variant: "destructive",
       });
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  };
+
+  // Função para atualizar a lista de usuários
+  const refreshUsersList = () => {
+    setIsRefreshing(true);
+    fetchUsers();
   };
 
   // Filtrar usuários de acordo com a pesquisa
@@ -219,40 +187,22 @@ const Users = () => {
     try {
       setIsSubmitting(true);
 
-      // Gerar uma senha aleatória temporária
-      const tempPassword = Math.random().toString(36).slice(-8);
-
-      // Criar um novo usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
+      // Chamar a edge function para criar um novo usuário
+      const { data: response, error } = await supabase.functions.invoke('list-users', {
+        method: 'POST',
+        body: {
+          action: 'createUser',
+          email: data.email,
           name: data.name,
-          role: data.role,
+          role: data.role
         }
       });
 
-      if (authError) throw authError;
-
-      // Criar um perfil para o novo usuário
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: data.email,
-          name: data.name,
-          role: data.role,
-        });
-
-      if (profileError) throw profileError;
+      if (error) throw error;
       
-      // Enviar email de redefinição de senha
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (resetError) throw resetError;
+      if (response.error) {
+        throw new Error(response.error);
+      }
       
       toast({
         title: "Usuário adicionado com sucesso",
@@ -263,7 +213,7 @@ const Users = () => {
       form.reset();
       
       // Atualizar a lista de usuários
-      fetchUsers();
+      refreshUsersList();
       
     } catch (error) {
       console.error("Erro ao adicionar usuário:", error);
@@ -287,8 +237,21 @@ const Users = () => {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Lista de Usuários</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshUsersList}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-1" />
+            )}
+            Atualizar
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center mb-6">
