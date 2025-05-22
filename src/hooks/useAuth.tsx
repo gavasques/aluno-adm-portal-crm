@@ -265,9 +265,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função para desvincular identidade
   const unlinkIdentity = async (provider: Provider, id: string) => {
     try {
-      // The Supabase API expects 'identity_id' instead of 'id'
       const { error } = await supabase.auth.unlinkIdentity({
-        identity_id: id,
+        id,
         user_id: user?.id || '',
         provider,
       });
