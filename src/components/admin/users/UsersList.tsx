@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, MoreHorizontal, Search, KeyRound, Info } from "lucide-react";
+import { Loader2, MoreHorizontal, Search, KeyRound, Info, UserPlus } from "lucide-react";
 import UserDetailsDialog from "./UserDetailsDialog";
 
 interface User {
@@ -38,6 +38,7 @@ interface UsersListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onResetPassword: (email: string) => void;
+  onAddUser: () => void;
 }
 
 const UsersList: React.FC<UsersListProps> = ({
@@ -46,6 +47,7 @@ const UsersList: React.FC<UsersListProps> = ({
   searchQuery,
   onSearchChange,
   onResetPassword,
+  onAddUser,
 }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -63,14 +65,19 @@ const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <div>
-      <div className="relative w-full sm:w-96 mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        <Input
-          placeholder="Buscar usuários..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+      <div className="flex items-center justify-between mb-6">
+        <div className="relative w-full sm:w-96">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Input
+            placeholder="Buscar usuários..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
+        <Button onClick={onAddUser} className="ml-4">
+          <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
+        </Button>
       </div>
 
       <div className="rounded-md border">

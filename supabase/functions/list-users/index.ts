@@ -134,7 +134,9 @@ async function handlePostRequest(req, supabaseAdmin) {
     }
     
     if (requestData.action === 'createUser') {
+      console.log("Criando novo usuário:", requestData.email);
       const result = await createUser(supabaseAdmin, requestData);
+      console.log("Usuário criado com sucesso!");
       return new Response(
         JSON.stringify(result),
         { 

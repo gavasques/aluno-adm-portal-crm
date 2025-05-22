@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import UsersList from "@/components/admin/users/UsersList";
 import UserAddDialog from "@/components/admin/users/UserAddDialog";
 import ResetPasswordDialog from "@/components/admin/users/ResetPasswordDialog";
@@ -45,7 +45,7 @@ const Users = () => {
       
       // Chamar a edge function list-users com GET (sem body)
       const { data, error } = await supabase.functions.invoke('list-users', {
-        method: 'GET' // Especificar método GET explicitamente
+        method: 'GET'
       });
       
       if (error) {
@@ -96,31 +96,27 @@ const Users = () => {
     setShowResetDialog(true);
   };
 
+  // Função para abrir o diálogo de adicionar usuário
+  const handleAddUser = () => {
+    setShowAddDialog(true);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-portal-dark">Gestão de Usuários</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
+        <Button onClick={handleAddUser}>
+          <RefreshCw className="mr-2 h-4 w-4" onClick={(e) => {
+            e.stopPropagation();
+            refreshUsersList();
+          }} />
+          {isRefreshing ? "Atualizando..." : "Atualizar"}
         </Button>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Lista de Usuários</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshUsersList}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-1" />
-            )}
-            Atualizar
-          </Button>
         </CardHeader>
         <CardContent>
           <UsersList 
@@ -129,6 +125,7 @@ const Users = () => {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onResetPassword={handleResetPassword}
+            onAddUser={handleAddUser}
           />
         </CardContent>
       </Card>
