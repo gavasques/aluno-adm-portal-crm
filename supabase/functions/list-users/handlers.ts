@@ -1,5 +1,6 @@
 
 import { corsHeaders } from './utils.ts';
+import { processUsers } from './userProcessing.ts';
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
   try {
@@ -13,53 +14,8 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
       throw error;
     }
 
-    // Processar os usuários para o formato esperado
-    const processedUsers = await Promise.all(users.map(async (user: any) => {
-      try {
-        // Buscar perfil associado para obter mais dados
-        const { data: profileData } = await supabaseAdmin
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        // Log para debug - verificar banned_until de usuário específico
-        console.log('getUser', { 
-          id: user.id, 
-          email: user.email, 
-          banned_until: user.banned_until
-        });
-        
-        // Determinar o status do usuário usando o banned_until
-        let status = "Ativo";
-        if (user.banned_until && new Date(user.banned_until) > new Date()) {
-          status = "Inativo";
-        } else if (user.user_metadata?.status === 'Convidado') {
-          status = "Convidado";
-        }
-
-        return {
-          id: user.id,
-          name: profileData?.name || user.user_metadata?.name || "Usuário sem nome",
-          email: user.email,
-          role: profileData?.role || user.user_metadata?.role || "Student",
-          status: status,
-          lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
-          tasks: [] // Placeholder para futuras tarefas
-        };
-      } catch (err) {
-        console.error(`Erro ao processar usuário ${user.id}:`, err);
-        return {
-          id: user.id,
-          name: user.user_metadata?.name || "Usuário sem nome",
-          email: user.email,
-          role: user.user_metadata?.role || "Student",
-          status: (user.banned_until && new Date(user.banned_until) > new Date()) ? "Inativo" : "Ativo",
-          lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
-          tasks: []
-        };
-      }
-    }));
+    // Processar os usuários para o formato esperado usando a função refatorada
+    const processedUsers = await processUsers(users, supabaseAdmin);
 
     console.log(`Retornando ${processedUsers.length} usuários processados`);
     
@@ -138,73 +94,41 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promi
     // Executar a ação correspondente
     console.log(`Executando ação: ${requestData.action}`);
     
-    switch (requestData.action) {
-      case 'createUser':
-        const createResult = await createUser(supabaseAdmin, requestData);
-        return new Response(
-          JSON.stringify(createResult),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            },
-            status: 200 
-          }
-        );
-      
-      case 'inviteUser':
-        const inviteResult = await inviteUser(supabaseAdmin, requestData);
-        return new Response(
-          JSON.stringify(inviteResult),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            },
-            status: 200 
-          }
-        );
-      
-      case 'deleteUser':
-        const deleteResult = await deleteUser(supabaseAdmin, requestData);
-        return new Response(
-          JSON.stringify(deleteResult),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            },
-            status: 200 
-          }
-        );
-      
-      case 'toggleUserStatus':
-        const toggleResult = await toggleUserStatus(supabaseAdmin, requestData);
-        return new Response(
-          JSON.stringify(toggleResult),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            },
-            status: 200 
-          }
-        );
-      
-      default:
-        console.error(`Ação desconhecida: ${requestData.action}`);
-        return new Response(
-          JSON.stringify({ 
-            error: `Ação desconhecida: ${requestData.action}` 
-          }),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            },
-            status: 400 
-          }
-        );
+    const handlers = {
+      'createUser': createUser,
+      'inviteUser': inviteUser,
+      'deleteUser': deleteUser,
+      'toggleUserStatus': toggleUserStatus
+    };
+    
+    const handler = handlers[requestData.action];
+    
+    if (handler) {
+      const result = await handler(supabaseAdmin, requestData);
+      return new Response(
+        JSON.stringify(result),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 200 
+        }
+      );
+    } else {
+      console.error(`Ação desconhecida: ${requestData.action}`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Ação desconhecida: ${requestData.action}` 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 400 
+        }
+      );
     }
   } catch (error) {
     console.error("Erro ao processar requisição POST:", error);
