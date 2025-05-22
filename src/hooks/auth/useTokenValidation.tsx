@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
-import { RECOVERY_MODE_KEY, RECOVERY_EXPIRY_KEY } from "./usePasswordReset";
+import { recoveryModeUtils } from "./useRecoveryMode";
 
 export const useTokenValidation = () => {
   const [validatingToken, setValidatingToken] = useState(true);
@@ -79,8 +79,7 @@ export const useTokenValidation = () => {
             setRecoveryMode(true);
           } else {
             // Fallback if hook is not available
-            localStorage.setItem(RECOVERY_MODE_KEY, "true");
-            localStorage.setItem(RECOVERY_EXPIRY_KEY, String(Date.now() + 30 * 60 * 1000)); // 30 minutes
+            recoveryModeUtils.setRecoveryMode(true);
           }
           
           setTokenValid(true);

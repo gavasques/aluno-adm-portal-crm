@@ -4,6 +4,7 @@ import { User, Session, Provider } from "@supabase/supabase-js";
 import { useSession } from "./useSession";
 import { useBasicAuth } from "./useBasicAuth";
 import { useSocialAuth } from "./useSocialAuth";
+import { recoveryModeUtils } from "./useRecoveryMode";
 
 // URL base do site que será usado para redirecionamentos
 const BASE_URL = "https://titan.guilhermevasques.club";
@@ -65,3 +66,6 @@ export const useAuth = () => {
   
   return context;
 };
+
+// Export recovery mode utilities directly
+export { recoveryModeUtils };

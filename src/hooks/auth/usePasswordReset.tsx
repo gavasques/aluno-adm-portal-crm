@@ -4,10 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
-
-// Constants for localStorage keys
-export const RECOVERY_MODE_KEY = "supabase_recovery_mode";
-export const RECOVERY_EXPIRY_KEY = "supabase_recovery_expiry";
+import { recoveryModeUtils } from "./useRecoveryMode";
 
 export const usePasswordReset = () => {
   const [password, setPassword] = useState("");
@@ -62,8 +59,7 @@ export const usePasswordReset = () => {
         setRecoveryMode(false);
       } else {
         // Fallback if hook is not available
-        localStorage.removeItem(RECOVERY_MODE_KEY);
-        localStorage.removeItem(RECOVERY_EXPIRY_KEY);
+        recoveryModeUtils.setRecoveryMode(false);
       }
       
       // Sign out to force new authentication
