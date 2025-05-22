@@ -20,7 +20,7 @@ interface UserStatusDialogProps {
   onOpenChange: (open: boolean) => void;
   userId: string;
   userEmail: string;
-  isActive: boolean;
+  currentStatus: string; // Changed from isActive: boolean to match UsersDialogs.tsx
   onSuccess: () => void;
 }
 
@@ -29,10 +29,11 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
   onOpenChange,
   userId,
   userEmail,
-  isActive,
+  currentStatus, // Changed from isActive
   onSuccess,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const isActive = currentStatus === "Ativo"; // Convert string status to boolean
 
   const handleStatusChange = async () => {
     if (!userId) return;

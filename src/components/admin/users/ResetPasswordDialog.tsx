@@ -17,12 +17,14 @@ interface ResetPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail: string;
+  onSuccess: () => void; // Added this prop to match UsersDialogs.tsx
 }
 
 const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ 
   open, 
   onOpenChange, 
-  userEmail 
+  userEmail,
+  onSuccess 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,6 +44,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
       });
       
       onOpenChange(false);
+      onSuccess(); // Call onSuccess after a successful operation
     } catch (error) {
       console.error("Erro ao enviar email de redefinição:", error);
       toast({

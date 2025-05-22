@@ -7,36 +7,37 @@ import UserStatusDialog from "./UserStatusDialog";
 import ResetPasswordDialog from "./ResetPasswordDialog";
 
 interface UsersDialogsProps {
-  showAddUserDialog: boolean;
-  setShowAddUserDialog: (show: boolean) => void;
-  showInviteUserDialog: boolean;
-  setShowInviteUserDialog: (show: boolean) => void;
-  showDeleteUserDialog: boolean;
-  setShowDeleteUserDialog: (show: boolean) => void;
-  showStatusUserDialog: boolean;
-  setShowStatusUserDialog: (show: boolean) => void;
-  showResetPasswordDialog: boolean;
-  setShowResetPasswordDialog: (show: boolean) => void;
-  selectedUser: {
-    id: string;
-    email: string;
-    status: string;
-  } | null;
+  // Changed prop names to match what's passed from Users.tsx
+  showAddDialog: boolean;
+  setShowAddDialog: (show: boolean) => void;
+  showInviteDialog: boolean;
+  setShowInviteDialog: (show: boolean) => void;
+  showDeleteDialog: boolean;
+  setShowDeleteDialog: (show: boolean) => void;
+  showStatusDialog: boolean;
+  setShowStatusDialog: (show: boolean) => void;
+  showResetDialog: boolean;
+  setShowResetDialog: (show: boolean) => void;
+  selectedUserEmail: string;
+  selectedUserId: string;
+  selectedUserStatus: boolean;
   onSuccess: () => void;
 }
 
 const UsersDialogs: React.FC<UsersDialogsProps> = ({
-  showAddUserDialog,
-  setShowAddUserDialog,
-  showInviteUserDialog,
-  setShowInviteUserDialog,
-  showDeleteUserDialog,
-  setShowDeleteUserDialog,
-  showStatusUserDialog,
-  setShowStatusUserDialog,
-  showResetPasswordDialog,
-  setShowResetPasswordDialog,
-  selectedUser,
+  showAddDialog,
+  setShowAddDialog,
+  showInviteDialog,
+  setShowInviteDialog,
+  showDeleteDialog,
+  setShowDeleteDialog,
+  showStatusDialog,
+  setShowStatusDialog,
+  showResetDialog,
+  setShowResetDialog,
+  selectedUserEmail,
+  selectedUserId,
+  selectedUserStatus,
   onSuccess
 }) => {
   // Função para garantir que a lista seja atualizada após qualquer operação
@@ -50,38 +51,38 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
   return (
     <>
       <UserAddDialog 
-        open={showAddUserDialog}
-        onOpenChange={setShowAddUserDialog}
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
         onSuccess={handleSuccess}
       />
 
       <UserInviteDialog 
-        open={showInviteUserDialog}
-        onOpenChange={setShowInviteUserDialog}
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
         onSuccess={handleSuccess}
       />
 
       <UserDeleteDialog 
-        open={showDeleteUserDialog}
-        onOpenChange={setShowDeleteUserDialog}
-        userId={selectedUser?.id || ""}
-        userEmail={selectedUser?.email || ""}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        userId={selectedUserId}
+        userEmail={selectedUserEmail}
         onSuccess={handleSuccess}
       />
 
       <UserStatusDialog 
-        open={showStatusUserDialog}
-        onOpenChange={setShowStatusUserDialog}
-        userId={selectedUser?.id || ""}
-        userEmail={selectedUser?.email || ""}
-        currentStatus={selectedUser?.status || ""}
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        userId={selectedUserId}
+        userEmail={selectedUserEmail}
+        currentStatus={selectedUserStatus ? "Ativo" : "Inativo"} // Convert boolean to string status
         onSuccess={handleSuccess}
       />
 
       <ResetPasswordDialog 
-        open={showResetPasswordDialog}
-        onOpenChange={setShowResetPasswordDialog}
-        userEmail={selectedUser?.email || ""}
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        userEmail={selectedUserEmail}
         onSuccess={handleSuccess}
       />
     </>

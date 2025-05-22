@@ -35,7 +35,19 @@ const Users = () => {
       />
 
       <UsersDialogs
-        {...dialogsState}
+        showAddDialog={dialogsState.showAddDialog}
+        setShowAddDialog={dialogsState.setShowAddDialog}
+        showInviteDialog={dialogsState.showInviteDialog}
+        setShowInviteDialog={dialogsState.setShowInviteDialog}
+        showDeleteDialog={dialogsState.showDeleteDialog}
+        setShowDeleteDialog={dialogsState.setShowDeleteDialog}
+        showStatusDialog={dialogsState.showStatusDialog}
+        setShowStatusDialog={dialogsState.setShowStatusDialog}
+        showResetDialog={dialogsState.showResetDialog}
+        setShowResetDialog={dialogsState.setShowResetDialog}
+        selectedUserEmail={dialogsState.selectedUserEmail}
+        selectedUserId={dialogsState.selectedUserId}
+        selectedUserStatus={dialogsState.selectedUserStatus}
         onSuccess={refreshUsersList}
       />
     </div>
