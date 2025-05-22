@@ -33,7 +33,7 @@ export function LinkedIdentities() {
     }
     
     // Impedir a remoção do provedor de email
-    if (provider === "email") {
+    if (provider === "email" as Provider) {
       return;
     }
     
