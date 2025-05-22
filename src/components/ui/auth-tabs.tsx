@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
 export function AuthTabs() {
-  const { signIn, signUp, resetPassword, signInWithGoogle } = useAuth();
+  const { signIn, signUp, resetPassword, signInWithGoogle, sendMagicLink } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +20,10 @@ export function AuthTabs() {
   const [googleLoading, setGoogleLoading] = useState(false);
   
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [magicLinkOpen, setMagicLinkOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +71,19 @@ export function AuthTabs() {
       console.error("Erro no login com Google:", error);
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleMagicLink = async () => {
+    setMagicLinkLoading(true);
+    try {
+      await sendMagicLink(magicLinkEmail);
+      setMagicLinkOpen(false);
+      setMagicLinkEmail("");
+    } catch (error) {
+      console.error("Erro ao enviar magic link:", error);
+    } finally {
+      setMagicLinkLoading(false);
     }
   };
 
@@ -120,6 +136,13 @@ export function AuthTabs() {
                     className="text-blue-300 hover:text-blue-200"
                   >
                     Esqueci a senha
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setMagicLinkOpen(true)} 
+                    className="text-blue-300 hover:text-blue-200"
+                  >
+                    Magic Link
                   </button>
                 </div>
                 <Button 
@@ -254,6 +277,41 @@ export function AuthTabs() {
               className="bg-blue-600 hover:bg-blue-500"
             >
               Enviar link de recuperação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para Magic Link */}
+      <Dialog open={magicLinkOpen} onOpenChange={setMagicLinkOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-blue-950 text-white border-blue-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">Login com Magic Link</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="magic-email" className="text-blue-200">Email</Label>
+              <Input 
+                id="magic-email" 
+                type="email" 
+                placeholder="seu@email.com" 
+                value={magicLinkEmail} 
+                onChange={e => setMagicLinkEmail(e.target.value)} 
+                className="bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300" 
+              />
+            </div>
+            <p className="text-sm text-blue-200 mt-2">
+              Enviaremos um link mágico para seu email. Ao clicar nele, você entrará automaticamente no sistema.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="submit" 
+              onClick={handleMagicLink} 
+              className="bg-blue-600 hover:bg-blue-500"
+              disabled={magicLinkLoading}
+            >
+              {magicLinkLoading ? "Enviando..." : "Enviar Magic Link"}
             </Button>
           </DialogFooter>
         </DialogContent>

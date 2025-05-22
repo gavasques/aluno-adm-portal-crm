@@ -35,6 +35,36 @@ export function useBasicAuth() {
     }
   };
 
+  // Função para enviar magic link
+  const sendMagicLink = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${BASE_URL}/`,
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Magic Link enviado com sucesso",
+        description: "Verifique seu email para fazer login.",
+        variant: "default",
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Erro ao enviar magic link:", error);
+      toast({
+        title: "Erro ao enviar magic link",
+        description: error.message || "Verifique seu email e tente novamente.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   // Função para cadastro
   const signUp = async (email: string, password: string, name: string) => {
     try {
@@ -156,6 +186,7 @@ export function useBasicAuth() {
     signUp,
     signOut,
     resetPassword,
-    updateUserPassword
+    updateUserPassword,
+    sendMagicLink
   };
 }

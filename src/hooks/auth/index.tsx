@@ -19,6 +19,7 @@ interface AuthContextProps {
   resetPassword: (email: string) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  sendMagicLink: (email: string) => Promise<boolean>;
   linkIdentity: (provider: Provider) => Promise<void>;
   unlinkIdentity: (provider: Provider, identity_id: string) => Promise<void>;
   getLinkedIdentities: () => Array<{id: string, provider: string}> | null;
@@ -30,7 +31,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, session, loading, isInRecoveryMode, setRecoveryMode } = useSession();
-  const { signIn, signUp, signOut, resetPassword, updateUserPassword } = useBasicAuth();
+  const { signIn, signUp, signOut, resetPassword, updateUserPassword, sendMagicLink } = useBasicAuth();
   const { signInWithGoogle, linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(user);
 
   return (
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resetPassword,
         updateUserPassword,
         signInWithGoogle,
+        sendMagicLink,
         linkIdentity,
         unlinkIdentity,
         getLinkedIdentities,
