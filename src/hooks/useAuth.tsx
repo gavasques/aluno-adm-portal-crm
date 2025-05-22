@@ -267,7 +267,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const unlinkIdentity = async (provider: Provider, id: string) => {
     try {
       const { error } = await supabase.auth.unlinkIdentity({
-        identity_id: id,
+        id,
         user_id: user?.id || '',
         provider,
       });
