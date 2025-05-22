@@ -1,9 +1,8 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 interface NavItemProps {
   href: string;
@@ -59,10 +58,7 @@ const itemAnimation = {
 
 const AdminSidebar = () => {
   return <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
-      <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
       <SidebarContent className="pt-16 pb-4">
-        
-        
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show" className="mt-4">
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
