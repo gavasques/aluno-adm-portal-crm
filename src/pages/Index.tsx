@@ -21,11 +21,12 @@ const Index = () => {
   // Se estiver em modo de recuperação, mostrar as abas de autenticação
   // Para evitar login automático durante o processo de recuperação
   if (isInRecoveryMode && isInRecoveryMode()) {
+    console.log("Página de login em modo de recuperação - mostrando login manual");
     return (
       <div className="min-h-screen relative overflow-hidden">
         <AuthTabs />
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-amber-100 text-amber-800 p-2 rounded shadow-md text-sm">
-          Há um processo de recuperação de senha em andamento. Complete-o na outra aba.
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-amber-100 text-amber-800 p-3 rounded-md shadow-md text-sm max-w-md text-center">
+          <strong>Atenção:</strong> Há um processo de recuperação de senha em andamento. Complete-o na outra aba ou solicite um novo link.
         </div>
       </div>
     );

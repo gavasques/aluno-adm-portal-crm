@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock } from "lucide-react";
+import { Lock, AlertOctagon } from "lucide-react";
 import { GridBackground } from "@/components/ui/grid-background";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -25,41 +25,77 @@ const ResetPassword = () => {
   const { session, setRecoveryMode } = useAuth();
   const [searchParams] = useSearchParams();
 
-  // Pega o token da URL se estiver usando search params
-  const tokenFromParams = searchParams.get('token') || searchParams.get('access_token') || window.location.hash;
-  const typeFromParams = searchParams.get('type');
+  // Extrair todos os possíveis parâmetros de token
+  const typeParam = searchParams.get('type');
+  const tokenParam = searchParams.get('token') || searchParams.get('access_token');
+  const hashParams = window.location.hash; // Para tokens no formato de hash
+
+  // Função para tentar extrair um token do hash da URL
+  const extractTokenFromHash = () => {
+    if (!hashParams) return null;
+    
+    // Vários formatos possíveis de hash
+    const accessTokenMatch = hashParams.match(/access_token=([^&]+)/);
+    const typeMatch = hashParams.match(/type=([^&]+)/);
+    
+    console.log("Hash params:", hashParams);
+    console.log("Access token match:", accessTokenMatch);
+    console.log("Type match:", typeMatch);
+    
+    return accessTokenMatch ? accessTokenMatch[1] : null;
+  };
+  
+  const extractedTokenFromHash = extractTokenFromHash();
   
   // Verificar se estamos em um fluxo de recuperação de senha
-  // Vamos verificar também se há um "#access_token" no hash da URL (formato alternativo do Supabase)
-  const isRecoveryFlow = typeFromParams === 'recovery' || 
-                          !!tokenFromParams || 
-                          window.location.hash.includes('type=recovery') ||
-                          window.location.hash.includes('access_token=');
+  const isRecoveryFlow = 
+    typeParam === 'recovery' || 
+    searchParams.get('reset_token') === 'true' ||
+    !!tokenParam || 
+    !!extractedTokenFromHash ||
+    hashParams.includes('type=recovery');
+
+  console.log("Recovery flow detection:", { 
+    typeParam,
+    tokenParam, 
+    hashParams,
+    extractedTokenFromHash,
+    isRecoveryFlow 
+  });
 
   useEffect(() => {
     // Verificar se o token é válido
     const validateToken = async () => {
       setValidatingToken(true);
       console.log("Validando token de recuperação...");
-      console.log("Token da URL:", tokenFromParams);
-      console.log("Tipo:", typeFromParams);
-      console.log("Hash completo:", window.location.hash);
-      console.log("É fluxo de recuperação:", isRecoveryFlow);
       
       try {
-        // Se não temos um token de recuperação visível, ainda precisamos verificar a sessão
+        // Verificar informações do token e da sessão
+        console.log("Parâmetros da URL:", {
+          typeParam,
+          tokenParam,
+          hashParams,
+          extractedTokenFromHash,
+          isRecoveryFlow
+        });
+        
+        // Se não temos nenhum indício de fluxo de recuperação e não temos sessão, invalidar
         if (!isRecoveryFlow && !session) {
           console.log("Nenhum token de recuperação detectado e sem sessão ativa");
           setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
           setTokenValid(false);
+          setValidatingToken(false);
           return;
         }
 
         // Verificar se o usuário tem uma sessão válida para recuperação
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Sessão atual:", currentSession);
         
-        if (currentSession?.user?.aud === "recovery" || isRecoveryFlow) {
-          console.log("Sessão de recuperação válida detectada");
+        if ((currentSession?.user?.aud === "recovery") || 
+            isRecoveryFlow || 
+            (currentSession && window.location.pathname === "/reset-password")) {
+          console.log("Sessão de recuperação válida detectada ou fluxo de recuperação identificado");
           
           // Definir modo de recuperação para todas as abas
           if (setRecoveryMode) {
@@ -86,7 +122,7 @@ const ResetPassword = () => {
     };
     
     validateToken();
-  }, [tokenFromParams, typeFromParams, isRecoveryFlow, setRecoveryMode, session]);
+  }, [tokenParam, typeParam, isRecoveryFlow, setRecoveryMode, session, extractedTokenFromHash, hashParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,6 +216,9 @@ const ResetPassword = () => {
             <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
           </div>
           <div className="w-full max-w-md mx-auto p-8 space-y-6 text-center">
+            <div className="flex justify-center mb-4">
+              <AlertOctagon className="h-16 w-16 text-red-400" />
+            </div>
             <h2 className="text-2xl font-semibold text-white">Link inválido ou expirado</h2>
             <p className="text-red-400">{error}</p>
             <p className="text-white mt-2">

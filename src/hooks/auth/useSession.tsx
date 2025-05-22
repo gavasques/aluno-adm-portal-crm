@@ -56,12 +56,15 @@ export function useSession() {
         console.log("User audience:", currentSession?.user?.aud);
         console.log("User metadata:", currentSession?.user?.user_metadata);
         
-        // Detectar eventos de recuperação de senha
+        // Detectar o máximo possível de indicadores de recuperação de senha
         if (event === "PASSWORD_RECOVERY" || 
             (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery") ||
-            (location.pathname === "/reset-password" && currentSession) || 
+            (location.pathname === "/reset-password" && 
+             (currentSession?.user?.aud === "recovery" || 
+              window.location.href.includes("type=recovery") || 
+              window.location.href.includes("access_token="))) ||
             (window.location.href.includes("type=recovery")) ||
-            (window.location.href.includes("access_token="))) {
+            (window.location.href.includes("access_token=") && location.pathname === "/reset-password")) {
           console.log("Evento de recuperação de senha detectado");
           setRecoveryMode(true);
           // Apenas armazenar a sessão para poder redefinir a senha
@@ -128,20 +131,19 @@ export function useSession() {
       console.log("URL completa:", window.location.href);
       console.log("isInRecoveryMode:", isInRecoveryMode());
       
-      // Se o usuário está em um processo de recuperação de senha
-      // ou estamos na página de reset ou em modo de recuperação
+      // Detectar o máximo possível de indicadores de recuperação de senha
       if (currentSession?.user?.aud === "recovery" || 
           isResetPasswordPage || 
           isInRecoveryMode() ||
           window.location.href.includes("type=recovery") || 
-          window.location.href.includes("access_token=")) {
+          (window.location.href.includes("access_token=") && location.pathname === "/reset-password")) {
         
         console.log("Em fluxo de recuperação de senha - armazenando sessão mas não autenticando");
         
         // Se detectamos um fluxo de recuperação, ativar modo de recuperação global
         if (currentSession?.user?.aud === "recovery" || 
             window.location.href.includes("type=recovery") || 
-            window.location.href.includes("access_token=")) {
+            (window.location.href.includes("access_token=") && location.pathname === "/reset-password")) {
           setRecoveryMode(true);
         }
         

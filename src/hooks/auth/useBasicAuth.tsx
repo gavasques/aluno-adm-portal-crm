@@ -97,10 +97,10 @@ export function useBasicAuth() {
   // Função para recuperação de senha
   const resetPassword = async (email: string) => {
     try {
-      // Certifica-se de redirecionar especificamente para a página de reset de senha
-      // com um parâmetro que pode ser verificado
+      // Certificar-se que o link de redefinição contém parâmetros específicos 
+      // Importante: incluir ?type=recovery para facilitar a detecção do fluxo
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${BASE_URL}/reset-password?reset_token=true`,
+        redirectTo: `${BASE_URL}/reset-password?type=recovery`,
       });
       
       if (error) throw error;
