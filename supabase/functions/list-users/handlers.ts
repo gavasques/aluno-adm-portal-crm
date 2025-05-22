@@ -23,16 +23,16 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           .eq('id', user.id)
           .single();
         
-        // Log para debug - verificar status banned de usuário específico
+        // Log para debug - verificar banned_until de usuário específico
         console.log('getUser', { 
           id: user.id, 
           email: user.email, 
-          banned: user.banned
+          banned_until: user.banned_until
         });
         
-        // Determinar o status do usuário usando o atributo 'banned'
+        // Determinar o status do usuário usando o banned_until
         let status = "Ativo";
-        if (user.banned) {
+        if (user.banned_until && new Date(user.banned_until) > new Date()) {
           status = "Inativo";
         } else if (user.user_metadata?.status === 'Convidado') {
           status = "Convidado";
@@ -54,7 +54,7 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           name: user.user_metadata?.name || "Usuário sem nome",
           email: user.email,
           role: user.user_metadata?.role || "Student",
-          status: user.banned ? "Inativo" : "Ativo",
+          status: (user.banned_until && new Date(user.banned_until) > new Date()) ? "Inativo" : "Ativo",
           lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
           tasks: []
         };
