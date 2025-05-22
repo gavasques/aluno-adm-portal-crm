@@ -30,19 +30,23 @@ export function useAdminOperations() {
         throw new Error(response.error);
       }
       
-      let message = "Usuário adicionado com sucesso";
+      // Verificar se o usuário já existe e tratar adequadamente
       if (response && response.existed) {
-        message = `O usuário ${email} já existe no sistema`;
+        toast({
+          title: "Usuário já existe",
+          description: `O usuário ${email} já existe no sistema, mas pode não estar visível na lista atual.`,
+          variant: "warning", // Usando variante de aviso para diferenciar visualmente
+        });
+        
+        return { success: false, existed: true };
       } else {
-        message = `Usuário ${email} adicionado com sucesso`;
+        toast({
+          title: "Usuário adicionado com sucesso",
+          description: `Usuário ${email} foi criado e adicionado ao sistema.`,
+        });
+        
+        return { success: true, existed: false };
       }
-      
-      toast({
-        title: "Usuário processado com sucesso",
-        description: message,
-      });
-      
-      return;
     } catch (error: any) {
       console.error("Erro ao criar usuário via admin:", error);
       toast({

@@ -19,15 +19,24 @@ export const useUsersList = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (forceRefresh = false) => {
     try {
-      setIsLoading(true);
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      
       setFetchError(null);
       
       try {
         console.log("Buscando usuários via Edge Function com método GET");
+        
+        // Adicionar timestamp para evitar cache
+        const timestamp = new Date().getTime();
         const { data, error } = await supabase.functions.invoke('list-users', {
-          method: 'GET'
+          method: 'GET',
+          queryParams: { '_t': timestamp.toString() }
         });
         
         if (error) {
@@ -95,8 +104,7 @@ export const useUsersList = () => {
 
   // Função para atualizar a lista de usuários
   const refreshUsersList = useCallback(() => {
-    setIsRefreshing(true);
-    fetchUsers();
+    fetchUsers(true);
   }, [fetchUsers]);
 
   // Buscar usuários ao montar o componente

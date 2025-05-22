@@ -45,7 +45,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       name: "",
       email: "",
       role: "Student",
-      password: "", // Campo adicionado para senha
+      password: "", 
     },
   });
 
@@ -54,17 +54,20 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       setIsSubmitting(true);
       console.log("Enviando dados:", data);
 
-      await createAdminUser(
+      const result = await createAdminUser(
         data.email, 
         data.name, 
         data.role, 
-        data.password // Agora passamos a senha diretamente para a função
+        data.password
       );
       
       form.reset();
-      // Garantir que a lista seja atualizada após adicionar um usuário
-      setTimeout(() => onSuccess(), 500);
       
+      // Só atualiza a lista e fecha o diálogo se realmente foi criado um novo usuário
+      // Se o usuário já existia, mantém o diálogo aberto para que o usuário possa tentar outro email
+      if (!result?.existed) {
+        setTimeout(() => onSuccess(), 500);
+      }
     } catch (error) {
       console.error("Erro ao adicionar usuário:", error);
     } finally {

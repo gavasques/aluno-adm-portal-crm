@@ -11,7 +11,7 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
       return { error: "Todos os campos são obrigatórios para criar um usuário" };
     }
 
-    // Verificar se o usuário já existe pelo email
+    // Verificar se o usuário já existe pelo email, buscando de forma mais completa
     const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
       filter: { email }
     });
@@ -23,7 +23,50 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
 
     if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
       console.log("Usuário já existe com este email:", email);
-      return { existed: true, message: "Usuário já existe com este email" };
+      
+      // Verificar se o perfil também existe
+      const { data: existingProfile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .single();
+      
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
+        console.error("Erro ao verificar perfil existente:", profileError);
+      }
+      
+      // Se o perfil não existe mas o usuário auth existe, criar o perfil
+      if (!existingProfile && existingUsers.users[0]) {
+        const userId = existingUsers.users[0].id;
+        console.log("Criando perfil para usuário existente:", userId);
+        
+        const { error: createProfileError } = await supabaseAdmin
+          .from('profiles')
+          .insert([
+            { id: userId, name: name, role: role, email: email }
+          ]);
+          
+        if (createProfileError) {
+          console.error("Erro ao criar perfil para usuário existente:", createProfileError);
+          return { 
+            existed: true, 
+            error: "Usuário existe mas houve erro ao criar perfil",
+            message: "O usuário já existe, mas houve um erro ao sincronizar seu perfil."
+          };
+        }
+        
+        return { 
+          existed: true, 
+          profileCreated: true, 
+          message: "Usuário já existe, mas o perfil foi sincronizado com sucesso."
+        };
+      }
+      
+      return { 
+        existed: true, 
+        message: "Usuário já existe com este email",
+        userId: existingUsers.users[0].id
+      };
     }
 
     // Criar usuário no Supabase Auth
@@ -55,7 +98,11 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
       }
 
       console.log("Usuário criado com sucesso:", user.user.id);
-      return { success: true, message: "Usuário criado com sucesso" };
+      return { 
+        success: true, 
+        message: "Usuário criado com sucesso",
+        userId: user.user.id
+      };
     } else {
       console.error("Erro ao criar usuário: Resposta inesperada do Supabase Auth");
       return { error: "Erro ao criar usuário: Resposta inesperada do Supabase Auth" };
