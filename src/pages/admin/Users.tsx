@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Card, 
@@ -60,9 +60,9 @@ import {
   UserPlus, 
   AlertTriangle,
   Mail,
-  KeyRound
+  KeyRound,
+  Loader2
 } from "lucide-react";
-import { USERS } from "@/data/users";
 import { supabase } from "@/integrations/supabase/client";
 
 const userFormSchema = z.object({
@@ -71,14 +71,103 @@ const userFormSchema = z.object({
   role: z.string({ required_error: "Selecione um papel" }),
 });
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+  tasks: any[];
+}
+
 const Users = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState(USERS);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Buscar usuários do Supabase
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Função para buscar os usuários do Supabase
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Buscar usuários da tabela auth.users (requer função administradora)
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) throw authError;
+      
+      // Buscar perfis dos usuários da tabela profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (profilesError) throw profilesError;
+      
+      // Mapear usuários autenticados para o formato esperado pela interface
+      const mappedUsers: User[] = authUsers.users.map(authUser => {
+        // Encontrar o perfil correspondente ao usuário
+        const profile = profiles?.find(p => p.id === authUser.id);
+        
+        return {
+          id: authUser.id,
+          name: profile?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
+          email: authUser.email || '',
+          role: profile?.role || 'Student',
+          status: authUser.banned ? 'Inativo' : 'Ativo',
+          lastLogin: authUser.last_sign_in_at 
+            ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              }) 
+            : 'Nunca',
+          tasks: []
+        };
+      });
+
+      // Verificar e criar perfis para usuários que não têm um
+      for (const authUser of authUsers.users) {
+        const hasProfile = profiles?.some(p => p.id === authUser.id);
+        
+        if (!hasProfile) {
+          // Criar um perfil para este usuário
+          await supabase.from('profiles').insert({
+            id: authUser.id,
+            email: authUser.email,
+            name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
+            role: authUser.email?.includes('gavasques') ? 'Admin' : 'Student' // Define gavasques como Admin
+          });
+          console.log(`Perfil criado para o usuário ${authUser.email}`);
+        }
+      }
+      
+      // Ordenar usuários por email
+      mappedUsers.sort((a, b) => a.email.localeCompare(b.email));
+      
+      setUsers(mappedUsers);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de usuários. Tente novamente.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
 
   // Filtrar usuários de acordo com a pesquisa
   const filteredUsers = users.filter(user => 
@@ -137,7 +226,7 @@ const Users = () => {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: data.email,
         password: tempPassword,
-        email_confirm: false,
+        email_confirm: true,
         user_metadata: {
           name: data.name,
           role: data.role,
@@ -146,18 +235,17 @@ const Users = () => {
 
       if (authError) throw authError;
 
-      // Criar um novo usuário na lista local para exibição
-      const newUser = {
-        id: users.length + 1,
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        status: "Ativo",
-        lastLogin: "Nunca",
-        tasks: []
-      };
+      // Criar um perfil para o novo usuário
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: data.email,
+          name: data.name,
+          role: data.role,
+        });
 
-      setUsers([...users, newUser]);
+      if (profileError) throw profileError;
       
       // Enviar email de redefinição de senha
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
@@ -173,6 +261,9 @@ const Users = () => {
       
       setShowAddDialog(false);
       form.reset();
+      
+      // Atualizar a lista de usuários
+      fetchUsers();
       
     } catch (error) {
       console.error("Erro ao adicionar usuário:", error);
@@ -225,7 +316,16 @@ const Users = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length > 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <div className="flex justify-center items-center">
+                        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                        <span>Carregando usuários...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>

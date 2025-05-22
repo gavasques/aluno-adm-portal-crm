@@ -1,4 +1,5 @@
 
+// Este arquivo é mantido por motivos de compatibilidade, mas os dados reais agora são buscados diretamente do Supabase
 export const USERS = [
   {
     id: 1,
