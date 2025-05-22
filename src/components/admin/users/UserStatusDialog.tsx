@@ -15,12 +15,12 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-interface UserStatusDialogProps {
+export interface UserStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
   userEmail: string;
-  currentStatus: string; // Changed from isActive: boolean to match UsersDialogs.tsx
+  currentStatus: string; // Using string to match the data from UsersDialogs
   onSuccess: () => void;
 }
 
@@ -29,7 +29,7 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
   onOpenChange,
   userId,
   userEmail,
-  currentStatus, // Changed from isActive
+  currentStatus,
   onSuccess,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);

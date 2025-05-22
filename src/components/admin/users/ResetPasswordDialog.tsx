@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, Mail } from "lucide-react";
 
-interface ResetPasswordDialogProps {
+export interface ResetPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail: string;

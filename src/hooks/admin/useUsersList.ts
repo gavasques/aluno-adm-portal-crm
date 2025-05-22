@@ -82,12 +82,16 @@ export const useUsersList = () => {
             variant: "destructive",
           });
         }
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
       }
-    } finally {
+    } catch (error) {
+      console.error("Erro não tratado ao buscar usuários:", error);
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [users]);
+  }, [users.length]);
 
   // Função para atualizar a lista de usuários
   const refreshUsersList = useCallback(() => {

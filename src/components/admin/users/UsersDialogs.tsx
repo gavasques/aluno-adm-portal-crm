@@ -6,8 +6,7 @@ import UserDeleteDialog from "./UserDeleteDialog";
 import UserStatusDialog from "./UserStatusDialog";
 import ResetPasswordDialog from "./ResetPasswordDialog";
 
-interface UsersDialogsProps {
-  // Changed prop names to match what's passed from Users.tsx
+export interface UsersDialogsProps {
   showAddDialog: boolean;
   setShowAddDialog: (show: boolean) => void;
   showInviteDialog: boolean;
