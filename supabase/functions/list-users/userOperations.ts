@@ -1,4 +1,3 @@
-
 import { corsHeaders } from './utils.ts';
 
 // Função para criar um novo usuário
@@ -7,14 +6,30 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
     const { email, password, name, role } = data;
 
     if (!email || !password || !name || !role) {
-      console.error("Dados incompletos para criar usuário");
+      console.error("Dados incompletos para criar usuário:", { email, password: !!password, name, role });
       return { error: "Todos os campos são obrigatórios para criar um usuário" };
+    }
+
+    // Verificar se o usuário já existe pelo email
+    const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
+      filter: { email }
+    });
+
+    if (searchError) {
+      console.error("Erro ao verificar se usuário existe:", searchError);
+      return { error: searchError.message };
+    }
+
+    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
+      console.log("Usuário já existe com este email:", email);
+      return { existed: true, message: "Usuário já existe com este email" };
     }
 
     // Criar usuário no Supabase Auth
     const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: password,
+      email_confirm: true, // Marcar o email como confirmado para não precisar de verificação
       user_metadata: { name: name, role: role },
     });
 

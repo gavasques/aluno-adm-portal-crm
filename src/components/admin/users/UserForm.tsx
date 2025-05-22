@@ -23,10 +23,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Schema para validação do formulário
 const userFormSchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
   role: z.string({ required_error: "Selecione um papel" }),
+  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }).optional(),
 });
 
 interface UserFormProps {
@@ -43,6 +45,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       name: "",
       email: "",
       role: "Student",
+      password: "", // Campo adicionado para senha
     },
   });
 
@@ -51,6 +54,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       setIsSubmitting(true);
       console.log("Enviando dados:", data);
 
+      // Gerar uma senha aleatória se não for fornecida
+      const password = data.password || Math.random().toString(36).slice(-10);
+
       // Chamar a edge function para criar um novo usuário
       const { data: response, error } = await supabase.functions.invoke('list-users', {
         method: 'POST',
@@ -58,7 +64,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
           action: 'createUser',
           email: data.email,
           name: data.name,
-          role: data.role
+          role: data.role,
+          password: password
         }
       });
 
@@ -145,6 +152,23 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
                   <SelectItem value="Student">Aluno</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Senha (opcional)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="password" 
+                  placeholder="Deixe em branco para gerar uma senha aleatória" 
+                  {...field} 
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
