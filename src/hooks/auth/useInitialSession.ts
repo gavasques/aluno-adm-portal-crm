@@ -13,9 +13,13 @@ export const useInitialSession = (
   setLoading: (loading: boolean) => void
 ) => {
   const location = useLocation();
+  const isLoginPage = location.pathname === "/";
+  const isProtectedRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/student");
 
   useEffect(() => {
     const checkSession = async () => {
+      setLoading(true);
+      
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
       // Log de informações para diagnóstico
@@ -50,5 +54,5 @@ export const useInitialSession = (
     };
 
     checkSession();
-  }, [location.pathname, setLoading, setSession, setUser]);
+  }, [location.pathname, setLoading, setSession, setUser, isLoginPage, isProtectedRoute]);
 };

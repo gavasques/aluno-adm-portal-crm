@@ -1,11 +1,12 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Header from "./Header";
 import StudentSidebar from "./StudentSidebar";
 import AdminSidebar from "./AdminSidebar";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/auth";
 
 interface LayoutProps {
   isAdmin?: boolean;
@@ -13,9 +14,24 @@ interface LayoutProps {
 
 const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
   const location = useLocation();
+  const { user, loading } = useAuth();
   const isAdmin = propIsAdmin !== undefined ? propIsAdmin : location.pathname.startsWith("/admin");
   const isStudent = location.pathname.startsWith("/student");
   const isHome = location.pathname === "/";
+  
+  // Se estiver carregando, mostrar um indicador de carregamento
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  // Se o usuário não estiver autenticado, redirecionar para a página inicial
+  if (!user && !isHome) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white">

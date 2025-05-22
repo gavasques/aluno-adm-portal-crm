@@ -17,6 +17,7 @@ export const useAuthState = () => {
   
   // Verificar se estamos na página de redefinição de senha
   const isResetPasswordPage = location.pathname === "/reset-password";
+  const isLoginPage = location.pathname === "/";
 
   useEffect(() => {
     // Configurar o listener de autenticação
@@ -54,7 +55,7 @@ export const useAuthState = () => {
 
         if (event === "SIGNED_OUT") {
           navigate("/");
-        } else if (event === "SIGNED_IN" && window.location.pathname === "/" && !isResetPasswordPage && !recoveryModeUtils.isInRecoveryMode()) {
+        } else if (event === "SIGNED_IN" && !isResetPasswordPage && !recoveryModeUtils.isInRecoveryMode()) {
           // Verificar o papel do usuário (admin ou aluno)
           setTimeout(async () => {
             try {
@@ -87,7 +88,7 @@ export const useAuthState = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, isResetPasswordPage, location.pathname]);
+  }, [navigate, isResetPasswordPage, location.pathname, isLoginPage]);
 
   return {
     user,
