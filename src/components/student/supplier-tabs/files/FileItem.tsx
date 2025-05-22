@@ -4,13 +4,9 @@ import { Download, Trash, FileText, FileArchive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { CustomFile } from "./utils";
 
-export interface FileItemProps {
-  id: number;
-  name: string;
-  type: string;
-  size: string;
-  date: string;
+export interface FileItemProps extends CustomFile {
   onDelete?: (id: number) => void;
   isEditing?: boolean;
 }

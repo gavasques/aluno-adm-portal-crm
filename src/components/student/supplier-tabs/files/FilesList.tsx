@@ -1,10 +1,11 @@
 
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import FileItem, { FileItemProps } from "./FileItem";
+import FileItem from "./FileItem";
+import { CustomFile } from "./utils";
 
 interface FilesListProps {
-  files: Omit<FileItemProps, 'onDelete'>[];
+  files: CustomFile[];
   onDeleteFile?: (id: number) => void;
   isEditing?: boolean;
 }
@@ -28,7 +29,11 @@ const FilesList: React.FC<FilesListProps> = ({
         {files.map((file) => (
           <FileItem 
             key={file.id} 
-            {...file} 
+            id={file.id}
+            name={file.name}
+            type={file.type}
+            size={file.size}
+            date={file.date}
             onDelete={onDeleteFile}
             isEditing={isEditing}
           />

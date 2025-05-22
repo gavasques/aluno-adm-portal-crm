@@ -21,3 +21,12 @@ export const formatBytes = (bytes: number): string => {
 
 // Total de armazenamento disponível em bytes (100MB)
 export const STORAGE_LIMIT = 100 * 1024 * 1024;
+
+// Interface para o tipo de arquivo personalizado
+export interface CustomFile {
+  id: number;
+  name: string;
+  type: string;
+  size: string;
+  date: string;
+}

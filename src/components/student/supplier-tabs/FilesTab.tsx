@@ -5,19 +5,11 @@ import { toast } from "sonner";
 import FileUploader from "./files/FileUploader";
 import FilesList from "./files/FilesList";
 import StorageIndicator from "./files/StorageIndicator";
-import { stringToBytes, formatBytes, STORAGE_LIMIT } from "./files/utils";
-
-interface File {
-  id: number;
-  name: string;
-  type: string;
-  size: string;
-  date: string;
-}
+import { stringToBytes, formatBytes, STORAGE_LIMIT, CustomFile } from "./files/utils";
 
 interface FilesTabProps {
-  files: File[];
-  onUpdate: (files: File[]) => void;
+  files: CustomFile[];
+  onUpdate: (files: CustomFile[]) => void;
   isEditing?: boolean;
 }
 
@@ -26,8 +18,6 @@ const FilesTab: React.FC<FilesTabProps> = ({
   onUpdate,
   isEditing = true
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-
   // Calcular armazenamento usado
   const usedStorage = files.reduce((total, file) => total + stringToBytes(file.size), 0);
   
@@ -36,9 +26,9 @@ const FilesTab: React.FC<FilesTabProps> = ({
     toast.success("Arquivo excluído com sucesso!");
   };
   
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = (file: globalThis.File) => {
     // Adicionar novo arquivo
-    const newFile = {
+    const newFile: CustomFile = {
       id: Date.now(),
       name: file.name,
       type: file.type.split('/')[1]?.toUpperCase() || 'FILE',

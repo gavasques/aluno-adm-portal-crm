@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+// URL base do site que será usado para redirecionamentos
+const BASE_URL = "https://titan.guilhermevasques.club";
+
 interface AuthContextProps {
   user: User | null;
   session: Session | null;
@@ -116,6 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data: {
             name,
           },
+          emailRedirectTo: `${BASE_URL}/reset-password`,
         },
       });
 
@@ -164,7 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${BASE_URL}/reset-password`,
       });
       
       if (error) throw error;

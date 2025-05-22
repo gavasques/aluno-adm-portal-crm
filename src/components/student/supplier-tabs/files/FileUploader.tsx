@@ -7,7 +7,7 @@ import { toast } from "sonner";
 interface FileUploaderProps {
   usedStorage: number;
   storageLimit: number;
-  onFileUpload: (file: File) => void;
+  onFileUpload: (file: globalThis.File) => void;
   disabled?: boolean;
 }
 
