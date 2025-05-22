@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth";
 
 // Schema para validação do formulário
 const userFormSchema = z.object({
@@ -38,6 +37,7 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createAdminUser } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(userFormSchema),
@@ -54,42 +54,12 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       setIsSubmitting(true);
       console.log("Enviando dados:", data);
 
-      // Gerar uma senha aleatória se não for fornecida
-      const password = data.password || Math.random().toString(36).slice(-10);
-
-      // Chamar a edge function para criar um novo usuário
-      const { data: response, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
-        body: {
-          action: 'createUser',
-          email: data.email,
-          name: data.name,
-          role: data.role,
-          password: password
-        }
-      });
-
-      if (error) {
-        console.error("Erro na chamada da função:", error);
-        throw new Error(error.message || "Erro ao adicionar usuário");
-      }
-      
-      if (response && response.error) {
-        console.error("Erro retornado pela função:", response.error);
-        throw new Error(response.error);
-      }
-      
-      let message = "Usuário adicionado com sucesso";
-      if (response && response.existed) {
-        message = `O usuário ${data.email} já existe no sistema`;
-      } else {
-        message = `Usuário ${data.email} adicionado com sucesso`;
-      }
-      
-      toast({
-        title: "Usuário processado com sucesso",
-        description: message,
-      });
+      await createAdminUser(
+        data.email, 
+        data.name, 
+        data.role, 
+        data.password // Agora passamos a senha diretamente para a função
+      );
       
       form.reset();
       // Garantir que a lista seja atualizada após adicionar um usuário
@@ -97,11 +67,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       
     } catch (error) {
       console.error("Erro ao adicionar usuário:", error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível adicionar o usuário. Tente novamente.",
-        variant: "destructive",
-      });
     } finally {
       setIsSubmitting(false);
     }

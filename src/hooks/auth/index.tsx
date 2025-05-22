@@ -25,13 +25,14 @@ interface AuthContextProps {
   getLinkedIdentities: () => Array<{id: string, provider: string}> | null;
   isInRecoveryMode?: () => boolean;
   setRecoveryMode?: (enabled: boolean) => void;
+  createAdminUser: (email: string, name: string, role: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, session, loading, isInRecoveryMode, setRecoveryMode } = useSession();
-  const { signIn, signUp, signOut, resetPassword, updateUserPassword, sendMagicLink } = useBasicAuth();
+  const { signIn, signUp, signOut, resetPassword, updateUserPassword, sendMagicLink, createAdminUser } = useBasicAuth();
   const { signInWithGoogle, linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(user);
 
   return (
@@ -51,7 +52,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         unlinkIdentity,
         getLinkedIdentities,
         isInRecoveryMode,
-        setRecoveryMode
+        setRecoveryMode,
+        createAdminUser
       }}
     >
       {children}
