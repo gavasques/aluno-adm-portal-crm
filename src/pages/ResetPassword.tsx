@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
 import { GridBackground } from "@/components/ui/grid-background";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -14,18 +15,49 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [validatingToken, setValidatingToken] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
   const navigate = useNavigate();
-  const { updateUserPassword } = useAuth();
+  const { session } = useAuth();
   const [searchParams] = useSearchParams();
 
   // Pega o token da URL se estiver usando search params
-  const tokenFromParams = searchParams.get('token');
+  const tokenFromParams = searchParams.get('token') || searchParams.get('access_token');
+  const typeFromParams = searchParams.get('type');
+  
+  // Verificar se estamos em um fluxo de recuperação de senha
+  const isRecoveryFlow = typeFromParams === 'recovery' || !!tokenFromParams;
 
   useEffect(() => {
+    // Verificar se o token é válido
+    const validateToken = async () => {
+      setValidatingToken(true);
+      
+      try {
+        // Se não temos um token de recuperação, não podemos prosseguir
+        if (!isRecoveryFlow) {
+          setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
+          setTokenValid(false);
+          return;
+        }
+
+        setTokenValid(true);
+      } catch (error) {
+        console.error("Erro ao validar token:", error);
+        setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
+        setTokenValid(false);
+      } finally {
+        setValidatingToken(false);
+      }
+    };
+    
+    validateToken();
+    
     // Log de informações para diagnóstico
     console.log("Token de recuperação detectado:", tokenFromParams || "Não encontrado em query params");
+    console.log("Tipo de ação:", typeFromParams);
     console.log("URL atual:", window.location.href);
-  }, [tokenFromParams]);
+  }, [tokenFromParams, typeFromParams, isRecoveryFlow]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,14 +78,21 @@ const ResetPassword = () => {
     }
     
     try {
-      await updateUserPassword(password);
+      // Usar diretamente o método updateUser com a senha
+      const { error } = await supabase.auth.updateUser({ password });
+      
+      if (error) throw error;
+      
       setSuccess(true);
       
       toast({
         title: "Senha atualizada com sucesso",
         description: "Você será redirecionado para a página de login",
-        variant: "default", // Alterado de "success" para "default"
+        variant: "default",
       });
+      
+      // Fazer logout para forçar uma nova autenticação
+      await supabase.auth.signOut();
       
       // Redirecionar após 2 segundos
       setTimeout(() => {
@@ -72,6 +111,50 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  // Se estamos validando o token, mostrar loading
+  if (validatingToken) {
+    return (
+      <div className="relative min-h-screen">
+        <GridBackground />
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+          <div className="mb-12">
+            <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
+          </div>
+          <div className="w-full max-w-md mx-auto p-8 space-y-6 text-center">
+            <h2 className="text-2xl font-semibold text-white">Verificando link de recuperação...</h2>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Se o token não for válido, mostrar mensagem de erro
+  if (!tokenValid && !success) {
+    return (
+      <div className="relative min-h-screen">
+        <GridBackground />
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+          <div className="mb-12">
+            <img src="/lovable-uploads/788ca39b-e116-44df-95de-2048b2ed6a09.png" alt="Logo" className="h-12" />
+          </div>
+          <div className="w-full max-w-md mx-auto p-8 space-y-6 text-center">
+            <h2 className="text-2xl font-semibold text-white">Link inválido ou expirado</h2>
+            <p className="text-red-400">{error}</p>
+            <Button 
+              onClick={() => navigate("/")}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Voltar para o login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen">
