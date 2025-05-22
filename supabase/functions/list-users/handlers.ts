@@ -1,6 +1,7 @@
 
 import { corsHeaders } from './utils.ts';
 import { processUsers } from './userProcessing.ts';
+import { createSuccessResponse, createErrorResponse } from './responseHelpers.ts';
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
   try {
@@ -19,32 +20,10 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
 
     console.log(`Retornando ${processedUsers.length} usuários processados`);
     
-    return new Response(
-      JSON.stringify({ 
-        users: processedUsers 
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 200 
-      }
-    );
+    return createSuccessResponse({ users: processedUsers });
   } catch (error) {
     console.error("Erro ao processar requisição GET:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || "Erro ao listar usuários" 
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 500 
-      }
-    );
+    return createErrorResponse(error);
   }
 };
 
@@ -58,33 +37,17 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promi
       requestData = await req.json();
     } catch (error) {
       console.error("Erro ao analisar o corpo da requisição:", error);
-      return new Response(
-        JSON.stringify({ 
-          error: "Body required. Requisição POST requer um corpo JSON válido." 
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 400 
-        }
+      return createErrorResponse(
+        "Body required. Requisição POST requer um corpo JSON válido.",
+        400
       );
     }
     
     if (!requestData || !requestData.action) {
       console.error("Dados inválidos ou ação não especificada no corpo da requisição");
-      return new Response(
-        JSON.stringify({ 
-          error: "Dados inválidos ou ação não especificada" 
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 400 
-        }
+      return createErrorResponse(
+        "Dados inválidos ou ação não especificada",
+        400
       );
     }
     
@@ -105,44 +68,16 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promi
     
     if (handler) {
       const result = await handler(supabaseAdmin, requestData);
-      return new Response(
-        JSON.stringify(result),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 200 
-        }
-      );
+      return createSuccessResponse(result);
     } else {
       console.error(`Ação desconhecida: ${requestData.action}`);
-      return new Response(
-        JSON.stringify({ 
-          error: `Ação desconhecida: ${requestData.action}` 
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 400 
-        }
+      return createErrorResponse(
+        `Ação desconhecida: ${requestData.action}`,
+        400
       );
     }
   } catch (error) {
     console.error("Erro ao processar requisição POST:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || "Erro ao processar a requisição" 
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 500 
-      }
-    );
+    return createErrorResponse(error);
   }
 };
