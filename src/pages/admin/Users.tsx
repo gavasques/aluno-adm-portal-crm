@@ -1,76 +1,17 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle, 
-  CardFooter 
+  CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { toast } from "@/hooks/use-toast";
-import { 
-  Search, 
-  MoreHorizontal, 
-  UserPlus, 
-  AlertTriangle,
-  Mail,
-  KeyRound,
-  Loader2,
-  RefreshCw
-} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-const userFormSchema = z.object({
-  name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  role: z.string({ required_error: "Selecione um papel" }),
-});
+import { UserPlus, RefreshCw, Loader2 } from "lucide-react";
+import UsersList from "@/components/admin/users/UsersList";
+import UserAddDialog from "@/components/admin/users/UserAddDialog";
+import ResetPasswordDialog from "@/components/admin/users/ResetPasswordDialog";
 
 interface User {
   id: string;
@@ -83,11 +24,9 @@ interface User {
 }
 
 const Users = () => {
-  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -121,11 +60,6 @@ const Users = () => {
       setIsRefreshing(false);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a lista de usuários. Tente novamente.",
-        variant: "destructive",
-      });
       setIsLoading(false);
       setIsRefreshing(false);
     }
@@ -137,94 +71,10 @@ const Users = () => {
     fetchUsers();
   };
 
-  // Filtrar usuários de acordo com a pesquisa
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Formulário para adicionar usuário
-  const form = useForm({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      role: "Student",
-    },
-  });
-
-  // Resetar senha de um usuário
-  const handleResetPassword = async (email) => {
-    try {
-      setIsSubmitting(true);
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Link de redefinição de senha enviado",
-        description: `Um email foi enviado para ${email} com instruções para redefinição de senha.`,
-      });
-      
-      setShowResetDialog(false);
-    } catch (error) {
-      console.error("Erro ao enviar email de redefinição:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar o email de redefinição. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Adicionar um novo usuário
-  const onSubmit = async (data) => {
-    try {
-      setIsSubmitting(true);
-
-      // Chamar a edge function para criar um novo usuário
-      const { data: response, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
-        body: {
-          action: 'createUser',
-          email: data.email,
-          name: data.name,
-          role: data.role
-        }
-      });
-
-      if (error) throw error;
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      toast({
-        title: "Usuário adicionado com sucesso",
-        description: `Um email de definição de senha foi enviado para ${data.email}.`,
-      });
-      
-      setShowAddDialog(false);
-      form.reset();
-      
-      // Atualizar a lista de usuários
-      refreshUsersList();
-      
-    } catch (error) {
-      console.error("Erro ao adicionar usuário:", error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível adicionar o usuário. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Função para lidar com a redefinição de senha
+  const handleResetPassword = (email: string) => {
+    setSelectedUserEmail(email);
+    setShowResetDialog(true);
   };
 
   return (
@@ -254,222 +104,28 @@ const Users = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                placeholder="Buscar usuários..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Papel</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Último Login</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <div className="flex justify-center items-center">
-                        <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                        <span>Carregando usuários...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={user.role === "Admin" ? "default" : "outline"}
-                          className={
-                            user.role === "Admin"
-                              ? "bg-blue-500 hover:bg-blue-600"
-                              : "bg-gray-100 text-gray-800"
-                          }
-                        >
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={user.status === "Ativo" ? "default" : "outline"}
-                          className={
-                            user.status === "Ativo"
-                              ? "bg-green-500"
-                              : "bg-gray-500"
-                          }
-                        >
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{user.lastLogin}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedUserEmail(user.email);
-                              setShowResetDialog(true);
-                            }}>
-                              <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              toast({
-                                title: "Função não implementada",
-                                description: "Esta funcionalidade será implementada em breve.",
-                              });
-                            }}>
-                              Ver detalhes
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      Nenhum usuário encontrado com os critérios de busca.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <UsersList 
+            users={users}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onResetPassword={handleResetPassword}
+          />
         </CardContent>
       </Card>
 
-      {/* Diálogo para adicionar usuário */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Adicionar Novo Usuário</DialogTitle>
-            <DialogDescription>
-              Preencha os dados para adicionar um novo usuário ao sistema. Um email de definição de senha será enviado automaticamente.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome*</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome completo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email*</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="email@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Papel*</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o papel" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Admin">Administrador</SelectItem>
-                        <SelectItem value="Student">Aluno</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter className="mt-6">
-                <Button 
-                  variant="outline" 
-                  type="button" 
-                  onClick={() => setShowAddDialog(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Adicionando..." : "Adicionar Usuário"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* Dialog components */}
+      <UserAddDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+        onSuccess={refreshUsersList}
+      />
 
-      {/* Diálogo para redefinir senha */}
-      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Mail className="mr-2 h-5 w-5" /> 
-              Enviar Email de Redefinição de Senha
-            </DialogTitle>
-            <DialogDescription>
-              Um email de redefinição de senha será enviado para o usuário.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4 border-y">
-            <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-              <AlertTriangle className="text-amber-600 h-5 w-5" />
-              <p className="text-sm text-amber-800">
-                Tem certeza que deseja enviar um email de redefinição de senha para <strong>{selectedUserEmail}</strong>?
-              </p>
-            </div>
-          </div>
-          
-          <DialogFooter className="gap-2 sm:gap-0 mt-4">
-            <Button variant="outline" onClick={() => setShowResetDialog(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={() => handleResetPassword(selectedUserEmail)} 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Enviando..." : "Enviar Email"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ResetPasswordDialog 
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        userEmail={selectedUserEmail}
+      />
     </div>
   );
 };
