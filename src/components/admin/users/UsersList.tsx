@@ -11,7 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, MoreHorizontal, Search, KeyRound } from "lucide-react";
+import { Loader2, MoreHorizontal, Search, KeyRound, Info } from "lucide-react";
+import UserDetailsDialog from "./UserDetailsDialog";
 
 interface User {
   id: string;
@@ -47,11 +47,19 @@ const UsersList: React.FC<UsersListProps> = ({
   onSearchChange,
   onResetPassword,
 }) => {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+
   // Filtrar usuários de acordo com a pesquisa
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleViewDetails = (user: User) => {
+    setSelectedUser(user);
+    setShowDetailsDialog(true);
+  };
 
   return (
     <div>
@@ -130,13 +138,8 @@ const UsersList: React.FC<UsersListProps> = ({
                         <DropdownMenuItem onClick={() => onResetPassword(user.email)}>
                           <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          toast({
-                            title: "Função não implementada",
-                            description: "Esta funcionalidade será implementada em breve.",
-                          });
-                        }}>
-                          Ver detalhes
+                        <DropdownMenuItem onClick={() => handleViewDetails(user)}>
+                          <Info className="mr-2 h-4 w-4" /> Ver detalhes
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -153,6 +156,13 @@ const UsersList: React.FC<UsersListProps> = ({
           </TableBody>
         </Table>
       </div>
+
+      {/* Dialog de detalhes do usuário */}
+      <UserDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        user={selectedUser}
+      />
     </div>
   );
 };
