@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -19,12 +19,11 @@ export const useUsersList = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       setFetchError(null);
       
-      // Usar método GET para listar usuários
       try {
         console.log("Buscando usuários via Edge Function com método GET");
         const { data, error } = await supabase.functions.invoke('list-users', {
@@ -39,11 +38,11 @@ export const useUsersList = () => {
         // Log para debug - verificar payload completo recebido do backend
         console.log("users payload", data);
         
-        if (data && data.users) {
+        if (data && Array.isArray(data.users)) {
           console.log("Dados recebidos:", data.users.length, "usuários");
           setUsers(data.users);
         } else {
-          console.error("Resposta da função sem dados de usuários:", data);
+          console.error("Resposta da função sem dados de usuários válidos:", data);
           throw new Error("A resposta do servidor não contém dados de usuários válidos");
         }
       } catch (error) {
@@ -84,23 +83,22 @@ export const useUsersList = () => {
           });
         }
       }
-      
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [users]);
 
   // Função para atualizar a lista de usuários
-  const refreshUsersList = () => {
+  const refreshUsersList = useCallback(() => {
     setIsRefreshing(true);
     fetchUsers();
-  };
+  }, [fetchUsers]);
 
   // Buscar usuários ao montar o componente
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   return {
     users,

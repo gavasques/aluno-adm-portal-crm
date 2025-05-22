@@ -80,10 +80,10 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       }
       
       let message = "Usuário adicionado com sucesso";
-      if (response.existed) {
+      if (response && response.existed) {
         message = `O usuário ${data.email} já existe no sistema`;
       } else {
-        message = `Um email de definição de senha foi enviado para ${data.email}`;
+        message = `Usuário ${data.email} adicionado com sucesso`;
       }
       
       toast({
@@ -92,7 +92,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       });
       
       form.reset();
-      onSuccess();
+      // Garantir que a lista seja atualizada após adicionar um usuário
+      setTimeout(() => onSuccess(), 500);
       
     } catch (error) {
       console.error("Erro ao adicionar usuário:", error);

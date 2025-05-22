@@ -75,6 +75,8 @@ const UserInviteForm: React.FC<UserInviteFormProps> = ({ onSuccess, onCancel }) 
       let message = "Convite enviado com sucesso";
       if (response && response.existed) {
         message = `O usuário ${data.email} já existe no sistema`;
+      } else if (response && response.directCreation) {
+        message = `Usuário criado diretamente. ${data.email} precisará usar a opção 'Esqueci minha senha'.`;
       } else {
         message = `Um email de convite foi enviado para ${data.email}`;
       }
@@ -85,7 +87,8 @@ const UserInviteForm: React.FC<UserInviteFormProps> = ({ onSuccess, onCancel }) 
       });
       
       form.reset();
-      onSuccess();
+      // Garantir que a lista seja atualizada após o convite ser enviado
+      setTimeout(() => onSuccess(), 500);
       
     } catch (error) {
       console.error("Erro ao enviar convite:", error);
