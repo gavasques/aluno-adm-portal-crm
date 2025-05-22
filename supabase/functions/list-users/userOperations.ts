@@ -1,357 +1,166 @@
-
-// Operações específicas de usuários (criar, excluir, alterar status)
-
-import { createSupabaseAdminClient } from './utils.ts';
+import { corsHeaders } from './utils.ts';
 
 // Função para criar um novo usuário
-export async function createUser(supabaseAdmin: any, requestData: any) {
-  const { email, name, role } = requestData;
-  
+export const createUser = async (supabaseAdmin: any, data: any) => {
   try {
-    console.log(`Iniciando criação do usuário: ${email}`);
-    
-    // Verificar se o usuário já existe
-    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (checkError) {
-      console.error("Erro ao verificar usuário existente:", checkError);
-      throw checkError;
-    }
-    
-    // Verificar se existe algum usuário com o email específico
-    const userWithSameEmail = existingUsers.users.find(user => 
-      user.email && user.email.toLowerCase() === email.toLowerCase()
-    );
-    
-    if (userWithSameEmail) {
-      console.log(`Usuário com email ${email} já existe, ID: ${userWithSameEmail.id}`);
-      return { success: true, message: "Usuário já existe", existed: true };
-    }
-    
-    console.log(`Nenhum usuário encontrado com email ${email}, prosseguindo com criação`);
-    
-    // Gerar uma senha aleatória temporária
-    const tempPassword = Math.random().toString(36).slice(-8);
-    
-    // Criar um novo usuário
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role,
-      }
-    });
-    
-    if (authError) {
-      console.error("Erro ao criar usuário:", authError);
-      throw authError;
-    }
-    
-    console.log(`Usuário criado com sucesso: ${email}, ID: ${authData.user.id}`);
-    
-    try {
-      // Verificar se o perfil já existe
-      const { data: existingProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-        
-      if (!existingProfile) {
-        // Criar perfil para o novo usuário apenas se não existir
-        const { error: profileError } = await supabaseAdmin
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email,
-            name,
-            role,
-          });
-        
-        if (profileError) {
-          console.error("Erro ao criar perfil, mas usuário foi criado:", profileError);
-          // Não falhar a operação se apenas o perfil falhar
-        } else {
-          console.log(`Perfil criado para usuário: ${email}`);
-        }
-      } else {
-        console.log(`Perfil já existe para usuário: ${email}, pulando criação`);
-      }
-    } catch (profileError) {
-      console.error("Erro ao verificar/criar perfil:", profileError);
-      // Não falhar a operação se apenas o perfil falhar
-    }
-    
-    // Enviar email de redefinição de senha
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email,
-      options: {
-        redirectTo: `https://titan.guilhermevasques.club/reset-password`,
-      }
-    });
-    
-    if (resetError) {
-      console.error("Erro ao gerar link de redefinição de senha:", resetError);
-      throw resetError;
-    }
-    
-    console.log(`Email de redefinição de senha enviado para: ${email}`);
-    console.log("Link de redefinição gerado com sucesso:", resetData?.properties?.action_link || "Link não disponível");
-    
-    return { 
-      success: true, 
-      message: "Usuário criado com sucesso e email de redefinição enviado",
-      recovery_link: resetData?.properties?.action_link
-    };
-  } catch (error) {
-    console.error(`Falha ao criar usuário ${email}:`, error);
-    throw error;
-  }
-}
+    const { email, password, name, role } = data;
 
-// Função para convidar um novo usuário
-export async function inviteUser(supabaseAdmin: any, requestData: any) {
-  const { email, name, role } = requestData;
-  
-  try {
-    console.log(`Iniciando convite para o usuário: ${email}`);
-    
-    // Verificar se o usuário já existe
-    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (checkError) {
-      console.error("Erro ao verificar usuário existente:", checkError);
-      throw checkError;
+    if (!email || !password || !name || !role) {
+      console.error("Dados incompletos para criar usuário");
+      return { error: "Todos os campos são obrigatórios para criar um usuário" };
     }
-    
-    // Verificar se existe algum usuário com o email específico
-    const userWithSameEmail = existingUsers.users.find(user => 
-      user.email && user.email.toLowerCase() === email.toLowerCase()
-    );
-    
-    if (userWithSameEmail) {
-      console.log(`Usuário com email ${email} já existe, ID: ${userWithSameEmail.id}`);
-      return { success: true, message: "Usuário já existe", existed: true };
-    }
-    
-    console.log(`Nenhum usuário encontrado com email ${email}, prosseguindo com convite`);
-    
-    // Criar um novo usuário com status de convidado
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      email_confirm: false, // O usuário precisará confirmar o email
-      user_metadata: {
-        name,
-        role,
-        status: 'Convidado' // Status de convidado
-      }
+
+    // Criar usuário no Supabase Auth
+    const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email: email,
+      password: password,
+      user_metadata: { name: name, role: role },
     });
-    
-    if (authError) {
-      console.error("Erro ao criar usuário convidado:", authError);
-      throw authError;
+
+    if (userError) {
+      console.error("Erro ao criar usuário:", userError);
+      return { error: userError.message };
     }
-    
-    console.log(`Usuário convidado criado com sucesso: ${email}, ID: ${authData.user.id}`);
-    
-    try {
-      // Criar perfil para o novo usuário convidado
+
+    if (user && user.user) {
+      // Criar perfil associado na tabela "profiles"
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email,
-          name,
-          role,
-          status: 'Convidado' // Status de convidado no perfil
-        });
-      
+        .insert([
+          { id: user.user.id, name: name, role: role, email: email }
+        ]);
+
       if (profileError) {
-        console.error("Erro ao criar perfil para usuário convidado:", profileError);
-        // Não falhar a operação se apenas o perfil falhar
-      } else {
-        console.log(`Perfil criado para usuário convidado: ${email}`);
+        console.error("Erro ao criar perfil:", profileError);
+        // Remover usuário criado se falhar ao criar perfil
+        await supabaseAdmin.auth.admin.deleteUser(user.user.id);
+        return { error: profileError.message };
       }
-    } catch (profileError) {
-      console.error("Erro ao criar perfil para usuário convidado:", profileError);
-      // Não falhar a operação se apenas o perfil falhar
-    }
-    
-    // Gerar link de convite (signup)
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
-      email,
-      options: {
-        redirectTo: `https://titan.guilhermevasques.club/accept-invite`,
-      }
-    });
-    
-    if (inviteError) {
-      console.error("Erro ao gerar link de convite:", inviteError);
-      throw inviteError;
-    }
-    
-    console.log(`Email de convite enviado para: ${email}`);
-    console.log("Link de convite gerado com sucesso:", inviteData?.properties?.action_link || "Link não disponível");
-    
-    return { 
-      success: true, 
-      message: "Convite enviado com sucesso",
-      invite_link: inviteData?.properties?.action_link,
-      user_id: authData.user.id
-    };
-  } catch (error) {
-    console.error(`Falha ao convidar usuário ${email}:`, error);
-    throw error;
-  }
-}
 
-// Função para verificar se o usuário tem dependências
-export async function checkUserDependencies(supabaseAdmin: any, userId: string) {
-  try {
-    // Aqui podemos consultar tabelas que têm referências ao usuário
-    // Por exemplo: fornecedores, alunos, arquivos, etc.
-    // Esta implementação é simplificada. Em um caso real, você deve verificar todas as tabelas relevantes.
-    
-    // Verificar se há alguma entrada nas tabelas relacionadas
-    // Por enquanto, retornamos false indicando que não há dependências
-    // Em uma implementação real, você adicionaria as verificações necessárias
-    
-    return false; // Simulando que não há dependências
-  } catch (error) {
-    console.error(`Erro ao verificar dependências do usuário ${userId}:`, error);
-    // Em caso de erro na verificação, é mais seguro assumir que há dependências
-    return true;
-  }
-}
-
-// Função para excluir um usuário ou inativá-lo se tiver referências
-export async function deleteUser(supabaseAdmin: any, requestData: any) {
-  const { userId, email } = requestData;
-  
-  try {
-    console.log(`Iniciando exclusão do usuário: ${email} (ID: ${userId})`);
-    
-    // Verificar se o usuário existe
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
-    if (userError) {
-      console.error("Erro ao buscar usuário:", userError);
-      throw userError;
-    }
-    
-    if (!userData || !userData.user) {
-      console.error("Usuário não encontrado:", userId);
-      throw new Error("Usuário não encontrado");
-    }
-
-    // Verificar dependências reais do usuário
-    const hasDependencies = await checkUserDependencies(supabaseAdmin, userId);
-    
-    if (hasDependencies) {
-      // Se tiver dependências, apenas inativamos o usuário em vez de excluí-lo
-      console.log(`Usuário ${email} possui dados relacionados, inativando em vez de excluir`);
-      
-      // Banir o usuário (isso o impede de fazer login)
-      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(
-        userId,
-        { banned: true }
-      );
-      
-      if (banError) {
-        console.error("Erro ao inativar usuário:", banError);
-        throw banError;
-      }
-      
-      console.log(`Usuário ${email} inativado com sucesso`);
-      return { success: true, inactivated: true };
+      console.log("Usuário criado com sucesso:", user.user.id);
+      return { success: true, message: "Usuário criado com sucesso" };
     } else {
-      // Se não tiver referências, excluímos primeiro o perfil e depois o usuário
-      console.log(`Excluindo perfil e usuário ${email} completamente`);
-      
-      // 1. Primeiro excluir o perfil
-      const { error: profileDeleteError } = await supabaseAdmin
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-      
-      if (profileDeleteError) {
-        console.error("Erro ao excluir perfil do usuário:", profileDeleteError);
-        throw profileDeleteError;
-      }
-      
-      console.log(`Perfil do usuário ${email} excluído com sucesso`);
-      
-      // 2. Agora excluir o usuário
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-      
-      if (deleteError) {
-        console.error("Erro ao excluir usuário:", deleteError);
-        throw deleteError;
-      }
-      
-      console.log(`Usuário ${email} excluído com sucesso`);
-      return { success: true, deleted: true };
+      console.error("Erro ao criar usuário: Resposta inesperada do Supabase Auth");
+      return { error: "Erro ao criar usuário: Resposta inesperada do Supabase Auth" };
     }
-  } catch (error) {
-    console.error(`Falha ao processar exclusão do usuário ${email}:`, error);
-    throw error;
-  }
-}
 
-// Função para alterar o status (ativar/desativar) de um usuário
-export async function toggleUserStatus(supabaseAdmin: any, requestData: any) {
-  const { userId, email, active } = requestData;
-  
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+    return { error: error.message };
+  }
+};
+
+// Função para convidar um usuário
+export const inviteUser = async (supabaseAdmin: any, data: any) => {
   try {
-    console.log(`Alterando status do usuário ${email} para ${active ? 'ativo' : 'inativo'}`);
-    
-    // Verificar se o usuário existe
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
-    if (userError) {
-      console.error("Erro ao buscar usuário:", userError);
-      throw userError;
+    const { email, name, role } = data;
+
+    if (!email || !name || !role) {
+      console.error("Dados incompletos para convidar usuário");
+      return { error: "Email, nome e role são obrigatórios para convidar um usuário" };
     }
-    
-    if (!userData || !userData.user) {
-      console.error("Usuário não encontrado:", userId);
-      throw new Error("Usuário não encontrado");
+
+    // Enviar convite para o usuário
+    const { data: invite, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: { name: name, role: role, status: 'Convidado' }
+    });
+
+    if (inviteError) {
+      console.error("Erro ao convidar usuário:", inviteError);
+      return { error: inviteError.message };
     }
+
+    // Criar perfil associado na tabela "profiles" com status "Convidado"
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert([
+        { id: invite.user.id, name: name, role: role, email: email }
+      ]);
+
+    if (profileError) {
+      console.error("Erro ao criar perfil:", profileError);
+      return { error: profileError.message };
+    }
+
+    console.log("Convite enviado com sucesso para:", email);
+    return { success: true, message: "Convite enviado com sucesso" };
+
+  } catch (error) {
+    console.error("Erro ao convidar usuário:", error);
+    return { error: error.message };
+  }
+};
+
+// Função para excluir um usuário
+export const deleteUser = async (supabaseAdmin: any, data: any) => {
+  try {
+    const { userId } = data;
+
+    if (!userId) {
+      console.error("ID do usuário não fornecido para exclusão");
+      return { error: "ID do usuário é obrigatório para esta operação" };
+    }
+
+    // Excluir usuário do Supabase Auth
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    if (deleteError) {
+      console.error("Erro ao excluir usuário:", deleteError);
+      return { error: deleteError.message };
+    }
+
+    console.log("Usuário excluído com sucesso:", userId);
+    return { success: true, message: "Usuário excluído com sucesso" };
+
+  } catch (error) {
+    console.error("Erro ao excluir usuário:", error);
+    return { error: error.message };
+  }
+};
+
+// Função para alternar o status do usuário (ativar/inativar)
+export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
+  try {
+    const { userId, active } = data;
     
-    // Atualizar o status do usuário (banned = !active)
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+    if (!userId) {
+      console.error("ID do usuário não fornecido para alteração de status");
+      return { 
+        error: "ID do usuário é obrigatório para esta operação"
+      };
+    }
+
+    console.log(`Alterando status do usuário para ${active ? 'ativo' : 'inativo'}`);
+    
+    // Atualizando o usuário no Supabase Auth
+    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
       { banned: !active }
     );
     
     if (updateError) {
-      console.error(`Erro ao ${active ? 'ativar' : 'inativar'} usuário:`, updateError);
+      console.error("Erro ao atualizar status do usuário:", updateError);
       throw updateError;
     }
     
-    // Importante: confirmar que a alteração foi realizada
-    const { data: updatedUser, error: checkError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
-    if (checkError) {
-      console.error("Erro ao verificar atualização do usuário:", checkError);
-      throw checkError;
-    }
-    
-    // Verificar se o status foi realmente atualizado
-    if (updatedUser.user.banned === !active) {
-      console.log(`Usuário ${email} ${active ? 'ativado' : 'inativado'} com sucesso. banned=${updatedUser.user.banned}`);
-      return { success: true, active, banned: updatedUser.user.banned };
+    // Verificar se a atualização foi aplicada corretamente
+    if (updateData?.user) {
+      console.log("Status do usuário atualizado com sucesso:", 
+        active ? "Ativado" : "Inativado", 
+        "Banned:", updateData.user.banned);
+      
+      return { 
+        success: true, 
+        message: `Usuário ${active ? 'ativado' : 'inativado'} com sucesso`
+      };
     } else {
-      console.error(`Falha na atualização do status: esperado banned=${!active}, recebido banned=${updatedUser.user.banned}`);
       throw new Error("A atualização do status não foi aplicada corretamente");
     }
+    
   } catch (error) {
-    console.error(`Falha ao alterar status do usuário ${email}:`, error);
-    throw error;
+    console.error(`Falha ao alterar status do usuário: ${error.message}`);
+    return { 
+      error: error.message || "Erro ao processar alteração de status"
+    };
   }
-}
-
+};

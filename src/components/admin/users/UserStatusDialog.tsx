@@ -39,6 +39,7 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
 
     try {
       setIsProcessing(true);
+      console.log(`Iniciando alteração de status para usuário ${userId}, isActive=${isActive}`);
 
       // Chamar a edge function para alterar o status do usuário
       const { data, error } = await supabase.functions.invoke('list-users', {
@@ -46,15 +47,16 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         body: {
           action: 'toggleUserStatus',
           userId,
-          email: userEmail,
           active: !isActive
         }
       });
 
       if (error) {
-        console.error("Erro ao alterar status do usuário:", error);
-        throw new Error(error.message || "Erro ao processar a alteração de status");
+        console.error("Erro ao chamar a função list-users:", error);
+        throw error;
       }
+
+      console.log("Resposta recebida da Edge Function:", data);
 
       if (data.error) {
         console.error("Erro retornado pela função:", data.error);
@@ -66,9 +68,6 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         console.error("Resposta da função indica falha:", data);
         throw new Error("A operação não foi concluída com sucesso");
       }
-
-      // Log para depuração
-      console.log("Resposta da função toggleUserStatus:", data);
 
       // Mostrar mensagem de sucesso
       toast({
