@@ -34,52 +34,98 @@ function handleOptionsRequest() {
 async function createUser(supabaseAdmin, requestData) {
   const { email, name, role } = requestData;
   
-  // Gerar uma senha aleatória temporária
-  const tempPassword = Math.random().toString(36).slice(-8);
-  
-  // Criar um novo usuário
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password: tempPassword,
-    email_confirm: true,
-    user_metadata: {
-      name,
-      role,
-    }
-  });
-  
-  if (authError) {
-    throw authError;
-  }
-  
-  // Criar perfil para o novo usuário
-  const { error: profileError } = await supabaseAdmin
-    .from('profiles')
-    .insert({
-      id: authData.user.id,
-      email,
-      name,
-      role,
+  try {
+    console.log(`Iniciando criação do usuário: ${email}`);
+    
+    // Verificar se o usuário já existe
+    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers({
+      email: email
     });
-  
-  if (profileError) {
-    throw profileError;
-  }
-  
-  // Enviar email de redefinição de senha
-  const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'recovery',
-    email,
-    options: {
-      redirectTo: `https://titan.guilhermevasques.club/reset-password`,
+    
+    if (checkError) {
+      console.error("Erro ao verificar usuário existente:", checkError);
+      throw checkError;
     }
-  });
-  
-  if (resetError) {
-    throw resetError;
+    
+    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
+      console.log("Usuário já existe, pulando criação:", email);
+      return { success: true, message: "Usuário já existe", existed: true };
+    }
+    
+    // Gerar uma senha aleatória temporária
+    const tempPassword = Math.random().toString(36).slice(-8);
+    
+    // Criar um novo usuário
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: {
+        name,
+        role,
+      }
+    });
+    
+    if (authError) {
+      console.error("Erro ao criar usuário:", authError);
+      throw authError;
+    }
+    
+    console.log(`Usuário criado com sucesso: ${email}, ID: ${authData.user.id}`);
+    
+    try {
+      // Verificar se o perfil já existe
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+        
+      if (!existingProfile) {
+        // Criar perfil para o novo usuário apenas se não existir
+        const { error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email,
+            name,
+            role,
+          });
+        
+        if (profileError) {
+          console.error("Erro ao criar perfil, mas usuário foi criado:", profileError);
+          // Não falhar a operação se apenas o perfil falhar
+        } else {
+          console.log(`Perfil criado para usuário: ${email}`);
+        }
+      } else {
+        console.log(`Perfil já existe para usuário: ${email}, pulando criação`);
+      }
+    } catch (profileError) {
+      console.error("Erro ao verificar/criar perfil:", profileError);
+      // Não falhar a operação se apenas o perfil falhar
+    }
+    
+    // Enviar email de redefinição de senha
+    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: {
+        redirectTo: `https://titan.guilhermevasques.club/reset-password`,
+      }
+    });
+    
+    if (resetError) {
+      console.error("Erro ao gerar link de redefinição de senha:", resetError);
+      throw resetError;
+    }
+    
+    console.log(`Email de redefinição de senha enviado para: ${email}`);
+    return { success: true, message: "Usuário criado com sucesso e email de redefinição enviado" };
+  } catch (error) {
+    console.error(`Falha ao criar usuário ${email}:`, error);
+    throw error;
   }
-  
-  return { success: true, message: "Usuário criado com sucesso" };
 }
 
 // Função para lidar com requisições POST
@@ -135,18 +181,35 @@ async function handlePostRequest(req, supabaseAdmin) {
     
     if (requestData.action === 'createUser') {
       console.log("Criando novo usuário:", requestData.email);
-      const result = await createUser(supabaseAdmin, requestData);
-      console.log("Usuário criado com sucesso!");
-      return new Response(
-        JSON.stringify(result),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 200 
-        }
-      );
+      try {
+        const result = await createUser(supabaseAdmin, requestData);
+        console.log("Usuário processado com sucesso!");
+        return new Response(
+          JSON.stringify(result),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
+          }
+        );
+      } catch (error) {
+        console.error("Erro durante criação do usuário:", error);
+        return new Response(
+          JSON.stringify({ 
+            error: error.message || "Erro ao criar usuário",
+            details: error.details || error.code || "Sem detalhes adicionais" 
+          }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 500
+          }
+        );
+      }
     }
     
     return new Response(

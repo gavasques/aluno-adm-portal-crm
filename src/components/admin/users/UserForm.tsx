@@ -49,6 +49,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
+      console.log("Enviando dados:", data);
 
       // Chamar a edge function para criar um novo usuário
       const { data: response, error } = await supabase.functions.invoke('list-users', {
@@ -71,9 +72,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         throw new Error(response.error);
       }
       
+      let message = "Usuário adicionado com sucesso";
+      if (response.existed) {
+        message = `O usuário ${data.email} já existe no sistema`;
+      } else {
+        message = `Um email de definição de senha foi enviado para ${data.email}`;
+      }
+      
       toast({
-        title: "Usuário adicionado com sucesso",
-        description: `Um email de definição de senha foi enviado para ${data.email}.`,
+        title: "Usuário processado com sucesso",
+        description: message,
       });
       
       form.reset();
