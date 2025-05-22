@@ -1,4 +1,3 @@
-
 import { corsHeaders } from './utils.ts';
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
@@ -23,21 +22,19 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           .eq('id', user.id)
           .single();
         
-        // Log para debug - verificar status disabled de usuário específico
+        // Log para debug - verificar status banned de usuário específico
         console.log('getUser', { 
           id: user.id, 
           email: user.email, 
-          disabled: user.disabled
+          banned: user.banned
         });
         
-        // Determinar o status do usuário usando o atributo 'disabled' em vez de 'banned'
-        let status = "Inativo";
-        if (!user.disabled) {
-          if (user.user_metadata?.status === 'Convidado') {
-            status = "Convidado";
-          } else {
-            status = "Ativo";
-          }
+        // Determinar o status do usuário usando o atributo 'banned' em vez de 'disabled'
+        let status = "Ativo";
+        if (user.banned) {
+          status = "Inativo";
+        } else if (user.user_metadata?.status === 'Convidado') {
+          status = "Convidado";
         }
 
         return {
@@ -56,7 +53,7 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           name: user.user_metadata?.name || "Usuário sem nome",
           email: user.email,
           role: user.user_metadata?.role || "Student",
-          status: user.disabled ? "Inativo" : "Ativo",
+          status: user.banned ? "Inativo" : "Ativo",
           lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
           tasks: []
         };
