@@ -19,11 +19,27 @@ serve(async (req) => {
     const supabaseAdmin = createSupabaseAdminClient();
     
     // Processar requisições com base no método HTTP
-    if (req.method === 'POST') {
+    if (req.method === 'GET') {
+      console.log("Encaminhando para o handler GET");
+      return await handleGetRequest(supabaseAdmin);
+    } else if (req.method === 'POST') {
+      console.log("Encaminhando para o handler POST");
       return await handlePostRequest(req, supabaseAdmin);
     } else {
-      // Requisições GET (listar usuários)
-      return await handleGetRequest(supabaseAdmin);
+      // Método não suportado
+      console.error(`Método não suportado: ${req.method}`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Método não suportado: ${req.method}` 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 405 
+        }
+      );
     }
   } catch (error) {
     console.error("Erro ao processar requisição:", error);

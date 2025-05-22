@@ -24,9 +24,12 @@ export const useUsersList = () => {
       setIsLoading(true);
       setFetchError(null);
       
-      // Tentar obter usuários da função Edge Function
+      // Usar método GET para listar usuários
       try {
-        const { data, error } = await supabase.functions.invoke('list-users');
+        console.log("Buscando usuários via Edge Function com método GET");
+        const { data, error } = await supabase.functions.invoke('list-users', {
+          method: 'GET'
+        });
         
         if (error) {
           console.error("Erro ao chamar a função list-users:", error);
