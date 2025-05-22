@@ -2,9 +2,15 @@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define a proper return type for the createAdminUser function
+export interface CreateUserResult {
+  success: boolean;
+  existed: boolean;
+}
+
 export function useAdminOperations() {
   // Nova função para adicionar um usuário no painel de admin
-  const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<void> => {
+  const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<CreateUserResult> => {
     try {
       console.log("Criando novo usuário:", { email, name, role, password: password ? "Definida" : "Gerada automaticamente" });
 
@@ -35,7 +41,7 @@ export function useAdminOperations() {
         toast({
           title: "Usuário já existe",
           description: `O usuário ${email} já existe no sistema, mas pode não estar visível na lista atual.`,
-          variant: "warning", // Usando variante de aviso para diferenciar visualmente
+          variant: "default", // Usando "default" ao invés de "warning" que não é um tipo válido
         });
         
         return { success: false, existed: true };

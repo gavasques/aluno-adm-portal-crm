@@ -65,7 +65,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       
       // Só atualiza a lista e fecha o diálogo se realmente foi criado um novo usuário
       // Se o usuário já existia, mantém o diálogo aberto para que o usuário possa tentar outro email
-      if (!result?.existed) {
+      if (result && !result.existed) {
         setTimeout(() => onSuccess(), 500);
       }
     } catch (error) {

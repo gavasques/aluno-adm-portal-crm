@@ -36,7 +36,8 @@ export const useUsersList = () => {
         const timestamp = new Date().getTime();
         const { data, error } = await supabase.functions.invoke('list-users', {
           method: 'GET',
-          queryParams: { '_t': timestamp.toString() }
+          // Use headers instead of queryParams which isn't a valid property
+          headers: { 'Cache-Control': 'no-cache', 'X-Timestamp': timestamp.toString() }
         });
         
         if (error) {

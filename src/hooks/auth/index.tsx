@@ -6,6 +6,9 @@ import { useBasicAuth } from "./useBasicAuth";
 import { useSocialAuth } from "./useSocialAuth";
 import { recoveryModeUtils } from "./useRecoveryMode";
 
+// Import the CreateUserResult interface
+import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
+
 // URL base do site que será usado para redirecionamentos
 const BASE_URL = "https://titan.guilhermevasques.club";
 
@@ -25,7 +28,7 @@ interface AuthContextProps {
   getLinkedIdentities: () => Array<{id: string, provider: string}> | null;
   isInRecoveryMode?: () => boolean;
   setRecoveryMode?: (enabled: boolean) => void;
-  createAdminUser: (email: string, name: string, role: string, password: string) => Promise<void>;
+  createAdminUser: (email: string, name: string, role: string, password: string) => Promise<CreateUserResult>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -73,3 +76,6 @@ export const useAuth = () => {
 
 // Export recovery mode utilities directly
 export { recoveryModeUtils };
+
+// Re-export the CreateUserResult for other components to use
+export type { CreateUserResult };
