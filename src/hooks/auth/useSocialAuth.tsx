@@ -58,10 +58,23 @@ export function useSocialAuth(user: User | null) {
     }
   };
 
-  // Função para desvincular identidade
-  const unlinkIdentity = async (_provider: string, identity_id: string) => {
+  // Função para desvincular identidade - corrigida para usar o objeto UserIdentity completo
+  const unlinkIdentity = async (provider: string, identity_id: string) => {
     try {
-      const { error } = await supabase.auth.unlinkIdentity({ identity_id });
+      // Obtém todas as identidades do usuário
+      const identities = user?.identities || [];
+      
+      // Encontra a identidade específica a ser desvinculada
+      const identityToUnlink = identities.find(identity => 
+        identity.identity_id === identity_id && identity.provider === provider
+      );
+      
+      if (!identityToUnlink) {
+        throw new Error("Identidade não encontrada para desvinculação");
+      }
+      
+      // Usa o objeto de identidade completo que atende ao tipo UserIdentity
+      const { error } = await supabase.auth.unlinkIdentity(identityToUnlink);
       
       if (error) throw error;
       
