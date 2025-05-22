@@ -29,45 +29,5 @@ export function handleOptionsRequest() {
   });
 }
 
-// Função para mapear usuários combinando dados de auth e profiles
-export function mapUsers(authUsers: any, latestProfiles: any[]) {
-  // Mapear usuários combinando dados de auth e profiles
-  const mappedUsers = authUsers.users.map((authUser: any) => {
-    const profile = latestProfiles.find((p) => p.id === authUser.id);
-    
-    // Determinar o papel com base no email ou nos metadados
-    const isAdmin = authUser.email && (
-      authUser.email.includes('gavasques') || 
-      authUser.user_metadata?.role === 'Admin'
-    );
-    
-    // Importante: usar diretamente o valor banned do objeto authUser
-    const isActive = !authUser.banned;
-    
-    return {
-      id: authUser.id,
-      name: profile?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
-      email: authUser.email || '',
-      role: profile?.role || (isAdmin ? 'Admin' : 'Student'),
-      status: isActive ? 'Ativo' : 'Inativo',
-      lastLogin: authUser.last_sign_in_at 
-        ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          }) 
-        : 'Nunca',
-      tasks: []
-    };
-  });
-
-  // Ordenar usuários por email
-  mappedUsers.sort((a: any, b: any) => a.email.localeCompare(b.email));
-  
-  return mappedUsers;
-}
-
 // Importar dependências necessárias
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";

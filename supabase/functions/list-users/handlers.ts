@@ -1,11 +1,8 @@
 
-import { createSupabaseAdminClient } from './utils.ts';
-import { createUser, deleteUser, toggleUserStatus, inviteUser } from './userOperations.ts';
+import { corsHeaders } from './utils.ts';
 
-export const handleGetRequest = async (): Promise<Response> => {
+export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
   try {
-    const supabaseAdmin = await createSupabaseAdminClient();
-    
     // Buscar todos os usuários usando o client admin
     const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
     
@@ -15,7 +12,7 @@ export const handleGetRequest = async (): Promise<Response> => {
     }
 
     // Processar os usuários para o formato esperado
-    const processedUsers = await Promise.all(users.map(async (user) => {
+    const processedUsers = await Promise.all(users.map(async (user: any) => {
       try {
         // Buscar perfil associado para obter mais dados
         const { data: profileData } = await supabaseAdmin
@@ -62,8 +59,11 @@ export const handleGetRequest = async (): Promise<Response> => {
         users: processedUsers 
       }),
       { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 200 
       }
     );
   } catch (error) {
@@ -73,14 +73,17 @@ export const handleGetRequest = async (): Promise<Response> => {
         error: error.message || "Erro ao listar usuários" 
       }),
       { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 500 
       }
     );
   }
 };
 
-export const handlePostRequest = async (req: Request): Promise<Response> => {
+export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promise<Response> => {
   try {
     const requestData = await req.json();
     
@@ -88,7 +91,8 @@ export const handlePostRequest = async (req: Request): Promise<Response> => {
       throw new Error("Dados inválidos ou ação não especificada");
     }
     
-    const supabaseAdmin = await createSupabaseAdminClient();
+    // Importar funções de operação dinâmicamente
+    const { createUser, deleteUser, toggleUserStatus, inviteUser } = await import('./userOperations.ts');
     
     // Executar a ação correspondente
     switch (requestData.action) {
@@ -97,8 +101,11 @@ export const handlePostRequest = async (req: Request): Promise<Response> => {
         return new Response(
           JSON.stringify(createResult),
           { 
-            status: 200,
-            headers: { 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
           }
         );
       
@@ -107,8 +114,11 @@ export const handlePostRequest = async (req: Request): Promise<Response> => {
         return new Response(
           JSON.stringify(inviteResult),
           { 
-            status: 200,
-            headers: { 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
           }
         );
       
@@ -117,8 +127,11 @@ export const handlePostRequest = async (req: Request): Promise<Response> => {
         return new Response(
           JSON.stringify(deleteResult),
           { 
-            status: 200,
-            headers: { 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
           }
         );
       
@@ -127,8 +140,11 @@ export const handlePostRequest = async (req: Request): Promise<Response> => {
         return new Response(
           JSON.stringify(toggleResult),
           { 
-            status: 200,
-            headers: { 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 200 
           }
         );
       
@@ -142,8 +158,11 @@ export const handlePostRequest = async (req: Request): Promise<Response> => {
         error: error.message || "Erro ao processar a requisição" 
       }),
       { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 500 
       }
     );
   }
