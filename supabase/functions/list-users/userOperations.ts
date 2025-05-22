@@ -1,4 +1,3 @@
-
 // Operações específicas de usuários (criar, excluir, alterar status)
 
 import { createSupabaseAdminClient } from './utils.ts';
@@ -11,19 +10,24 @@ export async function createUser(supabaseAdmin: any, requestData: any) {
     console.log(`Iniciando criação do usuário: ${email}`);
     
     // Verificar se o usuário já existe
-    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers({
-      email: email
-    });
+    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (checkError) {
       console.error("Erro ao verificar usuário existente:", checkError);
       throw checkError;
     }
     
-    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
-      console.log("Usuário já existe, pulando criação:", email);
+    // Verificar se existe algum usuário com o email específico
+    const userWithSameEmail = existingUsers.users.find(user => 
+      user.email && user.email.toLowerCase() === email.toLowerCase()
+    );
+    
+    if (userWithSameEmail) {
+      console.log(`Usuário com email ${email} já existe, ID: ${userWithSameEmail.id}`);
       return { success: true, message: "Usuário já existe", existed: true };
     }
+    
+    console.log(`Nenhum usuário encontrado com email ${email}, prosseguindo com criação`);
     
     // Gerar uma senha aleatória temporária
     const tempPassword = Math.random().toString(36).slice(-8);
