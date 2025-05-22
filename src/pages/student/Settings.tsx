@@ -1,18 +1,22 @@
 
+import { useState } from "react";
 import { LinkedIdentities } from "@/components/user/LinkedIdentities";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const { user, updateUserPassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [name, setName] = useState(user?.user_metadata?.name || "");
+  const [phone, setPhone] = useState(user?.user_metadata?.phone || "");
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +50,35 @@ const Settings = () => {
     }
   };
 
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsUpdatingProfile(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name,
+          phone
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar seu perfil.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-8">
       <h1 className="text-3xl font-bold mb-6">Configurações</h1>
@@ -60,24 +93,42 @@ const Settings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome</Label>
-              <Input 
-                id="name" 
-                value={user?.user_metadata?.name || ''} 
-                disabled 
-                className="bg-slate-100"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                value={user?.email || ''} 
-                disabled 
-                className="bg-slate-100"
-              />
-            </div>
+            <form onSubmit={handleProfileUpdate} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input 
+                  id="name" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Seu nome"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input 
+                  id="phone" 
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Seu telefone"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  value={user?.email || ''} 
+                  disabled 
+                  className="bg-slate-100"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={isUpdatingProfile} 
+                className="w-full"
+              >
+                {isUpdatingProfile ? "Atualizando..." : "Atualizar perfil"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
 
