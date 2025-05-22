@@ -1,4 +1,3 @@
-
 import { corsHeaders } from './utils.ts';
 
 // Função para criar um novo usuário
@@ -133,26 +132,22 @@ export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
 
     console.log(`Alterando status do usuário para ${active ? 'ativo' : 'inativo'}`);
     
-    // Usar banUser ou unbanUser com base no status desejado
-    let result;
-    if (active) {
-      // Se active=true, queremos ativar o usuário (unban)
-      console.log(`Ativando usuário (unban): ${userId}`);
-      result = await supabaseAdmin.auth.admin.unbanUser(userId);
-    } else {
-      // Se active=false, queremos inativar o usuário (ban)
-      console.log(`Inativando usuário (ban): ${userId}`);
-      result = await supabaseAdmin.auth.admin.banUser(userId);
-    }
+    // Usar updateUserById com o parâmetro ban_duration conforme a versão 2.49.8 do Supabase
+    const banDuration = active ? 'none' : '87600h'; // 'none' para ativar, '87600h' para inativar (10 anos)
     
-    const { data: updateData, error: updateError } = result;
+    console.log(`Utilizando updateUserById com ban_duration: ${banDuration} para o usuário ${userId}`);
+    
+    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      userId,
+      { ban_duration: banDuration }
+    );
     
     // Log detalhado do resultado da operação para debug
     console.log('toggleUserStatus-result', { 
       updateData, 
       updateError,
       userId,
-      actionTaken: active ? 'unban' : 'ban'
+      actionTaken: active ? 'ativar (ban_duration: none)' : 'inativar (ban_duration: 87600h)'
     });
     
     if (updateError) {
