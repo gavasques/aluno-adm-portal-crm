@@ -32,78 +32,93 @@ serve(async (req) => {
     
     // Lidar com requisições POST (criar usuário)
     if (req.method === 'POST') {
-      const requestData = await req.json();
-      
-      if (requestData.action === 'createUser') {
-        const { email, name, role } = requestData;
+      try {
+        // Parse JSON com tratamento de erro explícito
+        const requestData = await req.json();
         
-        // Gerar uma senha aleatória temporária
-        const tempPassword = Math.random().toString(36).slice(-8);
-        
-        // Criar um novo usuário
-        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          password: tempPassword,
-          email_confirm: true,
-          user_metadata: {
-            name,
-            role,
-          }
-        });
-        
-        if (authError) {
-          throw authError;
-        }
-        
-        // Criar perfil para o novo usuário
-        const { error: profileError } = await supabaseAdmin
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
+        if (requestData.action === 'createUser') {
+          const { email, name, role } = requestData;
+          
+          // Gerar uma senha aleatória temporária
+          const tempPassword = Math.random().toString(36).slice(-8);
+          
+          // Criar um novo usuário
+          const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email,
-            name,
-            role,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+              name,
+              role,
+            }
           });
-        
-        if (profileError) {
-          throw profileError;
-        }
-        
-        // Enviar email de redefinição de senha
-        const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'recovery',
-          email,
-          options: {
-            redirectTo: `${new URL(req.url).origin}/reset-password`,
+          
+          if (authError) {
+            throw authError;
           }
-        });
-        
-        if (resetError) {
-          throw resetError;
+          
+          // Criar perfil para o novo usuário
+          const { error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              email,
+              name,
+              role,
+            });
+          
+          if (profileError) {
+            throw profileError;
+          }
+          
+          // Enviar email de redefinição de senha
+          const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery',
+            email,
+            options: {
+              redirectTo: `${new URL(req.url).origin}/reset-password`,
+            }
+          });
+          
+          if (resetError) {
+            throw resetError;
+          }
+          
+          return new Response(
+            JSON.stringify({ success: true, message: "Usuário criado com sucesso" }),
+            { 
+              headers: { 
+                ...corsHeaders,
+                'Content-Type': 'application/json' 
+              },
+              status: 200 
+            },
+          );
         }
         
         return new Response(
-          JSON.stringify({ success: true, message: "Usuário criado com sucesso" }),
+          JSON.stringify({ error: "Ação não reconhecida" }),
           { 
             headers: { 
               ...corsHeaders,
               'Content-Type': 'application/json' 
             },
-            status: 200 
+            status: 400
+          },
+        );
+      } catch (parseError) {
+        console.error("Erro ao processar JSON:", parseError);
+        return new Response(
+          JSON.stringify({ error: "Formato de dados inválido" }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 400
           },
         );
       }
-      
-      return new Response(
-        JSON.stringify({ error: "Ação não reconhecida" }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 400
-        },
-      );
     }
     
     // Lidar com requisições GET (listar usuários)
