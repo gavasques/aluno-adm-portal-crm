@@ -1,3 +1,4 @@
+
 // Operações específicas de usuários (criar, excluir, alterar status)
 
 import { createSupabaseAdminClient } from './utils.ts';
@@ -84,7 +85,7 @@ export async function createUser(supabaseAdmin: any, requestData: any) {
     }
     
     // Enviar email de redefinição de senha
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: {
@@ -98,7 +99,13 @@ export async function createUser(supabaseAdmin: any, requestData: any) {
     }
     
     console.log(`Email de redefinição de senha enviado para: ${email}`);
-    return { success: true, message: "Usuário criado com sucesso e email de redefinição enviado" };
+    console.log("Link de redefinição gerado com sucesso:", resetData?.properties?.action_link || "Link não disponível");
+    
+    return { 
+      success: true, 
+      message: "Usuário criado com sucesso e email de redefinição enviado",
+      recovery_link: resetData?.properties?.action_link
+    };
   } catch (error) {
     console.error(`Falha ao criar usuário ${email}:`, error);
     throw error;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +15,7 @@ interface AuthContextProps {
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updateUserPassword: (password: string) => Promise<void>;
+  updateUserPassword: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -189,29 +188,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Função para atualizar senha
-  const updateUserPassword = async (password: string) => {
+  // Função para atualizar a senha do usuário
+  const updateUserPassword = async (newPassword: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
-        password,
+        password: newPassword,
       });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Senha atualizada com sucesso",
-        description: "Sua nova senha foi definida.",
-        variant: "default",
-      });
-      
-      navigate("/");
-    } catch (error: any) {
+
+      if (error) {
+        throw error;
+      }
+
+      // Após atualizar a senha com sucesso, podemos atualizar o estado local se necessário
+      console.log("Senha atualizada com sucesso");
+      return true;
+    } catch (error) {
       console.error("Erro ao atualizar senha:", error);
-      toast({
-        title: "Erro ao atualizar senha",
-        description: error.message,
-        variant: "destructive",
-      });
       throw error;
     }
   };

@@ -1,44 +1,59 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
 import { GridBackground } from "@/components/ui/grid-background";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { token } = useParams();
   const { updateUserPassword } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Pega o token da URL se estiver usando search params
+  const tokenFromParams = searchParams.get('token');
 
   useEffect(() => {
-    // O token é tratado automaticamente pelo Supabase quando chega nesta página
-    console.log("Token de recuperação recebido:", token);
-  }, [token]);
+    // Log de informações para diagnóstico
+    console.log("Token de recuperação detectado:", tokenFromParams || "Não encontrado em query params");
+    console.log("URL atual:", window.location.href);
+  }, [tokenFromParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     
     // Validação de senha
     if (password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres");
+      setLoading(false);
       return;
     }
     
     if (password !== confirmPassword) {
       setError("As senhas não coincidem");
+      setLoading(false);
       return;
     }
     
     try {
       await updateUserPassword(password);
       setSuccess(true);
+      
+      toast({
+        title: "Senha atualizada com sucesso",
+        description: "Você será redirecionado para a página de login",
+        variant: "success",
+      });
       
       // Redirecionar após 2 segundos
       setTimeout(() => {
@@ -47,6 +62,14 @@ const ResetPassword = () => {
     } catch (error: any) {
       console.error("Erro ao redefinir senha:", error);
       setError(error.message || "Ocorreu um erro ao redefinir a senha. Tente novamente.");
+      
+      toast({
+        title: "Erro ao atualizar senha",
+        description: error.message || "Ocorreu um erro ao atualizar sua senha. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,6 +99,7 @@ const ResetPassword = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="relative">
@@ -87,6 +111,7 @@ const ResetPassword = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -98,8 +123,9 @@ const ResetPassword = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={loading}
               >
-                Redefinir Senha
+                {loading ? "Processando..." : "Redefinir Senha"}
               </Button>
             </form>
           ) : (
