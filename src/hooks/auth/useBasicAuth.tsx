@@ -2,6 +2,7 @@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
 
 // URL base do site que será usado para redirecionamentos
 const BASE_URL = "https://titan.guilhermevasques.club";
@@ -182,7 +183,7 @@ export function useBasicAuth() {
   };
 
   // Nova função para adicionar um usuário no painel de admin
-  const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<void> => {
+  const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<CreateUserResult> => {
     try {
       console.log("Criando novo usuário:", { email, name, role, password: password ? "Definida" : "Gerada automaticamente" });
 
@@ -208,19 +209,23 @@ export function useBasicAuth() {
         throw new Error(response.error);
       }
       
-      let message = "Usuário adicionado com sucesso";
+      // Verificar se o usuário já existe e tratar adequadamente
       if (response && response.existed) {
-        message = `O usuário ${email} já existe no sistema`;
+        toast({
+          title: "Usuário já existe",
+          description: `O usuário ${email} já existe no sistema, mas pode não estar visível na lista atual.`,
+          variant: "default",
+        });
+        
+        return { success: false, existed: true };
       } else {
-        message = `Usuário ${email} adicionado com sucesso`;
+        toast({
+          title: "Usuário adicionado com sucesso",
+          description: `Usuário ${email} foi criado e adicionado ao sistema.`,
+        });
+        
+        return { success: true, existed: false };
       }
-      
-      toast({
-        title: "Usuário processado com sucesso",
-        description: message,
-      });
-      
-      return;
     } catch (error: any) {
       console.error("Erro ao criar usuário via admin:", error);
       toast({
