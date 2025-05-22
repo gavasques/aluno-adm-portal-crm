@@ -133,18 +133,26 @@ export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
 
     console.log(`Alterando status do usuário para ${active ? 'ativo' : 'inativo'}`);
     
-    // Usar updateUserById com o parâmetro banned em vez de usar funções inexistentes
-    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
-      { banned: !active }
-    );
+    // Usar banUser ou unbanUser com base no status desejado
+    let result;
+    if (active) {
+      // Se active=true, queremos ativar o usuário (unban)
+      console.log(`Ativando usuário (unban): ${userId}`);
+      result = await supabaseAdmin.auth.admin.unbanUser(userId);
+    } else {
+      // Se active=false, queremos inativar o usuário (ban)
+      console.log(`Inativando usuário (ban): ${userId}`);
+      result = await supabaseAdmin.auth.admin.banUser(userId);
+    }
+    
+    const { data: updateData, error: updateError } = result;
     
     // Log detalhado do resultado da operação para debug
     console.log('toggleUserStatus-result', { 
       updateData, 
       updateError,
-      banned: updateData?.user?.banned,
-      userId
+      userId,
+      actionTaken: active ? 'unban' : 'ban'
     });
     
     if (updateError) {
@@ -155,10 +163,9 @@ export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
     }
     
     // Verificar se a atualização foi aplicada corretamente
-    if (updateData?.user) {
-      console.log("Status do usuário atualizado com sucesso:", 
-        active ? "Ativado" : "Inativado", 
-        "Banned:", updateData.user.banned);
+    if (updateData) {
+      const statusMessage = active ? "Ativado" : "Inativado";
+      console.log(`Status do usuário atualizado com sucesso: ${statusMessage}`);
       
       return { 
         success: true, 
