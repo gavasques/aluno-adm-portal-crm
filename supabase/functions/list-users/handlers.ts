@@ -1,3 +1,4 @@
+
 import { corsHeaders } from './utils.ts';
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
@@ -29,7 +30,7 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           banned: user.banned
         });
         
-        // Determinar o status do usuário usando o atributo 'banned' em vez de 'disabled'
+        // Determinar o status do usuário usando o atributo 'banned'
         let status = "Ativo";
         if (user.banned) {
           status = "Inativo";
