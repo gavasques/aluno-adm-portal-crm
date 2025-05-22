@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -265,9 +266,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função para desvincular identidade
   const unlinkIdentity = async (provider: Provider, id: string) => {
     try {
-      // Fix: Convert the parameters to the UserIdentity format expected by Supabase
+      // The Supabase Auth API expects an object with 'id' property
+      // instead of 'identity_id' for the unlinkIdentity method
       const { error } = await supabase.auth.unlinkIdentity({
-        identity_id: id,
+        id,
         user_id: user?.id || '',
         provider,
       });
