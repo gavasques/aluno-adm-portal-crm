@@ -23,6 +23,13 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
           .eq('id', user.id)
           .single();
         
+        // Log para debug - verificar status disabled de usuário específico
+        console.log('getUser', { 
+          id: user.id, 
+          email: user.email, 
+          disabled: user.disabled
+        });
+        
         // Determinar o status do usuário usando o atributo 'disabled' em vez de 'banned'
         let status = "Inativo";
         if (!user.disabled) {

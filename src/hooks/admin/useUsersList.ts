@@ -36,6 +36,9 @@ export const useUsersList = () => {
           throw error;
         }
         
+        // Log para debug - verificar payload completo recebido do backend
+        console.log("users payload", data);
+        
         if (data && data.users) {
           console.log("Dados recebidos:", data.users.length, "usuários");
           setUsers(data.users);

@@ -139,6 +139,14 @@ export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
       { disabled: !active }
     );
     
+    // Log detalhado do resultado da operação para debug
+    console.log('toggleUserStatus-result', { 
+      updateData, 
+      updateError,
+      disabled: updateData?.user?.disabled,
+      userId
+    });
+    
     if (updateError) {
       console.error("Erro ao atualizar status do usuário:", updateError);
       return {
