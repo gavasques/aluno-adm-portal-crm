@@ -1,7 +1,7 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/auth";  // Importação corrigida
 import Layout from "@/layout/Layout";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";

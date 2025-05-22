@@ -1,6 +1,3 @@
 
-// Este arquivo serve apenas para compatibilidade com o código existente
-// Agora o código está organizado em src/hooks/auth/index.tsx
-
-import { AuthProvider, useAuth } from "./auth";
-export { AuthProvider, useAuth };
+// Este arquivo serve apenas como um proxy para o hook useAuth em src/hooks/auth/index.tsx
+export { AuthProvider, useAuth, recoveryModeUtils } from "./auth";

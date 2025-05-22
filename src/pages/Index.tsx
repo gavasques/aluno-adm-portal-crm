@@ -1,6 +1,6 @@
 
 import { AuthTabs } from "@/components/ui/auth-tabs";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/auth";  // Importação corrigida
 import { Navigate } from "react-router-dom";
 
 // Nome da chave no localStorage para controle de estado de recuperação de senha
