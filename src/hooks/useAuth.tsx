@@ -18,7 +18,7 @@ interface AuthContextProps {
   updateUserPassword: (newPassword: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   linkIdentity: (provider: Provider) => Promise<void>;
-  unlinkIdentity: (provider: Provider, id: string) => Promise<void>;
+  unlinkIdentity: (provider: Provider, identity_id: string) => Promise<void>;
   getLinkedIdentities: () => Array<{id: string, provider: string}> | null;
 }
 
@@ -263,23 +263,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Função para desvincular identidade
-  const unlinkIdentity = async (provider: Provider, id: string) => {
+  const unlinkIdentity = async (_provider: Provider, identity_id: string) => {
     try {
-      const { error } = await supabase.auth.unlinkIdentity({
-        identity_id: id,
-        user_id: user?.id || '',
-        provider,
-      });
+      const { error } = await supabase.auth.unlinkIdentity({ identity_id });
       
       if (error) throw error;
       
       toast({
         title: "Conta desvinculada com sucesso",
-        description: `Sua conta foi desvinculada do provedor ${provider}.`,
+        description: `Conta desvinculada.`,
         variant: "default",
       });
     } catch (error: any) {
-      console.error(`Erro ao desvincular conta com ${provider}:`, error);
+      console.error(`Erro ao desvincular identidade:`, error);
       toast({
         title: "Erro ao desvincular conta",
         description: error.message || "Ocorreu um erro ao tentar desvincular sua conta.",
@@ -292,7 +288,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função para obter identidades vinculadas
   const getLinkedIdentities = () => {
     if (!user) return null;
-    return user.identities;
+    return user.identities?.map(({ identity_id, provider }) => ({
+      id: identity_id,
+      provider
+    })) ?? [];
   };
 
   return (
