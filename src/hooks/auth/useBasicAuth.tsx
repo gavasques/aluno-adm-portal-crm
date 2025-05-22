@@ -79,6 +79,10 @@ export function useBasicAuth() {
         variant: "default",
       });
       
+      // Limpar qualquer modo de recuperação ao fazer logout
+      localStorage.removeItem("supabase_recovery_mode");
+      localStorage.removeItem("supabase_recovery_expiry");
+      
       navigate("/");
     } catch (error: any) {
       console.error("Erro ao fazer logout:", error);
@@ -94,8 +98,9 @@ export function useBasicAuth() {
   const resetPassword = async (email: string) => {
     try {
       // Certifica-se de redirecionar especificamente para a página de reset de senha
+      // com um parâmetro que pode ser verificado
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${BASE_URL}/reset-password`,
+        redirectTo: `${BASE_URL}/reset-password?reset_token=true`,
       });
       
       if (error) throw error;

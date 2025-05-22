@@ -3,14 +3,30 @@ import { AuthTabs } from "@/components/ui/auth-tabs";
 import { useAuth } from "@/hooks/auth";
 import { Navigate } from "react-router-dom";
 
+// Nome da chave no localStorage para controle de estado de recuperação de senha
+const RECOVERY_MODE_KEY = "supabase_recovery_mode";
+
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isInRecoveryMode } = useAuth();
 
   // Se estiver carregando, mostra um indicador de carregamento
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Se estiver em modo de recuperação, mostrar as abas de autenticação
+  // Para evitar login automático durante o processo de recuperação
+  if (isInRecoveryMode && isInRecoveryMode()) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <AuthTabs />
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-amber-100 text-amber-800 p-2 rounded shadow-md text-sm">
+          Há um processo de recuperação de senha em andamento. Complete-o na outra aba.
+        </div>
       </div>
     );
   }

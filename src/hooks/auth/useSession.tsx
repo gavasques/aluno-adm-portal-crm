@@ -53,16 +53,25 @@ export function useSession() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth event:", event, "Path:", location.pathname);
+        console.log("User audience:", currentSession?.user?.aud);
+        console.log("User metadata:", currentSession?.user?.user_metadata);
         
-        // Detectar eventos de recuperação de senha em qualquer página
+        // Detectar eventos de recuperação de senha
         if (event === "PASSWORD_RECOVERY" || 
-            (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery")) {
+            (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery") ||
+            (location.pathname === "/reset-password" && currentSession) || 
+            (window.location.href.includes("type=recovery")) ||
+            (window.location.href.includes("access_token="))) {
           console.log("Evento de recuperação de senha detectado");
           setRecoveryMode(true);
+          // Apenas armazenar a sessão para poder redefinir a senha
+          setSession(currentSession);
+          setLoading(false);
+          return;
         }
         
-        // Se estiver em modo de recuperação ou na página de reset, apenas
-        // armazenar a sessão para poder redefinir a senha, mas não considerar o usuário logado
+        // Se estiver em modo de recuperação, não fazer login automático
+        // apenas armazenar a sessão para poder redefinir a senha
         if (isResetPasswordPage || isInRecoveryMode()) {
           console.log("Em modo de recuperação ou na página de reset - não fazendo login automático");
           setSession(currentSession);
@@ -77,7 +86,7 @@ export function useSession() {
 
         if (event === "SIGNED_OUT") {
           navigate("/");
-        } else if (event === "SIGNED_IN" && window.location.pathname === "/" && !isResetPasswordPage) {
+        } else if (event === "SIGNED_IN" && window.location.pathname === "/" && !isResetPasswordPage && !isInRecoveryMode()) {
           // Verificar o papel do usuário (admin ou aluno)
           setTimeout(async () => {
             try {
@@ -111,16 +120,38 @@ export function useSession() {
     const checkSession = async () => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      // Se estamos na página de reset de senha ou em modo de recuperação, 
-      // não autenticamos o usuário automaticamente
-      if (isResetPasswordPage || isInRecoveryMode()) {
+      // Log de informações para diagnóstico
+      console.log("Verificando sessão existente", currentSession);
+      console.log("Usuário da sessão:", currentSession?.user);
+      console.log("Audience:", currentSession?.user?.aud);
+      console.log("Localização:", location.pathname);
+      console.log("URL completa:", window.location.href);
+      console.log("isInRecoveryMode:", isInRecoveryMode());
+      
+      // Se o usuário está em um processo de recuperação de senha
+      // ou estamos na página de reset ou em modo de recuperação
+      if (currentSession?.user?.aud === "recovery" || 
+          isResetPasswordPage || 
+          isInRecoveryMode() ||
+          window.location.href.includes("type=recovery") || 
+          window.location.href.includes("access_token=")) {
+        
+        console.log("Em fluxo de recuperação de senha - armazenando sessão mas não autenticando");
+        
+        // Se detectamos um fluxo de recuperação, ativar modo de recuperação global
+        if (currentSession?.user?.aud === "recovery" || 
+            window.location.href.includes("type=recovery") || 
+            window.location.href.includes("access_token=")) {
+          setRecoveryMode(true);
+        }
+        
         // Apenas armazenamos a sessão para poder redefinir a senha
-        console.log("Verificação de sessão - em modo de recuperação ou na página de reset");
         setSession(currentSession);
         setLoading(false);
         return;
       }
 
+      // Comportamento normal quando não está em recuperação de senha
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);

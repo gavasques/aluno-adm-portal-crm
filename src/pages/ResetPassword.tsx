@@ -26,35 +26,56 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
 
   // Pega o token da URL se estiver usando search params
-  const tokenFromParams = searchParams.get('token') || searchParams.get('access_token');
+  const tokenFromParams = searchParams.get('token') || searchParams.get('access_token') || window.location.hash;
   const typeFromParams = searchParams.get('type');
   
   // Verificar se estamos em um fluxo de recuperação de senha
-  const isRecoveryFlow = typeFromParams === 'recovery' || !!tokenFromParams;
+  // Vamos verificar também se há um "#access_token" no hash da URL (formato alternativo do Supabase)
+  const isRecoveryFlow = typeFromParams === 'recovery' || 
+                          !!tokenFromParams || 
+                          window.location.hash.includes('type=recovery') ||
+                          window.location.hash.includes('access_token=');
 
   useEffect(() => {
     // Verificar se o token é válido
     const validateToken = async () => {
       setValidatingToken(true);
+      console.log("Validando token de recuperação...");
+      console.log("Token da URL:", tokenFromParams);
+      console.log("Tipo:", typeFromParams);
+      console.log("Hash completo:", window.location.hash);
+      console.log("É fluxo de recuperação:", isRecoveryFlow);
       
       try {
-        // Se não temos um token de recuperação, não podemos prosseguir
-        if (!isRecoveryFlow) {
+        // Se não temos um token de recuperação visível, ainda precisamos verificar a sessão
+        if (!isRecoveryFlow && !session) {
+          console.log("Nenhum token de recuperação detectado e sem sessão ativa");
           setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
           setTokenValid(false);
           return;
         }
 
-        // Definir modo de recuperação para todas as abas
-        if (setRecoveryMode) {
-          setRecoveryMode(true);
-        } else {
-          // Fallback caso o hook não tenha sido estendido
-          localStorage.setItem(RECOVERY_MODE_KEY, "true");
-          localStorage.setItem(RECOVERY_EXPIRY_KEY, String(Date.now() + 30 * 60 * 1000)); // 30 minutos
-        }
+        // Verificar se o usuário tem uma sessão válida para recuperação
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        setTokenValid(true);
+        if (currentSession?.user?.aud === "recovery" || isRecoveryFlow) {
+          console.log("Sessão de recuperação válida detectada");
+          
+          // Definir modo de recuperação para todas as abas
+          if (setRecoveryMode) {
+            setRecoveryMode(true);
+          } else {
+            // Fallback caso o hook não tenha sido estendido
+            localStorage.setItem(RECOVERY_MODE_KEY, "true");
+            localStorage.setItem(RECOVERY_EXPIRY_KEY, String(Date.now() + 30 * 60 * 1000)); // 30 minutos
+          }
+          
+          setTokenValid(true);
+        } else {
+          console.log("Sessão não é de recuperação:", currentSession?.user?.aud);
+          setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
+          setTokenValid(false);
+        }
       } catch (error) {
         console.error("Erro ao validar token:", error);
         setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
@@ -65,12 +86,7 @@ const ResetPassword = () => {
     };
     
     validateToken();
-    
-    // Log de informações para diagnóstico
-    console.log("Token de recuperação detectado:", tokenFromParams || "Não encontrado em query params");
-    console.log("Tipo de ação:", typeFromParams);
-    console.log("URL atual:", window.location.href);
-  }, [tokenFromParams, typeFromParams, isRecoveryFlow, setRecoveryMode]);
+  }, [tokenFromParams, typeFromParams, isRecoveryFlow, setRecoveryMode, session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,6 +182,9 @@ const ResetPassword = () => {
           <div className="w-full max-w-md mx-auto p-8 space-y-6 text-center">
             <h2 className="text-2xl font-semibold text-white">Link inválido ou expirado</h2>
             <p className="text-red-400">{error}</p>
+            <p className="text-white mt-2">
+              Solicite um novo link de recuperação de senha.
+            </p>
             <Button 
               onClick={() => navigate("/")}
               className="bg-blue-600 hover:bg-blue-700 text-white"
