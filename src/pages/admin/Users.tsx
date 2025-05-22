@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, Loader2 } from "lucide-react";
 import UsersList from "@/components/admin/users/UsersList";
 import UserAddDialog from "@/components/admin/users/UserAddDialog";
+import UserInviteDialog from "@/components/admin/users/UserInviteDialog";
 import ResetPasswordDialog from "@/components/admin/users/ResetPasswordDialog";
 import UserDeleteDialog from "@/components/admin/users/UserDeleteDialog";
 import UserStatusDialog from "@/components/admin/users/UserStatusDialog";
@@ -30,6 +31,7 @@ const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
@@ -107,6 +109,11 @@ const Users = () => {
     setShowAddDialog(true);
   };
 
+  // Função para abrir o diálogo de convidar usuário
+  const handleInviteUser = () => {
+    setShowInviteDialog(true);
+  };
+
   // Função para abrir o diálogo de excluir usuário
   const handleDeleteUser = (userId: string, email: string) => {
     setSelectedUserId(userId);
@@ -144,6 +151,7 @@ const Users = () => {
             onSearchChange={setSearchQuery}
             onResetPassword={handleResetPassword}
             onAddUser={handleAddUser}
+            onInviteUser={handleInviteUser}
             onDeleteUser={handleDeleteUser}
             onToggleUserStatus={handleToggleUserStatus}
           />
@@ -154,6 +162,12 @@ const Users = () => {
       <UserAddDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+        onSuccess={refreshUsersList}
+      />
+
+      <UserInviteDialog
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
         onSuccess={refreshUsersList}
       />
 

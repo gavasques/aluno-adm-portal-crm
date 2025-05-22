@@ -112,6 +112,103 @@ export async function createUser(supabaseAdmin: any, requestData: any) {
   }
 }
 
+// Função para convidar um novo usuário
+export async function inviteUser(supabaseAdmin: any, requestData: any) {
+  const { email, name, role } = requestData;
+  
+  try {
+    console.log(`Iniciando convite para o usuário: ${email}`);
+    
+    // Verificar se o usuário já existe
+    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (checkError) {
+      console.error("Erro ao verificar usuário existente:", checkError);
+      throw checkError;
+    }
+    
+    // Verificar se existe algum usuário com o email específico
+    const userWithSameEmail = existingUsers.users.find(user => 
+      user.email && user.email.toLowerCase() === email.toLowerCase()
+    );
+    
+    if (userWithSameEmail) {
+      console.log(`Usuário com email ${email} já existe, ID: ${userWithSameEmail.id}`);
+      return { success: true, message: "Usuário já existe", existed: true };
+    }
+    
+    console.log(`Nenhum usuário encontrado com email ${email}, prosseguindo com convite`);
+    
+    // Criar um novo usuário com status de convidado
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      email_confirm: false, // O usuário precisará confirmar o email
+      user_metadata: {
+        name,
+        role,
+        status: 'Convidado' // Status de convidado
+      }
+    });
+    
+    if (authError) {
+      console.error("Erro ao criar usuário convidado:", authError);
+      throw authError;
+    }
+    
+    console.log(`Usuário convidado criado com sucesso: ${email}, ID: ${authData.user.id}`);
+    
+    try {
+      // Criar perfil para o novo usuário convidado
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email,
+          name,
+          role,
+          status: 'Convidado' // Status de convidado no perfil
+        });
+      
+      if (profileError) {
+        console.error("Erro ao criar perfil para usuário convidado:", profileError);
+        // Não falhar a operação se apenas o perfil falhar
+      } else {
+        console.log(`Perfil criado para usuário convidado: ${email}`);
+      }
+    } catch (profileError) {
+      console.error("Erro ao criar perfil para usuário convidado:", profileError);
+      // Não falhar a operação se apenas o perfil falhar
+    }
+    
+    // Gerar link de convite (signup)
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      options: {
+        redirectTo: `https://titan.guilhermevasques.club/accept-invite`,
+      }
+    });
+    
+    if (inviteError) {
+      console.error("Erro ao gerar link de convite:", inviteError);
+      throw inviteError;
+    }
+    
+    console.log(`Email de convite enviado para: ${email}`);
+    console.log("Link de convite gerado com sucesso:", inviteData?.properties?.action_link || "Link não disponível");
+    
+    return { 
+      success: true, 
+      message: "Convite enviado com sucesso",
+      invite_link: inviteData?.properties?.action_link,
+      user_id: authData.user.id
+    };
+  } catch (error) {
+    console.error(`Falha ao convidar usuário ${email}:`, error);
+    throw error;
+  }
+}
+
 // Função para verificar se o usuário tem dependências
 export async function checkUserDependencies(supabaseAdmin: any, userId: string) {
   try {
@@ -257,3 +354,4 @@ export async function toggleUserStatus(supabaseAdmin: any, requestData: any) {
     throw error;
   }
 }
+

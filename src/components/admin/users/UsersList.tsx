@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, MoreHorizontal, Search, KeyRound, Info, UserPlus, Trash2, UserX, UserCheck } from "lucide-react";
+import { Loader2, MoreHorizontal, Search, KeyRound, Info, UserPlus, Trash2, UserX, UserCheck, Mail } from "lucide-react";
 import UserDetailsDialog from "./UserDetailsDialog";
 
 interface User {
@@ -39,6 +39,7 @@ interface UsersListProps {
   onSearchChange: (query: string) => void;
   onResetPassword: (email: string) => void;
   onAddUser: () => void;
+  onInviteUser: () => void;
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
 }
@@ -50,6 +51,7 @@ const UsersList: React.FC<UsersListProps> = ({
   onSearchChange,
   onResetPassword,
   onAddUser,
+  onInviteUser,
   onDeleteUser,
   onToggleUserStatus,
 }) => {
@@ -67,9 +69,21 @@ const UsersList: React.FC<UsersListProps> = ({
     setShowDetailsDialog(true);
   };
 
+  // Função para determinar a cor da badge de status
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Ativo':
+        return "bg-green-500";
+      case 'Convidado':
+        return "bg-yellow-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <Input
@@ -79,9 +93,14 @@ const UsersList: React.FC<UsersListProps> = ({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        <Button onClick={onAddUser} className="ml-4">
-          <UserPlus className="mr-2 h-4 w-4" /> Adicionar Usuário
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={onInviteUser} variant="outline" className="gap-2">
+            <Mail className="h-4 w-4" /> Convidar Usuário
+          </Button>
+          <Button onClick={onAddUser} className="gap-2">
+            <UserPlus className="h-4 w-4" /> Adicionar Usuário
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border">
@@ -125,12 +144,8 @@ const UsersList: React.FC<UsersListProps> = ({
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={user.status === "Ativo" ? "default" : "outline"}
-                      className={
-                        user.status === "Ativo"
-                          ? "bg-green-500"
-                          : "bg-gray-500"
-                      }
+                      variant="default"
+                      className={getStatusBadgeClass(user.status)}
                     >
                       {user.status}
                     </Badge>
