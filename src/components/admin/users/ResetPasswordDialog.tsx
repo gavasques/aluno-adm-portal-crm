@@ -31,7 +31,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
       setIsSubmitting(true);
       
       const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://titan.guilhermevasques.club/reset-password`,
       });
       
       if (error) throw error;

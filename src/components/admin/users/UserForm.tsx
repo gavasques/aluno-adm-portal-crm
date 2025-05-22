@@ -61,9 +61,13 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro na chamada da função:", error);
+        throw new Error(error.message || "Erro ao adicionar usuário");
+      }
       
-      if (response.error) {
+      if (response && response.error) {
+        console.error("Erro retornado pela função:", response.error);
         throw new Error(response.error);
       }
       

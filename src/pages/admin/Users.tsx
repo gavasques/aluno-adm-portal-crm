@@ -12,6 +12,7 @@ import { UserPlus, RefreshCw, Loader2 } from "lucide-react";
 import UsersList from "@/components/admin/users/UsersList";
 import UserAddDialog from "@/components/admin/users/UserAddDialog";
 import ResetPasswordDialog from "@/components/admin/users/ResetPasswordDialog";
+import { toast } from "@/hooks/use-toast";
 
 interface User {
   id: string;
@@ -42,24 +43,42 @@ const Users = () => {
     try {
       setIsLoading(true);
       
-      // Chamar a edge function list-users
-      const { data, error } = await supabase.functions.invoke('list-users');
+      // Chamar a edge function list-users com GET (sem body)
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        method: 'GET' // Especificar método GET explicitamente
+      });
       
       if (error) {
+        console.error("Erro ao chamar a função list-users:", error);
+        toast({
+          title: "Erro ao buscar usuários",
+          description: error.message || "Não foi possível obter a lista de usuários",
+          variant: "destructive",
+        });
         throw error;
       }
       
       if (data && data.users) {
+        console.log("Dados recebidos:", data.users.length, "usuários");
         setUsers(data.users);
       } else {
-        console.error("Resposta da função sem dados de usuários");
-        throw new Error("Não foi possível obter a lista de usuários");
+        console.error("Resposta da função sem dados de usuários:", data);
+        toast({
+          title: "Dados incompletos",
+          description: "A resposta do servidor não contém dados de usuários válidos",
+          variant: "destructive",
+        });
       }
       
       setIsLoading(false);
       setIsRefreshing(false);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível obter a lista de usuários. Verifique o console para mais detalhes.",
+        variant: "destructive",
+      });
       setIsLoading(false);
       setIsRefreshing(false);
     }

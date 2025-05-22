@@ -71,7 +71,7 @@ async function createUser(supabaseAdmin, requestData) {
     type: 'recovery',
     email,
     options: {
-      redirectTo: `${new URL(self.location.href).origin}/reset-password`,
+      redirectTo: `https://titan.guilhermevasques.club/reset-password`,
     }
   });
   
@@ -85,8 +85,53 @@ async function createUser(supabaseAdmin, requestData) {
 // Função para lidar com requisições POST
 async function handlePostRequest(req, supabaseAdmin) {
   try {
+    // Verificar se há corpo na requisição
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return new Response(
+        JSON.stringify({ error: "Content-Type deve ser application/json" }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 400
+        }
+      );
+    }
+
+    // Tratar caso onde o corpo está vazio
+    const text = await req.text();
+    if (!text || text.trim() === '') {
+      return new Response(
+        JSON.stringify({ error: "Corpo da requisição vazio ou inválido" }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 400
+        }
+      );
+    }
+
     // Parse JSON com tratamento de erro explícito
-    const requestData = await req.json();
+    let requestData;
+    try {
+      requestData = JSON.parse(text);
+    } catch (parseError) {
+      console.error("Erro ao processar JSON:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Formato de dados inválido: " + parseError.message }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 400
+        }
+      );
+    }
     
     if (requestData.action === 'createUser') {
       const result = await createUser(supabaseAdmin, requestData);
@@ -112,16 +157,16 @@ async function handlePostRequest(req, supabaseAdmin) {
         status: 400
       }
     );
-  } catch (parseError) {
-    console.error("Erro ao processar JSON:", parseError);
+  } catch (error) {
+    console.error("Erro ao processar requisição POST:", error);
     return new Response(
-      JSON.stringify({ error: "Formato de dados inválido" }),
+      JSON.stringify({ error: error.message || "Erro ao processar requisição" }),
       { 
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json' 
         },
-        status: 400
+        status: 500
       }
     );
   }
@@ -130,7 +175,11 @@ async function handlePostRequest(req, supabaseAdmin) {
 // Função para criar perfil para usuários que não têm
 async function ensureUserProfile(supabaseAdmin, authUser, profilesMap) {
   if (!profilesMap.has(authUser.id)) {
-    const isAdmin = authUser.email?.includes('gavasques') ? true : false;
+    // Verifica se é admin com base no email
+    const isAdmin = authUser.email && (
+      authUser.email.includes('gavasques') || 
+      authUser.user_metadata?.role === 'Admin'
+    );
     
     const { error: insertError } = await supabaseAdmin
       .from('profiles')
@@ -163,11 +212,17 @@ function mapUsers(authUsers, latestProfiles) {
   const mappedUsers = authUsers.users.map(authUser => {
     const profile = latestProfiles.find((p) => p.id === authUser.id);
     
+    // Determinar o papel com base no email ou nos metadados
+    const isAdmin = authUser.email && (
+      authUser.email.includes('gavasques') || 
+      authUser.user_metadata?.role === 'Admin'
+    );
+    
     return {
       id: authUser.id,
       name: profile?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
       email: authUser.email || '',
-      role: profile?.role || 'Student',
+      role: profile?.role || (isAdmin ? 'Admin' : 'Student'),
       status: authUser.banned ? 'Inativo' : 'Ativo',
       lastLogin: authUser.last_sign_in_at 
         ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR', { 
@@ -190,56 +245,82 @@ function mapUsers(authUsers, latestProfiles) {
 
 // Função para lidar com requisições GET
 async function handleGetRequest(supabaseAdmin) {
-  // Obter usuários através do admin.listUsers
-  const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+  console.log("Processando requisição GET para listar usuários");
   
-  if (authError) {
-    throw authError;
-  }
-
-  // Buscar perfis dos usuários
-  const { data: profiles, error: profilesError } = await supabaseAdmin
-    .from('profiles')
-    .select('*');
-  
-  if (profilesError) {
-    console.error("Erro ao buscar perfis:", profilesError);
-  }
-
-  // Para cada usuário que não tem perfil, criar um
-  const profilesMap = new Map();
-  if (profiles) {
-    profiles.forEach(profile => {
-      profilesMap.set(profile.id, profile);
-    });
-  }
-
-  // Criar perfis para usuários que não têm
-  for (const authUser of authUsers.users) {
-    await ensureUserProfile(supabaseAdmin, authUser, profilesMap);
-  }
-
-  // Buscar perfis novamente se houveram atualizações
-  const latestProfiles = profilesMap.size > 0 ? 
-    Array.from(profilesMap.values()) : 
-    profiles || [];
-
-  const mappedUsers = mapUsers(authUsers, latestProfiles);
-
-  return new Response(
-    JSON.stringify({ users: mappedUsers }),
-    { 
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json' 
-      },
-      status: 200 
+  try {
+    // Obter usuários através do admin.listUsers
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error("Erro ao listar usuários:", authError);
+      throw authError;
     }
-  );
+
+    console.log(`Encontrados ${authUsers.users.length} usuários na autenticação`);
+
+    // Buscar perfis dos usuários
+    const { data: profiles, error: profilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('*');
+    
+    if (profilesError) {
+      console.error("Erro ao buscar perfis:", profilesError);
+    }
+
+    console.log(`Encontrados ${profiles?.length || 0} perfis no banco de dados`);
+
+    // Para cada usuário que não tem perfil, criar um
+    const profilesMap = new Map();
+    if (profiles) {
+      profiles.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+    }
+
+    // Criar perfis para usuários que não têm
+    for (const authUser of authUsers.users) {
+      await ensureUserProfile(supabaseAdmin, authUser, profilesMap);
+    }
+
+    // Buscar perfis novamente se houveram atualizações
+    const latestProfiles = profilesMap.size > 0 ? 
+      Array.from(profilesMap.values()) : 
+      profiles || [];
+
+    const mappedUsers = mapUsers(authUsers, latestProfiles);
+    console.log(`Retornando ${mappedUsers.length} usuários mapeados`);
+
+    return new Response(
+      JSON.stringify({ users: mappedUsers }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 200 
+      }
+    );
+  } catch (error) {
+    console.error("Erro ao processar requisição GET:", error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || "Erro ao processar requisição para listar usuários"
+      }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 500 
+      }
+    );
+  }
 }
 
 // Função principal que processa as requisições
 serve(async (req) => {
+  console.log(`Recebendo requisição ${req.method} para list-users`);
+  
   // Lidar com requisições OPTIONS (pre-flight CORS)
   if (req.method === 'OPTIONS') {
     return handleOptionsRequest();
