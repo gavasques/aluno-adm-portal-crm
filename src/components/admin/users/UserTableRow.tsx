@@ -4,7 +4,7 @@ import {
   TableRow, 
   TableCell 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import StatusBadge from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -63,9 +63,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={user.status === "Ativo" ? "default" : "secondary"}>
-          {user.status}
-        </Badge>
+        <StatusBadge status={user.status} />
       </TableCell>
       <TableCell>{user.role || "Não definido"}</TableCell>
       <TableCell>{user.lastLogin || "Nunca"}</TableCell>

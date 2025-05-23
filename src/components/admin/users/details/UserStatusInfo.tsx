@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import StatusBadge from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Award } from "lucide-react";
 
@@ -35,16 +36,7 @@ const UserStatusInfo: React.FC<UserStatusInfoProps> = ({ role, status }) => {
             <Award className="h-5 w-5 mt-0.5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">Status</p>
-              <Badge
-                variant={status === "Ativo" ? "default" : "outline"}
-                className={
-                  status === "Ativo"
-                    ? "bg-green-500"
-                    : "bg-gray-500"
-                }
-              >
-                {status}
-              </Badge>
+              <StatusBadge status={status} />
             </div>
           </div>
         </div>

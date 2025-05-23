@@ -4,11 +4,13 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface StatusBadgeProps {
-  isActive: boolean;
+  status: string;
   className?: string;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ isActive, className }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+  const isActive = status === "Ativo";
+  
   return (
     <Badge 
       className={cn(
@@ -19,7 +21,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ isActive, className }) => {
         className
       )}
     >
-      {isActive ? "Ativo" : "Inativo"}
+      {status}
     </Badge>
   );
 };

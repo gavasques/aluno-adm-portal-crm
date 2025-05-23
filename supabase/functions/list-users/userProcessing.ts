@@ -21,14 +21,16 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
       console.log('getUser', { 
         id: user.id, 
         email: user.email, 
+        status: profileData?.status,
         banned_until: user.banned_until
       });
       
-      // Determinar o status do usuário usando o banned_until
-      let status = "Ativo";
-      if (user.banned_until && new Date(user.banned_until) > new Date()) {
+      // Determinar o status do usuário usando o campo status do perfil 
+      // ou o banned_until como fallback
+      let status = profileData?.status || "Ativo";
+      if (!status && user.banned_until && new Date(user.banned_until) > new Date()) {
         status = "Inativo";
-      } else if (user.user_metadata?.status === 'Convidado') {
+      } else if (!status && user.user_metadata?.status === 'Convidado') {
         status = "Convidado";
       }
 
@@ -39,7 +41,8 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         role: profileData?.role || user.user_metadata?.role || "Student",
         status: status,
         lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
-        tasks: [] // Placeholder para futuras tarefas
+        tasks: [], // Placeholder para futuras tarefas
+        permission_group_id: profileData?.permission_group_id || null
       };
     } catch (err) {
       console.error(`Erro ao processar usuário ${user.id}:`, err);
@@ -48,9 +51,10 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         name: user.user_metadata?.name || "Usuário sem nome",
         email: user.email,
         role: user.user_metadata?.role || "Student",
-        status: (user.banned_until && new Date(user.banned_until) > new Date()) ? "Inativo" : "Ativo",
+        status: "Ativo", // Status padrão para casos de erro
         lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
-        tasks: []
+        tasks: [],
+        permission_group_id: null
       };
     }
   }));

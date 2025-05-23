@@ -37,24 +37,22 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
     try {
       setIsProcessing(true);
 
-      const newStatus = !isActive;
+      const newStatus = isActive ? "Inativo" : "Ativo";
 
-      // Instead of using a dedicated status field which doesn't exist,
-      // we'll store the user status as metadata in an existing field that supports updates
-      // In this case, we'll add a status indicator to the user's name field with a special format
-      // This is a temporary solution until a proper status field is added to the schema
+      // Agora utilizamos o campo status diretamente
       const { error } = await supabase
         .from("profiles")
         .update({ 
-          updated_at: new Date().toISOString() // Update the timestamp to indicate a change
+          status: newStatus,
+          updated_at: new Date().toISOString() // Atualizar o timestamp também
         })
         .eq('id', userId);
 
       if (error) throw error;
 
       toast({
-        title: `Usuário ${newStatus ? 'ativado' : 'inativado'}`,
-        description: `O usuário ${userEmail} foi ${newStatus ? 'ativado' : 'inativado'} com sucesso.`,
+        title: `Usuário ${newStatus === "Ativo" ? 'ativado' : 'inativado'}`,
+        description: `O usuário ${userEmail} foi ${newStatus === "Ativo" ? 'ativado' : 'inativado'} com sucesso.`,
       });
 
       onOpenChange(false);
