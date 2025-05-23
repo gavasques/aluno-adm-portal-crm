@@ -4,7 +4,7 @@ import { Tool } from "@/components/tools/ToolsTable";
 import { TOOLS } from "@/data/toolsData";
 import { filterTools, sortTools, getUniqueCanals } from "@/utils/toolsUtils";
 
-export const useTools = (isAdmin: boolean) => {
+export const useTools = (isAdmin: boolean = false) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [softwareTypeFilter, setSoftwareTypeFilter] = useState("all");
   const [recommendationFilter, setRecommendationFilter] = useState("all");

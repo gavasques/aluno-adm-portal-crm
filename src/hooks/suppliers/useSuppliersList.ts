@@ -6,6 +6,7 @@ import { INITIAL_SUPPLIERS, getAllBrands } from "@/data/suppliersData";
 export const useSuppliersList = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   
   // Estado para filtros
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -141,6 +142,13 @@ export const useSuppliersList = () => {
     }
   };
 
+  const handleUpdateSupplier = (updatedSupplier: Supplier) => {
+    setSuppliers(suppliers.map(supplier => 
+      supplier.id === updatedSupplier.id ? updatedSupplier : supplier
+    ));
+    setSelectedSupplier(updatedSupplier);
+  };
+
   return {
     suppliers,
     setSuppliers,
@@ -159,6 +167,9 @@ export const useSuppliersList = () => {
     sortField,
     sortDirection,
     allBrands,
+    selectedSupplier,
+    setSelectedSupplier,
+    handleUpdateSupplier,
     toggleCategoryFilter,
     toggleTypeFilter,
     toggleBrandFilter,

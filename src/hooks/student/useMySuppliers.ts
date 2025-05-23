@@ -83,7 +83,7 @@ const INITIAL_SUPPLIERS: MySupplier[] = [
 export const useMySuppliers = () => {
   const [suppliers, setSuppliers] = useState<MySupplier[]>(INITIAL_SUPPLIERS);
   const [selectedSupplier, setSelectedSupplier] = useState<MySupplier | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameFilter, setNameFilter] = useState("");
   const [cnpjFilter, setCnpjFilter] = useState("");
@@ -137,7 +137,11 @@ export const useMySuppliers = () => {
     }
   };
   
-  const handleAddSupplier = (data: SupplierFormValues) => {
+  const handleAddSupplier = () => {
+    setShowForm(true);
+  };
+  
+  const handleSubmit = (data: SupplierFormValues) => {
     setIsSubmitting(true);
     
     // Simular um atraso de rede
@@ -169,9 +173,13 @@ export const useMySuppliers = () => {
       setSuppliers([...suppliers, supplier]);
       toast.success(`${data.name} foi adicionado com sucesso.`);
       
-      setIsAddDialogOpen(false);
+      setShowForm(false);
       setIsSubmitting(false);
     }, 500);
+  };
+  
+  const handleCancel = () => {
+    setShowForm(false);
   };
   
   const handleDeleteSupplier = (id: number) => {
@@ -196,12 +204,11 @@ export const useMySuppliers = () => {
   };
   
   return {
-    suppliers,
-    sortedSuppliers,
+    suppliers: sortedSuppliers,
     selectedSupplier,
     setSelectedSupplier,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
+    showForm,
+    setShowForm,
     isSubmitting,
     nameFilter,
     setNameFilter,
@@ -215,6 +222,8 @@ export const useMySuppliers = () => {
     sortDirection,
     handleSort,
     handleAddSupplier,
+    handleSubmit,
+    handleCancel,
     handleDeleteSupplier,
     handleUpdateSupplier,
     clearFilters

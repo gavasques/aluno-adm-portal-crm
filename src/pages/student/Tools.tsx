@@ -24,7 +24,7 @@ const Tools = () => {
     selectedTool,
     setSelectedTool,
     handleUpdateTool
-  } = useTools();
+  } = useTools(false); // Pass false for student mode
 
   return (
     <StudentRouteGuard requiredMenuKey="tools">
