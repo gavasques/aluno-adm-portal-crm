@@ -74,7 +74,7 @@ export type Database = {
           name: string | null
           permission_group_id: string | null
           role: string | null
-          status: string | null
+          status: string
           updated_at: string | null
         }
         Insert: {
@@ -85,7 +85,7 @@ export type Database = {
           name?: string | null
           permission_group_id?: string | null
           role?: string | null
-          status?: string | null
+          status?: string
           updated_at?: string | null
         }
         Update: {
@@ -96,7 +96,7 @@ export type Database = {
           name?: string | null
           permission_group_id?: string | null
           role?: string | null
-          status?: string | null
+          status?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -146,6 +146,10 @@ export type Database = {
         Returns: {
           menu_key: string
         }[]
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
     }
     Enums: {
