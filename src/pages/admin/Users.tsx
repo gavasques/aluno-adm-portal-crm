@@ -6,20 +6,35 @@ import UsersHeader from "@/components/admin/users/UsersHeader";
 import UsersAlert from "@/components/admin/users/UsersAlert";
 import UsersCard from "@/components/admin/users/UsersCard";
 import UsersDialogs from "@/components/admin/users/UsersDialogs";
+import PendingUsersCard from "@/components/admin/users/PendingUsersCard";
 
 const Users = () => {
   const { users, isLoading, isRefreshing, fetchError, refreshUsersList } = useUsersList();
   const [searchQuery, setSearchQuery] = useState("");
   const dialogsState = useUserDialogs();
 
+  // Contar usuários pendentes
+  const pendingUsers = users.filter(user => 
+    user.permission_group_id && user.role !== "Admin"
+  );
+
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 space-y-6">
       <UsersHeader 
         refreshUsersList={refreshUsersList} 
         isRefreshing={isRefreshing} 
       />
 
       <UsersAlert fetchError={fetchError} />
+
+      {/* Card de usuários pendentes - mostrar apenas se houver usuários pendentes */}
+      {pendingUsers.length > 0 && (
+        <PendingUsersCard
+          users={users}
+          isLoading={isLoading}
+          onAssignGroup={dialogsState.handleSetPermissionGroup}
+        />
+      )}
 
       <UsersCard
         users={users}

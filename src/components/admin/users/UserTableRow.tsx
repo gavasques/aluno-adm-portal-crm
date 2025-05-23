@@ -4,7 +4,7 @@ import {
   TableRow, 
   TableCell 
 } from "@/components/ui/table";
-import StatusBadge from "@/components/ui/status-badge";
+import UserStatusBadge from "./UserStatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,7 +21,8 @@ import {
   UserX,
   UserCheck,
   UserMinus,
-  Lock 
+  Lock,
+  Clock
 } from "lucide-react";
 
 interface UserTableRowProps {
@@ -49,18 +50,27 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onToggleUserStatus,
   onSetPermissionGroup
 }) => {
-  // Método atualizado para determinar se o status é "Ativo"
+  // Determinar se o usuário está ativo com base no status
   const normalizedStatus = typeof user.status === 'string' ? user.status.toLowerCase() : '';
   const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
   
-  console.log(`UserTableRow: user=${user.name}, status=${user.status}, normalizedStatus=${normalizedStatus}, isActive=${isActive}`);
+  // Determinar se o usuário está no grupo temporário "Geral"
+  // Isto é uma aproximação - em um cenário real, você verificaria se o permission_group_id
+  // corresponde ao ID do grupo "Geral" especificamente
+  const isTemporaryGroup = user.permission_group_id && user.role !== "Admin";
 
   return (
-    <TableRow>
+    <TableRow className={isTemporaryGroup ? "bg-orange-50/30 border-l-4 border-l-orange-300" : ""}>
       <TableCell>
         <div className="flex items-center">
-          <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-2">
-            <User className="h-4 w-4 text-gray-600" />
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
+            isTemporaryGroup ? "bg-orange-100" : "bg-gray-100"
+          }`}>
+            {isTemporaryGroup ? (
+              <Clock className="h-4 w-4 text-orange-600" />
+            ) : (
+              <User className="h-4 w-4 text-gray-600" />
+            )}
           </div>
           <div>
             <div className="font-medium">{user.name || "Sem nome"}</div>
@@ -69,7 +79,11 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
         </div>
       </TableCell>
       <TableCell>
-        <StatusBadge status={user.status} />
+        <UserStatusBadge 
+          status={user.status} 
+          permissionGroupId={user.permission_group_id}
+          isTemporaryGroup={isTemporaryGroup}
+        />
       </TableCell>
       <TableCell>{user.role || "Não definido"}</TableCell>
       <TableCell>{user.lastLogin || "Nunca"}</TableCell>
@@ -94,7 +108,9 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
             {onSetPermissionGroup && (
               <DropdownMenuItem onClick={() => onSetPermissionGroup(user.id, user.email, user.permission_group_id)}>
                 <Lock className="mr-2 h-4 w-4" />
-                <span>Definir permissões</span>
+                <span>
+                  {isTemporaryGroup ? "Atribuir grupo definitivo" : "Definir permissões"}
+                </span>
               </DropdownMenuItem>
             )}
             

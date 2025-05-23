@@ -5,12 +5,12 @@ import {
   TableBody
 } from "@/components/ui/table";
 import UserDetailsDialog from "./UserDetailsDialog";
-import UserSearchBar from "./UserSearchBar";
 import UserActionButtons from "./UserActionButtons";
 import UsersTableHeader from "./UsersTableHeader";
 import UserTableRow from "./UserTableRow";
 import EmptyUsersList from "./EmptyUsersList";
 import LoadingUsersList from "./LoadingUsersList";
+import UsersFilter from "./UsersFilter";
 
 interface User {
   id: string;
@@ -50,12 +50,34 @@ const UsersList: React.FC<UsersListProps> = ({
 }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [groupFilter, setGroupFilter] = useState("all");
 
-  // Filtrar usuários de acordo com a pesquisa
-  const filteredUsers = users.filter(user => 
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Contar usuários pendentes (aproximação - verificar se não é Admin e tem permission_group_id)
+  const pendingCount = users.filter(user => 
+    user.permission_group_id && user.role !== "Admin"
+  ).length;
+
+  // Filtrar usuários de acordo com os filtros aplicados
+  const filteredUsers = users.filter(user => {
+    // Filtro de busca
+    const matchesSearch = user.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filtro de status
+    const matchesStatus = statusFilter === "all" || 
+                         user.status.toLowerCase().includes(statusFilter.toLowerCase());
+    
+    // Filtro de grupo
+    let matchesGroup = true;
+    if (groupFilter === "pending") {
+      matchesGroup = user.permission_group_id && user.role !== "Admin";
+    } else if (groupFilter === "assigned") {
+      matchesGroup = !user.permission_group_id || user.role === "Admin";
+    }
+    
+    return matchesSearch && matchesStatus && matchesGroup;
+  });
 
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
@@ -65,7 +87,18 @@ const UsersList: React.FC<UsersListProps> = ({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <UserSearchBar searchQuery={searchQuery} onSearchChange={onSearchChange} />
+        <div className="flex-1">
+          <UsersFilter
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            groupFilter={groupFilter}
+            onGroupFilterChange={setGroupFilter}
+            pendingCount={pendingCount}
+            totalCount={users.length}
+          />
+        </div>
         <UserActionButtons onAddUser={onAddUser} onInviteUser={onInviteUser} />
       </div>
 
