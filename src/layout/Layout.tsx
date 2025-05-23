@@ -7,6 +7,7 @@ import AdminSidebar from "./AdminSidebar";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface LayoutProps {
   isAdmin?: boolean;
@@ -14,13 +15,15 @@ interface LayoutProps {
 
 const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
   const location = useLocation();
-  const { user, loading } = useAuth();
-  const isAdmin = propIsAdmin !== undefined ? propIsAdmin : location.pathname.startsWith("/admin");
-  const isStudent = location.pathname.startsWith("/student");
+  const { user, loading: authLoading } = useAuth();
+  const { permissions, loading: permissionsLoading } = usePermissions();
+  
+  const isAdminRoute = propIsAdmin !== undefined ? propIsAdmin : location.pathname.startsWith("/admin");
+  const isStudentRoute = location.pathname.startsWith("/student");
   const isHome = location.pathname === "/";
   
-  // Se estiver carregando, mostrar um indicador de carregamento
-  if (loading) {
+  // Se estiver carregando, mostrar indicador de carregamento
+  if (authLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -33,13 +36,19 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
     return <Navigate to="/" replace />;
   }
 
+  // Se estiver tentando acessar área admin sem permissão, redirecionar para student
+  if (isAdminRoute && user && !permissions.hasAdminAccess) {
+    console.log("Usuário sem permissão admin tentando acessar área administrativa, redirecionando para /student");
+    return <Navigate to="/student" replace />;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {!isHome && <Header />}
       <SidebarProvider>
         <div className={`flex-grow flex ${!isHome ? 'pt-12' : ''} relative w-full`}>
-          {isStudent && <StudentSidebar />}
-          {isAdmin && <AdminSidebar />}
+          {isStudentRoute && <StudentSidebar />}
+          {isAdminRoute && permissions.hasAdminAccess && <AdminSidebar />}
           
           <motion.main 
             className="flex-1 overflow-x-hidden"
