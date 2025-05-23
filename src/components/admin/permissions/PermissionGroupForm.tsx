@@ -34,6 +34,7 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [allowAdminAccess, setAllowAdminAccess] = useState(false);
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingGroupData, setLoadingGroupData] = useState(isEdit);
@@ -45,6 +46,7 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
         setName(permissionGroup.name || "");
         setDescription(permissionGroup.description || "");
         setIsAdmin(permissionGroup.is_admin || false);
+        setAllowAdminAccess(permissionGroup.allow_admin_access || false);
         
         try {
           // Buscar menus associados a este grupo
@@ -64,6 +66,13 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
     loadGroupData();
   }, [isEdit, permissionGroup, getPermissionGroupMenus]);
 
+  // Automaticamente habilitar acesso admin se for grupo admin
+  useEffect(() => {
+    if (isAdmin) {
+      setAllowAdminAccess(true);
+    }
+  }, [isAdmin]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -78,6 +87,7 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
           name,
           description,
           is_admin: isAdmin,
+          allow_admin_access: allowAdminAccess,
           menu_keys: selectedMenus
         });
       } else {
@@ -85,6 +95,7 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
           name,
           description,
           is_admin: isAdmin,
+          allow_admin_access: allowAdminAccess,
           menu_keys: selectedMenus
         });
       }
@@ -156,11 +167,30 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
             <Label htmlFor="is-admin">Este é um grupo de administrador (acesso total)</Label>
           </div>
 
+          <div className="flex items-center space-x-2 py-2">
+            <Switch
+              id="allow-admin-access"
+              checked={allowAdminAccess}
+              onCheckedChange={setAllowAdminAccess}
+              disabled={isLoading || isSubmitting || isAdmin}
+            />
+            <Label htmlFor="allow-admin-access">Permitir acesso à área administrativa</Label>
+          </div>
+
           {isAdmin && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Grupos de administrador têm acesso a todas as funcionalidades do sistema, independente das permissões selecionadas.
+                Grupos de administrador têm acesso a todas as funcionalidades do sistema e automaticamente podem acessar a área administrativa.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {allowAdminAccess && !isAdmin && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Este grupo poderá acessar a área administrativa com base nas permissões específicas configuradas abaixo.
               </AlertDescription>
             </Alert>
           )}
