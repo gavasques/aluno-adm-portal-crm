@@ -7,6 +7,7 @@ import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import ResetPassword from "@/pages/ResetPassword";
 import AcceptInvite from "@/pages/AcceptInvite";
+import EmailConfirmation from "@/components/auth/EmailConfirmation";
 
 // Admin pages
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -38,6 +39,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/confirm-email" element={<EmailConfirmation />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
           
           <Route path="/admin" element={<Layout isAdmin={true} />}>

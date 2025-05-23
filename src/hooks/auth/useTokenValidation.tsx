@@ -32,13 +32,12 @@ export const useTokenValidation = () => {
   
   const extractedTokenFromHash = extractTokenFromHash();
   
-  // Check if we are in a password recovery flow
+  // Check if we are in a password recovery flow (APENAS recovery, não confirmação)
   const isRecoveryFlow = 
     typeParam === 'recovery' || 
     searchParams.get('reset_token') === 'true' ||
-    !!tokenParam || 
-    !!extractedTokenFromHash ||
-    hashParams.includes('type=recovery');
+    (!!tokenParam && typeParam === 'recovery') || 
+    (!!extractedTokenFromHash && hashParams.includes('type=recovery'));
 
   useEffect(() => {
     // Validate if the token is valid
@@ -56,7 +55,7 @@ export const useTokenValidation = () => {
           isRecoveryFlow
         });
         
-        // If we have no indication of recovery flow and no session, invalidate
+        // Se não é um fluxo de recovery E não há sessão, invalidar
         if (!isRecoveryFlow && !session) {
           console.log("Nenhum token de recuperação detectado e sem sessão ativa");
           setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
@@ -69,10 +68,11 @@ export const useTokenValidation = () => {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Sessão atual:", currentSession);
         
+        // Apenas aceitar se for explicitamente recovery ou se a sessão indica recovery
         if ((currentSession?.user?.aud === "recovery") || 
-            isRecoveryFlow || 
-            (currentSession && window.location.pathname === "/reset-password")) {
-          console.log("Sessão de recuperação válida detectada ou fluxo de recuperação identificado");
+            (isRecoveryFlow && typeParam === 'recovery') || 
+            (currentSession && window.location.pathname === "/reset-password" && typeParam === 'recovery')) {
+          console.log("Sessão de recuperação válida detectada");
           
           // Set recovery mode for all tabs
           if (setRecoveryMode) {
@@ -84,7 +84,10 @@ export const useTokenValidation = () => {
           
           setTokenValid(true);
         } else {
-          console.log("Sessão não é de recuperação:", currentSession?.user?.aud);
+          console.log("Sessão não é de recuperação ou tipo não é recovery:", { 
+            aud: currentSession?.user?.aud, 
+            typeParam 
+          });
           setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
           setTokenValid(false);
         }

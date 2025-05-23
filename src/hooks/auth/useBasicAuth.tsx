@@ -3,12 +3,14 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
+import { useSignUp } from "./useBasicAuth/useSignUp";
 
 // URL base do site que será usado para redirecionamentos
 const BASE_URL = "https://titan.guilhermevasques.club";
 
 export function useBasicAuth() {
   const navigate = useNavigate();
+  const { signUp: signUpUser } = useSignUp();
 
   // Função para login
   const signIn = async (email: string, password: string) => {
@@ -66,38 +68,8 @@ export function useBasicAuth() {
     }
   };
 
-  // Função para cadastro
-  const signUp = async (email: string, password: string, name: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-          emailRedirectTo: `${BASE_URL}/reset-password`,
-        },
-      });
-
-      if (error) throw error;
-      
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Verifique seu email para confirmar o cadastro.",
-        variant: "default",
-      });
-
-    } catch (error: any) {
-      console.error("Erro ao criar conta:", error);
-      toast({
-        title: "Erro ao criar conta",
-        description: error.message || "Verifique os dados informados e tente novamente.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
+  // Usar a função de signup do hook específico
+  const signUp = signUpUser;
 
   // Função para logout
   const signOut = async () => {

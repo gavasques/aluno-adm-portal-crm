@@ -14,7 +14,7 @@ export function useSignUp() {
           data: {
             name,
           },
-          emailRedirectTo: `${BASE_URL}/reset-password`,
+          emailRedirectTo: `${BASE_URL}/confirm-email`,
         },
       });
 
