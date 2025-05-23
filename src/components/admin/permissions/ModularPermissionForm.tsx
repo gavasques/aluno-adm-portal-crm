@@ -94,10 +94,8 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
           menu_keys: [] // Manter compatibilidade
         });
         
-        // Salvar permissões modulares se não for admin
-        if (!isAdmin) {
-          await saveGroupModulePermissions(permissionGroup.id, modulePermissions);
-        }
+        // Salvar permissões modulares sempre (mesmo para admin)
+        await saveGroupModulePermissions(permissionGroup.id, modulePermissions);
       } else {
         // Criar novo grupo usando o hook
         await createPermissionGroup({
@@ -107,19 +105,16 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
           menu_keys: [] // Manter compatibilidade
         });
         
-        // Para novo grupo, se não for admin, buscar o ID do grupo recém-criado
-        if (!isAdmin) {
-          // Buscar o grupo recém-criado para obter o ID
-          const { data: newGroups, error } = await supabase
-            .from("permission_groups")
-            .select("id")
-            .eq("name", name)
-            .order("created_at", { ascending: false })
-            .limit(1);
-            
-          if (!error && newGroups && newGroups.length > 0) {
-            await saveGroupModulePermissions(newGroups[0].id, modulePermissions);
-          }
+        // Para novo grupo, buscar o ID do grupo recém-criado e salvar permissões
+        const { data: newGroups, error } = await supabase
+          .from("permission_groups")
+          .select("id")
+          .eq("name", name)
+          .order("created_at", { ascending: false })
+          .limit(1);
+          
+        if (!error && newGroups && newGroups.length > 0) {
+          await saveGroupModulePermissions(newGroups[0].id, modulePermissions);
         }
       }
       
@@ -216,7 +211,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Grupos de administrador têm acesso a todas as funcionalidades do sistema, independente das permissões selecionadas.
+                Grupos de administrador têm acesso total ao sistema. As permissões abaixo são configuráveis para controle detalhado, se necessário.
               </AlertDescription>
             </Alert>
           )}
@@ -229,14 +224,14 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
               <Label className="text-base font-semibold">Permissões Modulares</Label>
             </div>
             
-            {!isAdmin && isLoading && (
+            {isLoading && (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 <p>Carregando módulos...</p>
               </div>
             )}
 
-            {!isAdmin && !isLoading && (
+            {!isLoading && (
               <div className="space-y-4">
                 {Object.entries(categorizedModules).map(([category, modules]) => (
                   <Card key={category} className="border">
@@ -310,7 +305,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
               </div>
             )}
 
-            {!isAdmin && !isLoading && Object.keys(categorizedModules).length === 0 && (
+            {!isLoading && Object.keys(categorizedModules).length === 0 && (
               <p className="text-sm text-muted-foreground">
                 Nenhum módulo disponível. Contate o administrador do sistema.
               </p>
