@@ -1,35 +1,18 @@
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-} from "@/components/ui/form";
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { usePermissionGroups, PermissionGroupWithMenus } from "@/hooks/admin/usePermissionGroups";
-import { useSystemMenus } from "@/hooks/admin/useSystemMenus";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "O nome deve ter pelo menos 2 caracteres.",
-  }),
-  description: z.string().optional(),
-  is_admin: z.boolean().default(false),
-  menu_keys: z.array(z.string()).optional(),
-});
+import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { useSystemMenus } from "@/hooks/admin/useSystemMenus";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface PermissionGroupFormProps {
   isEdit: boolean;
@@ -44,67 +27,65 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
   onOpenChange,
   onSuccess,
 }) => {
-  const { 
-    createPermissionGroup, 
-    updatePermissionGroup,
-    getPermissionGroupMenus,
-  } = usePermissionGroups();
-  const { systemMenus, isLoading: menusLoading } = useSystemMenus();
+  const { createPermissionGroup, updatePermissionGroup, getPermissionGroupMenus } = usePermissionGroups();
+  const { systemMenus, isLoading: loadingMenus } = useSystemMenus();
+  
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingMenus, setIsLoadingMenus] = useState(isEdit);
+  const [loadingGroupData, setLoadingGroupData] = useState(isEdit);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: isEdit ? permissionGroup?.name : "",
-      description: isEdit ? permissionGroup?.description || "" : "",
-      is_admin: isEdit ? permissionGroup?.is_admin || false : false,
-      menu_keys: [],
-    },
-  });
-
+  // Carregar dados do grupo para edição
   useEffect(() => {
-    // Se estiver em modo de edição, carregar os menus associados ao grupo
-    if (isEdit && permissionGroup) {
-      const loadPermissionGroupMenus = async () => {
+    const loadGroupData = async () => {
+      if (isEdit && permissionGroup) {
+        setName(permissionGroup.name || "");
+        setDescription(permissionGroup.description || "");
+        setIsAdmin(permissionGroup.is_admin || false);
+        
         try {
-          const menus = await getPermissionGroupMenus(permissionGroup.id);
-          setSelectedMenus(menus.map((menu: any) => menu.menu_key));
-          setIsLoadingMenus(false);
+          // Buscar menus associados a este grupo
+          const menuData = await getPermissionGroupMenus(permissionGroup.id);
+          const menuKeys = menuData.map((item: any) => item.menu_key);
+          setSelectedMenus(menuKeys);
         } catch (error) {
-          console.error("Erro ao carregar menus:", error);
-          setIsLoadingMenus(false);
+          console.error("Erro ao carregar menus do grupo:", error);
+        } finally {
+          setLoadingGroupData(false);
         }
-      };
-      
-      loadPermissionGroupMenus();
-    }
+      } else {
+        setLoadingGroupData(false);
+      }
+    };
+    
+    loadGroupData();
   }, [isEdit, permissionGroup, getPermissionGroupMenus]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name) return;
+    
     try {
       setIsSubmitting(true);
       
-      if (isEdit) {
-        // Atualizar grupo existente
-        const updateData: PermissionGroupWithMenus = {
+      if (isEdit && permissionGroup) {
+        await updatePermissionGroup({
           id: permissionGroup.id,
-          name: values.name, // Garantir que name é fornecido
-          description: values.description || null,
-          is_admin: values.is_admin,
-          menu_keys: values.is_admin ? [] : selectedMenus,
-        };
-        await updatePermissionGroup(updateData);
+          name,
+          description,
+          is_admin: isAdmin,
+          menu_keys: selectedMenus
+        });
       } else {
-        // Criar novo grupo
-        const createData: PermissionGroupWithMenus = {
-          name: values.name, // Garantir que name é fornecido
-          description: values.description || null,
-          is_admin: values.is_admin,
-          menu_keys: values.is_admin ? [] : selectedMenus,
-        };
-        await createPermissionGroup(createData);
+        await createPermissionGroup({
+          name,
+          description,
+          is_admin: isAdmin,
+          menu_keys: selectedMenus
+        });
       }
       
       onSuccess();
@@ -116,144 +97,125 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
     }
   };
 
-  const handleMenuChange = (menuKey: string, checked: boolean) => {
-    if (checked) {
-      setSelectedMenus([...selectedMenus, menuKey]);
-    } else {
-      setSelectedMenus(selectedMenus.filter(key => key !== menuKey));
-    }
+  const handleMenuToggle = (menuKey: string) => {
+    setSelectedMenus((prev) => {
+      if (prev.includes(menuKey)) {
+        return prev.filter(key => key !== menuKey);
+      } else {
+        return [...prev, menuKey];
+      }
+    });
   };
 
-  const isAdmin = form.watch("is_admin");
+  const isLoading = loadingMenus || loadingGroupData;
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{isEdit ? "Editar" : "Criar"} Grupo de Permissão</DialogTitle>
+        <DialogTitle>{isEdit ? 'Editar' : 'Novo'} Grupo de Permissão</DialogTitle>
+        <DialogDescription>
+          {isEdit
+            ? 'Edite as informações do grupo de permissão.'
+            : 'Crie um novo grupo de permissões para os usuários.'}
+        </DialogDescription>
       </DialogHeader>
-      
-      <div className="mt-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do grupo" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+
+      <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nome do Grupo</Label>
+            <Input
+              id="name"
+              placeholder="Ex: Gerentes de Marketing"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isLoading || isSubmitting}
+              required
             />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Descrição do grupo (opcional)" 
-                      {...field} 
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              placeholder="Descrição das permissões deste grupo"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={isLoading || isSubmitting}
             />
-            
-            <FormField
-              control={form.control}
-              name="is_admin"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Acesso Administrativo</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Usuários com este grupo terão acesso completo ao sistema.
-                    </p>
-                  </div>
-                </FormItem>
-              )}
+          </div>
+
+          <div className="flex items-center space-x-2 py-2">
+            <Switch
+              id="is-admin"
+              checked={isAdmin}
+              onCheckedChange={setIsAdmin}
+              disabled={isLoading || isSubmitting}
             />
+            <Label htmlFor="is-admin">Este é um grupo de administrador (acesso total)</Label>
+          </div>
+
+          {isAdmin && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Grupos de administrador têm acesso a todas as funcionalidades do sistema, independente das permissões selecionadas.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Separator className="my-2" />
+
+          <div className="space-y-2">
+            <Label>Permissões do Grupo</Label>
             
-            {!isAdmin && !menusLoading && !isLoadingMenus && (
-              <>
-                <Separator className="my-4" />
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium mb-2">Permissões de Acesso</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Selecione as áreas do sistema que este grupo poderá acessar.
-                  </p>
-                  
-                  <ScrollArea className="h-[200px] px-1">
-                    <div className="space-y-2">
-                      {systemMenus.map((menu) => (
-                        <div key={menu.menu_key} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`menu-${menu.menu_key}`}
-                            checked={selectedMenus.includes(menu.menu_key)}
-                            onCheckedChange={(checked) => 
-                              handleMenuChange(menu.menu_key, checked === true)
-                            }
-                          />
-                          <label
-                            htmlFor={`menu-${menu.menu_key}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {menu.display_name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                  
-                  {selectedMenus.length === 0 && (
-                    <p className="text-sm text-orange-600 mt-2">
-                      Atenção: Sem permissões selecionadas, os usuários deste grupo não poderão acessar nenhuma área do sistema.
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-            
-            {(menusLoading || isLoadingMenus) && !isAdmin && (
+            {!isAdmin && isLoading && (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                <span>Carregando menus...</span>
+                <p>Carregando opções...</p>
               </div>
             )}
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEdit ? "Atualizar" : "Criar"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
+
+            {!isAdmin && !isLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <CheckboxGroup className="space-y-2">
+                  {systemMenus.map((menu: any) => (
+                    <CheckboxItem
+                      key={menu.menu_key}
+                      id={`menu-${menu.menu_key}`}
+                      label={menu.display_name}
+                      description={menu.description || ''}
+                      checked={selectedMenus.includes(menu.menu_key)}
+                      onCheckedChange={() => handleMenuToggle(menu.menu_key)}
+                    />
+                  ))}
+                </CheckboxGroup>
+              </div>
+            )}
+
+            {!isAdmin && !isLoading && systemMenus.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum menu disponível. Contate o administrador do sistema.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading || isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEdit ? 'Salvar Alterações' : 'Criar Grupo'}
+          </Button>
+        </div>
+      </form>
     </>
   );
 };
