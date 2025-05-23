@@ -8,6 +8,7 @@ export interface PermissionGroup {
   name: string;
   description: string | null;
   is_admin: boolean;
+  allow_admin_access: boolean;
   created_at: string;
 }
 
@@ -16,6 +17,7 @@ export interface PermissionGroupWithMenus {
   name: string;
   description: string | null;
   is_admin: boolean;
+  allow_admin_access: boolean;
   menu_keys: string[];
 }
 
@@ -57,14 +59,15 @@ export const usePermissionGroups = () => {
 
   const createPermissionGroup = useCallback(async (groupData: PermissionGroupWithMenus) => {
     try {
-      const { name, description, is_admin } = groupData;
+      const { name, description, is_admin, allow_admin_access } = groupData;
       
       const { data: newGroup, error: groupError } = await supabase
         .from("permission_groups")
         .insert({
           name,
           description,
-          is_admin
+          is_admin,
+          allow_admin_access
         })
         .select()
         .single();
@@ -90,7 +93,7 @@ export const usePermissionGroups = () => {
 
   const updatePermissionGroup = useCallback(async (groupData: PermissionGroupWithMenus) => {
     try {
-      const { id, name, description, is_admin } = groupData;
+      const { id, name, description, is_admin, allow_admin_access } = groupData;
       
       if (!id) {
         throw new Error("ID do grupo é obrigatório para atualização");
@@ -102,6 +105,7 @@ export const usePermissionGroups = () => {
           name,
           description,
           is_admin,
+          allow_admin_access,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);

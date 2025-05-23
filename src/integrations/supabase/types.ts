@@ -127,6 +127,7 @@ export type Database = {
       }
       permission_groups: {
         Row: {
+          allow_admin_access: boolean
           created_at: string
           description: string | null
           id: string
@@ -135,6 +136,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_admin_access?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -143,6 +145,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_admin_access?: boolean
           created_at?: string
           description?: string | null
           id?: string

@@ -19,12 +19,14 @@ import {
 import { Edit2, Trash2, Users } from "lucide-react";
 import LoadingPermissions from "./LoadingPermissions";
 import EmptyPermissions from "./EmptyPermissions";
+import { Badge } from "@/components/ui/badge";
 
 interface PermissionGroup {
   id: string;
   name: string;
   description: string | null;
   is_admin: boolean;
+  allow_admin_access: boolean;
   created_at: string;
 }
 
@@ -59,6 +61,7 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                 <TableHead>Nome</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Tipo</TableHead>
+                <TableHead>Acesso Admin</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -72,9 +75,20 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                     <TableCell>{group.description || "-"}</TableCell>
                     <TableCell>
                       {group.is_admin ? (
-                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Admin</span>
+                        <Badge variant="default">Admin</Badge>
                       ) : (
-                        <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Padrão</span>
+                        <Badge variant="secondary">Padrão</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {group.allow_admin_access ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          Permitido
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">
+                          Negado
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right flex justify-end space-x-2">
@@ -99,7 +113,7 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                         size="sm"
                         className="text-red-600 hover:text-red-700" 
                         onClick={() => onDelete(group)}
-                        disabled={group.is_admin} // Não permitir excluir o grupo Admin
+                        disabled={group.is_admin}
                       >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Excluir</span>

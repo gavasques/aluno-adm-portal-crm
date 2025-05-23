@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [allowAdminAccess, setAllowAdminAccess] = useState(false);
   const [modulePermissions, setModulePermissions] = useState<ModulePermissionData[]>([]);
   const [loadingGroupData, setLoadingGroupData] = useState(isEdit);
 
@@ -52,6 +54,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
         setName(permissionGroup.name || "");
         setDescription(permissionGroup.description || "");
         setIsAdmin(permissionGroup.is_admin || false);
+        setAllowAdminAccess(permissionGroup.allow_admin_access || false);
         
         try {
           const permissions = await getGroupModulePermissions(permissionGroup.id, modules);
@@ -82,6 +85,13 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
     loadGroupData();
   }, [isEdit, permissionGroup, modules, getGroupModulePermissions]);
 
+  // Automaticamente habilitar acesso admin se for grupo admin
+  useEffect(() => {
+    if (isAdmin) {
+      setAllowAdminAccess(true);
+    }
+  }, [isAdmin]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -95,6 +105,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
           name,
           description,
           is_admin: isAdmin,
+          allow_admin_access: allowAdminAccess,
           menu_keys: [] // Manter compatibilidade
         });
         
@@ -106,6 +117,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
           name,
           description,
           is_admin: isAdmin,
+          allow_admin_access: allowAdminAccess,
           menu_keys: [] // Manter compatibilidade
         });
         
@@ -211,11 +223,30 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
             <Label htmlFor="is-admin">Este é um grupo de administrador (acesso total)</Label>
           </div>
 
+          <div className="flex items-center space-x-2 py-2">
+            <Switch
+              id="allow-admin-access"
+              checked={allowAdminAccess}
+              onCheckedChange={setAllowAdminAccess}
+              disabled={isLoading || isSubmitting || isAdmin}
+            />
+            <Label htmlFor="allow-admin-access">Permitir acesso à área administrativa</Label>
+          </div>
+
           {isAdmin && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Grupos de administrador têm acesso total ao sistema. As permissões abaixo são configuráveis para controle detalhado, se necessário.
+                Grupos de administrador têm acesso total ao sistema e automaticamente podem acessar a área administrativa.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {allowAdminAccess && !isAdmin && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Este grupo poderá acessar a área administrativa com base nas permissões específicas configuradas abaixo.
               </AlertDescription>
             </Alert>
           )}
