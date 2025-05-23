@@ -19,7 +19,12 @@ const SignUp = () => {
     
     if (email && password) {
       try {
-        await signUp({ email, password, options: { data: { name } } });
+        // Updated to match the expected function signature
+        await signUp(
+          { email, password }, 
+          { redirectTo: window.location.origin + '/signin' },
+          { data: { name } }
+        );
         navigate("/signin");
       } catch (error) {
         console.error("Erro ao criar conta:", error);

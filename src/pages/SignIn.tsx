@@ -18,7 +18,8 @@ const SignIn = () => {
     
     if (email && password) {
       try {
-        await signIn({ email, password });
+        // Updated to pass password as a separate argument
+        await signIn({ email, password }, false);
         navigate("/");
       } catch (error) {
         console.error("Erro ao fazer login:", error);
