@@ -20,15 +20,7 @@ import { Edit2, Trash2, Users } from "lucide-react";
 import LoadingPermissions from "./LoadingPermissions";
 import EmptyPermissions from "./EmptyPermissions";
 import { Badge } from "@/components/ui/badge";
-
-interface PermissionGroup {
-  id: string;
-  name: string;
-  description: string | null;
-  is_admin: boolean;
-  allow_admin_access: boolean;
-  created_at: string;
-}
+import { PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 
 interface PermissionsCardProps {
   permissionGroups: PermissionGroup[];
