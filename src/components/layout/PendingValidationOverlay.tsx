@@ -1,0 +1,41 @@
+
+import { motion } from "framer-motion";
+import { Clock } from "lucide-react";
+
+const PendingValidationOverlay = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-40"
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-lg shadow-2xl p-8 mx-4 max-w-md w-full text-center"
+      >
+        <div className="mb-6">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-8 h-8 text-yellow-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Conta em Validação
+          </h2>
+        </div>
+        
+        <p className="text-gray-600 leading-relaxed">
+          Sua conta está sendo validada. Assim que a mesma for validada você receberá acesso às respectivas áreas do portal.
+        </p>
+        
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-500">
+            Este processo pode levar algumas horas. Você será notificado por email quando sua conta for liberada.
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default PendingValidationOverlay;

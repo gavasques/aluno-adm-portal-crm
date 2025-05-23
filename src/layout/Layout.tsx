@@ -5,6 +5,7 @@ import Header from "./Header";
 import StudentSidebar from "./StudentSidebar";
 import AdminSidebar from "./AdminSidebar";
 import AccessDenied from "@/components/admin/AccessDenied";
+import PendingValidationOverlay from "@/components/layout/PendingValidationOverlay";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
@@ -31,6 +32,14 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
     redirectedRef.current = false;
     setShowAccessDenied(false);
   }, [location.pathname]);
+
+  // Verificar se deve mostrar o overlay de validação pendente
+  const shouldShowPendingValidation = user && 
+    !authLoading && 
+    !permissionsLoading && 
+    permissions.permissionGroupName === "Geral" && 
+    !permissions.hasAdminAccess &&
+    !isHome;
 
   // Se estiver carregando, mostrar indicador de carregamento
   if (authLoading || permissionsLoading) {
@@ -85,6 +94,9 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
               <Outlet />
             </motion.div>
           </motion.main>
+          
+          {/* Overlay de validação pendente */}
+          {shouldShowPendingValidation && <PendingValidationOverlay />}
         </div>
       </SidebarProvider>
     </div>

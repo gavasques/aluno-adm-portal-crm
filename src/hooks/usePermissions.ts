@@ -7,6 +7,7 @@ interface UserPermissions {
   hasAdminAccess: boolean;
   allowedMenus: string[];
   permissionGroupId: string | null;
+  permissionGroupName: string | null;
   isAdmin: boolean;
 }
 
@@ -16,6 +17,7 @@ export const usePermissions = () => {
     hasAdminAccess: false,
     allowedMenus: [],
     permissionGroupId: null,
+    permissionGroupName: null,
     isAdmin: false
   });
   const [loading, setLoading] = useState(true);
@@ -27,6 +29,7 @@ export const usePermissions = () => {
         hasAdminAccess: false,
         allowedMenus: [],
         permissionGroupId: null,
+        permissionGroupName: null,
         isAdmin: false
       });
       setLoading(false);
@@ -115,6 +118,7 @@ export const usePermissions = () => {
         hasAdminAccess,
         allowedMenus,
         permissionGroupId: profile.permission_group_id,
+        permissionGroupName: profile.permission_groups?.name,
         isAdmin: isAdminGroup || isAdminRole
       });
 
@@ -122,6 +126,7 @@ export const usePermissions = () => {
         hasAdminAccess,
         allowedMenus,
         permissionGroupId: profile.permission_group_id,
+        permissionGroupName: profile.permission_groups?.name,
         isAdmin: isAdminGroup || isAdminRole
       });
 
@@ -132,6 +137,7 @@ export const usePermissions = () => {
         hasAdminAccess: false,
         allowedMenus: [],
         permissionGroupId: null,
+        permissionGroupName: null,
         isAdmin: false
       });
     } finally {
