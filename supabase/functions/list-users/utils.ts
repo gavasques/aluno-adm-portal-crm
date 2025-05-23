@@ -4,9 +4,13 @@
 // Definir headers CORS para permitir o acesso a partir do frontend
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-timestamp',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400', // 24 horas para reduzir pré-voos CORS
 };
+
+// Importar dependências necessárias
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
 
 // Função para criar o cliente do Supabase com role de administrador
 export function createSupabaseAdminClient() {
@@ -37,11 +41,9 @@ export function createSupabaseAdminClient() {
 
 // Função para lidar com as requisições OPTIONS (CORS)
 export function handleOptionsRequest() {
+  console.log("Respondendo a requisição OPTIONS com cabeçalhos CORS");
   return new Response(null, {
     headers: corsHeaders,
     status: 204,
   });
 }
-
-// Importar dependências necessárias
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";

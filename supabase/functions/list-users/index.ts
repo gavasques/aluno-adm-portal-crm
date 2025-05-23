@@ -9,13 +9,15 @@ import { handlePostRequest, handleGetRequest } from './handlers.ts';
 serve(async (req) => {
   console.log(`Recebendo requisição ${req.method} para list-users`);
   
-  // Lidar com requisições OPTIONS (pre-flight CORS)
-  if (req.method === 'OPTIONS') {
-    return handleOptionsRequest();
-  }
-
   try {
+    // Lidar com requisições OPTIONS (pre-flight CORS)
+    if (req.method === 'OPTIONS') {
+      console.log("Processando requisição OPTIONS");
+      return handleOptionsRequest();
+    }
+
     // Criar cliente Supabase com token service_role
+    console.log("Criando cliente Supabase Admin...");
     const supabaseAdmin = createSupabaseAdminClient();
     
     // Processar requisições com base no método HTTP
@@ -46,7 +48,9 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || "Erro ao processar requisição"
+        error: error.message || "Erro ao processar requisição",
+        stack: error.stack,
+        timestamp: new Date().toISOString()
       }),
       { 
         headers: { 

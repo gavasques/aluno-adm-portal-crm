@@ -39,9 +39,12 @@ export const useUsersList = () => {
           method: 'GET',
           headers: { 
             'Cache-Control': 'no-cache', 
-            'X-Timestamp': timestamp.toString() 
+            'X-Timestamp': timestamp.toString(),
+            'Content-Type': 'application/json'
           }
         });
+        
+        console.log("Resposta bruta da Edge Function:", response);
         
         // Verificar erros na resposta
         if (response.error) {
@@ -52,7 +55,7 @@ export const useUsersList = () => {
         const data = response.data;
         
         // Log para debug - verificar payload completo recebido do backend
-        console.log("Resposta da função list-users:", data);
+        console.log("Dados processados da função list-users:", data);
         
         if (!data) {
           throw new Error("Resposta da Edge Function sem dados");

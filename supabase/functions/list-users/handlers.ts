@@ -1,6 +1,6 @@
 
 import { corsHeaders } from './utils.ts';
-import { processUsers } from './userProcessing.ts';
+import { processUsers, ensureProfiles } from './userProcessing.ts';
 import { createSuccessResponse, createErrorResponse } from './responseHelpers.ts';
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
@@ -29,6 +29,26 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
     }
 
     console.log(`Obtidos ${users.length} usuários do auth`);
+    
+    // Buscar perfis em uma única consulta
+    const { data: profilesData } = await supabaseAdmin
+      .from('profiles')
+      .select('*');
+    
+    // Criar um mapa de perfis para acesso rápido
+    const profilesMap = new Map();
+    if (profilesData && Array.isArray(profilesData)) {
+      profilesData.forEach(profile => {
+        if (profile && profile.id) {
+          profilesMap.set(profile.id, profile);
+        }
+      });
+    }
+    
+    console.log(`Mapa de perfis criado com ${profilesMap.size} entradas`);
+    
+    // Assegurar que todos os usuários tenham perfis
+    await ensureProfiles(users, supabaseAdmin, profilesMap);
     
     // Processar os usuários para o formato esperado usando a função refatorada
     const processedUsers = await processUsers(users, supabaseAdmin);
