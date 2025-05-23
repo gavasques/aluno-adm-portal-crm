@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Card, 
@@ -19,14 +18,7 @@ import {
 import { Edit2, Trash2, Users } from "lucide-react";
 import LoadingPermissions from "./LoadingPermissions";
 import EmptyPermissions from "./EmptyPermissions";
-
-interface PermissionGroup {
-  id: string;
-  name: string;
-  description: string | null;
-  is_admin: boolean;
-  created_at: string;
-}
+import { PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 
 interface PermissionsCardProps {
   permissionGroups: PermissionGroup[];

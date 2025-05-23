@@ -50,11 +50,11 @@ const Permissions = () => {
       )}
 
       <PermissionsCard 
-        permissionGroups={permissionGroups} 
+        permissionGroups={permissionGroups}
         isLoading={isLoading} 
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onViewUsers={handleViewUsers}
+        onEdit={handleEdit as (group: any) => void}
+        onDelete={handleDelete as (group: any) => void}
+        onViewUsers={handleViewUsers as (group: any) => void}
       />
 
       <PermissionsDialogs 

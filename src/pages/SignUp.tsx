@@ -17,14 +17,10 @@ const SignUp = () => {
     const password = (form.elements.namedItem("password") as HTMLInputElement)?.value;
     const name = (form.elements.namedItem("name") as HTMLInputElement)?.value;
     
-    if (email && password) {
+    if (email && password && name) {
       try {
-        // Updated to match the expected function signature
-        await signUp(
-          { email, password }, 
-          { redirectTo: window.location.origin + '/signin' },
-          { data: { name } }
-        );
+        // Call signUp with separate parameters
+        await signUp(email, password, name);
         navigate("/signin");
       } catch (error) {
         console.error("Erro ao criar conta:", error);
