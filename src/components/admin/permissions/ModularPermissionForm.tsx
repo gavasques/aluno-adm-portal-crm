@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { useSystemModules } from "@/hooks/admin/useSystemModules";
 import { useModularPermissions, ModulePermissionData } from "@/hooks/admin/useModularPermissions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ModularPermissionFormProps {
   isEdit: boolean;
@@ -98,22 +99,27 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
           await saveGroupModulePermissions(permissionGroup.id, modulePermissions);
         }
       } else {
-        // Criar novo grupo
-        const { data: newGroup, error: groupError } = await supabase
-          .from("permission_groups")
-          .insert({
-            name,
-            description,
-            is_admin: isAdmin
-          })
-          .select()
-          .single();
-          
-        if (groupError) throw groupError;
+        // Criar novo grupo usando o hook
+        await createPermissionGroup({
+          name,
+          description,
+          is_admin: isAdmin,
+          menu_keys: [] // Manter compatibilidade
+        });
         
-        // Salvar permissões modulares se não for admin
-        if (!isAdmin && newGroup) {
-          await saveGroupModulePermissions(newGroup.id, modulePermissions);
+        // Para novo grupo, se não for admin, buscar o ID do grupo recém-criado
+        if (!isAdmin) {
+          // Buscar o grupo recém-criado para obter o ID
+          const { data: newGroups, error } = await supabase
+            .from("permission_groups")
+            .select("id")
+            .eq("name", name)
+            .order("created_at", { ascending: false })
+            .limit(1);
+            
+          if (!error && newGroups && newGroups.length > 0) {
+            await saveGroupModulePermissions(newGroups[0].id, modulePermissions);
+          }
         }
       }
       
