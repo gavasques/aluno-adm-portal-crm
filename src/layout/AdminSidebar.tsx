@@ -14,7 +14,7 @@ interface NavItemProps {
 
 // Map of currently implemented routes
 const implementedRoutes = {
-  "/admin": true,
+  "/admin": true, // Updated to true since we've now implemented it
   "/admin/users": true,
   "/admin/permissions": true,
   "/admin/suppliers": true,

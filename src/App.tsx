@@ -13,6 +13,7 @@ const Home = lazy(() => import("@/pages/Home"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const Account = lazy(() => import("@/pages/Account"));
+const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AdminUsers = lazy(() => import("@/pages/admin/Users"));
 const AdminPermissions = lazy(() => import("@/pages/admin/Permissions"));
 const AdminSuppliers = lazy(() => import("@/pages/admin/Suppliers"));
@@ -33,6 +34,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loading />}>
             <Home />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/admin",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <AdminDashboard />
           </Suspense>
         ),
       },
