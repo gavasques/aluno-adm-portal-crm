@@ -1,8 +1,9 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
+import AccessDenied from "./AccessDenied";
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -19,10 +20,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const { permissions, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
   const hasRedirectedRef = useRef(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
 
   useEffect(() => {
     // Reset redirect flag when dependencies change
     hasRedirectedRef.current = false;
+    setShowAccessDenied(false);
   }, [user?.id, permissions.hasAdminAccess, requiredMenuKey]);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     if (requireAdminAccess && !permissions.hasAdminAccess) {
       console.log("Acesso negado: usuário não tem permissão admin");
       hasRedirectedRef.current = true;
-      navigate("/student");
+      setShowAccessDenied(true);
       return;
     }
 
@@ -47,7 +50,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
       console.log(`Acesso negado: usuário não tem acesso ao menu ${requiredMenuKey}`);
       hasRedirectedRef.current = true;
-      navigate("/student");
+      setShowAccessDenied(true);
       return;
     }
   }, [
@@ -70,7 +73,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  // Se não tem permissão, não renderizar nada (já redirecionou)
+  // Se deve mostrar tela de acesso negado
+  if (showAccessDenied) {
+    return <AccessDenied />;
+  }
+
+  // Se não tem permissão, não renderizar nada (já mostrou acesso negado)
   if (requireAdminAccess && !permissions.hasAdminAccess) {
     return null;
   }

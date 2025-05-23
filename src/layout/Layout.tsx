@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import Header from "./Header";
 import StudentSidebar from "./StudentSidebar";
 import AdminSidebar from "./AdminSidebar";
+import AccessDenied from "@/components/admin/AccessDenied";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface LayoutProps {
   isAdmin?: boolean;
@@ -19,6 +20,7 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
   const { user, loading: authLoading } = useAuth();
   const { permissions, loading: permissionsLoading } = usePermissions();
   const redirectedRef = useRef(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
   
   const isAdminRoute = propIsAdmin !== undefined ? propIsAdmin : location.pathname.startsWith("/admin");
   const isStudentRoute = location.pathname.startsWith("/student");
@@ -27,6 +29,7 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
   // Reset redirection flag when location changes
   useEffect(() => {
     redirectedRef.current = false;
+    setShowAccessDenied(false);
   }, [location.pathname]);
 
   // Se estiver carregando, mostrar indicador de carregamento
@@ -43,17 +46,20 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
     return <Navigate to="/" replace />;
   }
 
-  // Redirecionamento estável para evitar loops
+  // Verificação de acesso admin
   if (user && !authLoading && !permissionsLoading && !redirectedRef.current) {
-    // Se estiver tentando acessar área admin sem permissão, redirecionar para student
+    // Se estiver tentando acessar área admin sem permissão
     if (isAdminRoute && !permissions.hasAdminAccess) {
-      console.log("Usuário sem permissão admin tentando acessar área administrativa, redirecionando para /student");
+      console.log("Usuário sem permissão admin tentando acessar área administrativa");
       redirectedRef.current = true;
-      return <Navigate to="/student" replace />;
+      setShowAccessDenied(true);
+      return <AccessDenied />;
     }
+  }
 
-    // Se usuário tem permissão admin mas está na área student, permitir (não forçar redirecionamento)
-    // Isso evita loops e permite que admins acessem ambas as áreas
+  // Se deve mostrar a tela de acesso negado
+  if (showAccessDenied) {
+    return <AccessDenied />;
   }
 
   return (
