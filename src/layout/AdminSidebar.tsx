@@ -23,9 +23,9 @@ const NavItem = ({
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
-  // Se não tem menuKey, sempre mostrar (para itens básicos)
+  // Se não tem menuKey, sempre mostrar (para itens básicos como Dashboard)
   // Se tem menuKey, verificar se está na lista de menus permitidos
-  if (menuKey && !permissions.allowedMenus.includes(menuKey)) {
+  if (menuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(menuKey)) {
     return null;
   }
   
@@ -80,6 +80,11 @@ const AdminSidebar = () => {
         </SidebarContent>
       </Sidebar>
     );
+  }
+
+  // Se não tem acesso admin, não mostrar sidebar
+  if (!permissions.hasAdminAccess) {
+    return null;
   }
 
   return (

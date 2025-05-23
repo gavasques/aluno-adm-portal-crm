@@ -4,7 +4,6 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { recoveryModeUtils } from "./useRecoveryMode";
-import { useRoleRedirection } from "./useRoleRedirection";
 
 /**
  * Hook for handling authentication events
@@ -15,7 +14,6 @@ export const useAuthEventHandler = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { redirectBasedOnRole } = useRoleRedirection();
 
   // Verificar se estamos na página de redefinição de senha
   const isResetPasswordPage = location.pathname === "/reset-password";
@@ -54,12 +52,9 @@ export const useAuthEventHandler = () => {
 
     if (event === "SIGNED_OUT") {
       navigate("/");
-    } else if (event === "SIGNED_IN" && !isResetPasswordPage && !recoveryModeUtils.isInRecoveryMode()) {
-      // Verificar o papel do usuário (admin ou aluno)
-      if (currentSession?.user) {
-        setTimeout(() => redirectBasedOnRole(currentSession.user, currentSession), 0);
-      }
     }
+    // REMOVIDO: redirecionamento automático que causava loop
+    // O redirecionamento agora será feito pelo Layout baseado nas permissões
   };
 
   return {

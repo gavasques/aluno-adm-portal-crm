@@ -128,7 +128,7 @@ export const usePermissions = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, session]);
+  }, [user?.id, session?.access_token]); // Dependências específicas para evitar loops
 
   useEffect(() => {
     fetchPermissions();

@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useEffect, useRef } from "react";
 
 interface LayoutProps {
   isAdmin?: boolean;
@@ -17,11 +18,17 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const { permissions, loading: permissionsLoading } = usePermissions();
+  const redirectedRef = useRef(false);
   
   const isAdminRoute = propIsAdmin !== undefined ? propIsAdmin : location.pathname.startsWith("/admin");
   const isStudentRoute = location.pathname.startsWith("/student");
   const isHome = location.pathname === "/";
   
+  // Reset redirection flag when location changes
+  useEffect(() => {
+    redirectedRef.current = false;
+  }, [location.pathname]);
+
   // Se estiver carregando, mostrar indicador de carregamento
   if (authLoading || permissionsLoading) {
     return (
@@ -36,10 +43,17 @@ const Layout = ({ isAdmin: propIsAdmin }: LayoutProps = {}) => {
     return <Navigate to="/" replace />;
   }
 
-  // Se estiver tentando acessar área admin sem permissão, redirecionar para student
-  if (isAdminRoute && user && !permissions.hasAdminAccess) {
-    console.log("Usuário sem permissão admin tentando acessar área administrativa, redirecionando para /student");
-    return <Navigate to="/student" replace />;
+  // Redirecionamento estável para evitar loops
+  if (user && !authLoading && !permissionsLoading && !redirectedRef.current) {
+    // Se estiver tentando acessar área admin sem permissão, redirecionar para student
+    if (isAdminRoute && !permissions.hasAdminAccess) {
+      console.log("Usuário sem permissão admin tentando acessar área administrativa, redirecionando para /student");
+      redirectedRef.current = true;
+      return <Navigate to="/student" replace />;
+    }
+
+    // Se usuário tem permissão admin mas está na área student, permitir (não forçar redirecionamento)
+    // Isso evita loops e permite que admins acessem ambas as áreas
   }
 
   return (

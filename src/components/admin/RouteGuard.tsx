@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
@@ -18,12 +18,19 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const { user, loading: authLoading } = useAuth();
   const { permissions, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
-    if (authLoading || permissionsLoading) return;
+    // Reset redirect flag when dependencies change
+    hasRedirectedRef.current = false;
+  }, [user?.id, permissions.hasAdminAccess, requiredMenuKey]);
+
+  useEffect(() => {
+    if (authLoading || permissionsLoading || hasRedirectedRef.current) return;
 
     // Se não está autenticado, redirecionar para home
     if (!user) {
+      hasRedirectedRef.current = true;
       navigate("/");
       return;
     }
@@ -31,19 +38,22 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     // Se requer acesso admin e usuário não tem
     if (requireAdminAccess && !permissions.hasAdminAccess) {
       console.log("Acesso negado: usuário não tem permissão admin");
+      hasRedirectedRef.current = true;
       navigate("/student");
       return;
     }
 
     // Se requer menu específico e usuário não tem acesso
-    if (requiredMenuKey && !permissions.allowedMenus.includes(requiredMenuKey)) {
+    if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
       console.log(`Acesso negado: usuário não tem acesso ao menu ${requiredMenuKey}`);
+      hasRedirectedRef.current = true;
       navigate("/student");
       return;
     }
   }, [
     user, 
-    permissions, 
+    permissions.hasAdminAccess,
+    permissions.allowedMenus,
     authLoading, 
     permissionsLoading, 
     navigate, 
@@ -65,7 +75,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     return null;
   }
 
-  if (requiredMenuKey && !permissions.allowedMenus.includes(requiredMenuKey)) {
+  if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
     return null;
   }
 
