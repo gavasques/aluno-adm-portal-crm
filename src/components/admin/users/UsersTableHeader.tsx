@@ -7,9 +7,8 @@ const UsersTableHeader: React.FC = () => {
     <TableHeader>
       <TableRow>
         <TableHead>Nome</TableHead>
-        <TableHead>Email</TableHead>
-        <TableHead>Papel</TableHead>
         <TableHead>Status</TableHead>
+        <TableHead>Papel</TableHead>
         <TableHead>Último Login</TableHead>
         <TableHead className="text-right">Ações</TableHead>
       </TableRow>

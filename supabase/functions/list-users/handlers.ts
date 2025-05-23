@@ -95,7 +95,7 @@ export async function handleGetRequest(supabaseAdmin: any): Promise<Response> {
     console.error("Erro ao processar requisição GET:", error);
     return createErrorResponse(error);
   }
-};
+}
 
 export async function handlePostRequest(req: Request, supabaseAdmin: any): Promise<Response> {
   try {
@@ -151,4 +151,4 @@ export async function handlePostRequest(req: Request, supabaseAdmin: any): Promi
     console.error("Erro ao processar requisição POST:", error);
     return createErrorResponse(error);
   }
-};
+}
