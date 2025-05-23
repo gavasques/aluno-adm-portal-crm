@@ -1,68 +1,31 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { PartnerHeader } from "@/components/student/partners/PartnerHeader";
-import { PartnerContent } from "@/components/student/partners/PartnerContent";
-import { usePartners } from "@/hooks/student/usePartners";
-import { Toaster } from "@/components/ui/sonner";
+import PartnerHeader from "@/components/student/partners/PartnerHeader";
+import PartnerContent from "@/components/student/partners/PartnerContent";
+import StudentRouteGuard from "@/components/student/RouteGuard";
 
 const Partners = () => {
-  const {
-    searchQuery,
-    setSearchQuery,
-    partnerTypeFilter,
-    setPartnerTypeFilter,
-    recommendedFilter,
-    setRecommendedFilter,
-    selectedPartner,
-    setSelectedPartner,
-    ratingText,
-    setRatingText,
-    commentText,
-    setCommentText,
-    filteredPartners,
-    calculateAverageRating,
-    handleLikeRating,
-    handleLikeComment,
-    handleAddRating,
-    handleAddComment
-  } = usePartners();
-  
   return (
-    <motion.div 
-      className="container mx-auto py-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      {!selectedPartner && (
-        <PartnerHeader
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          partnerTypeFilter={partnerTypeFilter}
-          setPartnerTypeFilter={setPartnerTypeFilter}
-          recommendedFilter={recommendedFilter}
-          setRecommendedFilter={setRecommendedFilter}
-        />
-      )}
-      
-      <PartnerContent
-        filteredPartners={filteredPartners}
-        selectedPartner={selectedPartner}
-        setSelectedPartner={setSelectedPartner}
-        commentText={commentText}
-        ratingText={ratingText}
-        setCommentText={setCommentText}
-        setRatingText={setRatingText}
-        handleAddComment={handleAddComment}
-        handleAddRating={handleAddRating}
-        handleLikeComment={handleLikeComment}
-        handleLikeRating={handleLikeRating}
-        calculateAverageRating={calculateAverageRating}
-      />
+    <StudentRouteGuard requiredMenuKey="partners">
+      <div className="container mx-auto py-6 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <PartnerHeader />
+        </motion.div>
 
-      <Toaster />
-    </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <PartnerContent />
+        </motion.div>
+      </div>
+    </StudentRouteGuard>
   );
 };
 
