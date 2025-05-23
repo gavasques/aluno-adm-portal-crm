@@ -39,9 +39,12 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
 
       const newStatus = !isActive;
 
+      // Based on the error, we need to modify how we're updating the profile
+      // The profiles table may not have an 'is_active' field directly
+      // Let's update the field name to match what is expected in the database schema
       const { error } = await supabase
         .from("profiles")
-        .update({ is_active: newStatus })
+        .update({ status: newStatus ? "Ativo" : "Inativo" })
         .eq('id', userId);
 
       if (error) throw error;
