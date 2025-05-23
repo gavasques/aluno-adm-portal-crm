@@ -11,6 +11,7 @@ interface User {
   status: string;
   lastLogin: string;
   tasks: any[];
+  permission_group_id?: string | null;
 }
 
 export const useUsersList = () => {
@@ -36,7 +37,6 @@ export const useUsersList = () => {
         const timestamp = new Date().getTime();
         const { data, error } = await supabase.functions.invoke('list-users', {
           method: 'GET',
-          // Use headers instead of queryParams which isn't a valid property
           headers: { 'Cache-Control': 'no-cache', 'X-Timestamp': timestamp.toString() }
         });
         

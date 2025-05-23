@@ -32,6 +32,7 @@ const Users = () => {
         onInviteUser={dialogsState.handleInviteUser}
         onDeleteUser={dialogsState.handleDeleteUser}
         onToggleUserStatus={dialogsState.handleToggleUserStatus}
+        onSetPermissionGroup={dialogsState.handleSetPermissionGroup}
       />
 
       <UsersDialogs
@@ -45,9 +46,12 @@ const Users = () => {
         setShowStatusDialog={dialogsState.setShowStatusDialog}
         showResetDialog={dialogsState.showResetDialog}
         setShowResetDialog={dialogsState.setShowResetDialog}
+        showPermissionDialog={dialogsState.showPermissionDialog}
+        setShowPermissionDialog={dialogsState.setShowPermissionDialog}
         selectedUserEmail={dialogsState.selectedUserEmail}
         selectedUserId={dialogsState.selectedUserId}
         selectedUserStatus={dialogsState.selectedUserStatus}
+        selectedUserPermissionGroupId={dialogsState.selectedUserPermissionGroupId}
         onSuccess={refreshUsersList}
       />
     </div>

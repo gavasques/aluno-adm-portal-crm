@@ -20,6 +20,7 @@ interface User {
   status: string;
   lastLogin: string;
   tasks: any[];
+  permission_group_id?: string | null;
 }
 
 interface UsersListProps {
@@ -32,6 +33,7 @@ interface UsersListProps {
   onInviteUser: () => void;
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
+  onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
 }
 
 const UsersList: React.FC<UsersListProps> = ({
@@ -44,6 +46,7 @@ const UsersList: React.FC<UsersListProps> = ({
   onInviteUser,
   onDeleteUser,
   onToggleUserStatus,
+  onSetPermissionGroup,
 }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -81,6 +84,7 @@ const UsersList: React.FC<UsersListProps> = ({
                   onResetPassword={onResetPassword}
                   onDeleteUser={onDeleteUser}
                   onToggleUserStatus={onToggleUserStatus}
+                  onSetPermissionGroup={onSetPermissionGroup}
                 />
               ))
             ) : (

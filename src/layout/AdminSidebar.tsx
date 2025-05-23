@@ -1,7 +1,8 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench } from "lucide-react";
+import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 interface NavItemProps {
@@ -84,6 +85,9 @@ const AdminSidebar = () => {
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/users" icon={Users}>Gestão de Usuários</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/permissions" icon={Lock}>Gestão de Permissões</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/gestao-alunos" icon={User}>Gestão de Alunos</NavItem>

@@ -5,8 +5,9 @@ import UserInviteDialog from "./UserInviteDialog";
 import UserDeleteDialog from "./UserDeleteDialog";
 import UserStatusDialog from "./UserStatusDialog";
 import ResetPasswordDialog from "./ResetPasswordDialog";
+import UserPermissionGroupDialog from "./UserPermissionGroupDialog";
 
-export interface UsersDialogsProps {
+interface UsersDialogsProps {
   showAddDialog: boolean;
   setShowAddDialog: (show: boolean) => void;
   showInviteDialog: boolean;
@@ -17,9 +18,12 @@ export interface UsersDialogsProps {
   setShowStatusDialog: (show: boolean) => void;
   showResetDialog: boolean;
   setShowResetDialog: (show: boolean) => void;
+  showPermissionDialog?: boolean;
+  setShowPermissionDialog?: (show: boolean) => void;
   selectedUserEmail: string;
   selectedUserId: string;
   selectedUserStatus: boolean;
+  selectedUserPermissionGroupId?: string | null;
   onSuccess: () => void;
 }
 
@@ -34,56 +38,67 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
   setShowStatusDialog,
   showResetDialog,
   setShowResetDialog,
+  showPermissionDialog = false,
+  setShowPermissionDialog,
   selectedUserEmail,
   selectedUserId,
   selectedUserStatus,
+  selectedUserPermissionGroupId,
   onSuccess
 }) => {
-  // Função para garantir que a lista seja atualizada após qualquer operação
-  const handleSuccess = () => {
-    // Dar um pequeno atraso para garantir que a operação tenha sido concluída
-    setTimeout(() => {
-      onSuccess();
-    }, 500);
-  };
-
   return (
     <>
-      <UserAddDialog 
+      {/* Diálogo para adicionar usuário */}
+      <UserAddDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
-        onSuccess={handleSuccess}
+        onSuccess={onSuccess}
       />
 
-      <UserInviteDialog 
+      {/* Diálogo para convidar usuário */}
+      <UserInviteDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
-        onSuccess={handleSuccess}
+        onSuccess={onSuccess}
       />
 
-      <UserDeleteDialog 
+      {/* Diálogo para excluir usuário */}
+      <UserDeleteDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        userId={selectedUserId}
         userEmail={selectedUserEmail}
-        onSuccess={handleSuccess}
+        userId={selectedUserId}
+        onSuccess={onSuccess}
       />
 
-      <UserStatusDialog 
+      {/* Diálogo para alternar status do usuário */}
+      <UserStatusDialog
         open={showStatusDialog}
         onOpenChange={setShowStatusDialog}
-        userId={selectedUserId}
         userEmail={selectedUserEmail}
-        currentStatus={selectedUserStatus ? "Ativo" : "Inativo"} // Convert boolean to string status
-        onSuccess={handleSuccess}
+        userId={selectedUserId}
+        isActive={selectedUserStatus}
+        onSuccess={onSuccess}
       />
 
-      <ResetPasswordDialog 
+      {/* Diálogo para redefinir senha */}
+      <ResetPasswordDialog
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
         userEmail={selectedUserEmail}
-        onSuccess={handleSuccess}
       />
+      
+      {/* Diálogo para definir grupo de permissão */}
+      {setShowPermissionDialog && (
+        <UserPermissionGroupDialog
+          open={showPermissionDialog}
+          onOpenChange={setShowPermissionDialog}
+          userId={selectedUserId}
+          userEmail={selectedUserEmail}
+          currentGroupId={selectedUserPermissionGroupId || null}
+          onSuccess={onSuccess}
+        />
+      )}
     </>
   );
 };

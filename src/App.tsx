@@ -21,6 +21,7 @@ import AdminRegisters from "@/pages/admin/Registers";
 import AdminPartners from "@/pages/admin/Partners";
 import AdminTools from "@/pages/admin/Tools";
 import AdminSuppliers from "@/pages/admin/Suppliers";
+import AdminPermissions from "@/pages/admin/Permissions";
 
 // Aluno pages
 import StudentDashboard from "@/pages/student/Dashboard";
@@ -43,6 +44,7 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="permissions" element={<AdminPermissions />} />
             <Route path="gestao-alunos" element={<AdminStudents />} />
             <Route path="gestao-alunos/:id" element={<AdminStudentDetail />} />
             <Route path="tasks" element={<AdminTasks />} />

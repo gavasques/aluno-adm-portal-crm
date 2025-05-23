@@ -9,6 +9,62 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      permission_group_menus: {
+        Row: {
+          created_at: string
+          id: string
+          menu_key: string
+          permission_group_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_key: string
+          permission_group_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_key?: string
+          permission_group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_group_menus_permission_group_id_fkey"
+            columns: ["permission_group_id"]
+            isOneToOne: false
+            referencedRelation: "permission_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permission_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_admin: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_admin?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_admin?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -16,6 +72,7 @@ export type Database = {
           email: string
           id: string
           name: string | null
+          permission_group_id: string | null
           role: string | null
           updated_at: string | null
         }
@@ -25,6 +82,7 @@ export type Database = {
           email: string
           id: string
           name?: string | null
+          permission_group_id?: string | null
           role?: string | null
           updated_at?: string | null
         }
@@ -34,8 +92,44 @@ export type Database = {
           email?: string
           id?: string
           name?: string | null
+          permission_group_id?: string | null
           role?: string | null
           updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_permission_group_id_fkey"
+            columns: ["permission_group_id"]
+            isOneToOne: false
+            referencedRelation: "permission_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_menus: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          icon: string | null
+          id: string
+          menu_key: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          icon?: string | null
+          id?: string
+          menu_key: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          icon?: string | null
+          id?: string
+          menu_key?: string
         }
         Relationships: []
       }
