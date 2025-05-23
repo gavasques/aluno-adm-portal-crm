@@ -77,7 +77,7 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
         onOpenChange={setShowStatusDialog}
         userEmail={selectedUserEmail}
         userId={selectedUserId}
-        isActive={selectedUserStatus}
+        currentStatus={selectedUserStatus ? "Ativo" : "Inativo"}
         onSuccess={onSuccess}
       />
 
@@ -86,6 +86,7 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
         userEmail={selectedUserEmail}
+        onSuccess={onSuccess}
       />
       
       {/* Diálogo para definir grupo de permissão */}

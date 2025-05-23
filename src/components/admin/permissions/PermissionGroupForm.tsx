@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { usePermissionGroups, PermissionGroupWithMenus } from "@/hooks/admin/usePermissionGroups";
 import { useSystemMenus } from "@/hooks/admin/useSystemMenus";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -88,17 +88,23 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
       
       if (isEdit) {
         // Atualizar grupo existente
-        await updatePermissionGroup({
+        const updateData: PermissionGroupWithMenus = {
           id: permissionGroup.id,
-          ...values,
+          name: values.name, // Garantir que name é fornecido
+          description: values.description || null,
+          is_admin: values.is_admin,
           menu_keys: values.is_admin ? [] : selectedMenus,
-        });
+        };
+        await updatePermissionGroup(updateData);
       } else {
         // Criar novo grupo
-        await createPermissionGroup({
-          ...values,
+        const createData: PermissionGroupWithMenus = {
+          name: values.name, // Garantir que name é fornecido
+          description: values.description || null,
+          is_admin: values.is_admin,
           menu_keys: values.is_admin ? [] : selectedMenus,
-        });
+        };
+        await createPermissionGroup(createData);
       }
       
       onSuccess();

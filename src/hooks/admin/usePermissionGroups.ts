@@ -3,14 +3,19 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-interface PermissionGroup {
+export interface PermissionGroup {
   id: string;
   name: string;
   description: string | null;
   is_admin: boolean;
+  created_at: string;
 }
 
-interface PermissionGroupWithMenus extends PermissionGroup {
+export interface PermissionGroupWithMenus {
+  id?: string; // Opcional para criação, obrigatório para atualização
+  name: string;
+  description: string | null;
+  is_admin: boolean;
   menu_keys: string[];
 }
 
@@ -66,7 +71,7 @@ export const usePermissionGroups = () => {
       if (!is_admin && menu_keys && menu_keys.length > 0 && newGroup) {
         const menuPermissions = menu_keys.map((menuKey) => ({
           permission_group_id: newGroup.id,
-          menu_key
+          menu_key: menuKey
         }));
         
         const { error: menuError } = await supabase
@@ -98,6 +103,10 @@ export const usePermissionGroups = () => {
     try {
       const { id, name, description, is_admin, menu_keys } = groupData;
       
+      if (!id) {
+        throw new Error("ID do grupo é obrigatório para atualização");
+      }
+      
       // Atualizar o grupo de permissão
       const { error: groupError } = await supabase
         .from("permission_groups")
@@ -123,7 +132,7 @@ export const usePermissionGroups = () => {
       if (!is_admin && menu_keys && menu_keys.length > 0) {
         const menuPermissions = menu_keys.map((menuKey) => ({
           permission_group_id: id,
-          menu_key
+          menu_key: menuKey
         }));
         
         const { error: menuError } = await supabase

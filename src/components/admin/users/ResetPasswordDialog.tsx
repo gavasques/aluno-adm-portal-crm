@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -9,85 +9,96 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, Mail } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export interface ResetPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail: string;
-  onSuccess: () => void; // Added this prop to match UsersDialogs.tsx
+  onSuccess: () => void;
 }
 
-const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ 
-  open, 
-  onOpenChange, 
+const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
+  open,
+  onOpenChange,
   userEmail,
-  onSuccess 
+  onSuccess
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleResetPassword = async () => {
+  const handleReset = async () => {
+    if (!userEmail) return;
+
     try {
-      setIsSubmitting(true);
-      
+      setIsProcessing(true);
+
       const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `https://titan.guilhermevasques.club/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
-      
-      if (error) throw error;
-      
+
+      if (error) {
+        throw error;
+      }
+
       toast({
-        title: "Link de redefinição de senha enviado",
-        description: `Um email foi enviado para ${userEmail} com instruções para redefinição de senha.`,
+        title: "Email enviado",
+        description: `Um email de recuperação de senha foi enviado para ${userEmail}.`,
       });
-      
+
       onOpenChange(false);
-      onSuccess(); // Call onSuccess after a successful operation
+      onSuccess();
     } catch (error) {
-      console.error("Erro ao enviar email de redefinição:", error);
+      console.error("Erro ao enviar email de redefinição de senha:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível enviar o email de redefinição. Tente novamente.",
+        description: "Não foi possível enviar o email de redefinição de senha.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsProcessing(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Mail className="mr-2 h-5 w-5" /> 
-            Enviar Email de Redefinição de Senha
-          </DialogTitle>
+          <DialogTitle>Redefinir senha</DialogTitle>
           <DialogDescription>
             Um email de redefinição de senha será enviado para o usuário.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="py-4 border-y">
-          <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-            <AlertTriangle className="text-amber-600 h-5 w-5" />
-            <p className="text-sm text-amber-800">
-              Tem certeza que deseja enviar um email de redefinição de senha para <strong>{userEmail}</strong>?
-            </p>
-          </div>
+
+        <div className="py-4">
+          <p>
+            Deseja enviar um email de redefinição de senha para{" "}
+            <span className="font-medium text-foreground">{userEmail}</span>?
+          </p>
         </div>
-        
-        <DialogFooter className="gap-2 sm:gap-0 mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isProcessing}
+          >
             Cancelar
           </Button>
-          <Button 
-            onClick={handleResetPassword} 
-            disabled={isSubmitting}
+          <Button
+            type="button"
+            onClick={handleReset}
+            disabled={isProcessing}
           >
-            {isSubmitting ? "Enviando..." : "Enviar Email"}
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
+              </>
+            ) : (
+              "Enviar email"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

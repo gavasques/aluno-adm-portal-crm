@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
@@ -16,24 +16,24 @@ const Permissions = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
   const [showUsersDialog, setShowUsersDialog] = useState(false);
 
   const handleAdd = () => {
     setShowAddDialog(true);
   };
 
-  const handleEdit = (group: any) => {
+  const handleEdit = (group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowEditDialog(true);
   };
 
-  const handleDelete = (group: any) => {
+  const handleDelete = (group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowDeleteDialog(true);
   };
 
-  const handleViewUsers = (group: any) => {
+  const handleViewUsers = (group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowUsersDialog(true);
   };
