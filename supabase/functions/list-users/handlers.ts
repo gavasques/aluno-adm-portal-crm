@@ -1,5 +1,5 @@
 
-import { corsHeaders } from './utils.ts';
+import { corsHeaders } from './_shared/cors.ts';
 import { processUsers, ensureProfiles } from './userProcessing.ts';
 
 // Função auxiliar para criar respostas de sucesso
