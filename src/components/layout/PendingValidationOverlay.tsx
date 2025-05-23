@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { Clock, LogOut } from "lucide-react";
+import { Clock, LogOut, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
 
@@ -36,6 +36,27 @@ const PendingValidationOverlay = () => {
           <p className="text-sm text-gray-500">
             Este processo pode levar algumas horas. Você será notificado por email quando sua conta for liberada.
           </p>
+        </div>
+
+        <div className="mb-6 pt-4 border-t border-gray-200 space-y-3">
+          <p className="text-sm text-gray-600">
+            Dúvidas entre em contato: <span className="font-medium text-blue-600">contato@guilhermevasques.com</span>
+          </p>
+          
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-gray-600">
+              Enquanto isso, veja meus vídeos no Youtube:
+            </p>
+            <a 
+              href="https://www.youtube.com/@guilhermeavasques" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors font-medium text-sm"
+            >
+              <Youtube className="w-4 h-4" />
+              @guilhermeavasques
+            </a>
+          </div>
         </div>
 
         <Button
