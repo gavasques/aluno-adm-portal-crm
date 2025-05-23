@@ -73,7 +73,7 @@ export const useSystemModules = () => {
         actions: (actionsData || []).filter(action => action.module_id === module.id)
       }));
       
-      console.log("Módulos carregados:", modulesWithActions);
+      console.log("Módulos carregados com novas ações:", modulesWithActions);
       setModules(modulesWithActions);
     } catch (err: any) {
       console.error("Erro ao carregar módulos:", err);
@@ -102,6 +102,11 @@ export const useSystemModules = () => {
     return categories;
   }, [modules]);
 
+  // Adicionar função para atualizar dados após mudanças
+  const forceRefresh = useCallback(() => {
+    fetchModulesWithActions();
+  }, [fetchModulesWithActions]);
+
   useEffect(() => {
     fetchModulesWithActions();
   }, [fetchModulesWithActions]);
@@ -111,6 +116,7 @@ export const useSystemModules = () => {
     isLoading,
     error,
     refreshModules: fetchModulesWithActions,
+    forceRefresh,
     getModulesByCategory
   };
 };

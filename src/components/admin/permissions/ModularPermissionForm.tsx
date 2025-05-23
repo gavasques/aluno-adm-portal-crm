@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -32,7 +31,7 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
   onSuccess,
 }) => {
   const { createPermissionGroup, updatePermissionGroup } = usePermissionGroups();
-  const { modules, isLoading: loadingModules, getModulesByCategory } = useSystemModules();
+  const { modules, isLoading: loadingModules, getModulesByCategory, forceRefresh } = useSystemModules();
   const { getGroupModulePermissions, saveGroupModulePermissions, isSubmitting } = useModularPermissions();
   
   const [name, setName] = useState("");
@@ -40,6 +39,11 @@ const ModularPermissionForm: React.FC<ModularPermissionFormProps> = ({
   const [isAdmin, setIsAdmin] = useState(false);
   const [modulePermissions, setModulePermissions] = useState<ModulePermissionData[]>([]);
   const [loadingGroupData, setLoadingGroupData] = useState(isEdit);
+
+  // Forçar refresh dos módulos ao abrir o formulário para garantir que as novas ações sejam carregadas
+  useEffect(() => {
+    forceRefresh();
+  }, [forceRefresh]);
 
   // Carregar dados do grupo para edição
   useEffect(() => {
