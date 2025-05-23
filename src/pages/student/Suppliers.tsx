@@ -1,8 +1,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import SupplierHeader from "@/components/student/suppliers/SupplierHeader";
-import SupplierContent from "@/components/student/suppliers/SupplierContent";
+import { SupplierHeader } from "@/components/student/suppliers/SupplierHeader";
+import { SupplierContent } from "@/components/student/suppliers/SupplierContent";
 import StudentRouteGuard from "@/components/student/RouteGuard";
 
 const Suppliers = () => {

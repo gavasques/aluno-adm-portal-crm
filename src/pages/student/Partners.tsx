@@ -1,8 +1,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import PartnerHeader from "@/components/student/partners/PartnerHeader";
-import PartnerContent from "@/components/student/partners/PartnerContent";
+import { PartnerHeader } from "@/components/student/partners/PartnerHeader";
+import { PartnerContent } from "@/components/student/partners/PartnerContent";
 import StudentRouteGuard from "@/components/student/RouteGuard";
 
 const Partners = () => {

@@ -1,8 +1,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import SupplierForm from "@/components/student/my-suppliers/SupplierForm";
-import SuppliersList from "@/components/student/my-suppliers/SuppliersList";
+import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
+import { SuppliersList } from "@/components/student/my-suppliers/SuppliersList";
 import StudentRouteGuard from "@/components/student/RouteGuard";
 
 const MySuppliers = () => {

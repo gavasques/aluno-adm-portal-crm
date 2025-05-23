@@ -1,8 +1,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import ToolHeader from "@/components/student/tools/ToolHeader";
-import ToolContent from "@/components/student/tools/ToolContent";
+import { ToolHeader } from "@/components/student/tools/ToolHeader";
+import { ToolContent } from "@/components/student/tools/ToolContent";
 import StudentRouteGuard from "@/components/student/RouteGuard";
 
 const Tools = () => {
