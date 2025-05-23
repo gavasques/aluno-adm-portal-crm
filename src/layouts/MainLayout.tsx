@@ -9,8 +9,8 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = () => {
   return (
-    <Layout isAdmin={undefined}>
-      <Outlet />
-    </Layout>
+    // The Layout component is using Outlet internally and does not expect children
+    // as a prop. It only expects isAdmin as an optional prop.
+    <Layout isAdmin={undefined} />
   );
 };
