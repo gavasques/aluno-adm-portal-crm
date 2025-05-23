@@ -1,7 +1,39 @@
 
 import { corsHeaders } from './utils.ts';
 import { processUsers } from './userProcessing.ts';
-import { createSuccessResponse, createErrorResponse } from './responseHelpers.ts';
+
+// Função auxiliar para criar respostas com sucesso
+function createSuccessResponse(data: any, status = 200) {
+  return new Response(
+    JSON.stringify(data),
+    { 
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json' 
+      },
+      status 
+    }
+  );
+}
+
+// Função auxiliar para criar respostas de erro
+function createErrorResponse(error: any, status = 500) {
+  console.error("Erro na operação:", error);
+  
+  const errorMessage = error instanceof Error ? error.message : 
+    (typeof error === 'string' ? error : "Erro desconhecido");
+  
+  return new Response(
+    JSON.stringify({ error: errorMessage }),
+    { 
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json' 
+      },
+      status 
+    }
+  );
+}
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
   try {
@@ -15,6 +47,8 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
       throw error;
     }
 
+    console.log(`Obtidos ${users?.length || 0} usuários do auth`);
+    
     // Processar os usuários para o formato esperado usando a função refatorada
     const processedUsers = await processUsers(users, supabaseAdmin);
 
@@ -51,7 +85,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promi
       );
     }
     
-    // Importar funções de operação dinâmicamente
+    // Importar funções de operação dinamicamente
     const { createUser, deleteUser, toggleUserStatus, inviteUser } = await import('./userOperations.ts');
     
     // Executar a ação correspondente

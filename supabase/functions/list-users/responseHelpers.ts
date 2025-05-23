@@ -1,36 +1,37 @@
 
-import { corsHeaders } from './utils.ts';
+// Auxiliares para criação de respostas padronizadas
 
-/**
- * Cria uma resposta HTTP de sucesso
- */
-export function createSuccessResponse(data: any, status: number = 200): Response {
+import { corsHeaders } from "./utils.ts";
+
+// Cria uma resposta de sucesso padronizada
+export function createSuccessResponse(data: any, status = 200) {
   return new Response(
     JSON.stringify(data),
-    { 
-      headers: { 
+    {
+      headers: {
         ...corsHeaders,
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json'
       },
-      status: status
+      status
     }
   );
 }
 
-/**
- * Cria uma resposta HTTP de erro
- */
-export function createErrorResponse(error: any, status: number = 500): Response {
-  const errorMessage = error?.message || (typeof error === 'string' ? error : "Erro desconhecido");
+// Cria uma resposta de erro padronizada
+export function createErrorResponse(error: any, status = 500) {
+  console.error("Erro na operação:", error);
+  
+  const errorMessage = error instanceof Error ? error.message : 
+    (typeof error === 'string' ? error : "Erro desconhecido");
   
   return new Response(
     JSON.stringify({ error: errorMessage }),
-    { 
-      headers: { 
+    {
+      headers: {
         ...corsHeaders,
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json'
       },
-      status: status
+      status
     }
   );
 }

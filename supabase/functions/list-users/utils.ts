@@ -10,9 +10,17 @@ export const corsHeaders = {
 
 // Função para criar o cliente do Supabase com role de administrador
 export function createSupabaseAdminClient() {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !supabaseServiceRole) {
+    console.error("Variáveis de ambiente necessárias não configuradas");
+    throw new Error("Configuração de ambiente incompleta - verifique SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY");
+  }
+  
   return createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    supabaseUrl,
+    supabaseServiceRole,
     {
       auth: {
         persistSession: false,

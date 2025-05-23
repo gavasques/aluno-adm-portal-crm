@@ -37,7 +37,10 @@ export const useUsersList = () => {
         const timestamp = new Date().getTime();
         const { data, error } = await supabase.functions.invoke('list-users', {
           method: 'GET',
-          headers: { 'Cache-Control': 'no-cache', 'X-Timestamp': timestamp.toString() }
+          headers: { 
+            'Cache-Control': 'no-cache', 
+            'X-Timestamp': timestamp.toString() 
+          }
         });
         
         if (error) {
@@ -46,10 +49,10 @@ export const useUsersList = () => {
         }
         
         // Log para debug - verificar payload completo recebido do backend
-        console.log("users payload", data);
+        console.log("Resposta da função list-users:", data);
         
         if (data && Array.isArray(data.users)) {
-          console.log("Dados recebidos:", data.users.length, "usuários");
+          console.log(`Dados recebidos: ${data.users.length} usuários`);
           setUsers(data.users);
         } else {
           console.error("Resposta da função sem dados de usuários válidos:", data);

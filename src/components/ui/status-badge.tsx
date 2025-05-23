@@ -9,7 +9,12 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
-  const isActive = status === "Ativo";
+  // Verificar se o status é ativo, com diferentes formas de escrita possíveis
+  const isActive = status === "Ativo" || 
+                  status === "ativo" || 
+                  status === "ATIVO" ||
+                  status === "active" || 
+                  status === "Active";
   
   return (
     <Badge 
