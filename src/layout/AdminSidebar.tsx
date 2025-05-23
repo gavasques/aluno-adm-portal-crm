@@ -9,23 +9,56 @@ interface NavItemProps {
   href: string;
   icon: React.ElementType;
   children: React.ReactNode;
+  implemented?: boolean;
 }
+
+// Map of currently implemented routes
+const implementedRoutes = {
+  "/admin": true,
+  "/admin/users": true,
+  "/admin/permissions": true,
+  "/admin/suppliers": true,
+  "/admin/fix-permissions": true,
+  "/admin/settings": false,
+  "/admin/gestao-alunos": false,
+  "/admin/registers": false,
+  "/admin/tasks": false,
+  "/admin/crm": false,
+  "/admin/partners": false,
+  "/admin/tools": false
+};
 
 const NavItem = ({
   href,
   icon: Icon,
-  children
+  children,
+  implemented = true
 }: NavItemProps) => {
   const {
     pathname
   } = useLocation();
   const isActive = pathname === href;
   
+  // Determine if this route is implemented
+  const isImplemented = implementedRoutes[href] !== false;
+  
   return <SidebarMenuItem>
       <SidebarMenuButton asChild>
-        <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700")}>
+        <Link 
+          to={href} 
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", 
+            isActive 
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
+              : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700",
+            !isImplemented && "opacity-50 cursor-not-allowed"
+          )}
+          onClick={(e) => !isImplemented && e.preventDefault()}
+          title={!isImplemented ? "Rota ainda não implementada" : undefined}
+        >
           <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-blue-700 opacity-80")} />
           <span>{children}</span>
+          {!isImplemented && <span className="ml-1 text-xs">(Em breve)</span>}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>;
@@ -71,7 +104,7 @@ const AdminSidebar = () => {
                   <NavItem href="/admin" icon={Home}>Dashboard</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/settings" icon={Settings}>Configurações</NavItem>
+                  <NavItem href="/admin/settings" icon={Settings} implemented={false}>Configurações</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -90,10 +123,10 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/permissions" icon={Lock}>Gestão de Permissões</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/gestao-alunos" icon={User}>Gestão de Alunos</NavItem>
+                  <NavItem href="/admin/gestao-alunos" icon={User} implemented={false}>Gestão de Alunos</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/registers" icon={Database}>Cadastros</NavItem>
+                  <NavItem href="/admin/registers" icon={Database} implemented={false}>Cadastros</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -106,10 +139,10 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/tasks" icon={List}>Lista de Tarefas</NavItem>
+                  <NavItem href="/admin/tasks" icon={List} implemented={false}>Lista de Tarefas</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/crm" icon={BookOpen}>CRM / Gestão de Leads</NavItem>
+                  <NavItem href="/admin/crm" icon={BookOpen} implemented={false}>CRM / Gestão de Leads</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -125,10 +158,10 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/suppliers" icon={Users}>Fornecedores</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/partners" icon={BarChart}>Parceiros</NavItem>
+                  <NavItem href="/admin/partners" icon={BarChart} implemented={false}>Parceiros</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/tools" icon={Wrench}>Ferramentas</NavItem>
+                  <NavItem href="/admin/tools" icon={Wrench} implemented={false}>Ferramentas</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>

@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from "react";
 import {
   createBrowserRouter,
@@ -6,6 +7,7 @@ import {
 import { MainLayout } from "@/layouts/MainLayout";
 import { AuthProvider } from "@/hooks/useAuth";
 import Loading from "@/components/ui/loading";
+import NotFound from "@/pages/NotFound";
 
 const Home = lazy(() => import("@/pages/Home"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
@@ -24,6 +26,7 @@ const router = createBrowserRouter([
         <MainLayout />
       </AuthProvider>
     ),
+    errorElement: <NotFound />,
     children: [
       {
         index: true,
@@ -73,6 +76,10 @@ const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        path: "*",
+        element: <NotFound />
+      }
     ],
   },
   {
@@ -91,6 +98,10 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: "*",
+    element: <NotFound />
+  }
 ]);
 
 function App() {
