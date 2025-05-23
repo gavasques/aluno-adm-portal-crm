@@ -1,9 +1,9 @@
 
 // Arquivo principal da Edge Function
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/x/supabase@1.7.0/functions/mod.ts";
 import { corsHeaders, createSupabaseAdminClient, handleOptionsRequest } from './utils.ts';
-import { handlePostRequest, handleGetRequest } from './handlers.ts';
+import { handleGetRequest, handlePostRequest } from './handlers.ts';
 
 console.log("Edge Function list-users inicializada");
 

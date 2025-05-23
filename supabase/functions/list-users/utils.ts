@@ -1,5 +1,6 @@
 
-// Utilitários e configurações compartilhadas
+// Importar dependências necessárias
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
 
 // Definir headers CORS para permitir o acesso a partir do frontend
 export const corsHeaders = {
@@ -8,9 +9,6 @@ export const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Max-Age': '86400', // 24 horas para reduzir pré-voos CORS
 };
-
-// Importar dependências necessárias
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
 
 // Função para criar o cliente do Supabase com role de administrador
 export function createSupabaseAdminClient() {

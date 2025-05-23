@@ -35,7 +35,7 @@ export const createErrorResponse = (error: any, status: number = 500) => {
   );
 };
 
-export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
+export async function handleGetRequest(supabaseAdmin: any): Promise<Response> {
   try {
     console.log("Processando requisição GET para listar usuários");
     
@@ -87,7 +87,7 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
     // Processar os usuários para o formato esperado usando a função refatorada
     const processedUsers = await processUsers(users, supabaseAdmin);
 
-    console.log(`Retornando ${processedUsers.length} usuários processados`);
+    console.log(`Retornando ${processedUsers.length} usuários processados com status 200`);
     
     // Retornar com o formato esperado pelo frontend
     return createSuccessResponse({ users: processedUsers });
@@ -97,7 +97,7 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
   }
 };
 
-export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promise<Response> => {
+export async function handlePostRequest(req: Request, supabaseAdmin: any): Promise<Response> {
   try {
     console.log("Processando requisição POST");
     
@@ -138,6 +138,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any): Promi
     
     if (handler) {
       const result = await handler(supabaseAdmin, requestData);
+      console.log(`Ação ${requestData.action} concluída com sucesso, retornando status 200`);
       return createSuccessResponse(result);
     } else {
       console.error(`Ação desconhecida: ${requestData.action}`);
