@@ -1,43 +1,19 @@
 
 import { corsHeaders } from './utils.ts';
 import { processUsers } from './userProcessing.ts';
-
-// Função auxiliar para criar respostas com sucesso
-function createSuccessResponse(data: any, status = 200) {
-  return new Response(
-    JSON.stringify(data),
-    { 
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json' 
-      },
-      status 
-    }
-  );
-}
-
-// Função auxiliar para criar respostas de erro
-function createErrorResponse(error: any, status = 500) {
-  console.error("Erro na operação:", error);
-  
-  const errorMessage = error instanceof Error ? error.message : 
-    (typeof error === 'string' ? error : "Erro desconhecido");
-  
-  return new Response(
-    JSON.stringify({ error: errorMessage }),
-    { 
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json' 
-      },
-      status 
-    }
-  );
-}
+import { createSuccessResponse, createErrorResponse } from './responseHelpers.ts';
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
   try {
     console.log("Processando requisição GET para listar usuários");
+    
+    // Verificação explícita do client admin
+    if (!supabaseAdmin || !supabaseAdmin.auth || !supabaseAdmin.auth.admin) {
+      console.error("Erro: Cliente Supabase Admin inválido ou sem permissões suficientes");
+      throw new Error("Cliente Supabase Admin inválido ou sem permissões admin");
+    }
+    
+    console.log("Cliente admin verificado, buscando usuários...");
     
     // Buscar todos os usuários usando o client admin
     const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
@@ -47,13 +23,19 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
       throw error;
     }
 
-    console.log(`Obtidos ${users?.length || 0} usuários do auth`);
+    if (!users || !Array.isArray(users)) {
+      console.error("Resposta inválida da API auth.admin.listUsers:", users);
+      throw new Error("Resposta inválida da API: dados de usuários não encontrados ou inválidos");
+    }
+
+    console.log(`Obtidos ${users.length} usuários do auth`);
     
     // Processar os usuários para o formato esperado usando a função refatorada
     const processedUsers = await processUsers(users, supabaseAdmin);
 
     console.log(`Retornando ${processedUsers.length} usuários processados`);
     
+    // Retornar com o formato esperado pelo frontend
     return createSuccessResponse({ users: processedUsers });
   } catch (error) {
     console.error("Erro ao processar requisição GET:", error);

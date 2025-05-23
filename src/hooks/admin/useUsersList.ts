@@ -35,7 +35,7 @@ export const useUsersList = () => {
         
         // Adicionar timestamp para evitar cache
         const timestamp = new Date().getTime();
-        const { data, error } = await supabase.functions.invoke('list-users', {
+        const response = await supabase.functions.invoke('list-users', {
           method: 'GET',
           headers: { 
             'Cache-Control': 'no-cache', 
@@ -43,17 +43,29 @@ export const useUsersList = () => {
           }
         });
         
-        if (error) {
-          console.error("Erro ao chamar a função list-users:", error);
-          throw error;
+        // Verificar erros na resposta
+        if (response.error) {
+          console.error("Erro na resposta da Edge Function:", response.error);
+          throw new Error(`Erro na Edge Function: ${response.error.message || JSON.stringify(response.error)}`);
         }
+
+        const data = response.data;
         
         // Log para debug - verificar payload completo recebido do backend
         console.log("Resposta da função list-users:", data);
         
+        if (!data) {
+          throw new Error("Resposta da Edge Function sem dados");
+        }
+        
         if (data && Array.isArray(data.users)) {
           console.log(`Dados recebidos: ${data.users.length} usuários`);
           setUsers(data.users);
+          
+          // Limpar erro caso existente
+          if (fetchError) {
+            setFetchError(null);
+          }
         } else {
           console.error("Resposta da função sem dados de usuários válidos:", data);
           throw new Error("A resposta do servidor não contém dados de usuários válidos");
@@ -61,40 +73,21 @@ export const useUsersList = () => {
       } catch (error) {
         console.error("Erro ao buscar usuários:", error);
         
-        // Verificar se já estamos usando os dados mockados para evitar mostrar o alerta novamente
-        if (users.length === 0 || users[0].id !== "mock-1") {
-          setFetchError("Não foi possível obter dados de usuários. Exibindo dados de exemplo.");
+        // Erro detalhado para diagnóstico
+        const errorMessage = error instanceof Error 
+          ? `Erro: ${error.message}` 
+          : "Erro desconhecido ao buscar usuários";
           
-          // Dados mockados para usar quando a API falhar
-          const mockUsers: User[] = [
-            {
-              id: "mock-1",
-              name: "Administrador",
-              email: "admin@exemplo.com",
-              role: "Admin",
-              status: "Ativo",
-              lastLogin: "Nunca",
-              tasks: [],
-            },
-            {
-              id: "mock-2",
-              name: "Aluno Exemplo",
-              email: "aluno@exemplo.com",
-              role: "Student",
-              status: "Ativo",
-              lastLogin: "Nunca",
-              tasks: [],
-            }
-          ];
-          
-          setUsers(mockUsers);
-          
-          toast({
-            title: "Erro",
-            description: "Não foi possível obter a lista de usuários. Exibindo dados de exemplo.",
-            variant: "destructive",
-          });
-        }
+        setFetchError(errorMessage);
+        
+        toast({
+          title: "Erro ao carregar usuários",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        
+        // NÃO usar dados mockados, manter lista vazia
+        setUsers([]);
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -104,7 +97,7 @@ export const useUsersList = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [users.length]);
+  }, [fetchError]);
 
   // Função para atualizar a lista de usuários
   const refreshUsersList = useCallback(() => {

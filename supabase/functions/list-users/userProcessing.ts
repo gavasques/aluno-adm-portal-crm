@@ -38,14 +38,14 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         id: user.id, 
         email: user.email, 
         perfil: profileData ? 'encontrado' : 'não encontrado',
-        status: profileData?.status || 'desconhecido',
+        status: profileData?.status || 'Ativo',
         banned_until: user.banned_until
       });
       
-      // Determinar o status do usuário
-      let status = profileData?.status || "Ativo";
+      // Determinar o status do usuário - primariamente do perfil
+      let status = profileData?.status;
       
-      // Verificar banned_until como fallback se não houver status no perfil
+      // Se não houver status no perfil, verificar banned_until
       if (!status && user.banned_until && new Date(user.banned_until) > new Date()) {
         status = "Inativo";
       } else if (!status && user.user_metadata?.status === 'Convidado') {

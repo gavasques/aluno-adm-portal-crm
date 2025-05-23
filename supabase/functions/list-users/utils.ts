@@ -14,9 +14,14 @@ export function createSupabaseAdminClient() {
   const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   
   if (!supabaseUrl || !supabaseServiceRole) {
-    console.error("Variáveis de ambiente necessárias não configuradas");
+    console.error("Variáveis de ambiente necessárias não configuradas:", {
+      urlDefined: !!supabaseUrl,
+      keyDefined: !!supabaseServiceRole
+    });
     throw new Error("Configuração de ambiente incompleta - verifique SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY");
   }
+  
+  console.log("Criando cliente Supabase Admin com SERVICE_ROLE_KEY");
   
   return createClient(
     supabaseUrl,
@@ -24,6 +29,7 @@ export function createSupabaseAdminClient() {
     {
       auth: {
         persistSession: false,
+        autoRefreshToken: false,
       }
     }
   );

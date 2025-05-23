@@ -49,6 +49,19 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onToggleUserStatus,
   onSetPermissionGroup
 }) => {
+  // Log para debug
+  console.log("Renderizando UserTableRow para:", {
+    id: user.id,
+    email: user.email,
+    status: user.status
+  });
+
+  // Determinar se o status é "Ativo" (case insensitive)
+  const isActive = typeof user.status === 'string' && 
+                  user.status.toLowerCase() === 'ativo';
+  
+  console.log(`UserTableRow: user.status=${user.status}, isActive=${isActive}`);
+
   return (
     <TableRow>
       <TableCell>
@@ -98,10 +111,10 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               onClick={() => onToggleUserStatus(
                 user.id, 
                 user.email, 
-                user.status !== "Ativo"
+                !isActive
               )}
             >
-              {user.status === "Ativo" ? (
+              {isActive ? (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
                   <span>Desativar usuário</span>

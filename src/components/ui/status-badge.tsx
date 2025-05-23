@@ -9,12 +9,14 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
-  // Verificar se o status é ativo, com diferentes formas de escrita possíveis
-  const isActive = status === "Ativo" || 
-                  status === "ativo" || 
-                  status === "ATIVO" ||
-                  status === "active" || 
-                  status === "Active";
+  // Normalizar o status para comparação case-insensitive
+  const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : '';
+  
+  // Verificar se o status é ativo
+  const isActive = normalizedStatus === "ativo" || 
+                  normalizedStatus === "active";
+                  
+  console.log(`StatusBadge: status=${status}, normalizedStatus=${normalizedStatus}, isActive=${isActive}`);
   
   return (
     <Badge 
