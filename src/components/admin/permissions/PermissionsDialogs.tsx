@@ -1,6 +1,6 @@
 
 import React from "react";
-import PermissionGroupForm from "./PermissionGroupForm";
+import ModularPermissionForm from "./ModularPermissionForm";
 import PermissionGroupDelete from "./PermissionGroupDelete";
 import PermissionGroupUsers from "./PermissionGroupUsers";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -34,8 +34,8 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
     <>
       {/* Diálogo para adicionar grupo */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-[550px]">
-          <PermissionGroupForm
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+          <ModularPermissionForm
             isEdit={false}
             onOpenChange={setShowAddDialog}
             onSuccess={onSuccess}
@@ -45,8 +45,8 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
 
       {/* Diálogo para editar grupo */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[550px]">
-          <PermissionGroupForm
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+          <ModularPermissionForm
             isEdit={true}
             permissionGroup={selectedGroup}
             onOpenChange={setShowEditDialog}

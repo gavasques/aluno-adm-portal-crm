@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      module_actions: {
+        Row: {
+          action_key: string
+          action_name: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          module_id: string | null
+        }
+        Insert: {
+          action_key: string
+          action_name: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          module_id?: string | null
+        }
+        Update: {
+          action_key?: string
+          action_name?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          module_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_actions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "system_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_group_menus: {
         Row: {
           created_at: string
@@ -31,6 +69,55 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "permission_group_menus_permission_group_id_fkey"
+            columns: ["permission_group_id"]
+            isOneToOne: false
+            referencedRelation: "permission_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permission_group_modules: {
+        Row: {
+          action_id: string | null
+          created_at: string | null
+          granted: boolean | null
+          id: string
+          module_id: string | null
+          permission_group_id: string | null
+        }
+        Insert: {
+          action_id?: string | null
+          created_at?: string | null
+          granted?: boolean | null
+          id?: string
+          module_id?: string | null
+          permission_group_id?: string | null
+        }
+        Update: {
+          action_id?: string | null
+          created_at?: string | null
+          granted?: boolean | null
+          id?: string
+          module_id?: string | null
+          permission_group_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_group_modules_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "module_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permission_group_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "system_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permission_group_modules_permission_group_id_fkey"
             columns: ["permission_group_id"]
             isOneToOne: false
             referencedRelation: "permission_groups"
@@ -136,6 +223,51 @@ export type Database = {
         }
         Relationships: []
       }
+      system_modules: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_premium: boolean | null
+          module_key: string
+          module_name: string
+          sort_order: number | null
+          stripe_price_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          module_key: string
+          module_name: string
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          module_key?: string
+          module_name?: string
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -162,6 +294,14 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_allowed_modules: {
+        Args: { user_id: string }
+        Returns: {
+          module_key: string
+          module_name: string
+          actions: string[]
+        }[]
       }
     }
     Enums: {

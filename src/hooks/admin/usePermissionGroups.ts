@@ -12,7 +12,7 @@ export interface PermissionGroup {
 }
 
 export interface PermissionGroupWithMenus {
-  id?: string; // Opcional para criação, obrigatório para atualização
+  id?: string;
   name: string;
   description: string | null;
   is_admin: boolean;
@@ -57,9 +57,8 @@ export const usePermissionGroups = () => {
 
   const createPermissionGroup = useCallback(async (groupData: PermissionGroupWithMenus) => {
     try {
-      const { name, description, is_admin, menu_keys } = groupData;
+      const { name, description, is_admin } = groupData;
       
-      // Inserir o grupo de permissão
       const { data: newGroup, error: groupError } = await supabase
         .from("permission_groups")
         .insert({
@@ -72,26 +71,11 @@ export const usePermissionGroups = () => {
         
       if (groupError) throw groupError;
       
-      // Se não for admin e tiver menu_keys, inserir as permissões
-      if (!is_admin && menu_keys && menu_keys.length > 0 && newGroup) {
-        const menuPermissions = menu_keys.map((menuKey) => ({
-          permission_group_id: newGroup.id,
-          menu_key: menuKey
-        }));
-        
-        const { error: menuError } = await supabase
-          .from("permission_group_menus")
-          .insert(menuPermissions);
-          
-        if (menuError) throw menuError;
-      }
-      
       toast({
         title: "Grupo criado",
         description: "Grupo de permissão criado com sucesso",
       });
       
-      // Atualizar a lista de grupos
       await fetchPermissionGroups();
     } catch (err: any) {
       console.error("Erro ao criar grupo de permissão:", err);
@@ -106,13 +90,12 @@ export const usePermissionGroups = () => {
 
   const updatePermissionGroup = useCallback(async (groupData: PermissionGroupWithMenus) => {
     try {
-      const { id, name, description, is_admin, menu_keys } = groupData;
+      const { id, name, description, is_admin } = groupData;
       
       if (!id) {
         throw new Error("ID do grupo é obrigatório para atualização");
       }
       
-      // Atualizar o grupo de permissão
       const { error: groupError } = await supabase
         .from("permission_groups")
         .update({
@@ -125,34 +108,11 @@ export const usePermissionGroups = () => {
         
       if (groupError) throw groupError;
       
-      // Excluir todas as permissões existentes para o grupo
-      const { error: deleteError } = await supabase
-        .from("permission_group_menus")
-        .delete()
-        .eq('permission_group_id', id);
-        
-      if (deleteError) throw deleteError;
-      
-      // Se não for admin e tiver menu_keys, inserir as novas permissões
-      if (!is_admin && menu_keys && menu_keys.length > 0) {
-        const menuPermissions = menu_keys.map((menuKey) => ({
-          permission_group_id: id,
-          menu_key: menuKey
-        }));
-        
-        const { error: menuError } = await supabase
-          .from("permission_group_menus")
-          .insert(menuPermissions);
-          
-        if (menuError) throw menuError;
-      }
-      
       toast({
         title: "Grupo atualizado",
         description: "Grupo de permissão atualizado com sucesso",
       });
       
-      // Atualizar a lista de grupos
       await fetchPermissionGroups();
     } catch (err: any) {
       console.error("Erro ao atualizar grupo de permissão:", err);
@@ -179,7 +139,6 @@ export const usePermissionGroups = () => {
         description: "Grupo de permissão excluído com sucesso",
       });
       
-      // Atualizar a lista de grupos
       await fetchPermissionGroups();
     } catch (err: any) {
       console.error("Erro ao excluir grupo de permissão:", err);
@@ -253,7 +212,6 @@ export const usePermissionGroups = () => {
     }
   }, []);
 
-  // Inicializar a lista de grupos
   useEffect(() => {
     fetchPermissionGroups();
   }, [fetchPermissionGroups]);
