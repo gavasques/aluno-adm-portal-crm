@@ -1,7 +1,7 @@
 
 // Arquivo principal da Edge Function
 
-import { serve } from "https://deno.land/x/supabase@1.7.0/functions/mod.ts";
+import { serve } from "https://deno.land/std@0.202.0/http/server.ts";
 import { corsHeaders, createSupabaseAdminClient, handleOptionsRequest } from "./utils.ts";
 import { handleGetRequest, handlePostRequest } from "./handlers.ts";
 
