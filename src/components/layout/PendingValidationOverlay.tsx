@@ -1,8 +1,12 @@
 
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
+import { Clock, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
 
 const PendingValidationOverlay = () => {
+  const { signOut } = useSignInOut();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -24,15 +28,24 @@ const PendingValidationOverlay = () => {
           </h2>
         </div>
         
-        <p className="text-gray-600 leading-relaxed">
+        <p className="text-gray-600 leading-relaxed mb-6">
           Sua conta está sendo validada. Assim que a mesma for validada você receberá acesso às respectivas áreas do portal.
         </p>
         
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mb-6 pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-500">
             Este processo pode levar algumas horas. Você será notificado por email quando sua conta for liberada.
           </p>
         </div>
+
+        <Button
+          onClick={signOut}
+          variant="outline"
+          className="w-full flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Sair
+        </Button>
       </motion.div>
     </motion.div>
   );
