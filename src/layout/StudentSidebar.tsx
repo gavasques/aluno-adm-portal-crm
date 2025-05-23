@@ -5,6 +5,7 @@ import { Book, Home, Settings, Users, BarChart, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/auth";
 
 interface NavItemProps {
   href: string;
@@ -20,13 +21,20 @@ const NavItem = ({
   menuKey
 }: NavItemProps) => {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const { permissions } = usePermissions();
   const isActive = pathname === href;
 
-  // Verificar se o usuário tem permissão para acessar este menu
-  const hasPermission = permissions.hasAdminAccess || 
-    permissions.allowedMenus.length === 0 || 
-    permissions.allowedMenus.includes(menuKey);
+  // CORRIGIDO: Verificação simplificada de permissão
+  const hasPermission = permissions.hasAdminAccess || permissions.allowedMenus.includes(menuKey);
+
+  console.log("DEBUG - NavItem:", {
+    email: user?.email,
+    menuKey,
+    hasAdminAccess: permissions.hasAdminAccess,
+    allowedMenus: permissions.allowedMenus,
+    hasPermission
+  });
 
   // Se não tem permissão, não renderizar o item
   if (!hasPermission) {

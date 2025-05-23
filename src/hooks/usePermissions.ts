@@ -59,7 +59,8 @@ export const usePermissions = () => {
         throw profileError;
       }
 
-      console.log("Perfil encontrado:", profile);
+      console.log("DEBUG - Perfil encontrado:", profile);
+      console.log("DEBUG - Email do usuário:", user.email);
 
       // Determinar se tem acesso admin
       const hasGroupAdminAccess = profile.permission_groups?.allow_admin_access || false;
@@ -71,12 +72,14 @@ export const usePermissions = () => {
         ? hasGroupAdminAccess 
         : isAdminRole;
 
-      console.log("Verificações de acesso:", {
+      console.log("DEBUG - Verificações de acesso:", {
+        email: user.email,
         hasGroupAdminAccess,
         isAdminRole,
         isAdminGroup,
         hasAdminAccess,
-        permissionGroupId: profile.permission_group_id
+        permissionGroupId: profile.permission_group_id,
+        groupName: profile.permission_groups?.name
       });
 
       // Buscar menus permitidos
@@ -107,7 +110,13 @@ export const usePermissions = () => {
         }
       }
 
-      console.log("Menus permitidos:", allowedMenus);
+      console.log("DEBUG - Resultado final:", {
+        email: user.email,
+        hasAdminAccess,
+        allowedMenus,
+        permissionGroupId: profile.permission_group_id,
+        isAdmin: isAdminGroup || isAdminRole
+      });
 
       setPermissions({
         hasAdminAccess,
@@ -128,7 +137,7 @@ export const usePermissions = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, session?.access_token]); // Dependências específicas para evitar loops
+  }, [user?.id, session?.access_token]);
 
   useEffect(() => {
     fetchPermissions();

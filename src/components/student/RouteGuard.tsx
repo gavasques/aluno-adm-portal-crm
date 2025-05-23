@@ -29,10 +29,16 @@ const StudentRouteGuard: React.FC<StudentRouteGuardProps> = ({
     return null;
   }
 
-  // Verificar se tem permissão para o menu específico
-  const hasPermission = permissions.hasAdminAccess || 
-    permissions.allowedMenus.length === 0 || 
-    permissions.allowedMenus.includes(requiredMenuKey);
+  // CORRIGIDO: Verificação simplificada de permissão
+  const hasPermission = permissions.hasAdminAccess || permissions.allowedMenus.includes(requiredMenuKey);
+
+  console.log("DEBUG - RouteGuard:", {
+    email: user.email,
+    requiredMenuKey,
+    hasAdminAccess: permissions.hasAdminAccess,
+    allowedMenus: permissions.allowedMenus,
+    hasPermission
+  });
 
   if (!hasPermission) {
     return <AccessDenied />;

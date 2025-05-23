@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -22,9 +23,8 @@ const NavItem = ({
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
-  // Se não tem menuKey, sempre mostrar (para itens básicos como Dashboard)
-  // Se tem menuKey, verificar se está na lista de menus permitidos
-  if (menuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(menuKey)) {
+  // CORRIGIDO: Verificação simplificada - se tem menuKey, deve estar na lista de permitidos
+  if (menuKey && !permissions.allowedMenus.includes(menuKey)) {
     return null;
   }
   
