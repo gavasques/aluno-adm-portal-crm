@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 
 interface UserPermissionGroupDialogProps {
   open: boolean;
@@ -40,11 +40,13 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
   const { permissionGroups, isLoading } = usePermissionGroups();
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(currentGroupId);
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // Atualizar o grupo selecionado quando o currentGroupId mudar
   useEffect(() => {
     if (open) {
       setSelectedGroupId(currentGroupId);
+      setSuccess(false);
     }
   }, [currentGroupId, open]);
 
@@ -52,33 +54,57 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
     try {
       setSubmitting(true);
       
+      console.log("Atualizando grupo de permissão:", {
+        userId,
+        userEmail,
+        selectedGroupId,
+        currentGroupId
+      });
+      
       const { error } = await supabase
         .from("profiles")
         .update({ permission_group_id: selectedGroupId })
         .eq("id", userId);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao atualizar grupo de permissão:", error);
+        throw error;
+      }
+      
+      console.log("Grupo de permissão atualizado com sucesso");
+      
+      // Mostrar feedback de sucesso
+      setSuccess(true);
+      
+      const selectedGroup = permissionGroups.find(g => g.id === selectedGroupId);
+      const groupName = selectedGroup ? selectedGroup.name : "Nenhum grupo";
       
       toast({
         title: "Grupo de permissão atualizado",
-        description: selectedGroupId
-          ? "Usuário vinculado ao grupo com sucesso"
-          : "Usuário removido de qualquer grupo de permissão",
+        description: `${userEmail} foi vinculado ao grupo "${groupName}" com sucesso`,
       });
       
-      onSuccess();
-      onOpenChange(false);
+      // Aguardar um momento para mostrar o feedback e então atualizar a lista
+      setTimeout(() => {
+        onSuccess();
+        onOpenChange(false);
+        setSuccess(false);
+      }, 1500);
+      
     } catch (error: any) {
       console.error("Erro ao atualizar grupo de permissão do usuário:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o grupo de permissão",
+        description: error.message || "Não foi possível atualizar o grupo de permissão",
         variant: "destructive",
       });
     } finally {
       setSubmitting(false);
     }
   };
+
+  const selectedGroup = permissionGroups.find(g => g.id === selectedGroupId);
+  const hasChanges = selectedGroupId !== currentGroupId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,7 +126,7 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
               <Select
                 value={selectedGroupId || ""}
                 onValueChange={setSelectedGroupId}
-                disabled={isLoading}
+                disabled={isLoading || submitting}
               >
                 <SelectTrigger id="permissionGroup">
                   <SelectValue placeholder="Selecione um grupo" />
@@ -115,22 +141,47 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
                 </SelectContent>
               </Select>
               
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedGroupId
-                  ? "O usuário terá acesso aos recursos definidos pelo grupo selecionado."
-                  : "Sem grupo de permissão, o usuário terá acesso limitado ao sistema."}
-              </p>
+              <div className="mt-2 space-y-1">
+                {selectedGroup && (
+                  <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                    <strong>Grupo selecionado:</strong> {selectedGroup.name}
+                    {selectedGroup.description && (
+                      <div className="text-xs mt-1">{selectedGroup.description}</div>
+                    )}
+                  </div>
+                )}
+                
+                <p className="text-sm text-muted-foreground">
+                  {selectedGroupId
+                    ? "O usuário terá acesso aos recursos definidos pelo grupo selecionado."
+                    : "Sem grupo de permissão, o usuário terá acesso limitado ao sistema."}
+                </p>
+              </div>
             </div>
+
+            {success && (
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md">
+                <CheckCircle className="h-5 w-5" />
+                <span className="text-sm font-medium">Grupo atualizado com sucesso!</span>
+              </div>
+            )}
           </div>
         </div>
         
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitting || !hasChanges || success}
+          >
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
+            {success ? "Salvo!" : "Salvar"}
           </Button>
         </div>
       </DialogContent>
