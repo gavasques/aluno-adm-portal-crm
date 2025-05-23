@@ -29,14 +29,40 @@ export const usePermissionGroups = () => {
       setIsLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from("permission_groups")
-        .select("*")
-        .order("name");
-        
-      if (error) throw error;
+      // Obter sessão atual para verificar se temos um token válido
+      const { data: { session } } = await supabase.auth.getSession();
       
-      setPermissionGroups(data || []);
+      if (!session) {
+        console.warn("Sessão não encontrada ao buscar grupos de permissão");
+        setError("Você precisa estar autenticado para carregar os grupos de permissão.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Usar endpoint RPC para contornar possíveis problemas de RLS
+      // Isso evita a recursão infinita quando as policies consultam a mesma tabela
+      const { data, error: rpcError } = await supabase
+        .rpc('get_permission_groups')
+        .select();
+      
+      if (rpcError) {
+        console.error("Erro RPC ao carregar grupos de permissão:", rpcError);
+        
+        // Tentar consulta direta como fallback (usando service role via edge function poderia ser melhor)
+        const { data: directData, error: directError } = await supabase
+          .from("permission_groups")
+          .select("*")
+          .order("name");
+          
+        if (directError) {
+          console.error("Erro direto ao carregar grupos de permissão:", directError);
+          throw directError;
+        }
+        
+        setPermissionGroups(directData || []);
+      } else {
+        setPermissionGroups(data || []);
+      }
     } catch (err: any) {
       console.error("Erro ao carregar grupos de permissão:", err);
       setError("Não foi possível carregar os grupos de permissão. Tente novamente mais tarde.");

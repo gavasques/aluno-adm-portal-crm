@@ -90,7 +90,7 @@ export async function handleGetRequest(supabaseAdmin: any): Promise<Response> {
     console.log(`Retornando ${processedUsers.length} usuários processados com status 200`);
     console.log("Amostra de dados:", processedUsers.slice(0, 2));
     
-    // Retornar com o formato esperado pelo frontend
+    // Retornar com o formato esperado pelo frontend e garantir todos os headers CORS
     return createSuccessResponse({ users: processedUsers });
   } catch (error) {
     console.error("Erro ao processar requisição GET:", error);
