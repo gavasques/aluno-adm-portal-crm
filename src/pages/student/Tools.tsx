@@ -4,8 +4,28 @@ import { motion } from "framer-motion";
 import { ToolHeader } from "@/components/student/tools/ToolHeader";
 import { ToolContent } from "@/components/student/tools/ToolContent";
 import StudentRouteGuard from "@/components/student/RouteGuard";
+import { useTools } from "@/hooks/student/useTools";
 
 const Tools = () => {
+  const {
+    searchQuery,
+    setSearchQuery,
+    softwareTypeFilter,
+    setSoftwareTypeFilter,
+    recommendationFilter,
+    setRecommendationFilter,
+    canalFilter,
+    setCanalFilter,
+    canals,
+    filteredTools,
+    sortField,
+    sortDirection,
+    handleSort,
+    selectedTool,
+    setSelectedTool,
+    handleUpdateTool
+  } = useTools();
+
   return (
     <StudentRouteGuard requiredMenuKey="tools">
       <div className="container mx-auto py-6 space-y-6">
@@ -14,7 +34,17 @@ const Tools = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <ToolHeader />
+          <ToolHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            softwareTypeFilter={softwareTypeFilter}
+            setSoftwareTypeFilter={setSoftwareTypeFilter}
+            recommendationFilter={recommendationFilter}
+            setRecommendationFilter={setRecommendationFilter}
+            canalFilter={canalFilter}
+            setCanalFilter={setCanalFilter}
+            canals={canals}
+          />
         </motion.div>
 
         <motion.div
@@ -22,7 +52,16 @@ const Tools = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <ToolContent />
+          <ToolContent
+            tools={filteredTools}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            selectedTool={selectedTool}
+            setSelectedTool={setSelectedTool}
+            isAdmin={false}
+            onUpdateTool={handleUpdateTool}
+          />
         </motion.div>
       </div>
     </StudentRouteGuard>
