@@ -29,13 +29,18 @@ export const usePermissionGroups = () => {
       setIsLoading(true);
       setError(null);
       
+      console.log("Iniciando busca de grupos de permissão...");
       const { data, error } = await supabase
         .from("permission_groups")
         .select("*")
         .order("name");
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro detalhado ao buscar grupos de permissão:", error);
+        throw error;
+      }
       
+      console.log("Grupos de permissão recebidos:", data);
       setPermissionGroups(data || []);
     } catch (err: any) {
       console.error("Erro ao carregar grupos de permissão:", err);

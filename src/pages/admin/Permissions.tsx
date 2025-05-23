@@ -4,6 +4,7 @@ import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissio
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
+import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
 
 const Permissions = () => {
   const { 
@@ -43,9 +44,13 @@ const Permissions = () => {
       <PermissionsHeader onAdd={handleAdd} />
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-          <p>{error}</p>
-        </div>
+        <>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <p>{error}</p>
+            <p className="text-sm mt-1">Verifique as políticas de acesso ao banco de dados.</p>
+          </div>
+          <FixPermissionsButton onSuccess={refreshPermissionGroups} />
+        </>
       )}
 
       <PermissionsCard 
