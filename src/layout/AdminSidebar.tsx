@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -101,7 +100,7 @@ const AdminSidebar = () => {
                   <NavItem href="/admin" icon={Home}>Dashboard</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/settings" icon={Settings} menuKey="admin_settings">Configurações</NavItem>
+                  <NavItem href="/admin/settings" icon={Settings} menuKey="settings">Configurações</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -114,16 +113,16 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/users" icon={Users} menuKey="admin_users">Gestão de Usuários</NavItem>
+                  <NavItem href="/admin/users" icon={Users} menuKey="users">Gestão de Usuários</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/permissions" icon={Lock} menuKey="admin_permissions">Gestão de Permissões</NavItem>
+                  <NavItem href="/admin/permissions" icon={Lock} menuKey="permissions">Gestão de Permissões</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/gestao-alunos" icon={User} menuKey="admin_students">Gestão de Alunos</NavItem>
+                  <NavItem href="/admin/gestao-alunos" icon={User} menuKey="students">Gestão de Alunos</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/registers" icon={Database} menuKey="admin_registers">Cadastros</NavItem>
+                  <NavItem href="/admin/registers" icon={Database} menuKey="registers">Cadastros</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -136,10 +135,10 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/tasks" icon={List} menuKey="admin_tasks">Lista de Tarefas</NavItem>
+                  <NavItem href="/admin/tasks" icon={List} menuKey="tasks">Lista de Tarefas</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/crm" icon={BookOpen} menuKey="admin_crm">CRM / Gestão de Leads</NavItem>
+                  <NavItem href="/admin/crm" icon={BookOpen} menuKey="crm">CRM / Gestão de Leads</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -152,13 +151,13 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/suppliers" icon={Users} menuKey="admin_suppliers">Fornecedores</NavItem>
+                  <NavItem href="/admin/suppliers" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/partners" icon={BarChart} menuKey="admin_partners">Parceiros</NavItem>
+                  <NavItem href="/admin/partners" icon={BarChart} menuKey="partners">Parceiros</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/tools" icon={Wrench} menuKey="admin_tools">Ferramentas</NavItem>
+                  <NavItem href="/admin/tools" icon={Wrench} menuKey="tools">Ferramentas</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
