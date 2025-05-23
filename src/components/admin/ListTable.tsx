@@ -94,7 +94,7 @@ const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
                 <TableCell>{item.name}</TableCell>
                 <TableCell>
                   {item.status && (
-                    <StatusBadge isActive={item.status === "Ativo"} />
+                    <StatusBadge status={item.status} />
                   )}
                 </TableCell>
                 <TableCell className="text-right">

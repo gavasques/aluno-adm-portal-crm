@@ -150,7 +150,7 @@ const ToolsTable: React.FC<ToolsTableProps> = ({
               <TableCell>{tool.category}</TableCell>
               <TableCell>{tool.provider}</TableCell>
               <TableCell>
-                <StatusBadge isActive={tool.status === "Ativo"} />
+                <StatusBadge status={tool.status} />
               </TableCell>
               <TableCell>
                 <div className="flex items-center">
