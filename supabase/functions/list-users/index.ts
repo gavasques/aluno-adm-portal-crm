@@ -28,10 +28,32 @@ serve(async (req) => {
     // Processar requisições com base no método HTTP
     if (req.method === 'GET') {
       console.log("Encaminhando para o handler GET");
-      return await handleGetRequest(supabaseAdmin);
+      const response = await handleGetRequest(supabaseAdmin);
+      // Garantir que os headers CORS estejam na resposta GET
+      const responseHeaders = new Headers(response.headers);
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        responseHeaders.set(key, value);
+      });
+      
+      console.log("Headers da resposta GET:", Object.fromEntries(responseHeaders.entries()));
+      
+      return new Response(response.body, {
+        status: response.status,
+        headers: responseHeaders,
+      });
     } else if (req.method === 'POST') {
       console.log("Encaminhando para o handler POST");
-      return await handlePostRequest(req, supabaseAdmin);
+      const response = await handlePostRequest(req, supabaseAdmin);
+      // Garantir que os headers CORS estejam na resposta POST
+      const responseHeaders = new Headers(response.headers);
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        responseHeaders.set(key, value);
+      });
+      
+      return new Response(response.body, {
+        status: response.status,
+        headers: responseHeaders,
+      });
     } else {
       // Método não suportado
       console.error(`Método não suportado: ${req.method}`);

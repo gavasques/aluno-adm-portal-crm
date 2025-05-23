@@ -31,37 +31,38 @@ export const useUsersList = () => {
       setFetchError(null);
       
       try {
-        console.log("Buscando usuários via Edge Function com método GET");
+        console.log("Buscando usuários via Edge Function com método GET direto");
         
-        // Adicionar timestamp para evitar cache e logs detalhados
+        // Adicionar timestamp para evitar cache
         const timestamp = new Date().getTime();
-        console.log(`Realizando chamada à edge function: ${timestamp}`);
         
-        const response = await supabase.functions.invoke('list-users', {
+        // Obter o token de acesso do usuário autenticado
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const accessToken = session?.access_token;
+        
+        // Usar fetch diretamente em vez de invoke
+        const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
           method: 'GET',
-          headers: { 
-            'Cache-Control': 'no-cache', 
-            'X-Timestamp': timestamp.toString(),
-            'Content-Type': 'application/json'
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
+            'Authorization': accessToken ? `Bearer ${accessToken}` : '',
           }
         });
         
-        console.log("Resposta completa da Edge Function:", response);
-        
-        // Verificar erros na resposta
-        if (response.error) {
-          console.error("Erro na resposta da Edge Function:", response.error);
-          throw new Error(`Erro na Edge Function: ${response.error.message || JSON.stringify(response.error)}`);
+        // Verificar se a resposta é OK
+        if (!response.ok) {
+          console.error("Erro na resposta HTTP:", response.status, response.statusText);
+          const errorText = await response.text();
+          console.error("Erro detalhado:", errorText);
+          throw new Error(`Erro na requisição HTTP: ${response.status} ${response.statusText}`);
         }
-
-        const data = response.data;
         
-        // Log para debug - verificar payload completo recebido do backend
+        // Parsear o JSON da resposta
+        const data = await response.json();
         console.log("Dados processados da função list-users:", data);
-        
-        if (!data) {
-          throw new Error("Resposta da Edge Function sem dados");
-        }
         
         if (data && Array.isArray(data.users)) {
           console.log(`Dados recebidos: ${data.users.length} usuários`);
