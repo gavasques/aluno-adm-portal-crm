@@ -1,7 +1,39 @@
 
 import { corsHeaders } from './utils.ts';
 import { processUsers, ensureProfiles } from './userProcessing.ts';
-import { createSuccessResponse, createErrorResponse } from './responseHelpers.ts';
+
+// Função auxiliar para criar respostas de sucesso
+export const createSuccessResponse = (data: any) => {
+  return new Response(
+    JSON.stringify(data),
+    { 
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json' 
+      },
+      status: 200 
+    }
+  );
+};
+
+// Função auxiliar para criar respostas de erro
+export const createErrorResponse = (error: any, status: number = 500) => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
+  return new Response(
+    JSON.stringify({ 
+      error: errorMessage,
+      timestamp: new Date().toISOString()
+    }),
+    { 
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json' 
+      },
+      status 
+    }
+  );
+};
 
 export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> => {
   try {
@@ -16,15 +48,17 @@ export const handleGetRequest = async (supabaseAdmin: any): Promise<Response> =>
     console.log("Cliente admin verificado, buscando usuários...");
     
     // Buscar todos os usuários usando o client admin
-    const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
     
     if (error) {
       console.error("Erro ao listar usuários:", error);
       throw error;
     }
 
+    const users = data?.users;
+    
     if (!users || !Array.isArray(users)) {
-      console.error("Resposta inválida da API auth.admin.listUsers:", users);
+      console.error("Resposta inválida da API auth.admin.listUsers:", data);
       throw new Error("Resposta inválida da API: dados de usuários não encontrados ou inválidos");
     }
 

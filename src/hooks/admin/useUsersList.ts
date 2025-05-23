@@ -33,8 +33,10 @@ export const useUsersList = () => {
       try {
         console.log("Buscando usuários via Edge Function com método GET");
         
-        // Adicionar timestamp para evitar cache
+        // Adicionar timestamp para evitar cache e logs detalhados
         const timestamp = new Date().getTime();
+        console.log(`Realizando chamada à edge function: ${timestamp}`);
+        
         const response = await supabase.functions.invoke('list-users', {
           method: 'GET',
           headers: { 
@@ -44,7 +46,7 @@ export const useUsersList = () => {
           }
         });
         
-        console.log("Resposta bruta da Edge Function:", response);
+        console.log("Resposta completa da Edge Function:", response);
         
         // Verificar erros na resposta
         if (response.error) {
@@ -89,7 +91,7 @@ export const useUsersList = () => {
           variant: "destructive",
         });
         
-        // NÃO usar dados mockados, manter lista vazia
+        // Se não conseguirmos obter os usuários, definimos uma lista vazia
         setUsers([]);
       } finally {
         setIsLoading(false);

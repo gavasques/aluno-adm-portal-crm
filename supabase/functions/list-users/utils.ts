@@ -26,6 +26,8 @@ export function createSupabaseAdminClient() {
   }
   
   console.log("Criando cliente Supabase Admin com SERVICE_ROLE_KEY");
+  console.log("URL do Supabase:", supabaseUrl);
+  console.log("Service Role Key definida:", !!supabaseServiceRole);
   
   return createClient(
     supabaseUrl,

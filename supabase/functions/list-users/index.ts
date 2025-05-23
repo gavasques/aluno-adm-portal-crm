@@ -5,9 +5,11 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders, createSupabaseAdminClient, handleOptionsRequest } from './utils.ts';
 import { handlePostRequest, handleGetRequest } from './handlers.ts';
 
+console.log("Edge Function list-users inicializada");
+
 // Função principal que processa as requisições
 serve(async (req) => {
-  console.log(`Recebendo requisição ${req.method} para list-users`);
+  console.log(`Recebendo requisição ${req.method} para list-users na URL: ${req.url}`);
   
   try {
     // Lidar com requisições OPTIONS (pre-flight CORS)
@@ -19,6 +21,7 @@ serve(async (req) => {
     // Criar cliente Supabase com token service_role
     console.log("Criando cliente Supabase Admin...");
     const supabaseAdmin = createSupabaseAdminClient();
+    console.log("Cliente Supabase Admin criado com sucesso");
     
     // Processar requisições com base no método HTTP
     if (req.method === 'GET') {

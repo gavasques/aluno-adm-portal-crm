@@ -20,7 +20,7 @@ export async function ensureUserProfile(supabaseAdmin: any, authUser: any, profi
       email: authUser.email,
       name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário sem nome',
       role: isAdmin ? 'Admin' : 'Student',
-      status: 'Ativo'
+      status: authUser.banned_until ? 'Inativo' : 'Ativo' // Status baseado no banned_until
     };
     
     const { error: insertError } = await supabaseAdmin
