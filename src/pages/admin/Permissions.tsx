@@ -1,17 +1,16 @@
 
 import React, { useState } from "react";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
-import type { PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 
 const Permissions = () => {
   const { 
     permissionGroups, 
     isLoading, 
     error, 
-    refetch 
+    refreshPermissionGroups 
   } = usePermissionGroups();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -50,11 +49,11 @@ const Permissions = () => {
       )}
 
       <PermissionsCard 
-        permissionGroups={permissionGroups}
+        permissionGroups={permissionGroups} 
         isLoading={isLoading} 
-        onEdit={handleEdit as (group: any) => void}
-        onDelete={handleDelete as (group: any) => void}
-        onViewUsers={handleViewUsers as (group: any) => void}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onViewUsers={handleViewUsers}
       />
 
       <PermissionsDialogs 
@@ -67,7 +66,7 @@ const Permissions = () => {
         showUsersDialog={showUsersDialog}
         setShowUsersDialog={setShowUsersDialog}
         selectedGroup={selectedGroup}
-        onSuccess={refetch}
+        onSuccess={refreshPermissionGroups}
       />
     </div>
   );
