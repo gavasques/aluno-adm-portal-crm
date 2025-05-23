@@ -11,15 +11,5 @@ export const createSupabaseAdminClient = () => {
   );
 };
 
-// Função para lidar com requisições OPTIONS (CORS preflight)
-export function handleOptionsRequest() {
-  console.log("Respondendo a requisição OPTIONS com cabeçalhos CORS");
-  
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders
-  });
-}
-
 // Re-exportar corsHeaders para uso em outros arquivos
 export { corsHeaders };

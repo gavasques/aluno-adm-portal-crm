@@ -65,6 +65,12 @@ export const useUsersList = () => {
         
         if (data && Array.isArray(data.users)) {
           console.log(`Dados recebidos: ${data.users.length} usuários`);
+          
+          // Log dos primeiros usuários para debug
+          if (data.users.length > 0) {
+            console.log("Amostra dos dados de usuários:", data.users.slice(0, 2));
+          }
+          
           setUsers(data.users);
           
           // Limpar erro caso existente

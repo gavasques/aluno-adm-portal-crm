@@ -47,27 +47,23 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
       const profileData = profilesMap.get(user.id);
       
       // Log para debug
-      console.log('Dados do usuário processado:', { 
-        id: user.id, 
-        email: user.email, 
-        perfil: profileData ? 'encontrado' : 'não encontrado',
-        status: profileData?.status || (user.banned_until ? 'Inativo' : 'Ativo')
-      });
+      console.log(`Processando usuário: ${user.id}, ${user.email}`);
+      console.log(`Perfil encontrado: ${profileData ? 'Sim' : 'Não'}`);
+      if (profileData) {
+        console.log(`Status do perfil: ${profileData.status}`);
+      }
       
       // Determinar o status do usuário - primariamente do perfil
-      let status = profileData?.status;
+      let status = profileData?.status || "Ativo";
       
       // Se não houver status no perfil, verificar banned_until
-      if (!status && user.banned_until && new Date(user.banned_until) > new Date()) {
+      if (user.banned_until && new Date(user.banned_until) > new Date()) {
         status = "Inativo";
-      } else if (!status && user.user_metadata?.status === 'Convidado') {
+      } else if (user.user_metadata?.status === 'Convidado') {
         status = "Convidado";
       }
       
-      // Garantir que temos um status válido
-      if (!status) {
-        status = "Ativo"; // Valor padrão final
-      }
+      console.log(`Status final do usuário ${user.email}: ${status}`);
 
       return {
         id: user.id,

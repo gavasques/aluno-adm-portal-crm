@@ -132,6 +132,6 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       </TableCell>
     </TableRow>
   );
-}
+};
 
 export default UserTableRow;

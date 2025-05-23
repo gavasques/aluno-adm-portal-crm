@@ -12,7 +12,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
   // Normalizar o status para comparação case-insensitive
   const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : '';
   
-  // Verificar se o status é ativo (aceita várias formas)
+  // Verificar se o status é ativo
   const isActive = normalizedStatus === "ativo" || 
                    normalizedStatus === "active" ||
                    normalizedStatus === "activo";

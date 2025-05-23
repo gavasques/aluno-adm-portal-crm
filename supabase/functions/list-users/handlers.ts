@@ -1,6 +1,6 @@
 
-import { corsHeaders } from './_shared/cors.ts';
-import { processUsers, ensureProfiles } from './userProcessing.ts';
+import { corsHeaders } from "./_shared/cors.ts";
+import { processUsers, ensureProfiles } from "./userProcessing.ts";
 
 // Função auxiliar para criar respostas de sucesso
 export const createSuccessResponse = (data: any) => {
@@ -88,6 +88,7 @@ export async function handleGetRequest(supabaseAdmin: any): Promise<Response> {
     const processedUsers = await processUsers(users, supabaseAdmin);
 
     console.log(`Retornando ${processedUsers.length} usuários processados com status 200`);
+    console.log("Amostra de dados:", processedUsers.slice(0, 2));
     
     // Retornar com o formato esperado pelo frontend
     return createSuccessResponse({ users: processedUsers });

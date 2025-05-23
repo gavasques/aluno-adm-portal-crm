@@ -1,9 +1,8 @@
 
-// Arquivo principal da Edge Function
-
 import { serve } from "https://deno.land/std@0.202.0/http/server.ts";
-import { corsHeaders, createSupabaseAdminClient, handleOptionsRequest } from "./utils.ts";
+import { corsHeaders } from "./_shared/cors.ts";
 import { handleGetRequest, handlePostRequest } from "./handlers.ts";
+import { createSupabaseAdminClient } from "./utils.ts";
 
 console.log("Edge Function list-users inicializada");
 
@@ -15,7 +14,10 @@ serve(async (req) => {
     // Lidar com requisições OPTIONS (pre-flight CORS)
     if (req.method === 'OPTIONS') {
       console.log("Processando requisição OPTIONS");
-      return handleOptionsRequest();
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+      });
     }
 
     // Criar cliente Supabase com token service_role
