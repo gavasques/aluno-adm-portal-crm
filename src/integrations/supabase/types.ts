@@ -141,6 +141,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_permission_groups: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      drop_policies_for_table: {
+        Args: { table_name: string }
+        Returns: undefined
+      }
+      execute_sql: {
+        Args: { sql: string }
+        Returns: undefined
+      }
       get_allowed_menus: {
         Args: Record<PropertyKey, never>
         Returns: {

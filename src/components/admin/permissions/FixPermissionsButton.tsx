@@ -18,6 +18,7 @@ const FixPermissionsButton: React.FC<FixPermissionsButtonProps> = ({ onSuccess }
     try {
       setIsLoading(true);
       
+      console.log("Chamando a função fix-permission-groups-policy...");
       // Chamar a Edge Function para corrigir as políticas RLS
       const { data, error } = await supabase.functions.invoke("fix-permission-groups-policy");
       

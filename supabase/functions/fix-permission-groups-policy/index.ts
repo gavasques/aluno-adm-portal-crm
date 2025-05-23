@@ -26,70 +26,90 @@ serve(async (req) => {
 
     console.log("Iniciando correção das políticas RLS para permission_groups...");
 
-    // Primeiro, remover todas as políticas existentes para evitar conflitos
-    const { error: dropPoliciesError } = await supabaseAdmin.rpc('drop_policies_for_table', {
-      table_name: 'permission_groups'
-    });
+    // Remover todas as políticas existentes para evitar conflitos
+    const { data: dropResult, error: dropError } = await supabaseAdmin
+      .rpc('drop_policies_for_table', { table_name: 'permission_groups' });
 
-    if (dropPoliciesError) {
-      console.error("Erro ao remover políticas existentes:", dropPoliciesError);
-      // Continuar mesmo com erro, pois pode ser que as políticas não existam ainda
+    if (dropError) {
+      console.error("Erro ao remover políticas existentes:", dropError);
+      // Continuamos mesmo com erro, pois pode ser que não existam políticas ainda
+    } else {
+      console.log("Políticas existentes removidas com sucesso:", dropResult);
     }
 
-    // Criar uma função de segurança definida para verificar acesso aos grupos de permissão
-    const { error: createFunctionError } = await supabaseAdmin.rpc('execute_sql', {
-      sql: `
-        CREATE OR REPLACE FUNCTION public.can_access_permission_groups()
-        RETURNS BOOLEAN
-        LANGUAGE sql
-        SECURITY DEFINER
-        AS $$
-          -- Verificar se o usuário está autenticado
-          SELECT auth.uid() IS NOT NULL;
-        $$;
-      `
-    });
+    // Habilitar RLS na tabela
+    const { error: enableRlsError } = await supabaseAdmin
+      .rpc('execute_sql', { 
+        sql: 'ALTER TABLE public.permission_groups ENABLE ROW LEVEL SECURITY;' 
+      });
 
-    if (createFunctionError) {
-      console.error("Erro ao criar função de segurança:", createFunctionError);
-      throw createFunctionError;
+    if (enableRlsError) {
+      console.error("Erro ao habilitar RLS:", enableRlsError);
+      throw enableRlsError;
     }
 
-    // Criar políticas RLS adequadas para a tabela permission_groups
-    const { error: createPoliciesError } = await supabaseAdmin.rpc('execute_sql', {
-      sql: `
-        -- Ativar RLS na tabela permission_groups
-        ALTER TABLE public.permission_groups ENABLE ROW LEVEL SECURITY;
-        
-        -- Política para SELECT (leitura)
-        CREATE POLICY "Usuários autenticados podem ler grupos de permissão"
-        ON public.permission_groups
-        FOR SELECT
-        USING (public.can_access_permission_groups());
-        
-        -- Política para INSERT (inserção)
-        CREATE POLICY "Usuários autenticados podem criar grupos de permissão"
-        ON public.permission_groups
-        FOR INSERT
-        WITH CHECK (public.can_access_permission_groups());
-        
-        -- Política para UPDATE (atualização)
-        CREATE POLICY "Usuários autenticados podem atualizar grupos de permissão"
-        ON public.permission_groups
-        FOR UPDATE
-        USING (public.can_access_permission_groups());
-        
-        -- Política para DELETE (exclusão)
-        CREATE POLICY "Usuários autenticados podem excluir grupos de permissão"
-        ON public.permission_groups
-        FOR DELETE
-        USING (public.can_access_permission_groups());
-      `
-    });
+    // Criar políticas RLS para SELECT
+    const { error: selectPolicyError } = await supabaseAdmin
+      .rpc('execute_sql', { 
+        sql: `
+          CREATE POLICY "Usuários autenticados podem ler grupos de permissão"
+          ON public.permission_groups
+          FOR SELECT
+          USING (public.can_access_permission_groups());
+        `
+      });
 
-    if (createPoliciesError) {
-      console.error("Erro ao criar políticas RLS:", createPoliciesError);
-      throw createPoliciesError;
+    if (selectPolicyError) {
+      console.error("Erro ao criar política SELECT:", selectPolicyError);
+      throw selectPolicyError;
+    }
+
+    // Criar políticas RLS para INSERT
+    const { error: insertPolicyError } = await supabaseAdmin
+      .rpc('execute_sql', { 
+        sql: `
+          CREATE POLICY "Usuários autenticados podem criar grupos de permissão"
+          ON public.permission_groups
+          FOR INSERT
+          WITH CHECK (public.can_access_permission_groups());
+        `
+      });
+
+    if (insertPolicyError) {
+      console.error("Erro ao criar política INSERT:", insertPolicyError);
+      throw insertPolicyError;
+    }
+
+    // Criar políticas RLS para UPDATE
+    const { error: updatePolicyError } = await supabaseAdmin
+      .rpc('execute_sql', { 
+        sql: `
+          CREATE POLICY "Usuários autenticados podem atualizar grupos de permissão"
+          ON public.permission_groups
+          FOR UPDATE
+          USING (public.can_access_permission_groups());
+        `
+      });
+
+    if (updatePolicyError) {
+      console.error("Erro ao criar política UPDATE:", updatePolicyError);
+      throw updatePolicyError;
+    }
+
+    // Criar políticas RLS para DELETE
+    const { error: deletePolicyError } = await supabaseAdmin
+      .rpc('execute_sql', { 
+        sql: `
+          CREATE POLICY "Usuários autenticados podem excluir grupos de permissão"
+          ON public.permission_groups
+          FOR DELETE
+          USING (public.can_access_permission_groups());
+        `
+      });
+
+    if (deletePolicyError) {
+      console.error("Erro ao criar política DELETE:", deletePolicyError);
+      throw deletePolicyError;
     }
 
     console.log("Políticas RLS para permission_groups corrigidas com sucesso!");
