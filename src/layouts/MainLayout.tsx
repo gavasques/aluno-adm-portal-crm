@@ -1,12 +1,14 @@
 
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Layout from "../layout/Layout";
 
-// Não precisa de props!
 export const MainLayout: React.FC = () => {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+  
   return (
-    <Layout isAdmin={undefined}>
+    <Layout isAdmin={isAdmin}>
       <Outlet />
     </Layout>
   );
