@@ -8,16 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useMentoring } from '@/hooks/useMentoring';
 
 const sessionSchema = z.object({
   enrollmentId: z.string().min(1, 'Selecione uma inscrição'),
-  type: z.enum(['individual', 'grupo']),
+  type: z.enum(['individual', 'grupo'], { required_error: 'Tipo é obrigatório' }),
   title: z.string().min(1, 'Título é obrigatório'),
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
   scheduledTime: z.string().min(1, 'Horário é obrigatório'),
-  durationMinutes: z.number().min(15, 'Duração mínima é 15 minutos'),
-  accessLink: z.string().url('URL inválida').optional().or(z.literal('')),
-  mentorNotes: z.string().optional()
+  durationMinutes: z.coerce.number().min(15, 'Duração mínima de 15 minutos').max(240, 'Duração máxima de 240 minutos'),
+  accessLink: z.string().url('Link deve ser uma URL válida').optional().or(z.literal(''))
 });
 
 type SessionFormData = z.infer<typeof sessionSchema>;
@@ -25,11 +25,13 @@ type SessionFormData = z.infer<typeof sessionSchema>;
 interface SessionFormProps {
   onSubmit: (data: SessionFormData) => void;
   onCancel: () => void;
-  initialData?: Partial<SessionFormData & { scheduledDateTime: string }>;
+  initialData?: Partial<SessionFormData>;
   isLoading?: boolean;
 }
 
 const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionFormProps) => {
+  const { enrollments } = useMentoring();
+
   const form = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema),
     defaultValues: {
@@ -39,8 +41,7 @@ const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionForm
       scheduledDate: initialData?.scheduledDate || '',
       scheduledTime: initialData?.scheduledTime || '',
       durationMinutes: initialData?.durationMinutes || 60,
-      accessLink: initialData?.accessLink || '',
-      mentorNotes: initialData?.mentorNotes || ''
+      accessLink: initialData?.accessLink || ''
     }
   });
 
@@ -61,9 +62,11 @@ const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionForm
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="enrollment-1">João Silva - E-commerce Avançado</SelectItem>
-                    <SelectItem value="enrollment-2">Maria Santos - Marketing Digital</SelectItem>
-                    <SelectItem value="enrollment-3">Pedro Costa - E-commerce Avançado</SelectItem>
+                    {enrollments.map((enrollment) => (
+                      <SelectItem key={enrollment.id} value={enrollment.id}>
+                        {enrollment.mentoring.name} - Aluno {enrollment.studentId}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -76,7 +79,7 @@ const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionForm
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tipo</FormLabel>
+                <FormLabel>Tipo de Sessão</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -97,30 +100,10 @@ const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionForm
             control={form.control}
             name="title"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Título</FormLabel>
+              <FormItem className="md:col-span-2">
+                <FormLabel>Título da Sessão</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: Sessão 1 - Fundamentos" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="durationMinutes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duração (minutos)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    min="15" 
-                    step="15" 
-                    {...field} 
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
+                  <Input placeholder="Ex: Fundamentos do E-commerce" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -154,50 +137,42 @@ const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionForm
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="durationMinutes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duração (minutos)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="60" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="accessLink"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Link de Acesso (Opcional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://meet.google.com/..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-
-        <FormField
-          control={form.control}
-          name="accessLink"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Link de Acesso</FormLabel>
-              <FormControl>
-                <Input 
-                  type="url" 
-                  placeholder="https://meet.google.com/..." 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="mentorNotes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notas do Mentor</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Notas e preparações para a sessão..." 
-                  className="min-h-20"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Salvando...' : 'Salvar'}
+            {isLoading ? 'Salvando...' : 'Salvar Sessão'}
           </Button>
         </div>
       </form>

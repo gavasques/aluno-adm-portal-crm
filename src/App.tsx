@@ -34,7 +34,7 @@ import AdminTasks from "./pages/admin/Tasks";
 import AdminCRM from "./pages/admin/CRM";
 import AdminAuditDashboard from "./pages/admin/Audit";
 
-// New Mentoring Pages
+// Mentoring Pages
 import AdminMentoringManagement from "./pages/admin/AdminMentoringManagement";
 import AdminMentoringCatalog from "./pages/admin/AdminMentoringCatalog";
 import AdminMentoringEnrollments from "./pages/admin/AdminMentoringEnrollments";
@@ -84,7 +84,7 @@ function App() {
                 <Route path="crm" element={<AdminCRM />} />
                 <Route path="auditoria" element={<AdminAuditDashboard />} />
                 
-                {/* Mentoring Management Routes - CORRIGIDA */}
+                {/* Mentoring Management Routes */}
                 <Route path="mentorias" element={<AdminMentoringManagement />} />
                 <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
                 <Route path="mentorias/inscricoes" element={<AdminMentoringEnrollments />} />
@@ -103,7 +103,7 @@ function App() {
                 <Route path="ferramentas" element={<StudentTools />} />
                 <Route path="configuracoes" element={<StudentSettings />} />
                 
-                {/* Student Mentoring Routes - CORRIGIDA */}
+                {/* Student Mentoring Routes */}
                 <Route path="mentorias" element={<StudentMentoring />} />
                 <Route path="mentorias/:enrollmentId" element={<StudentMentoringDetail />} />
                 <Route path="mentorias/:enrollmentId/sessoes/:sessionId" element={<StudentMentoringSession />} />
