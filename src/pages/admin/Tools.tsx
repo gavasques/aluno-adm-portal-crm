@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -203,6 +204,9 @@ const Tools = () => {
     toast.success("Ferramenta adicionada com sucesso!");
   };
 
+  // Get unique categories from tools
+  const categories = Array.from(new Set(tools.map(tool => tool.category)));
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
@@ -213,15 +217,18 @@ const Tools = () => {
       </div>
       
       <AddToolDialog 
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
         onAddTool={handleAddTool}
+        categories={categories}
       />
       
       <ToolDetailDialog 
         tool={selectedTool}
+        isAdmin={true}
+        isOpen={!!selectedTool}
         onClose={() => setSelectedTool(null)}
-        onUpdate={handleUpdateTool}
+        onUpdateTool={handleUpdateTool}
       />
     </div>
   );
