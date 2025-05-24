@@ -3,15 +3,14 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
 import { SuppliersList } from "@/components/student/my-suppliers/SuppliersList";
+import { ErrorState } from "@/components/student/my-suppliers/ErrorState";
+import { LoadingState } from "@/components/student/my-suppliers/LoadingState";
 import SupplierDetail from "@/components/student/SupplierDetail";
 import StudentRouteGuard from "@/components/student/RouteGuard";
 import { useMySuppliers } from "@/hooks/student/useMySuppliers";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Plus, AlertCircle, RefreshCw, Wifi, WifiOff, Zap } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const MySuppliers = () => {
   const {
@@ -39,121 +38,20 @@ const MySuppliers = () => {
   if (loading) {
     return (
       <StudentRouteGuard requiredMenuKey="my-suppliers">
-        <div className="container mx-auto py-6 space-y-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Meus Fornecedores</h1>
-              <p className="text-gray-600 mt-2">
-                Gerencie seus fornecedores pessoais e mantenha seus dados organizados.
-              </p>
-            </div>
-            <Button disabled className="bg-gray-300">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Fornecedor
-            </Button>
-          </div>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <LoadingState />
       </StudentRouteGuard>
     );
   }
 
-  // Error state with enhanced information
+  // Error state
   if (error) {
-    const isNetworkError = error.includes('conexão') || error.includes('internet');
-    const isCircuitBreakerError = error.includes('Muitas tentativas');
-    const isAuthError = error.includes('autenticado');
-    
-    let ErrorIcon = AlertCircle;
-    let errorColor = 'red';
-    
-    if (isNetworkError) {
-      ErrorIcon = WifiOff;
-      errorColor = 'orange';
-    } else if (isCircuitBreakerError) {
-      ErrorIcon = Zap;
-      errorColor = 'yellow';
-    }
-    
     return (
       <StudentRouteGuard requiredMenuKey="my-suppliers">
-        <div className="container mx-auto py-6 space-y-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Meus Fornecedores</h1>
-              <p className="text-gray-600 mt-2">
-                Gerencie seus fornecedores pessoais e mantenha seus dados organizados.
-              </p>
-            </div>
-          </div>
-          
-          <Alert variant={errorColor === 'red' ? 'destructive' : 'warning'} className={`border-${errorColor}-200 bg-${errorColor}-50`}>
-            <ErrorIcon className={`h-6 w-6 text-${errorColor}-600`} />
-            <AlertTitle className={`text-${errorColor}-800 font-semibold`}>
-              {isNetworkError ? 'Problema de Conexão' : 
-               isCircuitBreakerError ? 'Sistema Temporariamente Indisponível' :
-               isAuthError ? 'Erro de Autenticação' : 'Erro ao Carregar Fornecedores'}
-            </AlertTitle>
-            <AlertDescription className={`text-${errorColor}-700`}>
-              <p className="mb-4">{error}</p>
-              
-              {retryCount > 0 && (
-                <p className="text-xs mb-4">
-                  Tentativas realizadas: {retryCount}
-                </p>
-              )}
-              
-              <div className="flex gap-2 mb-4">
-                {!isCircuitBreakerError && (
-                  <Button 
-                    onClick={handleRetry}
-                    className={`bg-${errorColor}-600 hover:bg-${errorColor}-700 text-white`}
-                    size="sm"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Tentar Novamente
-                  </Button>
-                )}
-                
-                <Button 
-                  onClick={() => window.location.reload()}
-                  variant="outline"
-                  className={`border-${errorColor}-300 text-${errorColor}-700 hover:bg-${errorColor}-100`}
-                  size="sm"
-                >
-                  Recarregar Página
-                </Button>
-              </div>
-
-              <div className={`p-3 bg-${errorColor}-100 rounded-md`}>
-                <p className={`text-xs text-${errorColor}-700`}>
-                  <strong>
-                    {isNetworkError ? 'Dica de Conectividade:' :
-                     isCircuitBreakerError ? 'Proteção Ativa:' :
-                     'Solução:'}
-                  </strong>{' '}
-                  {isNetworkError ? 
-                    'Verifique sua conexão com a internet e tente novamente.' :
-                   isCircuitBreakerError ?
-                    'O sistema detectou muitos erros e pausou as tentativas para proteger o servidor. Aguarde alguns minutos.' :
-                   isAuthError ?
-                    'Faça logout e login novamente para restaurar sua sessão.' :
-                    'Se o problema persistir, entre em contato com o suporte.'}
-                </p>
-              </div>
-            </AlertDescription>
-          </Alert>
-        </div>
+        <ErrorState 
+          error={error} 
+          retryCount={retryCount} 
+          onRetry={handleRetry} 
+        />
       </StudentRouteGuard>
     );
   }
