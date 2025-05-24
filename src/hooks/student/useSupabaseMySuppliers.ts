@@ -109,8 +109,7 @@ export const useSupabaseMySuppliers = () => {
           .eq('user_id', user!.id)
           .order('created_at', { ascending: false });
 
-        const result = await withTimeout(suppliersQuery);
-        const { data: suppliersData, error: suppliersError } = result;
+        const { data: suppliersData, error: suppliersError } = await withTimeout(suppliersQuery);
 
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
@@ -211,8 +210,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const result = await withTimeout(createQuery);
-      const { data: newSupplier, error } = result;
+      const { data: newSupplier, error } = await withTimeout(createQuery);
 
       if (error) {
         console.error('Error creating supplier:', error);
@@ -281,8 +279,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const result = await withTimeout(updateQuery);
-      const { data: updatedSupplier, error } = result;
+      const { data: updatedSupplier, error } = await withTimeout(updateQuery);
 
       if (error) {
         console.error('Error updating supplier:', error);
@@ -333,8 +330,7 @@ export const useSupabaseMySuppliers = () => {
         .eq('id', id)
         .eq('user_id', user!.id);
 
-      const result = await withTimeout(deleteQuery);
-      const { error } = result;
+      const { error } = await withTimeout(deleteQuery);
 
       if (error) {
         console.error('Error deleting supplier:', error);
