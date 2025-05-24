@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, CheckSquare, Square, AlertTriangle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PermissionGroupMenusManagerProps {
   groupId: string;
@@ -63,7 +63,7 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Memoizar a função de busca de menus do grupo
+  // Função interna estável para carregar menus do grupo
   const loadGroupMenus = useCallback(async () => {
     if (!groupId) return;
     
