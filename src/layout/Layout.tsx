@@ -1,5 +1,5 @@
 
-import { Outlet, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import AdminSidebar from "./AdminSidebar";
 import StudentSidebar from "./StudentSidebar";
@@ -9,9 +9,10 @@ import PendingValidationOverlay from "@/components/layout/PendingValidationOverl
 
 interface LayoutProps {
   isAdmin: boolean;
+  children: React.ReactNode;
 }
 
-const Layout = ({ isAdmin }: LayoutProps) => {
+const Layout = ({ isAdmin, children }: LayoutProps) => {
   const { user } = useAuth();
   const location = useLocation();
   
@@ -28,7 +29,7 @@ const Layout = ({ isAdmin }: LayoutProps) => {
           <div className="flex-1 flex flex-col min-w-0">
             <TopBar />
             <main className="flex-1 p-6 pt-20 overflow-auto">
-              <Outlet />
+              {children}
             </main>
           </div>
         </div>

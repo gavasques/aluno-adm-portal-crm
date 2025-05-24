@@ -51,17 +51,14 @@ import StudentRouteGuard from "./components/student/RouteGuard";
 import AdminLayout from "./layout/AdminLayout";
 import StudentLayout from "./layout/StudentLayout";
 
-// Route Guards
-import RouteGuard from "./components/RouteGuard";
-
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
             <Routes>
               <Route path="/" element={<Layout isAdmin={false}><Index /></Layout>} />
               <Route path="/reset-password" element={<Layout isAdmin={false}><ResetPassword /></Layout>} />
@@ -102,10 +99,10 @@ function App() {
               {/* 404 Route */}
               <Route path="*" element={<Layout isAdmin={false}><NotFound /></Layout>} />
             </Routes>
-          </BrowserRouter>
-          <Toaster />
-        </TooltipProvider>
-      </AuthProvider>
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
