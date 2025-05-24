@@ -3,7 +3,7 @@ import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Settings, Users, ChevronDown } from "lucide-react";
+import { LogOut, User, Settings, Users, ChevronDown, Bell } from "lucide-react";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -62,6 +62,13 @@ const TopBar = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Botão de Notificações */}
+          <Button variant="outline" className="flex items-center gap-2 relative">
+            <Bell className="h-4 w-4" />
+            Notificações
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+          </Button>
+
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
