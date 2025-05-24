@@ -1,57 +1,57 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import AdminLayout from "@/layout/AdminLayout";
-import StudentLayout from "@/layout/StudentLayout";
+import { AuthProvider } from "./hooks/auth";
+import Index from "./pages/Index";
+import ResetPassword from "./pages/ResetPassword";
+import AcceptInvite from "./pages/AcceptInvite";
+import NotFound from "./pages/NotFound";
 
-// Public pages
-import Index from "@/pages/Index";
-import ResetPassword from "@/pages/ResetPassword";
-import AcceptInvite from "@/pages/AcceptInvite";
-import NotFound from "@/pages/NotFound";
+// Admin Pages
+import Dashboard from "./pages/admin/Dashboard";
+import Users from "./pages/admin/Users";
+import Students from "./pages/admin/Students";
+import StudentDetail from "./pages/admin/StudentDetail";
+import CRM from "./pages/admin/CRM";
+import Tasks from "./pages/admin/Tasks";
+import TaskDetail from "./pages/admin/TaskDetail";
+import Suppliers from "./pages/admin/Suppliers";
+import Partners from "./pages/admin/Partners";
+import Tools from "./pages/admin/Tools";
+import Courses from "./pages/admin/Courses";
+import CourseDetails from "./pages/admin/CourseDetails";
+import Mentoring from "./pages/admin/Mentoring";
+import MentoringDetail from "./pages/admin/MentoringDetail";
+import Bonus from "./pages/admin/Bonus";
+import BonusDetail from "./pages/admin/BonusDetail";
+import Categories from "./pages/admin/Categories";
+import PartnerTypes from "./pages/admin/PartnerTypes";
+import SoftwareTypes from "./pages/admin/SoftwareTypes";
+import Permissions from "./pages/admin/Permissions";
+import Audit from "./pages/admin/Audit";
+import Settings from "./pages/admin/Settings";
+import Registers from "./pages/admin/Registers";
 
-// Admin pages
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminUsers from "@/pages/admin/Users";
-import AdminStudents from "@/pages/admin/Students";
-import AdminSuppliers from "@/pages/admin/Suppliers";
-import AdminPartners from "@/pages/admin/Partners";
-import AdminTools from "@/pages/admin/Tools";
-import AdminTasks from "@/pages/admin/Tasks";
-import AdminCRM from "@/pages/admin/CRM";
-import AdminAudit from "@/pages/admin/Audit";
-import AdminSettings from "@/pages/admin/Settings";
-import AdminPermissions from "@/pages/admin/Permissions";
-import AdminBonuses from "@/pages/admin/Bonus";
-import AdminBonusDetail from "@/pages/admin/BonusDetail";
-import AdminCourses from "@/pages/admin/Courses";
-import AdminCourseDetails from "@/pages/admin/CourseDetails";
-import AdminRegisters from "@/pages/admin/Registers";
-import AdminMentoringDetail from "@/pages/admin/MentoringDetail";
-import AdminTaskDetail from "@/pages/admin/TaskDetail";
-import AdminStudentDetail from "@/pages/admin/StudentDetail";
+// Student Pages
+import StudentDashboard from "./pages/student/Dashboard";
+import StudentSuppliers from "./pages/student/Suppliers";
+import MySuppliers from "./pages/student/MySuppliers";
+import StudentPartners from "./pages/student/Partners";
+import StudentTools from "./pages/student/Tools";
+import StudentSettings from "./pages/student/Settings";
 
-// New mentoring pages
-import AdminMentoringCatalog from "@/pages/admin/MentoringCatalog";
-import AdminGroupMentoring from "@/pages/admin/GroupMentoring";
-import AdminIndividualMentoring from "@/pages/admin/IndividualMentoring";
-import AdminMentoringMaterials from "@/pages/admin/MentoringMaterials";
+// Components
+import Layout from "./layout/Layout";
+import AdminRouteGuard from "./components/admin/RouteGuard";
+import StudentRouteGuard from "./components/student/RouteGuard";
 
-// Student pages
-import StudentDashboard from "@/pages/student/Dashboard";
-import StudentSuppliers from "@/pages/student/Suppliers";
-import StudentMySuppliers from "@/pages/student/MySuppliers";
-import StudentPartners from "@/pages/student/Partners";
-import StudentTools from "@/pages/student/Tools";
-import StudentSettings from "@/pages/student/Settings";
-import StudentMyMentoring from "@/pages/student/MyMentoring";
-
-// Route Guards
-import AdminRouteGuard from "@/components/admin/RouteGuard";
-import StudentRouteGuard from "@/components/student/RouteGuard";
+// Layouts
+import AdminLayout from "./layout/AdminLayout";
+import StudentLayout from "./layout/StudentLayout";
 
 const queryClient = new QueryClient();
 
@@ -60,69 +60,56 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Router>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/accept-invite" element={<AcceptInvite />} />
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<Layout isAdmin={false}><Index /></Layout>} />
+                <Route path="/reset-password" element={<Layout isAdmin={false}><ResetPassword /></Layout>} />
+                <Route path="/accept-invite" element={<Layout isAdmin={false}><AcceptInvite /></Layout>} />
+                
+                {/* Redirect from /student to /aluno */}
+                <Route path="/student" element={<Navigate to="/aluno" replace />} />
+                <Route path="/student/*" element={<Navigate to="/aluno" replace />} />
+                
+                {/* Admin Routes - URLs em português */}
+                <Route path="/admin" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Dashboard /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/configuracoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Settings /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/usuarios" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Users /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/permissoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Permissions /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/alunos" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Students /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/alunos/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><StudentDetail /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/cadastros" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Registers /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/tarefas" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tasks /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/tarefas/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><TaskDetail /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/leads" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CRM /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/fornecedores" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Suppliers /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/parceiros" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Partners /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/ferramentas" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tools /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/cursos" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Courses /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/cursos/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CourseDetails /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/mentorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Mentoring /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/mentorias/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/mentorias/new" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/bonus" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Bonus /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/bonus/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><BonusDetail /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/categorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Categories /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/tipos-parceiro" element={<AdminRouteGuard requireAdminAccess><AdminLayout><PartnerTypes /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/tipos-software" element={<AdminRouteGuard requireAdminAccess><AdminLayout><SoftwareTypes /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/auditoria" element={<AdminRouteGuard requireAdminAccess requiredMenuKey="audit"><AdminLayout><Audit /></AdminLayout></AdminRouteGuard>} />
 
-              {/* Admin routes */}
-              <Route path="/admin/*" element={
-                <AdminRouteGuard>
-                  <AdminLayout>
-                    <Routes>
-                      <Route path="/" element={<AdminDashboard />} />
-                      <Route path="/users" element={<AdminUsers />} />
-                      <Route path="/students" element={<AdminStudents />} />
-                      <Route path="/students/:id" element={<AdminStudentDetail />} />
-                      <Route path="/suppliers" element={<AdminSuppliers />} />
-                      <Route path="/partners" element={<AdminPartners />} />
-                      <Route path="/tools" element={<AdminTools />} />
-                      <Route path="/tasks" element={<AdminTasks />} />
-                      <Route path="/tasks/:id" element={<AdminTaskDetail />} />
-                      <Route path="/crm" element={<AdminCRM />} />
-                      <Route path="/audit" element={<AdminAudit />} />
-                      <Route path="/settings" element={<AdminSettings />} />
-                      <Route path="/permissions" element={<AdminPermissions />} />
-                      <Route path="/bonus" element={<AdminBonuses />} />
-                      <Route path="/bonus/:id" element={<AdminBonusDetail />} />
-                      <Route path="/courses" element={<AdminCourses />} />
-                      <Route path="/courses/:id" element={<AdminCourseDetails />} />
-                      <Route path="/cadastros" element={<AdminRegisters />} />
-                      <Route path="/mentorias/:id" element={<AdminMentoringDetail />} />
-                      
-                      {/* New mentoring routes */}
-                      <Route path="/mentoring-catalog" element={<AdminMentoringCatalog />} />
-                      <Route path="/group-mentoring/:id" element={<AdminGroupMentoring />} />
-                      <Route path="/individual-mentoring" element={<AdminIndividualMentoring />} />
-                      <Route path="/mentoring-materials" element={<AdminMentoringMaterials />} />
-                    </Routes>
-                  </AdminLayout>
-                </AdminRouteGuard>
-              } />
+                {/* Student Routes */}
+                <Route path="/aluno" element={<StudentRouteGuard requiredMenuKey="dashboard"><StudentLayout><StudentDashboard /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/fornecedores" element={<StudentRouteGuard requiredMenuKey="suppliers"><StudentLayout><StudentSuppliers /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/meus-fornecedores" element={<StudentRouteGuard requiredMenuKey="my-suppliers"><StudentLayout><MySuppliers /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/parceiros" element={<StudentRouteGuard requiredMenuKey="partners"><StudentLayout><StudentPartners /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/ferramentas" element={<StudentRouteGuard requiredMenuKey="tools"><StudentLayout><StudentTools /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/configuracoes" element={<StudentRouteGuard requiredMenuKey="settings"><StudentLayout><StudentSettings /></StudentLayout></StudentRouteGuard>} />
 
-              {/* Student routes */}
-              <Route path="/student/*" element={
-                <StudentRouteGuard>
-                  <StudentLayout>
-                    <Routes>
-                      <Route path="/" element={<StudentDashboard />} />
-                      <Route path="/suppliers" element={<StudentSuppliers />} />
-                      <Route path="/my-suppliers" element={<StudentMySuppliers />} />
-                      <Route path="/partners" element={<StudentPartners />} />
-                      <Route path="/tools" element={<StudentTools />} />
-                      <Route path="/settings" element={<StudentSettings />} />
-                      <Route path="/my-mentoring" element={<StudentMyMentoring />} />
-                    </Routes>
-                  </StudentLayout>
-                </StudentRouteGuard>
-              } />
-
-              {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
+                {/* 404 Route */}
+                <Route path="*" element={<Layout isAdmin={false}><NotFound /></Layout>} />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
