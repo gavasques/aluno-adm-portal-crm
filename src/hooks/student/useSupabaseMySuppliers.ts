@@ -95,21 +95,21 @@ export const useSupabaseMySuppliers = () => {
         }, 15000);
 
         // Buscar fornecedores com timeout - executar a query e aguardar resultado
-        const suppliersQueryResult = await withTimeout(
-          supabase
-            .from('my_suppliers')
-            .select(`
-              *,
-              brands:my_supplier_brands(*),
-              branches:my_supplier_branches(*),
-              contacts:my_supplier_contacts(*),
-              communications:my_supplier_communications(*),
-              ratings:my_supplier_ratings(*),
-              commentItems:my_supplier_comments(*)
-            `)
-            .eq('user_id', user!.id)
-            .order('created_at', { ascending: false })
-        );
+        const suppliersQuery = supabase
+          .from('my_suppliers')
+          .select(`
+            *,
+            brands:my_supplier_brands(*),
+            branches:my_supplier_branches(*),
+            contacts:my_supplier_contacts(*),
+            communications:my_supplier_communications(*),
+            ratings:my_supplier_ratings(*),
+            commentItems:my_supplier_comments(*)
+          `)
+          .eq('user_id', user!.id)
+          .order('created_at', { ascending: false });
+
+        const suppliersQueryResult = await withTimeout(suppliersQuery) as any;
 
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
@@ -196,21 +196,21 @@ export const useSupabaseMySuppliers = () => {
         comment_count: 0
       };
 
-      const createQueryResult = await withTimeout(
-        supabase
-          .from('my_suppliers')
-          .insert(supplierData)
-          .select(`
-            *,
-            brands:my_supplier_brands(*),
-            branches:my_supplier_branches(*),
-            contacts:my_supplier_contacts(*),
-            communications:my_supplier_communications(*),
-            ratings:my_supplier_ratings(*),
-            commentItems:my_supplier_comments(*)
-          `)
-          .single()
-      );
+      const createQuery = supabase
+        .from('my_suppliers')
+        .insert(supplierData)
+        .select(`
+          *,
+          brands:my_supplier_brands(*),
+          branches:my_supplier_branches(*),
+          contacts:my_supplier_contacts(*),
+          communications:my_supplier_communications(*),
+          ratings:my_supplier_ratings(*),
+          commentItems:my_supplier_comments(*)
+        `)
+        .single();
+
+      const createQueryResult = await withTimeout(createQuery) as any;
 
       if (createQueryResult.error) {
         console.error('Error creating supplier:', createQueryResult.error);
@@ -253,33 +253,33 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Updating supplier:', id, updates);
 
-      const updateQueryResult = await withTimeout(
-        supabase
-          .from('my_suppliers')
-          .update({
-            name: updates.name,
-            category: updates.category,
-            cnpj: updates.cnpj,
-            email: updates.email,
-            phone: updates.phone,
-            website: updates.website,
-            address: updates.address,
-            type: updates.type,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id)
-          .eq('user_id', user!.id)
-          .select(`
-            *,
-            brands:my_supplier_brands(*),
-            branches:my_supplier_branches(*),
-            contacts:my_supplier_contacts(*),
-            communications:my_supplier_communications(*),
-            ratings:my_supplier_ratings(*),
-            commentItems:my_supplier_comments(*)
-          `)
-          .single()
-      );
+      const updateQuery = supabase
+        .from('my_suppliers')
+        .update({
+          name: updates.name,
+          category: updates.category,
+          cnpj: updates.cnpj,
+          email: updates.email,
+          phone: updates.phone,
+          website: updates.website,
+          address: updates.address,
+          type: updates.type,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', user!.id)
+        .select(`
+          *,
+          brands:my_supplier_brands(*),
+          branches:my_supplier_branches(*),
+          contacts:my_supplier_contacts(*),
+          communications:my_supplier_communications(*),
+          ratings:my_supplier_ratings(*),
+          commentItems:my_supplier_comments(*)
+        `)
+        .single();
+
+      const updateQueryResult = await withTimeout(updateQuery) as any;
 
       if (updateQueryResult.error) {
         console.error('Error updating supplier:', updateQueryResult.error);
@@ -324,13 +324,13 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Deleting supplier:', id);
 
-      const deleteQueryResult = await withTimeout(
-        supabase
-          .from('my_suppliers')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user!.id)
-      );
+      const deleteQuery = supabase
+        .from('my_suppliers')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user!.id);
+
+      const deleteQueryResult = await withTimeout(deleteQuery) as any;
 
       if (deleteQueryResult.error) {
         console.error('Error deleting supplier:', deleteQueryResult.error);
