@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock } from "lucide-react";
+import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock, GraduationCap, Building, CheckCircle, Shield, Activity } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -82,6 +82,30 @@ const AdminSidebar = () => {
   if (!permissions.hasAdminAccess) {
     return null;
   }
+
+  const menuItems = [
+    { name: "Dashboard", path: "/admin", icon: Home },
+    { name: "Usuários", path: "/admin/users", icon: Users },
+    { name: "Gestão de Alunos", path: "/admin/students", icon: GraduationCap },
+    { name: "CRM", path: "/admin/crm", icon: Building },
+    { name: "Tarefas", path: "/admin/tasks", icon: CheckCircle },
+    { name: "GERAL ADM", path: "/admin/general", icon: Database, subItems: [
+      { name: "Fornecedores", path: "/admin/suppliers" },
+      { name: "Parceiros", path: "/admin/partners" },
+      { name: "Ferramentas", path: "/admin/tools" }
+    ]},
+    { name: "Cadastros", path: "/admin/registers", icon: FileText, subItems: [
+      { name: "Cursos", path: "/admin/courses" },
+      { name: "Mentorias", path: "/admin/mentoring" },
+      { name: "Bônus", path: "/admin/bonus" },
+      { name: "Categorias", path: "/admin/categories" },
+      { name: "Tipos de Parceiro", path: "/admin/partner-types" },
+      { name: "Tipos de Software", path: "/admin/software-types" }
+    ]},
+    { name: "Permissões", path: "/admin/permissions", icon: Shield },
+    { name: "Auditoria", path: "/admin/audit", icon: Activity },
+    { name: "Configurações", path: "/admin/settings", icon: Settings }
+  ];
 
   return (
     <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">

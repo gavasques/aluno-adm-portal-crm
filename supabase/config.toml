@@ -38,3 +38,5 @@ verify_jwt = true
 [functions.fix-permission-groups-policy]
 verify_jwt = true
 
+[functions.audit-logger]
+verify_jwt = false
