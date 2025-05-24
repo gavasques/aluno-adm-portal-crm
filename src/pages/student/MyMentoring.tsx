@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,6 @@ const mockStudentSubscriptions: AlunoInscricaoMentoria[] = [
     data_inicio_acesso: "2025-06-01",
     data_fim_acesso: "2025-07-30",
     status_inscricao: "ATIVA",
-    sessoes_realizadas_ind: 0,
     created_at: "2025-06-01T00:00:00Z",
     updated_at: "2025-06-01T00:00:00Z"
   }
