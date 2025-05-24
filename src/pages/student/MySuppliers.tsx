@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Plus, AlertCircle, RefreshCw, Wifi, WifiOff, CircuitBreaker } from "lucide-react";
+import { Plus, AlertCircle, RefreshCw, Wifi, WifiOff, Zap } from "lucide-react";
 
 const MySuppliers = () => {
   const {
@@ -73,14 +74,14 @@ const MySuppliers = () => {
     const isCircuitBreakerError = error.includes('Muitas tentativas');
     const isAuthError = error.includes('autenticado');
     
-    let errorIcon = AlertCircle;
+    let ErrorIcon = AlertCircle;
     let errorColor = 'red';
     
     if (isNetworkError) {
-      errorIcon = WifiOff;
+      ErrorIcon = WifiOff;
       errorColor = 'orange';
     } else if (isCircuitBreakerError) {
-      errorIcon = CircuitBreaker;
+      ErrorIcon = Zap;
       errorColor = 'yellow';
     }
     
@@ -97,7 +98,7 @@ const MySuppliers = () => {
           </div>
           
           <Alert variant={errorColor === 'red' ? 'destructive' : 'warning'} className={`border-${errorColor}-200 bg-${errorColor}-50`}>
-            <errorIcon.type className={`h-6 w-6 text-${errorColor}-600`} />
+            <ErrorIcon className={`h-6 w-6 text-${errorColor}-600`} />
             <AlertTitle className={`text-${errorColor}-800 font-semibold`}>
               {isNetworkError ? 'Problema de Conexão' : 
                isCircuitBreakerError ? 'Sistema Temporariamente Indisponível' :
