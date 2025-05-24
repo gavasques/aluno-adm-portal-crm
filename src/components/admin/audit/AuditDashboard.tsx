@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +21,7 @@ interface AuditLog {
   risk_level: string;
   success: boolean;
   created_at: string;
-  ip_address?: string;
+  ip_address?: string | null;
   user_agent?: string;
   metadata?: any;
 }
@@ -79,7 +78,14 @@ export const AuditDashboard: React.FC = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setAuditLogs(data || []);
+      
+      // Converter dados para o tipo correto
+      const typedData: AuditLog[] = (data || []).map(log => ({
+        ...log,
+        ip_address: log.ip_address ? String(log.ip_address) : undefined
+      }));
+      
+      setAuditLogs(typedData);
     } catch (error) {
       console.error('Erro ao carregar logs:', error);
     }

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -62,44 +63,44 @@ function App() {
         <TooltipProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Layout><Index /></Layout>} />
-              <Route path="/reset-password" element={<Layout><ResetPassword /></Layout>} />
-              <Route path="/accept-invite" element={<Layout><AcceptInvite /></Layout>} />
+              <Route path="/" element={<Layout isAdmin={false}><Index /></Layout>} />
+              <Route path="/reset-password" element={<Layout isAdmin={false}><ResetPassword /></Layout>} />
+              <Route path="/accept-invite" element={<Layout isAdmin={false}><AcceptInvite /></Layout>} />
               
               {/* Admin Routes */}
-              <Route path="/admin" element={<RouteGuard><AdminLayout><Dashboard /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/users" element={<RouteGuard><AdminLayout><Users /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/students" element={<RouteGuard><AdminLayout><Students /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/students/:id" element={<RouteGuard><AdminLayout><StudentDetail /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/crm" element={<RouteGuard><AdminLayout><CRM /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/tasks" element={<RouteGuard><AdminLayout><Tasks /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/tasks/:id" element={<RouteGuard><AdminLayout><TaskDetail /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/suppliers" element={<RouteGuard><AdminLayout><Suppliers /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/partners" element={<RouteGuard><AdminLayout><Partners /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/tools" element={<RouteGuard><AdminLayout><Tools /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/courses" element={<RouteGuard><AdminLayout><Courses /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/courses/:id" element={<RouteGuard><AdminLayout><CourseDetails /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/mentoring" element={<RouteGuard><AdminLayout><Mentoring /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/mentoring/:id" element={<RouteGuard><AdminLayout><MentoringDetail /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/bonus" element={<RouteGuard><AdminLayout><Bonus /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/bonus/:id" element={<RouteGuard><AdminLayout><BonusDetail /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/categories" element={<RouteGuard><AdminLayout><Categories /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/partner-types" element={<RouteGuard><AdminLayout><PartnerTypes /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/software-types" element={<RouteGuard><AdminLayout><SoftwareTypes /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/permissions" element={<RouteGuard><AdminLayout><Permissions /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/audit" element={<RouteGuard><AdminLayout><Audit /></AdminLayout></RouteGuard>} />
-              <Route path="/admin/settings" element={<RouteGuard><AdminLayout><Settings /></AdminLayout></RouteGuard>} />
+              <Route path="/admin" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Dashboard /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/users" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Users /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/students" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Students /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/students/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><StudentDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/crm" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CRM /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tasks" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tasks /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tasks/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><TaskDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/suppliers" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Suppliers /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/partners" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Partners /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tools" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tools /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/courses" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Courses /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/courses/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CourseDetails /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/mentoring" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Mentoring /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/mentoring/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/bonus" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Bonus /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/bonus/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><BonusDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/categories" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Categories /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/partner-types" element={<AdminRouteGuard requireAdminAccess><AdminLayout><PartnerTypes /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/software-types" element={<AdminRouteGuard requireAdminAccess><AdminLayout><SoftwareTypes /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/permissions" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Permissions /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/audit" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Audit /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/settings" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Settings /></AdminLayout></AdminRouteGuard>} />
 
               {/* Student Routes */}
-              <Route path="/aluno" element={<StudentRouteGuard><StudentLayout><StudentDashboard /></StudentLayout></StudentRouteGuard>} />
-              <Route path="/aluno/fornecedores" element={<StudentRouteGuard><StudentLayout><StudentSuppliers /></StudentLayout></StudentRouteGuard>} />
-              <Route path="/aluno/meus-fornecedores" element={<StudentRouteGuard><StudentLayout><MySuppliers /></StudentLayout></StudentRouteGuard>} />
-              <Route path="/aluno/parceiros" element={<StudentRouteGuard><StudentLayout><StudentPartners /></StudentLayout></StudentRouteGuard>} />
-              <Route path="/aluno/ferramentas" element={<StudentRouteGuard><StudentLayout><StudentTools /></StudentLayout></StudentRouteGuard>} />
-              <Route path="/aluno/configuracoes" element={<StudentRouteGuard><StudentLayout><StudentSettings /></StudentLayout></StudentRouteGuard>} />
+              <Route path="/aluno" element={<StudentRouteGuard requiredMenuKey="dashboard"><StudentLayout><StudentDashboard /></StudentLayout></StudentRouteGuard>} />
+              <Route path="/aluno/fornecedores" element={<StudentRouteGuard requiredMenuKey="suppliers"><StudentLayout><StudentSuppliers /></StudentLayout></StudentRouteGuard>} />
+              <Route path="/aluno/meus-fornecedores" element={<StudentRouteGuard requiredMenuKey="my_suppliers"><StudentLayout><MySuppliers /></StudentLayout></StudentRouteGuard>} />
+              <Route path="/aluno/parceiros" element={<StudentRouteGuard requiredMenuKey="partners"><StudentLayout><StudentPartners /></StudentLayout></StudentRouteGuard>} />
+              <Route path="/aluno/ferramentas" element={<StudentRouteGuard requiredMenuKey="tools"><StudentLayout><StudentTools /></StudentLayout></StudentRouteGuard>} />
+              <Route path="/aluno/configuracoes" element={<StudentRouteGuard requiredMenuKey="settings"><StudentLayout><StudentSettings /></StudentLayout></StudentRouteGuard>} />
 
               {/* 404 Route */}
-              <Route path="*" element={<Layout><NotFound /></Layout>} />
+              <Route path="*" element={<Layout isAdmin={false}><NotFound /></Layout>} />
             </Routes>
           </BrowserRouter>
           <Toaster />
