@@ -221,4 +221,5 @@ export const useBonuses = () => {
   };
 };
 
-export { BonusType, AccessPeriod } from "@/types/bonus.types";
+// Exportar tipos corretamente
+export type { BonusType, AccessPeriod } from "@/types/bonus.types";
