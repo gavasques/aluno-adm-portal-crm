@@ -1,87 +1,18 @@
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { MySupplier, SupplierFormValues } from "@/types/my-suppliers.types";
-
-// Sample data for my suppliers
-const INITIAL_SUPPLIERS: MySupplier[] = [
-  {
-    id: 1,
-    name: "Meu Fornecedor Local",
-    category: "Produtos Regionais",
-    rating: 4.5,
-    commentCount: 3,
-    logo: "ML",
-    cnpj: "12.345.678/0001-90",
-    email: "contato@meufornecedor.com",
-    phone: "(11) 98765-4321",
-    website: "www.meufornecedor.com",
-    address: "Av. Exemplo, 1000 - São Paulo/SP",
-    type: "Distribuidor",
-    brands: [
-      { id: 1, name: "Marca Regional", description: "Produtos locais" }
-    ],
-    branches: [
-      { id: 1, name: "Filial SP Centro", address: "Rua Central, 123 - São Paulo/SP", phone: "(11) 3456-7890", email: "centro@meufornecedor.com", cnpj: "12.345.678/0002-71" }
-    ],
-    contacts: [
-      { id: 1, name: "João Silva", role: "Gerente Comercial", phone: "(11) 97654-3210", email: "joao@meufornecedor.com" }
-    ],
-    communications: [
-      { id: 1, date: "2023-05-15", type: "Reunião", notes: "Discutimos novos produtos", contact: "João Silva" }
-    ],
-    files: [
-      { id: 1, name: "Catálogo 2023", type: "PDF", size: "2.5MB", date: "2023-04-10" }
-    ],
-    commentItems: [ 
-      { 
-        id: 1, 
-        userId: 1, 
-        userName: "Maria Oliveira", 
-        userAvatar: "", 
-        content: "Ótima qualidade de produtos e entrega rápida.", 
-        date: "2023-06-10T10:30:00", 
-        likes: 3, 
-        userLiked: true, 
-        replies: [
-          { 
-            id: 11, 
-            userId: 2, 
-            userName: "Carlos Silva", 
-            userAvatar: "", 
-            content: "Concordo! Serviço excelente.", 
-            date: "2023-06-10T14:45:00" 
-          }
-        ] 
-      }
-    ],
-    ratings: [
-      { 
-        id: 1, 
-        userId: 3, 
-        userName: "Pedro Santos", 
-        rating: 5, 
-        comment: "Produtos de alta qualidade e atendimento impecável.", 
-        date: "2023-05-20T09:15:00", 
-        likes: 2, 
-        userLiked: false 
-      }
-    ],
-    images: [
-      { 
-        id: 1, 
-        name: "Fachada da loja", 
-        src: "https://images.unsplash.com/photo-1472851294608-062f824d29cc", 
-        date: "2023-04-05", 
-        type: "JPEG", 
-        size: "1.2MB" 
-      }
-    ]
-  }
-];
+import { useSupabaseMySuppliers } from "./useSupabaseMySuppliers";
 
 export const useMySuppliers = () => {
-  const [suppliers, setSuppliers] = useState<MySupplier[]>(INITIAL_SUPPLIERS);
+  const {
+    suppliers,
+    loading,
+    error,
+    createSupplier,
+    updateSupplier,
+    deleteSupplier
+  } = useSupabaseMySuppliers();
+
   const [selectedSupplier, setSelectedSupplier] = useState<MySupplier | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,9 +29,9 @@ export const useMySuppliers = () => {
     const nameMatch = supplier.name.toLowerCase().includes(nameFilter.toLowerCase());
     
     // CNPJ do Fornecedor ou Filial
-    const cnpjMatch = supplier.cnpj.replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")) || 
+    const cnpjMatch = (supplier.cnpj || "").replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")) || 
                       supplier.branches.some(branch => 
-                        branch.cnpj && branch.cnpj.replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")));
+                        (branch.cnpj || "").replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")));
     
     // Marcas
     const brandMatch = brandFilter === "" || 
@@ -141,58 +72,32 @@ export const useMySuppliers = () => {
     setShowForm(true);
   };
   
-  const handleSubmit = (data: SupplierFormValues) => {
+  const handleSubmit = async (data: SupplierFormValues) => {
     setIsSubmitting(true);
     
-    // Simular um atraso de rede
-    setTimeout(() => {
-      // Create new supplier with all required properties
-      const supplier: MySupplier = {
-        id: Date.now(),
-        name: data.name,
-        category: data.category,
-        email: data.email || "",
-        phone: data.phone || "",
-        website: data.website || "",
-        cnpj: data.cnpj || "",
-        address: data.address || "",
-        type: data.type || "Distribuidor",
-        rating: 0,
-        commentCount: 0,
-        logo: data.name.substring(0, 2).toUpperCase(),
-        brands: [],
-        branches: [],
-        contacts: [],
-        communications: [],
-        files: [],
-        images: [],
-        ratings: [],
-        commentItems: []
-      };
-      
-      setSuppliers([...suppliers, supplier]);
-      toast.success(`${data.name} foi adicionado com sucesso.`);
-      
-      setShowForm(false);
+    try {
+      const newSupplier = await createSupplier(data);
+      if (newSupplier) {
+        setShowForm(false);
+      }
+    } finally {
       setIsSubmitting(false);
-    }, 500);
+    }
   };
   
   const handleCancel = () => {
     setShowForm(false);
   };
   
-  const handleDeleteSupplier = (id: number) => {
-    setSuppliers(suppliers.filter(supplier => supplier.id !== id));
-    toast.success("Fornecedor excluído com sucesso.");
+  const handleDeleteSupplier = async (id: string) => {
+    await deleteSupplier(id);
   };
 
-  const handleUpdateSupplier = (updatedSupplier: MySupplier) => {
-    setSuppliers(suppliers.map(supplier => 
-      supplier.id === updatedSupplier.id ? updatedSupplier : supplier
-    ));
-    setSelectedSupplier(updatedSupplier);
-    toast.success("Fornecedor atualizado com sucesso!");
+  const handleUpdateSupplier = async (updatedSupplier: MySupplier) => {
+    const result = await updateSupplier(updatedSupplier.id, updatedSupplier);
+    if (result) {
+      setSelectedSupplier(result);
+    }
   };
   
   // Função para limpar os filtros
@@ -210,6 +115,8 @@ export const useMySuppliers = () => {
     showForm,
     setShowForm,
     isSubmitting,
+    loading,
+    error,
     nameFilter,
     setNameFilter,
     cnpjFilter,

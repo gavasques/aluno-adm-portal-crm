@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 interface SuppliersListProps {
   suppliers: MySupplier[];
   onSelectSupplier: (supplier: MySupplier) => void;
-  onDeleteSupplier: (id: number) => void;
+  onDeleteSupplier: (id: string) => void;
   sortField: "name" | "category";
   sortDirection: "asc" | "desc";
   onSort: (field: "name" | "category") => void;
@@ -52,17 +52,6 @@ export function SuppliersList({
       scale: 1.01,
       backgroundColor: "rgba(139, 92, 246, 0.08)",
       transition: { duration: 0.2 }
-    }
-  };
-
-  // Container animation
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
     }
   };
 
@@ -220,7 +209,7 @@ export function SuppliersList({
                       initial="hidden"
                       animate="visible"
                     >
-                      {supplier.cnpj}
+                      {supplier.cnpj || "-"}
                     </motion.td>
                     <motion.td
                       className="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-[20%]"

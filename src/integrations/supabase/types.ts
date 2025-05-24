@@ -47,6 +47,307 @@ export type Database = {
           },
         ]
       }
+      my_supplier_branches: {
+        Row: {
+          address: string | null
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          supplier_id: string
+        }
+        Insert: {
+          address?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          supplier_id: string
+        }
+        Update: {
+          address?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_supplier_branches_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "my_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_supplier_brands: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_supplier_brands_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "my_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_supplier_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          likes: number | null
+          parent_id: string | null
+          supplier_id: string
+          user_avatar: string | null
+          user_id: string
+          user_liked: boolean | null
+          user_name: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          likes?: number | null
+          parent_id?: string | null
+          supplier_id: string
+          user_avatar?: string | null
+          user_id: string
+          user_liked?: boolean | null
+          user_name: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          likes?: number | null
+          parent_id?: string | null
+          supplier_id?: string
+          user_avatar?: string | null
+          user_id?: string
+          user_liked?: boolean | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_supplier_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "my_supplier_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "my_supplier_comments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "my_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_supplier_communications: {
+        Row: {
+          contact: string | null
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          supplier_id: string
+          type: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          supplier_id: string
+          type: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          supplier_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_supplier_communications_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "my_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_supplier_contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          role: string | null
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          role?: string | null
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string | null
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_supplier_contacts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "my_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_supplier_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          likes: number | null
+          rating: number
+          supplier_id: string
+          user_id: string
+          user_liked: boolean | null
+          user_name: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          likes?: number | null
+          rating: number
+          supplier_id: string
+          user_id: string
+          user_liked?: boolean | null
+          user_name: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          likes?: number | null
+          rating?: number
+          supplier_id?: string
+          user_id?: string
+          user_liked?: boolean | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_supplier_ratings_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "my_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      my_suppliers: {
+        Row: {
+          address: string | null
+          category: string
+          cnpj: string | null
+          comment_count: number | null
+          created_at: string
+          email: string | null
+          id: string
+          logo: string | null
+          name: string
+          phone: string | null
+          rating: number | null
+          type: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          category: string
+          cnpj?: string | null
+          comment_count?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo?: string | null
+          name: string
+          phone?: string | null
+          rating?: number | null
+          type?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string
+          cnpj?: string | null
+          comment_count?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo?: string | null
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       permission_group_menus: {
         Row: {
           created_at: string

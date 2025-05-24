@@ -8,7 +8,9 @@ import StudentRouteGuard from "@/components/student/RouteGuard";
 import { useMySuppliers } from "@/hooks/student/useMySuppliers";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, AlertCircle } from "lucide-react";
 
 const MySuppliers = () => {
   const {
@@ -18,6 +20,8 @@ const MySuppliers = () => {
     showForm,
     setShowForm,
     isSubmitting,
+    loading,
+    error,
     sortField,
     sortDirection,
     handleSort,
@@ -27,6 +31,69 @@ const MySuppliers = () => {
     handleCancel,
     handleUpdateSupplier
   } = useMySuppliers();
+
+  // Loading state
+  if (loading) {
+    return (
+      <StudentRouteGuard requiredMenuKey="my-suppliers">
+        <div className="container mx-auto py-6 space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Meus Fornecedores</h1>
+              <p className="text-gray-600 mt-2">
+                Gerencie seus fornecedores pessoais e mantenha seus dados organizados.
+              </p>
+            </div>
+            <Button disabled className="bg-gray-300">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Fornecedor
+            </Button>
+          </div>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </StudentRouteGuard>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <StudentRouteGuard requiredMenuKey="my-suppliers">
+        <div className="container mx-auto py-6 space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Meus Fornecedores</h1>
+              <p className="text-gray-600 mt-2">
+                Gerencie seus fornecedores pessoais e mantenha seus dados organizados.
+              </p>
+            </div>
+          </div>
+          
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 text-red-700">
+                <AlertCircle className="h-6 w-6" />
+                <div>
+                  <h3 className="font-semibold">Erro ao carregar fornecedores</h3>
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </StudentRouteGuard>
+    );
+  }
 
   return (
     <StudentRouteGuard requiredMenuKey="my-suppliers">
@@ -70,7 +137,7 @@ const MySuppliers = () => {
                 <SuppliersList
                   suppliers={suppliers}
                   onSelectSupplier={setSelectedSupplier}
-                  onDeleteSupplier={handleDeleteSupplier}
+                  onDeleteSupplier={(id: number) => handleDeleteSupplier(id.toString())}
                   sortField={sortField}
                   sortDirection={sortDirection}
                   onSort={handleSort}
