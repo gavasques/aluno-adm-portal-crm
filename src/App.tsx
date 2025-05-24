@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
+import { AuthProvider } from "@/hooks/useAuth";
 import AdminLayout from "@/layout/AdminLayout";
 import StudentLayout from "@/layout/StudentLayout";
 
@@ -61,67 +62,69 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Router>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/accept-invite" element={<AcceptInvite />} />
+            <AuthProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/accept-invite" element={<AcceptInvite />} />
 
-              {/* Admin routes */}
-              <Route path="/admin/*" element={
-                <AdminRouteGuard>
-                  <AdminLayout>
-                    <Routes>
-                      <Route path="/" element={<AdminDashboard />} />
-                      <Route path="/users" element={<AdminUsers />} />
-                      <Route path="/students" element={<AdminStudents />} />
-                      <Route path="/students/:id" element={<AdminStudentDetail />} />
-                      <Route path="/suppliers" element={<AdminSuppliers />} />
-                      <Route path="/partners" element={<AdminPartners />} />
-                      <Route path="/tools" element={<AdminTools />} />
-                      <Route path="/tasks" element={<AdminTasks />} />
-                      <Route path="/tasks/:id" element={<AdminTaskDetail />} />
-                      <Route path="/crm" element={<AdminCRM />} />
-                      <Route path="/audit" element={<AdminAudit />} />
-                      <Route path="/settings" element={<AdminSettings />} />
-                      <Route path="/permissions" element={<AdminPermissions />} />
-                      <Route path="/bonus" element={<AdminBonuses />} />
-                      <Route path="/bonus/:id" element={<AdminBonusDetail />} />
-                      <Route path="/courses" element={<AdminCourses />} />
-                      <Route path="/courses/:id" element={<AdminCourseDetails />} />
-                      <Route path="/cadastros" element={<AdminRegisters />} />
-                      <Route path="/mentorias/:id" element={<AdminMentoringDetail />} />
-                      
-                      {/* New mentoring routes */}
-                      <Route path="/mentoring-catalog" element={<AdminMentoringCatalog />} />
-                      <Route path="/group-mentoring/:id" element={<AdminGroupMentoring />} />
-                      <Route path="/individual-mentoring" element={<AdminIndividualMentoring />} />
-                      <Route path="/mentoring-materials" element={<AdminMentoringMaterials />} />
-                    </Routes>
-                  </AdminLayout>
-                </AdminRouteGuard>
-              } />
+                {/* Admin routes */}
+                <Route path="/admin/*" element={
+                  <AdminRouteGuard>
+                    <AdminLayout>
+                      <Routes>
+                        <Route path="/" element={<AdminDashboard />} />
+                        <Route path="/users" element={<AdminUsers />} />
+                        <Route path="/students" element={<AdminStudents />} />
+                        <Route path="/students/:id" element={<AdminStudentDetail />} />
+                        <Route path="/suppliers" element={<AdminSuppliers />} />
+                        <Route path="/partners" element={<AdminPartners />} />
+                        <Route path="/tools" element={<AdminTools />} />
+                        <Route path="/tasks" element={<AdminTasks />} />
+                        <Route path="/tasks/:id" element={<AdminTaskDetail />} />
+                        <Route path="/crm" element={<AdminCRM />} />
+                        <Route path="/audit" element={<AdminAudit />} />
+                        <Route path="/settings" element={<AdminSettings />} />
+                        <Route path="/permissions" element={<AdminPermissions />} />
+                        <Route path="/bonus" element={<AdminBonuses />} />
+                        <Route path="/bonus/:id" element={<AdminBonusDetail />} />
+                        <Route path="/courses" element={<AdminCourses />} />
+                        <Route path="/courses/:id" element={<AdminCourseDetails />} />
+                        <Route path="/cadastros" element={<AdminRegisters />} />
+                        <Route path="/mentorias/:id" element={<AdminMentoringDetail />} />
+                        
+                        {/* New mentoring routes */}
+                        <Route path="/mentoring-catalog" element={<AdminMentoringCatalog />} />
+                        <Route path="/group-mentoring/:id" element={<AdminGroupMentoring />} />
+                        <Route path="/individual-mentoring" element={<AdminIndividualMentoring />} />
+                        <Route path="/mentoring-materials" element={<AdminMentoringMaterials />} />
+                      </Routes>
+                    </AdminLayout>
+                  </AdminRouteGuard>
+                } />
 
-              {/* Student routes */}
-              <Route path="/student/*" element={
-                <StudentRouteGuard requiredMenuKey="student">
-                  <StudentLayout>
-                    <Routes>
-                      <Route path="/" element={<StudentDashboard />} />
-                      <Route path="/suppliers" element={<StudentSuppliers />} />
-                      <Route path="/my-suppliers" element={<StudentMySuppliers />} />
-                      <Route path="/partners" element={<StudentPartners />} />
-                      <Route path="/tools" element={<StudentTools />} />
-                      <Route path="/settings" element={<StudentSettings />} />
-                      <Route path="/my-mentoring" element={<StudentMyMentoring />} />
-                    </Routes>
-                  </StudentLayout>
-                </StudentRouteGuard>
-              } />
+                {/* Student routes */}
+                <Route path="/student/*" element={
+                  <StudentRouteGuard requiredMenuKey="student">
+                    <StudentLayout>
+                      <Routes>
+                        <Route path="/" element={<StudentDashboard />} />
+                        <Route path="/suppliers" element={<StudentSuppliers />} />
+                        <Route path="/my-suppliers" element={<StudentMySuppliers />} />
+                        <Route path="/partners" element={<StudentPartners />} />
+                        <Route path="/tools" element={<StudentTools />} />
+                        <Route path="/settings" element={<StudentSettings />} />
+                        <Route path="/my-mentoring" element={<StudentMyMentoring />} />
+                      </Routes>
+                    </StudentLayout>
+                  </StudentRouteGuard>
+                } />
 
-              {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* 404 route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
           </Router>
           <Toaster />
         </TooltipProvider>
