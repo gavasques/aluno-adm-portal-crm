@@ -18,7 +18,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
   const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
   
   // Se o usuário está no grupo temporário "Geral", mostrar badge especial
-  if (isTemporaryGroup && permissionGroupId) {
+  if (isTemporaryGroup) {
     return (
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="bg-orange-50 border-orange-200 text-orange-700">

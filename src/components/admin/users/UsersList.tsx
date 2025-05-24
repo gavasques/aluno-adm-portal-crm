@@ -36,6 +36,9 @@ interface UsersListProps {
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
 }
 
+// ID do grupo "Geral" (temporário) baseado nos logs
+const GERAL_GROUP_ID = "564c55dc-0ab8-481e-a0bc-97ea7e484b88";
+
 const UsersList: React.FC<UsersListProps> = ({
   users,
   isLoading,
@@ -53,9 +56,9 @@ const UsersList: React.FC<UsersListProps> = ({
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
 
-  // Contar usuários pendentes (aproximação - verificar se não é Admin e tem permission_group_id)
+  // Contar usuários pendentes (apenas aqueles no grupo "Geral")
   const pendingCount = users.filter(user => 
-    user.permission_group_id && user.role !== "Admin"
+    user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin"
   ).length;
 
   // Filtrar usuários de acordo com os filtros aplicados
@@ -71,9 +74,9 @@ const UsersList: React.FC<UsersListProps> = ({
     // Filtro de grupo
     let matchesGroup = true;
     if (groupFilter === "pending") {
-      matchesGroup = user.permission_group_id && user.role !== "Admin";
+      matchesGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
     } else if (groupFilter === "assigned") {
-      matchesGroup = !user.permission_group_id || user.role === "Admin";
+      matchesGroup = user.permission_group_id !== GERAL_GROUP_ID || user.role === "Admin";
     }
     
     return matchesSearch && matchesStatus && matchesGroup;

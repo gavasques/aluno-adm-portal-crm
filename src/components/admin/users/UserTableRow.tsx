@@ -42,6 +42,9 @@ interface UserTableRowProps {
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
 }
 
+// ID do grupo "Geral" (temporário) baseado nos logs
+const GERAL_GROUP_ID = "564c55dc-0ab8-481e-a0bc-97ea7e484b88";
+
 const UserTableRow: React.FC<UserTableRowProps> = ({ 
   user,
   onViewDetails,
@@ -55,9 +58,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
   
   // Determinar se o usuário está no grupo temporário "Geral"
-  // Isto é uma aproximação - em um cenário real, você verificaria se o permission_group_id
-  // corresponde ao ID do grupo "Geral" especificamente
-  const isTemporaryGroup = user.permission_group_id && user.role !== "Admin";
+  const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
 
   return (
     <TableRow className={isTemporaryGroup ? "bg-orange-50/30 border-l-4 border-l-orange-300" : ""}>
