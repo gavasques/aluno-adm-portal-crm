@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, ArrowLeft } from "lucide-react";
-import { useRateLimitedAuth } from "@/hooks/auth/useRateLimitedAuth";
-import { SecurityIndicator } from "./SecurityIndicator";
+import { useEnhancedRateLimitedAuth } from "@/hooks/auth/useEnhancedRateLimitedAuth";
+import { EnhancedSecurityIndicator } from "./EnhancedSecurityIndicator";
 
 interface ForgotPasswordFormProps {
   onBackToLogin?: () => void;
@@ -21,7 +21,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const { resetPassword, isRateLimited, remainingTime, getRemainingAttempts } = useRateLimitedAuth();
+  const { resetPassword, isRateLimited, remainingTime, riskLevel, getRemainingAttempts } = useEnhancedRateLimitedAuth();
   const remainingAttempts = getRemainingAttempts('password_reset');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,10 +80,11 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         </p>
       </div>
 
-      <SecurityIndicator
+      <EnhancedSecurityIndicator
         isRateLimited={isRateLimited}
         remainingTime={remainingTime}
         remainingAttempts={remainingAttempts}
+        riskLevel={riskLevel}
         className="mb-4"
       />
       

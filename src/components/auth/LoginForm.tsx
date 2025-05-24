@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { useRateLimitedAuth } from "@/hooks/auth/useRateLimitedAuth";
-import { SecurityIndicator } from "./SecurityIndicator";
+import { useEnhancedRateLimitedAuth } from "@/hooks/auth/useEnhancedRateLimitedAuth";
+import { EnhancedSecurityIndicator } from "./EnhancedSecurityIndicator";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -19,7 +19,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onForgotPasswor
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { signIn, isRateLimited, remainingTime, getRemainingAttempts } = useRateLimitedAuth();
+  const { signIn, isRateLimited, remainingTime, riskLevel, getRemainingAttempts } = useEnhancedRateLimitedAuth();
   const remainingAttempts = getRemainingAttempts('login');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,10 +44,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onForgotPasswor
 
   return (
     <div className="space-y-6">
-      <SecurityIndicator
+      <EnhancedSecurityIndicator
         isRateLimited={isRateLimited}
         remainingTime={remainingTime}
         remainingAttempts={remainingAttempts}
+        riskLevel={riskLevel}
         className="mb-4"
       />
       

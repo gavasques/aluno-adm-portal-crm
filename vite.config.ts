@@ -15,9 +15,11 @@ export default defineConfig(({ mode }) => ({
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+      'X-XSS-Protection': '1; mode=block',
+      'Strict-Transport-Security': mode === 'production' ? 'max-age=31536000; includeSubDomains' : '',
       'Content-Security-Policy': mode === 'development' 
-        ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https: wss:;"
-        : "default-src 'self'; script-src 'self' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;"
+        ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.gpteng.co https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: wss: https://*.supabase.co; frame-src 'self' https://accounts.google.com;"
+        : "default-src 'self'; script-src 'self' https://cdn.gpteng.co https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: https://*.supabase.co; frame-src 'self' https://accounts.google.com;"
     }
   },
   plugins: [
