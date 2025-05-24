@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Helmet } from "react-helmet-async";
 
 interface SEOHeadProps {
@@ -21,20 +22,20 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   ogImage = "/og-image.png"
 }) => {
   const fullTitle = `${title} | Portal do Aluno`;
-  const currentUrl = canonicalUrl || window.location.href;
+  const currentUrl = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : '');
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
-      <link rel="canonical" href={currentUrl} />
+      {currentUrl && <link rel="canonical" href={currentUrl} />}
       
       {/* Open Graph */}
       <meta property="og:title" content={ogTitle || fullTitle} />
       <meta property="og:description" content={ogDescription || description} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:url" content={currentUrl} />
+      {currentUrl && <meta property="og:url" content={currentUrl} />}
       <meta property="og:type" content="website" />
       
       {/* Twitter Card */}
