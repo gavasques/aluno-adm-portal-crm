@@ -1,4 +1,4 @@
-// Adicionando o campo ID na página de detalhes da mentoria
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, Pencil, IdCard } from "lucide-react";
 import { toast } from "sonner";
 
-// Inclua o mentoringId em todos os pontos relevantes
 interface MentoringData {
   id: string;
-  mentoringId: string; // Campo ID único
+  mentoringId: string;
   name: string;
   description: string;
   duration: string;
@@ -24,19 +23,16 @@ interface MentoringData {
   responsible: string;
 }
 
-// Defina os tipos para os campos do formulário
 type MentoringForm = Omit<MentoringData, "id" | "mentoringId">;
 
-// Certifique-se de atualizar a exibição para mostrar o ID
 const MentoringDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Dados de exemplo da mentoria selecionada
   const [mentoring, setMentoring] = useState<MentoringData>({
     id: id || "1",
-    mentoringId: "MNT001", // ID da mentoria exibido para o usuário
+    mentoringId: "MNT001",
     name: "Mentoria de E-commerce",
     description: "Mentoria especializada para quem deseja iniciar no mercado de e-commerce...",
     duration: "3 meses",
@@ -46,7 +42,6 @@ const MentoringDetail = () => {
     responsible: "Ana Silva"
   });
   
-  // Estado local para armazenar os valores dos campos do formulário
   const [formData, setFormData] = useState<MentoringForm>({
     name: mentoring.name,
     description: mentoring.description,
@@ -57,7 +52,6 @@ const MentoringDetail = () => {
     responsible: mentoring.responsible
   });
 
-  // Função para lidar com a mudança nos campos do formulário
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prevData => ({
@@ -66,29 +60,23 @@ const MentoringDetail = () => {
     }));
   };
 
-  // Função para lidar com o salvamento das alterações
   const handleSave = () => {
-    // Aqui você pode implementar a lógica para salvar os dados no backend
-    // Por exemplo, usando uma chamada de API para atualizar os dados da mentoria
     console.log("Dados a serem salvos:", formData);
     
-    // Após salvar os dados, você pode exibir uma mensagem de sucesso
     toast.success("Mentoria atualizada com sucesso!");
     
-    // Atualize o estado local com os novos dados
     setMentoring(prevMentoring => ({
       ...prevMentoring,
       ...formData
     }));
     
-    // Desabilite o modo de edição
     setIsEditing(false);
   };
 
   return (
     <div className="container mx-auto py-4">
       <div className="flex justify-between items-center mb-4">
-        <Button variant="ghost" onClick={() => navigate("/admin/mentoring")}>
+        <Button variant="ghost" onClick={() => navigate("/admin/cadastros?tab=mentoring")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
         </Button>
         {isEditing ? (

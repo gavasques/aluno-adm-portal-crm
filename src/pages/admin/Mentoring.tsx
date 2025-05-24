@@ -13,6 +13,12 @@ const Mentoring = () => {
     { id: 2, name: "Mentoria em Grupo", price: "R$ 800,00" },
     { id: 3, name: "Mentoria Premium", price: "R$ 2.500,00" }
   ];
+
+  const handleNewMentoring = () => {
+    // Por enquanto, navega para a primeira mentoria como exemplo
+    // Em uma implementação real, isso seria uma página de criação
+    navigate("/admin/mentorias/new");
+  };
   
   return (
     <div>
@@ -20,7 +26,7 @@ const Mentoring = () => {
         <div>
           <p className="text-sm text-gray-500">Gerencie as mentorias disponíveis</p>
         </div>
-        <Button onClick={() => navigate("/admin/mentorias/new")}>
+        <Button onClick={handleNewMentoring}>
           <PlusCircle className="h-4 w-4 mr-2" />
           Nova Mentoria
         </Button>
