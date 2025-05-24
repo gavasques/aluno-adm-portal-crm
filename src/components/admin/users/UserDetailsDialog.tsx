@@ -19,6 +19,8 @@ interface UserDetailsDialogProps {
     role: string;
     status: string;
     lastLogin: string;
+    storage_used_mb?: number;
+    storage_limit_mb?: number;
     tasks?: any[];
   } | null;
 }
@@ -32,7 +34,7 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <UserDetailsHeader />
         <UserDetailsContent user={user} />
         <UserDetailsFooter onClose={() => onOpenChange(false)} />

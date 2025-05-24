@@ -10,7 +10,7 @@ const UsersTableHeader: React.FC = () => {
         <TableHead>Status</TableHead>
         <TableHead>Função</TableHead>
         <TableHead>Último Login</TableHead>
-        <TableHead>Armazenamento</TableHead>
+        <TableHead>Storage %</TableHead>
         <TableHead className="text-right">Ações</TableHead>
       </TableRow>
     </TableHeader>
