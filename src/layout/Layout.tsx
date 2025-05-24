@@ -46,8 +46,8 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
             {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
           </div>
           
-          {/* Área principal - ocupa o restante do espaço */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Área principal - ocupa o restante do espaço com espaçamento */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden ml-1">
             <TopBar />
             <main className="flex-1 overflow-auto">
               {children}
