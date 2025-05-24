@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Grid, List, Trash2 } from "lucide-react";
@@ -278,12 +277,12 @@ const Bonus = () => {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Cadastro de Bônus</h1>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Cadastro de Bônus</h1>
         <Button 
           onClick={() => setIsAddDialogOpen(true)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" /> Adicionar Bônus
         </Button>
@@ -303,9 +302,9 @@ const Bonus = () => {
         onClearFilters={handleClearFilters}
       />
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>
+      <Card className="border-gray-200">
+        <CardHeader className="flex flex-row items-center justify-between bg-gray-50/50">
+          <CardTitle className="text-xl font-semibold text-gray-900">
             Bônus ({filteredBonuses.length})
           </CardTitle>
           <div className="flex gap-2">
@@ -313,6 +312,7 @@ const Bonus = () => {
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('grid')}
+              className="h-8"
             >
               <Grid className="h-4 w-4" />
             </Button>
@@ -320,14 +320,15 @@ const Bonus = () => {
               variant={viewMode === 'table' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('table')}
+              className="h-8"
             >
               <List className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
               {filteredBonuses.length > 0 ? (
                 filteredBonuses.map((bonus) => (
                   <BonusCard
@@ -338,8 +339,9 @@ const Bonus = () => {
                   />
                 ))
               ) : (
-                <div className="col-span-full text-center py-8 text-muted-foreground">
-                  Nenhum bônus encontrado.
+                <div className="col-span-full text-center py-12">
+                  <div className="text-gray-400 text-lg mb-2">Nenhum bônus encontrado</div>
+                  <p className="text-gray-500 text-sm">Tente ajustar os filtros ou adicione um novo bônus</p>
                 </div>
               )}
             </div>

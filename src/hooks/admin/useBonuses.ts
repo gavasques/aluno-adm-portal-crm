@@ -77,11 +77,20 @@ export const useBonuses = () => {
   };
 
   // Adicionar novo bônus
-  const addBonus = async (bonusData: Omit<Bonus, "id" | "bonus_id" | "created_at" | "updated_at">) => {
+  const addBonus = async (bonusData: {
+    name: string;
+    type: BonusType;
+    description: string;
+    access_period: AccessPeriod;
+    observations?: string;
+  }) => {
     try {
       const { data, error } = await supabase
         .from('bonuses')
-        .insert([bonusData])
+        .insert([{
+          ...bonusData,
+          bonus_id: `BNS${String(Date.now()).slice(-6)}`
+        }])
         .select()
         .single();
 
