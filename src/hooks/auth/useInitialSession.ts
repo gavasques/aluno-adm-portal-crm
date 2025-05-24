@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { recoveryModeUtils } from "./useRecoveryMode";
@@ -14,15 +14,19 @@ export const useInitialSession = (
 ) => {
   const location = useLocation();
   const hasCheckedInitial = useRef(false);
+  const isCheckingRef = useRef(false);
 
   React.useEffect(() => {
     // Evitar verificação múltipla da sessão inicial
-    if (hasCheckedInitial.current) {
+    if (hasCheckedInitial.current || isCheckingRef.current) {
       return;
     }
 
     const checkSession = async () => {
+      if (isCheckingRef.current) return;
+      
       console.log("Verificando sessão inicial");
+      isCheckingRef.current = true;
       setLoading(true);
       
       try {
@@ -57,9 +61,11 @@ export const useInitialSession = (
       } catch (error) {
         console.error("Erro ao verificar sessão inicial:", error);
         setLoading(false);
+      } finally {
+        isCheckingRef.current = false;
       }
     };
 
     checkSession();
-  }, []); // Dependência vazia para executar apenas uma vez
+  }, [setSession, setUser, setLoading, location.pathname]);
 };

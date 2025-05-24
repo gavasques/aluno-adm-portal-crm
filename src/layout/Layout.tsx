@@ -13,12 +13,28 @@ interface LayoutProps {
 }
 
 const Layout = ({ isAdmin, children }: LayoutProps) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
   
-  // Se não há usuário, não renderizar o layout
+  // Se está carregando a autenticação, mostrar loading
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Se não há usuário autenticado, não renderizar o layout completo
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {children}
+      </div>
+    );
   }
 
   return (

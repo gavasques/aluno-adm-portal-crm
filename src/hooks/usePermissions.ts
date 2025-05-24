@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 
@@ -23,9 +23,19 @@ export const usePermissions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchedUserIdRef = useRef<string | null>(null);
+  const isLoadingRef = useRef(false);
+
+  // Memoize user ID to prevent unnecessary re-renders
+  const userId = useMemo(() => user?.id || null, [user?.id]);
+  const sessionToken = useMemo(() => session?.access_token || null, [session?.access_token]);
 
   const fetchPermissions = useCallback(async () => {
-    if (!user || !session) {
+    // Prevent multiple simultaneous executions
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    if (!userId || !sessionToken) {
       setPermissions({
         hasAdminAccess: false,
         allowedMenus: [],
@@ -38,15 +48,17 @@ export const usePermissions = () => {
     }
 
     // Evitar buscar permissões múltiplas vezes para o mesmo usuário
-    if (fetchedUserIdRef.current === user.id) {
+    if (fetchedUserIdRef.current === userId) {
+      setLoading(false);
       return;
     }
 
     try {
+      isLoadingRef.current = true;
       setLoading(true);
       setError(null);
 
-      console.log("DEBUG - Iniciando fetchPermissions para:", user.email);
+      console.log("DEBUG - Iniciando fetchPermissions para:", user?.email);
 
       // Buscar perfil do usuário com grupo de permissão
       const { data: profile, error: profileError } = await supabase
@@ -62,7 +74,7 @@ export const usePermissions = () => {
             allow_admin_access
           )
         `)
-        .eq("id", user.id)
+        .eq("id", userId)
         .single();
 
       if (profileError) {
@@ -83,7 +95,7 @@ export const usePermissions = () => {
         : isAdminRole;
 
       console.log("DEBUG - Verificações de acesso:", {
-        email: user.email,
+        email: user?.email,
         hasGroupAdminAccess,
         isAdminRole,
         isAdminGroup,
@@ -121,7 +133,7 @@ export const usePermissions = () => {
       }
 
       console.log("DEBUG - Resultado final:", {
-        email: user.email,
+        email: user?.email,
         hasAdminAccess,
         allowedMenus,
         permissionGroupId: profile.permission_group_id,
@@ -137,7 +149,7 @@ export const usePermissions = () => {
         isAdmin: isAdminGroup || isAdminRole
       });
 
-      fetchedUserIdRef.current = user.id;
+      fetchedUserIdRef.current = userId;
 
     } catch (err: any) {
       console.error("Erro ao carregar permissões:", err);
@@ -151,10 +163,17 @@ export const usePermissions = () => {
       });
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [user?.id, session?.access_token]);
+  }, [userId, sessionToken, user?.email]);
 
   useEffect(() => {
+    // Reset quando usuário muda
+    if (fetchedUserIdRef.current !== userId) {
+      fetchedUserIdRef.current = null;
+      setError(null);
+    }
+    
     fetchPermissions();
   }, [fetchPermissions]);
 

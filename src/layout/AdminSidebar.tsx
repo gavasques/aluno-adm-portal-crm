@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock, GraduationCap, Building, CheckCircle, Shield, Activity } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface NavItemProps {
   href: string;
@@ -73,7 +74,7 @@ const AdminSidebar = () => {
       <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
         <SidebarContent className="pt-16 pb-4">
           <div className="flex items-center justify-center h-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <LoadingSpinner size="sm" text="" />
           </div>
         </SidebarContent>
       </Sidebar>

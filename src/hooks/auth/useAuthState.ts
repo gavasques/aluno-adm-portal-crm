@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthEventHandler } from "./useAuthEventHandler";
 
@@ -9,21 +9,27 @@ import { useAuthEventHandler } from "./useAuthEventHandler";
 export const useAuthState = () => {
   const { user, session, loading, handleAuthStateChange } = useAuthEventHandler();
   const subscriptionRef = useRef<any>(null);
+  const isInitializedRef = useRef(false);
   
+  // Memoize the handler to prevent unnecessary re-subscriptions
+  const memoizedHandler = useMemo(
+    () => (event: string, currentSession: any) => {
+      handleAuthStateChange(event, currentSession);
+    },
+    [handleAuthStateChange]
+  );
+
   React.useEffect(() => {
     // Evitar múltiplas subscrições
-    if (subscriptionRef.current) {
+    if (subscriptionRef.current || isInitializedRef.current) {
       return;
     }
 
     console.log("Configurando listener de autenticação");
+    isInitializedRef.current = true;
     
     // Configurar o listener de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        handleAuthStateChange(event, currentSession);
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(memoizedHandler);
 
     subscriptionRef.current = subscription;
 
@@ -32,8 +38,9 @@ export const useAuthState = () => {
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = null;
       }
+      isInitializedRef.current = false;
     };
-  }, []); // Dependência vazia para executar apenas uma vez
+  }, [memoizedHandler]);
 
   return {
     user,
