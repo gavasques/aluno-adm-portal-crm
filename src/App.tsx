@@ -64,29 +64,30 @@ function App() {
               <Route path="/reset-password" element={<Layout isAdmin={false}><ResetPassword /></Layout>} />
               <Route path="/accept-invite" element={<Layout isAdmin={false}><AcceptInvite /></Layout>} />
               
-              {/* Admin Routes */}
+              {/* Admin Routes - URLs em português */}
               <Route path="/admin" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Dashboard /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/users" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Users /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/students" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Students /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/students/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><StudentDetail /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/crm" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CRM /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/tasks" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tasks /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/tasks/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><TaskDetail /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/suppliers" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Suppliers /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/partners" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Partners /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/tools" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tools /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/courses" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Courses /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/courses/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CourseDetails /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/mentoring" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Mentoring /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/mentoring/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/configuracoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Settings /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/usuarios" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Users /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/permissoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Permissions /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/alunos" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Students /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/alunos/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><StudentDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/cadastros" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Courses /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tarefas" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tasks /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tarefas/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><TaskDetail /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/leads" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CRM /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/fornecedores" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Suppliers /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/parceiros" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Partners /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/ferramentas" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tools /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/cursos" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Courses /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/cursos/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CourseDetails /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/mentorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Mentoring /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/mentorias/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
               <Route path="/admin/bonus" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Bonus /></AdminLayout></AdminRouteGuard>} />
               <Route path="/admin/bonus/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><BonusDetail /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/categories" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Categories /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/partner-types" element={<AdminRouteGuard requireAdminAccess><AdminLayout><PartnerTypes /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/software-types" element={<AdminRouteGuard requireAdminAccess><AdminLayout><SoftwareTypes /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/permissions" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Permissions /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/audit" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Audit /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/settings" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Settings /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/categorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Categories /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tipos-parceiro" element={<AdminRouteGuard requireAdminAccess><AdminLayout><PartnerTypes /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/tipos-software" element={<AdminRouteGuard requireAdminAccess><AdminLayout><SoftwareTypes /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/auditoria" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Audit /></AdminLayout></AdminRouteGuard>} />
 
               {/* Student Routes */}
               <Route path="/aluno" element={<StudentRouteGuard requiredMenuKey="dashboard"><StudentLayout><StudentDashboard /></StudentLayout></StudentRouteGuard>} />
