@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
@@ -73,6 +72,10 @@ const MySuppliers = () => {
       </StudentRouteGuard>
     );
   }
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setShowForm(open);
+  };
 
   return (
     <StudentRouteGuard requiredMenuKey="my-suppliers">
@@ -180,7 +183,7 @@ const MySuppliers = () => {
           )}
         </AnimatePresence>
 
-        <Dialog open={showForm} onOpenChange={(open: boolean) => setShowForm(open)}>
+        <Dialog open={showForm} onOpenChange={handleDialogOpenChange}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Adicionar Fornecedor</DialogTitle>
