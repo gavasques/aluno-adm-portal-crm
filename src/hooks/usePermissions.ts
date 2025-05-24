@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 
@@ -22,6 +22,7 @@ export const usePermissions = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchedUserIdRef = useRef<string | null>(null);
 
   const fetchPermissions = useCallback(async () => {
     if (!user || !session) {
@@ -33,6 +34,11 @@ export const usePermissions = () => {
         isAdmin: false
       });
       setLoading(false);
+      return;
+    }
+
+    // Evitar buscar permissões múltiplas vezes para o mesmo usuário
+    if (fetchedUserIdRef.current === user.id) {
       return;
     }
 
@@ -130,6 +136,8 @@ export const usePermissions = () => {
         permissionGroupName: profile.permission_groups?.name,
         isAdmin: isAdminGroup || isAdminRole
       });
+
+      fetchedUserIdRef.current = user.id;
 
     } catch (err: any) {
       console.error("Erro ao carregar permissões:", err);

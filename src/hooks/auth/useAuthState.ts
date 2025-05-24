@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthEventHandler } from "./useAuthEventHandler";
 
@@ -8,8 +8,16 @@ import { useAuthEventHandler } from "./useAuthEventHandler";
  */
 export const useAuthState = () => {
   const { user, session, loading, handleAuthStateChange } = useAuthEventHandler();
+  const subscriptionRef = useRef<any>(null);
   
   React.useEffect(() => {
+    // Evitar múltiplas subscrições
+    if (subscriptionRef.current) {
+      return;
+    }
+
+    console.log("Configurando listener de autenticação");
+    
     // Configurar o listener de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -17,10 +25,15 @@ export const useAuthState = () => {
       }
     );
 
+    subscriptionRef.current = subscription;
+
     return () => {
-      subscription.unsubscribe();
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
     };
-  }, [handleAuthStateChange]);
+  }, []); // Dependência vazia para executar apenas uma vez
 
   return {
     user,
