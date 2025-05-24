@@ -55,7 +55,7 @@ const Students = () => {
   console.log("====================");
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="p-6 w-full">
       <StudentsHeader onAddStudent={() => setShowAddStudentDialog(true)} />
 
       <Card className="mb-6">
