@@ -1,11 +1,10 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tool } from "@/components/tools/ToolsTable";
-import ToolsTable from "@/components/tools/ToolsTable";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ToolDetail from "./ToolDetail";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ToolsTable, { Tool } from "@/components/tools/ToolsTable";
+import ToolDetail from "@/components/student/tools/ToolDetail";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ToolContentProps {
   tools: Tool[];
@@ -28,25 +27,17 @@ export function ToolContent({
   isAdmin,
   onUpdateTool
 }: ToolContentProps) {
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Simular tempo de carregamento para mostrar o skeleton
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 600);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
-  const handleOpenTool = (tool: Tool) => {
-    setSelectedTool(tool);
-  };
-  
-  const handleCloseTool = () => {
-    setSelectedTool(null);
-  };
-  
   return (
     <AnimatePresence mode="wait">
       {!selectedTool ? (
@@ -55,34 +46,59 @@ export function ToolContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-white to-teal-50">
-            <CardHeader className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-white to-green-50">
+            <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white py-[9px] px-[12px] mx-0 my-0">
               <CardTitle className="flex items-center justify-between">
-                <span>Lista de Ferramentas</span>
-                <span className="text-sm bg-white/20 px-2 py-1 rounded-full">
-                  {tools.length} encontrada(s)
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-bold">Lista de Ferramentas</span>
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.3 }}
+                    className="bg-white/20 px-3 py-1.5 rounded-full text-sm font-medium"
+                  >
+                    {tools.length} encontrada(s)
+                  </motion.div>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="p-4">
+                <motion.div
+                  className="p-6 space-y-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <Skeleton className="h-10 w-full mb-4" />
-                  <Skeleton className="h-12 w-full mb-2" />
-                  <Skeleton className="h-12 w-full mb-2" />
-                  <Skeleton className="h-12 w-full mb-2" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
+                  {[1, 2, 3].map((i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1, duration: 0.3 }}
+                    >
+                      <Skeleton className="h-16 w-full mb-2 rounded-md" />
+                    </motion.div>
+                  ))}
+                </motion.div>
               ) : (
-                <ToolsTable 
-                  tools={tools}
-                  sortField={sortField}
-                  sortDirection={sortDirection}
-                  onSort={onSort}
-                  onOpenTool={handleOpenTool}
-                />
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                >
+                  <ToolsTable
+                    tools={tools}
+                    onSelectTool={setSelectedTool}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={onSort}
+                    isAdmin={isAdmin}
+                  />
+                </motion.div>
               )}
             </CardContent>
           </Card>
@@ -90,17 +106,16 @@ export function ToolContent({
       ) : (
         <motion.div
           key="tool-detail"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="w-full"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.4 }}
+          className="bg-white rounded-lg shadow-xl border border-green-100 overflow-hidden"
         >
           <ToolDetail
             tool={selectedTool}
-            isAdmin={isAdmin}
-            onClose={handleCloseTool}
-            onUpdateTool={onUpdateTool}
+            onBack={() => setSelectedTool(null)}
+            onUpdate={onUpdateTool}
           />
         </motion.div>
       )}

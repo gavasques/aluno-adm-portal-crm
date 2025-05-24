@@ -30,11 +30,26 @@ const Partners = () => {
 
   return (
     <StudentRouteGuard requiredMenuKey="partners">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="w-full space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Parceiros</h1>
+              <p className="text-gray-600 mt-2">
+                Conheça nossos parceiros estratégicos para seu sucesso no e-commerce.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
           <PartnerHeader
             searchQuery={searchQuery}
