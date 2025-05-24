@@ -84,7 +84,7 @@ const AdminSidebar = () => {
   
   if (loading) {
     return (
-      <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
+      <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30">
         <SidebarContent className="pt-16 pb-4">
           <div className="flex items-center justify-center h-20">
             <LoadingSpinner size="sm" text="" />
@@ -100,7 +100,7 @@ const AdminSidebar = () => {
   }
 
   return (
-    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
+    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30">
       <SidebarContent className="pt-16 pb-4">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show" className="mt-4">
           <SidebarGroup>

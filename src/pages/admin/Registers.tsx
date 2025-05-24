@@ -30,7 +30,7 @@ const Registers = () => {
   };
   
   return (
-    <div className="px-6 w-full">
+    <div className="pl-4 pr-6 py-6 w-full">
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastros</h1>
       
       <Tabs 
