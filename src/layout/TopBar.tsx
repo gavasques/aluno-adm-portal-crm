@@ -3,12 +3,53 @@ import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Settings, Users, ChevronDown } from "lucide-react";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TopBar = () => {
   const { user } = useAuth();
   const { signOut } = useSignInOut();
+  const { permissions } = usePermissions();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isAdminArea = location.pathname.startsWith("/admin");
+  const isStudentArea = location.pathname.startsWith("/aluno");
+
+  const getTitle = () => {
+    if (isAdminArea) {
+      return "Portal Administrativo";
+    }
+    if (isStudentArea) {
+      return "Portal do Aluno";
+    }
+    return "Portal";
+  };
+
+  const handleNavigateToAdmin = () => {
+    navigate("/admin");
+  };
+
+  const handleNavigateToStudent = () => {
+    navigate("/aluno");
+  };
+
+  const handleSettings = () => {
+    if (isAdminArea) {
+      navigate("/admin/configuracoes");
+    } else {
+      navigate("/aluno/configuracoes");
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
@@ -16,27 +57,54 @@ const TopBar = () => {
         <div className="flex items-center gap-3">
           <SidebarTrigger className="lg:hidden" />
           <div className="font-semibold text-lg text-portal-dark">
-            Portal do Aluno
+            {getTitle()}
           </div>
         </div>
         
         <div className="flex items-center gap-3">
           {user && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <User className="h-4 w-4" />
-              <span>{user.email}</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                >
+                  <User className="h-4 w-4" />
+                  <span>{user.email}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Navegação entre áreas */}
+                {permissions.hasAdminAccess && isStudentArea && (
+                  <DropdownMenuItem onClick={handleNavigateToAdmin}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Ir para Área Administrativa
+                  </DropdownMenuItem>
+                )}
+                {isAdminArea && (
+                  <DropdownMenuItem onClick={handleNavigateToStudent}>
+                    <User className="h-4 w-4 mr-2" />
+                    Ir para Área do Aluno
+                  </DropdownMenuItem>
+                )}
+                
+                {/* Configurações */}
+                <DropdownMenuItem onClick={handleSettings}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurações
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                {/* Logout */}
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={signOut}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
         </div>
       </div>
     </header>
