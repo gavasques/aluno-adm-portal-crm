@@ -42,13 +42,13 @@ export const useSupabaseMySuppliers = () => {
     return true;
   }, [user?.id, session?.access_token, session?.user?.aud]);
 
-  // Função para adicionar timeout nas operações
+  // Função para adicionar timeout nas operações - updated to accept PromiseLike
   const withTimeout = async <T>(
-    operation: Promise<T>, 
+    operation: PromiseLike<T>, 
     timeoutMs: number = 10000
   ): Promise<T> => {
     return Promise.race([
-      operation,
+      Promise.resolve(operation),
       new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Operação expirou')), timeoutMs);
       })
@@ -95,7 +95,7 @@ export const useSupabaseMySuppliers = () => {
         }, 15000);
 
         // Buscar fornecedores com timeout - converter query builder em Promise
-        const suppliersQueryPromise = supabase
+        const suppliersQuery = supabase
           .from('my_suppliers')
           .select(`
             *,
@@ -109,7 +109,7 @@ export const useSupabaseMySuppliers = () => {
           .eq('user_id', user!.id)
           .order('created_at', { ascending: false });
 
-        const suppliersQueryResult = await withTimeout(suppliersQueryPromise.then(result => result)) as any;
+        const suppliersQueryResult = await withTimeout(suppliersQuery) as any;
 
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
@@ -196,7 +196,7 @@ export const useSupabaseMySuppliers = () => {
         comment_count: 0
       };
 
-      const createQueryPromise = supabase
+      const createQuery = supabase
         .from('my_suppliers')
         .insert(supplierData)
         .select(`
@@ -210,7 +210,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const createQueryResult = await withTimeout(createQueryPromise.then(result => result)) as any;
+      const createQueryResult = await withTimeout(createQuery) as any;
 
       if (createQueryResult.error) {
         console.error('Error creating supplier:', createQueryResult.error);
@@ -253,7 +253,7 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Updating supplier:', id, updates);
 
-      const updateQueryPromise = supabase
+      const updateQuery = supabase
         .from('my_suppliers')
         .update({
           name: updates.name,
@@ -279,7 +279,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const updateQueryResult = await withTimeout(updateQueryPromise.then(result => result)) as any;
+      const updateQueryResult = await withTimeout(updateQuery) as any;
 
       if (updateQueryResult.error) {
         console.error('Error updating supplier:', updateQueryResult.error);
@@ -324,13 +324,13 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Deleting supplier:', id);
 
-      const deleteQueryPromise = supabase
+      const deleteQuery = supabase
         .from('my_suppliers')
         .delete()
         .eq('id', id)
         .eq('user_id', user!.id);
 
-      const deleteQueryResult = await withTimeout(deleteQueryPromise.then(result => result)) as any;
+      const deleteQueryResult = await withTimeout(deleteQuery) as any;
 
       if (deleteQueryResult.error) {
         console.error('Error deleting supplier:', deleteQueryResult.error);
