@@ -36,10 +36,21 @@ const NavItem = ({
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
+  // Debug logging
+  console.log(`=== DEBUG Student NavItem: ${children} ===`);
+  console.log(`menuKey: ${menuKey}`);
+  console.log(`showAlways: ${showAlways}`);
+  console.log(`permissions.allowedMenus:`, permissions.allowedMenus);
+  console.log(`should show: ${showAlways || !menuKey || permissions.allowedMenus.includes(menuKey || '')}`);
+  console.log(`=== END DEBUG ===`);
+  
   // Mostrar sempre durante desenvolvimento ou se showAlways for true
   if (!showAlways && menuKey && !permissions.allowedMenus.includes(menuKey)) {
+    console.log(`❌ HIDING Student NavItem: ${children} (menuKey: ${menuKey} not in allowed menus)`);
     return null;
   }
+  
+  console.log(`✅ SHOWING Student NavItem: ${children}`);
   
   return (
     <SidebarMenuItem>
@@ -47,6 +58,9 @@ const NavItem = ({
         <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700")}>
           <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-blue-700 opacity-80")} />
           <span>{children}</span>
+          {/* Debug indicator */}
+          {showAlways && <span className="text-xs bg-green-500 text-white px-1 rounded">ALWAYS</span>}
+          {menuKey && !showAlways && <span className="text-xs bg-blue-500 text-white px-1 rounded">{menuKey}</span>}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -80,6 +94,14 @@ const StudentSidebar = () => {
   const isAdminArea = location.pathname.startsWith("/admin");
   const isStudentArea = location.pathname.startsWith("/aluno");
 
+  // Debug logging for permissions
+  console.log(`=== STUDENT SIDEBAR DEBUG ===`);
+  console.log(`loading: ${loading}`);
+  console.log(`hasAdminAccess: ${permissions.hasAdminAccess}`);
+  console.log(`allowedMenus:`, permissions.allowedMenus);
+  console.log(`current path: ${location.pathname}`);
+  console.log(`=== END STUDENT SIDEBAR DEBUG ===`);
+
   const handleNavigateToAdmin = () => {
     navigate("/admin");
   };
@@ -111,6 +133,8 @@ const StudentSidebar = () => {
     );
   }
 
+  console.log(`✅ Rendering student sidebar`);
+
   return (
     <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
       <SidebarHeader className="p-4 border-b border-gray-200">
@@ -131,6 +155,14 @@ const StudentSidebar = () => {
 
       <SidebarContent className="py-4">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
+          {/* Debug info panel */}
+          <div className="px-4 py-2 bg-blue-100 text-blue-800 text-xs mb-2">
+            <div>DEBUG MODE</div>
+            <div>Loading: {loading ? 'Yes' : 'No'}</div>
+            <div>Admin: {permissions.hasAdminAccess ? 'Yes' : 'No'}</div>
+            <div>Menus: {permissions.allowedMenus.length}</div>
+          </div>
+
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
               Principal
