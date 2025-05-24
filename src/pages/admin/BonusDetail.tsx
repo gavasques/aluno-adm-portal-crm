@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -84,7 +85,7 @@ const BonusDetail = () => {
         setName(foundBonus.name);
         setType(foundBonus.type);
         setDescription(foundBonus.description);
-        setAccessPeriod(foundBonus.accessPeriod);
+        setAccessPeriod(foundBonus.access_period);
         setObservations(foundBonus.observations || "");
         
         // Load comments from localStorage if available
@@ -123,7 +124,7 @@ const BonusDetail = () => {
       name,
       type,
       description,
-      accessPeriod,
+      access_period: accessPeriod,
       observations
     };
     
@@ -289,7 +290,7 @@ const BonusDetail = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="text-2xl">{bonus.bonusId}</CardTitle>
+              <CardTitle className="text-2xl">{bonus.bonus_id}</CardTitle>
               <CardDescription>
                 Visualize e edite os detalhes do bônus
               </CardDescription>
@@ -401,7 +402,7 @@ const BonusDetail = () => {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <p className="text-base">{bonus.accessPeriod}</p>
+                      <p className="text-base">{bonus.access_period}</p>
                     )}
                   </div>
                 </div>
@@ -435,13 +436,13 @@ const BonusDetail = () => {
                 
                 <div className="grid gap-3">
                   <label className="text-sm font-medium">ID do Bônus</label>
-                  <p className="text-base">{bonus.bonusId}</p>
+                  <p className="text-base">{bonus.bonus_id}</p>
                 </div>
                 
                 <div className="grid gap-3">
                   <label className="text-sm font-medium">Data de Criação</label>
                   <p className="text-base">
-                    {new Date(bonus.createdAt).toLocaleDateString('pt-BR', {
+                    {new Date(bonus.created_at).toLocaleDateString('pt-BR', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric'
