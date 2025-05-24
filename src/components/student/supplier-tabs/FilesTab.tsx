@@ -6,20 +6,28 @@ import FileUploader from "./files/FileUploader";
 import FilesList from "./files/FilesList";
 import StorageIndicator from "./files/StorageIndicator";
 import { stringToBytes, formatBytes, STORAGE_LIMIT, CustomFile } from "./files/utils";
+import { useUserStorage } from "@/hooks/useUserStorage";
 
 interface FilesTabProps {
   files: CustomFile[];
   onUpdate: (files: CustomFile[]) => void;
   isEditing?: boolean;
+  supplierId?: string;
 }
 
 const FilesTab: React.FC<FilesTabProps> = ({ 
   files = [], 
   onUpdate,
-  isEditing = true
+  isEditing = true,
+  supplierId
 }) => {
-  // Calcular armazenamento usado
-  const usedStorage = files.reduce((total, file) => total + stringToBytes(file.size), 0);
+  const { storageInfo } = useUserStorage();
+  
+  // Usar dados reais de armazenamento se disponível
+  const usedStorage = storageInfo ? storageInfo.storage_used_mb * 1024 * 1024 : 
+    files.reduce((total, file) => total + stringToBytes(file.size), 0);
+  
+  const storageLimit = storageInfo ? storageInfo.storage_limit_mb * 1024 * 1024 : STORAGE_LIMIT;
   
   const handleDeleteFile = (id: number) => {
     onUpdate(files.filter(file => file.id !== id));
@@ -27,7 +35,7 @@ const FilesTab: React.FC<FilesTabProps> = ({
   };
   
   const handleFileUpload = (file: globalThis.File) => {
-    // Adicionar novo arquivo
+    // Adicionar novo arquivo à lista local
     const newFile: CustomFile = {
       id: Date.now(),
       name: file.name,
@@ -46,16 +54,15 @@ const FilesTab: React.FC<FilesTabProps> = ({
         <CardTitle>Arquivos</CardTitle>
         <StorageIndicator 
           usedStorage={usedStorage} 
-          storageLimit={STORAGE_LIMIT} 
+          storageLimit={storageLimit} 
           formatBytes={formatBytes} 
         />
       </CardHeader>
       <CardContent>
         {isEditing && (
           <FileUploader 
-            usedStorage={usedStorage} 
-            storageLimit={STORAGE_LIMIT} 
-            onFileUpload={handleFileUpload} 
+            onFileUpload={handleFileUpload}
+            supplierId={supplierId}
           />
         )}
         

@@ -165,6 +165,8 @@ export type Database = {
           permission_group_id: string | null
           role: string | null
           status: string
+          storage_limit_mb: number | null
+          storage_used_mb: number | null
           updated_at: string | null
         }
         Insert: {
@@ -176,6 +178,8 @@ export type Database = {
           permission_group_id?: string | null
           role?: string | null
           status?: string
+          storage_limit_mb?: number | null
+          storage_used_mb?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -187,6 +191,8 @@ export type Database = {
           permission_group_id?: string | null
           role?: string | null
           status?: string
+          storage_limit_mb?: number | null
+          storage_used_mb?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -198,6 +204,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      storage_upgrades: {
+        Row: {
+          admin_id: string
+          id: string
+          new_limit_mb: number
+          notes: string | null
+          previous_limit_mb: number
+          upgrade_amount_mb: number
+          upgrade_date: string
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          id?: string
+          new_limit_mb: number
+          notes?: string | null
+          previous_limit_mb: number
+          upgrade_amount_mb: number
+          upgrade_date?: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          id?: string
+          new_limit_mb?: number
+          notes?: string | null
+          previous_limit_mb?: number
+          upgrade_amount_mb?: number
+          upgrade_date?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       system_menus: {
         Row: {
@@ -271,13 +310,93 @@ export type Database = {
         }
         Relationships: []
       }
+      user_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string | null
+          file_size_mb: number
+          file_type: string | null
+          id: string
+          supplier_id: string | null
+          upload_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path?: string | null
+          file_size_mb: number
+          file_type?: string | null
+          id?: string
+          supplier_id?: string | null
+          upload_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string | null
+          file_size_mb?: number
+          file_type?: string | null
+          id?: string
+          supplier_id?: string | null
+          upload_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_storage: {
+        Row: {
+          created_at: string
+          id: string
+          storage_limit_mb: number
+          storage_used_mb: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          storage_limit_mb?: number
+          storage_used_mb?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          storage_limit_mb?: number
+          storage_used_mb?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      add_storage_upgrade: {
+        Args: {
+          target_user_id: string
+          admin_user_id: string
+          upgrade_mb: number
+          upgrade_notes?: string
+        }
+        Returns: boolean
+      }
+      calculate_user_storage_usage: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       can_access_permission_groups: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      can_user_upload: {
+        Args: { user_uuid: string; file_size_mb: number }
         Returns: boolean
       }
       drop_policies_for_table: {
@@ -309,6 +428,10 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      update_user_storage_counter: {
+        Args: { user_uuid: string }
+        Returns: undefined
       }
     }
     Enums: {

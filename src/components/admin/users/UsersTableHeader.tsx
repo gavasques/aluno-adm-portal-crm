@@ -6,10 +6,11 @@ const UsersTableHeader: React.FC = () => {
   return (
     <TableHeader>
       <TableRow>
-        <TableHead>Nome</TableHead>
+        <TableHead>Usuário</TableHead>
         <TableHead>Status</TableHead>
-        <TableHead>Papel</TableHead>
+        <TableHead>Função</TableHead>
         <TableHead>Último Login</TableHead>
+        <TableHead>Armazenamento</TableHead>
         <TableHead className="text-right">Ações</TableHead>
       </TableRow>
     </TableHeader>
