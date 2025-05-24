@@ -52,7 +52,7 @@ const TopBar = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0 z-40">
+    <header className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0 z-40 mb-2.5">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           <SidebarTrigger className="lg:hidden" />
