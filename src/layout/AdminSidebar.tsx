@@ -122,6 +122,9 @@ const AdminSidebar = () => {
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/cadastros" icon={Database} menuKey="registers">Cadastros</NavItem>
                 </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/auditoria" icon={Shield} menuKey="audit">Auditoria</NavItem>
+                </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

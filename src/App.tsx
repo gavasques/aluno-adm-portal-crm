@@ -87,7 +87,7 @@ function App() {
               <Route path="/admin/categorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Categories /></AdminLayout></AdminRouteGuard>} />
               <Route path="/admin/tipos-parceiro" element={<AdminRouteGuard requireAdminAccess><AdminLayout><PartnerTypes /></AdminLayout></AdminRouteGuard>} />
               <Route path="/admin/tipos-software" element={<AdminRouteGuard requireAdminAccess><AdminLayout><SoftwareTypes /></AdminLayout></AdminRouteGuard>} />
-              <Route path="/admin/auditoria" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Audit /></AdminLayout></AdminRouteGuard>} />
+              <Route path="/admin/auditoria" element={<AdminRouteGuard requireAdminAccess requiredMenuKey="audit"><AdminLayout><Audit /></AdminLayout></AdminRouteGuard>} />
 
               {/* Student Routes */}
               <Route path="/aluno" element={<StudentRouteGuard requiredMenuKey="dashboard"><StudentLayout><StudentDashboard /></StudentLayout></StudentRouteGuard>} />
