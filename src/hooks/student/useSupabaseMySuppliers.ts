@@ -94,7 +94,7 @@ export const useSupabaseMySuppliers = () => {
           }
         }, 15000);
 
-        // Buscar fornecedores com timeout - executar a query e aguardar resultado
+        // Buscar fornecedores com timeout - converter query builder em Promise
         const suppliersQueryPromise = supabase
           .from('my_suppliers')
           .select(`
@@ -109,7 +109,7 @@ export const useSupabaseMySuppliers = () => {
           .eq('user_id', user!.id)
           .order('created_at', { ascending: false });
 
-        const suppliersQueryResult = await withTimeout(suppliersQueryPromise) as any;
+        const suppliersQueryResult = await withTimeout(suppliersQueryPromise.then(result => result)) as any;
 
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
@@ -210,7 +210,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const createQueryResult = await withTimeout(createQueryPromise) as any;
+      const createQueryResult = await withTimeout(createQueryPromise.then(result => result)) as any;
 
       if (createQueryResult.error) {
         console.error('Error creating supplier:', createQueryResult.error);
@@ -279,7 +279,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const updateQueryResult = await withTimeout(updateQueryPromise) as any;
+      const updateQueryResult = await withTimeout(updateQueryPromise.then(result => result)) as any;
 
       if (updateQueryResult.error) {
         console.error('Error updating supplier:', updateQueryResult.error);
@@ -330,7 +330,7 @@ export const useSupabaseMySuppliers = () => {
         .eq('id', id)
         .eq('user_id', user!.id);
 
-      const deleteQueryResult = await withTimeout(deleteQueryPromise) as any;
+      const deleteQueryResult = await withTimeout(deleteQueryPromise.then(result => result)) as any;
 
       if (deleteQueryResult.error) {
         console.error('Error deleting supplier:', deleteQueryResult.error);
