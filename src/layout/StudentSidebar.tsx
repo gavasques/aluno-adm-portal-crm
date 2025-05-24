@@ -1,8 +1,7 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Home, Settings, Users, BarChart, Wrench, Package, Bell, LogOut, User, ChevronDown } from "lucide-react";
+import { Home, Settings, Users, BarChart, Wrench, Package, Bell, LogOut, User, ChevronDown, GraduationCap } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
@@ -152,6 +151,9 @@ const StudentSidebar = () => {
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/aluno/mentorias" icon={GraduationCap} menuKey="mentoring">Minhas Mentorias</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +25,10 @@ import Courses from "./pages/admin/Courses";
 import CourseDetails from "./pages/admin/CourseDetails";
 import Mentoring from "./pages/admin/Mentoring";
 import MentoringDetail from "./pages/admin/MentoringDetail";
+import AdminMentoringDashboard from "./pages/admin/AdminMentoringDashboard";
+import AdminMentoringEnrollments from "./pages/admin/AdminMentoringEnrollments";
+import AdminMentoringSessions from "./pages/admin/AdminMentoringSessions";
+import AdminMentoringMaterials from "./pages/admin/AdminMentoringMaterials";
 import Bonus from "./pages/admin/Bonus";
 import BonusDetail from "./pages/admin/BonusDetail";
 import Categories from "./pages/admin/Categories";
@@ -43,6 +46,9 @@ import MySuppliers from "./pages/student/MySuppliers";
 import StudentPartners from "./pages/student/Partners";
 import StudentTools from "./pages/student/Tools";
 import StudentSettings from "./pages/student/Settings";
+import StudentMentoring from "./pages/student/Mentoring";
+import StudentMentoringDetail from "./pages/student/MentoringDetail";
+import StudentMentoringSession from "./pages/student/MentoringSession";
 
 // Components
 import Layout from "./layout/Layout";
@@ -90,6 +96,13 @@ function App() {
                 <Route path="/admin/mentorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Mentoring /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/mentorias/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/mentorias/new" element={<AdminRouteGuard requireAdminAccess><AdminLayout><MentoringDetail /></AdminLayout></AdminRouteGuard>} />
+                
+                {/* Admin Mentoring Management Routes */}
+                <Route path="/admin/gestao-mentorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><AdminMentoringDashboard /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/gestao-mentorias/inscricoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><AdminMentoringEnrollments /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/gestao-mentorias/sessoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><AdminMentoringSessions /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/gestao-mentorias/materiais" element={<AdminRouteGuard requireAdminAccess><AdminLayout><AdminMentoringMaterials /></AdminLayout></AdminRouteGuard>} />
+                
                 <Route path="/admin/bonus" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Bonus /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/bonus/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><BonusDetail /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/categorias" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Categories /></AdminLayout></AdminRouteGuard>} />
@@ -104,6 +117,11 @@ function App() {
                 <Route path="/aluno/parceiros" element={<StudentRouteGuard requiredMenuKey="partners"><StudentLayout><StudentPartners /></StudentLayout></StudentRouteGuard>} />
                 <Route path="/aluno/ferramentas" element={<StudentRouteGuard requiredMenuKey="tools"><StudentLayout><StudentTools /></StudentLayout></StudentRouteGuard>} />
                 <Route path="/aluno/configuracoes" element={<StudentRouteGuard requiredMenuKey="settings"><StudentLayout><StudentSettings /></StudentLayout></StudentRouteGuard>} />
+                
+                {/* Student Mentoring Routes */}
+                <Route path="/aluno/mentorias" element={<StudentRouteGuard requiredMenuKey="mentoring"><StudentLayout><StudentMentoring /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/mentorias/:id" element={<StudentRouteGuard requiredMenuKey="mentoring"><StudentLayout><StudentMentoringDetail /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/mentorias/:enrollmentId/sessao/:sessionId" element={<StudentRouteGuard requiredMenuKey="mentoring"><StudentLayout><StudentMentoringSession /></StudentLayout></StudentRouteGuard>} />
 
                 {/* 404 Route */}
                 <Route path="*" element={<Layout isAdmin={false}><NotFound /></Layout>} />
