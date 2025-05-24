@@ -48,14 +48,14 @@ const Categories = () => {
     loadCategories();
   }, []);
 
-  const handleAddCategory = async (data: { name: string; description?: string }) => {
+  const handleAddCategory = async (data: { name: string }) => {
     try {
       const { data: newCategory, error } = await supabase
         .from('categories')
         .insert([
           {
             name: data.name,
-            description: data.description || null
+            description: null
           }
         ])
         .select()
@@ -136,7 +136,7 @@ const Categories = () => {
             <AddItemForm 
               onSubmit={handleAddCategory} 
               itemName="Categoria"
-              showDescription={true}
+              showDescription={false}
             />
           </DialogContent>
         </Dialog>
