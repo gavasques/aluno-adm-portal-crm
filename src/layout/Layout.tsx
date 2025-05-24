@@ -40,14 +40,14 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          {/* Sidebar - usando posição relativa ao invés de fixed */}
-          <div className="flex-shrink-0">
+        <div className="flex min-h-screen w-full overflow-hidden">
+          {/* Sidebar - forçando posição relativa */}
+          <div className="flex-shrink-0 relative" style={{ width: '208px' }}>
             {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
           </div>
           
-          {/* Área principal - TopBar + Content */}
-          <div className="flex-1 flex flex-col min-w-0">
+          {/* Área principal - ocupa o restante do espaço */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             <TopBar />
             <main className="flex-1 overflow-auto">
               {children}
