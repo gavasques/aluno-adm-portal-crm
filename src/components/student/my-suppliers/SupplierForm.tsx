@@ -2,11 +2,12 @@
 import { Form } from "@/components/ui/form";
 import { SupplierFormValues } from "@/types/my-suppliers.types";
 import { motion } from "framer-motion";
-import { useSupplierForm } from "@/hooks/student/my-suppliers/useSupplierForm";
+import { useOptimizedSupplierForm } from "@/hooks/student/my-suppliers/useOptimizedSupplierForm";
 import { BasicInfoSection } from "./form/BasicInfoSection";
 import { ContactSection } from "./form/ContactSection";
 import { AdditionalInfoSection } from "./form/AdditionalInfoSection";
 import { FormActions } from "./form/FormActions";
+import { memo } from "react";
 
 interface SupplierFormProps {
   onSubmit: (data: SupplierFormValues) => void;
@@ -14,8 +15,8 @@ interface SupplierFormProps {
   isSubmitting: boolean;
 }
 
-export function SupplierForm({ onSubmit, onCancel, isSubmitting }: SupplierFormProps) {
-  const form = useSupplierForm();
+export const SupplierForm = memo(({ onSubmit, onCancel, isSubmitting }: SupplierFormProps) => {
+  const form = useOptimizedSupplierForm();
   
   return (
     <Form {...form}>
@@ -35,4 +36,6 @@ export function SupplierForm({ onSubmit, onCancel, isSubmitting }: SupplierFormP
       </form>
     </Form>
   );
-}
+});
+
+SupplierForm.displayName = "SupplierForm";

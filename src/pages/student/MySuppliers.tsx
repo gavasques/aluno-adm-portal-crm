@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/student/my-suppliers/ErrorState";
 import { LoadingState } from "@/components/student/my-suppliers/LoadingState";
 import SupplierDetail from "@/components/student/SupplierDetail";
 import StudentRouteGuard from "@/components/student/RouteGuard";
-import { useMySuppliers } from "@/hooks/student/useMySuppliers";
+import { useOptimizedMySuppliers } from "@/hooks/student/my-suppliers/useOptimizedMySuppliers";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -32,7 +32,7 @@ const MySuppliers = () => {
     handleCancel,
     handleUpdateSupplier,
     handleRetry
-  } = useMySuppliers();
+  } = useOptimizedMySuppliers();
 
   // Loading state
   if (loading) {
