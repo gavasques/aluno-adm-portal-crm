@@ -4,6 +4,9 @@ import { toast } from "@/hooks/use-toast";
 import { STUDENTS } from "@/data/students";
 
 export const useStudents = () => {
+  console.log("=== useStudents hook initializing ===");
+  console.log("Students data:", STUDENTS);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,11 +18,14 @@ export const useStudents = () => {
   
   // Filter students based on search query and status filter
   const filteredStudents = useMemo(() => {
-    return STUDENTS.filter(student => {
+    console.log("Filtering students with query:", searchQuery, "status:", statusFilter);
+    const filtered = STUDENTS.filter(student => {
       const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === "all" || student.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
+    console.log("Filtered students count:", filtered.length);
+    return filtered;
   }, [searchQuery, statusFilter]);
 
   // Sort students by name
@@ -38,6 +44,13 @@ export const useStudents = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = sortedStudents.slice(indexOfFirstItem, indexOfLastItem);
+
+  console.log("=== Pagination info ===");
+  console.log("Total pages:", totalPages);
+  console.log("Current page:", currentPage);
+  console.log("Items per page:", itemsPerPage);
+  console.log("Current items count:", currentItems.length);
+  console.log("=======================");
 
   // Handle sort toggle
   const toggleSort = () => {
@@ -80,6 +93,8 @@ export const useStudents = () => {
       description: "Os dados dos alunos foram exportados com sucesso."
     });
   };
+
+  console.log("=== useStudents hook returning values ===");
 
   return {
     // States

@@ -48,7 +48,7 @@ const defaultValues: Partial<SettingsFormValues> = {
   password: "",
 };
 
-export default function AdminSettings() {
+const AdminSettings = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Inicializar o formulário com react-hook-form
@@ -203,4 +203,6 @@ export default function AdminSettings() {
       </motion.div>
     </div>
   );
-}
+};
+
+export default AdminSettings;

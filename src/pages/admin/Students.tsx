@@ -22,6 +22,9 @@ import StudentDeleteDialog from "@/components/admin/students/StudentDeleteDialog
 import StudentAddDialog from "@/components/admin/students/StudentAddDialog";
 
 const Students = () => {
+  console.log("=== STUDENTS COMPONENT LOADING ===");
+  console.log("Component Students está sendo renderizado");
+  
   const {
     searchQuery,
     setSearchQuery,
@@ -45,6 +48,11 @@ const Students = () => {
     handleDeleteClick,
     exportToCSV
   } = useStudents();
+
+  console.log("=== STUDENTS DATA ===");
+  console.log("Filtered students:", filteredStudents.length);
+  console.log("Current items:", currentItems.length);
+  console.log("====================");
 
   return (
     <div className="container mx-auto py-6">

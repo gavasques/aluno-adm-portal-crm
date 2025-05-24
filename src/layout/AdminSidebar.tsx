@@ -24,7 +24,14 @@ const NavItem = ({
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
+  console.log(`=== NAV ITEM DEBUG: ${children} ===`);
+  console.log("Menu key:", menuKey);
+  console.log("Allowed menus:", permissions.allowedMenus);
+  console.log("Has access:", !menuKey || permissions.allowedMenus.includes(menuKey));
+  console.log("================================");
+  
   if (menuKey && !permissions.allowedMenus.includes(menuKey)) {
+    console.log(`Menu item ${children} hidden - no permission`);
     return null;
   }
   
@@ -69,6 +76,12 @@ const itemAnimation = {
 const AdminSidebar = () => {
   const { permissions, loading } = usePermissions();
   
+  console.log("=== ADMIN SIDEBAR DEBUG ===");
+  console.log("Loading:", loading);
+  console.log("Has admin access:", permissions.hasAdminAccess);
+  console.log("Allowed menus:", permissions.allowedMenus);
+  console.log("===========================");
+  
   if (loading) {
     return (
       <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
@@ -82,6 +95,7 @@ const AdminSidebar = () => {
   }
 
   if (!permissions.hasAdminAccess) {
+    console.log("Admin sidebar hidden - no admin access");
     return null;
   }
 
