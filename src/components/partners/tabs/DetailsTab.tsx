@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Partner } from "../PartnersTable";
+import { Partner } from "@/types/partner.types";
 import { motion } from "framer-motion";
 
 interface DetailsTabProps {

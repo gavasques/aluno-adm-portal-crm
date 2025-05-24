@@ -9,7 +9,7 @@ import {
   TabsTrigger,
   TabsTriggerWithBadge
 } from "@/components/ui/tabs";
-import { Partner } from "./PartnersTable";
+import { Partner } from "@/types/partner.types";
 import DetailsTab from "./tabs/DetailsTab";
 import ContactsTab from "./tabs/ContactsTab";
 import CommentsTab from "./tabs/CommentsTab";

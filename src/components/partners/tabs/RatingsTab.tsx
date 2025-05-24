@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star, Users } from "lucide-react";
-import { Partner } from "../PartnersTable";
+import { Partner } from "@/types/partner.types";
 
 interface RatingsTabProps {
   partner: Partner;

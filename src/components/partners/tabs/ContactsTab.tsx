@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Partner } from "../PartnersTable";
+import { Partner } from "@/types/partner.types";
 import { motion } from "framer-motion";
 import { Users, Mail, Phone, User } from "lucide-react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";

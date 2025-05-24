@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Partner } from "@/components/partners/PartnersTable";
+import { Partner } from "@/types/partner.types";
 import { Button } from "@/components/ui/button";
 import { 
   Tabs, 
@@ -25,29 +25,29 @@ import FilesTab from "@/components/partners/tabs/FilesTab";
 
 interface PartnerDetailProps {
   partner: Partner;
-  onBack: () => void;
+  onClose: () => void;
   commentText: string;
   ratingText: string;
-  onCommentTextChange: (text: string) => void;
-  onRatingTextChange: (text: string) => void;
-  onAddComment: () => void;
-  onAddRating: () => void;
-  onLikeComment: (commentId: number) => void;
-  onLikeRating: (ratingId: number) => void;
-  calculateAverageRating: (ratings: any[]) => string;
+  setCommentText: (text: string) => void;
+  setRatingText: (text: string) => void;
+  handleAddComment: (partnerId: number, comment: string) => void;
+  handleAddRating: (partnerId: number, rating: number, comment: string) => void;
+  handleLikeComment: (partnerId: number, commentId: number) => void;
+  handleLikeRating: (partnerId: number, ratingId: number) => void;
+  calculateAverageRating: (partnerId: number) => number;
 }
 
 const PartnerDetail: React.FC<PartnerDetailProps> = ({
   partner,
-  onBack,
+  onClose,
   commentText,
   ratingText,
-  onCommentTextChange,
-  onRatingTextChange,
-  onAddComment,
-  onAddRating,
-  onLikeComment,
-  onLikeRating,
+  setCommentText,
+  setRatingText,
+  handleAddComment,
+  handleAddRating,
+  handleLikeComment,
+  handleLikeRating,
   calculateAverageRating
 }) => {
   const [activeTab, setActiveTab] = useState("details");
@@ -86,7 +86,29 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
     }
   };
 
-  const averageRating = calculateAverageRating(partner.ratings);
+  const averageRating = calculateAverageRating(partner.id);
+  
+  const calculateAverageRatingString = (ratings: any[]): string => {
+    if (!ratings || ratings.length === 0) return "0.0";
+    const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
+    return (sum / ratings.length).toFixed(1);
+  };
+
+  const handleCommentAdd = () => {
+    handleAddComment(partner.id, commentText);
+  };
+
+  const handleRatingAdd = () => {
+    handleAddRating(partner.id, 5, ratingText);
+  };
+
+  const handleCommentLike = (commentId: number) => {
+    handleLikeComment(partner.id, commentId);
+  };
+
+  const handleRatingLike = (ratingId: number) => {
+    handleLikeRating(partner.id, ratingId);
+  };
   
   return (
     <div className="container mx-auto py-2 px-4">
@@ -99,7 +121,7 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onBack}
+          onClick={onClose}
           className="hover:bg-blue-100 transition-colors duration-300"
         >
           <ChevronLeft className="h-6 w-6 text-blue-600" />
@@ -129,7 +151,7 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
               <HoverCardTrigger asChild>
                 <div className="flex items-center cursor-pointer">
                   <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 mr-1" />
-                  <span className="font-medium">{averageRating}</span>
+                  <span className="font-medium">{averageRating.toFixed(1)}</span>
                 </div>
               </HoverCardTrigger>
               <HoverCardContent className="w-auto p-2">
@@ -238,9 +260,9 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
                   <CommentsTab
                     partner={partner}
                     commentText={commentText}
-                    onCommentTextChange={onCommentTextChange}
-                    onAddComment={onAddComment}
-                    onLikeComment={onLikeComment}
+                    onCommentTextChange={setCommentText}
+                    onAddComment={handleCommentAdd}
+                    onLikeComment={handleCommentLike}
                   />
                 </CardContent>
               </Card>
@@ -257,10 +279,10 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
                   <RatingsTab
                     partner={partner}
                     ratingText={ratingText}
-                    onRatingTextChange={onRatingTextChange}
-                    onAddRating={onAddRating}
-                    onLikeRating={onLikeRating}
-                    calculateAverageRating={calculateAverageRating}
+                    onRatingTextChange={setRatingText}
+                    onAddRating={handleRatingAdd}
+                    onLikeRating={handleRatingLike}
+                    calculateAverageRating={calculateAverageRatingString}
                   />
                 </CardContent>
               </Card>
