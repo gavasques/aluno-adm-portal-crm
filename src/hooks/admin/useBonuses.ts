@@ -2,26 +2,24 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export type BonusType = "Software" | "Sistema" | "IA" | "Ebook" | "Lista" | "Outros";
-export type AccessPeriod = "7 dias" | "15 dias" | "30 dias" | "2 Meses" | "3 Meses" | "6 Meses" | "1 Ano" | "Vitalício";
-
-export interface Bonus {
-  id: string;
-  bonus_id: string;
-  name: string;
-  type: BonusType;
-  description: string;
-  access_period: AccessPeriod;
-  observations?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Bonus, BonusType, AccessPeriod, BonusStats } from "@/types/bonus.types";
 
 export const useBonuses = () => {
   const [bonuses, setBonuses] = useState<Bonus[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [stats, setStats] = useState<BonusStats>({
+    total: 0,
+    byType: {
+      Software: 0,
+      Sistema: 0,
+      IA: 0,
+      Ebook: 0,
+      Lista: 0,
+      Outros: 0
+    },
+    recentlyAdded: 0
+  });
 
   // Carregar bônus do Supabase
   const loadBonuses = async () => {
@@ -38,13 +36,44 @@ export const useBonuses = () => {
         return;
       }
 
-      setBonuses(data || []);
+      const bonusData = data?.map(item => ({
+        ...item,
+        type: item.type as BonusType,
+        access_period: item.access_period as AccessPeriod
+      })) || [];
+
+      setBonuses(bonusData);
+      calculateStats(bonusData);
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast.error('Erro inesperado ao carregar bônus');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Calcular estatísticas
+  const calculateStats = (bonusData: Bonus[]) => {
+    const total = bonusData.length;
+    const byType = bonusData.reduce((acc, bonus) => {
+      acc[bonus.type] = (acc[bonus.type] || 0) + 1;
+      return acc;
+    }, {} as Record<BonusType, number>);
+
+    // Preencher tipos faltantes com 0
+    const allTypes: BonusType[] = ["Software", "Sistema", "IA", "Ebook", "Lista", "Outros"];
+    allTypes.forEach(type => {
+      if (!byType[type]) byType[type] = 0;
+    });
+
+    const recentlyAdded = bonusData.filter(bonus => {
+      const createdAt = new Date(bonus.created_at);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return createdAt >= thirtyDaysAgo;
+    }).length;
+
+    setStats({ total, byType, recentlyAdded });
   };
 
   // Adicionar novo bônus
@@ -62,7 +91,14 @@ export const useBonuses = () => {
         return false;
       }
 
-      setBonuses(prev => [data, ...prev]);
+      const newBonus = {
+        ...data,
+        type: data.type as BonusType,
+        access_period: data.access_period as AccessPeriod
+      };
+
+      setBonuses(prev => [newBonus, ...prev]);
+      calculateStats([newBonus, ...bonuses]);
       toast.success('Bônus adicionado com sucesso!');
       return true;
     } catch (error) {
@@ -88,8 +124,14 @@ export const useBonuses = () => {
         return false;
       }
 
+      const updatedBonus = {
+        ...data,
+        type: data.type as BonusType,
+        access_period: data.access_period as AccessPeriod
+      };
+
       setBonuses(prev => prev.map(bonus => 
-        bonus.id === id ? data : bonus
+        bonus.id === id ? updatedBonus : bonus
       ));
       toast.success('Bônus atualizado com sucesso!');
       return true;
@@ -114,7 +156,11 @@ export const useBonuses = () => {
         return false;
       }
 
-      setBonuses(prev => prev.filter(bonus => bonus.id !== id));
+      setBonuses(prev => {
+        const newBonuses = prev.filter(bonus => bonus.id !== id);
+        calculateStats(newBonuses);
+        return newBonuses;
+      });
       toast.success('Bônus excluído com sucesso!');
       return true;
     } catch (error) {
@@ -138,7 +184,11 @@ export const useBonuses = () => {
         return null;
       }
 
-      return data;
+      return {
+        ...data,
+        type: data.type as BonusType,
+        access_period: data.access_period as AccessPeriod
+      };
     } catch (error) {
       console.error('Erro inesperado:', error);
       return null;
@@ -162,6 +212,7 @@ export const useBonuses = () => {
     loading,
     searchTerm,
     setSearchTerm,
+    stats,
     addBonus,
     updateBonus,
     deleteBonus,
@@ -169,3 +220,5 @@ export const useBonuses = () => {
     loadBonuses
   };
 };
+
+export { BonusType, AccessPeriod } from "@/types/bonus.types";

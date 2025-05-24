@@ -1,18 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export interface BonusComment {
-  id: string;
-  bonus_id: string;
-  user_id: string;
-  content: string;
-  author_name: string;
-  likes: number;
-  user_liked: boolean;
-  created_at: string;
-}
+import { BonusComment } from "@/types/bonus.types";
 
 export const useBonusComments = (bonusId: string) => {
   const [comments, setComments] = useState<BonusComment[]>([]);

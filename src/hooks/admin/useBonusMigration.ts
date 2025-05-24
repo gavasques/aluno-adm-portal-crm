@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { type BonusType, type AccessPeriod } from "./useBonuses";
+import { BonusType, AccessPeriod } from "@/types/bonus.types";
 
 interface LocalStorageBonus {
   id: string;
@@ -23,7 +22,6 @@ export const useBonusMigration = () => {
     try {
       setMigrationStatus('checking');
 
-      // Verificar se existem dados no localStorage
       const localBonuses = localStorage.getItem("bonuses");
       if (!localBonuses) {
         setMigrationStatus('completed');
@@ -38,7 +36,6 @@ export const useBonusMigration = () => {
 
       setMigrationStatus('migrating');
 
-      // Verificar se já existem bônus no Supabase
       const { data: existingBonuses, error: checkError } = await supabase
         .from('bonuses')
         .select('bonus_id');
@@ -51,7 +48,6 @@ export const useBonusMigration = () => {
 
       const existingBonusIds = new Set(existingBonuses?.map(b => b.bonus_id) || []);
 
-      // Filtrar bônus que não existem no Supabase
       const bonusesToMigrate = parsedBonuses.filter(bonus => 
         !existingBonusIds.has(bonus.bonusId)
       );
@@ -62,7 +58,6 @@ export const useBonusMigration = () => {
         return;
       }
 
-      // Migrar bônus um por um
       let migrated = 0;
       for (const localBonus of bonusesToMigrate) {
         try {
@@ -90,9 +85,6 @@ export const useBonusMigration = () => {
 
       if (migrated > 0) {
         toast.success(`${migrated} bônus migrados com sucesso para o Supabase!`);
-        
-        // Opcional: limpar localStorage após migração bem-sucedida
-        // localStorage.removeItem("bonuses");
       }
 
       setMigrationStatus('completed');
@@ -103,7 +95,6 @@ export const useBonusMigration = () => {
     }
   };
 
-  // Executar migração automaticamente na inicialização
   useEffect(() => {
     migrateFromLocalStorage();
   }, []);

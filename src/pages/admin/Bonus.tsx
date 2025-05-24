@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, IdCard, Database } from "lucide-react";
+import { Plus, Grid, List } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -16,7 +17,6 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +26,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useBonuses, type BonusType, type AccessPeriod } from "@/hooks/admin/useBonuses";
+import { useBonuses } from "@/hooks/admin/useBonuses";
 import { useBonusMigration } from "@/hooks/admin/useBonusMigration";
+import { BonusType, AccessPeriod } from "@/types/bonus.types";
+import BonusStatsCards from "@/components/admin/bonus/BonusStatsCards";
+import BonusFilters from "@/components/admin/bonus/BonusFilters";
+import BonusCard from "@/components/admin/bonus/BonusCard";
 
 // Componente de formulário para adicionar/editar bônus
 interface BonusFormProps {
@@ -168,17 +173,30 @@ const Bonus = () => {
   const [bonusToDelete, setBonusToDelete] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  
+  // Filtros
+  const [typeFilter, setTypeFilter] = useState<BonusType | "all">("all");
+  const [periodFilter, setPeriodFilter] = useState<AccessPeriod | "all">("all");
   
   const {
     bonuses,
     loading,
     searchTerm,
     setSearchTerm,
+    stats,
     addBonus,
     deleteBonus
   } = useBonuses();
 
   const { migrationStatus, migratedCount } = useBonusMigration();
+
+  // Filtrar bônus
+  const filteredBonuses = bonuses.filter(bonus => {
+    const matchesType = typeFilter === "all" || bonus.type === typeFilter;
+    const matchesPeriod = periodFilter === "all" || bonus.access_period === periodFilter;
+    return matchesType && matchesPeriod;
+  });
 
   const handleAddBonus = async (bonusData: {
     name: string;
@@ -212,11 +230,16 @@ const Bonus = () => {
     navigate(`/admin/bonus/${id}`);
   };
 
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setTypeFilter("all");
+    setPeriodFilter("all");
+  };
+
   const renderMigrationStatus = () => {
     if (migrationStatus === 'migrating') {
       return (
         <Alert className="mb-4">
-          <Database className="h-4 w-4" />
           <AlertDescription>
             Migrando dados do localStorage para Supabase... {migratedCount} bônus migrados.
           </AlertDescription>
@@ -242,6 +265,7 @@ const Bonus = () => {
       <div className="container mx-auto py-6">
         <h1 className="text-3xl font-bold mb-8">Cadastro de Bônus</h1>
         {renderMigrationStatus()}
+        <BonusStatsCards stats={stats} loading={true} />
         <Card>
           <CardContent className="py-8">
             <div className="flex items-center justify-center">
@@ -255,79 +279,119 @@ const Bonus = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8">Cadastro de Bônus</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">Cadastro de Bônus</h1>
+        <Button 
+          onClick={() => setIsAddDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" /> Adicionar Bônus
+        </Button>
+      </div>
       
       {renderMigrationStatus()}
       
-      <Card className="mb-6">
+      <BonusStatsCards stats={stats} loading={loading} />
+      
+      <BonusFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+        periodFilter={periodFilter}
+        onPeriodFilterChange={setPeriodFilter}
+        onClearFilters={handleClearFilters}
+      />
+      
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gerenciar Bônus</CardTitle>
-          <Button 
-            onClick={() => setIsAddDialogOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Adicionar Bônus
-          </Button>
+          <CardTitle>
+            Bônus ({filteredBonuses.length})
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button 
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <Input
-              placeholder="Pesquisar bônus..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead><div className="flex items-center"><IdCard className="mr-1 h-4 w-4" /> ID</div></TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Tempo de Acesso</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bonuses.length > 0 ? (
-                  bonuses.map((bonus) => (
-                    <TableRow 
-                      key={bonus.id} 
-                      className="cursor-pointer hover:bg-muted"
-                      onClick={() => handleViewBonus(bonus.id)}
-                    >
-                      <TableCell className="font-medium">{bonus.bonus_id}</TableCell>
-                      <TableCell>{bonus.name}</TableCell>
-                      <TableCell>{bonus.type}</TableCell>
-                      <TableCell>{bonus.access_period}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setBonusToDelete(bonus.id);
-                          }}
-                          className="flex items-center gap-1"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only md:not-sr-only md:inline-flex">Excluir</span>
-                        </Button>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredBonuses.length > 0 ? (
+                filteredBonuses.map((bonus) => (
+                  <BonusCard
+                    key={bonus.id}
+                    bonus={bonus}
+                    onView={handleViewBonus}
+                    onDelete={setBonusToDelete}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  Nenhum bônus encontrado.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Tempo de Acesso</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBonuses.length > 0 ? (
+                    filteredBonuses.map((bonus) => (
+                      <TableRow 
+                        key={bonus.id} 
+                        className="cursor-pointer hover:bg-muted"
+                        onClick={() => handleViewBonus(bonus.id)}
+                      >
+                        <TableCell className="font-medium">{bonus.bonus_id}</TableCell>
+                        <TableCell>{bonus.name}</TableCell>
+                        <TableCell>{bonus.type}</TableCell>
+                        <TableCell>{bonus.access_period}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setBonusToDelete(bonus.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                        Nenhum bônus encontrado.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                      {searchTerm ? 'Nenhum bônus encontrado com esse termo.' : 'Nenhum bônus cadastrado.'}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

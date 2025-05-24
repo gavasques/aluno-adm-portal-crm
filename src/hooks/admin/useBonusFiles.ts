@@ -1,19 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export interface BonusFile {
-  id: string;
-  bonus_id: string;
-  user_id: string;
-  file_name: string;
-  file_size: number;
-  file_type: string;
-  description?: string;
-  file_path: string;
-  uploaded_at: string;
-}
+import { BonusFile } from "@/types/bonus.types";
 
 export const useBonusFiles = (bonusId: string) => {
   const [files, setFiles] = useState<BonusFile[]>([]);
