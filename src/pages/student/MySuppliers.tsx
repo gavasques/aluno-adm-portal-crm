@@ -180,7 +180,7 @@ const MySuppliers = () => {
           )}
         </AnimatePresence>
 
-        <Dialog open={showForm} onOpenChange={setShowForm}>
+        <Dialog open={showForm} onOpenChange={(open: boolean) => setShowForm(open)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Adicionar Fornecedor</DialogTitle>
