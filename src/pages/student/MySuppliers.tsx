@@ -137,7 +137,7 @@ const MySuppliers = () => {
                 <SuppliersList
                   suppliers={suppliers}
                   onSelectSupplier={setSelectedSupplier}
-                  onDeleteSupplier={(id: number) => handleDeleteSupplier(id.toString())}
+                  onDeleteSupplier={handleDeleteSupplier}
                   sortField={sortField}
                   sortDirection={sortDirection}
                   onSort={handleSort}
