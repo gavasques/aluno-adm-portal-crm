@@ -11,52 +11,25 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
-
-export interface Partner {
-  id: number;
-  name: string;
-  category: string;
-  type: string;
-  rating: number;
-  commentCount: number;
-  recommended: boolean;
-  website: string;  // Added website property
-  contacts: {
-    name: string;
-    role: string;
-    email: string;
-    phone: string;
-  }[];
-  description: string;
-  ratings: {
-    id: number;
-    user: string;
-    rating: number;
-    comment: string;
-    likes: number;
-  }[];
-  comments: {
-    id: number;
-    user: string;
-    text: string;
-    date: string;
-    likes: number;
-  }[];
-  files: any[];
-  history: any[];
-}
+import { Partner } from "@/types/partner.types";
 
 interface PartnersTableProps {
   partners: Partner[];
-  onViewDetails: (partner: Partner) => void;
-  calculateAverageRating: (ratings: any[]) => string;
+  onSelectPartner: (partner: Partner) => void;
+  isAdmin: boolean;
 }
 
 const PartnersTable: React.FC<PartnersTableProps> = ({ 
   partners, 
-  onViewDetails,
-  calculateAverageRating 
+  onSelectPartner,
+  isAdmin
 }) => {
+  const calculateAverageRating = (ratings: any[]) => {
+    if (!ratings || ratings.length === 0) return "0.0";
+    const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
+    return (sum / ratings.length).toFixed(1);
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -99,7 +72,7 @@ const PartnersTable: React.FC<PartnersTableProps> = ({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => onViewDetails(partner)}
+                    onClick={() => onSelectPartner(partner)}
                   >
                     Ver Detalhes
                   </Button>

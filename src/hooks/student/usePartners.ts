@@ -1,22 +1,24 @@
 
 import { useState } from "react";
-import { Partner } from "@/components/partners/PartnersTable";
+import { Partner } from "@/types/partner.types";
 
 // Dados de exemplo para parceiros
-const PARTNERS = [
+const PARTNERS: Partner[] = [
   {
     id: 1,
     name: "Marketing Digital Pro",
     category: "Marketing Digital",
     type: "Agência",
-    rating: 4.8,
-    commentCount: 14,
-    recommended: true,
-    website: "www.marketingdigitalpro.com",
-    contacts: [
-      { name: "Maria Silva", role: "Gerente de Contas", email: "maria@marketingpro.com", phone: "(11) 98765-4321" }
-    ],
+    contact: "Maria Silva",
+    phone: "(11) 98765-4321",
+    email: "maria@marketingpro.com",
+    address: "São Paulo, SP",
     description: "Agência especializada em marketing digital para e-commerce.",
+    website: "www.marketingdigitalpro.com",
+    recommended: true,
+    contacts: [
+      { id: 1, name: "Maria Silva", role: "Gerente de Contas", email: "maria@marketingpro.com", phone: "(11) 98765-4321" }
+    ],
     ratings: [
       { id: 1, user: "Ana Carolina", rating: 4, comment: "Ótima parceria, sempre disponíveis para ajudar.", likes: 3 },
       { id: 2, user: "Pedro Santos", rating: 5, comment: "Excelente atendimento e resultados.", likes: 1 }
@@ -33,14 +35,16 @@ const PARTNERS = [
     name: "Logística Express",
     category: "Logística",
     type: "Serviço",
-    rating: 4.3,
-    commentCount: 7,
-    recommended: false,
-    website: "www.logisticaexpress.com",
-    contacts: [
-      { name: "João Oliveira", role: "Diretor Comercial", email: "joao@logisticaexpress.com", phone: "(11) 97654-3210" }
-    ],
+    contact: "João Oliveira",
+    phone: "(11) 97654-3210",
+    email: "joao@logisticaexpress.com",
+    address: "Rio de Janeiro, RJ",
     description: "Empresa especializada em logística para e-commerce.",
+    website: "www.logisticaexpress.com",
+    recommended: false,
+    contacts: [
+      { id: 1, name: "João Oliveira", role: "Diretor Comercial", email: "joao@logisticaexpress.com", phone: "(11) 97654-3210" }
+    ],
     ratings: [
       { id: 1, user: "Carlos Silva", rating: 4, comment: "Entrega rápida e serviço de qualidade.", likes: 2 }
     ],
@@ -55,14 +59,16 @@ const PARTNERS = [
     name: "Contabilidade Online",
     category: "Contabilidade",
     type: "Consultor",
-    rating: 4.6,
-    commentCount: 9,
-    recommended: true,
-    website: "www.contabilidadeonline.com",
-    contacts: [
-      { name: "Ana Paula", role: "Contadora Chefe", email: "ana@contabilidadeonline.com", phone: "(11) 99876-5432" }
-    ],
+    contact: "Ana Paula",
+    phone: "(11) 99876-5432",
+    email: "ana@contabilidadeonline.com",
+    address: "Belo Horizonte, MG",
     description: "Serviços de contabilidade especializada para e-commerce.",
+    website: "www.contabilidadeonline.com",
+    recommended: true,
+    contacts: [
+      { id: 1, name: "Ana Paula", role: "Contadora Chefe", email: "ana@contabilidadeonline.com", phone: "(11) 99876-5432" }
+    ],
     ratings: [
       { id: 1, user: "Ricardo Martins", rating: 5, comment: "Profissionais excelentes, super recomendo!", likes: 4 }
     ],
@@ -97,14 +103,15 @@ export const usePartners = () => {
   });
 
   // Calculate average rating
-  const calculateAverageRating = (ratings) => {
-    if (!ratings || ratings.length === 0) return "0.0";
-    const sum = ratings.reduce((acc, item) => acc + item.rating, 0);
-    return (sum / ratings.length).toFixed(1);
+  const calculateAverageRating = (partnerId: number): number => {
+    const partner = PARTNERS.find(p => p.id === partnerId);
+    if (!partner || !partner.ratings || partner.ratings.length === 0) return 0;
+    const sum = partner.ratings.reduce((acc, item) => acc + item.rating, 0);
+    return parseFloat((sum / partner.ratings.length).toFixed(1));
   };
   
   // Handle like for a rating
-  const handleLikeRating = (ratingId) => {
+  const handleLikeRating = (partnerId: number, ratingId: number) => {
     if (selectedPartner) {
       const updatedRatings = selectedPartner.ratings.map(rating => {
         if (rating.id === ratingId) {
@@ -117,7 +124,7 @@ export const usePartners = () => {
   };
   
   // Handle like for a comment
-  const handleLikeComment = (commentId) => {
+  const handleLikeComment = (partnerId: number, commentId: number) => {
     if (selectedPartner) {
       const updatedComments = selectedPartner.comments.map(comment => {
         if (comment.id === commentId) {
@@ -130,13 +137,13 @@ export const usePartners = () => {
   };
   
   // Handle adding a new rating
-  const handleAddRating = () => {
-    if (selectedPartner && ratingText) {
+  const handleAddRating = (partnerId: number, rating: number, comment: string) => {
+    if (selectedPartner && comment) {
       const newRating = {
         id: Date.now(),
         user: "Usuário",
-        rating: 5,
-        comment: ratingText,
+        rating: rating,
+        comment: comment,
         likes: 0
       };
       
@@ -147,12 +154,12 @@ export const usePartners = () => {
   };
   
   // Handle adding a new comment
-  const handleAddComment = () => {
-    if (selectedPartner && commentText) {
+  const handleAddComment = (partnerId: number, comment: string) => {
+    if (selectedPartner && comment) {
       const newComment = {
         id: Date.now(),
         user: "Usuário",
-        text: commentText,
+        text: comment,
         date: new Date().toLocaleDateString(),
         likes: 0
       };
