@@ -1,10 +1,19 @@
-
 import { 
   MentoringCatalog, 
   StudentMentoringEnrollment, 
   MentoringSession, 
   MentoringMaterial 
 } from '@/types/mentoring.types';
+
+// Mock Mentoring Stats
+export const mockMentoringStats = {
+  totalEnrollments: 245,
+  activeEnrollments: 189,
+  completedSessions: 1247,
+  upcomingSessions: 23,
+  totalMaterials: 567,
+  averageRating: 4.7
+};
 
 // Mock Mentoring Catalogs
 export const mockMentoringCatalog: MentoringCatalog[] = [
