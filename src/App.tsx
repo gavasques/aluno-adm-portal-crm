@@ -35,6 +35,7 @@ import AdminCRM from "./pages/admin/CRM";
 import AdminAuditDashboard from "./pages/admin/Audit";
 
 // New Mentoring Pages
+import AdminMentoringManagement from "./pages/admin/AdminMentoringManagement";
 import AdminMentoringCatalog from "./pages/admin/AdminMentoringCatalog";
 import AdminMentoringEnrollments from "./pages/admin/AdminMentoringEnrollments";
 import AdminMentoringSessions from "./pages/admin/AdminMentoringSessions";
@@ -77,8 +78,6 @@ function App() {
                 <Route path="cadastros" element={<AdminRegistrations />} />
                 <Route path="cursos" element={<CourseList />} />
                 <Route path="cursos/:id" element={<CourseDetail />} />
-                <Route path="mentorias" element={<Mentoring />} />
-                <Route path="mentorias/:id" element={<MentoringDetail />} />
                 <Route path="bonus" element={<AdminBonus />} />
                 <Route path="bonus/:id" element={<BonusDetail />} />
                 <Route path="tarefas" element={<AdminTasks />} />
@@ -86,10 +85,12 @@ function App() {
                 <Route path="auditoria" element={<AdminAuditDashboard />} />
                 
                 {/* Mentoring Management Routes */}
+                <Route path="mentorias" element={<AdminMentoringManagement />} />
                 <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
                 <Route path="mentorias/inscricoes" element={<AdminMentoringEnrollments />} />
                 <Route path="mentorias/sessoes" element={<AdminMentoringSessions />} />
                 <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
+                <Route path="mentorias/:id" element={<MentoringDetail />} />
               </Route>
 
               {/* Student Routes */}

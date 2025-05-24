@@ -34,14 +34,7 @@ const NavItem = ({
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
-  console.log(`=== NAV ITEM DEBUG: ${children} ===`);
-  console.log("Menu key:", menuKey);
-  console.log("Allowed menus:", permissions.allowedMenus);
-  console.log("Has access:", !menuKey || permissions.allowedMenus.includes(menuKey));
-  console.log("================================");
-  
   if (menuKey && !permissions.allowedMenus.includes(menuKey)) {
-    console.log(`Menu item ${children} hidden - no permission`);
     return null;
   }
   
@@ -90,9 +83,6 @@ const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isAdminArea = location.pathname.startsWith("/admin");
-  const isStudentArea = location.pathname.startsWith("/aluno");
-
   const handleNavigateToStudent = () => {
     navigate("/aluno");
   };
@@ -112,12 +102,6 @@ const AdminSidebar = () => {
     return user?.user_metadata?.name || user?.email || "Administrador";
   };
   
-  console.log("=== ADMIN SIDEBAR DEBUG ===");
-  console.log("Loading:", loading);
-  console.log("Has admin access:", permissions.hasAdminAccess);
-  console.log("Allowed menus:", permissions.allowedMenus);
-  console.log("===========================");
-  
   if (loading) {
     return (
       <div className="w-52 h-screen bg-gray-900 border-r border-gray-700 shadow-2xl relative">
@@ -131,7 +115,6 @@ const AdminSidebar = () => {
   }
 
   if (!permissions.hasAdminAccess) {
-    console.log("Admin sidebar hidden - no admin access");
     return null;
   }
 
@@ -187,7 +170,7 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/alunos" icon={User} menuKey="students">Gestão de Alunos</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/gestao-mentorias" icon={GraduationCap} menuKey="mentoring-management">Gestão de Mentorias</NavItem>
+                  <NavItem href="/admin/mentorias" icon={GraduationCap} menuKey="mentoring-management">Gestão de Mentorias</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/cadastros" icon={Database} menuKey="registers">Cadastros</NavItem>
@@ -209,7 +192,7 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/tarefas" icon={List} menuKey="tasks">Lista de Tarefas</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/leads" icon={BookOpen} menuKey="crm">CRM / Gestão de Leads</NavItem>
+                  <NavItem href="/admin/crm" icon={BookOpen} menuKey="crm">CRM / Gestão de Leads</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
