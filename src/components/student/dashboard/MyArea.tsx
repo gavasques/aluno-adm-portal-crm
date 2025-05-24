@@ -29,7 +29,7 @@ export function MyArea() {
               <CardTitle className="text-blue-800">Meus Fornecedores</CardTitle>
               <CardDescription>Fornecedores que você cadastrou</CardDescription>
             </div>
-            <Link to="/student/my-suppliers">
+            <Link to="/aluno/meus-fornecedores">
               <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
                 <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                   Gerenciar
@@ -61,7 +61,7 @@ export function MyArea() {
                 </motion.div>
               ))}
               
-              <Link to="/student/my-suppliers" className="block">
+              <Link to="/aluno/meus-fornecedores" className="block">
                 <motion.div
                   whileHover={{ y: -5, scale: 1.02 }}
                   transition={{ duration: 0.2 }}

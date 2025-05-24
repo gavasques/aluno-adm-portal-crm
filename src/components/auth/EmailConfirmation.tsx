@@ -62,7 +62,7 @@ const EmailConfirmation = () => {
           
           // Redirecionar após 2 segundos para a área apropriada
           setTimeout(() => {
-            navigate("/student");
+            navigate("/aluno");
           }, 2000);
         } else {
           setError("Houve um problema na confirmação do email. Tente fazer login normalmente.");
@@ -82,7 +82,7 @@ const EmailConfirmation = () => {
   // Se o usuário já estiver logado, redirecionar
   useEffect(() => {
     if (user && !loading) {
-      navigate("/student");
+      navigate("/aluno");
     }
   }, [user, loading, navigate]);
 

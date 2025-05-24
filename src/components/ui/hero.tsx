@@ -33,7 +33,7 @@ const Hero = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Link to="/student">
+            <Link to="/aluno">
               <Button size="lg" className="bg-white text-portal-primary hover:bg-portal-light">
                 Área do Aluno
               </Button>

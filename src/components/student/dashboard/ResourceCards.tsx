@@ -15,7 +15,7 @@ export function ResourceCards() {
         description="disponíveis para você"
         trend="up"
         trendValue="3"
-        onClick={() => navigate('/student/suppliers')}
+        onClick={() => navigate('/aluno/fornecedores')}
         className="bg-gradient-to-br from-blue-50 to-white border-t-4 border-t-blue-400"
       />
       
@@ -24,7 +24,7 @@ export function ResourceCards() {
         value="12"
         icon={<Users size={20} />}
         description="disponíveis para você"
-        onClick={() => navigate('/student/partners')}
+        onClick={() => navigate('/aluno/parceiros')}
         className="bg-gradient-to-br from-purple-50 to-white border-t-4 border-t-purple-400"
       />
       
@@ -35,7 +35,7 @@ export function ResourceCards() {
         description="disponíveis para você"
         trend="up"
         trendValue="2"
-        onClick={() => navigate('/student/tools')}
+        onClick={() => navigate('/aluno/ferramentas')}
         className="bg-gradient-to-br from-green-50 to-white border-t-4 border-t-green-400"
       />
     </div>

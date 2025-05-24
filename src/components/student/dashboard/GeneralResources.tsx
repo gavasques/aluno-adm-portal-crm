@@ -16,7 +16,7 @@ export function GeneralResources() {
             <CardTitle>Fornecedores</CardTitle>
             <CardDescription>Lista de fornecedores disponíveis para consulta</CardDescription>
           </div>
-          <Link to="/student/suppliers">
+          <Link to="/aluno/fornecedores">
             <Button>Ver Todos</Button>
           </Link>
         </CardHeader>
@@ -60,7 +60,7 @@ export function GeneralResources() {
             <CardTitle>Parceiros</CardTitle>
             <CardDescription>Parceiros estratégicos para seu negócio</CardDescription>
           </div>
-          <Link to="/student/partners">
+          <Link to="/aluno/parceiros">
             <Button>Ver Todos</Button>
           </Link>
         </CardHeader>

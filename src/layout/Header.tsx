@@ -60,14 +60,14 @@ const Header = () => {
             </div>
             
             <DropdownMenuItem asChild>
-              <Link to={isAdmin ? "/admin" : "/student"} className="flex cursor-pointer items-center gap-2">
+              <Link to={isAdmin ? "/admin" : "/aluno"} className="flex cursor-pointer items-center gap-2">
                 <User className="h-4 w-4" />
                 Dashboard
               </Link>
             </DropdownMenuItem>
             
             <DropdownMenuItem asChild>
-              <Link to={isAdmin ? "/admin/settings" : "/student/settings"} className="flex cursor-pointer items-center gap-2">
+              <Link to={isAdmin ? "/admin/configuracoes" : "/aluno/configuracoes"} className="flex cursor-pointer items-center gap-2">
                 <Settings className="h-4 w-4" />
                 Configurações
               </Link>
@@ -75,7 +75,7 @@ const Header = () => {
             
             {isAdmin && (
               <DropdownMenuItem asChild>
-                <Link to="/student" className="flex cursor-pointer items-center gap-2">
+                <Link to="/aluno" className="flex cursor-pointer items-center gap-2">
                   <ExternalLink className="h-4 w-4" />
                   Ir para Área do Aluno
                 </Link>

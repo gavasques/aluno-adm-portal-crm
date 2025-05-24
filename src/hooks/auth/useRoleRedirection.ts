@@ -19,18 +19,18 @@ export const useRoleRedirection = () => {
 
       if (error) {
         console.error("Erro ao verificar o papel do usuário:", error);
-        navigate("/student"); // Redirecionar para aluno por padrão
+        navigate("/aluno"); // Redirecionar para aluno por padrão
         return;
       }
       
       if (data?.role === "Admin") {
         navigate("/admin");
       } else {
-        navigate("/student");
+        navigate("/aluno");
       }
     } catch (error) {
       console.error("Erro ao verificar o papel do usuário:", error);
-      navigate("/student"); // Redirecionar para aluno por padrão
+      navigate("/aluno"); // Redirecionar para aluno por padrão
     }
   };
 
