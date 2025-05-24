@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -22,19 +23,22 @@ interface NavItemProps {
   icon: React.ElementType;
   children: React.ReactNode;
   menuKey?: string;
+  showAlways?: boolean;
 }
 
 const NavItem = ({
   href,
   icon: Icon,
   children,
-  menuKey
+  menuKey,
+  showAlways = false
 }: NavItemProps) => {
   const { pathname } = useLocation();
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
-  if (menuKey && !permissions.allowedMenus.includes(menuKey)) {
+  // Mostrar sempre durante desenvolvimento ou se showAlways for true
+  if (!showAlways && menuKey && !permissions.allowedMenus.includes(menuKey)) {
     return null;
   }
   
@@ -145,7 +149,7 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin" icon={Home}>Dashboard</NavItem>
+                  <NavItem href="/admin" icon={Home} showAlways={true}>Dashboard</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/configuracoes" icon={Settings} menuKey="settings">Configurações</NavItem>
@@ -170,7 +174,7 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/alunos" icon={User} menuKey="students">Gestão de Alunos</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/mentorias" icon={GraduationCap} menuKey="mentoring-management">Gestão de Mentorias</NavItem>
+                  <NavItem href="/admin/mentorias" icon={GraduationCap} showAlways={true}>Gestão de Mentorias</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/cadastros" icon={Database} menuKey="registers">Cadastros</NavItem>

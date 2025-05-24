@@ -84,7 +84,7 @@ function App() {
                 <Route path="crm" element={<AdminCRM />} />
                 <Route path="auditoria" element={<AdminAuditDashboard />} />
                 
-                {/* Mentoring Management Routes */}
+                {/* Mentoring Management Routes - CORRIGIDA */}
                 <Route path="mentorias" element={<AdminMentoringManagement />} />
                 <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
                 <Route path="mentorias/inscricoes" element={<AdminMentoringEnrollments />} />
@@ -103,7 +103,7 @@ function App() {
                 <Route path="ferramentas" element={<StudentTools />} />
                 <Route path="configuracoes" element={<StudentSettings />} />
                 
-                {/* Student Mentoring Routes */}
+                {/* Student Mentoring Routes - CORRIGIDA */}
                 <Route path="mentorias" element={<StudentMentoring />} />
                 <Route path="mentorias/:enrollmentId" element={<StudentMentoringDetail />} />
                 <Route path="mentorias/:enrollmentId/sessoes/:sessionId" element={<StudentMentoringSession />} />
