@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import AdminSidebar from "./AdminSidebar";
 import StudentSidebar from "./StudentSidebar";
-import TopBar from "./TopBar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import PendingValidationOverlay from "@/components/layout/PendingValidationOverlay";
 
@@ -46,10 +45,9 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
             {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
           </div>
           
-          {/* Área principal - ocupa o restante do espaço com espaçamento de 10px, sem TopBar para alunos */}
+          {/* Área principal - ocupa o restante do espaço com espaçamento de 10px */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mx-2.5">
-            {isAdmin && <TopBar />}
-            <main className={`flex-1 overflow-auto p-2.5 ${isAdmin ? '' : 'pt-2.5'}`}>
+            <main className="flex-1 overflow-auto p-2.5 pt-2.5">
               {children}
             </main>
           </div>
