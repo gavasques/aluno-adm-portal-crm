@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const ConnectionTest: React.FC = () => {
   const [connectionStatus, setConnectionStatus] = useState<string>("Testando...");
-  const [supabaseUrl, setSupabaseUrl] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
@@ -24,12 +23,9 @@ export const ConnectionTest: React.FC = () => {
         throw new Error("Cliente Supabase não inicializado");
       }
 
-      // Obter URL do Supabase
-      const url = supabase.supabaseUrl;
-      setSupabaseUrl(url);
-      console.log("URL do Supabase:", url);
+      console.log("Cliente Supabase inicializado com sucesso");
 
-      // Fazer uma consulta simples
+      // Fazer uma consulta simples para testar a conectividade
       const { data, error: queryError } = await supabase
         .from('profiles')
         .select('count')
@@ -40,7 +36,7 @@ export const ConnectionTest: React.FC = () => {
         setError(`Erro na consulta: ${queryError.message}`);
         setConnectionStatus("Erro na conexão");
       } else {
-        console.log("Conexão bem-sucedida!");
+        console.log("Conexão bem-sucedida!", data);
         setConnectionStatus("Conexão OK");
       }
     } catch (err: any) {
@@ -53,7 +49,7 @@ export const ConnectionTest: React.FC = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Teste de Conexão</CardTitle>
+        <CardTitle>Teste de Conexão Supabase</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -66,13 +62,6 @@ export const ConnectionTest: React.FC = () => {
             {connectionStatus}
           </span>
         </div>
-        
-        {supabaseUrl && (
-          <div>
-            <strong>URL:</strong> 
-            <span className="ml-2 text-sm text-gray-600">{supabaseUrl}</span>
-          </div>
-        )}
         
         {error && (
           <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
