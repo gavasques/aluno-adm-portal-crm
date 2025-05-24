@@ -6,35 +6,43 @@ import { Plus } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { useSoftwareTypes } from "@/hooks/admin/useSoftwareTypes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SoftwareTypes = () => {
-  const [softwareTypes, setSoftwareTypes] = useState<ListItem[]>([
-    { id: "1", name: "CRM", description: "Customer Relationship Management" },
-    { id: "2", name: "ERP", description: "Enterprise Resource Planning" },
-    { id: "3", name: "CMS", description: "Content Management System" },
-    { id: "4", name: "Plataforma E-commerce", description: "Plataformas para criação de lojas virtuais" },
-    { id: "5", name: "Marketing", description: "Ferramentas de marketing digital" },
-    { id: "6", name: "Logística", description: "Soluções para logística e gestão de estoque" },
-    { id: "7", name: "Análise de Dados", description: "Ferramentas para análise de dados e BI" },
-  ]);
+  const { softwareTypes, loading, addSoftwareType, deleteSoftwareType } = useSoftwareTypes();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleAddSoftwareType = (data: { name: string; description?: string }) => {
-    const newType = {
-      id: Date.now().toString(),
-      name: data.name,
-      description: data.description || "",
-    };
-    setSoftwareTypes([...softwareTypes, newType]);
-    setIsDialogOpen(false);
-    toast.success("Tipo de ferramenta adicionado com sucesso!");
+  const handleAddSoftwareType = async (data: { name: string; description?: string }) => {
+    const success = await addSoftwareType(data);
+    if (success) {
+      setIsDialogOpen(false);
+    }
   };
 
-  const handleDeleteSoftwareType = (id: string | number) => {
-    setSoftwareTypes(softwareTypes.filter((type) => type.id !== id));
-    toast.success("Tipo de ferramenta excluído com sucesso!");
+  const handleDeleteSoftwareType = async (id: string | number) => {
+    await deleteSoftwareType(id.toString());
   };
+
+  // Convert to ListItem format for the table
+  const listItems: ListItem[] = softwareTypes.map(type => ({
+    id: type.id,
+    name: type.name,
+    description: type.description || "",
+  }));
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastro de Tipos de Ferramentas</h1>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -74,7 +82,7 @@ const SoftwareTypes = () => {
         </CardHeader>
         <CardContent>
           <ListTable 
-            items={softwareTypes} 
+            items={listItems} 
             onDelete={handleDeleteSoftwareType} 
           />
         </CardContent>

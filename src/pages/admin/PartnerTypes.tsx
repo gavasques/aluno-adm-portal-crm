@@ -6,28 +6,43 @@ import { Plus } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { usePartnerTypes } from "@/hooks/admin/usePartnerTypes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PartnerTypes = () => {
-  const [partnerTypes, setPartnerTypes] = useState<ListItem[]>([
-    { id: "1", name: "Agência", description: "Agência de marketing ou desenvolvimento" },
-    { id: "2", name: "Consultor", description: "Consultores independentes" },
-    { id: "3", name: "Revenda", description: "Revenda de produtos e serviços" },
-  ]);
+  const { partnerTypes, loading, addPartnerType, deletePartnerType } = usePartnerTypes();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleAddPartnerType = (data: { name: string; description?: string }) => {
-    const newType = {
-      id: Date.now().toString(),
-      name: data.name,
-      description: data.description || "",
-    };
-    setPartnerTypes([...partnerTypes, newType]);
-    setIsDialogOpen(false);
+  const handleAddPartnerType = async (data: { name: string; description?: string }) => {
+    const success = await addPartnerType(data);
+    if (success) {
+      setIsDialogOpen(false);
+    }
   };
 
-  const handleDeletePartnerType = (id: string | number) => {
-    setPartnerTypes(partnerTypes.filter((type) => type.id !== id));
+  const handleDeletePartnerType = async (id: string | number) => {
+    await deletePartnerType(id.toString());
   };
+
+  // Convert to ListItem format for the table
+  const listItems: ListItem[] = partnerTypes.map(type => ({
+    id: type.id,
+    name: type.name,
+    description: type.description || "",
+  }));
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastro de Tipos de Parceiros</h1>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -61,7 +76,7 @@ const PartnerTypes = () => {
         </CardHeader>
         <CardContent>
           <ListTable 
-            items={partnerTypes} 
+            items={listItems} 
             onDelete={handleDeletePartnerType} 
           />
         </CardContent>
