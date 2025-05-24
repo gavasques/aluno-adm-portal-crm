@@ -3,9 +3,23 @@ import { motion } from "framer-motion";
 import { Clock, LogOut, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/auth";
 
 const PendingValidationOverlay = () => {
   const { signOut } = useSignInOut();
+  const { user } = useAuth();
+  const { permissions, loading } = usePermissions();
+
+  // Se não há usuário ou ainda está carregando, não renderizar
+  if (!user || loading) {
+    return null;
+  }
+
+  // Se o usuário tem acesso admin, não mostrar o overlay
+  if (permissions.hasAdminAccess) {
+    return null;
+  }
 
   return (
     <motion.div
