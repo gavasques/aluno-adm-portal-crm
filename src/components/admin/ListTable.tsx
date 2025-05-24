@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 
 export interface ListItem {
-  id: string | number;
+  id: string;
   name: string;
   status?: string;
   [key: string]: any;
@@ -32,7 +32,7 @@ export interface ListItem {
 
 interface ListTableProps {
   items: ListItem[];
-  onDelete: (id: string | number) => void;
+  onDelete: (id: string) => void;
 }
 
 const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
@@ -57,7 +57,7 @@ const ListTable: React.FC<ListTableProps> = ({ items, onDelete }) => {
     setSortedItems(sorted);
   };
 
-  const handleDelete = (id: string | number) => {
+  const handleDelete = (id: string) => {
     onDelete(id);
     toast.success("Item excluído com sucesso!");
   };

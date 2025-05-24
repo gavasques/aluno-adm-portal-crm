@@ -82,7 +82,7 @@ const Categories = () => {
     }
   };
 
-  const handleDeleteCategory = async (id: string | number) => {
+  const handleDeleteCategory = async (id: string) => {
     try {
       const { error } = await supabase
         .from('categories')
