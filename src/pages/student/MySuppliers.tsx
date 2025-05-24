@@ -3,6 +3,8 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
 import { SuppliersList } from "@/components/student/my-suppliers/SuppliersList";
+import { SuppliersFilter } from "@/components/student/my-suppliers/SuppliersFilter";
+import { OptimizedPagination } from "@/components/student/my-suppliers/OptimizedPagination";
 import { ErrorState } from "@/components/student/my-suppliers/ErrorState";
 import { LoadingState } from "@/components/student/my-suppliers/LoadingState";
 import SupplierDetail from "@/components/student/SupplierDetail";
@@ -15,6 +17,7 @@ import { Plus } from "lucide-react";
 const MySuppliers = () => {
   const {
     suppliers,
+    allSuppliers,
     selectedSupplier,
     setSelectedSupplier,
     showForm,
@@ -23,15 +26,30 @@ const MySuppliers = () => {
     loading,
     error,
     retryCount,
+    nameFilter,
+    setNameFilter,
+    cnpjFilter,
+    setCnpjFilter,
+    brandFilter,
+    setBrandFilter,
+    contactFilter,
+    setContactFilter,
     sortField,
     sortDirection,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    pageInfo,
+    hasActiveFilters,
     handleSort,
     handleAddSupplier,
     handleDeleteSupplier,
     handleSubmit,
     handleCancel,
     handleUpdateSupplier,
-    handleRetry
+    handleRetry,
+    clearFilters
   } = useOptimizedMySuppliers();
 
   // Loading state
@@ -93,6 +111,26 @@ const MySuppliers = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <SuppliersFilter
+                  nameFilter={nameFilter}
+                  setNameFilter={setNameFilter}
+                  cnpjFilter={cnpjFilter}
+                  setCnpjFilter={setCnpjFilter}
+                  brandFilter={brandFilter}
+                  setBrandFilter={setBrandFilter}
+                  contactFilter={contactFilter}
+                  setContactFilter={setContactFilter}
+                  clearFilters={clearFilters}
+                  onAddSupplier={handleAddSupplier}
+                  hasActiveFilters={hasActiveFilters}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <SuppliersList
@@ -105,6 +143,25 @@ const MySuppliers = () => {
                   onAddSupplier={handleAddSupplier}
                 />
               </motion.div>
+
+              {allSuppliers.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <OptimizedPagination
+                    currentPage={pageInfo.currentPage}
+                    totalPages={pageInfo.totalPages}
+                    pageSize={pageSize}
+                    totalItems={pageInfo.totalItems}
+                    startIndex={pageInfo.startIndex}
+                    endIndex={pageInfo.endIndex}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={setPageSize}
+                  />
+                </motion.div>
+              )}
             </motion.div>
           ) : (
             <motion.div

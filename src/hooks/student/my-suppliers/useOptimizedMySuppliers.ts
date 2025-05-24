@@ -1,47 +1,49 @@
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { MySupplier, SupplierFormValues } from "@/types/my-suppliers.types";
-import { useSupabaseMySuppliers } from "../useSupabaseMySuppliers";
+import { useOptimizedQueries } from "./useOptimizedQueries";
+import { useOptimizedFilters } from "./useOptimizedFilters";
+import { useOptimizedOperations } from "./useOptimizedOperations";
+import { useVirtualizedList } from "./useVirtualizedList";
 
 export const useOptimizedMySuppliers = () => {
+  const [selectedSupplier, setSelectedSupplier] = useState<MySupplier | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [sortField, setSortField] = useState<"name" | "category">("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // Optimized queries with React Query
   const {
     suppliers,
-    loading,
+    isLoading: loading,
     error,
-    retryCount,
+    refetch: refreshSuppliers
+  } = useOptimizedQueries();
+  
+  // Optimized operations with mutations
+  const {
     createSupplier,
     updateSupplier,
     deleteSupplier,
-    refreshSuppliers
-  } = useSupabaseMySuppliers();
-
-  const [selectedSupplier, setSelectedSupplier] = useState<MySupplier | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [nameFilter, setNameFilter] = useState("");
-  const [cnpjFilter, setCnpjFilter] = useState("");
-  const [brandFilter, setBrandFilter] = useState("");
-  const [contactFilter, setContactFilter] = useState("");
-  const [sortField, setSortField] = useState<"name" | "category">("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    isCreating: isSubmitting
+  } = useOptimizedOperations();
   
-  // Memoized filtered suppliers to avoid recalculation on every render
-  const filteredSuppliers = useMemo(() => {
-    return suppliers.filter(supplier => {
-      const nameMatch = supplier.name.toLowerCase().includes(nameFilter.toLowerCase());
-      const cnpjMatch = (supplier.cnpj || "").replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")) || 
-                        supplier.branches.some(branch => 
-                          (branch.cnpj || "").replace(/\D/g, "").includes(cnpjFilter.replace(/\D/g, "")));
-      const brandMatch = brandFilter === "" || 
-                         supplier.brands.some(brand => 
-                           brand.name.toLowerCase().includes(brandFilter.toLowerCase()));
-      const contactMatch = contactFilter === "" || 
-                           supplier.contacts.some(contact => 
-                             contact.name.toLowerCase().includes(contactFilter.toLowerCase()));
-      
-      return nameMatch && cnpjMatch && brandMatch && contactMatch;
-    });
-  }, [suppliers, nameFilter, cnpjFilter, brandFilter, contactFilter]);
+  // Optimized filters with debounce
+  const {
+    nameFilter,
+    setNameFilter,
+    cnpjFilter,
+    setCnpjFilter,
+    brandFilter,
+    setBrandFilter,
+    contactFilter,
+    setContactFilter,
+    filteredSuppliers,
+    clearFilters,
+    hasActiveFilters
+  } = useOptimizedFilters(suppliers);
   
   // Memoized sorted suppliers
   const sortedSuppliers = useMemo(() => {
@@ -58,6 +60,18 @@ export const useOptimizedMySuppliers = () => {
     });
   }, [filteredSuppliers, sortField, sortDirection]);
   
+  // Virtualized list for performance
+  const { paginatedItems, pageInfo } = useVirtualizedList({
+    items: sortedSuppliers,
+    pageSize,
+    currentPage
+  });
+  
+  // Reset to first page when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [nameFilter, cnpjFilter, brandFilter, contactFilter]);
+  
   const handleSort = useCallback((field: "name" | "category") => {
     if (sortField === field) {
       setSortDirection(prev => prev === "asc" ? "desc" : "asc");
@@ -72,17 +86,11 @@ export const useOptimizedMySuppliers = () => {
   }, []);
   
   const handleSubmit = useCallback(async (data: SupplierFormValues) => {
-    setIsSubmitting(true);
-    
     try {
-      const newSupplier = await createSupplier(data);
-      if (newSupplier) {
-        setShowForm(false);
-      }
+      await createSupplier(data);
+      setShowForm(false);
     } catch (err) {
       console.error('Error in handleSubmit:', err);
-    } finally {
-      setIsSubmitting(false);
     }
   }, [createSupplier]);
   
@@ -114,15 +122,9 @@ export const useOptimizedMySuppliers = () => {
     refreshSuppliers();
   }, [refreshSuppliers]);
   
-  const clearFilters = useCallback(() => {
-    setNameFilter("");
-    setCnpjFilter("");
-    setBrandFilter("");
-    setContactFilter("");
-  }, []);
-  
   return {
-    suppliers: sortedSuppliers,
+    suppliers: paginatedItems,
+    allSuppliers: sortedSuppliers,
     selectedSupplier,
     setSelectedSupplier,
     showForm,
@@ -130,7 +132,7 @@ export const useOptimizedMySuppliers = () => {
     isSubmitting,
     loading,
     error,
-    retryCount,
+    retryCount: 0, // Will be managed by React Query
     nameFilter,
     setNameFilter,
     cnpjFilter,
@@ -141,6 +143,12 @@ export const useOptimizedMySuppliers = () => {
     setContactFilter,
     sortField,
     sortDirection,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    pageInfo,
+    hasActiveFilters,
     handleSort,
     handleAddSupplier,
     handleSubmit,

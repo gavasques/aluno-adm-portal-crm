@@ -1,8 +1,10 @@
 
-import { Search, FileText, Tag, User } from "lucide-react";
+import { Search, FileText, Tag, User, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { memo } from "react";
 
 interface SuppliersFilterProps {
   nameFilter: string;
@@ -15,9 +17,10 @@ interface SuppliersFilterProps {
   setContactFilter: (value: string) => void;
   clearFilters: () => void;
   onAddSupplier: () => void;
+  hasActiveFilters: boolean;
 }
 
-export function SuppliersFilter({
+export const SuppliersFilter = memo(({
   nameFilter,
   setNameFilter,
   cnpjFilter,
@@ -27,8 +30,11 @@ export function SuppliersFilter({
   contactFilter,
   setContactFilter,
   clearFilters,
-  onAddSupplier
-}: SuppliersFilterProps) {
+  onAddSupplier,
+  hasActiveFilters
+}: SuppliersFilterProps) => {
+  const activeFiltersCount = [nameFilter, cnpjFilter, brandFilter, contactFilter].filter(Boolean).length;
+
   return (
     <div className="flex flex-col gap-4 mb-6">
       <motion.div 
@@ -45,6 +51,16 @@ export function SuppliersFilter({
             value={nameFilter}
             onChange={(e) => setNameFilter(e.target.value)}
           />
+          {nameFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setNameFilter("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </motion.div>
         
         <motion.div className="relative" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
@@ -55,6 +71,16 @@ export function SuppliersFilter({
             value={cnpjFilter}
             onChange={(e) => setCnpjFilter(e.target.value)}
           />
+          {cnpjFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setCnpjFilter("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </motion.div>
         
         <motion.div className="relative" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
@@ -65,6 +91,16 @@ export function SuppliersFilter({
             value={brandFilter}
             onChange={(e) => setBrandFilter(e.target.value)}
           />
+          {brandFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setBrandFilter("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </motion.div>
         
         <motion.div className="relative" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
@@ -75,21 +111,37 @@ export function SuppliersFilter({
             value={contactFilter}
             onChange={(e) => setContactFilter(e.target.value)}
           />
+          {contactFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setContactFilter("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </motion.div>
       </motion.div>
       
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <motion.div 
-          className="flex gap-2"
+          className="flex items-center gap-2"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
         >
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="text-purple-700 bg-purple-100">
+              {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''}
+            </Badge>
+          )}
           <Button 
             variant="outline" 
             onClick={clearFilters} 
             size="sm"
             className="border-purple-200 hover:bg-purple-100 hover:text-purple-700 transition-colors"
+            disabled={!hasActiveFilters}
           >
             Limpar Filtros
           </Button>
@@ -114,4 +166,6 @@ export function SuppliersFilter({
       </div>
     </div>
   );
-}
+});
+
+SuppliersFilter.displayName = "SuppliersFilter";
