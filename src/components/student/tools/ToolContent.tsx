@@ -92,11 +92,10 @@ export function ToolContent({
                 >
                   <ToolsTable
                     tools={tools}
-                    onSelectTool={setSelectedTool}
+                    onOpenTool={setSelectedTool}
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={onSort}
-                    isAdmin={isAdmin}
                   />
                 </motion.div>
               )}
@@ -114,8 +113,9 @@ export function ToolContent({
         >
           <ToolDetail
             tool={selectedTool}
-            onBack={() => setSelectedTool(null)}
-            onUpdate={onUpdateTool}
+            onClose={() => setSelectedTool(null)}
+            onUpdateTool={onUpdateTool}
+            isAdmin={isAdmin}
           />
         </motion.div>
       )}
