@@ -94,8 +94,8 @@ export const useSupabaseMySuppliers = () => {
           }
         }, 15000);
 
-        // Buscar fornecedores com timeout - executar a query primeiro
-        const suppliersQuery = supabase
+        // Buscar fornecedores com timeout - executar a query e aguardar resultado
+        const suppliersQueryPromise = supabase
           .from('my_suppliers')
           .select(`
             *,
@@ -109,7 +109,7 @@ export const useSupabaseMySuppliers = () => {
           .eq('user_id', user!.id)
           .order('created_at', { ascending: false });
 
-        const { data: suppliersData, error: suppliersError } = await withTimeout(suppliersQuery);
+        const { data: suppliersData, error: suppliersError } = await withTimeout(suppliersQueryPromise);
 
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
@@ -196,7 +196,7 @@ export const useSupabaseMySuppliers = () => {
         comment_count: 0
       };
 
-      const createQuery = supabase
+      const createQueryPromise = supabase
         .from('my_suppliers')
         .insert(supplierData)
         .select(`
@@ -210,7 +210,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const { data: newSupplier, error } = await withTimeout(createQuery);
+      const { data: newSupplier, error } = await withTimeout(createQueryPromise);
 
       if (error) {
         console.error('Error creating supplier:', error);
@@ -253,7 +253,7 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Updating supplier:', id, updates);
 
-      const updateQuery = supabase
+      const updateQueryPromise = supabase
         .from('my_suppliers')
         .update({
           name: updates.name,
@@ -279,7 +279,7 @@ export const useSupabaseMySuppliers = () => {
         `)
         .single();
 
-      const { data: updatedSupplier, error } = await withTimeout(updateQuery);
+      const { data: updatedSupplier, error } = await withTimeout(updateQueryPromise);
 
       if (error) {
         console.error('Error updating supplier:', error);
@@ -324,13 +324,13 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Deleting supplier:', id);
 
-      const deleteQuery = supabase
+      const deleteQueryPromise = supabase
         .from('my_suppliers')
         .delete()
         .eq('id', id)
         .eq('user_id', user!.id);
 
-      const { error } = await withTimeout(deleteQuery);
+      const { error } = await withTimeout(deleteQueryPromise);
 
       if (error) {
         console.error('Error deleting supplier:', error);
