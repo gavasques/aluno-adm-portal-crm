@@ -1,17 +1,16 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Book, Home, Settings, Users, BarChart, FileText } from "lucide-react";
 import { motion } from "framer-motion";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
+import { Home, Settings, Users, BarChart, Wrench, Package } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/hooks/auth";
 
 interface NavItemProps {
   href: string;
   icon: React.ElementType;
   children: React.ReactNode;
-  menuKey: string;
+  menuKey?: string;
 }
 
 const NavItem = ({
@@ -21,39 +20,18 @@ const NavItem = ({
   menuKey
 }: NavItemProps) => {
   const { pathname } = useLocation();
-  const { user } = useAuth();
   const { permissions } = usePermissions();
   const isActive = pathname === href;
-
-  // CORRIGIDO: Verificação simplificada de permissão
-  const hasPermission = permissions.hasAdminAccess || permissions.allowedMenus.includes(menuKey);
-
-  console.log("DEBUG - NavItem:", {
-    email: user?.email,
-    menuKey,
-    hasAdminAccess: permissions.hasAdminAccess,
-    allowedMenus: permissions.allowedMenus,
-    hasPermission
-  });
-
-  // Se não tem permissão, não renderizar o item
-  if (!hasPermission) {
+  
+  if (menuKey && !permissions.allowedMenus.includes(menuKey)) {
     return null;
   }
-
+  
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>
-        <Link to={href} className={cn(
-          "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
-          isActive 
-            ? "bg-gradient-to-r from-portal-primary to-portal-secondary text-white shadow-md" 
-            : "text-portal-dark hover:bg-gradient-to-r hover:from-portal-light hover:to-blue-50 hover:text-portal-primary"
-        )}>
-          <Icon className={cn(
-            "h-4 w-4",
-            isActive ? "text-white" : "text-portal-primary opacity-80"
-          )} />
+        <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700")}>
+          <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-blue-700 opacity-80")} />
           <span>{children}</span>
         </Link>
       </SidebarMenuButton>
@@ -80,15 +58,13 @@ const itemAnimation = {
 
 const StudentSidebar = () => {
   const { permissions, loading } = usePermissions();
-
-  // Mostrar loading enquanto carrega as permissões
+  
   if (loading) {
     return (
-      <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30">
-        <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
+      <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
         <SidebarContent className="pt-16 pb-4">
-          <div className="flex items-center justify-center p-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <div className="flex items-center justify-center h-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         </SidebarContent>
       </Sidebar>
@@ -96,37 +72,20 @@ const StudentSidebar = () => {
   }
 
   return (
-    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30">
-      <SidebarTrigger className="fixed top-3 left-4 md:hidden z-50" />
+    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
       <SidebarContent className="pt-16 pb-4">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show" className="mt-4">
           <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-medium text-gray-500 px-[15px] py-0">
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
               Principal
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/student" icon={Home} menuKey="dashboard">Dashboard</NavItem>
-                </motion.div>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
-              Geral
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/suppliers" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
+                  <NavItem href="/aluno" icon={Home}>Dashboard</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/partners" icon={BarChart} menuKey="partners">Parceiros</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/tools" icon={Book} menuKey="tools">Ferramentas</NavItem>
+                  <NavItem href="/aluno/configuracoes" icon={Settings} menuKey="settings">Configurações</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -139,10 +98,26 @@ const StudentSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/my-suppliers" icon={FileText} menuKey="my-suppliers">Meus Fornecedores</NavItem>
+                  <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
+                </motion.div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
+              Geral
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/aluno/fornecedores" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/student/settings" icon={Settings} menuKey="settings">Configurações</NavItem>
+                  <NavItem href="/aluno/parceiros" icon={BarChart} menuKey="partners">Parceiros</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/aluno/ferramentas" icon={Wrench} menuKey="tools">Ferramentas</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
