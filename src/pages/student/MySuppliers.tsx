@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
@@ -8,7 +9,7 @@ import { ErrorState } from "@/components/student/my-suppliers/ErrorState";
 import { LoadingState } from "@/components/student/my-suppliers/LoadingState";
 import SupplierDetail from "@/components/student/SupplierDetail";
 import StudentRouteGuard from "@/components/student/RouteGuard";
-import { useOptimizedMySuppliers } from "@/hooks/student/my-suppliers/useOptimizedMySuppliers";
+import { useMySuppliers } from "@/hooks/student/useMySuppliers";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -16,7 +17,6 @@ import { Plus } from "lucide-react";
 const MySuppliers = () => {
   const {
     suppliers,
-    allSuppliers,
     selectedSupplier,
     setSelectedSupplier,
     showForm,
@@ -35,12 +35,6 @@ const MySuppliers = () => {
     setContactFilter,
     sortField,
     sortDirection,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
-    pageInfo,
-    hasActiveFilters,
     handleSort,
     handleAddSupplier,
     handleDeleteSupplier,
@@ -49,7 +43,7 @@ const MySuppliers = () => {
     handleUpdateSupplier,
     handleRetry,
     clearFilters
-  } = useOptimizedMySuppliers();
+  } = useMySuppliers();
 
   // Loading state
   if (loading) {
@@ -127,7 +121,7 @@ const MySuppliers = () => {
                   setContactFilter={setContactFilter}
                   clearFilters={clearFilters}
                   onAddSupplier={handleAddSupplier}
-                  hasActiveFilters={hasActiveFilters}
+                  hasActiveFilters={nameFilter !== "" || cnpjFilter !== "" || brandFilter !== "" || contactFilter !== ""}
                 />
               </motion.div>
 
@@ -146,25 +140,6 @@ const MySuppliers = () => {
                   onAddSupplier={handleAddSupplier}
                 />
               </motion.div>
-
-              {allSuppliers.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <OptimizedPagination
-                    currentPage={pageInfo.currentPage}
-                    totalPages={pageInfo.totalPages}
-                    pageSize={pageSize}
-                    totalItems={pageInfo.totalItems}
-                    startIndex={pageInfo.startIndex}
-                    endIndex={pageInfo.endIndex}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
-                  />
-                </motion.div>
-              )}
             </motion.div>
           ) : (
             <motion.div
