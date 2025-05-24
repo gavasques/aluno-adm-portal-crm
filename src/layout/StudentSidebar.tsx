@@ -1,9 +1,22 @@
-import { Link, useLocation } from "react-router-dom";
+
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Home, Settings, Users, BarChart, Wrench, Package } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Home, Settings, Users, BarChart, Wrench, Package, Search, Bell, FileText, LogOut, User, ChevronDown } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/auth";
+import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface NavItemProps {
   href: string;
@@ -57,11 +70,37 @@ const itemAnimation = {
 
 const StudentSidebar = () => {
   const { permissions, loading } = usePermissions();
+  const { user } = useAuth();
+  const { signOut } = useSignInOut();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isAdminArea = location.pathname.startsWith("/admin");
+  const isStudentArea = location.pathname.startsWith("/aluno");
+
+  const handleNavigateToAdmin = () => {
+    navigate("/admin");
+  };
+
+  const handleSettings = () => {
+    navigate("/aluno/configuracoes");
+  };
+
+  const getUserInitials = () => {
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
+
+  const getUserName = () => {
+    return user?.user_metadata?.name || user?.email || "Usuário";
+  };
   
   if (loading) {
     return (
       <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
-        <SidebarContent className="pt-16 pb-4">
+        <SidebarContent className="pt-4 pb-4">
           <div className="flex items-center justify-center h-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
@@ -72,8 +111,39 @@ const StudentSidebar = () => {
 
   return (
     <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
-      <SidebarContent className="pt-16 pb-4">
-        <motion.div variants={sidebarAnimation} initial="hidden" animate="show" className="mt-4">
+      <SidebarHeader className="p-4 border-b border-gray-200">
+        <div className="flex items-center gap-3 mb-4">
+          <img 
+            src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
+            alt="Logo" 
+            className="h-8"
+          />
+        </div>
+        
+        {/* Search Bar */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar..."
+            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors text-sm"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200">
+            <FileText className="h-3 w-3 mr-1" />
+            Relatório
+          </Button>
+          <Button variant="ghost" size="sm" className="relative hover:bg-gray-100 px-2">
+            <Bell className="h-4 w-4 text-gray-600" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">2</span>
+          </Button>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="py-4">
+        <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
               Principal
@@ -123,6 +193,53 @@ const StudentSidebar = () => {
           </SidebarGroup>
         </motion.div>
       </SidebarContent>
+
+      <SidebarFooter className="p-4 border-t border-gray-200">
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-md justify-start"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-gray-600 text-white text-sm">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="font-medium truncate">{getUserName()}</div>
+                  <div className="text-xs text-gray-500">Aluno</div>
+                </div>
+                <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+              {/* Navigation between areas */}
+              {permissions.hasAdminAccess && (
+                <DropdownMenuItem onClick={handleNavigateToAdmin}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Ir para Área Administrativa
+                </DropdownMenuItem>
+              )}
+              
+              {/* Settings */}
+              <DropdownMenuItem onClick={handleSettings}>
+                <Settings className="h-4 w-4 mr-2" />
+                Configurações
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Logout */}
+              <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 };
