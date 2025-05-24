@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+
 export function LoginTabs() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -13,25 +14,31 @@ export function LoginTabs() {
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [magicLinkOpen, setMagicLinkOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
+
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     navigate("/admin");
   };
+
   const handleStudentLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/student");
+    navigate("/aluno");
   };
+
   const handleForgotPassword = () => {
     console.log("Enviando recuperação para:", recoveryEmail);
     setForgotPasswordOpen(false);
     setRecoveryEmail("");
   };
+
   const handleMagicLink = () => {
     console.log("Enviando magic link para:", recoveryEmail);
     setMagicLinkOpen(false);
     setRecoveryEmail("");
   };
-  return <div className="fixed inset-0 flex items-center justify-center">
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-800 to-black z-0"></div>
       
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-screen-xl mx-auto px-4">
@@ -101,7 +108,6 @@ export function LoginTabs() {
         </div>
       </div>
 
-      {/* Dialog para Esqueci a senha */}
       <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
         <DialogContent className="sm:max-w-[425px] bg-blue-950 text-white border-blue-800">
           <DialogHeader>
@@ -121,7 +127,6 @@ export function LoginTabs() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog para Magic Link */}
       <Dialog open={magicLinkOpen} onOpenChange={setMagicLinkOpen}>
         <DialogContent className="sm:max-w-[425px] bg-blue-950 text-white border-blue-800">
           <DialogHeader>
@@ -140,5 +145,6 @@ export function LoginTabs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 }

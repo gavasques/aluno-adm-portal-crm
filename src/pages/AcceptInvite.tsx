@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -93,7 +92,7 @@ const AcceptInvite = () => {
             if (data?.role === "Admin") {
               navigate("/admin");
             } else {
-              navigate("/student");
+              navigate("/aluno");
             }
           } else {
             navigate("/");
