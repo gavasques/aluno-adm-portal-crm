@@ -40,11 +40,11 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <SidebarProvider>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen w-full">
           {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
           <div className="flex-1 flex flex-col min-w-0">
             <TopBar />
-            <main className="flex-1 p-6 pt-20 overflow-auto">
+            <main className="flex-1 py-6 pt-20 overflow-auto">
               {children}
             </main>
           </div>

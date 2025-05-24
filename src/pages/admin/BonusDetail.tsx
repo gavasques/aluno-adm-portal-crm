@@ -47,7 +47,7 @@ const BonusDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="px-6 py-6 w-full">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-center h-64">
@@ -61,7 +61,7 @@ const BonusDetail = () => {
 
   if (!bonus) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="px-6 py-6 w-full">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-center h-64">
@@ -74,7 +74,7 @@ const BonusDetail = () => {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="px-6 w-full">
       <Card>
         <BonusDetailHeader
           bonusId={bonus.bonus_id}
