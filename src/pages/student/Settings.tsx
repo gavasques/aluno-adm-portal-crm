@@ -10,18 +10,35 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import StoragePanel from "@/components/student/storage/StoragePanel";
+import { validatePassword, sanitizeError, logSecureError } from "@/utils/security";
 
 const Settings = () => {
   const { user, updateUserPassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [name, setName] = useState(user?.user_metadata?.name || "");
   const [phone, setPhone] = useState(user?.user_metadata?.phone || "");
 
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+    const validation = validatePassword(newPassword);
+    setPasswordErrors(validation.errors);
+  };
+
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (passwordErrors.length > 0) {
+      toast({
+        title: "Erro",
+        description: "Corrija os problemas da senha antes de continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast({
@@ -35,16 +52,15 @@ const Settings = () => {
     setIsUpdating(true);
     try {
       await updateUserPassword(password);
-      toast({
-        title: "Senha atualizada",
-        description: "Sua senha foi atualizada com sucesso.",
-      });
       setPassword("");
       setConfirmPassword("");
+      setPasswordErrors([]);
     } catch (error: any) {
+      logSecureError(error, "Student Password Update");
+      const sanitizedMessage = sanitizeError(error);
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível atualizar sua senha.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
     } finally {
@@ -71,15 +87,19 @@ const Settings = () => {
         description: "Suas informações foram atualizadas com sucesso.",
       });
     } catch (error: any) {
+      logSecureError(error, "Profile Update");
+      const sanitizedMessage = sanitizeError(error);
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível atualizar seu perfil.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
     } finally {
       setIsUpdatingProfile(false);
     }
   };
+
+  const isPasswordFormValid = passwordErrors.length === 0 && password === confirmPassword && password.length > 0;
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -158,9 +178,8 @@ const Settings = () => {
                     id="new-password" 
                     type="password" 
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     required
-                    minLength={6}
                   />
                 </div>
                 <div className="space-y-2">
@@ -171,12 +190,27 @@ const Settings = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    minLength={6}
                   />
                 </div>
+                
+                {passwordErrors.length > 0 && (
+                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-200">
+                    <p className="font-medium mb-2">Critérios de senha:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {passwordErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {password !== confirmPassword && confirmPassword.length > 0 && (
+                  <p className="text-red-600 text-sm">As senhas não coincidem</p>
+                )}
+                
                 <Button 
                   type="submit" 
-                  disabled={isUpdating} 
+                  disabled={isUpdating || !isPasswordFormValid} 
                   className="w-full"
                 >
                   {isUpdating ? "Atualizando..." : "Atualizar senha"}

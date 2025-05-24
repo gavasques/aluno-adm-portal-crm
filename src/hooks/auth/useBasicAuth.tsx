@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
 import { useSignUp } from "./useBasicAuth/useSignUp";
+import { sanitizeError, logSecureError } from "@/utils/security";
 
 // URL base do site que será usado para redirecionamentos
 const BASE_URL = "https://titan.guilhermevasques.club";
@@ -28,10 +29,12 @@ export function useBasicAuth() {
       });
 
     } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
+      logSecureError(error, "Login");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao fazer login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;
@@ -58,10 +61,12 @@ export function useBasicAuth() {
       
       return true;
     } catch (error: any) {
-      console.error("Erro ao enviar magic link:", error);
+      logSecureError(error, "Magic Link");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao enviar magic link",
-        description: error.message || "Verifique seu email e tente novamente.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;
@@ -88,10 +93,12 @@ export function useBasicAuth() {
       
       navigate("/");
     } catch (error: any) {
-      console.error("Erro ao fazer logout:", error);
+      logSecureError(error, "Logout");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao fazer logout",
-        description: error.message,
+        description: sanitizedMessage,
         variant: "destructive",
       });
     }
@@ -114,10 +121,12 @@ export function useBasicAuth() {
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao solicitar recuperação de senha:", error);
+      logSecureError(error, "Password Reset");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao solicitar recuperação de senha",
-        description: error.message,
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;
@@ -144,10 +153,12 @@ export function useBasicAuth() {
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao atualizar senha:", error);
+      logSecureError(error, "Password Update");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao atualizar senha",
-        description: error.message || "Ocorreu um erro ao atualizar sua senha.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;
@@ -157,7 +168,7 @@ export function useBasicAuth() {
   // Nova função para adicionar um usuário no painel de admin
   const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<CreateUserResult> => {
     try {
-      console.log("Criando novo usuário:", { email, name, role, password: password ? "Definida" : "Gerada automaticamente" });
+      logSecureError({ email, name, role, hasPassword: !!password }, "Creating user");
 
       // Criar o usuário diretamente via Edge Function no Supabase
       const { data: response, error } = await supabase.functions.invoke('list-users', {
@@ -172,13 +183,13 @@ export function useBasicAuth() {
       });
 
       if (error) {
-        console.error("Erro na chamada da função:", error);
-        throw new Error(error.message || "Erro ao adicionar usuário");
+        logSecureError(error, "Admin User Creation - Function Error");
+        throw new Error(sanitizeError(error));
       }
       
       if (response && response.error) {
-        console.error("Erro retornado pela função:", response.error);
-        throw new Error(response.error);
+        logSecureError(response.error, "Admin User Creation - Response Error");
+        throw new Error(sanitizeError(response.error));
       }
       
       // Verificar se o usuário já existe e tratar adequadamente
@@ -199,10 +210,12 @@ export function useBasicAuth() {
         return { success: true, existed: false };
       }
     } catch (error: any) {
-      console.error("Erro ao criar usuário via admin:", error);
+      logSecureError(error, "Admin User Creation");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao adicionar usuário",
-        description: error.message || "Não foi possível adicionar o usuário. Tente novamente.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;

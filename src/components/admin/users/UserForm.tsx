@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { 
   Form,
   FormControl,
@@ -21,14 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/auth";
-
-// Schema para validação do formulário
-const userFormSchema = z.object({
-  name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  role: z.string({ required_error: "Selecione um papel" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }).optional(),
-});
+import { userFormSchema } from "@/utils/validation-schemas";
+import { validatePassword } from "@/utils/security";
 
 interface UserFormProps {
   onSuccess: () => void;
@@ -37,6 +30,7 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const { createAdminUser } = useAuth();
 
   const form = useForm({
@@ -49,10 +43,23 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
     },
   });
 
+  // Validação em tempo real da senha
+  const handlePasswordChange = (password: string) => {
+    const validation = validatePassword(password);
+    setPasswordErrors(validation.errors);
+    return password;
+  };
+
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
-      console.log("Enviando dados:", data);
+      
+      // Validação final da senha
+      const passwordValidation = validatePassword(data.password);
+      if (!passwordValidation.isValid) {
+        setPasswordErrors(passwordValidation.errors);
+        return;
+      }
 
       const result = await createAdminUser(
         data.email, 
@@ -62,14 +69,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       );
       
       form.reset();
+      setPasswordErrors([]);
       
       // Só atualiza a lista e fecha o diálogo se realmente foi criado um novo usuário
-      // Se o usuário já existia, mantém o diálogo aberto para que o usuário possa tentar outro email
       if (result && !result.existed) {
         setTimeout(() => onSuccess(), 500);
       }
     } catch (error) {
-      console.error("Erro ao adicionar usuário:", error);
+      // O erro já foi sanitizado e exibido no hook
     } finally {
       setIsSubmitting(false);
     }
@@ -130,15 +137,28 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Senha (opcional)</FormLabel>
+              <FormLabel>Senha*</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
-                  placeholder="Deixe em branco para gerar uma senha aleatória" 
-                  {...field} 
+                  placeholder="Senha segura (obrigatória)" 
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(handlePasswordChange(e.target.value));
+                  }}
                 />
               </FormControl>
               <FormMessage />
+              {passwordErrors.length > 0 && (
+                <div className="text-sm text-red-600 mt-2">
+                  <p className="font-medium">Critérios de senha:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {passwordErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </FormItem>
           )}
         />
@@ -150,7 +170,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || passwordErrors.length > 0}>
             {isSubmitting ? "Adicionando..." : "Adicionar Usuário"}
           </Button>
         </div>

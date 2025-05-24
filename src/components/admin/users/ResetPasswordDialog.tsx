@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { sanitizeError, logSecureError } from "@/utils/security";
 
 export interface ResetPasswordDialogProps {
   open: boolean;
@@ -50,10 +51,12 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      console.error("Erro ao enviar email de redefinição de senha:", error);
+      logSecureError(error, "Admin Password Reset");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro",
-        description: "Não foi possível enviar o email de redefinição de senha.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
     } finally {

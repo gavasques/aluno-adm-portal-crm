@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
 import { recoveryModeUtils } from "./useRecoveryMode";
+import { validatePassword, sanitizeError, logSecureError } from "@/utils/security";
 
 export const usePasswordReset = () => {
   const [password, setPassword] = useState("");
@@ -15,9 +16,11 @@ export const usePasswordReset = () => {
   const navigate = useNavigate();
   const { setRecoveryMode } = useAuth();
 
-  const validatePassword = () => {
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
+  const validateForm = () => {
+    const passwordValidation = validatePassword(password);
+    
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors.join(". "));
       return false;
     }
     
@@ -35,7 +38,7 @@ export const usePasswordReset = () => {
     setLoading(true);
     
     // Validate password
-    if (!validatePassword()) {
+    if (!validateForm()) {
       setLoading(false);
       return;
     }
@@ -70,12 +73,13 @@ export const usePasswordReset = () => {
         navigate("/");
       }, 2000);
     } catch (error: any) {
-      console.error("Erro ao redefinir senha:", error);
-      setError(error.message || "Ocorreu um erro ao redefinir a senha. Tente novamente.");
+      logSecureError(error, "Password Reset");
+      const sanitizedMessage = sanitizeError(error);
+      setError(sanitizedMessage);
       
       toast({
         title: "Erro ao atualizar senha",
-        description: error.message || "Ocorreu um erro ao atualizar sua senha. Tente novamente.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
     } finally {

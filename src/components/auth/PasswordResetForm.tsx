@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Lock } from "lucide-react";
 import { GridBackground } from "@/components/ui/grid-background";
 import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
+import { validatePassword } from "@/utils/security";
+import { useState } from "react";
 
 export const PasswordResetForm: React.FC = () => {
   const {
@@ -16,6 +18,16 @@ export const PasswordResetForm: React.FC = () => {
     loading,
     handleResetPassword
   } = usePasswordReset();
+
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+    const validation = validatePassword(newPassword);
+    setPasswordErrors(validation.errors);
+  };
+
+  const isFormValid = passwordErrors.length === 0 && password === confirmPassword && password.length > 0;
 
   return (
     <div className="relative min-h-screen">
@@ -41,7 +53,7 @@ export const PasswordResetForm: React.FC = () => {
                     placeholder="Nova senha" 
                     className="pl-10 bg-gray-950/50 border-gray-800"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     required
                     disabled={loading}
                   />
@@ -60,14 +72,29 @@ export const PasswordResetForm: React.FC = () => {
                 </div>
               </div>
               
+              {passwordErrors.length > 0 && (
+                <div className="text-sm text-red-400 bg-red-900/20 p-3 rounded border border-red-800">
+                  <p className="font-medium mb-2">Critérios de senha:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {passwordErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {password !== confirmPassword && confirmPassword.length > 0 && (
+                <p className="text-red-400 text-sm">As senhas não coincidem</p>
+              )}
+              
               {error && (
-                <p className="text-red-500 text-sm">{error}</p>
+                <p className="text-red-400 text-sm">{error}</p>
               )}
               
               <Button 
                 type="submit" 
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={loading}
+                disabled={loading || !isFormValid}
               >
                 {loading ? "Processando..." : "Redefinir Senha"}
               </Button>

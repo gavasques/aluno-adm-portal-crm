@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeError, logSecureError } from "@/utils/security";
 
 const userInviteSchema = z.object({
   name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
@@ -49,7 +50,7 @@ const UserInviteForm: React.FC<UserInviteFormProps> = ({ onSuccess, onCancel }) 
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
-      console.log("Enviando convite:", data);
+      logSecureError({ ...data, role: data.role }, "User Invite");
 
       // Chamar a edge function para convidar um novo usuário
       const { data: response, error } = await supabase.functions.invoke('list-users', {
@@ -63,13 +64,13 @@ const UserInviteForm: React.FC<UserInviteFormProps> = ({ onSuccess, onCancel }) 
       });
 
       if (error) {
-        console.error("Erro na chamada da função:", error);
-        throw new Error(error.message || "Erro ao enviar convite");
+        logSecureError(error, "User Invite - Function Error");
+        throw new Error(sanitizeError(error));
       }
       
       if (response && response.error) {
-        console.error("Erro retornado pela função:", response.error);
-        throw new Error(response.error);
+        logSecureError(response.error, "User Invite - Response Error");
+        throw new Error(sanitizeError(response.error));
       }
       
       let message = "Convite enviado com sucesso";
@@ -90,11 +91,13 @@ const UserInviteForm: React.FC<UserInviteFormProps> = ({ onSuccess, onCancel }) 
       // Garantir que a lista seja atualizada após o convite ser enviado
       setTimeout(() => onSuccess(), 500);
       
-    } catch (error) {
-      console.error("Erro ao enviar convite:", error);
+    } catch (error: any) {
+      logSecureError(error, "User Invite - Submit");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível enviar o convite. Tente novamente.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
     } finally {
