@@ -8,9 +8,11 @@ export const useMySuppliers = () => {
     suppliers,
     loading,
     error,
+    retryCount,
     createSupplier,
     updateSupplier,
-    deleteSupplier
+    deleteSupplier,
+    refreshSuppliers
   } = useSupabaseMySuppliers();
 
   const [selectedSupplier, setSelectedSupplier] = useState<MySupplier | null>(null);
@@ -80,6 +82,8 @@ export const useMySuppliers = () => {
       if (newSupplier) {
         setShowForm(false);
       }
+    } catch (err) {
+      console.error('Error in handleSubmit:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -90,14 +94,27 @@ export const useMySuppliers = () => {
   };
   
   const handleDeleteSupplier = async (id: string) => {
-    await deleteSupplier(id);
+    try {
+      await deleteSupplier(id);
+    } catch (err) {
+      console.error('Error in handleDeleteSupplier:', err);
+    }
   };
 
   const handleUpdateSupplier = async (updatedSupplier: MySupplier) => {
-    const result = await updateSupplier(updatedSupplier.id, updatedSupplier);
-    if (result) {
-      setSelectedSupplier(result);
+    try {
+      const result = await updateSupplier(updatedSupplier.id, updatedSupplier);
+      if (result) {
+        setSelectedSupplier(result);
+      }
+    } catch (err) {
+      console.error('Error in handleUpdateSupplier:', err);
     }
+  };
+
+  const handleRetry = () => {
+    console.log('Manual retry requested');
+    refreshSuppliers();
   };
   
   // Função para limpar os filtros
@@ -117,6 +134,7 @@ export const useMySuppliers = () => {
     isSubmitting,
     loading,
     error,
+    retryCount,
     nameFilter,
     setNameFilter,
     cnpjFilter,
@@ -133,6 +151,7 @@ export const useMySuppliers = () => {
     handleCancel,
     handleDeleteSupplier,
     handleUpdateSupplier,
+    handleRetry,
     clearFilters
   };
 };

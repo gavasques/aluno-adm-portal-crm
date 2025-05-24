@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, RefreshCw } from "lucide-react";
 
 const MySuppliers = () => {
   const {
@@ -22,6 +22,7 @@ const MySuppliers = () => {
     isSubmitting,
     loading,
     error,
+    retryCount,
     sortField,
     sortDirection,
     handleSort,
@@ -29,7 +30,8 @@ const MySuppliers = () => {
     handleDeleteSupplier,
     handleSubmit,
     handleCancel,
-    handleUpdateSupplier
+    handleUpdateSupplier,
+    handleRetry
   } = useMySuppliers();
 
   // Loading state
@@ -65,7 +67,7 @@ const MySuppliers = () => {
     );
   }
 
-  // Error state
+  // Error state with detailed information and retry option
   if (error) {
     return (
       <StudentRouteGuard requiredMenuKey="my-suppliers">
@@ -81,11 +83,44 @@ const MySuppliers = () => {
           
           <Card className="border-red-200 bg-red-50">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 text-red-700">
-                <AlertCircle className="h-6 w-6" />
-                <div>
-                  <h3 className="font-semibold">Erro ao carregar fornecedores</h3>
-                  <p className="text-sm text-red-600">{error}</p>
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-6 w-6 text-red-600 mt-1 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-800 mb-2">Erro ao carregar fornecedores</h3>
+                  <p className="text-sm text-red-700 mb-4">{error}</p>
+                  
+                  {retryCount > 0 && (
+                    <p className="text-xs text-red-600 mb-4">
+                      Tentativas de reconexão: {retryCount}/3
+                    </p>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleRetry}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      size="sm"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Tentar Novamente
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => window.location.reload()}
+                      variant="outline"
+                      className="border-red-300 text-red-700 hover:bg-red-100"
+                      size="sm"
+                    >
+                      Recarregar Página
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-red-100 rounded-md">
+                    <p className="text-xs text-red-700">
+                      <strong>Dica:</strong> Se o problema persistir, verifique sua conexão com a internet 
+                      ou entre em contato com o suporte.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
