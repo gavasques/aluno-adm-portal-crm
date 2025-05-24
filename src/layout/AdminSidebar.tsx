@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -141,7 +140,7 @@ const AdminSidebar = () => {
       <SidebarHeader className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           <img 
-            src="/lovable-uploads/3fc67bb1-a7fb-4da7-8051-c66aaa7393f6.png"
+            src="/lovable-uploads/046b45b2-fcbe-4a91-a015-859f40a6ed5d.png"
             alt="Logo" 
             className="h-8"
           />
