@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,7 +16,6 @@ interface PermissionGroupMenusManagerProps {
   onClose: () => void;
 }
 
-// Templates predefinidos de menus
 const MENU_TEMPLATES = {
   admin: {
     name: "Admin Completo",
@@ -35,7 +34,6 @@ const MENU_TEMPLATES = {
   }
 };
 
-// Categorização dos menus
 const MENU_CATEGORIES = {
   admin: {
     name: "Administração",
@@ -59,70 +57,68 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
   groupName,
   onClose,
 }) => {
-  console.log("DEBUG - PermissionGroupMenusManager: Renderizando para grupo", groupId);
-  
   const { systemMenus, isLoading: menusLoading } = useSystemMenus();
-  const { getPermissionGroupMenus, updatePermissionGroup } = usePermissionGroups();
+  const { updatePermissionGroup } = usePermissionGroups();
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    const loadGroupMenus = async () => {
-      if (!groupId) return;
+  // Memoizar a função de busca de menus do grupo
+  const loadGroupMenus = useCallback(async () => {
+    if (!groupId) return;
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("permission_group_menus")
+        .select("menu_key")
+        .eq("permission_group_id", groupId);
+
+      if (error) throw error;
       
-      try {
-        console.log("DEBUG - PermissionGroupMenusManager: Carregando menus do grupo", groupId);
-        setIsLoading(true);
-        const menus = await getPermissionGroupMenus(groupId);
-        console.log("DEBUG - PermissionGroupMenusManager: Menus carregados:", menus.length);
-        setSelectedMenus(menus.map(m => m.menu_key));
-      } catch (error) {
-        console.error("Erro ao carregar menus do grupo:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os menus do grupo",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      setSelectedMenus(data?.map(m => m.menu_key) || []);
+    } catch (error) {
+      console.error("Erro ao carregar menus do grupo:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os menus do grupo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [groupId]);
 
+  useEffect(() => {
     loadGroupMenus();
-  }, [groupId, getPermissionGroupMenus]);
+  }, [loadGroupMenus]);
 
-  const handleMenuToggle = (menuKey: string) => {
-    console.log("DEBUG - PermissionGroupMenusManager: Toggle menu", menuKey);
+  const handleMenuToggle = useCallback((menuKey: string) => {
     setSelectedMenus(prev => 
       prev.includes(menuKey)
         ? prev.filter(m => m !== menuKey)
         : [...prev, menuKey]
     );
-  };
+  }, []);
 
-  const handleSelectAll = () => {
-    console.log("DEBUG - PermissionGroupMenusManager: Selecionando todos os menus");
+  const handleSelectAll = useCallback(() => {
     setSelectedMenus(systemMenus.map(menu => menu.menu_key));
-  };
+  }, [systemMenus]);
 
-  const handleClearAll = () => {
-    console.log("DEBUG - PermissionGroupMenusManager: Limpando seleção");
+  const handleClearAll = useCallback(() => {
     setSelectedMenus([]);
-  };
+  }, []);
 
-  const handleApplyTemplate = (templateKey: keyof typeof MENU_TEMPLATES) => {
-    console.log("DEBUG - PermissionGroupMenusManager: Aplicando template", templateKey);
+  const handleApplyTemplate = useCallback((templateKey: keyof typeof MENU_TEMPLATES) => {
     const template = MENU_TEMPLATES[templateKey];
     const availableMenus = template.menus.filter(menuKey => 
       systemMenus.some(menu => menu.menu_key === menuKey)
     );
     setSelectedMenus(availableMenus);
-  };
+  }, [systemMenus]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
-      console.log("DEBUG - PermissionGroupMenusManager: Salvando menus para grupo", groupId);
       setIsSaving(true);
       
       await updatePermissionGroup({
@@ -150,19 +146,18 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [groupId, groupName, selectedMenus, updatePermissionGroup, onClose]);
 
-  const getMenuCategory = (menuKey: string) => {
+  const getMenuCategory = useCallback((menuKey: string) => {
     for (const [categoryKey, category] of Object.entries(MENU_CATEGORIES)) {
       if (category.menus.includes(menuKey)) {
         return { key: categoryKey, ...category };
       }
     }
     return { key: "general", ...MENU_CATEGORIES.general };
-  };
+  }, []);
 
   const organizedMenus = useMemo(() => {
-    console.log("DEBUG - PermissionGroupMenusManager: Organizando menus", systemMenus.length);
     return systemMenus.reduce((acc, menu) => {
       const category = getMenuCategory(menu.menu_key);
       if (!acc[category.key]) {
@@ -171,7 +166,7 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
       acc[category.key].menus.push(menu);
       return acc;
     }, {} as Record<string, { category: any; menus: any[] }>);
-  }, [systemMenus]);
+  }, [systemMenus, getMenuCategory]);
 
   if (isLoading || menusLoading) {
     return (

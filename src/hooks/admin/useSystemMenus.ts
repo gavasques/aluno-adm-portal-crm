@@ -18,7 +18,6 @@ export const useSystemMenus = () => {
   useEffect(() => {
     const fetchSystemMenus = async () => {
       try {
-        console.log("DEBUG - useSystemMenus: Iniciando busca de menus do sistema");
         setIsLoading(true);
         setError(null);
         
@@ -28,11 +27,9 @@ export const useSystemMenus = () => {
           .order("display_name");
           
         if (error) {
-          console.error("DEBUG - useSystemMenus: Erro na busca:", error);
           throw error;
         }
         
-        console.log("DEBUG - useSystemMenus: Menus carregados:", data?.length || 0);
         setSystemMenus(data || []);
       } catch (err: any) {
         console.error("Erro ao carregar menus do sistema:", err);
@@ -43,10 +40,9 @@ export const useSystemMenus = () => {
     };
 
     fetchSystemMenus();
-  }, []); // Dependências vazias para executar apenas uma vez
+  }, []);
 
   const refreshSystemMenus = async () => {
-    console.log("DEBUG - useSystemMenus: Refresh solicitado");
     try {
       setIsLoading(true);
       setError(null);

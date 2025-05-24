@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -18,12 +18,10 @@ export const usePermissionGroups = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPermissionGroups = async () => {
+  const fetchPermissionGroups = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-
-      console.log("Buscando grupos de permissão...");
 
       const { data, error } = await supabase
         .from("permission_groups")
@@ -31,17 +29,14 @@ export const usePermissionGroups = () => {
         .order("name");
 
       if (error) {
-        console.error("Erro ao buscar grupos de permissão:", error);
         throw error;
       }
 
-      console.log("Grupos de permissão carregados:", data);
       setPermissionGroups(data || []);
     } catch (err: any) {
       console.error("Erro ao carregar grupos de permissão:", err);
       setError(err.message || "Erro ao carregar grupos de permissão");
       
-      // Mostrar toast apenas em caso de erro crítico
       if (err.message?.includes("permission denied") || err.message?.includes("RLS")) {
         toast({
           title: "Erro de permissão",
@@ -52,9 +47,9 @@ export const usePermissionGroups = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const createPermissionGroup = async (groupData: {
+  const createPermissionGroup = useCallback(async (groupData: {
     name: string;
     description?: string;
     is_admin: boolean;
@@ -62,8 +57,6 @@ export const usePermissionGroups = () => {
     menu_keys: string[];
   }) => {
     try {
-      console.log("Criando grupo de permissão:", groupData);
-
       const { data, error } = await supabase
         .from("permission_groups")
         .insert({
@@ -76,13 +69,9 @@ export const usePermissionGroups = () => {
         .single();
 
       if (error) {
-        console.error("Erro ao criar grupo de permissão:", error);
         throw error;
       }
 
-      console.log("Grupo de permissão criado:", data);
-
-      // Se houver menus para associar
       if (groupData.menu_keys.length > 0) {
         const menuAssociations = groupData.menu_keys.map(menuKey => ({
           permission_group_id: data.id,
@@ -95,7 +84,6 @@ export const usePermissionGroups = () => {
 
         if (menuError) {
           console.error("Erro ao associar menus:", menuError);
-          // Não falhar completamente, apenas avisar
         }
       }
 
@@ -114,9 +102,9 @@ export const usePermissionGroups = () => {
       });
       throw error;
     }
-  };
+  }, []);
 
-  const updatePermissionGroup = async (groupData: {
+  const updatePermissionGroup = useCallback(async (groupData: {
     id: string;
     name: string;
     description?: string;
@@ -125,8 +113,6 @@ export const usePermissionGroups = () => {
     menu_keys: string[];
   }) => {
     try {
-      console.log("Atualizando grupo de permissão:", groupData);
-
       const { data, error } = await supabase
         .from("permission_groups")
         .update({
@@ -141,18 +127,14 @@ export const usePermissionGroups = () => {
         .single();
 
       if (error) {
-        console.error("Erro ao atualizar grupo de permissão:", error);
         throw error;
       }
 
-      // Atualizar associações de menus
-      // Primeiro, remover associações existentes
       await supabase
         .from("permission_group_menus")
         .delete()
         .eq("permission_group_id", groupData.id);
 
-      // Depois, adicionar novas associações
       if (groupData.menu_keys.length > 0) {
         const menuAssociations = groupData.menu_keys.map(menuKey => ({
           permission_group_id: groupData.id,
@@ -167,8 +149,6 @@ export const usePermissionGroups = () => {
           console.error("Erro ao atualizar menus:", menuError);
         }
       }
-
-      console.log("Grupo de permissão atualizado:", data);
 
       toast({
         title: "Grupo atualizado",
@@ -185,30 +165,23 @@ export const usePermissionGroups = () => {
       });
       throw error;
     }
-  };
+  }, []);
 
-  const deletePermissionGroup = async (groupId: string) => {
+  const deletePermissionGroup = useCallback(async (groupId: string) => {
     try {
-      console.log("Excluindo grupo de permissão:", groupId);
-
-      // Primeiro, remover associações de menus
       await supabase
         .from("permission_group_menus")
         .delete()
         .eq("permission_group_id", groupId);
 
-      // Depois, excluir o grupo
       const { error } = await supabase
         .from("permission_groups")
         .delete()
         .eq("id", groupId);
 
       if (error) {
-        console.error("Erro ao excluir grupo de permissão:", error);
         throw error;
       }
-
-      console.log("Grupo de permissão excluído com sucesso");
 
       toast({
         title: "Grupo excluído",
@@ -223,67 +196,54 @@ export const usePermissionGroups = () => {
       });
       throw error;
     }
-  };
+  }, []);
 
-  const getPermissionGroupMenus = async (groupId: string) => {
+  const getPermissionGroupMenus = useCallback(async (groupId: string) => {
     try {
-      console.log("Buscando menus do grupo:", groupId);
-
       const { data, error } = await supabase
         .from("permission_group_menus")
         .select("menu_key")
         .eq("permission_group_id", groupId);
 
       if (error) {
-        console.error("Erro ao buscar menus do grupo:", error);
         throw error;
       }
 
-      console.log("Menus do grupo carregados:", data);
       return data || [];
     } catch (error: any) {
       console.error("Erro ao carregar menus do grupo:", error);
       throw error;
     }
-  };
+  }, []);
 
-  const getPermissionGroupUsers = async (groupId: string) => {
+  const getPermissionGroupUsers = useCallback(async (groupId: string) => {
     try {
-      console.log("Buscando usuários do grupo:", groupId);
-
       const { data, error } = await supabase
         .from("profiles")
         .select("id, name, email, role")
         .eq("permission_group_id", groupId);
 
       if (error) {
-        console.error("Erro ao buscar usuários do grupo:", error);
         throw error;
       }
 
-      console.log("Usuários do grupo carregados:", data);
       return data || [];
     } catch (error: any) {
       console.error("Erro ao carregar usuários do grupo:", error);
       throw error;
     }
-  };
+  }, []);
 
-  const removeUserFromGroup = async (userId: string) => {
+  const removeUserFromGroup = useCallback(async (userId: string) => {
     try {
-      console.log("Removendo usuário do grupo:", userId);
-
       const { error } = await supabase
         .from("profiles")
         .update({ permission_group_id: null })
         .eq("id", userId);
 
       if (error) {
-        console.error("Erro ao remover usuário do grupo:", error);
         throw error;
       }
-
-      console.log("Usuário removido do grupo com sucesso");
 
       toast({
         title: "Usuário removido",
@@ -298,15 +258,15 @@ export const usePermissionGroups = () => {
       });
       throw error;
     }
-  };
+  }, []);
 
-  const refreshPermissionGroups = () => {
+  const refreshPermissionGroups = useCallback(() => {
     fetchPermissionGroups();
-  };
+  }, [fetchPermissionGroups]);
 
   useEffect(() => {
     fetchPermissionGroups();
-  }, []);
+  }, [fetchPermissionGroups]);
 
   return {
     permissionGroups,
