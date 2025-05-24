@@ -1,5 +1,5 @@
 
-import { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { useSession } from "./useSession";
 import { useBasicAuth } from "./useBasicAuth";
@@ -33,7 +33,7 @@ interface AuthContextProps {
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user, session, loading, isInRecoveryMode, setRecoveryMode } = useSession();
   const { signIn, signUp, signOut, resetPassword, updateUserPassword, sendMagicLink, createAdminUser } = useBasicAuth();
   const { signInWithGoogle, linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(user);

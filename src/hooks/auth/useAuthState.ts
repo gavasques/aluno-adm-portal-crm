@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthEventHandler } from "./useAuthEventHandler";
 
@@ -9,7 +9,7 @@ import { useAuthEventHandler } from "./useAuthEventHandler";
 export const useAuthState = () => {
   const { user, session, loading, handleAuthStateChange } = useAuthEventHandler();
   
-  useEffect(() => {
+  React.useEffect(() => {
     // Configurar o listener de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {

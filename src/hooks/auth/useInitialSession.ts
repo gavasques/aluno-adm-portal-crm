@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
 import { recoveryModeUtils } from "./useRecoveryMode";
@@ -16,7 +15,7 @@ export const useInitialSession = (
   const isLoginPage = location.pathname === "/";
   const isProtectedRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/student");
 
-  useEffect(() => {
+  React.useEffect(() => {
     const checkSession = async () => {
       setLoading(true);
       
