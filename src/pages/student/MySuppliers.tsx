@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AnimatePresence } from "framer-motion";
 import { MySuppliersListView } from "@/components/student/my-suppliers/MySuppliersList";
@@ -68,7 +67,7 @@ const MySuppliers = () => {
 
   return (
     <StudentRouteGuard requiredMenuKey="my-suppliers">
-      <div className="container mx-auto py-6 space-y-8">
+      <div className="w-full space-y-8">
         <AnimatePresence mode="wait">
           {!selectedSupplier ? (
             <MySuppliersListView

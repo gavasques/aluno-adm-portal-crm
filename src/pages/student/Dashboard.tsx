@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const StudentDashboard = () => {
   return (
-    <div className="container mx-auto py-6">
+    <div className="w-full">
       <DashboardHeader />
       <ResourceCards />
       

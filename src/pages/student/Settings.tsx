@@ -102,7 +102,7 @@ const Settings = () => {
   const isPasswordFormValid = passwordErrors.length === 0 && password === confirmPassword && password.length > 0;
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="w-full space-y-8">
       <h1 className="text-3xl font-bold mb-6">Configurações</h1>
       
       <Tabs defaultValue="profile" className="w-full">
