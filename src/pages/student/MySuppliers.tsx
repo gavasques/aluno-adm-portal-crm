@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierForm } from "@/components/student/my-suppliers/SupplierForm";
@@ -10,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, AlertCircle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Plus, AlertCircle, RefreshCw, Wifi, WifiOff, CircuitBreaker } from "lucide-react";
 
 const MySuppliers = () => {
   const {
@@ -67,8 +67,23 @@ const MySuppliers = () => {
     );
   }
 
-  // Error state with detailed information and retry option
+  // Error state with enhanced information
   if (error) {
+    const isNetworkError = error.includes('conexão') || error.includes('internet');
+    const isCircuitBreakerError = error.includes('Muitas tentativas');
+    const isAuthError = error.includes('autenticado');
+    
+    let errorIcon = AlertCircle;
+    let errorColor = 'red';
+    
+    if (isNetworkError) {
+      errorIcon = WifiOff;
+      errorColor = 'orange';
+    } else if (isCircuitBreakerError) {
+      errorIcon = CircuitBreaker;
+      errorColor = 'yellow';
+    }
+    
     return (
       <StudentRouteGuard requiredMenuKey="my-suppliers">
         <div className="container mx-auto py-6 space-y-8">
@@ -81,50 +96,62 @@ const MySuppliers = () => {
             </div>
           </div>
           
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-6 w-6 text-red-600 mt-1 flex-shrink-0" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-red-800 mb-2">Erro ao carregar fornecedores</h3>
-                  <p className="text-sm text-red-700 mb-4">{error}</p>
-                  
-                  {retryCount > 0 && (
-                    <p className="text-xs text-red-600 mb-4">
-                      Tentativas de reconexão: {retryCount}/3
-                    </p>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleRetry}
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                      size="sm"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Tentar Novamente
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => window.location.reload()}
-                      variant="outline"
-                      className="border-red-300 text-red-700 hover:bg-red-100"
-                      size="sm"
-                    >
-                      Recarregar Página
-                    </Button>
-                  </div>
-
-                  <div className="mt-4 p-3 bg-red-100 rounded-md">
-                    <p className="text-xs text-red-700">
-                      <strong>Dica:</strong> Se o problema persistir, verifique sua conexão com a internet 
-                      ou entre em contato com o suporte.
-                    </p>
-                  </div>
-                </div>
+          <Alert variant={errorColor === 'red' ? 'destructive' : 'warning'} className={`border-${errorColor}-200 bg-${errorColor}-50`}>
+            <errorIcon.type className={`h-6 w-6 text-${errorColor}-600`} />
+            <AlertTitle className={`text-${errorColor}-800 font-semibold`}>
+              {isNetworkError ? 'Problema de Conexão' : 
+               isCircuitBreakerError ? 'Sistema Temporariamente Indisponível' :
+               isAuthError ? 'Erro de Autenticação' : 'Erro ao Carregar Fornecedores'}
+            </AlertTitle>
+            <AlertDescription className={`text-${errorColor}-700`}>
+              <p className="mb-4">{error}</p>
+              
+              {retryCount > 0 && (
+                <p className="text-xs mb-4">
+                  Tentativas realizadas: {retryCount}
+                </p>
+              )}
+              
+              <div className="flex gap-2 mb-4">
+                {!isCircuitBreakerError && (
+                  <Button 
+                    onClick={handleRetry}
+                    className={`bg-${errorColor}-600 hover:bg-${errorColor}-700 text-white`}
+                    size="sm"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Tentar Novamente
+                  </Button>
+                )}
+                
+                <Button 
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  className={`border-${errorColor}-300 text-${errorColor}-700 hover:bg-${errorColor}-100`}
+                  size="sm"
+                >
+                  Recarregar Página
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className={`p-3 bg-${errorColor}-100 rounded-md`}>
+                <p className={`text-xs text-${errorColor}-700`}>
+                  <strong>
+                    {isNetworkError ? 'Dica de Conectividade:' :
+                     isCircuitBreakerError ? 'Proteção Ativa:' :
+                     'Solução:'}
+                  </strong>{' '}
+                  {isNetworkError ? 
+                    'Verifique sua conexão com a internet e tente novamente.' :
+                   isCircuitBreakerError ?
+                    'O sistema detectou muitos erros e pausou as tentativas para proteger o servidor. Aguarde alguns minutos.' :
+                   isAuthError ?
+                    'Faça logout e login novamente para restaurar sua sessão.' :
+                    'Se o problema persistir, entre em contato com o suporte.'}
+                </p>
+              </div>
+            </AlertDescription>
+          </Alert>
         </div>
       </StudentRouteGuard>
     );
