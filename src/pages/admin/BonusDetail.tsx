@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -22,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bonus, BonusType, AccessPeriod } from "./Bonus";
+import { Bonus, BonusType, AccessPeriod } from "@/types/bonus.types";
 
 // Interface para comentários
 interface Comment {
