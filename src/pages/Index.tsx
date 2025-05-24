@@ -1,12 +1,14 @@
-
 import { AuthTabs } from "@/components/ui/auth-tabs";
 import { useAuth } from "@/hooks/auth";
 import { Navigate } from "react-router-dom";
+import { ConnectionTest } from "@/components/debug/ConnectionTest";
 
 const RECOVERY_MODE_KEY = "supabase_recovery_mode";
 
 const Index = () => {
   const { user, loading, isInRecoveryMode } = useAuth();
+
+  console.log("Index page - User:", user, "Loading:", loading);
 
   if (loading) {
     return (
@@ -35,7 +37,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <AuthTabs />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <ConnectionTest />
+        </div>
+        <AuthTabs />
+      </div>
     </div>
   );
 };
