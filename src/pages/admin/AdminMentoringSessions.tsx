@@ -1,17 +1,37 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Search, Filter, Download, Plus, Clock, Video } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  Calendar, 
+  Search, 
+  Filter, 
+  Plus, 
+  Clock, 
+  Video, 
+  Edit, 
+  Trash2, 
+  Copy,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import SessionForm from '@/components/admin/mentoring/SessionForm';
 
 const AdminMentoringSessions = () => {
   const { sessions } = useMentoring();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -23,6 +43,73 @@ const AdminMentoringSessions = () => {
     }
   };
 
+  const filteredSessions = sessions.filter(session => {
+    const matchesSearch = !searchTerm || 
+      session.title.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || session.status === statusFilter;
+    const matchesType = !typeFilter || session.type === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const handleCreateSession = (data: any) => {
+    const sessionData = {
+      ...data,
+      scheduledDate: `${data.scheduledDate}T${data.scheduledTime}:00.000Z`
+    };
+    console.log('Creating session:', sessionData);
+    setShowForm(false);
+  };
+
+  const handleEditSession = (data: any) => {
+    const sessionData = {
+      ...data,
+      scheduledDate: `${data.scheduledDate}T${data.scheduledTime}:00.000Z`
+    };
+    console.log('Editing session:', sessionData);
+    setEditingSession(null);
+  };
+
+  const handleDeleteSession = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta sessão?')) {
+      console.log('Deleting session:', id);
+    }
+  };
+
+  const handleStatusChange = (id: string, newStatus: string) => {
+    console.log(`Changing session ${id} status to:`, newStatus);
+  };
+
+  const handleBulkAction = (action: string) => {
+    console.log(`Bulk action ${action} for:`, selectedSessions);
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedSessions(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const selectAll = () => {
+    setSelectedSessions(
+      selectedSessions.length === filteredSessions.length 
+        ? [] 
+        : filteredSessions.map(s => s.id)
+    );
+  };
+
+  const prepareEditData = (session: any) => {
+    const scheduledDate = new Date(session.scheduledDate);
+    return {
+      ...session,
+      scheduledDate: format(scheduledDate, 'yyyy-MM-dd'),
+      scheduledTime: format(scheduledDate, 'HH:mm')
+    };
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -31,10 +118,81 @@ const AdminMentoringSessions = () => {
           <h1 className="text-3xl font-bold text-gray-900">Gestão de Sessões</h1>
           <p className="text-gray-600 mt-1">Agende e gerencie sessões de mentoria</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Sessão
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Calendar className="h-4 w-4 mr-2" />
+            Calendário
+          </Button>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Sessão
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total de Sessões</p>
+                <p className="text-2xl font-bold text-gray-900">{sessions.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Calendar className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Agendadas</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {sessions.filter(s => s.status === 'agendada').length}
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Clock className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Realizadas</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {sessions.filter(s => s.status === 'realizada').length}
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Canceladas</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {sessions.filter(s => s.status === 'cancelada').length}
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-lg">
+                <XCircle className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -46,24 +204,28 @@ const AdminMentoringSessions = () => {
               <Input
                 placeholder="Buscar por título, aluno..."
                 className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Todos os status</SelectItem>
                 <SelectItem value="agendada">Agendada</SelectItem>
                 <SelectItem value="realizada">Realizada</SelectItem>
                 <SelectItem value="cancelada">Cancelada</SelectItem>
                 <SelectItem value="reagendada">Reagendada</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Todos os tipos</SelectItem>
                 <SelectItem value="individual">Individual</SelectItem>
                 <SelectItem value="grupo">Grupo</SelectItem>
               </SelectContent>
@@ -76,12 +238,36 @@ const AdminMentoringSessions = () => {
         </CardContent>
       </Card>
 
+      {/* Bulk Actions */}
+      {selectedSessions.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">
+                {selectedSessions.length} sessão(ões) selecionada(s)
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleBulkAction('cancel')}>
+                  Cancelar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleBulkAction('reschedule')}>
+                  Reagendar
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => handleBulkAction('delete')}>
+                  Excluir
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Sessions Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Sessões ({sessions.length})
+            Sessões ({filteredSessions.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -89,6 +275,13 @@ const AdminMentoringSessions = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
+                  <th className="text-left py-3 px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedSessions.length === filteredSessions.length && filteredSessions.length > 0}
+                      onChange={selectAll}
+                    />
+                  </th>
                   <th className="text-left py-3 px-4 font-medium">Título</th>
                   <th className="text-left py-3 px-4 font-medium">Tipo</th>
                   <th className="text-left py-3 px-4 font-medium">Data/Hora</th>
@@ -99,8 +292,15 @@ const AdminMentoringSessions = () => {
                 </tr>
               </thead>
               <tbody>
-                {sessions.map((session) => (
+                {filteredSessions.map((session) => (
                   <tr key={session.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessions.includes(session.id)}
+                        onChange={() => toggleSelection(session.id)}
+                      />
+                    </td>
                     <td className="py-3 px-4">
                       <div className="font-medium">{session.title}</div>
                       <div className="text-sm text-gray-500">ID: {session.enrollmentId}</div>
@@ -123,30 +323,57 @@ const AdminMentoringSessions = () => {
                       {session.durationMinutes} min
                     </td>
                     <td className="py-3 px-4">
-                      <Badge className={getStatusColor(session.status)}>
-                        {session.status}
-                      </Badge>
+                      <Select
+                        value={session.status}
+                        onValueChange={(value) => handleStatusChange(session.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <Badge className={getStatusColor(session.status)}>
+                            {session.status}
+                          </Badge>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="agendada">Agendada</SelectItem>
+                          <SelectItem value="realizada">Realizada</SelectItem>
+                          <SelectItem value="cancelada">Cancelada</SelectItem>
+                          <SelectItem value="reagendada">Reagendada</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         {session.accessLink && (
-                          <Button variant="ghost" size="sm">
-                            <Video className="h-3 w-3 mr-1" />
-                            Acesso
+                          <Button variant="ghost" size="sm" title="Link de acesso">
+                            <Video className="h-3 w-3" />
                           </Button>
                         )}
                         {session.recordingLink && (
-                          <Button variant="ghost" size="sm">
-                            <Video className="h-3 w-3 mr-1" />
-                            Gravação
+                          <Button variant="ghost" size="sm" title="Gravação">
+                            <Video className="h-3 w-3" />
                           </Button>
                         )}
+                        <Button variant="ghost" size="sm" title="Copiar link">
+                          <Copy className="h-3 w-3" />
+                        </Button>
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <Button variant="ghost" size="sm">
-                        Editar
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingSession(session)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteSession(session.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -155,6 +382,30 @@ const AdminMentoringSessions = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create/Edit Form Dialog */}
+      <Dialog open={showForm || !!editingSession} onOpenChange={(open) => {
+        if (!open) {
+          setShowForm(false);
+          setEditingSession(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingSession ? 'Editar Sessão' : 'Nova Sessão'}
+            </DialogTitle>
+          </DialogHeader>
+          <SessionForm
+            onSubmit={editingSession ? handleEditSession : handleCreateSession}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingSession(null);
+            }}
+            initialData={editingSession ? prepareEditData(editingSession) : undefined}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

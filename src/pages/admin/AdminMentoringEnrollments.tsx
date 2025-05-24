@@ -1,15 +1,34 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, Filter, Download, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  Users, 
+  Search, 
+  Filter, 
+  Download, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye,
+  UserPlus,
+  Calendar
+} from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
+import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 
 const AdminMentoringEnrollments = () => {
   const { enrollments } = useMentoring();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingEnrollment, setEditingEnrollment] = useState<any>(null);
+  const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -21,6 +40,53 @@ const AdminMentoringEnrollments = () => {
     }
   };
 
+  const filteredEnrollments = enrollments.filter(enrollment => {
+    const matchesSearch = !searchTerm || 
+      enrollment.mentoring.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      enrollment.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || enrollment.status === statusFilter;
+    const matchesType = !typeFilter || enrollment.mentoring.type === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const handleCreateEnrollment = (data: any) => {
+    console.log('Creating enrollment:', data);
+    setShowForm(false);
+  };
+
+  const handleEditEnrollment = (data: any) => {
+    console.log('Editing enrollment:', data);
+    setEditingEnrollment(null);
+  };
+
+  const handleDeleteEnrollment = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta inscrição?')) {
+      console.log('Deleting enrollment:', id);
+    }
+  };
+
+  const handleBulkAction = (action: string) => {
+    console.log(`Bulk action ${action} for:`, selectedEnrollments);
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedEnrollments(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const selectAll = () => {
+    setSelectedEnrollments(
+      selectedEnrollments.length === filteredEnrollments.length 
+        ? [] 
+        : filteredEnrollments.map(e => e.id)
+    );
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -29,10 +95,81 @@ const AdminMentoringEnrollments = () => {
           <h1 className="text-3xl font-bold text-gray-900">Gestão de Inscrições</h1>
           <p className="text-gray-600 mt-1">Gerencie todas as inscrições de mentorias</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Inscrição
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Inscrição
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total de Inscrições</p>
+                <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Inscrições Ativas</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {enrollments.filter(e => e.status === 'ativa').length}
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <UserPlus className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Concluídas</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {enrollments.filter(e => e.status === 'concluida').length}
+                </p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Calendar className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Taxa de Conclusão</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {Math.round((enrollments.filter(e => e.status === 'concluida').length / enrollments.length) * 100)}%
+                </p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Users className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -42,26 +179,30 @@ const AdminMentoringEnrollments = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Buscar por aluno, mentoria..."
+                placeholder="Buscar por aluno, mentoria, mentor..."
                 className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Todos os status</SelectItem>
                 <SelectItem value="ativa">Ativa</SelectItem>
                 <SelectItem value="concluida">Concluída</SelectItem>
                 <SelectItem value="pausada">Pausada</SelectItem>
                 <SelectItem value="cancelada">Cancelada</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Todos os tipos</SelectItem>
                 <SelectItem value="Individual">Individual</SelectItem>
                 <SelectItem value="Grupo">Grupo</SelectItem>
                 <SelectItem value="Premium">Premium</SelectItem>
@@ -69,22 +210,42 @@ const AdminMentoringEnrollments = () => {
             </Select>
             <Button variant="outline">
               <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
+              Mais Filtros
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Bulk Actions */}
+      {selectedEnrollments.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">
+                {selectedEnrollments.length} inscrição(ões) selecionada(s)
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleBulkAction('pause')}>
+                  Pausar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleBulkAction('activate')}>
+                  Ativar
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => handleBulkAction('delete')}>
+                  Excluir
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Enrollments Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Inscrições ({enrollments.length})
+            Inscrições ({filteredEnrollments.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -92,6 +253,13 @@ const AdminMentoringEnrollments = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
+                  <th className="text-left py-3 px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedEnrollments.length === filteredEnrollments.length && filteredEnrollments.length > 0}
+                      onChange={selectAll}
+                    />
+                  </th>
                   <th className="text-left py-3 px-4 font-medium">Aluno</th>
                   <th className="text-left py-3 px-4 font-medium">Mentoria</th>
                   <th className="text-left py-3 px-4 font-medium">Tipo</th>
@@ -103,8 +271,15 @@ const AdminMentoringEnrollments = () => {
                 </tr>
               </thead>
               <tbody>
-                {enrollments.map((enrollment) => (
+                {filteredEnrollments.map((enrollment) => (
                   <tr key={enrollment.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedEnrollments.includes(enrollment.id)}
+                        onChange={() => toggleSelection(enrollment.id)}
+                      />
+                    </td>
                     <td className="py-3 px-4">
                       <div>
                         <div className="font-medium">Aluno {enrollment.studentId}</div>
@@ -126,6 +301,12 @@ const AdminMentoringEnrollments = () => {
                       <div className="text-sm">
                         {enrollment.sessionsUsed}/{enrollment.totalSessions} sessões
                       </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${(enrollment.sessionsUsed / enrollment.totalSessions) * 100}%` }}
+                        ></div>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600">
                       {new Date(enrollment.startDate).toLocaleDateString('pt-BR')}
@@ -134,9 +315,25 @@ const AdminMentoringEnrollments = () => {
                       {new Date(enrollment.endDate).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="py-3 px-4">
-                      <Button variant="ghost" size="sm">
-                        Ver Detalhes
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingEnrollment(enrollment)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteEnrollment(enrollment.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -145,6 +342,30 @@ const AdminMentoringEnrollments = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create/Edit Form Dialog */}
+      <Dialog open={showForm || !!editingEnrollment} onOpenChange={(open) => {
+        if (!open) {
+          setShowForm(false);
+          setEditingEnrollment(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingEnrollment ? 'Editar Inscrição' : 'Nova Inscrição'}
+            </DialogTitle>
+          </DialogHeader>
+          <EnrollmentForm
+            onSubmit={editingEnrollment ? handleEditEnrollment : handleCreateEnrollment}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingEnrollment(null);
+            }}
+            initialData={editingEnrollment}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
