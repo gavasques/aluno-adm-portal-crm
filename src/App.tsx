@@ -4,26 +4,17 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import Home from "./pages/Index";
-import Login from "./pages/Login";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/student/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminLayout from "./layout/AdminLayout";
 import StudentLayout from "./layout/StudentLayout";
 import StudentSuppliers from "./pages/student/Suppliers";
-import StudentSupplierDetail from "./pages/student/SupplierDetail";
 import MySuppliers from "./pages/student/MySuppliers";
-import MySupplierDetailView from "./pages/student/MySupplierDetailView";
 import StudentPartners from "./pages/student/Partners";
-import StudentPartnerDetail from "./pages/student/PartnerDetail";
 import StudentTools from "./pages/student/Tools";
-import StudentToolDetail from "./pages/student/ToolDetail";
 import StudentSettings from "./pages/student/Settings";
 import AdminSuppliers from "./pages/admin/Suppliers";
 import SupplierDetail from "./pages/admin/SupplierDetail";
-import AdminGeneral from "./pages/admin/AdminGeneral";
 import AdminPartners from "./pages/admin/Partners";
 import AdminTools from "./pages/admin/Tools";
 import AdminUsers from "./pages/admin/Users";
@@ -62,10 +53,6 @@ function App() {
         <Toaster />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -73,7 +60,6 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="fornecedores" element={<AdminSuppliers />} />
             <Route path="fornecedores/:id" element={<SupplierDetail />} />
-            <Route path="geral" element={<AdminGeneral />} />
             <Route path="parceiros" element={<AdminPartners />} />
             <Route path="ferramentas" element={<AdminTools />} />
             <Route path="usuarios" element={<AdminUsers />} />
@@ -103,13 +89,9 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="fornecedores" element={<StudentSuppliers />} />
-            <Route path="fornecedores/:id" element={<StudentSupplierDetail />} />
             <Route path="meus-fornecedores" element={<MySuppliers />} />
-            <Route path="meus-fornecedores/:id" element={<MySupplierDetailView />} />
             <Route path="parceiros" element={<StudentPartners />} />
-            <Route path="parceiros/:id" element={<StudentPartnerDetail />} />
             <Route path="ferramentas" element={<StudentTools />} />
-            <Route path="ferramentas/:id" element={<StudentToolDetail />} />
             <Route path="configuracoes" element={<StudentSettings />} />
             
             {/* Student Mentoring Routes */}
