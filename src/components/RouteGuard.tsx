@@ -39,8 +39,23 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   useEffect(() => {
     if (authLoading || permissionsLoading || hasRedirectedRef.current) return;
 
+    console.log("=== ROUTE GUARD DEBUG ===");
+    console.log("Current user:", {
+      id: user?.id,
+      email: user?.email,
+      isAuthenticated: !!user
+    });
+    console.log("Permissions:", {
+      hasAdminAccess: permissions.hasAdminAccess,
+      allowedMenus: permissions.allowedMenus,
+      requiredMenuKey,
+      requireAdminAccess
+    });
+    console.log("========================");
+
     // Se não está autenticado, redirecionar para home
     if (!user) {
+      console.log("Usuário não autenticado, redirecionando para home");
       hasRedirectedRef.current = true;
       navigate("/");
       return;
@@ -66,6 +81,8 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       setShowAccessDenied(true);
       return;
     }
+
+    console.log("Acesso permitido para usuário:", user.email);
   }, [
     user, 
     permissions.hasAdminAccess,

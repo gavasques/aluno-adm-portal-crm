@@ -19,8 +19,14 @@ export const useAuthEventHandler = () => {
   const isResetPasswordPage = location.pathname === "/reset-password";
 
   const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
-    console.log("Auth event:", event, "Path:", location.pathname);
+    console.log("=== AUTH EVENT DEBUG ===");
+    console.log("Event:", event);
+    console.log("Path:", location.pathname);
+    console.log("User email:", currentSession?.user?.email);
+    console.log("User ID:", currentSession?.user?.id);
+    console.log("Session exists:", !!currentSession);
     console.log("User audience:", currentSession?.user?.aud);
+    console.log("========================");
     
     // Detectar o máximo possível de indicadores de recuperação de senha
     if (event === "PASSWORD_RECOVERY" || 
@@ -42,11 +48,18 @@ export const useAuthEventHandler = () => {
     }
 
     // Comportamento normal quando não está em recuperação de senha
+    console.log("Atualizando estado de autenticação:", {
+      hasSession: !!currentSession,
+      userEmail: currentSession?.user?.email,
+      userId: currentSession?.user?.id
+    });
+    
     setSession(currentSession);
     setUser(currentSession?.user ?? null);
     setLoading(false);
 
     if (event === "SIGNED_OUT") {
+      console.log("Usuário deslogado, redirecionando para home");
       navigate("/");
     }
   }, [location.pathname, isResetPasswordPage, navigate]);

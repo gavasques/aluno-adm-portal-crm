@@ -25,17 +25,27 @@ export const useInitialSession = (
     const checkSession = async () => {
       if (isCheckingRef.current) return;
       
+      console.log("=== INITIAL SESSION CHECK ===");
       console.log("Verificando sessão inicial");
       isCheckingRef.current = true;
       setLoading(true);
       
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        console.log("Sessão existente encontrada:", !!currentSession);
-        console.log("Usuário da sessão:", currentSession?.user?.email);
-        console.log("Audience:", currentSession?.user?.aud);
-        console.log("Localização:", location.pathname);
+        if (error) {
+          console.error("Erro ao obter sessão:", error);
+          setLoading(false);
+          return;
+        }
+
+        console.log("Sessão inicial encontrada:", {
+          hasSession: !!currentSession,
+          userEmail: currentSession?.user?.email,
+          userId: currentSession?.user?.id,
+          audience: currentSession?.user?.aud,
+          path: location.pathname
+        });
         
         // Detectar o máximo possível de indicadores de recuperação de senha
         if (recoveryModeUtils.detectRecoveryFlow(currentSession, location.pathname)) {
@@ -53,11 +63,17 @@ export const useInitialSession = (
         }
 
         // Comportamento normal quando não está em recuperação de senha
+        console.log("Configurando sessão normal:", {
+          userEmail: currentSession?.user?.email,
+          userId: currentSession?.user?.id
+        });
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setLoading(false);
         
         hasCheckedInitial.current = true;
+        console.log("=== SESSION CHECK COMPLETE ===");
       } catch (error) {
         console.error("Erro ao verificar sessão inicial:", error);
         setLoading(false);
