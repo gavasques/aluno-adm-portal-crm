@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissionGroups";
+import { useMenuCounts } from "@/hooks/admin/useMenuCounts";
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
@@ -15,6 +16,8 @@ const Permissions = () => {
     error, 
     refreshPermissionGroups 
   } = usePermissionGroups();
+
+  const { menuCounts } = useMenuCounts(permissionGroups.map(g => g.id));
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -72,6 +75,7 @@ const Permissions = () => {
         onDelete={handleDelete}
         onViewUsers={handleViewUsers}
         onManageMenus={handleManageMenus}
+        groupMenuCounts={menuCounts}
       />
 
       <PermissionsDialogs 
@@ -88,12 +92,15 @@ const Permissions = () => {
       />
 
       <Dialog open={showMenusDialog} onOpenChange={setShowMenusDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedGroup && (
             <PermissionGroupMenusManager
               groupId={selectedGroup.id}
               groupName={selectedGroup.name}
-              onClose={() => setShowMenusDialog(false)}
+              onClose={() => {
+                setShowMenusDialog(false);
+                refreshPermissionGroups(); // Refresh para atualizar contadores
+              }}
             />
           )}
         </DialogContent>

@@ -16,7 +16,7 @@ import {
   TableRow, 
   TableCell 
 } from "@/components/ui/table";
-import { Edit2, Trash2, Users, Menu } from "lucide-react";
+import { Edit2, Trash2, Users, Menu, AlertTriangle } from "lucide-react";
 import LoadingPermissions from "./LoadingPermissions";
 import EmptyPermissions from "./EmptyPermissions";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ interface PermissionsCardProps {
   onDelete: (group: PermissionGroup) => void;
   onViewUsers: (group: PermissionGroup) => void;
   onManageMenus?: (group: PermissionGroup) => void;
+  groupMenuCounts?: Record<string, number>;
 }
 
 const PermissionsCard: React.FC<PermissionsCardProps> = ({
@@ -38,7 +39,77 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
   onDelete,
   onViewUsers,
   onManageMenus,
+  groupMenuCounts = {},
 }) => {
+  const getMenuCountBadge = (groupId: string, isAdmin: boolean) => {
+    const count = groupMenuCounts[groupId] || 0;
+    
+    if (isAdmin) {
+      return (
+        <Badge variant="default" className="bg-purple-100 text-purple-800">
+          Admin Total
+        </Badge>
+      );
+    }
+    
+    if (count === 0) {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          Sem menus
+        </Badge>
+      );
+    }
+    
+    if (count <= 3) {
+      return (
+        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+          {count} menus
+        </Badge>
+      );
+    }
+    
+    return (
+      <Badge variant="secondary" className="bg-green-50 text-green-700">
+        {count} menus
+      </Badge>
+    );
+  };
+
+  const getGroupStatusBadge = (group: PermissionGroup) => {
+    const menuCount = groupMenuCounts[group.id] || 0;
+    
+    if (group.is_admin || group.allow_admin_access) {
+      return (
+        <Badge variant="default" className="bg-blue-100 text-blue-800">
+          ✓ Configurado
+        </Badge>
+      );
+    }
+    
+    if (menuCount === 0) {
+      return (
+        <Badge variant="destructive">
+          ⚠ Sem acesso
+        </Badge>
+      );
+    }
+    
+    if (menuCount <= 3) {
+      return (
+        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+          ⚡ Limitado
+        </Badge>
+      );
+    }
+    
+    return (
+      <Badge variant="secondary" className="bg-green-50 text-green-700">
+        ✓ Completo
+      </Badge>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -55,7 +126,9 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                 <TableHead>Nome</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Acesso Admin</TableHead>
+                <TableHead>Acesso</TableHead>
+                <TableHead>Menus</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -85,6 +158,12 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                         </Badge>
                       )}
                     </TableCell>
+                    <TableCell>
+                      {getMenuCountBadge(group.id, group.is_admin || group.allow_admin_access)}
+                    </TableCell>
+                    <TableCell>
+                      {getGroupStatusBadge(group)}
+                    </TableCell>
                     <TableCell className="text-right flex justify-end space-x-2">
                       {onManageMenus && (
                         <Button 
@@ -92,6 +171,11 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                           size="sm"
                           onClick={() => onManageMenus(group)}
                           title="Gerenciar Menus"
+                          className={
+                            !group.is_admin && !group.allow_admin_access && (groupMenuCounts[group.id] || 0) === 0
+                              ? "border-orange-300 text-orange-600 hover:bg-orange-50"
+                              : ""
+                          }
                         >
                           <Menu className="h-4 w-4" />
                           <span className="sr-only">Gerenciar Menus</span>
