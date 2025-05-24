@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
 import { useSignUp } from "./useBasicAuth/useSignUp";
 import { sanitizeError, logSecureError } from "@/utils/security";
+import { logUserCreation } from "@/utils/audit-logger";
 
 // URL base do site que será usado para redirecionamentos
 const BASE_URL = "https://titan.guilhermevasques.club";
@@ -184,16 +185,20 @@ export function useBasicAuth() {
 
       if (error) {
         logSecureError(error, "Admin User Creation - Function Error");
+        logUserCreation(email, false, 'admin', sanitizeError(error));
         throw new Error(sanitizeError(error));
       }
       
       if (response && response.error) {
         logSecureError(response.error, "Admin User Creation - Response Error");
+        logUserCreation(email, false, 'admin', sanitizeError(response.error));
         throw new Error(sanitizeError(response.error));
       }
       
       // Verificar se o usuário já existe e tratar adequadamente
       if (response && response.existed) {
+        logUserCreation(email, false, 'admin', 'User already exists');
+        
         toast({
           title: "Usuário já existe",
           description: `O usuário ${email} já existe no sistema, mas pode não estar visível na lista atual.`,
@@ -202,6 +207,8 @@ export function useBasicAuth() {
         
         return { success: false, existed: true };
       } else {
+        logUserCreation(email, true, 'admin');
+        
         toast({
           title: "Usuário adicionado com sucesso",
           description: `Usuário ${email} foi criado e adicionado ao sistema.`,
@@ -212,6 +219,7 @@ export function useBasicAuth() {
     } catch (error: any) {
       logSecureError(error, "Admin User Creation");
       const sanitizedMessage = sanitizeError(error);
+      logUserCreation(email, false, 'admin', sanitizedMessage);
       
       toast({
         title: "Erro ao adicionar usuário",
