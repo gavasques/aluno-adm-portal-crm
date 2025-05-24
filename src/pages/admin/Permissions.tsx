@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 import { useMenuCounts } from "@/hooks/admin/useMenuCounts";
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
@@ -10,6 +10,8 @@ import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsB
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Permissions = () => {
+  console.log("DEBUG - Permissions: Componente renderizando");
+  
   const { 
     permissionGroups, 
     isLoading, 
@@ -17,7 +19,8 @@ const Permissions = () => {
     refreshPermissionGroups 
   } = usePermissionGroups();
 
-  const { menuCounts } = useMenuCounts(permissionGroups.map(g => g.id));
+  const groupIds = permissionGroups.map(g => g.id);
+  const { menuCounts } = useMenuCounts(groupIds);
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -26,32 +29,53 @@ const Permissions = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
   const [showMenusDialog, setShowMenusDialog] = useState(false);
 
+  useEffect(() => {
+    console.log("DEBUG - Permissions: Grupos carregados:", permissionGroups.length);
+  }, [permissionGroups.length]);
+
+  useEffect(() => {
+    console.log("DEBUG - Permissions: Contagens de menu:", Object.keys(menuCounts).length);
+  }, [menuCounts]);
+
   const handleAdd = () => {
+    console.log("DEBUG - Permissions: Abrindo diálogo de adicionar");
     setShowAddDialog(true);
   };
 
   const handleEdit = (group: PermissionGroup) => {
+    console.log("DEBUG - Permissions: Editando grupo", group.id);
     setSelectedGroup(group);
     setShowEditDialog(true);
   };
 
   const handleDelete = (group: PermissionGroup) => {
+    console.log("DEBUG - Permissions: Deletando grupo", group.id);
     setSelectedGroup(group);
     setShowDeleteDialog(true);
   };
 
   const handleViewUsers = (group: PermissionGroup) => {
+    console.log("DEBUG - Permissions: Visualizando usuários do grupo", group.id);
     setSelectedGroup(group);
     setShowUsersDialog(true);
   };
 
   const handleManageMenus = (group: PermissionGroup) => {
+    console.log("DEBUG - Permissions: Gerenciando menus do grupo", group.id);
     setSelectedGroup(group);
     setShowMenusDialog(true);
   };
 
   const handleSuccess = () => {
+    console.log("DEBUG - Permissions: Refresh após sucesso");
     refreshPermissionGroups();
+  };
+
+  const handleCloseMenusDialog = () => {
+    console.log("DEBUG - Permissions: Fechando diálogo de menus");
+    setShowMenusDialog(false);
+    setSelectedGroup(null);
+    refreshPermissionGroups(); // Refresh para atualizar contadores
   };
 
   return (
@@ -97,10 +121,7 @@ const Permissions = () => {
             <PermissionGroupMenusManager
               groupId={selectedGroup.id}
               groupName={selectedGroup.name}
-              onClose={() => {
-                setShowMenusDialog(false);
-                refreshPermissionGroups(); // Refresh para atualizar contadores
-              }}
+              onClose={handleCloseMenusDialog}
             />
           )}
         </DialogContent>

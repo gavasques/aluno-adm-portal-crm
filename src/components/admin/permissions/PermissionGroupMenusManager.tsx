@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -59,6 +59,8 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
   groupName,
   onClose,
 }) => {
+  console.log("DEBUG - PermissionGroupMenusManager: Renderizando para grupo", groupId);
+  
   const { systemMenus, isLoading: menusLoading } = useSystemMenus();
   const { getPermissionGroupMenus, updatePermissionGroup } = usePermissionGroups();
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
@@ -67,9 +69,13 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
 
   useEffect(() => {
     const loadGroupMenus = async () => {
+      if (!groupId) return;
+      
       try {
+        console.log("DEBUG - PermissionGroupMenusManager: Carregando menus do grupo", groupId);
         setIsLoading(true);
         const menus = await getPermissionGroupMenus(groupId);
+        console.log("DEBUG - PermissionGroupMenusManager: Menus carregados:", menus.length);
         setSelectedMenus(menus.map(m => m.menu_key));
       } catch (error) {
         console.error("Erro ao carregar menus do grupo:", error);
@@ -87,6 +93,7 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
   }, [groupId, getPermissionGroupMenus]);
 
   const handleMenuToggle = (menuKey: string) => {
+    console.log("DEBUG - PermissionGroupMenusManager: Toggle menu", menuKey);
     setSelectedMenus(prev => 
       prev.includes(menuKey)
         ? prev.filter(m => m !== menuKey)
@@ -95,14 +102,17 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
   };
 
   const handleSelectAll = () => {
+    console.log("DEBUG - PermissionGroupMenusManager: Selecionando todos os menus");
     setSelectedMenus(systemMenus.map(menu => menu.menu_key));
   };
 
   const handleClearAll = () => {
+    console.log("DEBUG - PermissionGroupMenusManager: Limpando seleção");
     setSelectedMenus([]);
   };
 
   const handleApplyTemplate = (templateKey: keyof typeof MENU_TEMPLATES) => {
+    console.log("DEBUG - PermissionGroupMenusManager: Aplicando template", templateKey);
     const template = MENU_TEMPLATES[templateKey];
     const availableMenus = template.menus.filter(menuKey => 
       systemMenus.some(menu => menu.menu_key === menuKey)
@@ -112,6 +122,7 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
 
   const handleSave = async () => {
     try {
+      console.log("DEBUG - PermissionGroupMenusManager: Salvando menus para grupo", groupId);
       setIsSaving(true);
       
       await updatePermissionGroup({
@@ -150,14 +161,17 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
     return { key: "general", ...MENU_CATEGORIES.general };
   };
 
-  const organizedMenus = systemMenus.reduce((acc, menu) => {
-    const category = getMenuCategory(menu.menu_key);
-    if (!acc[category.key]) {
-      acc[category.key] = { category, menus: [] };
-    }
-    acc[category.key].menus.push(menu);
-    return acc;
-  }, {} as Record<string, { category: any; menus: any[] }>);
+  const organizedMenus = useMemo(() => {
+    console.log("DEBUG - PermissionGroupMenusManager: Organizando menus", systemMenus.length);
+    return systemMenus.reduce((acc, menu) => {
+      const category = getMenuCategory(menu.menu_key);
+      if (!acc[category.key]) {
+        acc[category.key] = { category, menus: [] };
+      }
+      acc[category.key].menus.push(menu);
+      return acc;
+    }, {} as Record<string, { category: any; menus: any[] }>);
+  }, [systemMenus]);
 
   if (isLoading || menusLoading) {
     return (
@@ -293,7 +307,6 @@ const PermissionGroupMenusManager: React.FC<PermissionGroupMenusManagerProps> = 
               <div className="flex flex-wrap gap-1">
                 {selectedMenus.map(menuKey => {
                   const menu = systemMenus.find(m => m.menu_key === menuKey);
-                  const category = getMenuCategory(menuKey);
                   return (
                     <Badge key={menuKey} variant="secondary" className="text-xs">
                       {menu?.display_name || menuKey}

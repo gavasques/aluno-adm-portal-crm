@@ -8,7 +8,10 @@ export const useMenuCounts = (permissionGroupIds: string[]) => {
 
   useEffect(() => {
     const fetchMenuCounts = async () => {
+      console.log("DEBUG - useMenuCounts: Iniciando busca de contagens", permissionGroupIds.length);
+      
       if (permissionGroupIds.length === 0) {
+        console.log("DEBUG - useMenuCounts: Nenhum grupo para buscar");
         setMenuCounts({});
         setIsLoading(false);
         return;
@@ -33,6 +36,7 @@ export const useMenuCounts = (permissionGroupIds: string[]) => {
           return acc;
         }, {} as Record<string, number>);
 
+        console.log("DEBUG - useMenuCounts: Contagens calculadas:", counts);
         setMenuCounts(counts);
       } catch (error) {
         console.error("Erro ao carregar contagens de menus:", error);
@@ -42,7 +46,7 @@ export const useMenuCounts = (permissionGroupIds: string[]) => {
     };
 
     fetchMenuCounts();
-  }, [permissionGroupIds]);
+  }, [permissionGroupIds.join(',')]); // Usar join para criar dependência estável
 
   return { menuCounts, isLoading };
 };
