@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Package } from "lucide-react";
+import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { 
   DropdownMenu,
@@ -45,29 +45,7 @@ export function SupplierHeader({
   };
   
   return (
-    <div className="animate-fade-in mb-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <motion.div 
-          className="flex items-center gap-3"
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-gradient-to-br from-orange-500 to-amber-400 rounded-md p-3 text-white shadow-md">
-            <Package size={28} className="text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-portal-dark">Fornecedores</h1>
-        </motion.div>
-        <motion.p 
-          className="text-muted-foreground mt-2 md:mt-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          Encontre os melhores fornecedores para seu negócio
-        </motion.p>
-      </div>
-      
+    <div className="animate-fade-in mb-8">      
       <motion.div 
         className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
         initial={{ y: 20, opacity: 0 }}
