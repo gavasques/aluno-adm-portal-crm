@@ -16,7 +16,7 @@ import {
   TableRow, 
   TableCell 
 } from "@/components/ui/table";
-import { Edit2, Trash2, Users } from "lucide-react";
+import { Edit2, Trash2, Users, Menu } from "lucide-react";
 import LoadingPermissions from "./LoadingPermissions";
 import EmptyPermissions from "./EmptyPermissions";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ interface PermissionsCardProps {
   onEdit: (group: PermissionGroup) => void;
   onDelete: (group: PermissionGroup) => void;
   onViewUsers: (group: PermissionGroup) => void;
+  onManageMenus?: (group: PermissionGroup) => void;
 }
 
 const PermissionsCard: React.FC<PermissionsCardProps> = ({
@@ -36,6 +37,7 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
   onEdit,
   onDelete,
   onViewUsers,
+  onManageMenus,
 }) => {
   return (
     <Card>
@@ -84,10 +86,22 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                       )}
                     </TableCell>
                     <TableCell className="text-right flex justify-end space-x-2">
+                      {onManageMenus && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => onManageMenus(group)}
+                          title="Gerenciar Menus"
+                        >
+                          <Menu className="h-4 w-4" />
+                          <span className="sr-only">Gerenciar Menus</span>
+                        </Button>
+                      )}
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => onViewUsers(group)}
+                        title="Ver Usuários"
                       >
                         <Users className="h-4 w-4" />
                         <span className="sr-only">Ver Usuários</span>
@@ -96,6 +110,7 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                         variant="outline" 
                         size="sm"
                         onClick={() => onEdit(group)}
+                        title="Editar"
                       >
                         <Edit2 className="h-4 w-4" />
                         <span className="sr-only">Editar</span>
@@ -106,6 +121,7 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                         className="text-red-600 hover:text-red-700" 
                         onClick={() => onDelete(group)}
                         disabled={group.is_admin}
+                        title="Excluir"
                       >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Excluir</span>

@@ -21,12 +21,20 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const navigate = useNavigate();
   const hasRedirectedRef = useRef(false);
   const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     // Reset redirect flag when dependencies change
     hasRedirectedRef.current = false;
     setShowAccessDenied(false);
   }, [user?.id, permissions.hasAdminAccess, requiredMenuKey]);
+
+  useEffect(() => {
+    // Mark as not initial load after first permissions check
+    if (!permissionsLoading && isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [permissionsLoading, isInitialLoad]);
 
   useEffect(() => {
     if (authLoading || permissionsLoading || hasRedirectedRef.current) return;
@@ -37,6 +45,19 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       navigate("/");
       return;
     }
+
+    // Aguardar um ciclo após o carregamento inicial para evitar flash
+    if (isInitialLoad) {
+      return;
+    }
+
+    console.log("DEBUG - RouteGuard Admin:", {
+      email: user.email,
+      hasAdminAccess: permissions.hasAdminAccess,
+      requireAdminAccess,
+      requiredMenuKey,
+      allowedMenus: permissions.allowedMenus
+    });
 
     // Se requer acesso admin e usuário não tem
     if (requireAdminAccess && !permissions.hasAdminAccess) {
@@ -61,11 +82,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     permissionsLoading, 
     navigate, 
     requiredMenuKey, 
-    requireAdminAccess
+    requireAdminAccess,
+    isInitialLoad
   ]);
 
-  // Mostrar loading enquanto verifica permissões
-  if (authLoading || permissionsLoading) {
+  // Mostrar loading enquanto verifica permissões ou durante carregamento inicial
+  if (authLoading || permissionsLoading || isInitialLoad) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>

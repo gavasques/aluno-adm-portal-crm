@@ -40,6 +40,8 @@ export const usePermissions = () => {
       setLoading(true);
       setError(null);
 
+      console.log("DEBUG - Iniciando fetchPermissions para:", user.email);
+
       // Buscar perfil do usuário com grupo de permissão
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -63,7 +65,6 @@ export const usePermissions = () => {
       }
 
       console.log("DEBUG - Perfil encontrado:", profile);
-      console.log("DEBUG - Email do usuário:", user.email);
 
       // Determinar se tem acesso admin
       const hasGroupAdminAccess = profile.permission_groups?.allow_admin_access || false;

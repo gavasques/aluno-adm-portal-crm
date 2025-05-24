@@ -4,7 +4,9 @@ import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissio
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
+import PermissionGroupMenusManager from "@/components/admin/permissions/PermissionGroupMenusManager";
 import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Permissions = () => {
   const { 
@@ -19,6 +21,7 @@ const Permissions = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
   const [showUsersDialog, setShowUsersDialog] = useState(false);
+  const [showMenusDialog, setShowMenusDialog] = useState(false);
 
   const handleAdd = () => {
     setShowAddDialog(true);
@@ -37,6 +40,15 @@ const Permissions = () => {
   const handleViewUsers = (group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowUsersDialog(true);
+  };
+
+  const handleManageMenus = (group: PermissionGroup) => {
+    setSelectedGroup(group);
+    setShowMenusDialog(true);
+  };
+
+  const handleSuccess = () => {
+    refreshPermissionGroups();
   };
 
   return (
@@ -59,6 +71,7 @@ const Permissions = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onViewUsers={handleViewUsers}
+        onManageMenus={handleManageMenus}
       />
 
       <PermissionsDialogs 
@@ -71,8 +84,20 @@ const Permissions = () => {
         showUsersDialog={showUsersDialog}
         setShowUsersDialog={setShowUsersDialog}
         selectedGroup={selectedGroup}
-        onSuccess={refreshPermissionGroups}
+        onSuccess={handleSuccess}
       />
+
+      <Dialog open={showMenusDialog} onOpenChange={setShowMenusDialog}>
+        <DialogContent className="max-w-2xl">
+          {selectedGroup && (
+            <PermissionGroupMenusManager
+              groupId={selectedGroup.id}
+              groupName={selectedGroup.name}
+              onClose={() => setShowMenusDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
