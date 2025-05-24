@@ -1,8 +1,4 @@
 
-// Este é um arquivo fictício que representa a página de Mentorias
-// O componente real deve ser modificado para remover o título e adaptar-se à exibição em abas
-// Como não temos acesso ao conteúdo exato deste arquivo, estamos apenas criando um exemplo
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +20,7 @@ const Mentoring = () => {
         <div>
           <p className="text-sm text-gray-500">Gerencie as mentorias disponíveis</p>
         </div>
-        <Button onClick={() => navigate("/admin/mentoring/new")}>
+        <Button onClick={() => navigate("/admin/mentorias/new")}>
           <PlusCircle className="h-4 w-4 mr-2" />
           Nova Mentoria
         </Button>
@@ -45,7 +41,7 @@ const Mentoring = () => {
                 <td className="px-6 py-4 whitespace-nowrap">{mentoring.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{mentoring.price}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/mentoring/${mentoring.id}`)}>
+                  <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/mentorias/${mentoring.id}`)}>
                     Editar
                   </Button>
                 </td>
