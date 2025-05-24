@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -98,7 +97,7 @@ function App() {
                 {/* Student Routes */}
                 <Route path="/aluno" element={<StudentRouteGuard requiredMenuKey="dashboard"><StudentLayout><StudentDashboard /></StudentLayout></StudentRouteGuard>} />
                 <Route path="/aluno/fornecedores" element={<StudentRouteGuard requiredMenuKey="suppliers"><StudentLayout><StudentSuppliers /></StudentLayout></StudentRouteGuard>} />
-                <Route path="/aluno/meus-fornecedores" element={<StudentRouteGuard requiredMenuKey="my_suppliers"><StudentLayout><MySuppliers /></StudentLayout></StudentRouteGuard>} />
+                <Route path="/aluno/meus-fornecedores" element={<StudentRouteGuard requiredMenuKey="my-suppliers"><StudentLayout><MySuppliers /></StudentLayout></StudentRouteGuard>} />
                 <Route path="/aluno/parceiros" element={<StudentRouteGuard requiredMenuKey="partners"><StudentLayout><StudentPartners /></StudentLayout></StudentRouteGuard>} />
                 <Route path="/aluno/ferramentas" element={<StudentRouteGuard requiredMenuKey="tools"><StudentLayout><StudentTools /></StudentLayout></StudentRouteGuard>} />
                 <Route path="/aluno/configuracoes" element={<StudentRouteGuard requiredMenuKey="settings"><StudentLayout><StudentSettings /></StudentLayout></StudentRouteGuard>} />
