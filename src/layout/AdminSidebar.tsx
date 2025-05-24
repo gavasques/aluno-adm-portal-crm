@@ -49,8 +49,8 @@ const NavItem = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>
-        <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700")}>
-          <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-blue-700 opacity-80")} />
+        <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg" : "text-gray-300 hover:bg-gray-700 hover:text-white")}>
+          <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-gray-400")} />
           <span>{children}</span>
         </Link>
       </SidebarMenuButton>
@@ -121,7 +121,7 @@ const AdminSidebar = () => {
   
   if (loading) {
     return (
-      <div className="w-52 h-screen bg-white border-r border-border shadow-lg relative">
+      <div className="w-52 h-screen bg-gray-900 border-r border-gray-700 shadow-2xl relative">
         <div className="pt-4 pb-4">
           <div className="flex items-center justify-center h-20">
             <LoadingSpinner size="sm" text="" />
@@ -137,24 +137,24 @@ const AdminSidebar = () => {
   }
 
   return (
-    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
-      <SidebarHeader className="p-4 border-b border-gray-200">
+    <Sidebar className="border-r border-gray-700 w-52 hidden md:block flex-shrink-0 bg-gray-900 shadow-2xl z-30 pr-0">
+      <SidebarHeader className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           <img 
-            src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
+            src="/lovable-uploads/3fc67bb1-a7fb-4da7-8051-c66aaa7393f6.png"
             alt="Logo" 
             className="h-8"
           />
           
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative hover:bg-gray-100 px-2">
-            <Bell className="h-4 w-4 text-gray-600" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">2</span>
+          <Button variant="ghost" size="sm" className="relative hover:bg-gray-700 px-2">
+            <Bell className="h-4 w-4 text-gray-400" />
+            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">2</span>
           </Button>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-4">
+      <SidebarContent className="py-4 bg-gray-900">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
@@ -234,16 +234,16 @@ const AdminSidebar = () => {
         </motion.div>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-gray-200">
+      <SidebarFooter className="p-4 border-t border-gray-700 bg-gray-900">
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 px-2 py-2 rounded-md justify-start h-auto"
+                className="w-full flex items-center gap-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white px-2 py-2 rounded-md justify-start h-auto"
               >
                 <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-gray-600 text-white text-xs">
+                  <AvatarFallback className="bg-gray-700 text-white text-xs">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
@@ -251,26 +251,26 @@ const AdminSidebar = () => {
                   <div className="font-medium truncate text-xs">{getUserName()}</div>
                   <div className="text-[10px] text-gray-500">Administrador</div>
                 </div>
-                <ChevronDown className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                <ChevronDown className="h-3 w-3 text-gray-500 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+            <DropdownMenuContent align="end" className="w-56 bg-gray-800 border border-gray-600 shadow-2xl">
               {/* Navigation between areas */}
-              <DropdownMenuItem onClick={handleNavigateToStudent}>
+              <DropdownMenuItem onClick={handleNavigateToStudent} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                 <User className="h-4 w-4 mr-2" />
                 Ir para Área do Aluno
               </DropdownMenuItem>
               
               {/* Settings */}
-              <DropdownMenuItem onClick={handleSettings}>
+              <DropdownMenuItem onClick={handleSettings} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                 <Settings className="h-4 w-4 mr-2" />
                 Configurações
               </DropdownMenuItem>
               
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-600" />
               
               {/* Logout */}
-              <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600">
+              <DropdownMenuItem onClick={signOut} className="text-red-400 hover:bg-gray-700 focus:bg-gray-700 hover:text-red-300 focus:text-red-300">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </DropdownMenuItem>
