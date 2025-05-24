@@ -81,6 +81,127 @@ export type Database = {
         }
         Relationships: []
       }
+      bonus_comments: {
+        Row: {
+          author_name: string
+          bonus_id: string
+          content: string
+          created_at: string
+          id: string
+          likes: number | null
+          user_id: string
+          user_liked: boolean | null
+        }
+        Insert: {
+          author_name: string
+          bonus_id: string
+          content: string
+          created_at?: string
+          id?: string
+          likes?: number | null
+          user_id: string
+          user_liked?: boolean | null
+        }
+        Update: {
+          author_name?: string
+          bonus_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes?: number | null
+          user_id?: string
+          user_liked?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_comments_bonus_id_fkey"
+            columns: ["bonus_id"]
+            isOneToOne: false
+            referencedRelation: "bonuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bonus_files: {
+        Row: {
+          bonus_id: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_id: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_id?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_files_bonus_id_fkey"
+            columns: ["bonus_id"]
+            isOneToOne: false
+            referencedRelation: "bonuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bonuses: {
+        Row: {
+          access_period: string
+          bonus_id: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          observations: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          access_period: string
+          bonus_id: string
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          observations?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          access_period?: string
+          bonus_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          observations?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -853,6 +974,10 @@ export type Database = {
       execute_sql: {
         Args: { sql: string }
         Returns: undefined
+      }
+      generate_bonus_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_allowed_menus: {
         Args: Record<PropertyKey, never>

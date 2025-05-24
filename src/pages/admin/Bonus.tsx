@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, IdCard } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Trash2, IdCard, Database } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -27,29 +26,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-
-// Tipos para os bônus
-export type BonusType = "Software" | "Sistema" | "IA" | "Ebook" | "Lista" | "Outros";
-export type AccessPeriod = "7 dias" | "15 dias" | "30 dias" | "2 Meses" | "3 Meses" | "6 Meses" | "1 Ano" | "Vitalício";
-
-export interface Bonus {
-  id: string;
-  bonusId: string; // Campo ID único
-  name: string;
-  type: BonusType;
-  description: string;
-  accessPeriod: AccessPeriod;
-  observations?: string;
-  createdAt: Date;
-}
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useBonuses, type BonusType, type AccessPeriod } from "@/hooks/admin/useBonuses";
+import { useBonusMigration } from "@/hooks/admin/useBonusMigration";
 
 // Componente de formulário para adicionar/editar bônus
 interface BonusFormProps {
-  onSubmit: (data: Omit<Bonus, "id" | "createdAt" | "bonusId">) => void;
+  onSubmit: (data: {
+    name: string;
+    type: BonusType;
+    description: string;
+    access_period: AccessPeriod;
+    observations?: string;
+  }) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
+const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel, isSubmitting = false }) => {
   const [name, setName] = useState("");
   const [type, setType] = useState<BonusType>("Outros");
   const [description, setDescription] = useState("");
@@ -62,8 +57,8 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
       name,
       type,
       description,
-      accessPeriod,
-      observations
+      access_period: accessPeriod,
+      observations: observations || undefined
     });
   };
 
@@ -77,6 +72,7 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            disabled={isSubmitting}
           />
         </div>
         
@@ -89,6 +85,7 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
               onChange={(e) => setType(e.target.value as BonusType)}
               className="w-full rounded-md border border-gray-300 p-2"
               required
+              disabled={isSubmitting}
             >
               <option value="Software">Software</option>
               <option value="Sistema">Sistema</option>
@@ -107,6 +104,7 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
               onChange={(e) => setAccessPeriod(e.target.value as AccessPeriod)}
               className="w-full rounded-md border border-gray-300 p-2"
               required
+              disabled={isSubmitting}
             >
               <option value="7 dias">7 dias</option>
               <option value="15 dias">15 dias</option>
@@ -128,6 +126,7 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             required
+            disabled={isSubmitting}
           />
         </div>
         
@@ -138,16 +137,24 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
             value={observations}
             onChange={(e) => setObservations(e.target.value)}
             rows={2}
+            disabled={isSubmitting}
           />
         </div>
       </div>
       
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancelar
         </Button>
-        <Button type="submit">
-          Adicionar Bônus
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <LoadingSpinner size="sm" className="mr-2" />
+              Adicionando...
+            </>
+          ) : (
+            'Adicionar Bônus'
+          )}
         </Button>
       </DialogFooter>
     </form>
@@ -157,111 +164,100 @@ const BonusForm: React.FC<BonusFormProps> = ({ onSubmit, onCancel }) => {
 // Componente principal de Bônus
 const Bonus = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [bonusToDelete, setBonusToDelete] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  const [bonuses, setBonuses] = useState<Bonus[]>([
-    {
-      id: "1",
-      bonusId: "BNS001", // ID do bônus
-      name: "Lista de Fornecedores Premium",
-      type: "Lista",
-      description: "Lista exclusiva com mais de 100 fornecedores confiáveis para dropshipping",
-      accessPeriod: "Vitalício",
-      observations: "Atualizada trimestralmente",
-      createdAt: new Date(2024, 1, 15)
-    },
-    {
-      id: "2",
-      bonusId: "BNS002", // ID do bônus
-      name: "Software Gerador de Termos",
-      type: "Software",
-      description: "Gerador automático de políticas e termos para lojas virtuais",
-      accessPeriod: "1 Ano",
-      createdAt: new Date(2024, 2, 20)
-    }
-  ]);
+  const {
+    bonuses,
+    loading,
+    searchTerm,
+    setSearchTerm,
+    addBonus,
+    deleteBonus
+  } = useBonuses();
 
-  // Load bonuses from localStorage on component mount
-  useEffect(() => {
-    const storedBonuses = localStorage.getItem("bonuses");
-    if (storedBonuses) {
-      try {
-        const parsedBonuses = JSON.parse(storedBonuses);
-        // Convert string dates back to Date objects
-        const formattedBonuses = parsedBonuses.map((bonus: any) => ({
-          ...bonus,
-          createdAt: new Date(bonus.createdAt)
-        }));
-        setBonuses(formattedBonuses);
-      } catch (error) {
-        console.error("Error parsing bonuses from localStorage:", error);
-      }
-    } else {
-      // Initialize localStorage with default bonuses
-      localStorage.setItem("bonuses", JSON.stringify(bonuses));
-    }
-  }, []);
+  const { migrationStatus, migratedCount } = useBonusMigration();
 
-  // Função para gerar IDs únicos para bônus
-  const generateBonusId = () => {
-    const prefix = "BNS";
-    const existingIds = bonuses.map(bonus => bonus.bonusId);
-    let counter = existingIds.length + 1;
-    let newId;
+  const handleAddBonus = async (bonusData: {
+    name: string;
+    type: BonusType;
+    description: string;
+    access_period: AccessPeriod;
+    observations?: string;
+  }) => {
+    setIsSubmitting(true);
+    const success = await addBonus(bonusData);
+    setIsSubmitting(false);
     
-    do {
-      newId = `${prefix}${counter.toString().padStart(3, '0')}`;
-      counter++;
-    } while (existingIds.includes(newId));
-    
-    return newId;
+    if (success) {
+      setIsAddDialogOpen(false);
+    }
   };
   
-  // Filtrar bônus baseado na pesquisa
-  const filteredBonuses = bonuses.filter(bonus => 
-    bonus.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bonus.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bonus.bonusId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const handleAddBonus = (newBonus: Omit<Bonus, "id" | "createdAt" | "bonusId">) => {
-    const bonus: Bonus = {
-      ...newBonus,
-      id: Date.now().toString(),
-      bonusId: generateBonusId(), // Gerar ID único para o bônus
-      createdAt: new Date()
-    };
+  const handleDeleteBonus = async () => {
+    if (!bonusToDelete) return;
     
-    const updatedBonuses = [...bonuses, bonus];
-    setBonuses(updatedBonuses);
+    setIsDeleting(true);
+    const success = await deleteBonus(bonusToDelete);
+    setIsDeleting(false);
     
-    // Save to localStorage
-    localStorage.setItem("bonuses", JSON.stringify(updatedBonuses));
-    
-    setIsAddDialogOpen(false);
-    toast.success("Bônus adicionado com sucesso!");
-  };
-  
-  const handleDeleteBonus = (id: string) => {
-    const updatedBonuses = bonuses.filter(bonus => bonus.id !== id);
-    setBonuses(updatedBonuses);
-    
-    // Update localStorage
-    localStorage.setItem("bonuses", JSON.stringify(updatedBonuses));
-    
-    setBonusToDelete(null);
-    toast.success("Bônus removido com sucesso!");
+    if (success) {
+      setBonusToDelete(null);
+    }
   };
 
   const handleViewBonus = (id: string) => {
     navigate(`/admin/bonus/${id}`);
   };
 
+  const renderMigrationStatus = () => {
+    if (migrationStatus === 'migrating') {
+      return (
+        <Alert className="mb-4">
+          <Database className="h-4 w-4" />
+          <AlertDescription>
+            Migrando dados do localStorage para Supabase... {migratedCount} bônus migrados.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    if (migrationStatus === 'error') {
+      return (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            Erro durante a migração dos dados. Verifique o console para mais detalhes.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    return null;
+  };
+
+  if (loading && migrationStatus !== 'completed') {
+    return (
+      <div className="container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-8">Cadastro de Bônus</h1>
+        {renderMigrationStatus()}
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex items-center justify-center">
+              <LoadingSpinner size="sm" text="Carregando bônus..." />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-8">Cadastro de Bônus</h1>
+      
+      {renderMigrationStatus()}
       
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
@@ -295,17 +291,17 @@ const Bonus = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBonuses.length > 0 ? (
-                  filteredBonuses.map((bonus) => (
+                {bonuses.length > 0 ? (
+                  bonuses.map((bonus) => (
                     <TableRow 
                       key={bonus.id} 
                       className="cursor-pointer hover:bg-muted"
                       onClick={() => handleViewBonus(bonus.id)}
                     >
-                      <TableCell className="font-medium">{bonus.bonusId}</TableCell>
+                      <TableCell className="font-medium">{bonus.bonus_id}</TableCell>
                       <TableCell>{bonus.name}</TableCell>
                       <TableCell>{bonus.type}</TableCell>
-                      <TableCell>{bonus.accessPeriod}</TableCell>
+                      <TableCell>{bonus.access_period}</TableCell>
                       <TableCell>
                         <Button
                           variant="destructive"
@@ -325,7 +321,7 @@ const Bonus = () => {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                      Nenhum bônus encontrado.
+                      {searchTerm ? 'Nenhum bônus encontrado com esse termo.' : 'Nenhum bônus cadastrado.'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -344,7 +340,11 @@ const Bonus = () => {
               Preencha as informações do bônus abaixo.
             </DialogDescription>
           </DialogHeader>
-          <BonusForm onSubmit={handleAddBonus} onCancel={() => setIsAddDialogOpen(false)} />
+          <BonusForm 
+            onSubmit={handleAddBonus} 
+            onCancel={() => setIsAddDialogOpen(false)}
+            isSubmitting={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
 
@@ -361,14 +361,23 @@ const Bonus = () => {
             <Button
               variant="outline"
               onClick={() => setBonusToDelete(null)}
+              disabled={isDeleting}
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
-              onClick={() => bonusToDelete && handleDeleteBonus(bonusToDelete)}
+              onClick={handleDeleteBonus}
+              disabled={isDeleting}
             >
-              Excluir
+              {isDeleting ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Excluindo...
+                </>
+              ) : (
+                'Excluir'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
