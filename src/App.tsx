@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,6 +34,7 @@ import SoftwareTypes from "./pages/admin/SoftwareTypes";
 import Permissions from "./pages/admin/Permissions";
 import Audit from "./pages/admin/Audit";
 import Settings from "./pages/admin/Settings";
+import Registers from "./pages/admin/Registers";
 
 // Student Pages
 import StudentDashboard from "./pages/student/Dashboard";
@@ -76,7 +78,7 @@ function App() {
                 <Route path="/admin/permissoes" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Permissions /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/alunos" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Students /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/alunos/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><StudentDetail /></AdminLayout></AdminRouteGuard>} />
-                <Route path="/admin/cadastros" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Courses /></AdminLayout></AdminRouteGuard>} />
+                <Route path="/admin/cadastros" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Registers /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/tarefas" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Tasks /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/tarefas/:id" element={<AdminRouteGuard requireAdminAccess><AdminLayout><TaskDetail /></AdminLayout></AdminRouteGuard>} />
                 <Route path="/admin/leads" element={<AdminRouteGuard requireAdminAccess><AdminLayout><CRM /></AdminLayout></AdminRouteGuard>} />
