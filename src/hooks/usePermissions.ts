@@ -63,6 +63,13 @@ export const usePermissions = () => {
         console.log("Final permissions:", newPermissions);
         console.log("=== PERMISSIONS COMPLETE ===");
 
+        // Log adicional para debug do overlay
+        console.log("=== OVERLAY DEBUG ===");
+        console.log("User has admin access:", newPermissions.hasAdminAccess);
+        console.log("User allowed menus:", newPermissions.allowedMenus);
+        console.log("Should show overlay:", !newPermissions.hasAdminAccess && newPermissions.allowedMenus.length === 0);
+        console.log("==================");
+
         setPermissions(newPermissions);
       } catch (error) {
         console.error("Erro geral ao buscar permissões:", error);

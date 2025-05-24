@@ -21,6 +21,15 @@ const PendingValidationOverlay = () => {
     return null;
   }
 
+  // Verificar se o usuário tem pelo menos uma permissão de menu válida
+  const hasValidPermissions = permissions.allowedMenus && permissions.allowedMenus.length > 0;
+
+  // Se o usuário tem permissões válidas, não mostrar o overlay
+  if (hasValidPermissions) {
+    return null;
+  }
+
+  // Apenas mostrar o overlay se o usuário realmente não tem permissões
   return (
     <motion.div
       initial={{ opacity: 0 }}
