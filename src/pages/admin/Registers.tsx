@@ -26,7 +26,7 @@ const Registers = () => {
   // Atualizar a URL quando a aba mudar
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    navigate(`/admin/registers?tab=${value}`, { replace: true });
+    navigate(`/admin/cadastros?tab=${value}`, { replace: true });
   };
   
   return (
