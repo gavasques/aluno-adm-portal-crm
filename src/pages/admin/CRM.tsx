@@ -51,7 +51,7 @@ const CRM = () => {
   } = useCRMState();
 
   return (
-    <div className="container mx-auto py-0">
+    <div className="w-full">
       <div className="flex flex-col mb-4">
         <h1 className="text-3xl font-bold text-portal-dark mb-4">CRM / Gestão de Leads</h1>
         <div className="flex gap-2 justify-start">

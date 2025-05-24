@@ -13,7 +13,7 @@ const Users = () => {
   const dialogsState = useUserDialogs();
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="w-full space-y-6">
       <UsersHeader 
         refreshUsersList={refreshUsersList} 
         isRefreshing={isRefreshing} 

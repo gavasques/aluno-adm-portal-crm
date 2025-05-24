@@ -62,7 +62,7 @@ const Permissions = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="w-full">
       <PermissionsHeader onAdd={handleAdd} />
 
       {error && (
