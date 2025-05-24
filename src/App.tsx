@@ -3,7 +3,7 @@ import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/auth";
 import Index from "./pages/Index";
 import ResetPassword from "./pages/ResetPassword";
@@ -63,6 +63,10 @@ function App() {
               <Route path="/" element={<Layout isAdmin={false}><Index /></Layout>} />
               <Route path="/reset-password" element={<Layout isAdmin={false}><ResetPassword /></Layout>} />
               <Route path="/accept-invite" element={<Layout isAdmin={false}><AcceptInvite /></Layout>} />
+              
+              {/* Redirect from /student to /aluno */}
+              <Route path="/student" element={<Navigate to="/aluno" replace />} />
+              <Route path="/student/*" element={<Navigate to="/aluno" replace />} />
               
               {/* Admin Routes - URLs em português */}
               <Route path="/admin" element={<AdminRouteGuard requireAdminAccess><AdminLayout><Dashboard /></AdminLayout></AdminRouteGuard>} />
