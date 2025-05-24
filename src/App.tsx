@@ -14,7 +14,7 @@ import StudentPartners from "./pages/student/Partners";
 import StudentTools from "./pages/student/Tools";
 import StudentSettings from "./pages/student/Settings";
 import AdminSuppliers from "./pages/admin/Suppliers";
-import SupplierDetail from "./pages/admin/SupplierDetail";
+import SupplierDetail from "./components/admin/SupplierDetail";
 import AdminPartners from "./pages/admin/Partners";
 import AdminTools from "./pages/admin/Tools";
 import AdminUsers from "./pages/admin/Users";
