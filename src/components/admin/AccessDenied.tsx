@@ -21,14 +21,14 @@ const AccessDenied: React.FC = () => {
 
     // Redirecionamento automático após 3 segundos
     const timer = setTimeout(() => {
-      navigate("/student");
+      navigate("/aluno");
     }, 3000);
 
     return () => clearTimeout(timer);
   }, [navigate, toast]);
 
   const handleGoToStudent = () => {
-    navigate("/student");
+    navigate("/aluno");
   };
 
   return (
@@ -56,7 +56,7 @@ const AccessDenied: React.FC = () => {
               variant="outline"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Ir para Área do Estudante
+              Ir para Área do Aluno
             </Button>
             
             <p className="text-xs text-gray-500 text-center">
