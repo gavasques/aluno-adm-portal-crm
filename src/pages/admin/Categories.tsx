@@ -9,15 +9,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 const Categories = () => {
   const [categories, setCategories] = useState<ListItem[]>([
-    { id: "1", name: "E-commerce" },
-    { id: "2", name: "Marketing Digital" },
-    { id: "3", name: "Gestão Financeira" },
+    { id: crypto.randomUUID(), name: "E-commerce" },
+    { id: crypto.randomUUID(), name: "Marketing Digital" },
+    { id: crypto.randomUUID(), name: "Gestão Financeira" },
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddCategory = (data: { name: string }) => {
     const newCategory = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: data.name,
     };
     setCategories([...categories, newCategory]);
