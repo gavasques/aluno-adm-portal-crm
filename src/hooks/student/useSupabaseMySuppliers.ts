@@ -94,7 +94,7 @@ export const useSupabaseMySuppliers = () => {
           }
         }, 15000);
 
-        // Buscar fornecedores com timeout
+        // Buscar fornecedores com timeout - executar a query primeiro
         const suppliersQuery = supabase
           .from('my_suppliers')
           .select(`
