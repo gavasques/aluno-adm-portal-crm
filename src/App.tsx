@@ -15,7 +15,7 @@ import StudentPartners from "./pages/student/Partners";
 import StudentTools from "./pages/student/Tools";
 import StudentSettings from "./pages/student/Settings";
 import AdminSuppliers from "./pages/admin/Suppliers";
-import SupplierDetail from "./components/admin/SupplierDetail";
+import SupplierDetailWrapper from "./components/admin/SupplierDetailWrapper";
 import AdminPartners from "./pages/admin/Partners";
 import AdminTools from "./pages/admin/Tools";
 import AdminUsers from "./pages/admin/Users";
@@ -50,8 +50,8 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Toaster />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -63,7 +63,7 @@ function App() {
               <Route path="fornecedores" element={<AdminSuppliers />} />
               <Route path="fornecedores/:id" element={
                 <RouteGuard requireAdminAccess={true}>
-                  <SupplierDetail />
+                  <SupplierDetailWrapper />
                 </RouteGuard>
               } />
               <Route path="parceiros" element={<AdminPartners />} />
@@ -106,8 +106,8 @@ function App() {
               <Route path="mentorias/:enrollmentId/sessoes/:sessionId" element={<StudentMentoringSession />} />
             </Route>
           </Routes>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
