@@ -95,36 +95,36 @@ export const useSupabaseMySuppliers = () => {
         }, 15000);
 
         // Buscar fornecedores com timeout - executar a query e aguardar resultado
-        const suppliersQueryPromise = supabase
-          .from('my_suppliers')
-          .select(`
-            *,
-            brands:my_supplier_brands(*),
-            branches:my_supplier_branches(*),
-            contacts:my_supplier_contacts(*),
-            communications:my_supplier_communications(*),
-            ratings:my_supplier_ratings(*),
-            commentItems:my_supplier_comments(*)
-          `)
-          .eq('user_id', user!.id)
-          .order('created_at', { ascending: false });
-
-        const { data: suppliersData, error: suppliersError } = await withTimeout(suppliersQueryPromise);
+        const suppliersQueryResult = await withTimeout(
+          supabase
+            .from('my_suppliers')
+            .select(`
+              *,
+              brands:my_supplier_brands(*),
+              branches:my_supplier_branches(*),
+              contacts:my_supplier_contacts(*),
+              communications:my_supplier_communications(*),
+              ratings:my_supplier_ratings(*),
+              commentItems:my_supplier_comments(*)
+            `)
+            .eq('user_id', user!.id)
+            .order('created_at', { ascending: false })
+        );
 
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
           loadingTimeoutRef.current = null;
         }
 
-        if (suppliersError) {
-          console.error('Supabase error loading suppliers:', suppliersError);
-          throw new Error(`Erro do banco de dados: ${suppliersError.message}`);
+        if (suppliersQueryResult.error) {
+          console.error('Supabase error loading suppliers:', suppliersQueryResult.error);
+          throw new Error(`Erro do banco de dados: ${suppliersQueryResult.error.message}`);
         }
 
-        console.log(`Successfully loaded ${suppliersData?.length || 0} suppliers`);
+        console.log(`Successfully loaded ${suppliersQueryResult.data?.length || 0} suppliers`);
 
         // Transformar dados para o formato esperado
-        const transformedSuppliers: MySupplier[] = (suppliersData || []).map(supplier => ({
+        const transformedSuppliers: MySupplier[] = (suppliersQueryResult.data || []).map(supplier => ({
           ...supplier,
           files: [],
           images: []
@@ -196,31 +196,31 @@ export const useSupabaseMySuppliers = () => {
         comment_count: 0
       };
 
-      const createQueryPromise = supabase
-        .from('my_suppliers')
-        .insert(supplierData)
-        .select(`
-          *,
-          brands:my_supplier_brands(*),
-          branches:my_supplier_branches(*),
-          contacts:my_supplier_contacts(*),
-          communications:my_supplier_communications(*),
-          ratings:my_supplier_ratings(*),
-          commentItems:my_supplier_comments(*)
-        `)
-        .single();
+      const createQueryResult = await withTimeout(
+        supabase
+          .from('my_suppliers')
+          .insert(supplierData)
+          .select(`
+            *,
+            brands:my_supplier_brands(*),
+            branches:my_supplier_branches(*),
+            contacts:my_supplier_contacts(*),
+            communications:my_supplier_communications(*),
+            ratings:my_supplier_ratings(*),
+            commentItems:my_supplier_comments(*)
+          `)
+          .single()
+      );
 
-      const { data: newSupplier, error } = await withTimeout(createQueryPromise);
-
-      if (error) {
-        console.error('Error creating supplier:', error);
-        throw new Error(`Erro ao criar fornecedor: ${error.message}`);
+      if (createQueryResult.error) {
+        console.error('Error creating supplier:', createQueryResult.error);
+        throw new Error(`Erro ao criar fornecedor: ${createQueryResult.error.message}`);
       }
 
-      console.log('Supplier created successfully:', newSupplier);
+      console.log('Supplier created successfully:', createQueryResult.data);
 
       const transformedSupplier: MySupplier = {
-        ...newSupplier,
+        ...createQueryResult.data,
         files: [],
         images: []
       };
@@ -253,43 +253,43 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Updating supplier:', id, updates);
 
-      const updateQueryPromise = supabase
-        .from('my_suppliers')
-        .update({
-          name: updates.name,
-          category: updates.category,
-          cnpj: updates.cnpj,
-          email: updates.email,
-          phone: updates.phone,
-          website: updates.website,
-          address: updates.address,
-          type: updates.type,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .eq('user_id', user!.id)
-        .select(`
-          *,
-          brands:my_supplier_brands(*),
-          branches:my_supplier_branches(*),
-          contacts:my_supplier_contacts(*),
-          communications:my_supplier_communications(*),
-          ratings:my_supplier_ratings(*),
-          commentItems:my_supplier_comments(*)
-        `)
-        .single();
+      const updateQueryResult = await withTimeout(
+        supabase
+          .from('my_suppliers')
+          .update({
+            name: updates.name,
+            category: updates.category,
+            cnpj: updates.cnpj,
+            email: updates.email,
+            phone: updates.phone,
+            website: updates.website,
+            address: updates.address,
+            type: updates.type,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('user_id', user!.id)
+          .select(`
+            *,
+            brands:my_supplier_brands(*),
+            branches:my_supplier_branches(*),
+            contacts:my_supplier_contacts(*),
+            communications:my_supplier_communications(*),
+            ratings:my_supplier_ratings(*),
+            commentItems:my_supplier_comments(*)
+          `)
+          .single()
+      );
 
-      const { data: updatedSupplier, error } = await withTimeout(updateQueryPromise);
-
-      if (error) {
-        console.error('Error updating supplier:', error);
-        throw new Error(`Erro ao atualizar fornecedor: ${error.message}`);
+      if (updateQueryResult.error) {
+        console.error('Error updating supplier:', updateQueryResult.error);
+        throw new Error(`Erro ao atualizar fornecedor: ${updateQueryResult.error.message}`);
       }
 
-      console.log('Supplier updated successfully:', updatedSupplier);
+      console.log('Supplier updated successfully:', updateQueryResult.data);
 
       const transformedSupplier: MySupplier = {
-        ...updatedSupplier,
+        ...updateQueryResult.data,
         files: [],
         images: []
       };
@@ -324,17 +324,17 @@ export const useSupabaseMySuppliers = () => {
     try {
       console.log('Deleting supplier:', id);
 
-      const deleteQueryPromise = supabase
-        .from('my_suppliers')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user!.id);
+      const deleteQueryResult = await withTimeout(
+        supabase
+          .from('my_suppliers')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user!.id)
+      );
 
-      const { error } = await withTimeout(deleteQueryPromise);
-
-      if (error) {
-        console.error('Error deleting supplier:', error);
-        throw new Error(`Erro ao excluir fornecedor: ${error.message}`);
+      if (deleteQueryResult.error) {
+        console.error('Error deleting supplier:', deleteQueryResult.error);
+        throw new Error(`Erro ao excluir fornecedor: ${deleteQueryResult.error.message}`);
       }
 
       console.log('Supplier deleted successfully');
