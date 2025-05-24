@@ -104,7 +104,7 @@ function App() {
 
               {/* Student routes */}
               <Route path="/student/*" element={
-                <StudentRouteGuard>
+                <StudentRouteGuard requiredMenuKey="student">
                   <StudentLayout>
                     <Routes>
                       <Route path="/" element={<StudentDashboard />} />
