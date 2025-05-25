@@ -7,7 +7,7 @@ interface UseMenuManagementProps {
   permissionGroup?: any;
   isAdmin: boolean;
   selectedMenus: string[];
-  setSelectedMenus: (menus: string[]) => void;
+  setSelectedMenus: React.Dispatch<React.SetStateAction<string[]>>;
   setLoadingGroupData: (loading: boolean) => void;
 }
 
