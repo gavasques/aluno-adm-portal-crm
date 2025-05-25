@@ -4,16 +4,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { BASE_URL } from "./constants";
 
 export function usePasswordReset() {
-  // Função para recuperação de senha
+  // Função para recuperação de senha com logging detalhado
   const resetPassword = async (email: string) => {
+    console.log("=== usePasswordReset.resetPassword ===");
+    console.log("Email:", email);
+    console.log("BASE_URL:", BASE_URL);
+    
     try {
-      // Certificar-se que o link de redefinição contém parâmetros específicos 
-      // Importante: incluir ?type=recovery para facilitar a detecção do fluxo
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${BASE_URL}/reset-password?type=recovery`,
+      const redirectUrl = `${BASE_URL}/reset-password?type=recovery`;
+      console.log("Redirect URL configurada:", redirectUrl);
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
       });
       
-      if (error) throw error;
+      console.log("Resposta do resetPasswordForEmail:", { data, error });
+      
+      if (error) {
+        console.error("Erro do Supabase:", error);
+        throw error;
+      }
+      
+      console.log("Email de recuperação enviado com sucesso");
       
       toast({
         title: "Link de recuperação enviado",
@@ -33,15 +45,20 @@ export function usePasswordReset() {
 
   // Função para atualizar a senha do usuário
   const updateUserPassword = async (newPassword: string): Promise<void> => {
+    console.log("=== updateUserPassword ===");
+    
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (error) {
+        console.error("Erro ao atualizar senha:", error);
         throw error;
       }
 
+      console.log("Senha atualizada com sucesso");
+      
       // Limpar o modo de recuperação ao atualizar a senha com sucesso
       localStorage.removeItem("supabase_recovery_mode");
       localStorage.removeItem("supabase_recovery_expiry");
