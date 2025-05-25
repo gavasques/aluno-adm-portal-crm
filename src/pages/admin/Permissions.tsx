@@ -18,7 +18,7 @@ const Permissions = () => {
   } = usePermissionGroups();
 
   const groupIds = permissionGroups.map(g => g.id);
-  const { menuCounts } = useMenuCounts(groupIds);
+  const { menuCounts, refreshMenuCounts } = useMenuCounts(groupIds);
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -52,13 +52,17 @@ const Permissions = () => {
   };
 
   const handleSuccess = () => {
+    console.log("DEBUG - Permissions: handleSuccess called - refreshing data");
     refreshPermissionGroups();
+    refreshMenuCounts();
   };
 
   const handleCloseMenusDialog = () => {
     setShowMenusDialog(false);
     setSelectedGroup(null);
+    console.log("DEBUG - Permissions: handleCloseMenusDialog called - refreshing data");
     refreshPermissionGroups();
+    refreshMenuCounts();
   };
 
   return (
@@ -71,7 +75,7 @@ const Permissions = () => {
             <p>{error}</p>
             <p className="text-sm mt-1">Verifique as políticas de acesso ao banco de dados.</p>
           </div>
-          <FixPermissionsButton onSuccess={refreshPermissionGroups} />
+          <FixPermissionsButton onSuccess={handleSuccess} />
         </>
       )}
 
