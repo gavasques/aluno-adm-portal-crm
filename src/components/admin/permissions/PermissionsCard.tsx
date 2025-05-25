@@ -139,53 +139,61 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome do Grupo</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="flex items-center gap-1">
-                    Perfil do Usuário
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <HelpCircle className="h-3 w-3 text-gray-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Define se é um administrador completo ou usuário padrão</p>
-                      </TooltipContent>
-                    </Tooltip>
+                  <TableHead className="w-[200px]">Nome do Grupo</TableHead>
+                  <TableHead className="w-[200px]">Descrição</TableHead>
+                  <TableHead className="w-[150px]">
+                    <div className="flex items-center gap-1">
+                      Perfil do Usuário
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-3 w-3 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Define se é um administrador completo ou usuário padrão</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableHead>
-                  <TableHead className="flex items-center gap-1">
-                    Acesso à Área Admin
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <HelpCircle className="h-3 w-3 text-gray-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Se o grupo pode acessar a área administrativa do sistema</p>
-                      </TooltipContent>
-                    </Tooltip>
+                  <TableHead className="w-[150px]">
+                    <div className="flex items-center gap-1">
+                      Acesso à Área Admin
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-3 w-3 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Se o grupo pode acessar a área administrativa do sistema</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableHead>
-                  <TableHead className="flex items-center gap-1">
-                    Qtd. de Menus
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <HelpCircle className="h-3 w-3 text-gray-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Quantidade de menus/seções que o grupo pode acessar</p>
-                      </TooltipContent>
-                    </Tooltip>
+                  <TableHead className="w-[120px]">
+                    <div className="flex items-center gap-1">
+                      Qtd. de Menus
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-3 w-3 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Quantidade de menus/seções que o grupo pode acessar</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableHead>
-                  <TableHead className="flex items-center gap-1">
-                    Situação do Grupo
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <HelpCircle className="h-3 w-3 text-gray-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Status geral da configuração do grupo</p>
-                      </TooltipContent>
-                    </Tooltip>
+                  <TableHead className="w-[150px]">
+                    <div className="flex items-center gap-1">
+                      Situação do Grupo
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-3 w-3 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Status geral da configuração do grupo</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="w-[120px] text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -194,16 +202,16 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                 ) : permissionGroups.length > 0 ? (
                   permissionGroups.map((group) => (
                     <TableRow key={group.id}>
-                      <TableCell className="font-medium">{group.name}</TableCell>
-                      <TableCell>{group.description || "-"}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium w-[200px]">{group.name}</TableCell>
+                      <TableCell className="w-[200px]">{group.description || "-"}</TableCell>
+                      <TableCell className="w-[150px]">
                         {group.is_admin ? (
                           <Badge variant="default">Administrador</Badge>
                         ) : (
                           <Badge variant="secondary">Usuário Padrão</Badge>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {group.allow_admin_access ? (
                           <Badge variant="default" className="bg-green-100 text-green-800">
                             Permitido
@@ -214,62 +222,64 @@ const PermissionsCard: React.FC<PermissionsCardProps> = ({
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[120px]">
                         {getMenuCountBadge(group.id, group.is_admin, group.allow_admin_access)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {getGroupStatusBadge(group)}
                       </TableCell>
-                      <TableCell className="text-right flex justify-end space-x-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => onViewUsers(group)}
-                            >
-                              <Users className="h-4 w-4" />
-                              <span className="sr-only">Ver Usuários</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Ver usuários neste grupo</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => onEdit(group)}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                              <span className="sr-only">Editar</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Editar grupo de permissão</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="text-red-600 hover:text-red-700" 
-                              onClick={() => onDelete(group)}
-                              disabled={group.is_admin}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Excluir</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{group.is_admin ? "Não é possível excluir admin" : "Excluir grupo"}</p>
-                          </TooltipContent>
-                        </Tooltip>
+                      <TableCell className="w-[120px]">
+                        <div className="flex justify-end space-x-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => onViewUsers(group)}
+                              >
+                                <Users className="h-4 w-4" />
+                                <span className="sr-only">Ver Usuários</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Ver usuários neste grupo</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => onEdit(group)}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                                <span className="sr-only">Editar</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Editar grupo de permissão</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-red-600 hover:text-red-700" 
+                                onClick={() => onDelete(group)}
+                                disabled={group.is_admin}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Excluir</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{group.is_admin ? "Não é possível excluir admin" : "Excluir grupo"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
