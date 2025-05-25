@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -7,8 +6,10 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGrou
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
+import { useActiveMentoring } from "@/hooks/useActiveMentoring";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ interface NavItemProps {
   children: React.ReactNode;
   menuKey?: string;
   showAlways?: boolean;
+  customCondition?: boolean;
 }
 
 const NavItem = ({
@@ -30,11 +32,17 @@ const NavItem = ({
   icon: Icon,
   children,
   menuKey,
-  showAlways = false
+  showAlways = false,
+  customCondition
 }: NavItemProps) => {
   const { pathname } = useLocation();
   const { permissions } = usePermissions();
   const isActive = pathname === href;
+  
+  // Check custom condition first, then permissions
+  if (customCondition !== undefined && !customCondition) {
+    return null;
+  }
   
   if (!showAlways && menuKey && !permissions.allowedMenus.includes(menuKey)) {
     return null;
@@ -73,6 +81,7 @@ const StudentSidebar = () => {
   const { permissions, loading } = usePermissions();
   const { user } = useAuth();
   const { signOut } = useSignInOut();
+  const { hasActiveMentoring, loading: mentoringLoading } = useActiveMentoring();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -155,7 +164,22 @@ const StudentSidebar = () => {
                   <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno/mentorias" icon={GraduationCap} showAlways={true}>Minhas Mentorias</NavItem>
+                  {mentoringLoading ? (
+                    <SidebarMenuItem>
+                      <div className="flex items-center gap-2 rounded-md px-3 py-2">
+                        <Skeleton className="h-4 w-4" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </SidebarMenuItem>
+                  ) : (
+                    <NavItem 
+                      href="/aluno/mentorias" 
+                      icon={GraduationCap} 
+                      customCondition={hasActiveMentoring}
+                    >
+                      Minhas Mentorias
+                    </NavItem>
+                  )}
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
