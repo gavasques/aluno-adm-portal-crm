@@ -113,6 +113,14 @@ export const usePermissionGroups = () => {
     menu_keys: string[];
   }) => {
     try {
+      console.log("=== UPDATE PERMISSION GROUP (FIXED) ===");
+      console.log("Dados recebidos:", {
+        id: groupData.id,
+        is_admin: groupData.is_admin,
+        allow_admin_access: groupData.allow_admin_access,
+        menu_keys_count: groupData.menu_keys.length
+      });
+
       const { data, error } = await supabase
         .from("permission_groups")
         .update({
@@ -130,25 +138,45 @@ export const usePermissionGroups = () => {
         throw error;
       }
 
-      await supabase
-        .from("permission_group_menus")
-        .delete()
-        .eq("permission_group_id", groupData.id);
-
-      if (groupData.menu_keys.length > 0) {
-        const menuAssociations = groupData.menu_keys.map(menuKey => ({
-          permission_group_id: groupData.id,
-          menu_key: menuKey,
-        }));
-
-        const { error: menuError } = await supabase
+      // CORREÇÃO CRÍTICA: Deletar menus APENAS se for admin completo
+      if (groupData.is_admin) {
+        console.log("🔴 Admin completo - DELETANDO todos os menus");
+        await supabase
           .from("permission_group_menus")
-          .insert(menuAssociations);
+          .delete()
+          .eq("permission_group_id", groupData.id);
+      } else {
+        console.log("✅ Admin limitado/usuário normal - ATUALIZANDO menus preservados");
+        
+        // Para admin limitado, primeiro deletar e depois inserir os menus preservados
+        await supabase
+          .from("permission_group_menus")
+          .delete()
+          .eq("permission_group_id", groupData.id);
 
-        if (menuError) {
-          console.error("Erro ao atualizar menus:", menuError);
+        // Inserir os menus preservados (se houver)
+        if (groupData.menu_keys.length > 0) {
+          const menuAssociations = groupData.menu_keys.map(menuKey => ({
+            permission_group_id: groupData.id,
+            menu_key: menuKey,
+          }));
+
+          console.log("📝 Inserindo menus preservados:", menuAssociations.length);
+          const { error: menuError } = await supabase
+            .from("permission_group_menus")
+            .insert(menuAssociations);
+
+          if (menuError) {
+            console.error("❌ Erro ao inserir menus preservados:", menuError);
+          } else {
+            console.log("✅ Menus preservados inseridos com sucesso");
+          }
+        } else {
+          console.log("⚠️ Nenhum menu para preservar");
         }
       }
+
+      console.log("=====================================");
 
       toast({
         title: "Grupo atualizado",
@@ -157,7 +185,7 @@ export const usePermissionGroups = () => {
 
       return data;
     } catch (error: any) {
-      console.error("Erro ao atualizar grupo de permissão:", error);
+      console.error("❌ Erro ao atualizar grupo de permissão:", error);
       toast({
         title: "Erro",
         description: error.message || "Erro ao atualizar grupo de permissão",

@@ -74,7 +74,7 @@ export const MenuPermissionsSection: React.FC<MenuPermissionsSectionProps> = ({
                   allowAdminAccess ? 'text-green-700' : 'text-blue-700'
                 }`}>
                   {allowAdminAccess 
-                    ? 'Este grupo terá acesso à área administrativa apenas para os menus selecionados abaixo. Os menus selecionados serão preservados.'
+                    ? 'Este grupo terá acesso à área administrativa apenas para os menus selecionados abaixo. Os menus selecionados são preservados automaticamente.'
                     : 'Este grupo terá acesso apenas à área do aluno para os menus selecionados abaixo.'
                   }
                 </p>
