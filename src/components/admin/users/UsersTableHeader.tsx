@@ -1,6 +1,10 @@
 
 import React from "react";
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 const UsersTableHeader: React.FC = () => {
   return (
@@ -8,9 +12,9 @@ const UsersTableHeader: React.FC = () => {
       <TableRow>
         <TableHead>Usuário</TableHead>
         <TableHead>Status</TableHead>
-        <TableHead>Função</TableHead>
+        <TableHead>Papel</TableHead>
+        <TableHead>Mentor</TableHead>
         <TableHead>Último Login</TableHead>
-        <TableHead>Storage %</TableHead>
         <TableHead className="text-right">Ações</TableHead>
       </TableRow>
     </TableHeader>

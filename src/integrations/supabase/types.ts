@@ -703,6 +703,7 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          is_mentor: boolean
           name: string | null
           permission_group_id: string | null
           role: string | null
@@ -716,6 +717,7 @@ export type Database = {
           created_at?: string | null
           email: string
           id: string
+          is_mentor?: boolean
           name?: string | null
           permission_group_id?: string | null
           role?: string | null
@@ -729,6 +731,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          is_mentor?: boolean
           name?: string | null
           permission_group_id?: string | null
           role?: string | null

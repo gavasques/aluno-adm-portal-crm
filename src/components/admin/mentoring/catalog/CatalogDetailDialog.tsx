@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import {
   Edit 
 } from 'lucide-react';
 import { MentoringCatalog } from '@/types/mentoring.types';
+import { useMentors } from '@/hooks/useMentors';
 
 interface CatalogDetailDialogProps {
   open: boolean;
@@ -29,6 +30,16 @@ const CatalogDetailDialog: React.FC<CatalogDetailDialogProps> = ({
   catalog,
   onEdit
 }) => {
+  const { mentors } = useMentors();
+  const [mentorName, setMentorName] = useState<string>('');
+
+  useEffect(() => {
+    if (catalog && mentors.length > 0) {
+      const mentor = mentors.find(m => m.id === catalog.instructor);
+      setMentorName(mentor ? `${mentor.name} (${mentor.email})` : catalog.instructor);
+    }
+  }, [catalog, mentors]);
+
   if (!catalog) return null;
 
   const getTypeColor = (type: string) => {
@@ -77,8 +88,8 @@ const CatalogDetailDialog: React.FC<CatalogDetailDialogProps> = ({
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-500" />
                     <div>
-                      <p className="text-sm font-medium">Instrutor</p>
-                      <p className="text-sm text-gray-600">{catalog.instructor}</p>
+                      <p className="text-sm font-medium">Mentor</p>
+                      <p className="text-sm text-gray-600">{mentorName || catalog.instructor}</p>
                     </div>
                   </div>
 

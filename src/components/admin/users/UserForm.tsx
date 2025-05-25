@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/auth";
 import { userFormSchema } from "@/utils/validation-schemas";
 import { validatePassword } from "@/utils/security";
@@ -39,7 +40,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       name: "",
       email: "",
       role: "Student",
-      password: "", 
+      password: "",
+      is_mentor: false,
     },
   });
 
@@ -65,7 +67,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         data.email, 
         data.name, 
         data.role, 
-        data.password
+        data.password,
+        data.is_mentor
       );
       
       form.reset();
@@ -159,6 +162,26 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
                   </ul>
                 </div>
               )}
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="is_mentor"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">É Mentor</FormLabel>
+                <div className="text-sm text-gray-500">
+                  Permitir que este usuário seja selecionado como mentor nas mentorias
+                </div>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
             </FormItem>
           )}
         />

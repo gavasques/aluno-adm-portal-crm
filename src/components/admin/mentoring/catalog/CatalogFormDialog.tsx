@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Save, X } from 'lucide-react';
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
+import { useMentors } from '@/hooks/useMentors';
 
 interface CatalogFormDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
   onSubmit,
   isLoading = false
 }) => {
+  const { mentors, loading: mentorsLoading } = useMentors();
   const [formData, setFormData] = useState<CreateMentoringCatalogData>({
     name: '',
     type: 'Individual',
@@ -73,7 +75,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     }
 
     if (!formData.instructor.trim()) {
-      newErrors.instructor = 'Instrutor é obrigatório';
+      newErrors.instructor = 'Mentor é obrigatório';
     }
 
     if (!formData.description.trim()) {
@@ -116,6 +118,11 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const getSelectedMentorName = (mentorId: string) => {
+    const mentor = mentors.find(m => m.id === mentorId);
+    return mentor ? `${mentor.name} (${mentor.email})` : mentorId;
   };
 
   return (
@@ -178,18 +185,32 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               </Select>
             </div>
 
-            {/* Instrutor */}
+            {/* Mentor */}
             <div className="space-y-2">
-              <Label htmlFor="instructor">Instrutor *</Label>
-              <Input
-                id="instructor"
-                value={formData.instructor}
-                onChange={(e) => handleChange('instructor', e.target.value)}
-                placeholder="Nome do instrutor"
-                className={errors.instructor ? 'border-red-500' : ''}
-              />
+              <Label htmlFor="instructor">Mentor *</Label>
+              <Select 
+                value={formData.instructor} 
+                onValueChange={(value) => handleChange('instructor', value)}
+                disabled={mentorsLoading}
+              >
+                <SelectTrigger className={errors.instructor ? 'border-red-500' : ''}>
+                  <SelectValue placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {mentors.map((mentor) => (
+                    <SelectItem key={mentor.id} value={mentor.id}>
+                      {mentor.name} ({mentor.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.instructor && (
                 <p className="text-sm text-red-600">{errors.instructor}</p>
+              )}
+              {mentors.length === 0 && !mentorsLoading && (
+                <p className="text-sm text-amber-600">
+                  Nenhum mentor encontrado. Marque usuários como mentores na gestão de usuários.
+                </p>
               )}
             </div>
           </div>
@@ -267,7 +288,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
             </Button>
             <Button 
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || mentorsLoading}
             >
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? 'Salvando...' : catalog ? 'Salvar Alterações' : 'Criar Mentoria'}

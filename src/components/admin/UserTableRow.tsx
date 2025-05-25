@@ -5,6 +5,7 @@ import {
   TableCell 
 } from "@/components/ui/table";
 import StatusBadge from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,7 +22,8 @@ import {
   UserX,
   UserCheck,
   UserMinus,
-  Lock 
+  Lock,
+  GraduationCap
 } from "lucide-react";
 
 interface UserTableRowProps {
@@ -33,12 +35,14 @@ interface UserTableRowProps {
     status: string;
     lastLogin: string;
     permission_group_id?: string | null;
+    is_mentor?: boolean;
   };
   onViewDetails: (user: any) => void;
   onResetPassword: (email: string) => void;
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
+  onToggleMentorStatus?: (userId: string, isMentor: boolean) => void;
 }
 
 const UserTableRow: React.FC<UserTableRowProps> = ({ 
@@ -47,7 +51,8 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onResetPassword,
   onDeleteUser,
   onToggleUserStatus,
-  onSetPermissionGroup
+  onSetPermissionGroup,
+  onToggleMentorStatus
 }) => {
   // Determinar se o usuário está ativo com base no status
   const isActive = user.status === "Ativo";
@@ -69,6 +74,16 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
         <StatusBadge status={user.status} />
       </TableCell>
       <TableCell>{user.role || "Não definido"}</TableCell>
+      <TableCell>
+        {user.is_mentor ? (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <GraduationCap className="h-3 w-3 mr-1" />
+            Mentor
+          </Badge>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )}
+      </TableCell>
       <TableCell>{user.lastLogin || "Nunca"}</TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
@@ -92,6 +107,13 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               <DropdownMenuItem onClick={() => onSetPermissionGroup(user.id, user.email, user.permission_group_id)}>
                 <Lock className="mr-2 h-4 w-4" />
                 <span>Definir permissões</span>
+              </DropdownMenuItem>
+            )}
+
+            {onToggleMentorStatus && (
+              <DropdownMenuItem onClick={() => onToggleMentorStatus(user.id, !user.is_mentor)}>
+                <GraduationCap className="mr-2 h-4 w-4" />
+                <span>{user.is_mentor ? 'Remover mentor' : 'Tornar mentor'}</span>
               </DropdownMenuItem>
             )}
             
