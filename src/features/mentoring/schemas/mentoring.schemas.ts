@@ -52,7 +52,7 @@ export type CreateSessionData = z.infer<typeof createSessionSchema>;
 export type CreateExtensionData = z.infer<typeof createExtensionSchema>;
 export type MentoringFiltersData = z.infer<typeof mentoringFiltersSchema>;
 
-// Função utilitária para validação
+// Função utilitária para validação corrigida
 export const validateMentoringData = <T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } => {
   try {
     const validatedData = schema.parse(data);
