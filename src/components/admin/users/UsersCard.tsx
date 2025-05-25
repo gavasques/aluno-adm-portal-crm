@@ -15,6 +15,7 @@ interface UsersCardProps {
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
+  onRefresh?: () => void;
 }
 
 const UsersCard: React.FC<UsersCardProps> = (props) => {
