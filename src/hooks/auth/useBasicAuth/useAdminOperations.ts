@@ -30,7 +30,7 @@ export const useAdminOperations = () => {
 
       const { data, error } = await supabase.functions.invoke('list-users', {
         body: { 
-          action: 'create',
+          action: 'createUser',
           email, 
           name, 
           role, 
@@ -39,19 +39,29 @@ export const useAdminOperations = () => {
         }
       });
 
+      console.log("Resposta da Edge Function:", { data, error });
+
       if (error) {
         console.error("Erro da Edge Function:", error);
+        
+        // Tratar diferentes tipos de erro
+        let errorMessage = "Erro ao criar usuário";
+        if (error.message?.includes("non-2xx status code")) {
+          errorMessage = "Erro interno do servidor. Tente novamente.";
+        } else {
+          errorMessage = error.message || "Erro desconhecido ao criar usuário";
+        }
+        
         toast({
           title: "Erro",
-          description: error.message || "Erro ao criar usuário",
+          description: errorMessage,
           variant: "destructive",
         });
-        throw error;
+        
+        return { error: errorMessage, existed: false };
       }
 
-      console.log("Resposta da Edge Function:", data);
-
-      if (data.error) {
+      if (data?.error) {
         console.error("Erro retornado pela função:", data.error);
         toast({
           title: "Erro",
@@ -61,7 +71,7 @@ export const useAdminOperations = () => {
         return { error: data.error, existed: false };
       }
 
-      if (data.existed) {
+      if (data?.existed) {
         const message = data.profileCreated 
           ? "Usuário já existia, mas o perfil foi sincronizado com sucesso"
           : data.message || "Usuário já existe com este email";
@@ -80,7 +90,7 @@ export const useAdminOperations = () => {
         };
       }
 
-      if (data.success) {
+      if (data?.success) {
         const message = data.message || "Usuário criado com sucesso";
         const mentorMessage = is_mentor ? " (marcado como mentor)" : "";
         
@@ -97,18 +107,25 @@ export const useAdminOperations = () => {
         };
       }
 
+      // Se chegou até aqui, algo inesperado aconteceu
       console.error("Resposta inesperada da função:", data);
+      const fallbackMessage = "Resposta inesperada do servidor";
+      
       toast({
         title: "Erro",
-        description: "Resposta inesperada do servidor",
+        description: fallbackMessage,
         variant: "destructive",
       });
       
-      return { error: "Resposta inesperada do servidor", existed: false };
+      return { error: fallbackMessage, existed: false };
+      
     } catch (error: any) {
       console.error("Erro ao criar usuário:", error);
       
-      const errorMessage = error.message || "Erro desconhecido ao criar usuário";
+      let errorMessage = "Erro desconhecido ao criar usuário";
+      if (error.message) {
+        errorMessage = error.message;
+      }
       
       toast({
         title: "Erro",
@@ -116,7 +133,7 @@ export const useAdminOperations = () => {
         variant: "destructive",
       });
       
-      throw new Error(errorMessage);
+      return { error: errorMessage, existed: false };
     }
   };
 

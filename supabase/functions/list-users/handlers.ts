@@ -1,155 +1,149 @@
 
 import { corsHeaders } from "./_shared/cors.ts";
-import { processUsers, ensureProfiles } from "./userProcessing.ts";
+import { createUser, inviteUser, deleteUser, toggleUserStatus } from "./userOperations.ts";
+import { processUsersForResponse } from "./userProcessing.ts";
 
-// Função auxiliar para criar respostas de sucesso
-export const createSuccessResponse = (data: any) => {
-  return new Response(
-    JSON.stringify(data),
-    { 
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json' 
-      },
-      status: 200 
-    }
-  );
-};
-
-// Função auxiliar para criar respostas de erro
-export const createErrorResponse = (error: any, status: number = 500) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  
-  return new Response(
-    JSON.stringify({ 
-      error: errorMessage,
-      timestamp: new Date().toISOString()
-    }),
-    { 
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json' 
-      },
-      status 
-    }
-  );
-};
-
-export async function handleGetRequest(supabaseAdmin: any): Promise<Response> {
+// Handler para requisições GET (listar usuários)
+export const handleGetRequest = async (supabaseAdmin: any) => {
   try {
     console.log("Processando requisição GET para listar usuários");
     
-    // Verificação explícita do client admin
-    if (!supabaseAdmin || !supabaseAdmin.auth || !supabaseAdmin.auth.admin) {
-      console.error("Erro: Cliente Supabase Admin inválido ou sem permissões suficientes");
-      throw new Error("Cliente Supabase Admin inválido ou sem permissões admin");
+    // Verificar se o cliente admin está funcionando
+    if (!supabaseAdmin) {
+      console.error("Cliente Supabase Admin não disponível");
+      return new Response(
+        JSON.stringify({ error: "Erro interno: cliente admin não disponível" }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
     }
     
     console.log("Cliente admin verificado, buscando usuários...");
     
-    // Buscar todos os usuários usando o client admin
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
+    // Buscar usuários do auth
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (error) {
-      console.error("Erro ao listar usuários:", error);
-      throw error;
+    if (authError) {
+      console.error("Erro ao buscar usuários do auth:", authError);
+      return new Response(
+        JSON.stringify({ error: authError.message }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
     }
-
-    const users = data?.users;
     
-    if (!users || !Array.isArray(users)) {
-      console.error("Resposta inválida da API auth.admin.listUsers:", data);
-      throw new Error("Resposta inválida da API: dados de usuários não encontrados ou inválidos");
-    }
-
-    console.log(`Obtidos ${users.length} usuários do auth`);
+    console.log(`Obtidos ${authUsers?.users?.length || 0} usuários do auth`);
     
-    // Buscar perfis em uma única consulta
-    const { data: profilesData } = await supabaseAdmin
+    // Buscar perfis
+    const { data: profiles, error: profilesError } = await supabaseAdmin
       .from('profiles')
       .select('*');
-    
-    // Criar um mapa de perfis para acesso rápido
-    const profilesMap = new Map();
-    if (profilesData && Array.isArray(profilesData)) {
-      profilesData.forEach(profile => {
-        if (profile && profile.id) {
-          profilesMap.set(profile.id, profile);
-        }
-      });
+      
+    if (profilesError) {
+      console.error("Erro ao buscar perfis:", profilesError);
     }
     
-    console.log(`Mapa de perfis criado com ${profilesMap.size} entradas`);
+    // Processar usuários para resposta
+    const processedUsers = await processUsersForResponse(authUsers?.users || [], profiles || []);
     
-    // Assegurar que todos os usuários tenham perfis
-    await ensureProfiles(users, supabaseAdmin, profilesMap);
-    
-    // Processar os usuários para o formato esperado usando a função refatorada
-    const processedUsers = await processUsers(users, supabaseAdmin);
-
     console.log(`Retornando ${processedUsers.length} usuários processados com status 200`);
     console.log("Amostra de dados:", processedUsers.slice(0, 2));
     
-    // Retornar com o formato esperado pelo frontend
-    return createSuccessResponse({ users: processedUsers });
+    return new Response(
+      JSON.stringify({ users: processedUsers }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    );
+    
   } catch (error) {
-    console.error("Erro ao processar requisição GET:", error);
-    return createErrorResponse(error);
+    console.error("Erro no handler GET:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
   }
-}
+};
 
-export async function handlePostRequest(req: Request, supabaseAdmin: any): Promise<Response> {
+// Handler para requisições POST (operações de usuário)
+export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
   try {
     console.log("Processando requisição POST");
     
-    // Verificar se o corpo da requisição existe
-    let requestData;
-    try {
-      requestData = await req.json();
-    } catch (error) {
-      console.error("Erro ao analisar o corpo da requisição:", error);
-      return createErrorResponse(
-        "Body required. Requisição POST requer um corpo JSON válido.",
-        400
-      );
+    const requestBody = await req.json();
+    console.log("Dados recebidos:", { ...requestBody, password: requestBody.password ? '***' : undefined });
+    
+    const { action } = requestBody;
+    console.log("Executando ação:", action);
+    
+    let result;
+    
+    switch (action) {
+      case 'create':
+      case 'createUser':
+        result = await createUser(supabaseAdmin, requestBody);
+        break;
+        
+      case 'invite':
+      case 'inviteUser':
+        result = await inviteUser(supabaseAdmin, requestBody);
+        break;
+        
+      case 'delete':
+      case 'deleteUser':
+        result = await deleteUser(supabaseAdmin, requestBody);
+        break;
+        
+      case 'toggleStatus':
+      case 'toggleUserStatus':
+        result = await toggleUserStatus(supabaseAdmin, requestBody);
+        break;
+        
+      default:
+        console.error("Ação não reconhecida:", action);
+        return new Response(
+          JSON.stringify({ error: `Ação não suportada: ${action}` }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400 
+          }
+        );
     }
     
-    if (!requestData || !requestData.action) {
-      console.error("Dados inválidos ou ação não especificada no corpo da requisição");
-      return createErrorResponse(
-        "Dados inválidos ou ação não especificada",
-        400
-      );
+    console.log("Resultado da operação:", result);
+    
+    // Determinar status HTTP baseado no resultado
+    let statusCode = 200;
+    if (result.error) {
+      statusCode = 400;
+    } else if (result.existed && !result.profileCreated) {
+      statusCode = 409; // Conflict
     }
     
-    // Importar funções de operação dinamicamente
-    const { createUser, deleteUser, toggleUserStatus, inviteUser } = await import('./userOperations.ts');
+    return new Response(
+      JSON.stringify(result),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: statusCode 
+      }
+    );
     
-    // Executar a ação correspondente
-    console.log(`Executando ação: ${requestData.action}`);
-    
-    const handlers = {
-      'createUser': createUser,
-      'inviteUser': inviteUser,
-      'deleteUser': deleteUser,
-      'toggleUserStatus': toggleUserStatus
-    };
-    
-    const handler = handlers[requestData.action];
-    
-    if (handler) {
-      const result = await handler(supabaseAdmin, requestData);
-      console.log(`Ação ${requestData.action} concluída com sucesso, retornando status 200`);
-      return createSuccessResponse(result);
-    } else {
-      console.error(`Ação desconhecida: ${requestData.action}`);
-      return createErrorResponse(
-        `Ação desconhecida: ${requestData.action}`,
-        400
-      );
-    }
   } catch (error) {
-    console.error("Erro ao processar requisição POST:", error);
-    return createErrorResponse(error);
+    console.error("Erro no handler POST:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
   }
-}
+};
