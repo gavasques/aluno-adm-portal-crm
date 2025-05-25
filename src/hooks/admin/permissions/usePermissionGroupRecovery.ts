@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 export const usePermissionGroupRecovery = () => {
   const recoverMentorGroupMenus = useCallback(async () => {
     try {
-      console.log("=== RECUPERANDO MENUS DO GRUPO MENTOR (MELHORADO) ===");
+      console.log("=== RECUPERANDO MENUS DO GRUPO MENTOR (VERSÃO EXPANDIDA) ===");
       
       // Buscar o grupo Mentor
       const { data: mentorGroup, error: groupError } = await supabase
@@ -25,33 +25,26 @@ export const usePermissionGroupRecovery = () => {
         return false;
       }
 
-      console.log("Grupo Mentor encontrado:", {
+      console.log("✅ Grupo Mentor encontrado:", {
         id: mentorGroup.id,
         is_admin: mentorGroup.is_admin,
         allow_admin_access: mentorGroup.allow_admin_access
       });
 
-      // Verificar menus atuais
-      const { data: currentMenus, error: menusError } = await supabase
-        .from("permission_group_menus")
-        .select("menu_key")
-        .eq("permission_group_id", mentorGroup.id);
-
-      if (menusError) {
-        console.error("❌ Erro ao verificar menus atuais:", menusError);
-        return false;
-      }
-
-      console.log("Menus atuais do grupo Mentor:", currentMenus?.length || 0);
-
-      // Menus completos que um mentor deveria ter acesso
+      // Conjunto expandido de menus para mentores
       const mentorMenus = [
-        "dashboard",
-        "students", 
-        "mentoring",
-        "tasks",
-        "users",
-        "settings"
+        "dashboard",      // Dashboard principal
+        "students",       // Gestão de alunos
+        "mentoring",      // Sistema de mentoria
+        "tasks",          // Tarefas e agenda
+        "users",          // Gerenciamento de usuários
+        "settings",       // Configurações
+        "crm",           // CRM para leads
+        "suppliers",     // Fornecedores
+        "partners",      // Parceiros
+        "tools",         // Ferramentas
+        "bonus",         // Bônus e materiais
+        "courses"        // Cursos
       ];
 
       // Verificar quais menus existem no sistema
@@ -66,7 +59,7 @@ export const usePermissionGroupRecovery = () => {
       }
 
       const validMenus = systemMenus?.map(m => m.menu_key) || [];
-      console.log("Menus válidos para recuperação:", validMenus);
+      console.log("✅ Menus válidos para recuperação:", validMenus);
 
       if (validMenus.length === 0) {
         console.log("⚠️ Nenhum menu válido encontrado para recuperação");
@@ -107,7 +100,7 @@ export const usePermissionGroupRecovery = () => {
       }
 
       console.log("✅ Menus do grupo Mentor recuperados com sucesso!");
-      console.log("Menus restaurados:", validMenus);
+      console.log("📋 Menus restaurados:", validMenus);
       console.log("========================================================");
 
       toast({

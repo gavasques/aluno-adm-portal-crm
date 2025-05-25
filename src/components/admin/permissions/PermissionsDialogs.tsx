@@ -1,9 +1,10 @@
 
 import React from "react";
-import ModularPermissionForm from "./ModularPermissionForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { PermissionGroup } from "@/hooks/admin/usePermissionGroups";
+import UnifiedPermissionForm from "./UnifiedPermissionForm";
 import PermissionGroupDelete from "./PermissionGroupDelete";
 import PermissionGroupUsers from "./PermissionGroupUsers";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface PermissionsDialogsProps {
   showAddDialog: boolean;
@@ -14,7 +15,7 @@ interface PermissionsDialogsProps {
   setShowDeleteDialog: (show: boolean) => void;
   showUsersDialog: boolean;
   setShowUsersDialog: (show: boolean) => void;
-  selectedGroup: any;
+  selectedGroup: PermissionGroup | null;
   onSuccess: () => void;
 }
 
@@ -32,10 +33,10 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
 }) => {
   return (
     <>
-      {/* Diálogo para adicionar grupo */}
+      {/* Add Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
-          <ModularPermissionForm
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <UnifiedPermissionForm
             isEdit={false}
             onOpenChange={setShowAddDialog}
             onSuccess={onSuccess}
@@ -43,37 +44,42 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo para editar grupo */}
+      {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
-          <ModularPermissionForm
-            isEdit={true}
-            permissionGroup={selectedGroup}
-            onOpenChange={setShowEditDialog}
-            onSuccess={onSuccess}
-          />
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedGroup && (
+            <UnifiedPermissionForm
+              isEdit={true}
+              permissionGroup={selectedGroup}
+              onOpenChange={setShowEditDialog}
+              onSuccess={onSuccess}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo para excluir grupo */}
+      {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[450px]">
-          <PermissionGroupDelete
-            permissionGroup={selectedGroup}
-            onOpenChange={setShowDeleteDialog}
-            onSuccess={onSuccess}
-          />
+        <DialogContent>
+          {selectedGroup && (
+            <PermissionGroupDelete
+              group={selectedGroup}
+              onOpenChange={setShowDeleteDialog}
+              onSuccess={onSuccess}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo para visualizar usuários do grupo */}
+      {/* Users Dialog */}
       <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
-        <DialogContent className="sm:max-w-[700px]">
-          <PermissionGroupUsers
-            permissionGroup={selectedGroup}
-            onOpenChange={setShowUsersDialog}
-            onSuccess={onSuccess}
-          />
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedGroup && (
+            <PermissionGroupUsers
+              groupId={selectedGroup.id}
+              groupName={selectedGroup.name}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
