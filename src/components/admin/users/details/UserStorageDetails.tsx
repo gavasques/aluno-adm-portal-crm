@@ -9,21 +9,20 @@ import StorageUpgradeDialog from "../StorageUpgradeDialog";
 import { useAdminStorage } from "@/hooks/admin/useAdminStorage";
 
 interface UserStorageDetailsProps {
-  userId: string;
-  userName: string;
-  storageUsedMb: number;
-  storageLimitMb: number;
+  user: {
+    id: string;
+    name: string;
+    storage_used_mb?: number;
+    storage_limit_mb?: number;
+  };
 }
 
-const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({
-  userId,
-  userName,
-  storageUsedMb,
-  storageLimitMb
-}) => {
+const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const { storageUpgrades } = useAdminStorage();
   
+  const storageUsedMb = user.storage_used_mb || 0;
+  const storageLimitMb = user.storage_limit_mb || 100;
   const usagePercentage = (storageUsedMb / storageLimitMb) * 100;
   
   const formatMB = (mb: number) => {
@@ -46,7 +45,7 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({
   };
 
   // Filtrar upgrades deste usuário
-  const userUpgrades = storageUpgrades.filter(upgrade => upgrade.user_id === userId);
+  const userUpgrades = storageUpgrades.filter(upgrade => upgrade.user_id === user.id);
 
   return (
     <>
@@ -148,8 +147,8 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({
       <StorageUpgradeDialog
         open={showUpgradeDialog}
         onOpenChange={setShowUpgradeDialog}
-        userId={userId}
-        userName={userName}
+        userId={user.id}
+        userName={user.name}
       />
     </>
   );

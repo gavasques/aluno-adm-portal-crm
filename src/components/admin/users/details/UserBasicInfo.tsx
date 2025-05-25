@@ -4,12 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { User, Mail, CalendarClock } from "lucide-react";
 
 interface UserBasicInfoProps {
-  name: string;
-  email: string;
-  lastLogin: string;
+  user: {
+    name: string;
+    email: string;
+    lastLogin: string;
+  };
 }
 
-const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ name, email, lastLogin }) => {
+const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ user }) => {
   return (
     <Card>
       <CardContent className="pt-6">
@@ -19,21 +21,21 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ name, email, lastLogin })
             <User className="h-5 w-5 mt-0.5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">Nome</p>
-              <p className="font-medium">{name}</p>
+              <p className="font-medium">{user.name}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <Mail className="h-5 w-5 mt-0.5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium">{email}</p>
+              <p className="font-medium">{user.email}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <CalendarClock className="h-5 w-5 mt-0.5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-500">Último Login</p>
-              <p className="font-medium">{lastLogin}</p>
+              <p className="font-medium">{user.lastLogin}</p>
             </div>
           </div>
         </div>
