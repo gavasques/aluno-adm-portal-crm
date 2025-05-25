@@ -19,7 +19,7 @@ export const useMentoringCatalogMutations = () => {
         // Validação de schema
         const schemaValidation = validateCatalog(data);
         if (!schemaValidation.success) {
-          throw new Error(schemaValidation.errors.join(', '));
+          throw new Error('errors' in schemaValidation ? schemaValidation.errors.join(', ') : 'Erro de validação');
         }
 
         // Validação de regras de negócio

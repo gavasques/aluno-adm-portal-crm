@@ -18,7 +18,7 @@ export const useMentoringSessionMutations = () => {
       mutationFn: async (data: CreateSessionData) => {
         const validation = validateSession(data);
         if (!validation.success) {
-          throw new Error(validation.errors.join(', '));
+          throw new Error('errors' in validation ? validation.errors.join(', ') : 'Erro de validação');
         }
         return repository.createSession(data);
       },
@@ -37,7 +37,7 @@ export const useMentoringSessionMutations = () => {
       mutationFn: async (data: CreateExtensionData) => {
         const validation = validateExtension(data);
         if (!validation.success) {
-          throw new Error(validation.errors.join(', '));
+          throw new Error('errors' in validation ? validation.errors.join(', ') : 'Erro de validação');
         }
         return repository.addExtension(data);
       },
