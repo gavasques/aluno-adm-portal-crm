@@ -45,6 +45,14 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
     }
   };
 
+  const handleRowClick = (catalog: MentoringCatalog, event: React.MouseEvent) => {
+    // Prevenir o clique se for em um botão
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    onView(catalog);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -63,12 +71,6 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                   </Button>
                 </TableHead>
                 <TableHead className="font-medium">Tipo</TableHead>
-                <TableHead className="font-medium">Instrutor</TableHead>
-                <TableHead className="font-medium">
-                  <Button variant="ghost" size="sm" className="h-auto p-0 font-medium">
-                    Preço <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
                 <TableHead className="font-medium text-center">Duração</TableHead>
                 <TableHead className="font-medium text-center">Sessões</TableHead>
                 <TableHead className="font-medium text-center">Status</TableHead>
@@ -77,8 +79,12 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
             </TableHeader>
             <TableBody>
               {catalogs.map((catalog) => (
-                <TableRow key={catalog.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium max-w-64">
+                <TableRow 
+                  key={catalog.id} 
+                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={(e) => handleRowClick(catalog, e)}
+                >
+                  <TableCell className="font-medium max-w-80">
                     <div>
                       <p className="font-medium truncate">{catalog.name}</p>
                       <p className="text-sm text-gray-500 truncate">{catalog.description}</p>
@@ -88,14 +94,6 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                     <Badge className={getTypeColor(catalog.type)}>
                       {catalog.type}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-32">
-                    <span className="truncate">{catalog.instructor}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium text-green-600">
-                      R$ {catalog.price.toLocaleString()}
-                    </span>
                   </TableCell>
                   <TableCell className="text-center">
                     {catalog.durationWeeks} sem
@@ -108,7 +106,10 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onToggleStatus(catalog.id, catalog.active)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleStatus(catalog.id, catalog.active);
+                        }}
                         className="p-1"
                         title={catalog.active ? 'Desativar mentoria' : 'Ativar mentoria'}
                       >
@@ -126,7 +127,10 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                         variant="ghost" 
                         size="sm" 
                         className="p-2"
-                        onClick={() => onView(catalog)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onView(catalog);
+                        }}
                         title="Visualizar detalhes"
                       >
                         <Eye className="h-4 w-4" />
@@ -135,7 +139,10 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                         variant="ghost" 
                         size="sm" 
                         className="p-2"
-                        onClick={() => onEdit(catalog)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(catalog);
+                        }}
                         title="Editar mentoria"
                       >
                         <Edit className="h-4 w-4" />
@@ -144,7 +151,10 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                         variant="ghost" 
                         size="sm" 
                         className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => onDelete(catalog.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(catalog.id);
+                        }}
                         title="Excluir mentoria"
                       >
                         <Trash2 className="h-4 w-4" />
