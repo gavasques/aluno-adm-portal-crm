@@ -1,12 +1,18 @@
 
 import React from 'react';
-import { CatalogManagement } from '@/components/admin/mentoring/refactored/CatalogManagement';
+import { MentoringProvider } from '@/features/mentoring/contexts/MentoringContext';
+import { MentoringErrorBoundary } from '@/features/mentoring/shared/components/ErrorBoundary';
+import { CatalogManagement } from '@/features/mentoring/admin/components/CatalogManagement';
 
 const AdminMentoringCatalog = () => {
   return (
-    <div className="container mx-auto py-6">
-      <CatalogManagement />
-    </div>
+    <MentoringErrorBoundary>
+      <MentoringProvider>
+        <div className="container mx-auto py-6">
+          <CatalogManagement />
+        </div>
+      </MentoringProvider>
+    </MentoringErrorBoundary>
   );
 };
 
