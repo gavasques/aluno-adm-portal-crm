@@ -1,3 +1,4 @@
+
 # Welcome to your Lovable project
 
 ## Project info
@@ -60,6 +61,53 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Testing
+
+### Permission Services Testing Suite
+
+Este projeto inclui uma suíte completa de testes para o sistema de permissões:
+
+#### Testes Unitários
+- **PermissionGroupService.test.ts**: Testa operações CRUD de grupos de permissão
+- **SystemMenuService.test.ts**: Testa gerenciamento de menus do sistema
+- **SystemModuleService.test.ts**: Testa módulos e ações do sistema
+- **PermissionValidationService.test.ts**: Testa validações de permissão
+- **usePermissionServices.test.ts**: Testa o hook de serviços
+
+#### Testes de Integração
+- **PermissionWorkflows.integration.test.ts**: Testa fluxos completos de permissão
+- **SecurityValidation.integration.test.ts**: Testa validações de segurança
+- **DataFlow.integration.test.ts**: Testa consistência de dados entre serviços
+
+### Running Tests
+
+```sh
+# Executar todos os testes
+npm run test
+
+# Executar apenas testes unitários
+npm run test src/services/permissions/__tests__/*.test.ts
+
+# Executar apenas testes de integração
+npm run test src/services/permissions/__tests__/integration/
+
+# Executar testes com coverage
+npm run test -- --coverage
+
+# Executar testes em modo watch
+npm run test -- --watch
+```
+
+### Test Structure
+
+Os testes estão organizados seguindo as melhores práticas:
+
+- **Unit Tests**: Testam componentes individuais isoladamente
+- **Integration Tests**: Testam interações entre múltiplos serviços
+- **Mocking**: Uso extensivo de mocks do Supabase para testes determinísticos
+- **Coverage**: Cobertura completa dos cenários de sucesso e erro
+- **Security**: Testes específicos para validações de segurança
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/615752d4-0ad0-4fbd-9977-45d5385af67b) and click on Share -> Publish.
@@ -71,3 +119,4 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
