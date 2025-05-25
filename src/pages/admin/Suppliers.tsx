@@ -1,7 +1,7 @@
-
 import React from "react";
 import SupplierDetail from "@/components/admin/SupplierDetail";
 import SuppliersContent from "@/components/admin/suppliers/SuppliersContent";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 
 // Importar hooks
 import { useSuppliersList } from "@/hooks/suppliers/useSuppliersList";
@@ -48,8 +48,22 @@ const AdminSuppliers = () => {
     handleImportSuppliers
   } = useSupplierOperations(suppliers, setSuppliers);
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Geral ADM', href: '/admin/geral' },
+    { label: 'Fornecedores' }
+  ];
+
   return (
     <div className="w-full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/geral"
+        className="mb-6"
+      />
+
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Fornecedores</h1>
       
       {!selectedSupplier ? (

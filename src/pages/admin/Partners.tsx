@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Card, 
@@ -10,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import { 
   Select, 
   SelectContent, 
@@ -94,8 +94,22 @@ const Partners = () => {
     handleDeleteRating
   } = usePartnerRatings(selectedPartner, setSelectedPartner, updatePartner);
   
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Geral ADM', href: '/admin/geral' },
+    { label: 'Parceiros' }
+  ];
+  
   return (
     <div className="w-full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/geral"
+        className="mb-6"
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-portal-dark">Parceiros</h1>
         <Dialog>

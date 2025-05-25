@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { 
   Users, 
   Search, 
@@ -19,7 +19,6 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  ArrowLeft,
   UserPlus,
   Timer
 } from 'lucide-react';
@@ -41,6 +40,12 @@ const AdminMentoringEnrollments = () => {
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
+
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Mentorias', href: '/admin/mentorias' },
+    { label: 'Inscrições' }
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -112,22 +117,20 @@ const AdminMentoringEnrollments = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 space-y-6">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/mentorias"
+        className="mb-4"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/admin/mentorias')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Inscrições de Mentorias</h1>
-            <p className="text-gray-600 mt-1">Gerencie todas as inscrições de alunos</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Inscrições de Mentorias</h1>
+          <p className="text-gray-600 mt-1">Gerencie todas as inscrições de alunos</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">

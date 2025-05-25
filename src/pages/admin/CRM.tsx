@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import { Plus, Search, Settings } from "lucide-react";
 
 // Import our components
@@ -50,8 +50,21 @@ const CRM = () => {
     saveColumnChanges
   } = useCRMState();
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'CRM / Gestão de Leads' }
+  ];
+
   return (
     <div className="w-full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-6"
+      />
+
       <div className="flex flex-col mb-4">
         <h1 className="text-3xl font-bold text-portal-dark mb-4">CRM / Gestão de Leads</h1>
         <div className="flex gap-2 justify-start">

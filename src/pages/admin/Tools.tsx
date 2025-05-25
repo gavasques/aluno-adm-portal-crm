@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import { Plus, Search, Trash, Filter } from "lucide-react";
 import { toast } from "sonner";
 
@@ -161,6 +161,12 @@ const Tools = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [recommendedFilter, setRecommendedFilter] = useState<string>("all");
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Geral ADM', href: '/admin/geral' },
+    { label: 'Ferramentas' }
+  ];
+
   useEffect(() => {
     let result = [...tools];
 
@@ -209,6 +215,14 @@ const Tools = () => {
 
   return (
     <div className="w-full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/geral"
+        className="mb-6"
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-portal-dark">Ferramentas</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>
