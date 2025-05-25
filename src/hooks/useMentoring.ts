@@ -23,7 +23,7 @@ import {
 } from '@/data/mentoringData';
 
 export const useMentoring = () => {
-  const [catalogs] = useState<MentoringCatalog[]>(mockMentoringCatalog);
+  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(mockMentoringCatalog);
   const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(mockStudentEnrollments);
   const [sessions] = useState<MentoringSession[]>(mockMentoringSessions);
   const [materials] = useState<MentoringMaterial[]>(mockMentoringMaterials);
@@ -38,22 +38,41 @@ export const useMentoring = () => {
       updatedAt: new Date().toISOString()
     };
     
+    setCatalogs(prev => [...prev, newCatalog]);
     console.log('Creating mentoring catalog:', newCatalog);
     return newCatalog;
   };
 
-  const updateMentoringCatalog = async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<MentoringCatalog | null> => {
-    const catalog = catalogs.find(c => c.id === id);
-    if (!catalog) return null;
-    
-    const updated = {
-      ...catalog,
-      ...data,
-      updatedAt: new Date().toISOString()
-    };
-    
-    console.log('Updating mentoring catalog:', updated);
-    return updated;
+  const updateMentoringCatalog = async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> => {
+    try {
+      setCatalogs(prev => prev.map(catalog => {
+        if (catalog.id === id) {
+          return {
+            ...catalog,
+            ...data,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return catalog;
+      }));
+      
+      console.log('Updated mentoring catalog:', id, data);
+      return true;
+    } catch (error) {
+      console.error('Error updating catalog:', error);
+      return false;
+    }
+  };
+
+  const deleteMentoringCatalog = async (id: string): Promise<boolean> => {
+    try {
+      setCatalogs(prev => prev.filter(catalog => catalog.id !== id));
+      console.log('Deleted mentoring catalog:', id);
+      return true;
+    } catch (error) {
+      console.error('Error deleting catalog:', error);
+      return false;
+    }
   };
 
   const createSession = async (data: CreateSessionData): Promise<MentoringSession> => {
@@ -172,6 +191,7 @@ export const useMentoring = () => {
     // Admin functions
     createMentoringCatalog,
     updateMentoringCatalog,
+    deleteMentoringCatalog,
     createSession,
     updateSession,
     addExtension,

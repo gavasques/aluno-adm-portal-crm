@@ -23,6 +23,7 @@ import { MentoringCatalog } from '@/types/mentoring.types';
 
 interface CatalogTableProps {
   catalogs: MentoringCatalog[];
+  onView: (catalog: MentoringCatalog) => void;
   onEdit: (catalog: MentoringCatalog) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, currentStatus: boolean) => void;
@@ -30,6 +31,7 @@ interface CatalogTableProps {
 
 const CatalogTable: React.FC<CatalogTableProps> = ({
   catalogs,
+  onView,
   onEdit,
   onDelete,
   onToggleStatus
@@ -108,6 +110,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                         size="sm"
                         onClick={() => onToggleStatus(catalog.id, catalog.active)}
                         className="p-1"
+                        title={catalog.active ? 'Desativar mentoria' : 'Ativar mentoria'}
                       >
                         {catalog.active ? (
                           <ToggleRight className="h-5 w-5 text-green-600" />
@@ -119,7 +122,13 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <Button variant="ghost" size="sm" className="p-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="p-2"
+                        onClick={() => onView(catalog)}
+                        title="Visualizar detalhes"
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -127,6 +136,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                         size="sm" 
                         className="p-2"
                         onClick={() => onEdit(catalog)}
+                        title="Editar mentoria"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -135,6 +145,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                         size="sm" 
                         className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={() => onDelete(catalog.id)}
+                        title="Excluir mentoria"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
