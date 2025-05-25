@@ -82,13 +82,44 @@ export const usePermissionGroupCrud = () => {
 
   const updatePermissionGroup = useCallback(async (groupData: UpdatePermissionGroupData) => {
     try {
-      console.log("=== UPDATE PERMISSION GROUP (CRITICAL FIX) ===");
+      console.log("=== UPDATE PERMISSION GROUP (FINAL CORRECTION) ===");
       console.log("Dados recebidos:", {
         id: groupData.id,
         is_admin: groupData.is_admin,
         allow_admin_access: groupData.allow_admin_access,
         menu_keys_count: groupData.menu_keys.length
       });
+
+      // Primeiro, buscar o estado atual do grupo para comparação
+      const { data: currentGroup, error: fetchError } = await supabase
+        .from("permission_groups")
+        .select("*")
+        .eq("id", groupData.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      console.log("Estado atual do grupo:", {
+        current_is_admin: currentGroup.is_admin,
+        current_allow_admin_access: currentGroup.allow_admin_access,
+        new_is_admin: groupData.is_admin,
+        new_allow_admin_access: groupData.allow_admin_access
+      });
+
+      // Buscar menus atuais do grupo
+      const { data: currentMenus, error: menusError } = await supabase
+        .from("permission_group_menus")
+        .select("menu_key")
+        .eq("permission_group_id", groupData.id);
+
+      if (menusError) {
+        console.error("❌ Erro ao buscar menus atuais:", menusError);
+      }
+
+      const currentMenuKeys = currentMenus?.map(m => m.menu_key) || [];
+      console.log("Menus atuais no banco:", currentMenuKeys);
 
       // Atualizar dados básicos do grupo
       const { data, error } = await supabase
@@ -108,7 +139,7 @@ export const usePermissionGroupCrud = () => {
         throw error;
       }
 
-      // CORREÇÃO CRÍTICA: Lógica condicional para gerenciamento de menus
+      // LÓGICA CORRIGIDA: Gerenciamento condicional de menus
       if (groupData.is_admin) {
         // Admin completo (is_admin = true) - deletar todos os menus (acesso total)
         console.log("🔴 ADMIN COMPLETO - Deletando todos os menus (acesso total implícito)");
@@ -118,40 +149,50 @@ export const usePermissionGroupCrud = () => {
           .eq("permission_group_id", groupData.id);
         console.log("✅ Todos os menus deletados para admin completo");
       } else {
-        // Não-admin (is_admin = false) - gerenciar menus conforme seleção
-        console.log("🟡 NÃO-ADMIN - Gerenciando menus conforme seleção");
+        // Não-admin (is_admin = false) - aplicar lógica diferenciada
+        console.log("🟡 NÃO-ADMIN - Verificando necessidade de alteração de menus");
         
-        if (groupData.allow_admin_access) {
-          console.log("🟢 ADMIN LIMITADO - Preservando menus selecionados");
-        } else {
-          console.log("🔵 USUÁRIO NORMAL - Gerenciando menus normalmente");
-        }
+        const needsMenuUpdate = JSON.stringify(currentMenuKeys.sort()) !== JSON.stringify(groupData.menu_keys.sort());
         
-        // Sempre deletar e reinserir para garantir consistência
-        await supabase
-          .from("permission_group_menus")
-          .delete()
-          .eq("permission_group_id", groupData.id);
-
-        // Inserir menus selecionados (se houver)
-        if (groupData.menu_keys.length > 0) {
-          const menuAssociations = groupData.menu_keys.map(menuKey => ({
-            permission_group_id: groupData.id,
-            menu_key: menuKey,
-          }));
-
-          console.log("📝 Inserindo", menuAssociations.length, "menus preservados/selecionados");
-          const { error: menuError } = await supabase
+        if (needsMenuUpdate) {
+          console.log("📝 MUDANÇA DE MENUS DETECTADA - Atualizando menus");
+          console.log("Menus antigos:", currentMenuKeys);
+          console.log("Menus novos:", groupData.menu_keys);
+          
+          // Deletar menus antigos
+          await supabase
             .from("permission_group_menus")
-            .insert(menuAssociations);
+            .delete()
+            .eq("permission_group_id", groupData.id);
 
-          if (menuError) {
-            console.error("❌ Erro ao inserir menus preservados:", menuError);
+          // Inserir novos menus (se houver)
+          if (groupData.menu_keys.length > 0) {
+            const menuAssociations = groupData.menu_keys.map(menuKey => ({
+              permission_group_id: groupData.id,
+              menu_key: menuKey,
+            }));
+
+            console.log("📝 Inserindo", menuAssociations.length, "novos menus");
+            const { error: menuError } = await supabase
+              .from("permission_group_menus")
+              .insert(menuAssociations);
+
+            if (menuError) {
+              console.error("❌ Erro ao inserir novos menus:", menuError);
+            } else {
+              console.log("✅ Novos menus inseridos com sucesso");
+            }
           } else {
-            console.log("✅ Menus preservados/selecionados inseridos com sucesso");
+            console.log("ℹ️ Nenhum menu novo para inserir");
           }
         } else {
-          console.log("ℹ️ Nenhum menu selecionado para inserir");
+          console.log("✅ MENUS INALTERADOS - Preservando estado atual");
+          
+          if (groupData.allow_admin_access) {
+            console.log("🟢 ADMIN LIMITADO - Menus preservados:", currentMenuKeys.length, "menus");
+          } else {
+            console.log("🔵 USUÁRIO NORMAL - Menus preservados:", currentMenuKeys.length, "menus");
+          }
         }
       }
 

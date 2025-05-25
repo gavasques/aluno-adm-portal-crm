@@ -1,33 +1,36 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
-import SEOHead from "@/components/seo/SEOHead";
-import { useUrlOptimization } from "@/hooks/useUrlOptimization";
+import { Plus } from "lucide-react";
+import PermissionGroupRecoveryButton from "./PermissionGroupRecoveryButton";
 
 interface PermissionsHeaderProps {
   onAdd: () => void;
+  onRecoverySuccess?: () => void;
 }
 
-const PermissionsHeader: React.FC<PermissionsHeaderProps> = ({ onAdd }) => {
-  const { getCanonicalUrl } = useUrlOptimization();
-  
+const PermissionsHeader: React.FC<PermissionsHeaderProps> = ({ 
+  onAdd, 
+  onRecoverySuccess 
+}) => {
   return (
-    <>
-      <SEOHead
-        title="Gestão de Permissões"
-        description="Gerencie grupos de permissão e controle de acesso aos recursos do sistema"
-        keywords="permissões, grupos, acesso, administração, segurança"
-        canonicalUrl={getCanonicalUrl()}
-      />
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-portal-dark">Gestão de Permissões</h1>
-        <Button onClick={onAdd}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Novo Grupo de Permissão
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Grupos de Permissão</h1>
+        <p className="text-gray-600 mt-1">
+          Gerencie grupos de permissão e controle de acesso dos usuários
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2">
+        {onRecoverySuccess && (
+          <PermissionGroupRecoveryButton onSuccess={onRecoverySuccess} />
+        )}
+        <Button onClick={onAdd} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Novo Grupo
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

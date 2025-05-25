@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 import { useMenuCounts } from "@/hooks/admin/useMenuCounts";
@@ -8,6 +7,7 @@ import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialog
 import PermissionGroupMenusManager from "@/components/admin/permissions/PermissionGroupMenusManager";
 import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
 
 const Permissions = () => {
   const { 
@@ -57,6 +57,12 @@ const Permissions = () => {
     refreshMenuCounts();
   };
 
+  const handleRecoverySuccess = () => {
+    console.log("DEBUG - Permissions: handleRecoverySuccess called - refreshing data");
+    refreshPermissionGroups();
+    refreshMenuCounts();
+  };
+
   const handleCloseMenusDialog = () => {
     setShowMenusDialog(false);
     setSelectedGroup(null);
@@ -67,7 +73,7 @@ const Permissions = () => {
 
   return (
     <div className="w-full">
-      <PermissionsHeader onAdd={handleAdd} />
+      <PermissionsHeader onAdd={handleAdd} onRecoverySuccess={handleRecoverySuccess} />
 
       {error && (
         <>
@@ -78,6 +84,17 @@ const Permissions = () => {
           <FixPermissionsButton onSuccess={handleSuccess} />
         </>
       )}
+
+      {/* Show recovery notice for Mentor group */}
+      <div className="bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded mb-4">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4" />
+          <span className="font-medium">Atenção:</span>
+        </div>
+        <p className="text-sm mt-1">
+          Se o grupo "Mentor" estiver sem menus, use o botão "Recuperar Grupo Mentor" acima para restaurá-los automaticamente.
+        </p>
+      </div>
 
       <PermissionsCard 
         permissionGroups={permissionGroups} 
