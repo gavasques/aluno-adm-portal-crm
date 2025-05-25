@@ -37,21 +37,9 @@ const NavItem = ({
   const { permissions } = usePermissions();
   const isActive = pathname === href;
   
-  // Debug logging
-  console.log(`=== DEBUG NavItem: ${children} ===`);
-  console.log(`menuKey: ${menuKey}`);
-  console.log(`showAlways: ${showAlways}`);
-  console.log(`permissions.allowedMenus:`, permissions.allowedMenus);
-  console.log(`should show: ${showAlways || !menuKey || permissions.allowedMenus.includes(menuKey || '')}`);
-  console.log(`=== END DEBUG ===`);
-  
-  // Mostrar sempre durante desenvolvimento ou se showAlways for true
   if (!showAlways && menuKey && !permissions.allowedMenus.includes(menuKey)) {
-    console.log(`❌ HIDING NavItem: ${children} (menuKey: ${menuKey} not in allowed menus)`);
     return null;
   }
-  
-  console.log(`✅ SHOWING NavItem: ${children}`);
   
   return (
     <SidebarMenuItem>
@@ -59,9 +47,6 @@ const NavItem = ({
         <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg" : "text-gray-300 hover:bg-gray-700 hover:text-white")}>
           <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-gray-400")} />
           <span>{children}</span>
-          {/* Debug indicator */}
-          {showAlways && <span className="text-xs bg-green-500 text-white px-1 rounded">ALWAYS</span>}
-          {menuKey && !showAlways && <span className="text-xs bg-blue-500 text-white px-1 rounded">{menuKey}</span>}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -101,14 +86,6 @@ const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Debug logging for permissions
-  console.log(`=== ADMIN SIDEBAR DEBUG ===`);
-  console.log(`loading: ${loading}`);
-  console.log(`hasAdminAccess: ${permissions.hasAdminAccess}`);
-  console.log(`allowedMenus:`, permissions.allowedMenus);
-  console.log(`current path: ${location.pathname}`);
-  console.log(`=== END ADMIN SIDEBAR DEBUG ===`);
-
   const handleNavigateToStudent = () => {
     navigate("/aluno");
   };
@@ -141,11 +118,8 @@ const AdminSidebar = () => {
   }
 
   if (!permissions.hasAdminAccess) {
-    console.log(`❌ No admin access, hiding sidebar`);
     return null;
   }
-
-  console.log(`✅ Rendering admin sidebar`);
 
   return (
     <Sidebar className="border-r border-gray-700 w-52 hidden md:block flex-shrink-0 bg-gray-900 shadow-2xl z-30 pr-0">
@@ -157,7 +131,6 @@ const AdminSidebar = () => {
             className="h-8"
           />
           
-          {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative hover:bg-gray-700 px-2">
             <Bell className="h-4 w-4 text-gray-400" />
             <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">2</span>
@@ -167,14 +140,6 @@ const AdminSidebar = () => {
 
       <SidebarContent className="py-4 bg-gray-900">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
-          {/* Debug info panel */}
-          <div className="px-4 py-2 bg-red-900 text-white text-xs mb-2">
-            <div>DEBUG MODE</div>
-            <div>Loading: {loading ? 'Yes' : 'No'}</div>
-            <div>Admin: {permissions.hasAdminAccess ? 'Yes' : 'No'}</div>
-            <div>Menus: {permissions.allowedMenus.length}</div>
-          </div>
-
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
               Principal
@@ -277,13 +242,11 @@ const AdminSidebar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-gray-800 border border-gray-600 shadow-2xl">
-              {/* Navigation between areas */}
               <DropdownMenuItem onClick={handleNavigateToStudent} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                 <User className="h-4 w-4 mr-2" />
                 Ir para Área do Aluno
               </DropdownMenuItem>
               
-              {/* Settings */}
               <DropdownMenuItem onClick={handleSettings} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                 <Settings className="h-4 w-4 mr-2" />
                 Configurações
@@ -291,7 +254,6 @@ const AdminSidebar = () => {
               
               <DropdownMenuSeparator className="bg-gray-600" />
               
-              {/* Logout */}
               <DropdownMenuItem onClick={signOut} className="text-red-400 hover:bg-gray-700 focus:bg-gray-700 hover:text-red-300 focus:text-red-300">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
