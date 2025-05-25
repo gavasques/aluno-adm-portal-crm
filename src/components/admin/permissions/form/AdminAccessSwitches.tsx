@@ -3,7 +3,7 @@ import React from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle, Info, Shield } from "lucide-react";
 
 interface AdminAccessSwitchesProps {
   isAdmin: boolean;
@@ -31,7 +31,10 @@ export const AdminAccessSwitches: React.FC<AdminAccessSwitchesProps> = ({
           onCheckedChange={setIsAdmin}
           disabled={isLoading || isSubmitting}
         />
-        <Label htmlFor="is-admin">Este é um grupo de administrador (acesso total)</Label>
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-red-500" />
+          <Label htmlFor="is-admin">Este é um grupo de administrador (acesso total)</Label>
+        </div>
       </div>
 
       <div className="flex items-center space-x-2 py-2">
@@ -48,7 +51,8 @@ export const AdminAccessSwitches: React.FC<AdminAccessSwitchesProps> = ({
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Grupos de administrador têm acesso a todas as funcionalidades do sistema e automaticamente podem acessar a área administrativa.
+            <strong>Acesso Total:</strong> Grupos de administrador têm acesso a todas as funcionalidades do sistema. 
+            Os menus específicos serão ignorados pois este grupo tem permissões completas.
           </AlertDescription>
         </Alert>
       )}
@@ -57,8 +61,18 @@ export const AdminAccessSwitches: React.FC<AdminAccessSwitchesProps> = ({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Este grupo poderá acessar a área administrativa com base nas permissões específicas configuradas abaixo. 
-            Os menus selecionados serão preservados mesmo com acesso administrativo habilitado.
+            <strong>Acesso Administrativo Limitado:</strong> Este grupo poderá acessar a área administrativa 
+            apenas para os menus selecionados abaixo. Os menus selecionados serão preservados.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!allowAdminAccess && !isAdmin && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Acesso Apenas à Área do Aluno:</strong> Este grupo terá acesso limitado aos menus 
+            selecionados, mas apenas na área do aluno.
           </AlertDescription>
         </Alert>
       )}
