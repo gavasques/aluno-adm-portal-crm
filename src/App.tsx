@@ -103,10 +103,16 @@ function App() {
                 <Route path="ferramentas" element={<StudentTools />} />
                 <Route path="configuracoes" element={<StudentSettings />} />
                 
-                {/* Student Mentoring Routes */}
+                {/* Student Mentoring Routes with Route Guards */}
                 <Route path="mentorias" element={<StudentMentoring />} />
-                <Route path="mentorias/:enrollmentId" element={<StudentMentoringDetail />} />
-                <Route path="mentorias/:enrollmentId/sessoes/:sessionId" element={<StudentMentoringSession />} />
+                <Route 
+                  path="mentorias/:enrollmentId" 
+                  element={<StudentMentoringDetail />} 
+                />
+                <Route 
+                  path="mentorias/:enrollmentId/sessoes/:sessionId" 
+                  element={<StudentMentoringSession />} 
+                />
               </Route>
             </Routes>
           </AuthProvider>

@@ -16,19 +16,28 @@ import {
   Play
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSecureMentoring } from '@/hooks/useSecureMentoring';
 import { useMentoring } from '@/hooks/useMentoring';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const StudentMentoring = () => {
   const navigate = useNavigate();
-  const { getMyEnrollments, getMyUpcomingSessions, getEnrollmentProgress } = useMentoring();
-  
-  // Mock do usuário atual - em um ambiente real viria do contexto de auth
-  const currentUserId = 'user-1';
-  
-  const myEnrollments = getMyEnrollments(currentUserId);
-  const upcomingSessions = getMyUpcomingSessions(currentUserId);
+  const { getEnrollmentProgress } = useMentoring();
+  const { 
+    isAuthenticated,
+    getMySecureEnrollments, 
+    getMySecureUpcomingSessions 
+  } = useSecureMentoring();
+
+  // Redirect se não autenticado
+  if (!isAuthenticated) {
+    navigate('/auth');
+    return null;
+  }
+
+  const myEnrollments = getMySecureEnrollments;
+  const upcomingSessions = getMySecureUpcomingSessions;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -111,8 +120,8 @@ const StudentMentoring = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Materiais</p>
-                <p className="text-2xl font-bold text-gray-900">12</p>
+                <p className="text-sm font-medium text-gray-600">Total Inscrições</p>
+                <p className="text-2xl font-bold text-gray-900">{myEnrollments.length}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-lg">
                 <FileText className="h-6 w-6 text-orange-600" />
