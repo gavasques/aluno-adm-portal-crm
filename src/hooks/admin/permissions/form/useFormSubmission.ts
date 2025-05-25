@@ -37,10 +37,10 @@ export const useFormSubmission = ({
     try {
       setIsSubmitting(true);
       
-      // VALIDAÇÃO CRÍTICA: Verificar estado antes do submit
+      // VALIDAÇÃO FINAL CORRIGIDA
       let menusToSend: string[];
       
-      console.log("=== SUBMIT VALIDATION (FIXED) ===");
+      console.log("=== SUBMIT VALIDATION (FINAL FIX) ===");
       console.log("Estado final antes do submit:");
       console.log("- isAdmin:", isAdmin);
       console.log("- allowAdminAccess:", allowAdminAccess);
@@ -48,22 +48,25 @@ export const useFormSubmission = ({
       console.log("- selectedMenus:", selectedMenus);
       
       if (isAdmin) {
-        // Admin completo - sem menus específicos (acesso total)
+        // Admin completo (is_admin = true) - sem menus específicos (acesso total)
         menusToSend = [];
-        console.log("✅ SUBMIT: Admin completo - enviando array vazio");
+        console.log("✅ SUBMIT: Admin completo - enviando array vazio (acesso total)");
       } else {
-        // Admin limitado ou usuário normal - preservar menus selecionados
-        menusToSend = [...selectedMenus]; // Clonar array para segurança
-        console.log("✅ SUBMIT: Admin limitado/usuário normal - preservando menus:", menusToSend.length);
+        // Não-admin (is_admin = false) - preservar menus selecionados
+        // Isso inclui tanto usuários normais quanto admin limitado (allow_admin_access = true)
+        menusToSend = [...selectedMenus];
+        console.log("✅ SUBMIT: Não-admin - preservando menus selecionados:", menusToSend.length);
         
-        // VALIDAÇÃO FINAL: Verificar inconsistências
-        if (allowAdminAccess && selectedMenus.length === 0) {
-          console.warn("⚠️ ATENÇÃO: Admin limitado sem menus selecionados!");
+        // Log específico para admin limitado
+        if (allowAdminAccess) {
+          console.log("🟡 ADMIN LIMITADO: Preservando", menusToSend.length, "menus selecionados");
+        } else {
+          console.log("🔵 USUÁRIO NORMAL: Preservando", menusToSend.length, "menus selecionados");
         }
       }
       
       console.log("menusToSend final para backend:", menusToSend.length, "menus");
-      console.log("=================================");
+      console.log("==========================================");
       
       if (isEdit && permissionGroup) {
         await updatePermissionGroup({
