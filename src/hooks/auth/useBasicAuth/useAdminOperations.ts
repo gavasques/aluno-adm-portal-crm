@@ -20,7 +20,8 @@ export const useAdminOperations = () => {
     is_mentor: boolean = false
   ): Promise<CreateUserResult> => {
     try {
-      console.log("Criando usuário via Edge Function com dados:", { 
+      console.log("[useAdminOperations] Iniciando criação de usuário");
+      console.log("[useAdminOperations] Dados:", { 
         email, 
         name, 
         role, 
@@ -28,26 +29,63 @@ export const useAdminOperations = () => {
         is_mentor 
       });
 
+      // Validação de entrada no frontend
+      if (!email || !email.includes('@')) {
+        const errorMsg = "Email é obrigatório e deve ser válido";
+        console.error("[useAdminOperations] Erro de validação:", errorMsg);
+        toast({
+          title: "Erro de Validação",
+          description: errorMsg,
+          variant: "destructive",
+        });
+        return { error: errorMsg };
+      }
+
+      if (!password || password.length < 6) {
+        const errorMsg = "Senha deve ter pelo menos 6 caracteres";
+        console.error("[useAdminOperations] Erro de validação:", errorMsg);
+        toast({
+          title: "Erro de Validação",
+          description: errorMsg,
+          variant: "destructive",
+        });
+        return { error: errorMsg };
+      }
+
+      if (!name || name.trim().length === 0) {
+        const errorMsg = "Nome é obrigatório";
+        console.error("[useAdminOperations] Erro de validação:", errorMsg);
+        toast({
+          title: "Erro de Validação",
+          description: errorMsg,
+          variant: "destructive",
+        });
+        return { error: errorMsg };
+      }
+
+      console.log("[useAdminOperations] Validação passou, chamando Edge Function");
+
       const { data, error } = await supabase.functions.invoke('list-users', {
         body: { 
           action: 'createUser',
-          email, 
-          name, 
+          email: email.trim(), 
+          name: name.trim(), 
           role, 
           password,
           is_mentor
         }
       });
 
-      console.log("Resposta da Edge Function:", { data, error });
+      console.log("[useAdminOperations] Resposta da Edge Function:", { data, error });
 
       if (error) {
-        console.error("Erro da Edge Function:", error);
+        console.error("[useAdminOperations] Erro da Edge Function:", error);
         
-        // Tratar diferentes tipos de erro
         let errorMessage = "Erro ao criar usuário";
-        if (error.message?.includes("non-2xx status code")) {
-          errorMessage = "Erro interno do servidor. Tente novamente.";
+        if (error.message?.includes("Failed to fetch")) {
+          errorMessage = "Erro de conexão com o servidor. Verifique sua conexão.";
+        } else if (error.message?.includes("non-2xx status code")) {
+          errorMessage = "Erro interno do servidor. Dados inválidos ou conflito.";
         } else {
           errorMessage = error.message || "Erro desconhecido ao criar usuário";
         }
@@ -62,7 +100,7 @@ export const useAdminOperations = () => {
       }
 
       if (data?.error) {
-        console.error("Erro retornado pela função:", data.error);
+        console.error("[useAdminOperations] Erro retornado pela função:", data.error);
         toast({
           title: "Erro",
           description: data.error,
@@ -76,8 +114,10 @@ export const useAdminOperations = () => {
           ? "Usuário já existia, mas o perfil foi sincronizado com sucesso"
           : data.message || "Usuário já existe com este email";
         
+        console.log("[useAdminOperations] Usuário já existe:", message);
+        
         toast({
-          title: "Aviso",
+          title: data.profileCreated ? "Sincronizado" : "Aviso",
           description: message,
           variant: data.profileCreated ? "default" : "destructive",
         });
@@ -94,6 +134,8 @@ export const useAdminOperations = () => {
         const message = data.message || "Usuário criado com sucesso";
         const mentorMessage = is_mentor ? " (marcado como mentor)" : "";
         
+        console.log("[useAdminOperations] Usuário criado com sucesso:", message);
+        
         toast({
           title: "Sucesso",
           description: message + mentorMessage,
@@ -108,7 +150,7 @@ export const useAdminOperations = () => {
       }
 
       // Se chegou até aqui, algo inesperado aconteceu
-      console.error("Resposta inesperada da função:", data);
+      console.error("[useAdminOperations] Resposta inesperada:", data);
       const fallbackMessage = "Resposta inesperada do servidor";
       
       toast({
@@ -120,7 +162,7 @@ export const useAdminOperations = () => {
       return { error: fallbackMessage, existed: false };
       
     } catch (error: any) {
-      console.error("Erro ao criar usuário:", error);
+      console.error("[useAdminOperations] Erro não tratado:", error);
       
       let errorMessage = "Erro desconhecido ao criar usuário";
       if (error.message) {

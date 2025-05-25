@@ -4,6 +4,8 @@ import { createUser, inviteUser, deleteUser, toggleUserStatus } from "./userOper
 
 // Função para processar usuários para resposta
 const processUsersForResponse = async (authUsers: any[], profiles: any[]) => {
+  console.log("[processUsersForResponse] Processando usuários:", authUsers.length, "perfis:", profiles.length);
+  
   const processedUsers = [];
   
   for (const user of authUsers) {
@@ -39,17 +41,18 @@ const processUsersForResponse = async (authUsers: any[], profiles: any[]) => {
     });
   }
   
+  console.log("[processUsersForResponse] Usuários processados:", processedUsers.length);
   return processedUsers;
 };
 
 // Handler para requisições GET (listar usuários)
 export const handleGetRequest = async (supabaseAdmin: any) => {
   try {
-    console.log("Processando requisição GET para listar usuários");
+    console.log("[handleGetRequest] Processando requisição GET para listar usuários");
     
     // Verificar se o cliente admin está funcionando
     if (!supabaseAdmin) {
-      console.error("Cliente Supabase Admin não disponível");
+      console.error("[handleGetRequest] Cliente Supabase Admin não disponível");
       return new Response(
         JSON.stringify({ error: "Erro interno: cliente admin não disponível" }),
         { 
@@ -59,13 +62,13 @@ export const handleGetRequest = async (supabaseAdmin: any) => {
       );
     }
     
-    console.log("Cliente admin verificado, buscando usuários...");
+    console.log("[handleGetRequest] Cliente admin verificado, buscando usuários...");
     
     // Buscar usuários do auth
     const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (authError) {
-      console.error("Erro ao buscar usuários do auth:", authError);
+      console.error("[handleGetRequest] Erro ao buscar usuários do auth:", authError);
       return new Response(
         JSON.stringify({ error: authError.message }),
         { 
@@ -75,7 +78,7 @@ export const handleGetRequest = async (supabaseAdmin: any) => {
       );
     }
     
-    console.log(`Obtidos ${authUsers?.users?.length || 0} usuários do auth`);
+    console.log(`[handleGetRequest] Obtidos ${authUsers?.users?.length || 0} usuários do auth`);
     
     // Buscar perfis
     const { data: profiles, error: profilesError } = await supabaseAdmin
@@ -83,14 +86,13 @@ export const handleGetRequest = async (supabaseAdmin: any) => {
       .select('*');
       
     if (profilesError) {
-      console.error("Erro ao buscar perfis:", profilesError);
+      console.error("[handleGetRequest] Erro ao buscar perfis:", profilesError);
     }
     
     // Processar usuários para resposta
     const processedUsers = await processUsersForResponse(authUsers?.users || [], profiles || []);
     
-    console.log(`Retornando ${processedUsers.length} usuários processados com status 200`);
-    console.log("Amostra de dados:", processedUsers.slice(0, 2));
+    console.log(`[handleGetRequest] Retornando ${processedUsers.length} usuários processados com status 200`);
     
     return new Response(
       JSON.stringify({ users: processedUsers }),
@@ -101,7 +103,7 @@ export const handleGetRequest = async (supabaseAdmin: any) => {
     );
     
   } catch (error) {
-    console.error("Erro no handler GET:", error);
+    console.error("[handleGetRequest] Erro no handler GET:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -115,39 +117,62 @@ export const handleGetRequest = async (supabaseAdmin: any) => {
 // Handler para requisições POST (operações de usuário)
 export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
   try {
-    console.log("Processando requisição POST");
+    console.log("[handlePostRequest] Processando requisição POST");
     
     const requestBody = await req.json();
-    console.log("Dados recebidos:", { ...requestBody, password: requestBody.password ? '***' : undefined });
+    console.log("[handlePostRequest] Dados recebidos:", { 
+      action: requestBody.action,
+      email: requestBody.email,
+      name: requestBody.name,
+      role: requestBody.role,
+      hasPassword: !!requestBody.password,
+      is_mentor: requestBody.is_mentor
+    });
     
     const { action } = requestBody;
-    console.log("Executando ação:", action);
+    console.log("[handlePostRequest] Executando ação:", action);
+    
+    // Validação de entrada
+    if (!action || typeof action !== 'string') {
+      console.error("[handlePostRequest] Ação não fornecida ou inválida");
+      return new Response(
+        JSON.stringify({ error: "Ação é obrigatória" }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
+    }
     
     let result;
     
     switch (action) {
       case 'create':
       case 'createUser':
+        console.log("[handlePostRequest] Executando criação de usuário");
         result = await createUser(supabaseAdmin, requestBody);
         break;
         
       case 'invite':
       case 'inviteUser':
+        console.log("[handlePostRequest] Executando convite de usuário");
         result = await inviteUser(supabaseAdmin, requestBody);
         break;
         
       case 'delete':
       case 'deleteUser':
+        console.log("[handlePostRequest] Executando exclusão de usuário");
         result = await deleteUser(supabaseAdmin, requestBody);
         break;
         
       case 'toggleStatus':
       case 'toggleUserStatus':
+        console.log("[handlePostRequest] Executando alteração de status");
         result = await toggleUserStatus(supabaseAdmin, requestBody);
         break;
         
       default:
-        console.error("Ação não reconhecida:", action);
+        console.error("[handlePostRequest] Ação não reconhecida:", action);
         return new Response(
           JSON.stringify({ error: `Ação não suportada: ${action}` }),
           { 
@@ -157,7 +182,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
         );
     }
     
-    console.log("Resultado da operação:", result);
+    console.log("[handlePostRequest] Resultado da operação:", result);
     
     // Determinar status HTTP baseado no resultado
     let statusCode = 200;
@@ -176,9 +201,9 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
     );
     
   } catch (error) {
-    console.error("Erro no handler POST:", error);
+    console.error("[handlePostRequest] Erro no handler POST:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: `Erro interno: ${error.message}` }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 

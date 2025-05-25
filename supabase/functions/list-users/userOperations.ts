@@ -1,50 +1,60 @@
-
 import { corsHeaders } from './utils.ts';
 
 // Função para limpar usuário órfão (existe no Auth mas não no profiles)
 export const cleanupOrphanedUser = async (supabaseAdmin: any, email: string) => {
   try {
-    console.log(`Limpando usuário órfão com email: ${email}`);
+    console.log(`[cleanupOrphanedUser] Iniciando limpeza para email: ${email}`);
     
-    // Buscar usuário no Auth
-    const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
-      filter: { email }
-    });
-
-    if (searchError) {
-      console.error("Erro ao buscar usuário órfão:", searchError);
-      return { error: searchError.message };
+    // Buscar usuário no Auth usando listUsers
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error("[cleanupOrphanedUser] Erro ao buscar usuários do auth:", authError);
+      return { error: authError.message };
     }
 
-    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
-      const userId = existingUsers.users[0].id;
+    // Filtrar usuário pelo email
+    const existingUser = authData?.users?.find(user => user.email === email);
+    
+    if (!existingUser) {
+      console.log(`[cleanupOrphanedUser] Nenhum usuário encontrado com email: ${email}`);
+      return { cleaned: false, message: "Nenhum usuário encontrado" };
+    }
+
+    console.log(`[cleanupOrphanedUser] Usuário encontrado: ${existingUser.id}`);
+    
+    // Verificar se existe perfil
+    const { data: existingProfile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', existingUser.id)
+      .maybeSingle();
+    
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error("[cleanupOrphanedUser] Erro ao verificar perfil:", profileError);
+      return { error: `Erro ao verificar perfil: ${profileError.message}` };
+    }
+    
+    // Se não existe perfil, é um usuário órfão - deletar do Auth
+    if (!existingProfile) {
+      console.log(`[cleanupOrphanedUser] Deletando usuário órfão ${existingUser.id} do Auth`);
       
-      // Verificar se existe perfil
-      const { data: existingProfile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(existingUser.id);
       
-      // Se não existe perfil, é um usuário órfão - deletar do Auth
-      if (profileError && profileError.code === 'PGRST116') {
-        console.log(`Deletando usuário órfão ${userId} do Auth`);
-        
-        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-        
-        if (deleteError) {
-          console.error("Erro ao deletar usuário órfão:", deleteError);
-          return { error: `Erro ao limpar usuário órfão: ${deleteError.message}` };
-        }
-        
-        console.log(`Usuário órfão ${userId} deletado com sucesso`);
-        return { cleaned: true, message: "Usuário órfão removido com sucesso" };
+      if (deleteError) {
+        console.error("[cleanupOrphanedUser] Erro ao deletar usuário órfão:", deleteError);
+        return { error: `Erro ao limpar usuário órfão: ${deleteError.message}` };
       }
+      
+      console.log(`[cleanupOrphanedUser] Usuário órfão ${existingUser.id} deletado com sucesso`);
+      return { cleaned: true, message: "Usuário órfão removido com sucesso" };
     }
     
-    return { cleaned: false, message: "Nenhum usuário órfão encontrado" };
+    console.log(`[cleanupOrphanedUser] Usuário ${existingUser.id} tem perfil válido`);
+    return { cleaned: false, message: "Usuário tem perfil válido" };
+    
   } catch (error) {
-    console.error("Erro ao limpar usuário órfão:", error);
+    console.error("[cleanupOrphanedUser] Erro não tratado:", error);
     return { error: error.message };
   }
 };
@@ -52,55 +62,84 @@ export const cleanupOrphanedUser = async (supabaseAdmin: any, email: string) => 
 // Função para criar um novo usuário
 export const createUser = async (supabaseAdmin: any, data: any) => {
   try {
-    const { email, password, name, role, is_mentor } = data;
-
-    if (!email || !password || !name || !role) {
-      console.error("Dados incompletos para criar usuário:", { email, password: !!password, name, role });
-      return { error: "Todos os campos são obrigatórios para criar um usuário" };
-    }
-
-    // Primeiro, tentar limpar qualquer usuário órfão com este email
-    const cleanupResult = await cleanupOrphanedUser(supabaseAdmin, email);
-    if (cleanupResult.error) {
-      console.log("Aviso na limpeza de órfão:", cleanupResult.error);
-    } else if (cleanupResult.cleaned) {
-      console.log("Usuário órfão removido antes da criação:", cleanupResult.message);
-    }
-
-    // Verificar se o usuário ainda existe após a limpeza
-    const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
-      filter: { email }
+    console.log("[createUser] Iniciando criação de usuário");
+    console.log("[createUser] Dados recebidos:", { 
+      email: data.email, 
+      name: data.name, 
+      role: data.role, 
+      hasPassword: !!data.password,
+      is_mentor: data.is_mentor 
     });
 
-    if (searchError) {
-      console.error("Erro ao verificar se usuário existe:", searchError);
-      return { error: searchError.message };
+    const { email, password, name, role, is_mentor } = data;
+
+    // Validação rigorosa de entrada
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      console.error("[createUser] Email inválido:", email);
+      return { error: "Email é obrigatório e deve ser válido" };
     }
 
-    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
-      console.log("Usuário ainda existe após limpeza:", email);
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      console.error("[createUser] Senha inválida");
+      return { error: "Senha é obrigatória e deve ter pelo menos 6 caracteres" };
+    }
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      console.error("[createUser] Nome inválido:", name);
+      return { error: "Nome é obrigatório e não pode estar vazio" };
+    }
+
+    if (!role || typeof role !== 'string') {
+      console.error("[createUser] Role inválido:", role);
+      return { error: "Role é obrigatório" };
+    }
+
+    console.log("[createUser] Validação de entrada passou");
+
+    // Primeiro, tentar limpar qualquer usuário órfão com este email
+    console.log("[createUser] Executando limpeza de usuário órfão");
+    const cleanupResult = await cleanupOrphanedUser(supabaseAdmin, email);
+    if (cleanupResult.error) {
+      console.log("[createUser] Aviso na limpeza:", cleanupResult.error);
+    } else if (cleanupResult.cleaned) {
+      console.log("[createUser] Usuário órfão removido:", cleanupResult.message);
+    }
+
+    // Verificar se o usuário ainda existe após a limpeza usando listUsers
+    console.log("[createUser] Verificando se usuário ainda existe após limpeza");
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error("[createUser] Erro ao verificar usuários existentes:", authError);
+      return { error: `Erro ao verificar usuários: ${authError.message}` };
+    }
+
+    const existingUser = authData?.users?.find(user => user.email === email);
+
+    if (existingUser) {
+      console.log("[createUser] Usuário ainda existe após limpeza:", email);
       
       // Verificar se o perfil também existe
       const { data: existingProfile, error: profileError } = await supabaseAdmin
         .from('profiles')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
       
       if (profileError && profileError.code !== 'PGRST116') {
-        console.error("Erro ao verificar perfil existente:", profileError);
+        console.error("[createUser] Erro ao verificar perfil existente:", profileError);
+        return { error: `Erro ao verificar perfil: ${profileError.message}` };
       }
       
       // Se o perfil não existe mas o usuário auth existe, criar o perfil
-      if (!existingProfile && existingUsers.users[0]) {
-        const userId = existingUsers.users[0].id;
-        console.log("Criando perfil para usuário existente:", userId);
+      if (!existingProfile) {
+        console.log("[createUser] Criando perfil para usuário existente:", existingUser.id);
         
         const { error: createProfileError } = await supabaseAdmin
           .from('profiles')
           .insert([
             { 
-              id: userId, 
+              id: existingUser.id, 
               name: name, 
               role: role, 
               email: email,
@@ -109,7 +148,7 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
           ]);
           
         if (createProfileError) {
-          console.error("Erro ao criar perfil para usuário existente:", createProfileError);
+          console.error("[createUser] Erro ao criar perfil para usuário existente:", createProfileError);
           return { 
             existed: true, 
             error: "Usuário existe mas houve erro ao criar perfil",
@@ -117,69 +156,83 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
           };
         }
         
+        console.log("[createUser] Perfil criado com sucesso para usuário existente");
         return { 
           existed: true, 
           profileCreated: true, 
-          message: "Usuário já existe, mas o perfil foi sincronizado com sucesso."
+          message: "Usuário já existe, mas o perfil foi sincronizado com sucesso.",
+          is_mentor: is_mentor || false
         };
       }
       
+      console.log("[createUser] Usuário e perfil já existem");
       return { 
         existed: true, 
         message: "Usuário já existe com este email",
-        userId: existingUsers.users[0].id
+        userId: existingUser.id,
+        is_mentor: existingProfile?.is_mentor || false
       };
     }
 
+    console.log("[createUser] Criando novo usuário no Supabase Auth");
     // Criar usuário no Supabase Auth
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: newUserData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: password,
       email_confirm: true,
-      user_metadata: { name: name, role: role, is_mentor: is_mentor || false },
+      user_metadata: { 
+        name: name, 
+        role: role, 
+        is_mentor: is_mentor || false 
+      },
     });
 
     if (userError) {
-      console.error("Erro ao criar usuário:", userError);
-      return { error: userError.message };
+      console.error("[createUser] Erro ao criar usuário no auth:", userError);
+      return { error: `Erro ao criar usuário: ${userError.message}` };
     }
 
-    if (user && user.user) {
-      // Criar perfil associado na tabela "profiles"
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert([
-          { 
-            id: user.user.id, 
-            name: name, 
-            role: role, 
-            email: email,
-            is_mentor: is_mentor || false
-          }
-        ]);
-
-      if (profileError) {
-        console.error("Erro ao criar perfil:", profileError);
-        // Remover usuário criado se falhar ao criar perfil
-        await supabaseAdmin.auth.admin.deleteUser(user.user.id);
-        return { error: profileError.message };
-      }
-
-      console.log("Usuário criado com sucesso:", user.user.id);
-      return { 
-        success: true, 
-        message: "Usuário criado com sucesso",
-        userId: user.user.id,
-        is_mentor: is_mentor || false
-      };
-    } else {
-      console.error("Erro ao criar usuário: Resposta inesperada do Supabase Auth");
+    if (!newUserData || !newUserData.user) {
+      console.error("[createUser] Resposta inesperada do Supabase Auth:", newUserData);
       return { error: "Erro ao criar usuário: Resposta inesperada do Supabase Auth" };
     }
 
+    console.log("[createUser] Usuário criado no auth:", newUserData.user.id);
+
+    // Criar perfil associado na tabela "profiles"
+    console.log("[createUser] Criando perfil na tabela profiles");
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert([
+        { 
+          id: newUserData.user.id, 
+          name: name, 
+          role: role, 
+          email: email,
+          is_mentor: is_mentor || false
+        }
+      ]);
+
+    if (profileError) {
+      console.error("[createUser] Erro ao criar perfil:", profileError);
+      console.log("[createUser] Removendo usuário criado devido ao erro no perfil");
+      
+      // Remover usuário criado se falhar ao criar perfil
+      await supabaseAdmin.auth.admin.deleteUser(newUserData.user.id);
+      return { error: `Erro ao criar perfil: ${profileError.message}` };
+    }
+
+    console.log("[createUser] Usuário e perfil criados com sucesso:", newUserData.user.id);
+    return { 
+      success: true, 
+      message: "Usuário criado com sucesso",
+      userId: newUserData.user.id,
+      is_mentor: is_mentor || false
+    };
+
   } catch (error) {
-    console.error("Erro ao criar usuário:", error);
-    return { error: error.message };
+    console.error("[createUser] Erro não tratado:", error);
+    return { error: `Erro interno: ${error.message}` };
   }
 };
 
