@@ -90,6 +90,8 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     totalSessions: 8,
     responsibleMentor: 'João Mentor',
     observations: 'Aluno muito dedicado, progresso excelente',
+    extensions: [],
+    hasExtension: false,
     createdAt: '2024-02-25T15:00:00Z',
     updatedAt: '2024-03-15T10:00:00Z'
   },
@@ -101,10 +103,23 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     status: 'pausada',
     startDate: '2024-02-01T09:00:00Z',
     endDate: '2024-04-25T09:00:00Z',
+    originalEndDate: '2024-03-25T09:00:00Z',
     sessionsUsed: 8,
     totalSessions: 16,
     responsibleMentor: 'Pedro Analista',
     observations: 'Pausada por solicitação do aluno para reorganização de agenda',
+    extensions: [
+      {
+        id: 'ext-1',
+        enrollmentId: 'enrollment-2',
+        extensionMonths: 1,
+        appliedDate: '2024-03-20T09:00:00Z',
+        notes: 'Extensão concedida devido a problemas de agenda do aluno',
+        adminId: 'admin-1',
+        createdAt: '2024-03-20T09:00:00Z'
+      }
+    ],
+    hasExtension: true,
     createdAt: '2024-01-25T16:00:00Z',
     updatedAt: '2024-03-01T09:00:00Z'
   },
@@ -122,6 +137,8 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     totalSessions: 12,
     responsibleMentor: 'Maria Consultora',
     observations: 'Participação ativa no grupo, excelente colaboração',
+    extensions: [],
+    hasExtension: false,
     createdAt: '2024-03-10T11:00:00Z',
     updatedAt: '2024-03-20T14:00:00Z'
   },
@@ -137,6 +154,8 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     totalSessions: 6,
     responsibleMentor: 'Ana Vendedora',
     observations: 'Mentoria concluída com sucesso, aluno implementou estratégias',
+    extensions: [],
+    hasExtension: false,
     createdAt: '2024-01-10T08:00:00Z',
     updatedAt: '2024-02-12T10:00:00Z'
   },
@@ -154,6 +173,8 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     totalSessions: 15,
     responsibleMentor: 'Carlos Automação',
     observations: 'Iniciando jornada de automação, muito entusiasmado',
+    extensions: [],
+    hasExtension: false,
     createdAt: '2024-02-25T14:00:00Z',
     updatedAt: '2024-03-08T16:00:00Z'
   },
@@ -171,6 +192,8 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     totalSessions: 8,
     responsibleMentor: 'João Mentor',
     observations: 'Cancelada por incompatibilidade de horários',
+    extensions: [],
+    hasExtension: false,
     createdAt: '2023-12-20T15:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z'
   }
