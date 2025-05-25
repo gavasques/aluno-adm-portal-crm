@@ -2,16 +2,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import PermissionGroupRecoveryButton from "./PermissionGroupRecoveryButton";
 
 interface PermissionsHeaderProps {
   onAdd: () => void;
-  onRecoverySuccess?: () => void;
 }
 
 const PermissionsHeader: React.FC<PermissionsHeaderProps> = ({ 
-  onAdd, 
-  onRecoverySuccess 
+  onAdd
 }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -22,9 +19,6 @@ const PermissionsHeader: React.FC<PermissionsHeaderProps> = ({
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
-        {onRecoverySuccess && (
-          <PermissionGroupRecoveryButton onSuccess={onRecoverySuccess} />
-        )}
         <Button onClick={onAdd} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Novo Grupo
