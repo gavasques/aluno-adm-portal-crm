@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { MentoringCatalog, StudentMentoringEnrollment, MentoringSession, MentoringMaterial } from '@/types/mentoring.types';
+import { MentoringFilters } from '../types/contracts.types';
 
 interface MentoringState {
   catalogs: MentoringCatalog[];
@@ -9,11 +10,7 @@ interface MentoringState {
   materials: MentoringMaterial[];
   loading: boolean;
   error: string | null;
-  filters: {
-    status?: string;
-    type?: string;
-    search?: string;
-  };
+  filters: MentoringFilters;
 }
 
 type MentoringAction =
@@ -26,7 +23,7 @@ type MentoringAction =
   | { type: 'ADD_CATALOG'; payload: MentoringCatalog }
   | { type: 'UPDATE_CATALOG'; payload: { id: string; data: Partial<MentoringCatalog> } }
   | { type: 'DELETE_CATALOG'; payload: string }
-  | { type: 'SET_FILTERS'; payload: Partial<MentoringState['filters']> };
+  | { type: 'SET_FILTERS'; payload: Partial<MentoringFilters> };
 
 const initialState: MentoringState = {
   catalogs: [],
