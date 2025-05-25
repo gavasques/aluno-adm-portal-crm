@@ -1,12 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { usePermissionGroups, PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 import { useMenuCounts } from "@/hooks/admin/useMenuCounts";
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
-import PermissionGroupMenusManager from "@/components/admin/permissions/PermissionGroupMenusManager";
 import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
 const Permissions = () => {
@@ -25,7 +24,6 @@ const Permissions = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
   const [showUsersDialog, setShowUsersDialog] = useState(false);
-  const [showMenusDialog, setShowMenusDialog] = useState(false);
 
   const handleAdd = () => {
     setShowAddDialog(true);
@@ -46,11 +44,6 @@ const Permissions = () => {
     setShowUsersDialog(true);
   };
 
-  const handleManageMenus = (group: PermissionGroup) => {
-    setSelectedGroup(group);
-    setShowMenusDialog(true);
-  };
-
   const handleSuccess = () => {
     console.log("DEBUG - Permissions: handleSuccess called - refreshing data");
     refreshPermissionGroups();
@@ -59,14 +52,6 @@ const Permissions = () => {
 
   const handleRecoverySuccess = () => {
     console.log("DEBUG - Permissions: handleRecoverySuccess called - refreshing data");
-    refreshPermissionGroups();
-    refreshMenuCounts();
-  };
-
-  const handleCloseMenusDialog = () => {
-    setShowMenusDialog(false);
-    setSelectedGroup(null);
-    console.log("DEBUG - Permissions: handleCloseMenusDialog called - refreshing data");
     refreshPermissionGroups();
     refreshMenuCounts();
   };
@@ -102,7 +87,6 @@ const Permissions = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onViewUsers={handleViewUsers}
-        onManageMenus={handleManageMenus}
         groupMenuCounts={menuCounts}
       />
 
@@ -118,18 +102,6 @@ const Permissions = () => {
         selectedGroup={selectedGroup}
         onSuccess={handleSuccess}
       />
-
-      <Dialog open={showMenusDialog} onOpenChange={setShowMenusDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {selectedGroup && (
-            <PermissionGroupMenusManager
-              groupId={selectedGroup.id}
-              groupName={selectedGroup.name}
-              onClose={handleCloseMenusDialog}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
