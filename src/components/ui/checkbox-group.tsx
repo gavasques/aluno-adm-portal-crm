@@ -15,6 +15,7 @@ interface CheckboxItemProps {
   description?: string;
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
+  disabled?: boolean;
 }
 
 const CheckboxGroup = React.forwardRef<
@@ -32,20 +33,21 @@ CheckboxGroup.displayName = "CheckboxGroup";
 const CheckboxItem = React.forwardRef<
   React.ElementRef<typeof Checkbox>,
   CheckboxItemProps
->(({ id, label, description, checked, onCheckedChange, ...props }, ref) => {
+>(({ id, label, description, checked, onCheckedChange, disabled, ...props }, ref) => {
   return (
     <div className="flex items-start space-x-2">
       <Checkbox 
         id={id} 
         checked={checked} 
         onCheckedChange={onCheckedChange} 
+        disabled={disabled}
         ref={ref} 
         {...props}
       />
       <div className="grid gap-1 leading-none">
-        <Label htmlFor={id}>{label}</Label>
+        <Label htmlFor={id} className={disabled ? "text-muted-foreground" : ""}>{label}</Label>
         {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className={cn("text-sm text-muted-foreground", disabled && "opacity-50")}>{description}</p>
         )}
       </div>
     </div>
