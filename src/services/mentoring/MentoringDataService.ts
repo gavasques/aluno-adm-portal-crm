@@ -1,4 +1,3 @@
-
 import { 
   MentoringCatalog, 
   StudentMentoringEnrollment, 
@@ -132,17 +131,15 @@ export class MentoringDataService {
   // Statistics
   getEnrollmentProgress(enrollment: StudentMentoringEnrollment) {
     const percentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
-    const remaining = enrollment.totalSessions - enrollment.sessionsUsed;
     const daysRemaining = Math.ceil(
       (new Date(enrollment.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
     );
     
     return {
       percentage: Math.min(percentage, 100),
-      sessionsRemaining: Math.max(remaining, 0),
-      daysRemaining: Math.max(daysRemaining, 0),
-      isExpired: daysRemaining < 0,
-      isCompleted: enrollment.sessionsUsed >= enrollment.totalSessions
+      sessionsUsed: enrollment.sessionsUsed,
+      totalSessions: enrollment.totalSessions,
+      daysRemaining: Math.max(daysRemaining, 0)
     };
   }
 
