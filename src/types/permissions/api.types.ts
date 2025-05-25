@@ -1,4 +1,6 @@
 
+import { PermissionGroup, SystemMenu, SystemModule } from './core.types';
+
 // API response types
 export interface ApiResponse<T> {
   data?: T;
@@ -23,13 +25,6 @@ export interface PermissionOperationResult {
 
 export interface MenuCountMap {
   [groupId: string]: number;
-}
-
-// User permission types
-export interface UserPermissions {
-  hasAdminAccess: boolean;
-  allowedMenus: string[];
-  modulePermissions: Record<string, string[]>;
 }
 
 // Hook return types

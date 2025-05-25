@@ -3,6 +3,10 @@
 export { PermissionGroupModel } from './PermissionGroup.model';
 export { SystemMenuModel } from './SystemMenu.model';
 
+// Import the models for the factory
+import { PermissionGroupModel } from './PermissionGroup.model';
+import { SystemMenuModel } from './SystemMenu.model';
+
 // Export model utilities
 export class PermissionModelFactory {
   static createPermissionGroup(data: any): PermissionGroupModel {

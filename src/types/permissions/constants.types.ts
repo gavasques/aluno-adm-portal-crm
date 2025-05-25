@@ -1,4 +1,6 @@
 
+import { PermissionGroup } from './core.types';
+
 // Permission system constants
 export const PERMISSION_ROLES = {
   ADMIN: 'admin',

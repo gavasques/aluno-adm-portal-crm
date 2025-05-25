@@ -1,5 +1,6 @@
 
 import { z } from 'zod';
+import { PermissionGroup, SystemMenu } from './core.types';
 
 // Validation schemas
 export const PermissionGroupSchema = z.object({

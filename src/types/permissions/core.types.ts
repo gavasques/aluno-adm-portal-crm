@@ -60,3 +60,10 @@ export interface PermissionGroupModule {
   granted: boolean;
   created_at: string;
 }
+
+// User permission types
+export interface UserPermissions {
+  hasAdminAccess: boolean;
+  allowedMenus: string[];
+  modulePermissions: Record<string, string[]>;
+}
