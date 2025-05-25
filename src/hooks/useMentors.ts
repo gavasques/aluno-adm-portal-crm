@@ -41,12 +41,35 @@ export const useMentors = () => {
 
   const updateMentorStatus = async (userId: string, isMentor: boolean) => {
     try {
-      const { error } = await supabase
+      console.log(`[useMentors] Tentando atualizar mentor status:`, {
+        userId,
+        isMentor,
+        timestamp: new Date().toISOString()
+      });
+
+      const { data, error } = await supabase
         .from('profiles')
         .update({ is_mentor: isMentor })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useMentors] Erro na atualização:', error);
+        throw error;
+      }
+
+      console.log('[useMentors] Resultado da atualização:', data);
+
+      // Verificar se a atualização foi bem-sucedida
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('profiles')
+        .select('id, name, email, is_mentor')
+        .eq('id', userId)
+        .single();
+
+      if (!verifyError) {
+        console.log('[useMentors] Verificação pós-atualização:', verifyData);
+      }
 
       toast({
         title: "Sucesso",

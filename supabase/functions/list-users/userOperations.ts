@@ -136,17 +136,19 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
       if (!existingProfile) {
         console.log("[createUser] Criando perfil para usuário existente:", existingUser.id);
         
+        const profileData = {
+          id: existingUser.id,
+          name: name,
+          role: role,
+          email: email,
+          is_mentor: is_mentor || false
+        };
+        
+        console.log("[createUser] Dados do perfil a ser criado:", profileData);
+        
         const { error: createProfileError } = await supabaseAdmin
           .from('profiles')
-          .insert([
-            { 
-              id: existingUser.id, 
-              name: name, 
-              role: role, 
-              email: email,
-              is_mentor: is_mentor || false
-            }
-          ]);
+          .insert([profileData]);
           
         if (createProfileError) {
           console.error("[createUser] Erro ao criar perfil para usuário existente:", createProfileError);
@@ -166,20 +168,24 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
         };
       } else {
         // Perfil existe, vamos atualizar os dados incluindo is_mentor
-        console.log("[createUser] Atualizando perfil existente com novos dados:", {
-          name,
-          role,
-          is_mentor: is_mentor || false
+        console.log("[createUser] Atualizando perfil existente:", {
+          currentData: existingProfile,
+          newData: { name, role, is_mentor: is_mentor || false }
         });
         
-        const { error: updateProfileError } = await supabaseAdmin
+        const updateData = {
+          name: name,
+          role: role,
+          is_mentor: is_mentor || false
+        };
+        
+        console.log("[createUser] Dados para atualização:", updateData);
+        
+        const { data: updateResult, error: updateProfileError } = await supabaseAdmin
           .from('profiles')
-          .update({ 
-            name: name, 
-            role: role,
-            is_mentor: is_mentor || false
-          })
-          .eq('id', existingUser.id);
+          .update(updateData)
+          .eq('id', existingUser.id)
+          .select();
           
         if (updateProfileError) {
           console.error("[createUser] Erro ao atualizar perfil existente:", updateProfileError);
@@ -190,7 +196,20 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
           };
         }
         
+        console.log("[createUser] Resultado da atualização:", updateResult);
         console.log("[createUser] Perfil atualizado com sucesso para usuário existente");
+        
+        // Verificar se a atualização foi bem-sucedida
+        const { data: verifyProfile, error: verifyError } = await supabaseAdmin
+          .from('profiles')
+          .select('*')
+          .eq('id', existingUser.id)
+          .single();
+          
+        if (!verifyError) {
+          console.log("[createUser] Verificação pós-atualização:", verifyProfile);
+        }
+        
         return { 
           existed: true, 
           profileCreated: true, 
@@ -226,18 +245,20 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
     console.log("[createUser] Usuário criado no auth:", newUserData.user.id);
 
     // Criar perfil associado na tabela "profiles"
-    console.log("[createUser] Criando perfil na tabela profiles com is_mentor:", is_mentor || false);
-    const { error: profileError } = await supabaseAdmin
+    const profileData = {
+      id: newUserData.user.id,
+      name: name,
+      role: role,
+      email: email,
+      is_mentor: is_mentor || false
+    };
+    
+    console.log("[createUser] Criando perfil na tabela profiles:", profileData);
+    
+    const { data: profileResult, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .insert([
-        { 
-          id: newUserData.user.id, 
-          name: name, 
-          role: role, 
-          email: email,
-          is_mentor: is_mentor || false
-        }
-      ]);
+      .insert([profileData])
+      .select();
 
     if (profileError) {
       console.error("[createUser] Erro ao criar perfil:", profileError);
@@ -248,8 +269,10 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
       return { error: `Erro ao criar perfil: ${profileError.message}` };
     }
 
+    console.log("[createUser] Resultado da criação do perfil:", profileResult);
     console.log("[createUser] Usuário e perfil criados com sucesso:", newUserData.user.id);
     console.log("[createUser] Status de mentor definido como:", is_mentor || false);
+    
     return { 
       success: true, 
       message: "Usuário criado com sucesso",
@@ -360,7 +383,6 @@ export const inviteUser = async (supabaseAdmin: any, data: any) => {
   }
 };
 
-// Função para excluir um usuário
 export const deleteUser = async (supabaseAdmin: any, data: any) => {
   try {
     const { userId, email } = data;
@@ -475,7 +497,6 @@ export const deleteUser = async (supabaseAdmin: any, data: any) => {
   }
 };
 
-// Função para alternar o status do usuário (ativar/inativar)
 export const toggleUserStatus = async (supabaseAdmin: any, data: any) => {
   try {
     const { userId, active } = data;
