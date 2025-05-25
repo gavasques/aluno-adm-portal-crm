@@ -63,28 +63,30 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         return;
       }
 
-      // Criar usuário primeiro (sem is_mentor)
+      console.log("Enviando dados do formulário:", {
+        ...data,
+        password: "***"
+      });
+
+      // Criar usuário com todos os dados incluindo is_mentor
       const result = await createAdminUser(
         data.email, 
         data.name, 
         data.role, 
-        data.password
+        data.password,
+        data.is_mentor
       );
-      
-      // Se o usuário foi criado com sucesso e is_mentor é true, atualizar separadamente
-      if (result && !result.existed && data.is_mentor) {
-        // TODO: Implementar atualização do status de mentor via API separada
-        console.log("Status de mentor será atualizado:", data.is_mentor);
-      }
       
       form.reset();
       setPasswordErrors([]);
       
-      // Só atualiza a lista e fecha o diálogo se realmente foi criado um novo usuário
-      if (result && !result.existed) {
+      // Só atualiza a lista e fecha o diálogo se realmente foi criado um novo usuário ou foi sincronizado
+      if (result && (result.success || result.existed)) {
+        console.log("Usuário criado/sincronizado com sucesso:", result);
         setTimeout(() => onSuccess(), 500);
       }
     } catch (error) {
+      console.error("Erro no formulário:", error);
       // O erro já foi sanitizado e exibido no hook
     } finally {
       setIsSubmitting(false);

@@ -1,17 +1,73 @@
 
 import { corsHeaders } from './utils.ts';
 
+// Função para limpar usuário órfão (existe no Auth mas não no profiles)
+export const cleanupOrphanedUser = async (supabaseAdmin: any, email: string) => {
+  try {
+    console.log(`Limpando usuário órfão com email: ${email}`);
+    
+    // Buscar usuário no Auth
+    const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
+      filter: { email }
+    });
+
+    if (searchError) {
+      console.error("Erro ao buscar usuário órfão:", searchError);
+      return { error: searchError.message };
+    }
+
+    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
+      const userId = existingUsers.users[0].id;
+      
+      // Verificar se existe perfil
+      const { data: existingProfile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      // Se não existe perfil, é um usuário órfão - deletar do Auth
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log(`Deletando usuário órfão ${userId} do Auth`);
+        
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        
+        if (deleteError) {
+          console.error("Erro ao deletar usuário órfão:", deleteError);
+          return { error: `Erro ao limpar usuário órfão: ${deleteError.message}` };
+        }
+        
+        console.log(`Usuário órfão ${userId} deletado com sucesso`);
+        return { cleaned: true, message: "Usuário órfão removido com sucesso" };
+      }
+    }
+    
+    return { cleaned: false, message: "Nenhum usuário órfão encontrado" };
+  } catch (error) {
+    console.error("Erro ao limpar usuário órfão:", error);
+    return { error: error.message };
+  }
+};
+
 // Função para criar um novo usuário
 export const createUser = async (supabaseAdmin: any, data: any) => {
   try {
-    const { email, password, name, role } = data;
+    const { email, password, name, role, is_mentor } = data;
 
     if (!email || !password || !name || !role) {
       console.error("Dados incompletos para criar usuário:", { email, password: !!password, name, role });
       return { error: "Todos os campos são obrigatórios para criar um usuário" };
     }
 
-    // Verificar se o usuário já existe pelo email, buscando de forma mais completa
+    // Primeiro, tentar limpar qualquer usuário órfão com este email
+    const cleanupResult = await cleanupOrphanedUser(supabaseAdmin, email);
+    if (cleanupResult.error) {
+      console.log("Aviso na limpeza de órfão:", cleanupResult.error);
+    } else if (cleanupResult.cleaned) {
+      console.log("Usuário órfão removido antes da criação:", cleanupResult.message);
+    }
+
+    // Verificar se o usuário ainda existe após a limpeza
     const { data: existingUsers, error: searchError } = await supabaseAdmin.auth.admin.listUsers({
       filter: { email }
     });
@@ -22,7 +78,7 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
     }
 
     if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
-      console.log("Usuário já existe com este email:", email);
+      console.log("Usuário ainda existe após limpeza:", email);
       
       // Verificar se o perfil também existe
       const { data: existingProfile, error: profileError } = await supabaseAdmin
@@ -31,7 +87,7 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
         .eq('email', email)
         .single();
       
-      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error("Erro ao verificar perfil existente:", profileError);
       }
       
@@ -43,7 +99,13 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
         const { error: createProfileError } = await supabaseAdmin
           .from('profiles')
           .insert([
-            { id: userId, name: name, role: role, email: email }
+            { 
+              id: userId, 
+              name: name, 
+              role: role, 
+              email: email,
+              is_mentor: is_mentor || false
+            }
           ]);
           
         if (createProfileError) {
@@ -73,8 +135,8 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
     const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: password,
-      email_confirm: true, // Marcar o email como confirmado para não precisar de verificação
-      user_metadata: { name: name, role: role },
+      email_confirm: true,
+      user_metadata: { name: name, role: role, is_mentor: is_mentor || false },
     });
 
     if (userError) {
@@ -87,7 +149,13 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .insert([
-          { id: user.user.id, name: name, role: role, email: email }
+          { 
+            id: user.user.id, 
+            name: name, 
+            role: role, 
+            email: email,
+            is_mentor: is_mentor || false
+          }
         ]);
 
       if (profileError) {
@@ -101,7 +169,8 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
       return { 
         success: true, 
         message: "Usuário criado com sucesso",
-        userId: user.user.id
+        userId: user.user.id,
+        is_mentor: is_mentor || false
       };
     } else {
       console.error("Erro ao criar usuário: Resposta inesperada do Supabase Auth");

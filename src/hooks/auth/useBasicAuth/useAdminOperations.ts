@@ -1,68 +1,117 @@
 
-import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-// Define a proper return type for the createAdminUser function
-export interface CreateUserResult {
-  success: boolean;
-  existed: boolean;
-}
-
-export function useAdminOperations() {
-  // Nova função para adicionar um usuário no painel de admin
-  const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<CreateUserResult> => {
+export const useAdminOperations = () => {
+  const createAdminUser = async (
+    email: string, 
+    name: string, 
+    role: string, 
+    password: string,
+    is_mentor: boolean = false
+  ) => {
     try {
-      console.log("Criando novo usuário:", { email, name, role, password: password ? "Definida" : "Gerada automaticamente" });
+      console.log("Criando usuário via Edge Function com dados:", { 
+        email, 
+        name, 
+        role, 
+        password: "***",
+        is_mentor 
+      });
 
-      // Criar o usuário diretamente via Edge Function no Supabase
-      const { data: response, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
-        body: {
-          action: 'createUser',
-          email: email,
-          name: name,
-          role: role,
-          password: password || Math.random().toString(36).slice(-10)
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        body: { 
+          action: 'create',
+          email, 
+          name, 
+          role, 
+          password,
+          is_mentor
         }
       });
 
       if (error) {
-        console.error("Erro na chamada da função:", error);
-        throw new Error(error.message || "Erro ao adicionar usuário");
-      }
-      
-      if (response && response.error) {
-        console.error("Erro retornado pela função:", response.error);
-        throw new Error(response.error);
-      }
-      
-      // Verificar se o usuário já existe e tratar adequadamente
-      if (response && response.existed) {
+        console.error("Erro da Edge Function:", error);
         toast({
-          title: "Usuário já existe",
-          description: `O usuário ${email} já existe no sistema, mas pode não estar visível na lista atual.`,
-          variant: "default", // Usando "default" ao invés de "warning" que não é um tipo válido
+          title: "Erro",
+          description: error.message || "Erro ao criar usuário",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      console.log("Resposta da Edge Function:", data);
+
+      if (data.error) {
+        console.error("Erro retornado pela função:", data.error);
+        toast({
+          title: "Erro",
+          description: data.error,
+          variant: "destructive",
+        });
+        return { error: data.error, existed: false };
+      }
+
+      if (data.existed) {
+        const message = data.profileCreated 
+          ? "Usuário já existia, mas o perfil foi sincronizado com sucesso"
+          : data.message || "Usuário já existe com este email";
+        
+        toast({
+          title: "Aviso",
+          description: message,
+          variant: data.profileCreated ? "default" : "destructive",
         });
         
-        return { success: false, existed: true };
-      } else {
+        return { 
+          success: data.profileCreated, 
+          existed: true, 
+          message,
+          is_mentor: data.is_mentor || is_mentor
+        };
+      }
+
+      if (data.success) {
+        const message = data.message || "Usuário criado com sucesso";
+        const mentorMessage = is_mentor ? " (marcado como mentor)" : "";
+        
         toast({
-          title: "Usuário adicionado com sucesso",
-          description: `Usuário ${email} foi criado e adicionado ao sistema.`,
+          title: "Sucesso",
+          description: message + mentorMessage,
         });
         
-        return { success: true, existed: false };
+        return { 
+          success: true, 
+          existed: false, 
+          message,
+          is_mentor: data.is_mentor || is_mentor
+        };
       }
-    } catch (error: any) {
-      console.error("Erro ao criar usuário via admin:", error);
+
+      console.error("Resposta inesperada da função:", data);
       toast({
-        title: "Erro ao adicionar usuário",
-        description: error.message || "Não foi possível adicionar o usuário. Tente novamente.",
+        title: "Erro",
+        description: "Resposta inesperada do servidor",
         variant: "destructive",
       });
-      throw error;
+      
+      return { error: "Resposta inesperada do servidor", existed: false };
+    } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
+      
+      const errorMessage = error.message || "Erro desconhecido ao criar usuário";
+      
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      throw new Error(errorMessage);
     }
   };
 
-  return { createAdminUser };
-}
+  return {
+    createAdminUser,
+  };
+};
