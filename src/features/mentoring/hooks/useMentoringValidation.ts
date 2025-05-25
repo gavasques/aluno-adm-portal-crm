@@ -79,10 +79,10 @@ export const useMentoringValidation = () => {
         description: errors.join(', '),
         variant: "destructive",
       });
-      return { success: false, errors };
+      return { success: false as const, errors };
     }
 
-    return { success: true, errors: [] };
+    return { success: true as const, errors: [] };
   }, [toast]);
 
   return {
