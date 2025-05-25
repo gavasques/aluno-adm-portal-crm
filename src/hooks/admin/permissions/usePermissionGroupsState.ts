@@ -1,38 +1,25 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { PermissionServiceFactory } from "@/services/permissions";
 import { toast } from "@/hooks/use-toast";
+import type { PermissionGroup } from "@/types/permissions";
 
-export interface PermissionGroup {
-  id: string;
-  name: string;
-  description?: string;
-  is_admin: boolean;
-  allow_admin_access: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export { PermissionGroup } from "@/types/permissions";
 
 export const usePermissionGroupsState = () => {
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const permissionGroupService = PermissionServiceFactory.getPermissionGroupService();
+
   const fetchPermissionGroups = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
-        .from("permission_groups")
-        .select("*")
-        .order("name");
-
-      if (error) {
-        throw error;
-      }
-
-      setPermissionGroups(data || []);
+      const groups = await permissionGroupService.getAll();
+      setPermissionGroups(groups);
     } catch (err: any) {
       console.error("Erro ao carregar grupos de permissão:", err);
       setError(err.message || "Erro ao carregar grupos de permissão");
@@ -47,7 +34,7 @@ export const usePermissionGroupsState = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [permissionGroupService]);
 
   const refreshPermissionGroups = useCallback(() => {
     fetchPermissionGroups();

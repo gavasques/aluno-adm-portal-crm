@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { PermissionServiceFactory } from "@/services/permissions";
 import { useAuth } from "@/hooks/auth";
 
 interface Permissions {
@@ -16,6 +16,9 @@ export const usePermissions = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const validationService = PermissionServiceFactory.getPermissionValidationService();
+  const menuService = PermissionServiceFactory.getSystemMenuService();
+
   useEffect(() => {
     const fetchPermissions = async () => {
       if (!user) {
@@ -29,46 +32,25 @@ export const usePermissions = () => {
       }
 
       try {
-        console.log("=== FETCHING PERMISSIONS ===");
+        console.log("=== FETCHING PERMISSIONS (SERVICE LAYER) ===");
         console.log("For user:", {
           id: user.id,
           email: user.email
         });
 
-        // Verificar se é admin
-        const { data: isAdminData, error: adminError } = await supabase
-          .rpc('is_admin');
-
-        if (adminError) {
-          console.error("Erro ao verificar se é admin:", adminError);
-        }
-
-        console.log("Is admin result:", isAdminData);
-
-        // Buscar menus permitidos
-        const { data: menusData, error: menusError } = await supabase
-          .rpc('get_allowed_menus');
-
-        if (menusError) {
-          console.error("Erro ao buscar menus permitidos:", menusError);
-        }
-
-        console.log("Allowed menus result:", menusData);
+        // Verificar se é admin usando o serviço
+        const hasAdminAccess = await validationService.hasAdminAccess();
+        
+        // Buscar menus permitidos usando o serviço
+        const allowedMenus = await menuService.getAllowedMenusForUser();
 
         const newPermissions = {
-          hasAdminAccess: !!isAdminData,
-          allowedMenus: menusData?.map((item: any) => item.menu_key) || []
+          hasAdminAccess,
+          allowedMenus
         };
 
-        console.log("Final permissions:", newPermissions);
+        console.log("Final permissions (via services):", newPermissions);
         console.log("=== PERMISSIONS COMPLETE ===");
-
-        // Log adicional para debug do overlay
-        console.log("=== OVERLAY DEBUG ===");
-        console.log("User has admin access:", newPermissions.hasAdminAccess);
-        console.log("User allowed menus:", newPermissions.allowedMenus);
-        console.log("Should show overlay:", !newPermissions.hasAdminAccess && newPermissions.allowedMenus.length === 0);
-        console.log("==================");
 
         setPermissions(newPermissions);
       } catch (error) {
@@ -85,7 +67,7 @@ export const usePermissions = () => {
     if (!authLoading) {
       fetchPermissions();
     }
-  }, [user?.id, authLoading]);
+  }, [user?.id, authLoading, validationService, menuService]);
 
   return { permissions, loading };
 };
