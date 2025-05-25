@@ -23,7 +23,8 @@ import {
   UserCheck,
   UserMinus,
   Lock,
-  Clock
+  Clock,
+  Shield
 } from "lucide-react";
 
 interface UserTableRowProps {
@@ -37,6 +38,7 @@ interface UserTableRowProps {
     permission_group_id?: string | null;
     storage_used_mb?: number;
     storage_limit_mb?: number;
+    is_mentor?: boolean;
   };
   onViewDetails: (user: any) => void;
   onResetPassword: (email: string) => void;
@@ -63,18 +65,38 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   // Determinar se o usuário está no grupo temporário "Geral"
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
 
+  // Determinar se é um usuário admin
+  const isAdminUser = user.role === "Admin";
+
+  const getUserIcon = () => {
+    if (isAdminUser) {
+      return <Shield className="h-4 w-4 text-blue-600" />;
+    }
+    if (isTemporaryGroup) {
+      return <Clock className="h-4 w-4 text-orange-600" />;
+    }
+    return <User className="h-4 w-4 text-gray-600" />;
+  };
+
+  const getRowClass = () => {
+    if (isAdminUser) {
+      return "bg-blue-50/30 border-l-4 border-l-blue-300";
+    }
+    if (isTemporaryGroup) {
+      return "bg-orange-50/30 border-l-4 border-l-orange-300";
+    }
+    return "";
+  };
+
   return (
-    <TableRow className={isTemporaryGroup ? "bg-orange-50/30 border-l-4 border-l-orange-300" : ""}>
+    <TableRow className={getRowClass()}>
       <TableCell>
         <div className="flex items-center">
           <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
+            isAdminUser ? "bg-blue-100" : 
             isTemporaryGroup ? "bg-orange-100" : "bg-gray-100"
           }`}>
-            {isTemporaryGroup ? (
-              <Clock className="h-4 w-4 text-orange-600" />
-            ) : (
-              <User className="h-4 w-4 text-gray-600" />
-            )}
+            {getUserIcon()}
           </div>
           <div>
             <div className="font-medium">{user.name || "Sem nome"}</div>
@@ -89,14 +111,28 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
           isTemporaryGroup={isTemporaryGroup}
         />
       </TableCell>
-      <TableCell>{user.role || "Não definido"}</TableCell>
-      <TableCell>{user.lastLogin || "Nunca"}</TableCell>
       <TableCell>
-        <StoragePercentageBadge
-          storageUsedMb={user.storage_used_mb || 0}
-          storageLimitMb={user.storage_limit_mb || 100}
-        />
+        <div className="flex items-center gap-2">
+          <span>{user.role || "Não definido"}</span>
+          {user.is_mentor && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              Mentor
+            </span>
+          )}
+        </div>
       </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {user.is_mentor ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              Sim
+            </span>
+          ) : (
+            <span className="text-gray-500 text-sm">Não</span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>{user.lastLogin || "Nunca"}</TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
