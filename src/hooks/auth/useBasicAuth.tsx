@@ -167,9 +167,15 @@ export function useBasicAuth() {
   };
 
   // Nova função para adicionar um usuário no painel de admin
-  const createAdminUser = async (email: string, name: string, role: string, password: string): Promise<CreateUserResult> => {
+  const createAdminUser = async (
+    email: string, 
+    name: string, 
+    role: string, 
+    password: string,
+    is_mentor: boolean = false
+  ): Promise<CreateUserResult> => {
     try {
-      logSecureError({ email, name, role, hasPassword: !!password }, "Creating user");
+      logSecureError({ email, name, role, hasPassword: !!password, is_mentor }, "Creating user");
 
       // Criar o usuário diretamente via Edge Function no Supabase
       const { data: response, error } = await supabase.functions.invoke('list-users', {
@@ -179,7 +185,8 @@ export function useBasicAuth() {
           email: email,
           name: name,
           role: role,
-          password: password || Math.random().toString(36).slice(-10)
+          password: password || Math.random().toString(36).slice(-10),
+          is_mentor: is_mentor
         }
       });
 

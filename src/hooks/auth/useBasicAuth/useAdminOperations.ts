@@ -2,6 +2,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+export interface CreateUserResult {
+  success?: boolean;
+  existed?: boolean;
+  error?: string;
+  message?: string;
+  is_mentor?: boolean;
+  profileCreated?: boolean;
+}
+
 export const useAdminOperations = () => {
   const createAdminUser = async (
     email: string, 
@@ -9,7 +18,7 @@ export const useAdminOperations = () => {
     role: string, 
     password: string,
     is_mentor: boolean = false
-  ) => {
+  ): Promise<CreateUserResult> => {
     try {
       console.log("Criando usuário via Edge Function com dados:", { 
         email, 

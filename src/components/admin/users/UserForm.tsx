@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/auth";
+import { useAdminOperations } from "@/hooks/auth/useBasicAuth/useAdminOperations";
 import { userFormSchema } from "@/utils/validation-schemas";
 import { validatePassword } from "@/utils/security";
 
@@ -32,7 +31,7 @@ interface UserFormProps {
 const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-  const { createAdminUser } = useAuth();
+  const { createAdminUser } = useAdminOperations();
 
   const form = useForm({
     resolver: zodResolver(userFormSchema),
