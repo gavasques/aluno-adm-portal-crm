@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Clock, Users, Filter } from "lucide-react";
+import { Search, Clock, Users, Filter, AlertCircle } from "lucide-react";
 
 interface UsersFilterProps {
   searchQuery: string;
@@ -33,6 +33,17 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
   pendingCount,
   totalCount,
 }) => {
+  const handlePendingFilter = () => {
+    onGroupFilterChange("pending");
+    onStatusFilterChange("all");
+  };
+
+  const clearAllFilters = () => {
+    onSearchChange("");
+    onStatusFilterChange("all");
+    onGroupFilterChange("all");
+  };
+
   return (
     <div className="space-y-4">
       {/* Estatísticas rápidas */}
@@ -47,14 +58,60 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-orange-600" />
             <span className="text-sm text-gray-600">Pendentes: </span>
-            <Badge variant="outline" className="border-orange-300 text-orange-700 bg-orange-50">
+            <Badge 
+              variant="outline" 
+              className="border-orange-300 text-orange-700 bg-orange-50 cursor-pointer hover:bg-orange-100"
+              onClick={handlePendingFilter}
+            >
               {pendingCount}
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Filtros */}
+      {/* Filtros rápidos */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant={groupFilter === "pending" ? "default" : "outline"}
+          size="sm"
+          onClick={handlePendingFilter}
+          className="h-8"
+        >
+          <AlertCircle className="h-3 w-3 mr-1" />
+          Pendentes
+          {pendingCount > 0 && (
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {pendingCount}
+            </Badge>
+          )}
+        </Button>
+
+        <Button
+          variant={groupFilter === "assigned" ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            onGroupFilterChange("assigned");
+            onStatusFilterChange("all");
+          }}
+          className="h-8"
+        >
+          Validados
+        </Button>
+
+        <Button
+          variant={statusFilter === "ativo" ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            onStatusFilterChange("ativo");
+            onGroupFilterChange("all");
+          }}
+          className="h-8"
+        >
+          Ativos
+        </Button>
+      </div>
+
+      {/* Filtros detalhados */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-64">
           <div className="relative">
@@ -94,11 +151,7 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              onSearchChange("");
-              onStatusFilterChange("all");
-              onGroupFilterChange("all");
-            }}
+            onClick={clearAllFilters}
           >
             <Filter className="h-4 w-4 mr-1" />
             Limpar Filtros
