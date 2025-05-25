@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useUsersList } from "@/hooks/admin/useUsersList";
 import { useUserDialogs } from "@/hooks/admin/useUserDialogs";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import UsersHeader from "@/components/admin/users/UsersHeader";
 import UsersAlert from "@/components/admin/users/UsersAlert";
 import UsersCard from "@/components/admin/users/UsersCard";
@@ -12,8 +13,21 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const dialogsState = useUserDialogs();
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Gestão de Usuários' }
+  ];
+
   return (
     <div className="w-full space-y-6">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-6"
+      />
+
       <UsersHeader 
         refreshUsersList={refreshUsersList} 
         isRefreshing={isRefreshing} 

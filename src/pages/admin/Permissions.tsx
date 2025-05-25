@@ -1,6 +1,7 @@
 
 import React from "react";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
 import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
@@ -43,8 +44,21 @@ const Permissions = () => {
     refreshPermissionGroups();
   };
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Gestão de Permissões' }
+  ];
+
   return (
     <div className="w-full space-y-6">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-6"
+      />
+
       <PermissionsHeader onAdd={handleAdd} />
       
       <PerformanceOptimizedPermissions 

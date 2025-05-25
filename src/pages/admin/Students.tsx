@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 
 // Import the new hook and components
 import { useStudents } from "@/hooks/admin/useStudents";
@@ -54,8 +55,21 @@ const Students = () => {
   console.log("Current items:", currentItems.length);
   console.log("====================");
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Gestão de Alunos' }
+  ];
+
   return (
     <div className="w-full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-6"
+      />
+
       <StudentsHeader onAddStudent={() => setShowAddStudentDialog(true)} />
 
       <Card className="mb-6">

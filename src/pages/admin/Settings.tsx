@@ -6,6 +6,7 @@ import * as z from "zod";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 
 import {
   Card,
@@ -74,8 +75,21 @@ const AdminSettings = () => {
     window.location.href = "/student";
   };
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Configurações' }
+  ];
+
   return (
     <div className="container mx-auto py-10">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-6"
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

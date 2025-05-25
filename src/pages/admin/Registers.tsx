@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useLocation, useNavigate } from "react-router-dom";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import Mentoring from "./Mentoring";
 import Bonus from "./Bonus";
 import Categories from "./Categories";
@@ -28,9 +29,22 @@ const Registers = () => {
     setActiveTab(value);
     navigate(`/admin/cadastros?tab=${value}`, { replace: true });
   };
+
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Cadastros' }
+  ];
   
   return (
     <div className="w-full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-6"
+      />
+
       <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastros</h1>
       
       <Tabs 
