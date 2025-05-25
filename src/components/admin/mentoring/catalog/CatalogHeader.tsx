@@ -1,20 +1,16 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Plus, Grid3X3, List } from 'lucide-react';
+import { ArrowLeft, Download, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface CatalogHeaderProps {
-  viewMode: 'grid' | 'table';
-  onViewModeChange: (mode: 'grid' | 'table') => void;
   onCreateCatalog: () => void;
   totalCatalogs: number;
   activeCatalogs: number;
 }
 
 const CatalogHeader: React.FC<CatalogHeaderProps> = ({
-  viewMode,
-  onViewModeChange,
   onCreateCatalog,
   totalCatalogs,
   activeCatalogs
@@ -41,25 +37,6 @@ const CatalogHeader: React.FC<CatalogHeaderProps> = ({
       </div>
       
       <div className="flex items-center gap-3">
-        <div className="flex items-center bg-gray-100 rounded-lg p-1">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('grid')}
-            className="px-3"
-          >
-            <Grid3X3 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'table' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('table')}
-            className="px-3"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-        
         <Button variant="outline" className="flex items-center gap-2">
           <Download className="h-4 w-4" />
           Exportar

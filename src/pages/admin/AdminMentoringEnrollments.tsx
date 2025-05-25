@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,22 +20,27 @@ import {
   Clock,
   XCircle,
   ArrowLeft,
-  UserPlus
+  UserPlus,
+  Timer
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMentoring } from '@/hooks/useMentoring';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
+import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
+import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 
 const AdminMentoringEnrollments = () => {
   const navigate = useNavigate();
-  const { enrollments, getEnrollmentProgress } = useMentoring();
+  const { enrollments, getEnrollmentProgress, addExtension } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<any>(null);
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
+  const [showExtensionDialog, setShowExtensionDialog] = useState(false);
+  const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -70,6 +76,18 @@ const AdminMentoringEnrollments = () => {
   const handleDeleteEnrollment = (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta inscrição?')) {
       console.log('Deleting enrollment:', id);
+    }
+  };
+
+  const handleAddExtension = (enrollment: StudentMentoringEnrollment) => {
+    setSelectedEnrollmentForExtension(enrollment);
+    setShowExtensionDialog(true);
+  };
+
+  const handleExtensionSubmit = async (data: CreateExtensionData) => {
+    const success = await addExtension(data);
+    if (success) {
+      console.log('Extensão adicionada com sucesso');
     }
   };
 
@@ -175,13 +193,13 @@ const AdminMentoringEnrollments = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Taxa de Conclusão</p>
+                <p className="text-sm font-medium text-gray-600">Com Extensões</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {Math.round((enrollments.filter(e => e.status === 'concluida').length / enrollments.length) * 100)}%
+                  {enrollments.filter(e => e.hasExtension).length}
                 </p>
               </div>
               <div className="p-3 bg-orange-100 rounded-lg">
-                <Users className="h-6 w-6 text-orange-600" />
+                <Timer className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
@@ -303,7 +321,15 @@ const AdminMentoringEnrollments = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-medium">{enrollment.mentoring.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">{enrollment.mentoring.name}</div>
+                        {enrollment.hasExtension && (
+                          <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                            <Timer className="h-3 w-3 mr-1" />
+                            Extensão
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="outline">{enrollment.mentoring.type}</Badge>
@@ -328,7 +354,14 @@ const AdminMentoringEnrollments = () => {
                       {new Date(enrollment.startDate).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600">
-                      {new Date(enrollment.endDate).toLocaleDateString('pt-BR')}
+                      <div>
+                        {new Date(enrollment.endDate).toLocaleDateString('pt-BR')}
+                        {enrollment.originalEndDate && (
+                          <div className="text-xs text-gray-500">
+                            Original: {new Date(enrollment.originalEndDate).toLocaleDateString('pt-BR')}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-1">
@@ -341,6 +374,14 @@ const AdminMentoringEnrollments = () => {
                           onClick={() => setEditingEnrollment(enrollment)}
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleAddExtension(enrollment)}
+                          title="Adicionar Extensão"
+                        >
+                          <Timer className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -382,6 +423,14 @@ const AdminMentoringEnrollments = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Extension Dialog */}
+      <ExtensionDialog
+        open={showExtensionDialog}
+        onOpenChange={setShowExtensionDialog}
+        enrollment={selectedEnrollmentForExtension}
+        onSubmit={handleExtensionSubmit}
+      />
     </div>
   );
 };

@@ -13,6 +13,16 @@ export interface MentoringCatalog {
   updatedAt: string;
 }
 
+export interface MentoringExtension {
+  id: string;
+  enrollmentId: string;
+  extensionMonths: number;
+  appliedDate: string;
+  notes?: string;
+  adminId: string;
+  createdAt: string;
+}
+
 export interface StudentMentoringEnrollment {
   id: string;
   studentId: string;
@@ -21,10 +31,13 @@ export interface StudentMentoringEnrollment {
   status: 'ativa' | 'concluida' | 'cancelada' | 'pausada';
   startDate: string;
   endDate: string;
+  originalEndDate?: string;
   sessionsUsed: number;
   totalSessions: number;
   responsibleMentor: string;
   observations: string;
+  extensions: MentoringExtension[];
+  hasExtension: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,4 +110,10 @@ export interface UpdateSessionData extends Partial<CreateSessionData> {
   mentorNotes?: string;
   studentNotes?: string;
   recordingLink?: string;
+}
+
+export interface CreateExtensionData {
+  enrollmentId: string;
+  extensionMonths: number;
+  notes?: string;
 }

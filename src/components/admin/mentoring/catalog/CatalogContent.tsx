@@ -4,7 +4,6 @@ import { useMentoring } from '@/hooks/useMentoring';
 import CatalogHeader from './CatalogHeader';
 import CatalogStatsCards from './CatalogStatsCards';
 import CatalogFilters from './CatalogFilters';
-import CatalogCard from './CatalogCard';
 import CatalogTable from './CatalogTable';
 import EmptyState from '@/components/mentoring/EmptyState';
 import LoadingSpinner from '@/components/mentoring/LoadingSpinner';
@@ -14,7 +13,6 @@ const CatalogContent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [editingCatalog, setEditingCatalog] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -67,8 +65,6 @@ const CatalogContent: React.FC = () => {
     <>
       {/* Header */}
       <CatalogHeader
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         onCreateCatalog={handleCreateCatalog}
         totalCatalogs={catalogs.length}
         activeCatalogs={catalogs.filter(c => c.active).length}
@@ -95,18 +91,6 @@ const CatalogContent: React.FC = () => {
           title="Nenhuma mentoria encontrada"
           description="Não há mentorias que correspondam aos filtros selecionados. Tente ajustar os critérios de busca."
         />
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCatalogs.map((catalog) => (
-            <CatalogCard
-              key={catalog.id}
-              catalog={catalog}
-              onEdit={handleEditCatalog}
-              onDelete={handleDeleteCatalog}
-              onToggleStatus={handleToggleStatus}
-            />
-          ))}
-        </div>
       ) : (
         <CatalogTable
           catalogs={filteredCatalogs}

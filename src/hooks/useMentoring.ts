@@ -7,7 +7,9 @@ import {
   MentoringMaterial,
   CreateMentoringCatalogData,
   CreateSessionData,
-  UpdateSessionData
+  UpdateSessionData,
+  CreateExtensionData,
+  MentoringExtension
 } from '@/types/mentoring.types';
 import { 
   mockMentoringCatalog, 
@@ -22,7 +24,7 @@ import {
 
 export const useMentoring = () => {
   const [catalogs] = useState<MentoringCatalog[]>(mockMentoringCatalog);
-  const [enrollments] = useState<StudentMentoringEnrollment[]>(mockStudentEnrollments);
+  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(mockStudentEnrollments);
   const [sessions] = useState<MentoringSession[]>(mockMentoringSessions);
   const [materials] = useState<MentoringMaterial[]>(mockMentoringMaterials);
 
@@ -81,6 +83,49 @@ export const useMentoring = () => {
     return updated;
   };
 
+  const addExtension = async (data: CreateExtensionData): Promise<boolean> => {
+    try {
+      const enrollment = enrollments.find(e => e.id === data.enrollmentId);
+      if (!enrollment) return false;
+
+      const extension: MentoringExtension = {
+        id: `ext-${Date.now()}`,
+        enrollmentId: data.enrollmentId,
+        extensionMonths: data.extensionMonths,
+        appliedDate: new Date().toISOString(),
+        notes: data.notes,
+        adminId: 'current-admin-id', // In real app, get from auth context
+        createdAt: new Date().toISOString()
+      };
+
+      // Calculate new end date
+      const currentEndDate = new Date(enrollment.endDate);
+      const newEndDate = new Date(currentEndDate);
+      newEndDate.setMonth(newEndDate.getMonth() + data.extensionMonths);
+
+      // Update enrollment
+      const updatedEnrollment: StudentMentoringEnrollment = {
+        ...enrollment,
+        endDate: newEndDate.toISOString(),
+        originalEndDate: enrollment.originalEndDate || enrollment.endDate,
+        extensions: [...(enrollment.extensions || []), extension],
+        hasExtension: true,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Update state
+      setEnrollments(prev => 
+        prev.map(e => e.id === data.enrollmentId ? updatedEnrollment : e)
+      );
+
+      console.log('Extension added successfully:', extension);
+      return true;
+    } catch (error) {
+      console.error('Error adding extension:', error);
+      return false;
+    }
+  };
+
   // Student functions
   const getMyEnrollments = (studentId: string): StudentMentoringEnrollment[] => {
     return getStudentEnrollments(studentId);
@@ -129,6 +174,7 @@ export const useMentoring = () => {
     updateMentoringCatalog,
     createSession,
     updateSession,
+    addExtension,
     
     // Student functions
     getMyEnrollments,
