@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -106,6 +107,22 @@ const StudentSidebar = () => {
   const getUserName = () => {
     return user?.user_metadata?.name || user?.email || "Usuário";
   };
+
+  // Verificar se deve mostrar o menu de mentorias
+  const shouldShowMentoring = () => {
+    // Se tem permissão admin, sempre mostrar
+    if (permissions.hasAdminAccess) {
+      return true;
+    }
+    
+    // Se tem a permissão específica do menu, mostrar
+    if (permissions.allowedMenus.includes('student-mentoring')) {
+      return true;
+    }
+    
+    // Para alunos regulares, só mostrar se tem mentoria ativa
+    return hasActiveMentoring;
+  };
   
   if (loading) {
     return (
@@ -175,7 +192,7 @@ const StudentSidebar = () => {
                     <NavItem 
                       href="/aluno/mentorias" 
                       icon={GraduationCap} 
-                      customCondition={hasActiveMentoring}
+                      customCondition={shouldShowMentoring()}
                     >
                       Minhas Mentorias
                     </NavItem>

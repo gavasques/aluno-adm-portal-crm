@@ -14,12 +14,14 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useSecureMentoring } from '@/hooks/useSecureMentoring';
 import { useMentoring } from '@/hooks/useMentoring';
+import { usePermissions } from '@/hooks/usePermissions';
 import LoadingSpinner from '@/components/mentoring/LoadingSpinner';
 import ErrorMessage from '@/components/mentoring/ErrorMessage';
 import EmptyState from '@/components/mentoring/EmptyState';
 
 const StudentMentoring = () => {
   const navigate = useNavigate();
+  const { permissions } = usePermissions();
   const { 
     getMySecureEnrollments,
     getMySecureUpcomingSessions,
@@ -30,8 +32,24 @@ const StudentMentoring = () => {
   } = useSecureMentoring();
   const { getEnrollmentProgress } = useMentoring();
 
-  // Redirect if not authenticated
-  if (!loading && !isAuthenticated) {
+  // Verificar se o usuário pode acessar
+  const canAccess = () => {
+    // Admins sempre podem acessar
+    if (permissions.hasAdminAccess) {
+      return true;
+    }
+    
+    // Verificar se tem a permissão específica
+    if (permissions.allowedMenus.includes('student-mentoring')) {
+      return true;
+    }
+    
+    // Para outros usuários, verificar autenticação
+    return isAuthenticated;
+  };
+
+  // Redirect if not authenticated or no permission
+  if (!loading && !canAccess()) {
     navigate('/');
     return null;
   }
@@ -77,8 +95,15 @@ const StudentMentoring = () => {
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Minhas Mentorias</h1>
-        <p className="text-gray-600 mt-1">Acompanhe seu progresso e acesse materiais</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {permissions.hasAdminAccess ? 'Mentorias (Visão Admin)' : 'Minhas Mentorias'}
+        </h1>
+        <p className="text-gray-600 mt-1">
+          {permissions.hasAdminAccess 
+            ? 'Visualizando mentorias como administrador' 
+            : 'Acompanhe seu progresso e acesse materiais'
+          }
+        </p>
       </div>
 
       {/* Quick Stats */}
@@ -176,7 +201,7 @@ const StudentMentoring = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Minhas Inscrições ({enrollments.length})
+            {permissions.hasAdminAccess ? 'Inscrições do Sistema' : 'Minhas Inscrições'} ({enrollments.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
