@@ -96,7 +96,7 @@ export const useMentoringQueries = () => {
           throw new Error(businessValidation.errors.join(', '));
         }
 
-        return repository.createCatalog(schemaValidation.data);
+        return repository.createCatalog(data);
       },
       onSuccess: (newCatalog) => {
         // Invalidar cache dos catálogos
@@ -187,7 +187,7 @@ export const useMentoringQueries = () => {
         if (!validation.success) {
           throw new Error(validation.errors.join(', '));
         }
-        return repository.createSession(validation.data);
+        return repository.createSession(data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: mentoringQueryKeys.sessions() });
@@ -206,7 +206,7 @@ export const useMentoringQueries = () => {
         if (!validation.success) {
           throw new Error(validation.errors.join(', '));
         }
-        return repository.addExtension(validation.data);
+        return repository.addExtension(data);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: mentoringQueryKeys.enrollments() });
