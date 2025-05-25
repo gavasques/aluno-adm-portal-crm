@@ -4,7 +4,7 @@ import { PermissionServiceFactory } from "@/services/permissions";
 import { toast } from "@/hooks/use-toast";
 import type { PermissionGroup } from "@/types/permissions";
 
-export { PermissionGroup } from "@/types/permissions";
+export type { PermissionGroup } from "@/types/permissions";
 
 export const usePermissionGroupsState = () => {
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>([]);

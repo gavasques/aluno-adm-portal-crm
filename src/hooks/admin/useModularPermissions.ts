@@ -3,7 +3,7 @@ import { useState } from "react";
 import { PermissionServiceFactory } from "@/services/permissions";
 import type { SystemModule, ModulePermissionData } from "@/types/permissions";
 
-export { ModulePermissionData } from "@/types/permissions";
+export type { ModulePermissionData } from "@/types/permissions";
 
 export const useModularPermissions = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
