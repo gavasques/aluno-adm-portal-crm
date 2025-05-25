@@ -18,9 +18,10 @@ describe('SystemModuleService', () => {
   let service: SystemModuleService;
   let mockSupabase: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     service = new SystemModuleService();
-    mockSupabase = vi.mocked(await import('@/integrations/supabase/client')).supabase;
+    const supabaseModule = await import('@/integrations/supabase/client');
+    mockSupabase = vi.mocked(supabaseModule).supabase;
     vi.clearAllMocks();
   });
 

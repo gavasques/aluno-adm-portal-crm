@@ -27,9 +27,10 @@ describe('PermissionGroupService', () => {
   let service: PermissionGroupService;
   let mockSupabase: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     service = new PermissionGroupService();
-    mockSupabase = vi.mocked(await import('@/integrations/supabase/client')).supabase;
+    const supabaseModule = await import('@/integrations/supabase/client');
+    mockSupabase = vi.mocked(supabaseModule).supabase;
     vi.clearAllMocks();
   });
 
@@ -100,6 +101,7 @@ describe('PermissionGroupService', () => {
         description: 'New group description',
         is_admin: false,
         allow_admin_access: false,
+        menu_keys: ['dashboard', 'users'],
       };
 
       const mockQuery = {
@@ -117,7 +119,12 @@ describe('PermissionGroupService', () => {
 
       expect(result.success).toBe(true);
       expect(mockSupabase.from).toHaveBeenCalledWith('permission_groups');
-      expect(mockQuery.insert).toHaveBeenCalledWith([newGroupData]);
+      expect(mockQuery.insert).toHaveBeenCalledWith([{
+        name: newGroupData.name,
+        description: newGroupData.description,
+        is_admin: newGroupData.is_admin,
+        allow_admin_access: newGroupData.allow_admin_access,
+      }]);
     });
   });
 
@@ -129,6 +136,7 @@ describe('PermissionGroupService', () => {
         description: 'Updated description',
         is_admin: false,
         allow_admin_access: true,
+        menu_keys: ['dashboard'],
       };
 
       const mockQuery = {

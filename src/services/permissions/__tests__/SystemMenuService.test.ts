@@ -20,9 +20,10 @@ describe('SystemMenuService', () => {
   let service: SystemMenuService;
   let mockSupabase: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     service = new SystemMenuService();
-    mockSupabase = vi.mocked(await import('@/integrations/supabase/client')).supabase;
+    const supabaseModule = await import('@/integrations/supabase/client');
+    mockSupabase = vi.mocked(supabaseModule).supabase;
     vi.clearAllMocks();
   });
 
