@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { useSystemMenus } from "@/hooks/admin/useSystemMenus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 interface PermissionGroupFormProps {
   isEdit: boolean;
@@ -81,6 +81,10 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
     try {
       setIsSubmitting(true);
       
+      // Para grupos admin completo, não enviar menus específicos (eles têm acesso a tudo)
+      // Para grupos com acesso admin limitado, preservar os menus selecionados
+      const menusToSend = isAdmin ? [] : selectedMenus;
+      
       if (isEdit && permissionGroup) {
         await updatePermissionGroup({
           id: permissionGroup.id,
@@ -88,7 +92,7 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
           description,
           is_admin: isAdmin,
           allow_admin_access: allowAdminAccess,
-          menu_keys: selectedMenus
+          menu_keys: menusToSend
         });
       } else {
         await createPermissionGroup({
@@ -96,7 +100,7 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
           description,
           is_admin: isAdmin,
           allow_admin_access: allowAdminAccess,
-          menu_keys: selectedMenus
+          menu_keys: menusToSend
         });
       }
       
@@ -188,9 +192,10 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
 
           {allowAdminAccess && !isAdmin && (
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <Info className="h-4 w-4" />
               <AlertDescription>
-                Este grupo poderá acessar a área administrativa com base nas permissões específicas configuradas abaixo.
+                Este grupo poderá acessar a área administrativa com base nas permissões específicas configuradas abaixo. 
+                Os menus selecionados serão preservados mesmo com acesso administrativo habilitado.
               </AlertDescription>
             </Alert>
           )}
@@ -200,34 +205,61 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
           <div className="space-y-2">
             <Label>Permissões do Grupo</Label>
             
-            {!isAdmin && isLoading && (
+            {isLoading && (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 <p>Carregando opções...</p>
               </div>
             )}
 
-            {!isAdmin && !isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <CheckboxGroup className="space-y-2">
-                  {systemMenus.map((menu: any) => (
-                    <CheckboxItem
-                      key={menu.menu_key}
-                      id={`menu-${menu.menu_key}`}
-                      label={menu.display_name}
-                      description={menu.description || ''}
-                      checked={selectedMenus.includes(menu.menu_key)}
-                      onCheckedChange={() => handleMenuToggle(menu.menu_key)}
-                    />
-                  ))}
-                </CheckboxGroup>
-              </div>
-            )}
+            {!isLoading && (
+              <>
+                {isAdmin ? (
+                  <div className="p-3 border border-blue-200 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-800">
+                      <Info className="h-4 w-4" />
+                      <span className="text-sm font-medium">Acesso Total</span>
+                    </div>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Este grupo tem acesso completo a todas as funcionalidades do sistema.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <CheckboxGroup className="space-y-2">
+                      {systemMenus.map((menu: any) => (
+                        <CheckboxItem
+                          key={menu.menu_key}
+                          id={`menu-${menu.menu_key}`}
+                          label={menu.display_name}
+                          description={menu.description || ''}
+                          checked={selectedMenus.includes(menu.menu_key)}
+                          onCheckedChange={() => handleMenuToggle(menu.menu_key)}
+                          disabled={isSubmitting}
+                        />
+                      ))}
+                    </CheckboxGroup>
+                  </div>
+                )}
 
-            {!isAdmin && !isLoading && systemMenus.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum menu disponível. Contate o administrador do sistema.
-              </p>
+                {!isAdmin && systemMenus.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum menu disponível. Contate o administrador do sistema.
+                  </p>
+                )}
+
+                {!isAdmin && allowAdminAccess && selectedMenus.length > 0 && (
+                  <div className="p-3 border border-green-200 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <Info className="h-4 w-4" />
+                      <span className="text-sm font-medium">Acesso Administrativo Limitado</span>
+                    </div>
+                    <p className="text-sm text-green-700 mt-1">
+                      Este grupo terá acesso à área administrativa apenas para os {selectedMenus.length} menus selecionados.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
