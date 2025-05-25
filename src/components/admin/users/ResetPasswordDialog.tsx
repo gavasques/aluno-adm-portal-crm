@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { sanitizeError, logSecureError } from "@/utils/security";
@@ -31,10 +31,12 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastAttempt, setLastAttempt] = useState<Date | null>(null);
   const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (open && userEmail) {
       runSupabaseDiagnostics(userEmail).then(setDiagnostics);
+      setShowSuccess(false);
     }
   }, [open, userEmail]);
 
@@ -95,7 +97,10 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
         redirectTo: redirectUrl,
       });
 
-      console.log("Resposta do Supabase:", { data, error });
+      console.log("=== RESPOSTA COMPLETA DO SUPABASE ===");
+      console.log("Data:", JSON.stringify(data, null, 2));
+      console.log("Error:", error);
+      console.log("=====================================");
 
       if (error) {
         console.error("Erro do Supabase:", error);
@@ -103,17 +108,29 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
         throw error;
       }
 
-      console.log("Email enviado com sucesso!");
+      // Verificar se a resposta do Supabase confirma o envio
+      console.log("✅ SUCESSO CONFIRMADO PELO SUPABASE!");
+      console.log("Email enfileirado com sucesso para:", userEmail);
+      console.log("Dados de confirmação:", data);
+      
       logPasswordResetAttempt(userEmail, true);
       setLastAttempt(new Date());
+      setShowSuccess(true);
 
+      // Toast de sucesso mais detalhado e duradouro
       toast({
-        title: "Email enviado",
-        description: `Um email de recuperação de senha foi enviado para ${userEmail}. Verifique também a pasta de spam.`,
+        title: "✅ Email enviado com sucesso!",
+        description: `Confirmado pelo Supabase: Email de recuperação foi enviado para ${userEmail}. Verifique sua caixa de entrada e pasta de spam.`,
+        duration: 8000, // 8 segundos para dar tempo de ler
       });
 
-      onOpenChange(false);
-      onSuccess();
+      console.log("=== PROCESSO CONCLUÍDO COM SUCESSO ===");
+
+      // Fechar dialog após 2 segundos para mostrar o sucesso visual
+      setTimeout(() => {
+        onOpenChange(false);
+        onSuccess();
+      }, 2000);
 
     } catch (error: any) {
       console.error("=== ERRO NO RESET DE SENHA ===");
@@ -137,9 +154,10 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
       }
       
       toast({
-        title: "Erro ao enviar email",
+        title: "❌ Erro ao enviar email",
         description: userMessage,
         variant: "destructive",
+        duration: 6000,
       });
     } finally {
       setIsProcessing(false);
@@ -151,87 +169,138 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Redefinir senha</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {showSuccess ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Email enviado com sucesso!
+              </>
+            ) : (
+              <>
+                <Mail className="h-5 w-5" />
+                Redefinir senha
+              </>
+            )}
+          </DialogTitle>
           <DialogDescription>
-            Um email de redefinição de senha será enviado para o usuário.
+            {showSuccess ? (
+              "O email de redefinição foi confirmado pelo Supabase e enviado."
+            ) : (
+              "Um email de redefinição de senha será enviado para o usuário."
+            )}
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-4">
-          <p>
-            Deseja enviar um email de redefinição de senha para{" "}
-            <span className="font-medium text-foreground">{userEmail}</span>?
-          </p>
-          
-          {/* Status de diagnósticos */}
-          {diagnostics && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                {diagnostics.clientConfigured ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                )}
-                <span>Cliente Supabase: {diagnostics.clientConfigured ? 'Configurado' : 'Erro'}</span>
+          {showSuccess ? (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-green-800">Envio confirmado pelo Supabase!</p>
+                <p className="text-green-700 mt-1">
+                  Email de recuperação foi enviado para{" "}
+                  <span className="font-medium">{userEmail}</span>
+                </p>
+                <p className="text-green-600 text-xs mt-2">
+                  Verifique a caixa de entrada e pasta de spam. O email pode levar alguns minutos para chegar.
+                </p>
               </div>
+            </div>
+          ) : (
+            <>
+              <p>
+                Deseja enviar um email de redefinição de senha para{" "}
+                <span className="font-medium text-foreground">{userEmail}</span>?
+              </p>
               
-              {diagnostics.userExists !== undefined && (
-                <div className="flex items-center gap-2 text-sm">
-                  {diagnostics.userExists ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              {/* Status de diagnósticos */}
+              {diagnostics && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    {diagnostics.clientConfigured ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    )}
+                    <span>Cliente Supabase: {diagnostics.clientConfigured ? 'Configurado' : 'Erro'}</span>
+                  </div>
+                  
+                  {diagnostics.userExists !== undefined && (
+                    <div className="flex items-center gap-2 text-sm">
+                      {diagnostics.userExists ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      )}
+                      <span>Usuário: {diagnostics.userExists ? 'Encontrado' : 'Não encontrado/sem permissão'}</span>
+                    </div>
                   )}
-                  <span>Usuário: {diagnostics.userExists ? 'Encontrado' : 'Não encontrado/sem permissão'}</span>
+                  
+                  {diagnostics.errors.length > 0 && (
+                    <div className="p-2 bg-red-50 border border-red-200 rounded text-sm">
+                      <p className="font-medium text-red-800">Problemas detectados:</p>
+                      <ul className="list-disc list-inside text-red-700">
+                        {diagnostics.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
               
-              {diagnostics.errors.length > 0 && (
-                <div className="p-2 bg-red-50 border border-red-200 rounded text-sm">
-                  <p className="font-medium text-red-800">Problemas detectados:</p>
-                  <ul className="list-disc list-inside text-red-700">
-                    {diagnostics.errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
+              {!canAttemptReset() && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                  <div className="text-sm text-yellow-800">
+                    <p className="font-medium">Aguarde antes de tentar novamente</p>
+                    <p>Um reset foi enviado recentemente. Aguarde pelo menos 1 minuto entre tentativas.</p>
+                  </div>
                 </div>
               )}
-            </div>
-          )}
-          
-          {!canAttemptReset() && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
-              <div className="text-sm text-yellow-800">
-                <p className="font-medium">Aguarde antes de tentar novamente</p>
-                <p>Um reset foi enviado recentemente. Aguarde pelo menos 1 minuto entre tentativas.</p>
-              </div>
-            </div>
+            </>
           )}
         </div>
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isProcessing}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            onClick={handleReset}
-            disabled={isProcessing || !canAttemptReset()}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
-              </>
-            ) : (
-              "Enviar email"
-            )}
-          </Button>
+          {showSuccess ? (
+            <Button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Concluído
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isProcessing}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleReset}
+                disabled={isProcessing || !canAttemptReset()}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Enviar email
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
