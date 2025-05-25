@@ -25,6 +25,7 @@ import {
   Lock,
   GraduationCap
 } from "lucide-react";
+import MentorToggleButton from "./users/MentorToggleButton";
 
 interface UserTableRowProps {
   user: {
@@ -42,7 +43,7 @@ interface UserTableRowProps {
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
-  onToggleMentorStatus?: (userId: string, isMentor: boolean) => void;
+  onRefresh?: () => void;
 }
 
 const UserTableRow: React.FC<UserTableRowProps> = ({ 
@@ -52,7 +53,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onDeleteUser,
   onToggleUserStatus,
   onSetPermissionGroup,
-  onToggleMentorStatus
+  onRefresh
 }) => {
   // Determinar se o usuário está ativo com base no status
   const isActive = user.status === "Ativo";
@@ -75,14 +76,23 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       </TableCell>
       <TableCell>{user.role || "Não definido"}</TableCell>
       <TableCell>
-        {user.is_mentor ? (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-            <GraduationCap className="h-3 w-3 mr-1" />
-            Mentor
-          </Badge>
-        ) : (
-          <span className="text-gray-400">-</span>
-        )}
+        <div className="flex items-center gap-2">
+          {user.is_mentor ? (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <GraduationCap className="h-3 w-3 mr-1" />
+              Mentor
+            </Badge>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )}
+          <MentorToggleButton
+            userId={user.id}
+            userEmail={user.email}
+            userName={user.name}
+            isMentor={user.is_mentor || false}
+            onUpdate={onRefresh}
+          />
+        </div>
       </TableCell>
       <TableCell>{user.lastLogin || "Nunca"}</TableCell>
       <TableCell className="text-right">
@@ -107,13 +117,6 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               <DropdownMenuItem onClick={() => onSetPermissionGroup(user.id, user.email, user.permission_group_id)}>
                 <Lock className="mr-2 h-4 w-4" />
                 <span>Definir permissões</span>
-              </DropdownMenuItem>
-            )}
-
-            {onToggleMentorStatus && (
-              <DropdownMenuItem onClick={() => onToggleMentorStatus(user.id, !user.is_mentor)}>
-                <GraduationCap className="mr-2 h-4 w-4" />
-                <span>{user.is_mentor ? 'Remover mentor' : 'Tornar mentor'}</span>
               </DropdownMenuItem>
             )}
             

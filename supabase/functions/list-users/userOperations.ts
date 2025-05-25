@@ -1,3 +1,4 @@
+
 import { corsHeaders } from './utils.ts';
 
 // Função para limpar usuário órfão (existe no Auth mas não no profiles)
@@ -163,15 +164,40 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
           message: "Usuário já existe, mas o perfil foi sincronizado com sucesso.",
           is_mentor: is_mentor || false
         };
+      } else {
+        // Perfil existe, vamos atualizar os dados incluindo is_mentor
+        console.log("[createUser] Atualizando perfil existente com novos dados:", {
+          name,
+          role,
+          is_mentor: is_mentor || false
+        });
+        
+        const { error: updateProfileError } = await supabaseAdmin
+          .from('profiles')
+          .update({ 
+            name: name, 
+            role: role,
+            is_mentor: is_mentor || false
+          })
+          .eq('id', existingUser.id);
+          
+        if (updateProfileError) {
+          console.error("[createUser] Erro ao atualizar perfil existente:", updateProfileError);
+          return { 
+            existed: true, 
+            error: "Erro ao atualizar dados do usuário existente",
+            message: "O usuário já existe, mas houve um erro ao atualizar seus dados."
+          };
+        }
+        
+        console.log("[createUser] Perfil atualizado com sucesso para usuário existente");
+        return { 
+          existed: true, 
+          profileCreated: true, 
+          message: "Usuário já existe e seus dados foram atualizados com sucesso.",
+          is_mentor: is_mentor || false
+        };
       }
-      
-      console.log("[createUser] Usuário e perfil já existem");
-      return { 
-        existed: true, 
-        message: "Usuário já existe com este email",
-        userId: existingUser.id,
-        is_mentor: existingProfile?.is_mentor || false
-      };
     }
 
     console.log("[createUser] Criando novo usuário no Supabase Auth");
@@ -200,7 +226,7 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
     console.log("[createUser] Usuário criado no auth:", newUserData.user.id);
 
     // Criar perfil associado na tabela "profiles"
-    console.log("[createUser] Criando perfil na tabela profiles");
+    console.log("[createUser] Criando perfil na tabela profiles com is_mentor:", is_mentor || false);
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert([
@@ -223,6 +249,7 @@ export const createUser = async (supabaseAdmin: any, data: any) => {
     }
 
     console.log("[createUser] Usuário e perfil criados com sucesso:", newUserData.user.id);
+    console.log("[createUser] Status de mentor definido como:", is_mentor || false);
     return { 
       success: true, 
       message: "Usuário criado com sucesso",

@@ -33,6 +33,7 @@ const Users = () => {
         onDeleteUser={dialogsState.handleDeleteUser}
         onToggleUserStatus={dialogsState.handleToggleUserStatus}
         onSetPermissionGroup={dialogsState.handleSetPermissionGroup}
+        onRefresh={refreshUsersList}
       />
 
       <UsersDialogs

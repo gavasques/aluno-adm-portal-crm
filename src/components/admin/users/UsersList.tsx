@@ -7,7 +7,7 @@ import {
 import UserDetailsDialog from "./UserDetailsDialog";
 import UserActionButtons from "./UserActionButtons";
 import UsersTableHeader from "./UsersTableHeader";
-import UserTableRow from "./UserTableRow";
+import UserTableRow from "../UserTableRow";
 import EmptyUsersList from "./EmptyUsersList";
 import LoadingUsersList from "./LoadingUsersList";
 import UsersFilter from "./UsersFilter";
@@ -23,6 +23,7 @@ interface User {
   permission_group_id?: string | null;
   storage_used_mb?: number;
   storage_limit_mb?: number;
+  is_mentor?: boolean;
 }
 
 interface UsersListProps {
@@ -36,6 +37,7 @@ interface UsersListProps {
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
+  onRefresh?: () => void;
 }
 
 // ID do grupo "Geral" (temporário) baseado nos logs
@@ -52,6 +54,7 @@ const UsersList: React.FC<UsersListProps> = ({
   onDeleteUser,
   onToggleUserStatus,
   onSetPermissionGroup,
+  onRefresh,
 }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -123,6 +126,7 @@ const UsersList: React.FC<UsersListProps> = ({
                   onDeleteUser={onDeleteUser}
                   onToggleUserStatus={onToggleUserStatus}
                   onSetPermissionGroup={onSetPermissionGroup}
+                  onRefresh={onRefresh}
                 />
               ))
             ) : (
