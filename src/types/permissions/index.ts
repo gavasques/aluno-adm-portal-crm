@@ -12,6 +12,9 @@ export type {
   SystemMenu as ISystemMenu,
   SystemModule as ISystemModule,
   ModuleAction as IModuleAction,
-  PermissionGroupFormData as IPermissionGroupFormData,
   UserPermissions as IUserPermissions,
 } from './core.types';
+
+export type {
+  PermissionGroupFormData as IPermissionGroupFormData,
+} from './forms.types';
