@@ -33,8 +33,9 @@ export abstract class BasePermissionService {
     };
   }
 
-  protected getCurrentUserId(): string | null {
-    return supabase.auth.getUser().then(({ data: { user } }) => user?.id || null);
+  protected async getCurrentUserId(): Promise<string | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
   }
 
   protected async executeWithErrorHandling<T>(

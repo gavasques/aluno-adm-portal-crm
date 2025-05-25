@@ -35,7 +35,7 @@ export class PermissionValidationService extends BasePermissionService implement
 
   async canPerformAction(moduleKey: string, actionKey: string, userId?: string): Promise<boolean> {
     const result = await this.executeWithErrorHandling(async () => {
-      const currentUserId = userId || (await supabase.auth.getUser()).data.user?.id;
+      const currentUserId = userId || await this.getCurrentUserId();
       
       if (!currentUserId) return false;
 

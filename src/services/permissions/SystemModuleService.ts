@@ -55,7 +55,7 @@ export class SystemModuleService extends BasePermissionService implements ISyste
 
   async getUserAllowedModules(userId?: string): Promise<SystemModule[]> {
     const result = await this.executeWithErrorHandling(async () => {
-      const currentUserId = userId || (await supabase.auth.getUser()).data.user?.id;
+      const currentUserId = userId || await this.getCurrentUserId();
       
       if (!currentUserId) return [];
 
@@ -64,18 +64,45 @@ export class SystemModuleService extends BasePermissionService implements ISyste
       });
 
       if (error) throw error;
-      return data || [];
+      
+      // A função RPC retorna dados em formato diferente, então vamos buscar os módulos completos
+      const moduleKeys = data?.map((item: any) => item.module_key) || [];
+      
+      if (moduleKeys.length === 0) return [];
+
+      const { data: modules, error: modulesError } = await supabase
+        .from("system_modules")
+        .select(`
+          *,
+          actions:module_actions(*)
+        `)
+        .in("module_key", moduleKeys)
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (modulesError) throw modulesError;
+      return modules || [];
     }, "buscar módulos permitidos");
 
     return result || [];
   }
 
   async validateModuleAccess(moduleKey: string, actionKey: string, userId?: string): Promise<boolean> {
-    const allowedModules = await this.getUserAllowedModules(userId);
-    const module = allowedModules.find(m => m.module_key === moduleKey);
-    
-    if (!module || !module.actions) return false;
-    
-    return module.actions.includes(actionKey);
+    const result = await this.executeWithErrorHandling(async () => {
+      const currentUserId = userId || await this.getCurrentUserId();
+      
+      if (!currentUserId) return false;
+
+      const { data, error } = await supabase.rpc('get_user_allowed_modules', {
+        user_id: currentUserId
+      });
+
+      if (error) throw error;
+      
+      const module = data?.find((m: any) => m.module_key === moduleKey);
+      return module?.actions?.includes(actionKey) || false;
+    }, "verificar permissão de ação");
+
+    return result || false;
   }
 }

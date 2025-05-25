@@ -6,6 +6,14 @@ export * from './api.types';
 export * from './validation.types';
 export * from './constants.types';
 
+// Export service interfaces from interfaces file
+export type {
+  IPermissionGroupService,
+  ISystemMenuService,
+  ISystemModuleService,
+  IPermissionValidationService,
+} from '../services/permissions/interfaces';
+
 // Re-export commonly used types with aliases for convenience
 export type {
   PermissionGroup as IPermissionGroup,
