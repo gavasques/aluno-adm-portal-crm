@@ -3,40 +3,64 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { 
-  Calendar, 
-  Clock, 
   BookOpen, 
+  Calendar, 
   Users, 
-  FileText, 
-  Video,
-  CheckCircle,
-  AlertCircle,
-  Play
+  Clock, 
+  ChevronRight,
+  Star
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSecureMentoring } from '@/hooks/useSecureMentoring';
 import { useMentoring } from '@/hooks/useMentoring';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import LoadingSpinner from '@/components/mentoring/LoadingSpinner';
+import ErrorMessage from '@/components/mentoring/ErrorMessage';
+import EmptyState from '@/components/mentoring/EmptyState';
 
 const StudentMentoring = () => {
   const navigate = useNavigate();
-  const { getEnrollmentProgress } = useMentoring();
   const { 
-    isAuthenticated,
-    getMySecureEnrollments, 
-    getMySecureUpcomingSessions 
+    getMySecureEnrollments,
+    getMySecureUpcomingSessions,
+    loading,
+    error,
+    clearError,
+    isAuthenticated
   } = useSecureMentoring();
+  const { getEnrollmentProgress } = useMentoring();
 
-  // Redirect se não autenticado
-  if (!isAuthenticated) {
-    navigate('/auth');
+  // Redirect if not authenticated
+  if (!loading && !isAuthenticated) {
+    navigate('/');
     return null;
   }
 
-  const myEnrollments = getMySecureEnrollments;
+  // Show loading spinner
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <LoadingSpinner size="lg" message="Carregando suas mentorias..." />
+      </div>
+    );
+  }
+
+  // Show error message
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <ErrorMessage 
+          message={error}
+          onRetry={() => {
+            clearError();
+            window.location.reload();
+          }}
+        />
+      </div>
+    );
+  }
+
+  const enrollments = getMySecureEnrollments;
   const upcomingSessions = getMySecureUpcomingSessions;
 
   const getStatusColor = (status: string) => {
@@ -49,38 +73,27 @@ const StudentMentoring = () => {
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'Individual': return <Users className="h-4 w-4" />;
-      case 'Grupo': return <Users className="h-4 w-4" />;
-      case 'Premium': return <BookOpen className="h-4 w-4" />;
-      default: return <BookOpen className="h-4 w-4" />;
-    }
-  };
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Minhas Mentorias</h1>
-          <p className="text-gray-600 mt-1">Acompanhe seu progresso e próximas sessões</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Minhas Mentorias</h1>
+        <p className="text-gray-600 mt-1">Acompanhe seu progresso e acesse materiais</p>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Mentorias Ativas</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {myEnrollments.filter(e => e.status === 'ativa').length}
+                  {enrollments.filter(e => e.status === 'ativa').length}
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <BookOpen className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -104,27 +117,13 @@ const StudentMentoring = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Sessões Realizadas</p>
+                <p className="text-sm font-medium text-gray-600">Total Concluídas</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {myEnrollments.reduce((acc, e) => acc + e.sessionsUsed, 0)}
+                  {enrollments.filter(e => e.status === 'concluida').length}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
-                <Video className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Inscrições</p>
-                <p className="text-2xl font-bold text-gray-900">{myEnrollments.length}</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <FileText className="h-6 w-6 text-orange-600" />
+                <Star className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -136,36 +135,35 @@ const StudentMentoring = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+              <Calendar className="h-5 w-5" />
               Próximas Sessões
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {upcomingSessions.slice(0, 3).map((session) => (
-                <div key={session.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-4">
+                <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
-                      <Calendar className="h-5 w-5 text-blue-600" />
+                      <Clock className="h-4 w-4 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900">{session.title}</h4>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(session.scheduledDate), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                      <p className="font-medium">{session.title}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(session.scheduledDate).toLocaleDateString('pt-BR', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="capitalize">
-                      {session.type}
-                    </Badge>
-                    {session.accessLink && (
-                      <Button size="sm">
-                        <Play className="h-4 w-4 mr-2" />
-                        Entrar
-                      </Button>
-                    )}
-                  </div>
+                  <Button variant="outline" size="sm">
+                    Acessar
+                  </Button>
                 </div>
               ))}
             </div>
@@ -174,91 +172,69 @@ const StudentMentoring = () => {
       )}
 
       {/* My Enrollments */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {myEnrollments.map((enrollment) => {
-          const progress = getEnrollmentProgress(enrollment);
-          
-          return (
-            <Card 
-              key={enrollment.id} 
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate(`/aluno/mentorias/${enrollment.id}`)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon(enrollment.mentoring.type)}
-                    <CardTitle className="text-lg">{enrollment.mentoring.name}</CardTitle>
-                  </div>
-                  <Badge className={getStatusColor(enrollment.status)}>
-                    {enrollment.status}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {enrollment.responsibleMentor}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {enrollment.mentoring.durationWeeks} semanas
-                  </span>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Progresso das Sessões</span>
-                    <span>{enrollment.sessionsUsed}/{enrollment.totalSessions}</span>
-                  </div>
-                  <Progress value={progress.percentage} className="h-2" />
-                  <div className="text-xs text-gray-500">
-                    {progress.sessionsRemaining} sessões restantes • {progress.daysRemaining} dias
-                  </div>
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Minhas Inscrições ({enrollments.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {enrollments.length === 0 ? (
+            <EmptyState type="enrollments" />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {enrollments.map((enrollment) => {
+                const progress = getEnrollmentProgress(enrollment);
+                return (
+                  <Card key={enrollment.id} className="hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => navigate(`/aluno/mentorias/${enrollment.id}`)}>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg mb-2">
+                              {enrollment.mentoring.name}
+                            </h3>
+                            <Badge className={getStatusColor(enrollment.status)}>
+                              {enrollment.status}
+                            </Badge>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <div className="text-sm text-gray-600">
-                    <p>Início: {format(new Date(enrollment.startDate), 'dd/MM/yyyy')}</p>
-                    <p>Término: {format(new Date(enrollment.endDate), 'dd/MM/yyyy')}</p>
-                  </div>
-                  
-                  {progress.isExpired && (
-                    <Badge variant="outline" className="text-red-600 border-red-200">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      Expirada
-                    </Badge>
-                  )}
-                  
-                  {progress.isCompleted && !progress.isExpired && (
-                    <Badge variant="outline" className="text-green-600 border-green-200">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Concluída
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Users className="h-4 w-4" />
+                            <span>{enrollment.responsibleMentor}</span>
+                          </div>
 
-      {/* Empty State */}
-      {myEnrollments.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma mentoria encontrada</h3>
-            <p className="text-gray-500 mb-4">
-              Você ainda não está inscrito em nenhuma mentoria.
-            </p>
-            <Button onClick={() => navigate('/aluno/fornecedores')}>
-              Explorar Mentorias
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Progresso</span>
+                              <span>{Math.round(progress.percentage)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full transition-all" 
+                                style={{ width: `${progress.percentage}%` }}
+                              ></div>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-500">
+                              <span>{enrollment.sessionsUsed}/{enrollment.totalSessions} sessões</span>
+                              <span>{progress.daysRemaining} dias restantes</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
