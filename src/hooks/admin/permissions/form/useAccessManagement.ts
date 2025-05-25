@@ -12,23 +12,24 @@ export const useAccessManagement = ({
   allowAdminAccess,
   setAllowAdminAccess,
 }: UseAccessManagementProps) => {
-  // Handler para allowAdminAccess com validações de segurança
+  // Handler para allowAdminAccess com validações de segurança APRIMORADAS
   const handleAllowAdminAccessChange = useCallback((value: boolean) => {
-    console.log("=== ALLOW ADMIN ACCESS CHANGE (SAFE) ===");
+    console.log("=== ALLOW ADMIN ACCESS CHANGE (FINAL SAFE) ===");
     console.log("Mudando allowAdminAccess de", allowAdminAccess, "para", value);
     console.log("isAdmin atual:", isAdmin);
     
     if (!isAdmin) {
       // Para usuários não-admin completo, permitir alteração do allowAdminAccess
-      // IMPORTANTE: NÃO tocar nos menus aqui - eles devem ser preservados!
+      // CRÍTICO: NÃO tocar nos menus aqui - eles devem ser preservados!
       console.log("✅ Usuário não é admin completo - alterando allowAdminAccess");
-      console.log("🔒 PRESERVANDO menus selecionados (não alterados aqui)");
+      console.log("🔒 GARANTINDO preservação dos menus selecionados");
+      console.log("📝 IMPORTANTE: Esta mudança NÃO deve afetar selectedMenus");
       setAllowAdminAccess(value);
       
       if (value) {
-        console.log("🟡 Usuário agora é ADMIN LIMITADO - menus preservados");
+        console.log("🟡 Usuário agora é ADMIN LIMITADO - menus PRESERVADOS");
       } else {
-        console.log("🔵 Usuário voltou a ser USUÁRIO NORMAL - menus preservados");
+        console.log("🔵 Usuário voltou a ser USUÁRIO NORMAL - menus PRESERVADOS");
       }
     } else {
       // Admin completo sempre tem allowAdminAccess = true
@@ -36,7 +37,7 @@ export const useAccessManagement = ({
       setAllowAdminAccess(true);
     }
     
-    console.log("========================================");
+    console.log("===============================================");
   }, [isAdmin, allowAdminAccess, setAllowAdminAccess]);
 
   return {

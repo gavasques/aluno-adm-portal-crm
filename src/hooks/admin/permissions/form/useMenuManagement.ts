@@ -30,12 +30,12 @@ export const useMenuManagement = ({
           const menuData = await getPermissionGroupMenus(permissionGroup.id);
           const menuKeys = menuData.map((item: any) => item.menu_key);
           
-          console.log("=== LOADING GROUP MENUS FOR EDIT ===");
+          console.log("=== LOADING GROUP MENUS FOR EDIT (FIXED) ===");
           console.log("Grupo:", permissionGroup.name);
           console.log("is_admin:", permissionGroup.is_admin);
           console.log("allow_admin_access:", permissionGroup.allow_admin_access);
           console.log("Menus carregados:", menuKeys);
-          console.log("===================================");
+          console.log("==========================================");
           
           setSelectedMenus(menuKeys);
         } catch (error) {
@@ -50,22 +50,30 @@ export const useMenuManagement = ({
     loadGroupMenus();
   }, [isEdit, permissionGroup?.id, getPermissionGroupMenus, setSelectedMenus, setLoadingGroupData]);
 
-  // Comportamento para mudanças de admin - APENAS para admin completo
+  // CORREÇÃO CRÍTICA: Comportamento para mudanças de admin - APENAS para admin completo
   useEffect(() => {
-    console.log("=== ADMIN BEHAVIOR EFFECT (FINAL FIX) ===");
-    console.log("isAdmin mudou para:", isAdmin);
+    console.log("=== ADMIN BEHAVIOR EFFECT (FINAL CORRECTION) ===");
+    console.log("isAdmin atual:", isAdmin);
+    console.log("Contexto: isEdit =", isEdit);
+    
+    // PROTEÇÃO CRÍTICA: Não limpar menus durante edição
+    if (isEdit) {
+      console.log("🛡️ MODO EDIÇÃO: Preservando menus existentes");
+      console.log("============================================");
+      return;
+    }
     
     if (isAdmin) {
       // APENAS admin completo (isAdmin = true) deve limpar menus
-      console.log("🔴 ADMIN COMPLETO: Limpando menus (acesso total)");
+      console.log("🔴 ADMIN COMPLETO (NOVO): Limpando menus (acesso total)");
       setSelectedMenus([]);
       console.log("✅ Menus limpos para admin completo");
     } else {
       console.log("🟡 NÃO é admin completo - menus preservados");
     }
     
-    console.log("==========================================");
-  }, [isAdmin, setSelectedMenus]);
+    console.log("==============================================");
+  }, [isAdmin, setSelectedMenus, isEdit]);
 
   const handleMenuToggle = useCallback((menuKey: string) => {
     console.log("=== MENU TOGGLE (SAFE) ===");

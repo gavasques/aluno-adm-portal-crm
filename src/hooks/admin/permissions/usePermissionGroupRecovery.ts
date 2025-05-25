@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 export const usePermissionGroupRecovery = () => {
   const recoverMentorGroupMenus = useCallback(async () => {
     try {
-      console.log("=== RECUPERANDO MENUS DO GRUPO MENTOR ===");
+      console.log("=== RECUPERANDO MENUS DO GRUPO MENTOR (MELHORADO) ===");
       
       // Buscar o grupo Mentor
       const { data: mentorGroup, error: groupError } = await supabase
@@ -17,6 +17,11 @@ export const usePermissionGroupRecovery = () => {
 
       if (groupError || !mentorGroup) {
         console.error("❌ Grupo Mentor não encontrado:", groupError);
+        toast({
+          title: "Erro",
+          description: "Grupo Mentor não encontrado",
+          variant: "destructive",
+        });
         return false;
       }
 
@@ -39,17 +44,13 @@ export const usePermissionGroupRecovery = () => {
 
       console.log("Menus atuais do grupo Mentor:", currentMenus?.length || 0);
 
-      // Se já tem menus, não fazer nada
-      if (currentMenus && currentMenus.length > 0) {
-        console.log("✅ Grupo Mentor já possui menus, não é necessária recuperação");
-        return true;
-      }
-
-      // Menus que um mentor deveria ter acesso
+      // Menus completos que um mentor deveria ter acesso
       const mentorMenus = [
         "dashboard",
         "students", 
         "mentoring",
+        "tasks",
+        "users",
         "settings"
       ];
 
@@ -69,8 +70,20 @@ export const usePermissionGroupRecovery = () => {
 
       if (validMenus.length === 0) {
         console.log("⚠️ Nenhum menu válido encontrado para recuperação");
+        toast({
+          title: "Aviso",
+          description: "Nenhum menu válido encontrado para recuperação",
+          variant: "destructive",
+        });
         return false;
       }
+
+      // FORÇAR recuperação: deletar menus existentes e inserir novos
+      console.log("🔄 Removendo menus existentes do grupo Mentor...");
+      await supabase
+        .from("permission_group_menus")
+        .delete()
+        .eq("permission_group_id", mentorGroup.id);
 
       // Inserir menus de recuperação
       const menuAssociations = validMenus.map(menuKey => ({
@@ -78,22 +91,28 @@ export const usePermissionGroupRecovery = () => {
         menu_key: menuKey,
       }));
 
+      console.log("📝 Inserindo", menuAssociations.length, "menus de recuperação...");
       const { error: insertError } = await supabase
         .from("permission_group_menus")
         .insert(menuAssociations);
 
       if (insertError) {
         console.error("❌ Erro ao inserir menus de recuperação:", insertError);
+        toast({
+          title: "Erro na recuperação",
+          description: "Erro ao inserir menus de recuperação",
+          variant: "destructive",
+        });
         return false;
       }
 
       console.log("✅ Menus do grupo Mentor recuperados com sucesso!");
       console.log("Menus restaurados:", validMenus);
-      console.log("=========================================");
+      console.log("========================================================");
 
       toast({
         title: "Recuperação concluída",
-        description: `Grupo Mentor recuperado com ${validMenus.length} menus`,
+        description: `Grupo Mentor recuperado com ${validMenus.length} menus: ${validMenus.join(", ")}`,
       });
 
       return true;
