@@ -12,7 +12,7 @@ export type {
   ISystemMenuService,
   ISystemModuleService,
   IPermissionValidationService,
-} from '../services/permissions/interfaces';
+} from '../../services/permissions/interfaces';
 
 // Re-export commonly used types with aliases for convenience
 export type {
