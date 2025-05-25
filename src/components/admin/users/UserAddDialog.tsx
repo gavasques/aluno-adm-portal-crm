@@ -21,14 +21,15 @@ const UserAddDialog: React.FC<UserAddDialogProps> = ({
   onSuccess 
 }) => {
   const handleSuccess = () => {
-    // Fechar o diálogo e atualizar a lista
+    // O UserForm já gerencia o delay e feedback visual
+    // Aqui apenas fechamos o diálogo e atualizamos a lista
     onOpenChange(false);
     
-    // Forçar um timeout para garantir que o backend tenha tempo
-    // de processar o novo usuário antes de atualizar a lista
+    // Atualizar a lista após um pequeno delay para garantir
+    // que o diálogo seja fechado primeiro
     setTimeout(() => {
       onSuccess();
-    }, 1000);
+    }, 300);
   };
 
   return (
@@ -38,7 +39,7 @@ const UserAddDialog: React.FC<UserAddDialogProps> = ({
           <DialogTitle>Adicionar Novo Usuário</DialogTitle>
           <DialogDescription>
             Preencha os dados para adicionar um novo usuário ao sistema. 
-            Se o usuário já existir, você será notificado.
+            Você receberá uma confirmação quando a operação for concluída.
           </DialogDescription>
         </DialogHeader>
         <UserForm 

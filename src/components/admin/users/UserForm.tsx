@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { useAdminOperations } from "@/hooks/auth/useBasicAuth/useAdminOperations";
 import { userFormSchema } from "@/utils/validation-schemas";
 import { validatePassword } from "@/utils/security";
+import { toast } from "@/hooks/use-toast";
+import { CheckCircle } from "lucide-react";
 
 interface UserFormProps {
   onSuccess: () => void;
@@ -30,6 +33,7 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const { createAdminUser } = useAdminOperations();
 
@@ -76,13 +80,30 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         data.is_mentor
       );
       
-      form.reset();
-      setPasswordErrors([]);
-      
-      // Só atualiza a lista e fecha o diálogo se realmente foi criado um novo usuário ou foi sincronizado
+      // Se a operação foi bem-sucedida ou o usuário foi sincronizado
       if (result && (result.success || result.existed)) {
         console.log("Usuário criado/sincronizado com sucesso:", result);
-        setTimeout(() => onSuccess(), 500);
+        
+        // Mostrar estado de sucesso
+        setIsSuccess(true);
+        
+        // Toast de sucesso personalizado com duração estendida
+        toast({
+          title: "✅ Operação Concluída",
+          description: result.existed && result.profileCreated 
+            ? "Usuário já existia, mas foi sincronizado com sucesso!"
+            : "Usuário criado com sucesso!",
+          duration: 4000, // 4 segundos
+        });
+
+        // Reset do formulário
+        form.reset();
+        setPasswordErrors([]);
+        
+        // Delay para mostrar o feedback antes de fechar
+        setTimeout(() => {
+          onSuccess();
+        }, 4000); // 4 segundos para ver o feedback completo
       }
     } catch (error) {
       console.error("Erro no formulário:", error);
@@ -91,6 +112,27 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       setIsSubmitting(false);
     }
   };
+
+  // Se está em estado de sucesso, mostrar feedback visual
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 space-y-4">
+        <div className="relative">
+          <CheckCircle className="h-16 w-16 text-green-500 animate-scale-in" />
+          <div className="absolute inset-0 h-16 w-16 border-4 border-green-500 rounded-full animate-pulse" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="text-lg font-semibold text-green-700">Usuário Criado!</h3>
+          <p className="text-sm text-gray-600">
+            A operação foi concluída com sucesso.
+          </p>
+          <p className="text-xs text-gray-500">
+            Esta janela será fechada automaticamente...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -197,11 +239,23 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
             variant="outline" 
             type="button" 
             onClick={onCancel}
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting || passwordErrors.length > 0}>
-            {isSubmitting ? "Adicionando..." : "Adicionar Usuário"}
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || passwordErrors.length > 0}
+            className="relative"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Criando...
+              </>
+            ) : (
+              "Adicionar Usuário"
+            )}
           </Button>
         </div>
       </form>
