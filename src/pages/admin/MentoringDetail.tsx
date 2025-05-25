@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Pencil, IdCard } from "lucide-react";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
+import { Save, Pencil, IdCard } from "lucide-react";
 import { toast } from "sonner";
 
 interface MentoringData {
@@ -117,12 +118,25 @@ const MentoringDetail = () => {
     );
   };
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Cadastros', href: '/admin/cadastros' },
+    { label: 'Mentorias', href: '/admin/cadastros?tab=mentoring' },
+    { label: isNewMentoring ? 'Nova Mentoria' : mentoring.name }
+  ];
+
   return (
     <div className="container mx-auto py-4">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/cadastros?tab=mentoring"
+        className="mb-4"
+      />
+
       <div className="flex justify-between items-center mb-4">
-        <Button variant="ghost" onClick={() => navigate("/admin/cadastros?tab=mentoring")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-        </Button>
+        <div></div>
         {getHeaderActions()}
       </div>
 

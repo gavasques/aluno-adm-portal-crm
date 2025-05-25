@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { 
   BookOpen, 
   Users, 
@@ -82,8 +83,21 @@ const AdminMentoringManagement = () => {
     }
   ];
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Gestão de Mentorias' }
+  ];
+
   return (
     <div className="container mx-auto py-4 space-y-6">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin"
+        className="mb-4"
+      />
+
       {/* Header compacto */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1">

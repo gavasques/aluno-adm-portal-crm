@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import { PlusCircle } from "lucide-react";
 
 const Mentoring = () => {
@@ -19,9 +20,23 @@ const Mentoring = () => {
     // Em uma implementação real, isso seria uma página de criação
     navigate("/admin/mentorias/new");
   };
+
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Cadastros', href: '/admin/cadastros' },
+    { label: 'Mentorias' }
+  ];
   
   return (
     <div>
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/cadastros"
+        className="mb-6"
+      />
+
       <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-sm text-gray-500">Gerencie as mentorias disponíveis</p>
