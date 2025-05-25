@@ -41,11 +41,14 @@ export const runSupabaseDiagnostics = async (userEmail?: string): Promise<Supaba
     // Se email fornecido, verificar se usuário existe
     if (userEmail) {
       try {
-        const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+        const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
         if (usersError) {
           diagnostics.errors.push(`Não foi possível listar usuários: ${usersError.message}`);
+        } else if (usersData && usersData.users) {
+          // Corrigir a tipagem explicitamente
+          diagnostics.userExists = usersData.users.some((user: any) => user.email === userEmail);
         } else {
-          diagnostics.userExists = users?.users?.some(user => user.email === userEmail) || false;
+          diagnostics.errors.push("Resposta inesperada ao listar usuários");
         }
       } catch (error: any) {
         diagnostics.errors.push(`Erro ao verificar usuário: ${error.message}`);
