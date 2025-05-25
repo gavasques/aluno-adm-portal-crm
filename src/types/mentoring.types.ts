@@ -2,7 +2,7 @@
 export interface MentoringCatalog {
   id: string;
   name: string;
-  type: 'Individual' | 'Grupo' | 'Premium';
+  type: 'Individual' | 'Grupo';
   instructor: string;
   durationWeeks: number;
   numberOfSessions: number;
@@ -87,7 +87,7 @@ export interface MentoringStats {
 
 export interface CreateMentoringCatalogData {
   name: string;
-  type: 'Individual' | 'Grupo' | 'Premium';
+  type: 'Individual' | 'Grupo';
   instructor: string;
   durationWeeks: number;
   numberOfSessions: number;

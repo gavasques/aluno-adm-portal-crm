@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -172,7 +171,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               <Label htmlFor="type">Tipo *</Label>
               <Select 
                 value={formData.type} 
-                onValueChange={(value: 'Individual' | 'Grupo' | 'Premium') => handleChange('type', value)}
+                onValueChange={(value: 'Individual' | 'Grupo') => handleChange('type', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -180,7 +179,6 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="Individual">Individual</SelectItem>
                   <SelectItem value="Grupo">Grupo</SelectItem>
-                  <SelectItem value="Premium">Premium</SelectItem>
                 </SelectContent>
               </Select>
             </div>

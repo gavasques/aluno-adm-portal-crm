@@ -1,4 +1,3 @@
-
 import { 
   MentoringCatalog, 
   StudentMentoringEnrollment, 
@@ -6,7 +5,7 @@ import {
   MentoringMaterial 
 } from '@/types/mentoring.types';
 
-// Catálogos expandidos
+// Catálogos expandidos (sem Premium)
 export const expandedMentoringCatalog: MentoringCatalog[] = [
   {
     id: 'catalog-1',
@@ -36,13 +35,13 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
   },
   {
     id: 'catalog-3',
-    name: 'Análise de Dados Premium',
-    type: 'Premium',
+    name: 'Análise de Dados Avançada',
+    type: 'Individual',
     instructor: 'Pedro Analista',
-    durationWeeks: 12,
-    numberOfSessions: 16,
-    price: 2500,
-    description: 'Mentoria premium com análise avançada de dados e BI',
+    durationWeeks: 10,
+    numberOfSessions: 12,
+    price: 1800,
+    description: 'Mentoria individual com análise avançada de dados e BI',
     active: true,
     createdAt: '2024-02-01T09:00:00Z',
     updatedAt: '2024-02-01T09:00:00Z'
@@ -75,7 +74,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
   }
 ];
 
-// Inscrições expandidas para múltiplos usuários
+// Inscrições expandidas para múltiplos usuários (ajustando referências)
 export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
   // Usuário 1 (user-1)
   {
@@ -104,8 +103,8 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
     startDate: '2024-02-01T09:00:00Z',
     endDate: '2024-04-25T09:00:00Z',
     originalEndDate: '2024-03-25T09:00:00Z',
-    sessionsUsed: 8,
-    totalSessions: 16,
+    sessionsUsed: 6,
+    totalSessions: 12,
     responsibleMentor: 'Pedro Analista',
     observations: 'Pausada por solicitação do aluno para reorganização de agenda',
     extensions: [

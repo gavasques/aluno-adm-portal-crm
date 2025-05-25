@@ -51,7 +51,6 @@ const CatalogFilters: React.FC<CatalogFiltersProps> = ({
                 <SelectItem value="">Todos os tipos</SelectItem>
                 <SelectItem value="Individual">Individual</SelectItem>
                 <SelectItem value="Grupo">Grupo</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
               </SelectContent>
             </Select>
             
