@@ -6,6 +6,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./hooks/auth";
 import Home from "./pages/Index";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/student/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminLayout from "./layout/AdminLayout";
@@ -58,6 +59,7 @@ function App() {
             <Toaster />
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>

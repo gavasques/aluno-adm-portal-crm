@@ -24,55 +24,67 @@ export const useTokenValidation = () => {
     // Various possible hash formats
     const accessTokenMatch = hashParams.match(/access_token=([^&]+)/);
     
+    console.log("=== TOKEN VALIDATION DEBUG ===");
     console.log("Hash params:", hashParams);
     console.log("Access token match:", accessTokenMatch);
+    console.log("Type param:", typeParam);
+    console.log("Token param:", tokenParam);
+    console.log("Current URL:", window.location.href);
+    console.log("===============================");
     
     return accessTokenMatch ? accessTokenMatch[1] : null;
   };
   
   const extractedTokenFromHash = extractTokenFromHash();
   
-  // Check if we are in a password recovery flow (APENAS recovery, não confirmação)
+  // Check if we are in a password recovery flow
   const isRecoveryFlow = 
     typeParam === 'recovery' || 
-    searchParams.get('reset_token') === 'true' ||
     (!!tokenParam && typeParam === 'recovery') || 
-    (!!extractedTokenFromHash && hashParams.includes('type=recovery'));
+    (!!extractedTokenFromHash && hashParams.includes('type=recovery')) ||
+    (!!extractedTokenFromHash && window.location.pathname === "/reset-password");
 
   useEffect(() => {
     // Validate if the token is valid
     const validateToken = async () => {
       setValidatingToken(true);
-      console.log("Validando token de recuperação...");
+      console.log("=== VALIDANDO TOKEN DE RECUPERAÇÃO ===");
       
       try {
         // Check token and session information
-        console.log("Parâmetros da URL:", {
+        console.log("Parâmetros detectados:", {
           typeParam,
           tokenParam,
           hashParams,
           extractedTokenFromHash,
-          isRecoveryFlow
+          isRecoveryFlow,
+          pathname: window.location.pathname
         });
         
-        // Se não é um fluxo de recovery E não há sessão, invalidar
-        if (!isRecoveryFlow && !session) {
-          console.log("Nenhum token de recuperação detectado e sem sessão ativa");
+        // Se não é um fluxo de recovery, invalidar
+        if (!isRecoveryFlow) {
+          console.log("❌ Não é um fluxo de recovery detectado");
           setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
           setTokenValid(false);
           setValidatingToken(false);
           return;
         }
 
+        console.log("✅ Fluxo de recovery detectado");
+
         // Check if the user has a valid recovery session
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Sessão atual:", currentSession);
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
-        // Apenas aceitar se for explicitamente recovery ou se a sessão indica recovery
-        if ((currentSession?.user?.aud === "recovery") || 
-            (isRecoveryFlow && typeParam === 'recovery') || 
-            (currentSession && window.location.pathname === "/reset-password" && typeParam === 'recovery')) {
-          console.log("Sessão de recuperação válida detectada");
+        console.log("Sessão atual:", {
+          session: currentSession,
+          sessionError,
+          userAud: currentSession?.user?.aud,
+          accessToken: currentSession?.access_token ? "presente" : "ausente"
+        });
+        
+        // Se há uma sessão ou token válido, aceitar
+        if (currentSession || extractedTokenFromHash) {
+          console.log("✅ Sessão ou token de recuperação válido detectado");
           
           // Set recovery mode for all tabs
           if (setRecoveryMode) {
@@ -84,19 +96,17 @@ export const useTokenValidation = () => {
           
           setTokenValid(true);
         } else {
-          console.log("Sessão não é de recuperação ou tipo não é recovery:", { 
-            aud: currentSession?.user?.aud, 
-            typeParam 
-          });
+          console.log("❌ Nenhuma sessão válida ou token encontrado");
           setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
           setTokenValid(false);
         }
       } catch (error) {
-        console.error("Erro ao validar token:", error);
+        console.error("❌ Erro ao validar token:", error);
         setError("Link inválido ou expirado. Solicite um novo link de recuperação de senha.");
         setTokenValid(false);
       } finally {
         setValidatingToken(false);
+        console.log("=== FIM DA VALIDAÇÃO ===");
       }
     };
     

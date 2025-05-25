@@ -1,87 +1,37 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth";
-import { recoveryModeUtils } from "./useRecoveryMode";
-import { validatePassword, sanitizeError, logSecureError } from "@/utils/security";
+import { usePasswordReset as usePasswordResetHook } from "./useBasicAuth/usePasswordReset";
 
 export const usePasswordReset = () => {
+  const { updateUserPassword } = usePasswordResetHook();
+  
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { setRecoveryMode } = useAuth();
-
-  const validateForm = () => {
-    const passwordValidation = validatePassword(password);
-    
-    if (!passwordValidation.isValid) {
-      setError(passwordValidation.errors.join(". "));
-      return false;
-    }
-    
-    if (password !== confirmPassword) {
-      setError("As senhas não coincidem");
-      return false;
-    }
-    
-    return true;
-  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
     
-    // Validate password
-    if (!validateForm()) {
-      setLoading(false);
+    if (password !== confirmPassword) {
+      setError("As senhas não coincidem");
       return;
     }
-    
+
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
     try {
-      // Update the user's password
-      const { error } = await supabase.auth.updateUser({ password });
-      
-      if (error) throw error;
-      
+      await updateUserPassword(password);
       setSuccess(true);
-      
-      toast({
-        title: "Senha atualizada com sucesso",
-        description: "Você será redirecionado para a página de login",
-        variant: "default",
-      });
-      
-      // Clear recovery mode
-      if (setRecoveryMode) {
-        setRecoveryMode(false);
-      } else {
-        // Fallback if hook is not available
-        recoveryModeUtils.setRecoveryMode(false);
-      }
-      
-      // Sign out to force new authentication
-      await supabase.auth.signOut();
-      
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
     } catch (error: any) {
-      logSecureError(error, "Password Reset");
-      const sanitizedMessage = sanitizeError(error);
-      setError(sanitizedMessage);
-      
-      toast({
-        title: "Erro ao atualizar senha",
-        description: sanitizedMessage,
-        variant: "destructive",
-      });
+      setError(error.message || "Erro ao redefinir senha");
     } finally {
       setLoading(false);
     }
@@ -93,11 +43,9 @@ export const usePasswordReset = () => {
     confirmPassword,
     setConfirmPassword,
     error,
-    setError,
     success,
-    setSuccess,
     loading,
-    setLoading,
-    handleResetPassword
+    handleResetPassword,
+    updateUserPassword
   };
 };
