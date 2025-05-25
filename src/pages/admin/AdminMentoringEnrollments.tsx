@@ -9,6 +9,7 @@ import {
   Users, 
   Search, 
   Filter, 
+  Download,
   Plus, 
   Edit, 
   Trash2, 
@@ -17,7 +18,8 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  ArrowLeft
+  ArrowLeft,
+  UserPlus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMentoring } from '@/hooks/useMentoring';
@@ -32,6 +34,7 @@ const AdminMentoringEnrollments = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<any>(null);
+  const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
