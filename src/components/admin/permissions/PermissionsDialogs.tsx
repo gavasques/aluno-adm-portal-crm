@@ -63,7 +63,7 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
         <DialogContent>
           {selectedGroup && (
             <PermissionGroupDelete
-              group={selectedGroup}
+              permissionGroup={selectedGroup}
               onOpenChange={setShowDeleteDialog}
               onSuccess={onSuccess}
             />
@@ -76,8 +76,9 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedGroup && (
             <PermissionGroupUsers
-              groupId={selectedGroup.id}
-              groupName={selectedGroup.name}
+              permissionGroup={selectedGroup}
+              onOpenChange={setShowUsersDialog}
+              onSuccess={onSuccess}
             />
           )}
         </DialogContent>
