@@ -63,13 +63,19 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         return;
       }
 
+      // Criar usuário primeiro (sem is_mentor)
       const result = await createAdminUser(
         data.email, 
         data.name, 
         data.role, 
-        data.password,
-        data.is_mentor
+        data.password
       );
+      
+      // Se o usuário foi criado com sucesso e is_mentor é true, atualizar separadamente
+      if (result && !result.existed && data.is_mentor) {
+        // TODO: Implementar atualização do status de mentor via API separada
+        console.log("Status de mentor será atualizado:", data.is_mentor);
+      }
       
       form.reset();
       setPasswordErrors([]);

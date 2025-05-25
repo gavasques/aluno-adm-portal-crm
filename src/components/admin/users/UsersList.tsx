@@ -11,7 +11,6 @@ import UserTableRow from "./UserTableRow";
 import EmptyUsersList from "./EmptyUsersList";
 import LoadingUsersList from "./LoadingUsersList";
 import UsersFilter from "./UsersFilter";
-import { useMentors } from "@/hooks/useMentors";
 
 interface User {
   id: string;
@@ -22,7 +21,8 @@ interface User {
   lastLogin: string;
   tasks: any[];
   permission_group_id?: string | null;
-  is_mentor?: boolean;
+  storage_used_mb?: number;
+  storage_limit_mb?: number;
 }
 
 interface UsersListProps {
@@ -57,7 +57,6 @@ const UsersList: React.FC<UsersListProps> = ({
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
-  const { updateMentorStatus } = useMentors();
 
   // Contar usuários pendentes (apenas aqueles no grupo "Geral")
   const pendingCount = users.filter(user => 
@@ -88,11 +87,6 @@ const UsersList: React.FC<UsersListProps> = ({
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
     setShowDetailsDialog(true);
-  };
-
-  const handleToggleMentorStatus = async (userId: string, isMentor: boolean) => {
-    await updateMentorStatus(userId, isMentor);
-    // A lista será atualizada automaticamente através do hook pai
   };
 
   return (
@@ -129,7 +123,6 @@ const UsersList: React.FC<UsersListProps> = ({
                   onDeleteUser={onDeleteUser}
                   onToggleUserStatus={onToggleUserStatus}
                   onSetPermissionGroup={onSetPermissionGroup}
-                  onToggleMentorStatus={handleToggleMentorStatus}
                 />
               ))
             ) : (
