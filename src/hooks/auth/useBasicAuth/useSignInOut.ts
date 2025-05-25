@@ -2,6 +2,7 @@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { recoveryModeUtils } from "../useRecoveryMode";
 
 export function useSignInOut() {
   const navigate = useNavigate();
@@ -32,22 +33,53 @@ export function useSignInOut() {
     }
   };
 
-  // Função para logout
+  // Função para logout melhorada
   const signOut = async () => {
     try {
+      console.log("=== INICIANDO LOGOUT ===");
+      
+      // Primeiro, limpar todos os dados locais
+      recoveryModeUtils.clearAllRecoveryData();
+      
+      // Limpar outros dados do localStorage relacionados à autenticação
+      const keysToRemove = [
+        "supabase.auth.token",
+        "sb-qflmguzmticupqtnlirf-auth-token",
+        "sb-auth-token"
+      ];
+      
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.warn(`Erro ao limpar ${key}:`, e);
+        }
+      });
+      
+      console.log("Dados locais limpos, fazendo logout no Supabase...");
+      
+      // Fazer logout no Supabase
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Erro no logout do Supabase:", error);
+        throw error;
+      }
+      
+      console.log("Logout no Supabase concluído com sucesso");
       
       toast({
         title: "Logout realizado com sucesso",
         variant: "default",
       });
       
-      // Limpar qualquer modo de recuperação ao fazer logout
-      localStorage.removeItem("supabase_recovery_mode");
-      localStorage.removeItem("supabase_recovery_expiry");
+      console.log("Redirecionando para página inicial...");
       
-      navigate("/");
+      // Redirecionar imediatamente
+      navigate("/", { replace: true });
+      
+      console.log("=== LOGOUT CONCLUÍDO ===");
+      
     } catch (error: any) {
       console.error("Erro ao fazer logout:", error);
       toast({
@@ -55,6 +87,14 @@ export function useSignInOut() {
         description: error.message,
         variant: "destructive",
       });
+      
+      // Mesmo com erro, tentar limpar e redirecionar
+      try {
+        recoveryModeUtils.clearAllRecoveryData();
+        navigate("/", { replace: true });
+      } catch (redirectError) {
+        console.error("Erro ao redirecionar após falha no logout:", redirectError);
+      }
     }
   };
 

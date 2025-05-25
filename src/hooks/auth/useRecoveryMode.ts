@@ -43,6 +43,32 @@ export const recoveryModeUtils = {
   },
 
   /**
+   * Clear all recovery-related data
+   */
+  clearAllRecoveryData: (): void => {
+    console.log("=== LIMPANDO TODOS OS DADOS DE RECUPERAÇÃO ===");
+    
+    const keysToRemove = [
+      RECOVERY_MODE_KEY,
+      RECOVERY_EXPIRY_KEY,
+      "supabase_recovery_mode",
+      "supabase_recovery_expiry",
+      "password_reset_attempts"
+    ];
+    
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        console.log(`Removido: ${key}`);
+      } catch (error) {
+        console.warn(`Erro ao remover ${key}:`, error);
+      }
+    });
+    
+    console.log("=== LIMPEZA DE DADOS DE RECUPERAÇÃO CONCLUÍDA ===");
+  },
+
+  /**
    * Detect if the current URL or session appears to be for password recovery
    */
   detectRecoveryFlow: (session: any, pathname: string): boolean => {

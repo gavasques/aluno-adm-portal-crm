@@ -28,6 +28,28 @@ export const useAuthEventHandler = () => {
     console.log("User audience:", currentSession?.user?.aud);
     console.log("========================");
     
+    // Tratamento especial para logout
+    if (event === "SIGNED_OUT") {
+      console.log("=== PROCESSANDO LOGOUT ===");
+      
+      // Limpar completamente o estado
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+      
+      // Limpar modo de recuperação e qualquer estado local
+      recoveryModeUtils.clearAllRecoveryData();
+      
+      console.log("Estado limpo, redirecionando para home");
+      
+      // Forçar redirecionamento para a página inicial
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 100);
+      
+      return;
+    }
+    
     // Detectar o máximo possível de indicadores de recuperação de senha
     if (event === "PASSWORD_RECOVERY" || 
         (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery") ||
@@ -57,11 +79,6 @@ export const useAuthEventHandler = () => {
     setSession(currentSession);
     setUser(currentSession?.user ?? null);
     setLoading(false);
-
-    if (event === "SIGNED_OUT") {
-      console.log("Usuário deslogado, redirecionando para home");
-      navigate("/");
-    }
   }, [location.pathname, isResetPasswordPage, navigate]);
 
   return {

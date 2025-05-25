@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ const TopBar = () => {
   const { permissions } = usePermissions();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isAdminArea = location.pathname.startsWith("/admin");
   const isStudentArea = location.pathname.startsWith("/aluno");
@@ -40,6 +41,21 @@ const TopBar = () => {
       navigate("/admin/configuracoes");
     } else {
       navigate("/aluno/configuracoes");
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (isLoggingOut) return;
+    
+    console.log("=== USUÁRIO CLICOU EM SAIR ===");
+    setIsLoggingOut(true);
+    
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Erro no logout:", error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -129,9 +145,13 @@ const TopBar = () => {
                 <DropdownMenuSeparator />
                 
                 {/* Logout */}
-                <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600">
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="text-red-600 focus:text-red-600"
+                  disabled={isLoggingOut}
+                >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sair
+                  {isLoggingOut ? "Saindo..." : "Sair"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
