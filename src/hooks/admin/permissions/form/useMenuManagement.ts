@@ -1,0 +1,86 @@
+
+import { useEffect, useCallback } from "react";
+import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+
+interface UseMenuManagementProps {
+  isEdit: boolean;
+  permissionGroup?: any;
+  isAdmin: boolean;
+  selectedMenus: string[];
+  setSelectedMenus: (menus: string[]) => void;
+  setLoadingGroupData: (loading: boolean) => void;
+}
+
+export const useMenuManagement = ({
+  isEdit,
+  permissionGroup,
+  isAdmin,
+  selectedMenus,
+  setSelectedMenus,
+  setLoadingGroupData,
+}: UseMenuManagementProps) => {
+  const { getPermissionGroupMenus } = usePermissionGroups();
+
+  // Load group menus for edit mode
+  useEffect(() => {
+    const loadGroupMenus = async () => {
+      if (isEdit && permissionGroup?.id) {
+        try {
+          const menuData = await getPermissionGroupMenus(permissionGroup.id);
+          const menuKeys = menuData.map((item: any) => item.menu_key);
+          console.log("✅ Menus carregados para edição:", menuKeys);
+          setSelectedMenus(menuKeys);
+        } catch (error) {
+          console.error("❌ Erro ao carregar menus do grupo:", error);
+          setSelectedMenus([]);
+        } finally {
+          setLoadingGroupData(false);
+        }
+      }
+    };
+
+    loadGroupMenus();
+  }, [isEdit, permissionGroup?.id, getPermissionGroupMenus, setSelectedMenus, setLoadingGroupData]);
+
+  // Handle admin behavior changes
+  useEffect(() => {
+    console.log("=== ADMIN BEHAVIOR EFFECT (FIXED) ===");
+    console.log("isAdmin mudou para:", isAdmin);
+    
+    if (isAdmin) {
+      // APENAS admin completo (isAdmin = true) deve limpar menus
+      console.log("🔴 ADMIN COMPLETO: Limpando menus");
+      setSelectedMenus([]);
+      console.log("✅ Menus limpos para admin completo");
+    }
+    
+    console.log("=====================================");
+  }, [isAdmin, setSelectedMenus]);
+
+  const handleMenuToggle = useCallback((menuKey: string) => {
+    console.log("=== MENU TOGGLE (FIXED) ===");
+    console.log("Toggling menu:", menuKey);
+    console.log("isAdmin:", isAdmin);
+    
+    // PROTEÇÃO: Não permitir alteração se for admin completo
+    if (isAdmin) {
+      console.log("🔴 Admin completo - toggle bloqueado");
+      return;
+    }
+    
+    // Para admin limitado e usuário normal, permitir toggle
+    setSelectedMenus((prev) => {
+      const newMenus = prev.includes(menuKey)
+        ? prev.filter(key => key !== menuKey)
+        : [...prev, menuKey];
+      
+      console.log("✅ selectedMenus atualizado:", newMenus.length, "menus");
+      console.log("==============================");
+      return newMenus;
+    });
+  }, [isAdmin, setSelectedMenus]);
+
+  return {
+    handleMenuToggle,
+  };
+};
