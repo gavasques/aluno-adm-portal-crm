@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import { 
   BookOpen, 
@@ -59,113 +60,127 @@ export const CatalogManagement: React.FC = () => {
     setFilters({ status: value || undefined });
   };
 
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/admin' },
+    { label: 'Mentorias', href: '/admin/mentorias' },
+    { label: 'Catálogo' }
+  ];
+
   if (loading) {
     return <MentoringLoadingState variant="card" count={6} message="Carregando catálogo de mentorias..." />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav 
+        items={breadcrumbItems} 
+        showBackButton={true}
+        backHref="/admin/mentorias"
+        className="mb-4"
+      />
+
       {/* Header compacto */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
-              <BookOpen className="h-5 w-5 lg:h-6 w-6" />
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+              <BookOpen className="h-4 w-4 lg:h-5 w-5" />
             </div>
             Catálogo de Mentorias
           </h2>
-          <p className="text-gray-600 text-sm lg:text-base">Gerencie o catálogo de mentorias disponíveis</p>
+          <p className="text-gray-600 text-xs lg:text-sm">Gerencie o catálogo de mentorias disponíveis</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
             <Input
               placeholder="Buscar mentorias..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-full sm:w-64 h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg"
+              className="pl-8 w-full sm:w-56 h-8 border border-gray-200 focus:border-blue-500 rounded-lg text-sm"
             />
           </div>
           <Button 
             onClick={handleCreateCatalog}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 h-10 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 h-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-3 w-3 mr-1" />
             Nova Mentoria
           </Button>
         </div>
       </div>
 
       {/* Stats Cards compactos */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
-        <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-3 lg:p-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 lg:gap-3">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-2 lg:p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-blue-600 mb-1">Total</p>
-                <p className="text-xl lg:text-2xl font-bold text-blue-900">{stats.total}</p>
+                <p className="text-lg lg:text-xl font-bold text-blue-900">{stats.total}</p>
                 <div className="flex items-center mt-1">
-                  <Award className="h-3 w-3 text-blue-500 mr-1" />
+                  <Award className="h-2 w-2 text-blue-500 mr-1" />
                   <span className="text-xs text-blue-600">mentorias</span>
                 </div>
               </div>
-              <div className="p-2 lg:p-3 bg-blue-500 rounded-xl">
-                <BookOpen className="h-4 w-4 lg:h-5 w-5 text-white" />
+              <div className="p-1.5 lg:p-2 bg-blue-500 rounded-lg">
+                <BookOpen className="h-3 w-3 lg:h-4 w-4 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-3 lg:p-4">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-2 lg:p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-green-600 mb-1">Ativas</p>
-                <p className="text-xl lg:text-2xl font-bold text-green-900">{stats.active}</p>
+                <p className="text-lg lg:text-xl font-bold text-green-900">{stats.active}</p>
                 <div className="flex items-center mt-1">
-                  <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  <TrendingUp className="h-2 w-2 text-green-500 mr-1" />
                   <span className="text-xs text-green-600">disponíveis</span>
                 </div>
               </div>
-              <div className="p-2 lg:p-3 bg-green-500 rounded-xl">
-                <Zap className="h-4 w-4 lg:h-5 w-5 text-white" />
+              <div className="p-1.5 lg:p-2 bg-green-500 rounded-lg">
+                <Zap className="h-3 w-3 lg:h-4 w-4 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-3 lg:p-4">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-2 lg:p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-purple-600 mb-1">Individual</p>
-                <p className="text-xl lg:text-2xl font-bold text-purple-900">{stats.individual}</p>
+                <p className="text-lg lg:text-xl font-bold text-purple-900">{stats.individual}</p>
                 <div className="flex items-center mt-1">
-                  <Target className="h-3 w-3 text-purple-500 mr-1" />
+                  <Target className="h-2 w-2 text-purple-500 mr-1" />
                   <span className="text-xs text-purple-600">1:1</span>
                 </div>
               </div>
-              <div className="p-2 lg:p-3 bg-purple-500 rounded-xl">
-                <Users className="h-4 w-4 lg:h-5 w-5 text-white" />
+              <div className="p-1.5 lg:p-2 bg-purple-500 rounded-lg">
+                <Users className="h-3 w-3 lg:h-4 w-4 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-yellow-100 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-3 lg:p-4">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-yellow-50 to-yellow-100 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-2 lg:p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-yellow-600 mb-1">Grupo</p>
-                <p className="text-xl lg:text-2xl font-bold text-yellow-900">{stats.group}</p>
+                <p className="text-lg lg:text-xl font-bold text-yellow-900">{stats.group}</p>
                 <div className="flex items-center mt-1">
-                  <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                  <Star className="h-2 w-2 text-yellow-500 mr-1" />
                   <span className="text-xs text-yellow-600">turmas</span>
                 </div>
               </div>
-              <div className="p-2 lg:p-3 bg-yellow-500 rounded-xl">
-                <Users className="h-4 w-4 lg:h-5 w-5 text-white" />
+              <div className="p-1.5 lg:p-2 bg-yellow-500 rounded-lg">
+                <Users className="h-3 w-3 lg:h-4 w-4 text-white" />
               </div>
             </div>
           </CardContent>
@@ -173,19 +188,19 @@ export const CatalogManagement: React.FC = () => {
       </div>
 
       {/* Filtros compactos */}
-      <Card className="border-0 shadow-md">
+      <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
-              <Filter className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+              <Filter className="h-3 w-3" />
             </div>
             Filtros e Ordenação
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <Select value={filters.type || ""} onValueChange={handleTypeFilter}>
-              <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg">
+              <SelectTrigger className="h-8 border border-gray-200 focus:border-blue-500 rounded-lg text-sm">
                 <SelectValue placeholder="Filtrar por tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -206,7 +221,7 @@ export const CatalogManagement: React.FC = () => {
             </Select>
 
             <Select value={filters.status || ""} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg">
+              <SelectTrigger className="h-8 border border-gray-200 focus:border-blue-500 rounded-lg text-sm">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
@@ -226,18 +241,18 @@ export const CatalogManagement: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button 
                 variant={viewMode === 'grid' ? 'default' : 'outline'} 
                 onClick={() => setViewMode('grid')}
-                className="flex-1 h-10 rounded-lg text-sm"
+                className="flex-1 h-8 rounded-lg text-xs"
               >
                 Grid
               </Button>
               <Button 
                 variant={viewMode === 'list' ? 'default' : 'outline'} 
                 onClick={() => setViewMode('list')}
-                className="flex-1 h-10 rounded-lg text-sm"
+                className="flex-1 h-8 rounded-lg text-xs"
               >
                 Lista
               </Button>
@@ -247,7 +262,7 @@ export const CatalogManagement: React.FC = () => {
               <Button 
                 variant="outline" 
                 onClick={clearFilters}
-                className="h-10 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg text-sm"
+                className="h-8 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg text-xs"
               >
                 Limpar Filtros
               </Button>
@@ -257,11 +272,11 @@ export const CatalogManagement: React.FC = () => {
       </Card>
 
       {/* Catalog List compacto */}
-      <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+      <div className={`grid gap-3 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
         {filteredCatalogs.map((catalog) => (
           <Card
             key={catalog.id}
-            className="border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden"
+            className="border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group overflow-hidden"
             onClick={() => handleViewCatalog(catalog)}
           >
             <div className={`h-1 bg-gradient-to-r ${
@@ -269,21 +284,21 @@ export const CatalogManagement: React.FC = () => {
                 ? 'from-purple-500 to-purple-600' 
                 : 'from-yellow-500 to-yellow-600'
             }`} />
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${
                     catalog.type === 'Individual' 
                       ? 'bg-purple-100 text-purple-600' 
                       : 'bg-yellow-100 text-yellow-600'
                   } group-hover:scale-105 transition-transform duration-300`}>
-                    <Users className="h-4 w-4" />
+                    <Users className="h-3 w-3" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                    <h3 className="font-bold text-base text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
                       {catalog.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mt-1">por {catalog.instructor}</p>
+                    <p className="text-gray-600 text-xs mt-1">por {catalog.instructor}</p>
                   </div>
                 </div>
                 <Badge 
@@ -300,9 +315,9 @@ export const CatalogManagement: React.FC = () => {
             
             <CardContent className="pt-0">
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Tipo:</span>
+                    <span className="text-gray-600 text-xs">Tipo:</span>
                     <Badge 
                       variant="outline" 
                       className={`text-xs ${
@@ -315,21 +330,21 @@ export const CatalogManagement: React.FC = () => {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Duração:</span>
-                    <span className="font-medium">{catalog.durationWeeks} sem</span>
+                    <span className="text-gray-600 text-xs">Duração:</span>
+                    <span className="font-medium text-xs">{catalog.durationWeeks} sem</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Sessões:</span>
-                    <span className="font-medium">{catalog.numberOfSessions}</span>
+                    <span className="text-gray-600 text-xs">Sessões:</span>
+                    <span className="font-medium text-xs">{catalog.numberOfSessions}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Preço:</span>
-                    <span className="font-bold text-green-600">R$ {catalog.price.toFixed(2)}</span>
+                    <span className="text-gray-600 text-xs">Preço:</span>
+                    <span className="font-bold text-green-600 text-xs">R$ {catalog.price.toFixed(2)}</span>
                   </div>
                 </div>
                 
                 <div className="pt-2 border-t border-gray-100">
-                  <p className="text-gray-700 text-sm line-clamp-2">{catalog.description}</p>
+                  <p className="text-gray-700 text-xs line-clamp-2">{catalog.description}</p>
                 </div>
               </div>
             </CardContent>
@@ -339,35 +354,35 @@ export const CatalogManagement: React.FC = () => {
 
       {/* Estado Vazio compacto */}
       {filteredCatalogs.length === 0 && (
-        <Card className="border-0 shadow-md">
-          <CardContent className="py-12 text-center">
-            <div className="p-4 bg-gray-100 rounded-2xl inline-block mb-4">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto" />
+        <Card className="border-0 shadow-sm">
+          <CardContent className="py-8 text-center">
+            <div className="p-3 bg-gray-100 rounded-xl inline-block mb-3">
+              <BookOpen className="h-8 w-8 text-gray-400 mx-auto" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
               Nenhuma mentoria encontrada
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-gray-600 mb-4 max-w-md mx-auto text-sm">
               {Object.keys(filters).length > 0 
                 ? 'Ajuste os filtros para encontrar mentorias ou crie uma nova'
                 : 'Crie sua primeira mentoria para começar'
               }
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
               {Object.keys(filters).length > 0 && (
                 <Button 
                   variant="outline" 
                   onClick={clearFilters}
-                  className="px-4 py-2 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  className="px-3 py-1 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
                 >
                   Limpar Filtros
                 </Button>
               )}
               <Button 
                 onClick={handleCreateCatalog}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-1 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-3 w-3 mr-1" />
                 Nova Mentoria
               </Button>
             </div>
