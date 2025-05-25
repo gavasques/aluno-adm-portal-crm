@@ -1,94 +1,100 @@
 
-import { useCallback } from 'react';
-import { 
-  createMentoringCatalogSchema,
-  createSessionSchema,
-  createExtensionSchema,
-  validateMentoringData
-} from '../schemas/mentoring.schemas';
 import { CreateMentoringCatalogData, CreateSessionData, CreateExtensionData } from '@/types/mentoring.types';
-import { useToast } from '@/hooks/use-toast';
 
 export const useMentoringValidation = () => {
-  const { toast } = useToast();
-
-  const validateCatalog = useCallback((data: CreateMentoringCatalogData) => {
-    const result = validateMentoringData(createMentoringCatalogSchema, data);
-    
-    if (!result.success) {
-      toast({
-        title: "Erro de validação",
-        description: result.errors.join(', '),
-        variant: "destructive",
-      });
-    }
-    
-    return result;
-  }, [toast]);
-
-  const validateSession = useCallback((data: CreateSessionData) => {
-    const result = validateMentoringData(createSessionSchema, data);
-    
-    if (!result.success) {
-      toast({
-        title: "Erro de validação da sessão",
-        description: result.errors.join(', '),
-        variant: "destructive",
-      });
-    }
-    
-    return result;
-  }, [toast]);
-
-  const validateExtension = useCallback((data: CreateExtensionData) => {
-    const result = validateMentoringData(createExtensionSchema, data);
-    
-    if (!result.success) {
-      toast({
-        title: "Erro de validação da extensão",
-        description: result.errors.join(', '),
-        variant: "destructive",
-      });
-    }
-    
-    return result;
-  }, [toast]);
-
-  const validateBusinessRules = useCallback((data: CreateMentoringCatalogData) => {
+  const validateCatalog = (data: CreateMentoringCatalogData) => {
     const errors: string[] = [];
 
-    // Regra de negócio: preço mínimo para mentorias individuais
-    if (data.type === 'Individual' && data.price < 100) {
-      errors.push('Mentorias individuais devem ter preço mínimo de R$ 100');
+    if (!data.name || data.name.trim().length < 3) {
+      errors.push('Nome deve ter pelo menos 3 caracteres');
     }
-
-    // Regra de negócio: número de sessões vs duração
-    const sessionsPerWeek = data.numberOfSessions / data.durationWeeks;
-    if (sessionsPerWeek > 3) {
-      errors.push('Máximo de 3 sessões por semana permitidas');
+    if (!data.instructor || data.instructor.trim().length < 2) {
+      errors.push('Instrutor é obrigatório');
     }
-
-    // Regra de negócio: mentorias em grupo devem ter mais sessões
-    if (data.type === 'Grupo' && data.numberOfSessions < 4) {
-      errors.push('Mentorias em grupo devem ter pelo menos 4 sessões');
+    if (!data.durationWeeks || data.durationWeeks < 1) {
+      errors.push('Duração deve ser de pelo menos 1 semana');
+    }
+    if (!data.numberOfSessions || data.numberOfSessions < 1) {
+      errors.push('Deve ter pelo menos 1 sessão');
+    }
+    if (!data.price || data.price < 0) {
+      errors.push('Preço deve ser maior que zero');
     }
 
     if (errors.length > 0) {
-      toast({
-        title: "Erro nas regras de negócio",
-        description: errors.join(', '),
-        variant: "destructive",
-      });
-      return { success: false as const, errors };
+      return { success: false, errors };
     }
 
-    return { success: true as const, errors: [] };
-  }, [toast]);
+    return { success: true, data };
+  };
+
+  const validateBusinessRules = (data: CreateMentoringCatalogData) => {
+    const errors: string[] = [];
+
+    // Regra: Mentoria individual não pode ter mais de 20 sessões
+    if (data.type === 'Individual' && data.numberOfSessions > 20) {
+      errors.push('Mentoria individual não pode ter mais de 20 sessões');
+    }
+
+    // Regra: Mentoria em grupo deve ter preço menor
+    if (data.type === 'Grupo' && data.price > 5000) {
+      errors.push('Mentoria em grupo deve ter preço máximo de R$ 5.000');
+    }
+
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+
+    return { success: true, data };
+  };
+
+  const validateSession = (data: CreateSessionData) => {
+    const errors: string[] = [];
+
+    if (!data.enrollmentId) {
+      errors.push('Inscrição é obrigatória');
+    }
+    if (!data.title || data.title.trim().length < 3) {
+      errors.push('Título deve ter pelo menos 3 caracteres');
+    }
+    if (!data.scheduledDate) {
+      errors.push('Data da sessão é obrigatória');
+    }
+    if (!data.durationMinutes || data.durationMinutes < 30) {
+      errors.push('Duração deve ser de pelo menos 30 minutos');
+    }
+
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+
+    return { success: true, data };
+  };
+
+  const validateExtension = (data: CreateExtensionData) => {
+    const errors: string[] = [];
+
+    if (!data.enrollmentId) {
+      errors.push('Inscrição é obrigatória');
+    }
+    if (!data.extensionMonths || data.extensionMonths < 1) {
+      errors.push('Extensão deve ser de pelo menos 1 mês');
+    }
+    if (data.extensionMonths > 12) {
+      errors.push('Extensão não pode ser maior que 12 meses');
+    }
+
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+
+    return { success: true, data };
+  };
 
   return {
     validateCatalog,
+    validateBusinessRules,
     validateSession,
     validateExtension,
-    validateBusinessRules
   };
 };

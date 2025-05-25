@@ -9,14 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { StatsCard } from '@/components/mentoring/shared/StatsCard';
-import { MentoringCard } from '@/components/mentoring/shared/MentoringCard';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import { 
   BookOpen, 
   Plus, 
   Users, 
-  Clock, 
   Search, 
   Filter,
   Star,
@@ -67,128 +64,128 @@ export const CatalogManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header Moderno */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-3">
-          <h2 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white">
-              <BookOpen className="h-8 w-8" />
+    <div className="space-y-6">
+      {/* Header compacto */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+              <BookOpen className="h-5 w-5 lg:h-6 w-6" />
             </div>
             Catálogo de Mentorias
           </h2>
-          <p className="text-gray-600 text-lg">Gerencie o catálogo de mentorias disponíveis</p>
+          <p className="text-gray-600 text-sm lg:text-base">Gerencie o catálogo de mentorias disponíveis</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Buscar mentorias..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full sm:w-80 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+              className="pl-9 w-full sm:w-64 h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg"
             />
           </div>
           <Button 
             onClick={handleCreateCatalog}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 h-10 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-4 w-4 mr-2" />
             Nova Mentoria
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards Melhorados */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
+      {/* Stats Cards compactos */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600 mb-1">Total</p>
-                <p className="text-3xl font-bold text-blue-900">{stats.total}</p>
-                <div className="flex items-center mt-2">
-                  <Award className="h-4 w-4 text-blue-500 mr-1" />
-                  <span className="text-sm text-blue-600">mentorias</span>
+                <p className="text-xs font-medium text-blue-600 mb-1">Total</p>
+                <p className="text-xl lg:text-2xl font-bold text-blue-900">{stats.total}</p>
+                <div className="flex items-center mt-1">
+                  <Award className="h-3 w-3 text-blue-500 mr-1" />
+                  <span className="text-xs text-blue-600">mentorias</span>
                 </div>
               </div>
-              <div className="p-4 bg-blue-500 rounded-2xl">
-                <BookOpen className="h-8 w-8 text-white" />
+              <div className="p-2 lg:p-3 bg-blue-500 rounded-xl">
+                <BookOpen className="h-4 w-4 lg:h-5 w-5 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 mb-1">Ativas</p>
-                <p className="text-3xl font-bold text-green-900">{stats.active}</p>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-600">disponíveis</span>
+                <p className="text-xs font-medium text-green-600 mb-1">Ativas</p>
+                <p className="text-xl lg:text-2xl font-bold text-green-900">{stats.active}</p>
+                <div className="flex items-center mt-1">
+                  <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  <span className="text-xs text-green-600">disponíveis</span>
                 </div>
               </div>
-              <div className="p-4 bg-green-500 rounded-2xl">
-                <Zap className="h-8 w-8 text-white" />
+              <div className="p-2 lg:p-3 bg-green-500 rounded-xl">
+                <Zap className="h-4 w-4 lg:h-5 w-5 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600 mb-1">Individual</p>
-                <p className="text-3xl font-bold text-purple-900">{stats.individual}</p>
-                <div className="flex items-center mt-2">
-                  <Target className="h-4 w-4 text-purple-500 mr-1" />
-                  <span className="text-sm text-purple-600">1:1</span>
+                <p className="text-xs font-medium text-purple-600 mb-1">Individual</p>
+                <p className="text-xl lg:text-2xl font-bold text-purple-900">{stats.individual}</p>
+                <div className="flex items-center mt-1">
+                  <Target className="h-3 w-3 text-purple-500 mr-1" />
+                  <span className="text-xs text-purple-600">1:1</span>
                 </div>
               </div>
-              <div className="p-4 bg-purple-500 rounded-2xl">
-                <Users className="h-8 w-8 text-white" />
+              <div className="p-2 lg:p-3 bg-purple-500 rounded-xl">
+                <Users className="h-4 w-4 lg:h-5 w-5 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-6">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-yellow-100 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-600 mb-1">Grupo</p>
-                <p className="text-3xl font-bold text-yellow-900">{stats.group}</p>
-                <div className="flex items-center mt-2">
-                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                  <span className="text-sm text-yellow-600">turmas</span>
+                <p className="text-xs font-medium text-yellow-600 mb-1">Grupo</p>
+                <p className="text-xl lg:text-2xl font-bold text-yellow-900">{stats.group}</p>
+                <div className="flex items-center mt-1">
+                  <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                  <span className="text-xs text-yellow-600">turmas</span>
                 </div>
               </div>
-              <div className="p-4 bg-yellow-500 rounded-2xl">
-                <Users className="h-8 w-8 text-white" />
+              <div className="p-2 lg:p-3 bg-yellow-500 rounded-xl">
+                <Users className="h-4 w-4 lg:h-5 w-5 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtros Aprimorados */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white">
-              <Filter className="h-5 w-5" />
+      {/* Filtros compactos */}
+      <Card className="border-0 shadow-md">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+              <Filter className="h-4 w-4" />
             </div>
             Filtros e Ordenação
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Select value={filters.type || ""} onValueChange={handleTypeFilter}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl">
+              <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg">
                 <SelectValue placeholder="Filtrar por tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -209,7 +206,7 @@ export const CatalogManagement: React.FC = () => {
             </Select>
 
             <Select value={filters.status || ""} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl">
+              <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-blue-500 rounded-lg">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
@@ -233,14 +230,14 @@ export const CatalogManagement: React.FC = () => {
               <Button 
                 variant={viewMode === 'grid' ? 'default' : 'outline'} 
                 onClick={() => setViewMode('grid')}
-                className="flex-1 h-12 rounded-xl"
+                className="flex-1 h-10 rounded-lg text-sm"
               >
                 Grid
               </Button>
               <Button 
                 variant={viewMode === 'list' ? 'default' : 'outline'} 
                 onClick={() => setViewMode('list')}
-                className="flex-1 h-12 rounded-xl"
+                className="flex-1 h-10 rounded-lg text-sm"
               >
                 Lista
               </Button>
@@ -250,7 +247,7 @@ export const CatalogManagement: React.FC = () => {
               <Button 
                 variant="outline" 
                 onClick={clearFilters}
-                className="h-12 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl"
+                className="h-10 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg text-sm"
               >
                 Limpar Filtros
               </Button>
@@ -259,31 +256,31 @@ export const CatalogManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Catalog List com Cards Melhorados */}
-      <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+      {/* Catalog List compacto */}
+      <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
         {filteredCatalogs.map((catalog) => (
           <Card
             key={catalog.id}
-            className="border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer group overflow-hidden"
+            className="border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden"
             onClick={() => handleViewCatalog(catalog)}
           >
-            <div className={`h-2 bg-gradient-to-r ${
+            <div className={`h-1 bg-gradient-to-r ${
               catalog.type === 'Individual' 
                 ? 'from-purple-500 to-purple-600' 
                 : 'from-yellow-500 to-yellow-600'
             }`} />
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between mb-4">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-2xl ${
+                  <div className={`p-2 rounded-xl ${
                     catalog.type === 'Individual' 
                       ? 'bg-purple-100 text-purple-600' 
                       : 'bg-yellow-100 text-yellow-600'
-                  } group-hover:scale-110 transition-transform duration-300`}>
-                    <Users className="h-6 w-6" />
+                  } group-hover:scale-105 transition-transform duration-300`}>
+                    <Users className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-xl text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
                       {catalog.name}
                     </h3>
                     <p className="text-gray-600 text-sm mt-1">por {catalog.instructor}</p>
@@ -294,7 +291,7 @@ export const CatalogManagement: React.FC = () => {
                     catalog.active 
                       ? 'bg-green-100 text-green-700 border-green-200' 
                       : 'bg-gray-100 text-gray-700 border-gray-200'
-                  } border-2`}
+                  } border text-xs`}
                 >
                   {catalog.active ? 'Ativa' : 'Inativa'}
                 </Badge>
@@ -302,13 +299,13 @@ export const CatalogManagement: React.FC = () => {
             </CardHeader>
             
             <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Tipo:</span>
                     <Badge 
                       variant="outline" 
-                      className={`${
+                      className={`text-xs ${
                         catalog.type === 'Individual' 
                           ? 'border-purple-200 text-purple-700 bg-purple-50' 
                           : 'border-yellow-200 text-yellow-700 bg-yellow-50'
@@ -331,7 +328,7 @@ export const CatalogManagement: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="pt-3 border-t border-gray-100">
+                <div className="pt-2 border-t border-gray-100">
                   <p className="text-gray-700 text-sm line-clamp-2">{catalog.description}</p>
                 </div>
               </div>
@@ -340,37 +337,37 @@ export const CatalogManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Estado Vazio Melhorado */}
+      {/* Estado Vazio compacto */}
       {filteredCatalogs.length === 0 && (
-        <Card className="border-0 shadow-lg">
-          <CardContent className="py-16 text-center">
-            <div className="p-6 bg-gray-100 rounded-3xl inline-block mb-6">
-              <BookOpen className="h-16 w-16 text-gray-400 mx-auto" />
+        <Card className="border-0 shadow-md">
+          <CardContent className="py-12 text-center">
+            <div className="p-4 bg-gray-100 rounded-2xl inline-block mb-4">
+              <BookOpen className="h-12 w-12 text-gray-400 mx-auto" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Nenhuma mentoria encontrada
             </h3>
-            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               {Object.keys(filters).length > 0 
-                ? 'Ajuste os filtros para encontrar mentorias ou crie uma nova mentoria para começar'
-                : 'Crie sua primeira mentoria para começar a ajudar seus alunos'
+                ? 'Ajuste os filtros para encontrar mentorias ou crie uma nova'
+                : 'Crie sua primeira mentoria para começar'
               }
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               {Object.keys(filters).length > 0 && (
                 <Button 
                   variant="outline" 
                   onClick={clearFilters}
-                  className="px-6 py-3 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 rounded-xl"
+                  className="px-4 py-2 border-2 border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg"
                 >
                   Limpar Filtros
                 </Button>
               )}
               <Button 
                 onClick={handleCreateCatalog}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <Plus className="h-5 w-5 mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
                 Nova Mentoria
               </Button>
             </div>
