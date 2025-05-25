@@ -43,7 +43,7 @@ export const usePermissionGroupForm = ({
         try {
           const menuData = await getPermissionGroupMenus(permissionGroup.id);
           const menuKeys = menuData.map((item: any) => item.menu_key);
-          console.log("Menus carregados:", menuKeys);
+          console.log("Menus carregados para edição:", menuKeys);
           setSelectedMenus(menuKeys);
         } catch (error) {
           console.error("Erro ao carregar menus do grupo:", error);
@@ -58,26 +58,44 @@ export const usePermissionGroupForm = ({
     loadGroupData();
   }, [isEdit, permissionGroup, getPermissionGroupMenus]);
 
-  // CORREÇÃO PRINCIPAL: Controlar comportamento APENAS do isAdmin
+  // CORREÇÃO PRINCIPAL: Controlar comportamento APENAS quando isAdmin muda
   useEffect(() => {
     console.log("=== ADMIN BEHAVIOR EFFECT ===");
-    console.log("isAdmin:", isAdmin);
-    console.log("allowAdminAccess:", allowAdminAccess);
-    console.log("selectedMenus antes:", selectedMenus);
+    console.log("isAdmin mudou para:", isAdmin);
+    console.log("allowAdminAccess atual:", allowAdminAccess);
+    console.log("selectedMenus antes da verificação:", selectedMenus);
     
     if (isAdmin) {
-      // APENAS admin completo (isAdmin = true) deve limpar menus e habilitar allowAdminAccess
-      console.log("Admin completo detectado - limpando menus e habilitando acesso admin");
-      setAllowAdminAccess(true);
+      // APENAS admin completo (isAdmin = true) deve limpar menus
+      console.log("🔴 Admin completo detectado - LIMPANDO menus e habilitando acesso admin");
       setSelectedMenus([]);
+      setAllowAdminAccess(true);
+      console.log("✅ Menus limpos para admin completo");
     }
-    // IMPORTANTE: NÃO fazer nada quando apenas allowAdminAccess muda
-    // Isso preserva os menus selecionados para admin limitado
+    // IMPORTANTE: NÃO fazer nada quando allowAdminAccess muda
+    // Isso preserva os menus para admin limitado
     
-    console.log("selectedMenus depois:", selectedMenus);
-    console.log("allowAdminAccess depois:", allowAdminAccess);
+    console.log("selectedMenus final:", isAdmin ? [] : selectedMenus);
     console.log("==============================");
-  }, [isAdmin]); // APENAS isAdmin como dependência
+  }, [isAdmin]); // APENAS isAdmin como dependência - CRÍTICO!
+
+  // Função para controlar allowAdminAccess sem afetar menus
+  const handleAllowAdminAccessChange = useCallback((value: boolean) => {
+    console.log("=== ALLOW ADMIN ACCESS CHANGE ===");
+    console.log("Mudando allowAdminAccess de", allowAdminAccess, "para", value);
+    console.log("isAdmin atual:", isAdmin);
+    console.log("selectedMenus antes:", selectedMenus);
+    
+    if (!isAdmin) {
+      // Para usuários não-admin, apenas mudar o allowAdminAccess
+      // SEM TOCAR nos menus selecionados
+      console.log("✅ Usuário não é admin completo - preservando menus");
+      setAllowAdminAccess(value);
+    }
+    
+    console.log("selectedMenus após mudança:", selectedMenus);
+    console.log("================================");
+  }, [isAdmin, allowAdminAccess, selectedMenus]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,34 +105,31 @@ export const usePermissionGroupForm = ({
     try {
       setIsSubmitting(true);
       
-      // VALIDAÇÃO: Verificar estado dos menus antes do submit
+      // VALIDAÇÃO CRÍTICA: Verificar estado antes do submit
       let menusToSend: string[];
       
       console.log("=== SUBMIT VALIDATION ===");
-      console.log("isAdmin:", isAdmin);
-      console.log("allowAdminAccess:", allowAdminAccess);
-      console.log("selectedMenus before submit:", selectedMenus);
+      console.log("Estado final antes do submit:");
+      console.log("- isAdmin:", isAdmin);
+      console.log("- allowAdminAccess:", allowAdminAccess);
+      console.log("- selectedMenus:", selectedMenus);
       
       if (isAdmin) {
         // Admin completo - sem menus específicos (acesso total)
         menusToSend = [];
-        console.log("SUBMIT: Admin completo - enviando array vazio");
-      } else if (allowAdminAccess) {
-        // Admin limitado - preservar menus selecionados
-        menusToSend = selectedMenus;
-        console.log("SUBMIT: Admin limitado - preservando menus:", menusToSend);
-        
-        // VALIDAÇÃO ADICIONAL: Verificar se não há inconsistência
-        if (selectedMenus.length === 0) {
-          console.warn("ATENÇÃO: Admin limitado sem menus selecionados!");
-        }
+        console.log("✅ SUBMIT: Admin completo - enviando array vazio");
       } else {
-        // Usuário normal - preservar menus selecionados
-        menusToSend = selectedMenus;
-        console.log("SUBMIT: Usuário normal - preservando menus:", menusToSend);
+        // Admin limitado ou usuário normal - preservar menus selecionados
+        menusToSend = [...selectedMenus]; // Clonar array para segurança
+        console.log("✅ SUBMIT: Admin limitado/usuário normal - preservando menus:", menusToSend);
+        
+        // VALIDAÇÃO: Verificar inconsistências
+        if (allowAdminAccess && selectedMenus.length === 0) {
+          console.warn("⚠️ ATENÇÃO: Admin limitado sem menus selecionados!");
+        }
       }
       
-      console.log("menusToSend final:", menusToSend);
+      console.log("menusToSend final para backend:", menusToSend);
       console.log("========================");
       
       if (isEdit && permissionGroup) {
@@ -152,31 +167,32 @@ export const usePermissionGroupForm = ({
     console.log("allowAdminAccess:", allowAdminAccess);
     console.log("selectedMenus antes:", selectedMenus);
     
-    // IMPORTANTE: Não permitir alteração de menus se for admin completo
+    // PROTEÇÃO: Não permitir alteração se for admin completo
     if (isAdmin) {
-      console.log("Admin completo - toggle ignorado");
+      console.log("🔴 Admin completo - toggle bloqueado");
       return;
     }
     
-    // Para admin limitado e usuário normal, permitir toggle normalmente
+    // Para admin limitado e usuário normal, permitir toggle
     setSelectedMenus((prev) => {
       const newMenus = prev.includes(menuKey)
         ? prev.filter(key => key !== menuKey)
         : [...prev, menuKey];
       
-      console.log("selectedMenus depois:", newMenus);
+      console.log("✅ selectedMenus atualizado:", newMenus);
       console.log("==================");
       return newMenus;
     });
-  }, [isAdmin]); // Remover allowAdminAccess da dependência
+  }, [isAdmin, selectedMenus]);
 
-  // Log para monitorar mudanças de estado críticas
+  // Monitor de estado para debug
   useEffect(() => {
-    console.log("=== STATE MONITORING ===");
-    console.log("isAdmin:", isAdmin);
-    console.log("allowAdminAccess:", allowAdminAccess);
-    console.log("selectedMenus count:", selectedMenus.length);
-    console.log("selectedMenus:", selectedMenus);
+    console.log("=== STATE MONITOR ===");
+    console.log("Estado atual:");
+    console.log("- isAdmin:", isAdmin);
+    console.log("- allowAdminAccess:", allowAdminAccess);
+    console.log("- selectedMenus count:", selectedMenus.length);
+    console.log("- selectedMenus:", selectedMenus);
     
     // VALIDAÇÃO DE CONSISTÊNCIA
     if (!isAdmin && allowAdminAccess && selectedMenus.length === 0) {
@@ -185,7 +201,7 @@ export const usePermissionGroupForm = ({
     if (isAdmin && selectedMenus.length > 0) {
       console.warn("⚠️ INCONSISTÊNCIA: Admin completo com menus específicos!");
     }
-    console.log("========================");
+    console.log("====================");
   }, [isAdmin, allowAdminAccess, selectedMenus]);
 
   const isLoading = loadingMenus || loadingGroupData;
@@ -199,7 +215,7 @@ export const usePermissionGroupForm = ({
     isAdmin,
     setIsAdmin,
     allowAdminAccess,
-    setAllowAdminAccess,
+    setAllowAdminAccess: handleAllowAdminAccessChange, // Usar handler customizado
     selectedMenus,
     isSubmitting,
     isLoading,

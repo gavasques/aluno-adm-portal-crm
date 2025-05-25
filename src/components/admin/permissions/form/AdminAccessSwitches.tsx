@@ -61,10 +61,10 @@ export const AdminAccessSwitches: React.FC<AdminAccessSwitchesProps> = ({
       )}
 
       {allowAdminAccess && !isAdmin && (
-        <Alert className="border-orange-200 bg-orange-50">
-          <Lock className="h-4 w-4 text-orange-600" />
+        <Alert className="border-green-200 bg-green-50">
+          <Lock className="h-4 w-4 text-green-600" />
           <AlertDescription>
-            <strong>Acesso Administrativo Limitado:</strong> Este grupo poderá acessar a área administrativa 
+            <strong>✅ Acesso Administrativo Limitado:</strong> Este grupo poderá acessar a área administrativa 
             apenas para os menus selecionados abaixo. <strong>Os menus selecionados serão preservados.</strong>
           </AlertDescription>
         </Alert>

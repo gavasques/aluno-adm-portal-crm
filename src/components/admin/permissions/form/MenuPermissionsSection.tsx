@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { Loader2, Info, Shield, Lock, AlertTriangle } from "lucide-react";
+import { Loader2, Info, Shield, Lock, CheckCircle } from "lucide-react";
 import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox-group";
 
 interface MenuPermissionsSectionProps {
@@ -49,50 +49,32 @@ export const MenuPermissionsSection: React.FC<MenuPermissionsSectionProps> = ({
             </div>
           ) : (
             <>
-              {/* Indicador visual do tipo de acesso com validação */}
+              {/* Indicador visual aprimorado */}
               <div className={`p-3 border rounded-lg ${
                 allowAdminAccess 
-                  ? selectedMenus.length > 0 
-                    ? 'border-orange-200 bg-orange-50' 
-                    : 'border-yellow-200 bg-yellow-50'
+                  ? 'border-green-200 bg-green-50' 
                   : 'border-blue-200 bg-blue-50'
               }`}>
                 <div className={`flex items-center gap-2 ${
-                  allowAdminAccess 
-                    ? selectedMenus.length > 0 
-                      ? 'text-orange-800' 
-                      : 'text-yellow-800'
-                    : 'text-blue-800'
+                  allowAdminAccess ? 'text-green-800' : 'text-blue-800'
                 }`}>
                   {allowAdminAccess ? (
-                    selectedMenus.length > 0 ? (
-                      <Lock className="h-4 w-4" />
-                    ) : (
-                      <AlertTriangle className="h-4 w-4" />
-                    )
+                    <CheckCircle className="h-4 w-4" />
                   ) : (
                     <Info className="h-4 w-4" />
                   )}
                   <span className="text-sm font-medium">
                     {allowAdminAccess 
-                      ? selectedMenus.length > 0
-                        ? `Acesso Administrativo Limitado (${selectedMenus.length} menus)`
-                        : `Acesso Administrativo Limitado (NENHUM MENU SELECIONADO)`
-                      : `Acesso de Aluno (${selectedMenus.length} menus)`
+                      ? `✅ Acesso Administrativo Limitado (${selectedMenus.length} menus selecionados)`
+                      : `Acesso de Aluno (${selectedMenus.length} menus selecionados)`
                     }
                   </span>
                 </div>
                 <p className={`text-sm mt-1 ${
-                  allowAdminAccess 
-                    ? selectedMenus.length > 0 
-                      ? 'text-orange-700' 
-                      : 'text-yellow-700'
-                    : 'text-blue-700'
+                  allowAdminAccess ? 'text-green-700' : 'text-blue-700'
                 }`}>
                   {allowAdminAccess 
-                    ? selectedMenus.length > 0
-                      ? 'Este grupo terá acesso à área administrativa apenas para os menus selecionados abaixo.'
-                      : 'ATENÇÃO: Este grupo tem acesso administrativo mas nenhum menu foi selecionado. Selecione pelo menos um menu.'
+                    ? 'Este grupo terá acesso à área administrativa apenas para os menus selecionados abaixo. Os menus selecionados serão preservados.'
                     : 'Este grupo terá acesso apenas à área do aluno para os menus selecionados abaixo.'
                   }
                 </p>
