@@ -2,13 +2,14 @@
 import { useState, useEffect } from "react";
 import { PermissionServiceFactory } from "@/services/permissions";
 import { useAuth } from "@/hooks/auth";
+import { useOptimizedPermissions } from "./useOptimizedPermissions";
 
 interface Permissions {
   hasAdminAccess: boolean;
   allowedMenus: string[];
 }
 
-export const usePermissions = () => {
+export const usePermissions = (useOptimization: boolean = true) => {
   const { user, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permissions>({
     hasAdminAccess: false,
@@ -16,10 +17,24 @@ export const usePermissions = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Hook otimizado
+  const optimizedResult = useOptimizedPermissions();
+
   const validationService = PermissionServiceFactory.getPermissionValidationService();
   const menuService = PermissionServiceFactory.getSystemMenuService();
 
   useEffect(() => {
+    // Se está usando otimização, usar o resultado otimizado
+    if (useOptimization) {
+      setPermissions({
+        hasAdminAccess: optimizedResult.permissions.hasAdminAccess,
+        allowedMenus: optimizedResult.permissions.allowedMenus
+      });
+      setLoading(optimizedResult.loading);
+      return;
+    }
+
+    // Fallback para implementação original
     const fetchPermissions = async () => {
       if (!user) {
         console.log("=== PERMISSIONS: No user ===");
@@ -67,7 +82,11 @@ export const usePermissions = () => {
     if (!authLoading) {
       fetchPermissions();
     }
-  }, [user?.id, authLoading, validationService, menuService]);
+  }, [user?.id, authLoading, useOptimization, optimizedResult, validationService, menuService]);
 
-  return { permissions, loading };
+  return { 
+    permissions, 
+    loading,
+    refreshPermissions: useOptimization ? optimizedResult.refreshPermissions : undefined 
+  };
 };

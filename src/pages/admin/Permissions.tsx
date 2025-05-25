@@ -6,6 +6,10 @@ import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader"
 import PermissionsCard from "@/components/admin/permissions/PermissionsCard";
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
 import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
+import PerformanceOptimizedPermissions from "@/components/admin/permissions/PerformanceOptimizedPermissions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Zap, List } from "lucide-react";
 
 const Permissions = () => {
   const { 
@@ -51,8 +55,6 @@ const Permissions = () => {
 
   return (
     <div className="w-full">
-      <PermissionsHeader onAdd={handleAdd} />
-
       {error && (
         <>
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -63,27 +65,49 @@ const Permissions = () => {
         </>
       )}
 
-      <PermissionsCard 
-        permissionGroups={permissionGroups} 
-        isLoading={isLoading} 
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onViewUsers={handleViewUsers}
-        groupMenuCounts={menuCounts}
-      />
+      <Tabs defaultValue="optimized" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="optimized" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Versão Otimizada
+            <Badge variant="secondary" className="ml-1">Nova</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="standard" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            Versão Padrão
+          </TabsTrigger>
+        </TabsList>
 
-      <PermissionsDialogs 
-        showAddDialog={showAddDialog}
-        setShowAddDialog={setShowAddDialog}
-        showEditDialog={showEditDialog}
-        setShowEditDialog={setShowEditDialog}
-        showDeleteDialog={showDeleteDialog}
-        setShowDeleteDialog={setShowDeleteDialog}
-        showUsersDialog={showUsersDialog}
-        setShowUsersDialog={setShowUsersDialog}
-        selectedGroup={selectedGroup}
-        onSuccess={handleSuccess}
-      />
+        <TabsContent value="optimized" className="mt-6">
+          <PerformanceOptimizedPermissions />
+        </TabsContent>
+
+        <TabsContent value="standard" className="mt-6">
+          <PermissionsHeader onAdd={handleAdd} />
+
+          <PermissionsCard 
+            permissionGroups={permissionGroups} 
+            isLoading={isLoading} 
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onViewUsers={handleViewUsers}
+            groupMenuCounts={menuCounts}
+          />
+
+          <PermissionsDialogs 
+            showAddDialog={showAddDialog}
+            setShowAddDialog={setShowAddDialog}
+            showEditDialog={showEditDialog}
+            setShowEditDialog={setShowEditDialog}
+            showDeleteDialog={showDeleteDialog}
+            setShowDeleteDialog={setShowDeleteDialog}
+            showUsersDialog={showUsersDialog}
+            setShowUsersDialog={setShowUsersDialog}
+            selectedGroup={selectedGroup}
+            onSuccess={handleSuccess}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
