@@ -22,13 +22,16 @@ interface UserDetailsDialogProps {
     storage_used_mb?: number;
     storage_limit_mb?: number;
     tasks?: any[];
+    is_mentor?: boolean;
   } | null;
+  onRefresh?: () => void;
 }
 
 const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({ 
   open, 
   onOpenChange, 
-  user 
+  user,
+  onRefresh
 }) => {
   if (!user) return null;
 
@@ -36,7 +39,7 @@ const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <UserDetailsHeader />
-        <UserDetailsContent user={user} />
+        <UserDetailsContent user={user} onRefresh={onRefresh} />
         <UserDetailsFooter onClose={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>

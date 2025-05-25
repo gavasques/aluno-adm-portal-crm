@@ -24,7 +24,8 @@ import {
   UserMinus,
   Lock,
   Clock,
-  Shield
+  Shield,
+  GraduationCap
 } from "lucide-react";
 
 interface UserTableRowProps {
@@ -116,19 +117,9 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
           <span>{user.role || "Não definido"}</span>
           {user.is_mentor && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <GraduationCap className="h-3 w-3 mr-1" />
               Mentor
             </span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          {user.is_mentor ? (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-              Sim
-            </span>
-          ) : (
-            <span className="text-gray-500 text-sm">Não</span>
           )}
         </div>
       </TableCell>

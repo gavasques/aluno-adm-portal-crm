@@ -13,7 +13,6 @@ const UsersTableHeader: React.FC = () => {
         <TableHead>Usuário</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>Papel</TableHead>
-        <TableHead>Mentor</TableHead>
         <TableHead>Último Login</TableHead>
         <TableHead className="text-right">Ações</TableHead>
       </TableRow>

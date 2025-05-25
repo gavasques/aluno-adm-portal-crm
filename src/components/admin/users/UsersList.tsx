@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Table, 
@@ -7,7 +6,7 @@ import {
 import UserDetailsDialog from "./UserDetailsDialog";
 import UserActionButtons from "./UserActionButtons";
 import UsersTableHeader from "./UsersTableHeader";
-import UserTableRow from "../UserTableRow";
+import UserTableRow from "./UserTableRow";
 import EmptyUsersList from "./EmptyUsersList";
 import LoadingUsersList from "./LoadingUsersList";
 import UsersFilter from "./UsersFilter";
@@ -126,7 +125,6 @@ const UsersList: React.FC<UsersListProps> = ({
                   onDeleteUser={onDeleteUser}
                   onToggleUserStatus={onToggleUserStatus}
                   onSetPermissionGroup={onSetPermissionGroup}
-                  onRefresh={onRefresh}
                 />
               ))
             ) : (
@@ -141,6 +139,7 @@ const UsersList: React.FC<UsersListProps> = ({
         open={showDetailsDialog}
         onOpenChange={setShowDetailsDialog}
         user={selectedUser}
+        onRefresh={onRefresh}
       />
     </div>
   );
