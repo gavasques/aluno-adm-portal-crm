@@ -1,7 +1,46 @@
 
 import { corsHeaders } from "./_shared/cors.ts";
 import { createUser, inviteUser, deleteUser, toggleUserStatus } from "./userOperations.ts";
-import { processUsersForResponse } from "./userProcessing.ts";
+
+// Função para processar usuários para resposta
+const processUsersForResponse = async (authUsers: any[], profiles: any[]) => {
+  const processedUsers = [];
+  
+  for (const user of authUsers) {
+    // Buscar perfil correspondente
+    const profile = profiles.find(p => p.id === user.id || p.email === user.email);
+    
+    // Determinar status do usuário
+    let status = 'Ativo';
+    if (user.banned_until && new Date(user.banned_until) > new Date()) {
+      status = 'Inativo';
+    } else if (!user.email_confirmed_at) {
+      status = 'Pendente';
+    }
+    
+    // Determinar último login
+    let lastLogin = 'Nunca';
+    if (user.last_sign_in_at) {
+      lastLogin = new Date(user.last_sign_in_at).toLocaleDateString('pt-BR');
+    }
+    
+    processedUsers.push({
+      id: user.id,
+      name: profile?.name || user.user_metadata?.name || user.email,
+      email: user.email,
+      role: profile?.role || 'Student',
+      status: status,
+      lastLogin: lastLogin,
+      tasks: [],
+      permission_group_id: profile?.permission_group_id || null,
+      storage_used_mb: profile?.storage_used_mb || 0,
+      storage_limit_mb: profile?.storage_limit_mb || 100,
+      is_mentor: profile?.is_mentor || false
+    });
+  }
+  
+  return processedUsers;
+};
 
 // Handler para requisições GET (listar usuários)
 export const handleGetRequest = async (supabaseAdmin: any) => {
