@@ -81,9 +81,23 @@ const PermissionGroupForm: React.FC<PermissionGroupFormProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Para grupos admin completo, não enviar menus específicos (eles têm acesso a tudo)
-      // Para grupos com acesso admin limitado, preservar os menus selecionados
-      const menusToSend = isAdmin ? [] : selectedMenus;
+      // CORREÇÃO PRINCIPAL: Distinguir entre admin completo e admin limitado
+      let menusToSend: string[];
+      
+      if (isAdmin) {
+        // Admin completo - não precisa de menus específicos
+        menusToSend = [];
+      } else {
+        // Admin limitado ou usuário normal - preservar menus selecionados
+        menusToSend = selectedMenus;
+      }
+      
+      console.log("=== SUBMIT DEBUG ===");
+      console.log("isAdmin:", isAdmin);
+      console.log("allowAdminAccess:", allowAdminAccess);
+      console.log("selectedMenus:", selectedMenus);
+      console.log("menusToSend:", menusToSend);
+      console.log("===================");
       
       if (isEdit && permissionGroup) {
         await updatePermissionGroup({
