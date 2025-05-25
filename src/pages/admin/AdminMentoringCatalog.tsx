@@ -19,11 +19,14 @@ import {
   DollarSign,
   Calendar,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useMentoring } from '@/hooks/useMentoring';
 
 const AdminMentoringCatalog = () => {
+  const navigate = useNavigate();
   const { catalogs } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -153,9 +156,19 @@ const AdminMentoringCatalog = () => {
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Catálogo de Mentorias</h1>
-          <p className="text-gray-600 mt-1">Gerencie os produtos de mentoria disponíveis</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/admin/mentorias')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Catálogo de Mentorias</h1>
+            <p className="text-gray-600 mt-1">Gerencie os produtos de mentoria disponíveis</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">

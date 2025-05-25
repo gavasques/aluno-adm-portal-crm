@@ -86,7 +86,7 @@ const AdminMentoringSessions = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Breadcrumb */}
-      <BreadcrumbNav items={breadcrumbItems} showBackButton />
+      <BreadcrumbNav items={breadcrumbItems} showBackButton={true} />
 
       {/* Header */}
       <div className="flex items-center justify-between">

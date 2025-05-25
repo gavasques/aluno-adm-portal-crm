@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,25 +9,29 @@ import {
   Users, 
   Search, 
   Filter, 
-  Download, 
   Plus, 
   Edit, 
   Trash2, 
   Eye,
-  UserPlus,
-  Calendar
+  Calendar,
+  CheckCircle,
+  Clock,
+  XCircle,
+  ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useMentoring } from '@/hooks/useMentoring';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
+import { format } from 'date-fns';
 
 const AdminMentoringEnrollments = () => {
-  const { enrollments } = useMentoring();
+  const navigate = useNavigate();
+  const { enrollments, getEnrollmentProgress } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<any>(null);
-  const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,9 +94,19 @@ const AdminMentoringEnrollments = () => {
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestão de Inscrições</h1>
-          <p className="text-gray-600 mt-1">Gerencie todas as inscrições de mentorias</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/admin/mentorias')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Inscrições de Mentorias</h1>
+            <p className="text-gray-600 mt-1">Gerencie todas as inscrições de alunos</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
