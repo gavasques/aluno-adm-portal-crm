@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import {
   Users,
   Play,
   GraduationCap,
-  User,
+  UserPlus,
   Grid3X3,
   List
 } from 'lucide-react';
@@ -43,7 +44,6 @@ const AdminIndividualSessions = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [studentFilter, setStudentFilter] = useState('');
   const [mentorFilter, setMentorFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -58,19 +58,6 @@ const AdminIndividualSessions = () => {
   ];
 
   const isAdmin = !user || user?.role === 'Admin' || user?.role === 'admin' || true;
-
-  const studentNames = {
-    'student-001': 'João Silva',
-    'student-002': 'Maria Santos',
-    'student-003': 'Pedro Oliveira',
-    'student-004': 'Ana Costa',
-    'student-005': 'Carlos Ferreira',
-    'student-006': 'Juliana Rodrigues',
-    'student-007': 'Roberto Lima',
-    'student-008': 'Fernanda Alves',
-    'student-009': 'Ricardo Pereira',
-    'student-010': 'Camila Barbosa'
-  };
 
   const formatSafeDate = (dateString: string | undefined, formatStr: string) => {
     if (!dateString) return 'Data não definida';
@@ -112,13 +99,11 @@ const AdminIndividualSessions = () => {
           })
           .findIndex(s => s.id === session.id) + 1;
 
-        const studentName = enrollment ? studentNames[enrollment.studentId as keyof typeof studentNames] || 'Aluno não encontrado' : 'Aluno não encontrado';
-
         return {
           ...session,
           enrollment,
           sessionNumber,
-          studentName,
+          studentName: enrollment?.studentId || 'Estudante não encontrado',
           mentorName: enrollment?.responsibleMentor || 'Mentor não definido',
           mentoringName: enrollment?.mentoring.name || 'Mentoria não encontrada',
           totalSessions: enrollment?.totalSessions || 0
@@ -150,12 +135,6 @@ const AdminIndividualSessions = () => {
 
     if (statusFilter) {
       filtered = filtered.filter(session => session.status === statusFilter);
-    }
-
-    if (studentFilter) {
-      filtered = filtered.filter(session => 
-        session.studentName.toLowerCase().includes(studentFilter.toLowerCase())
-      );
     }
 
     if (mentorFilter) {
@@ -195,7 +174,7 @@ const AdminIndividualSessions = () => {
     }
 
     return filtered;
-  }, [individualSessions, searchTerm, statusFilter, studentFilter, mentorFilter, dateFilter, isAdmin, user]);
+  }, [individualSessions, searchTerm, statusFilter, mentorFilter, dateFilter, isAdmin, user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -224,7 +203,7 @@ const AdminIndividualSessions = () => {
 
   const handleCreateSession = async (data: any) => {
     try {
-      console.log('Creating session with data:', data);
+      console.log('Creating individual session with data:', data);
       
       const scheduledDate = data.scheduledDate && data.scheduledTime 
         ? new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString()
@@ -236,21 +215,21 @@ const AdminIndividualSessions = () => {
         title: data.title,
         scheduledDate,
         durationMinutes: data.durationMinutes,
-        meetingLink: data.meetingLink || undefined
+        meetingLink: data.meetingLink || undefined,
+        groupId: data.groupId
       };
       
       await createSession(sessionData);
       setShowForm(false);
-      console.log('Session created successfully');
+      console.log('Individual session created successfully');
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error('Error creating individual session:', error);
     }
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
-    setStudentFilter('');
     setMentorFilter('');
     setDateFilter('');
   };
@@ -287,7 +266,7 @@ const AdminIndividualSessions = () => {
           </div>
           
           {isAdmin && (
-            <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setShowForm(true)} className="bg-green-600 hover:bg-green-700">
               <Plus className="h-4 w-4 mr-2" />
               Nova Sessão Individual
             </Button>
@@ -305,7 +284,7 @@ const AdminIndividualSessions = () => {
                 <p className="text-2xl font-bold text-gray-900">{filteredSessions.length}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
-                <User className="h-6 w-6 text-blue-600" />
+                <Video className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -347,13 +326,13 @@ const AdminIndividualSessions = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Canceladas</p>
+                <p className="text-sm font-medium text-gray-600">Total Alunos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {filteredSessions.filter(s => s.status === 'cancelada').length}
+                  {new Set(filteredSessions.map(s => s.studentName)).size}
                 </p>
               </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <Users className="h-6 w-6 text-red-600" />
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <UserPlus className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -418,7 +397,7 @@ const AdminIndividualSessions = () => {
           isAdmin={isAdmin}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSessions.map((session) => (
             <Card 
               key={session.id} 
@@ -429,11 +408,11 @@ const AdminIndividualSessions = () => {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="p-2 bg-purple-100 rounded-lg shrink-0">
-                        <User className="h-4 w-4 text-purple-600" />
+                      <div className="p-2 bg-blue-100 rounded-lg shrink-0">
+                        <Video className="h-4 w-4 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-sm truncate">{session.mentoringName}</h4>
+                        <h4 className="font-medium text-sm truncate">{session.studentName}</h4>
                         <p className="text-xs text-gray-500">
                           Sessão {session.sessionNumber}/{session.totalSessions}
                         </p>
@@ -446,10 +425,10 @@ const AdminIndividualSessions = () => {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <User className="h-3 w-3 text-gray-400 shrink-0" />
+                      <GraduationCap className="h-3 w-3 text-gray-400 shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-medium">Aluno:</span>
-                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.studentName}</span>
+                        <span className="text-xs font-medium">Mentoria:</span>
+                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.mentoringName}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -482,7 +461,9 @@ const AdminIndividualSessions = () => {
                     <div className="flex items-center gap-1">
                       <span>{session.durationMinutes} min</span>
                     </div>
-                    <Badge variant="outline" className="text-xs">Individual</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Individual
+                    </Badge>
                   </div>
 
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
@@ -534,14 +515,14 @@ const AdminIndividualSessions = () => {
       {filteredSessions.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
-            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma sessão individual encontrada</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || statusFilter || studentFilter || mentorFilter || dateFilter
+              {searchTerm || statusFilter || mentorFilter || dateFilter
                 ? 'Tente ajustar os filtros para encontrar as sessões desejadas.'
                 : 'Não há sessões individuais agendadas no momento.'}
             </p>
-            {isAdmin && !searchTerm && !statusFilter && !studentFilter && !mentorFilter && !dateFilter && (
+            {isAdmin && !searchTerm && !statusFilter && !mentorFilter && !dateFilter && (
               <Button onClick={() => setShowForm(true)} className="mt-2">
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Primeira Sessão Individual
@@ -584,8 +565,6 @@ const AdminIndividualSessions = () => {
         onOpenChange={(open) => {
           if (!open) setViewingSession(null);
         }}
-        onSave={(data) => console.log('Save session:', data)}
-        isAdmin={isAdmin}
       />
     </div>
   );

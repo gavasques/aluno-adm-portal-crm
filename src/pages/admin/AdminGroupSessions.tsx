@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -571,8 +570,6 @@ const AdminGroupSessions = () => {
         onOpenChange={(open) => {
           if (!open) setViewingSession(null);
         }}
-        onSave={(data) => console.log('Save session:', data)}
-        isAdmin={isAdmin}
       />
     </div>
   );
