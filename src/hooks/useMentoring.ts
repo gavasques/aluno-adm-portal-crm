@@ -34,6 +34,9 @@ export const useMentoring = () => {
   const createCatalog = useCallback(async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
     setLoading(true);
     try {
+      console.log('🏗️ Criando catálogo com dados:', data);
+      console.log('📋 Extensões a serem salvas:', data.extensions);
+      
       const newCatalog = dataService.createCatalog(data);
       refreshData();
       toast({

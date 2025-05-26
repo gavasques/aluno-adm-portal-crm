@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Save, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Save, X, BookOpen, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
-import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
+import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption } from '@/types/mentoring.types';
+import ExtensionsManager from './ExtensionsManager';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -31,7 +33,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
   const { toast } = useToast();
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
 
-  const [formData, setFormData] = useState<CreateMentoringCatalogData>({
+  const [formData, setFormData] = useState<CreateMentoringCatalogData & { extensions?: MentoringExtensionOption[] }>({
     name: '',
     type: 'Individual',
     instructor: '',
@@ -40,7 +42,8 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     price: 0,
     description: '',
     active: true,
-    status: 'Ativa'
+    status: 'Ativa',
+    extensions: []
   });
 
   // Configuração do editor de texto rico
@@ -73,7 +76,8 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         price: catalog.price,
         description: catalog.description,
         active: catalog.active,
-        status: catalog.status
+        status: catalog.status,
+        extensions: catalog.extensions || []
       });
     } else {
       setFormData({
@@ -85,7 +89,8 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         price: 0,
         description: '',
         active: true,
-        status: 'Ativa'
+        status: 'Ativa',
+        extensions: []
       });
     }
   }, [catalog, open]);
@@ -103,6 +108,9 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     }
 
     try {
+      console.log('🚀 Enviando dados do formulário:', formData);
+      console.log('📋 Extensões incluídas:', formData.extensions);
+      
       await onSubmit(formData);
       toast({
         title: "Sucesso",
@@ -127,11 +135,18 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
   };
 
   const handleMentorChange = (mentorId: string) => {
-    // Encontrar o mentor selecionado e usar o nome dele
     const selectedMentor = mentors.find(mentor => mentor.id === mentorId);
     if (selectedMentor) {
       handleInputChange('instructor', selectedMentor.name);
     }
+  };
+
+  const handleExtensionsChange = (extensions: MentoringExtensionOption[]) => {
+    console.log('🔄 Atualizando extensões:', extensions);
+    setFormData(prev => ({
+      ...prev,
+      extensions
+    }));
   };
 
   return (
@@ -144,141 +159,181 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Nome da Mentoria */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome da Mentoria *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Nome da mentoria"
-              required
-            />
-          </div>
+        <Tabs defaultValue="basic" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="basic" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Informações Básicas
+            </TabsTrigger>
+            <TabsTrigger value="extensions" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Extensões ({formData.extensions?.length || 0})
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Descrição com Editor Rico */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição *</Label>
-            <div className="min-h-[200px]">
-              <ReactQuill
-                theme="snow"
-                value={formData.description}
-                onChange={(value) => handleInputChange('description', value)}
-                modules={quillModules}
-                formats={quillFormats}
-                placeholder="Descreva os objetivos e conteúdo da mentoria..."
-                style={{ height: '150px' }}
+          <TabsContent value="basic" className="space-y-6 mt-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Nome da Mentoria */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome da Mentoria *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Nome da mentoria"
+                  required
+                />
+              </div>
+
+              {/* Descrição com Editor Rico */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição *</Label>
+                <div className="min-h-[200px]">
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.description}
+                    onChange={(value) => handleInputChange('description', value)}
+                    modules={quillModules}
+                    formats={quillFormats}
+                    placeholder="Descreva os objetivos e conteúdo da mentoria..."
+                    style={{ height: '150px' }}
+                  />
+                </div>
+              </div>
+
+              {/* Tipo e Mentor */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Tipo *</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value: 'Individual' | 'Grupo') => handleInputChange('type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Individual">Individual</SelectItem>
+                      <SelectItem value="Grupo">Grupo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="instructor">Mentor *</Label>
+                  <Select
+                    value={mentors.find(m => m.name === formData.instructor)?.id || ''}
+                    onValueChange={handleMentorChange}
+                    disabled={mentorsLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mentors.map((mentor) => (
+                        <SelectItem key={mentor.id} value={mentor.id}>
+                          {mentor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Duração, Sessões e Preço */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="durationWeeks">Duração (semanas) *</Label>
+                  <Input
+                    id="durationWeeks"
+                    type="number"
+                    min="1"
+                    value={formData.durationWeeks}
+                    onChange={(e) => handleInputChange('durationWeeks', Number(e.target.value))}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="numberOfSessions">Número de Sessões *</Label>
+                  <Input
+                    id="numberOfSessions"
+                    type="number"
+                    min="1"
+                    value={formData.numberOfSessions}
+                    onChange={(e) => handleInputChange('numberOfSessions', Number(e.target.value))}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price">Preço (R$) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', Number(e.target.value))}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="active"
+                  checked={formData.active}
+                  onCheckedChange={(checked) => handleInputChange('active', checked)}
+                />
+                <Label htmlFor="active">Mentoria ativa</Label>
+              </div>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="extensions" className="mt-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Opções de Extensão</h3>
+                  <p className="text-sm text-gray-600">
+                    Configure opções de extensão que podem ser oferecidas aos clientes
+                  </p>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {formData.extensions?.length || 0} extensão(ões) configurada(s)
+                </div>
+              </div>
+              
+              <ExtensionsManager
+                extensions={formData.extensions || []}
+                onExtensionsChange={handleExtensionsChange}
               />
             </div>
-          </div>
+          </TabsContent>
+        </Tabs>
 
-          {/* Tipo e Mentor */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: 'Individual' | 'Grupo') => handleInputChange('type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Individual">Individual</SelectItem>
-                  <SelectItem value="Grupo">Grupo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="instructor">Mentor *</Label>
-              <Select
-                value={mentors.find(m => m.name === formData.instructor)?.id || ''}
-                onValueChange={handleMentorChange}
-                disabled={mentorsLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {mentors.map((mentor) => (
-                    <SelectItem key={mentor.id} value={mentor.id}>
-                      {mentor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Duração, Sessões e Preço */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="durationWeeks">Duração (semanas) *</Label>
-              <Input
-                id="durationWeeks"
-                type="number"
-                min="1"
-                value={formData.durationWeeks}
-                onChange={(e) => handleInputChange('durationWeeks', Number(e.target.value))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="numberOfSessions">Número de Sessões *</Label>
-              <Input
-                id="numberOfSessions"
-                type="number"
-                min="1"
-                value={formData.numberOfSessions}
-                onChange={(e) => handleInputChange('numberOfSessions', Number(e.target.value))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="price">Preço (R$) *</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => handleInputChange('price', Number(e.target.value))}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="active"
-              checked={formData.active}
-              onCheckedChange={(checked) => handleInputChange('active', checked)}
-            />
-            <Label htmlFor="active">Mentoria ativa</Label>
-          </div>
-
-          {/* Ações */}
-          <div className="flex gap-2 justify-end pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              <Save className="h-4 w-4 mr-1" />
-              {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </div>
-        </form>
+        {/* Ações */}
+        <div className="flex gap-2 justify-end pt-4 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
