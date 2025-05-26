@@ -82,7 +82,10 @@ export const useCalendly = () => {
         return [];
       }
 
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'scheduled' | 'cancelled' | 'completed'
+      }));
     } catch (error) {
       console.error('Error in getCalendlyEvents:', error);
       return [];

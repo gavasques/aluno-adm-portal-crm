@@ -86,7 +86,10 @@ export class CalendlyService {
           return null;
         }
 
-        return data;
+        return {
+          ...data,
+          status: data.status as 'scheduled' | 'cancelled' | 'completed'
+        };
       } else {
         // Criar novo evento
         const { data, error } = await supabase
@@ -100,7 +103,10 @@ export class CalendlyService {
           return null;
         }
 
-        return data;
+        return {
+          ...data,
+          status: data.status as 'scheduled' | 'cancelled' | 'completed'
+        };
       }
     } catch (error) {
       console.error('Error in syncCalendlyEvent:', error);
@@ -121,7 +127,10 @@ export class CalendlyService {
         return [];
       }
 
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'scheduled' | 'cancelled' | 'completed'
+      }));
     } catch (error) {
       console.error('Error in getCalendlyEventsByStudent:', error);
       return [];
@@ -141,7 +150,10 @@ export class CalendlyService {
         return [];
       }
 
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'scheduled' | 'cancelled' | 'completed'
+      }));
     } catch (error) {
       console.error('Error in getCalendlyEventsByMentor:', error);
       return [];

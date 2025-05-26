@@ -100,7 +100,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     const options: CalendlyWidgetOptions = {
       url: calendlyUrl,
       prefill: {
-        name: user?.name || '',
+        name: user?.email || '',
         email: user?.email || ''
       }
     };
