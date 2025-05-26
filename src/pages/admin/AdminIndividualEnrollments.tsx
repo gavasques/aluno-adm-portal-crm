@@ -2,9 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
-import { useMentoring } from '@/hooks/useMentoring';
+import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
 import { usePagination } from '@/hooks/usePagination';
-import { MentoringProviders } from '@/features/mentoring/providers/MentoringProviders';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
@@ -17,8 +16,8 @@ import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentori
 
 const ITEMS_PER_PAGE = 25;
 
-const AdminIndividualEnrollmentsContent = () => {
-  const { enrollments, getEnrollmentProgress, addExtension, refreshData } = useMentoring();
+const AdminIndividualEnrollments = () => {
+  const { enrollments, loading, addExtension, refreshEnrollments } = useSupabaseMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -82,13 +81,13 @@ const AdminIndividualEnrollmentsContent = () => {
   const handleCreateEnrollment = (data: any) => {
     console.log('Creating individual enrollment:', data);
     setShowForm(false);
-    refreshData();
+    refreshEnrollments();
   };
 
   const handleEditEnrollment = (data: any) => {
     console.log('Editing individual enrollment:', data);
     setEditingEnrollment(null);
-    refreshData();
+    refreshEnrollments();
   };
 
   const handleViewEnrollment = (enrollment: StudentMentoringEnrollment) => {
@@ -98,7 +97,7 @@ const AdminIndividualEnrollmentsContent = () => {
   const handleDeleteEnrollment = (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta inscrição individual?')) {
       console.log('Deleting individual enrollment:', id);
-      refreshData();
+      refreshEnrollments();
     }
   };
 
@@ -111,7 +110,7 @@ const AdminIndividualEnrollmentsContent = () => {
     const success = await addExtension(data);
     if (success) {
       console.log('Extensão adicionada com sucesso');
-      refreshData();
+      refreshEnrollments();
     }
   };
 
@@ -126,6 +125,25 @@ const AdminIndividualEnrollmentsContent = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <BreadcrumbNav 
+          items={breadcrumbItems} 
+          showBackButton={true}
+          backHref="/admin/mentorias"
+          className="mb-4"
+        />
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando inscrições...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6 animate-fade-in">
@@ -259,14 +277,6 @@ const AdminIndividualEnrollmentsContent = () => {
         onSubmit={handleExtensionSubmit}
       />
     </div>
-  );
-};
-
-const AdminIndividualEnrollments = () => {
-  return (
-    <MentoringProviders>
-      <AdminIndividualEnrollmentsContent />
-    </MentoringProviders>
   );
 };
 
