@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     active: true
   });
 
+  const [priceDisplay, setPriceDisplay] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -51,6 +53,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         description: catalog.description,
         active: catalog.active
       });
+      setPriceDisplay(catalog.price > 0 ? formatCurrency(catalog.price) : '');
     } else {
       setFormData({
         name: '',
@@ -62,9 +65,46 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         description: '',
         active: true
       });
+      setPriceDisplay('');
     }
     setErrors({});
   }, [catalog, open]);
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2
+    }).format(value);
+  };
+
+  const parseCurrency = (value: string): number => {
+    // Remove tudo exceto números e vírgula/ponto
+    const cleanValue = value.replace(/[^\d,.-]/g, '');
+    // Substitui vírgula por ponto para parsing
+    const normalizedValue = cleanValue.replace(',', '.');
+    const parsed = parseFloat(normalizedValue);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const handlePriceChange = (value: string) => {
+    // Se o campo estiver vazio, limpar tudo
+    if (value === '') {
+      setPriceDisplay('');
+      setFormData(prev => ({ ...prev, price: 0 }));
+      return;
+    }
+
+    const numericValue = parseCurrency(value);
+    setFormData(prev => ({ ...prev, price: numericValue }));
+    
+    // Formatar apenas se há um valor válido
+    if (numericValue > 0) {
+      setPriceDisplay(formatCurrency(numericValue));
+    } else {
+      setPriceDisplay(value);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -117,11 +157,6 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
-  };
-
-  const getSelectedMentorName = (mentorId: string) => {
-    const mentor = mentors.find(m => m.id === mentorId);
-    return mentor ? `${mentor.name} (${mentor.email})` : mentorId;
   };
 
   return (
@@ -251,11 +286,10 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               <Label htmlFor="price">Preço (R$) *</Label>
               <Input
                 id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => handleChange('price', parseFloat(e.target.value) || 0)}
+                type="text"
+                value={priceDisplay}
+                onChange={(e) => handlePriceChange(e.target.value)}
+                placeholder="R$ 0,00"
                 className={errors.price ? 'border-red-500' : ''}
               />
               {errors.price && (

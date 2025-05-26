@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useMentoringContext } from '../../contexts/MentoringContext';
 import { useMentoringOperations } from '../../hooks/useMentoringOperations';
@@ -24,7 +25,7 @@ import {
   Zap,
   Target
 } from 'lucide-react';
-import { MentoringCatalog } from '@/types/mentoring.types';
+import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 
 export const CatalogManagement: React.FC = () => {
   const { state } = useMentoringContext();
@@ -49,6 +50,16 @@ export const CatalogManagement: React.FC = () => {
 
   const handleCreateCatalog = () => {
     setShowCreateDialog(true);
+  };
+
+  const handleSubmitCatalog = async (data: CreateMentoringCatalogData): Promise<void> => {
+    try {
+      await createCatalog(data);
+      setShowCreateDialog(false);
+    } catch (error) {
+      console.error('Erro ao criar mentoria:', error);
+      throw error;
+    }
   };
 
   const handleViewCatalog = (catalog: MentoringCatalog) => {
@@ -399,7 +410,7 @@ export const CatalogManagement: React.FC = () => {
       <CatalogFormDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        onSubmit={createCatalog}
+        onSubmit={handleSubmitCatalog}
         isLoading={catalogLoading}
       />
     </>
