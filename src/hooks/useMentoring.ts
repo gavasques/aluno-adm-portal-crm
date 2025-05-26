@@ -33,6 +33,8 @@ export const useMentoring = () => {
     const newCatalog: MentoringCatalog = {
       id: `catalog-${Date.now()}`,
       ...data,
+      totalSessions: data.numberOfSessions,
+      tags: [],
       active: data.active ?? true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
