@@ -14,10 +14,17 @@ import {
   HandHeart, 
   GraduationCap,
   Search,
-  Plus
+  Plus,
+  ChevronDown
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Mentoring from "./Mentoring";
 import Bonus from "./Bonus";
 import Categories from "./Categories";
@@ -200,15 +207,50 @@ const Registers = () => {
               value={activeTab}
               onValueChange={handleTabChange}
             >
-              <TabsList className="w-full justify-start p-0 bg-gray-50 rounded-none border-b h-auto">
+              {/* Mobile Dropdown for Tabs */}
+              <div className="lg:hidden bg-gray-50 border-b p-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <div className="flex items-center gap-2">
+                        {activeTabData?.icon && <activeTabData.icon className="h-4 w-4" />}
+                        {activeTabData?.label}
+                        <Badge variant="secondary" className="ml-1 text-xs">
+                          {activeTabData?.count}
+                        </Badge>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full">
+                    {tabsData.map((tab) => (
+                      <DropdownMenuItem 
+                        key={tab.value}
+                        onClick={() => handleTabChange(tab.value)}
+                        className="flex items-center gap-2"
+                      >
+                        <tab.icon className="h-4 w-4" />
+                        {tab.label}
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {tab.count}
+                        </Badge>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop Tabs */}
+              <TabsList className="hidden lg:flex w-full justify-start p-0 bg-gray-50 rounded-none border-b h-auto">
                 {tabsData.map((tab) => (
                   <TabsTrigger 
                     key={tab.value}
                     value={tab.value}
-                    className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-6 py-3 flex items-center gap-2"
+                    className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-4 py-3 flex items-center gap-2 text-sm"
                   >
                     <tab.icon className="h-4 w-4" />
-                    {tab.label}
+                    <span className="hidden xl:inline">{tab.label}</span>
+                    <span className="xl:hidden">{tab.label.split(' ')[0]}</span>
                     <Badge variant="secondary" className="ml-1 text-xs">
                       {tab.count}
                     </Badge>
