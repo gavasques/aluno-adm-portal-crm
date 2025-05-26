@@ -38,7 +38,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     active: true
   });
 
-  const [priceDisplay, setPriceDisplay] = useState('');
+  const [priceInput, setPriceInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         description: catalog.description,
         active: catalog.active
       });
-      setPriceDisplay(catalog.price > 0 ? formatCurrency(catalog.price) : '');
+      setPriceInput(catalog.price > 0 ? catalog.price.toString().replace('.', ',') : '');
     } else {
       setFormData({
         name: '',
@@ -65,12 +65,12 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         description: '',
         active: true
       });
-      setPriceDisplay('');
+      setPriceInput('');
     }
     setErrors({});
   }, [catalog, open]);
 
-  const formatCurrency = (value: number): string => {
+  const formatCurrencyDisplay = (value: number): string => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -78,31 +78,39 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     }).format(value);
   };
 
-  const parseCurrency = (value: string): number => {
-    // Remove tudo exceto números e vírgula/ponto
-    const cleanValue = value.replace(/[^\d,.-]/g, '');
+  const parsePriceInput = (input: string): number => {
+    if (!input || input.trim() === '') return 0;
+    
+    // Remove todos os caracteres exceto números, vírgula e ponto
+    const cleanValue = input.replace(/[^\d,.]/g, '');
+    
+    // Se estiver vazio após limpeza, retorna 0
+    if (!cleanValue) return 0;
+    
     // Substitui vírgula por ponto para parsing
     const normalizedValue = cleanValue.replace(',', '.');
+    
+    // Converte para número
     const parsed = parseFloat(normalizedValue);
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  const handlePriceChange = (value: string) => {
-    // Se o campo estiver vazio, limpar tudo
-    if (value === '') {
-      setPriceDisplay('');
-      setFormData(prev => ({ ...prev, price: 0 }));
-      return;
-    }
+  const handlePriceInputChange = (value: string) => {
+    // Permite apenas números, vírgula e ponto
+    const filteredValue = value.replace(/[^\d,.]/g, '');
+    setPriceInput(filteredValue);
+  };
 
-    const numericValue = parseCurrency(value);
+  const handlePriceBlur = () => {
+    const numericValue = parsePriceInput(priceInput);
     setFormData(prev => ({ ...prev, price: numericValue }));
     
-    // Formatar apenas se há um valor válido
+    // Formata o input para exibição
     if (numericValue > 0) {
-      setPriceDisplay(formatCurrency(numericValue));
-    } else {
-      setPriceDisplay(value);
+      setPriceInput(numericValue.toString().replace('.', ','));
+    } else if (priceInput === '' || numericValue === 0) {
+      setPriceInput('');
+      setFormData(prev => ({ ...prev, price: 0 }));
     }
   };
 
@@ -140,12 +148,19 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Atualiza o preço final antes da validação
+    const finalPrice = parsePriceInput(priceInput);
+    const finalFormData = { ...formData, price: finalPrice };
+    
+    // Atualiza o estado para validação
+    setFormData(finalFormData);
+    
     if (!validateForm()) {
       return;
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit(finalFormData);
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao salvar mentoria:', error);
@@ -287,13 +302,19 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               <Input
                 id="price"
                 type="text"
-                value={priceDisplay}
-                onChange={(e) => handlePriceChange(e.target.value)}
-                placeholder="R$ 0,00"
+                value={priceInput}
+                onChange={(e) => handlePriceInputChange(e.target.value)}
+                onBlur={handlePriceBlur}
+                placeholder="0,00"
                 className={errors.price ? 'border-red-500' : ''}
               />
               {errors.price && (
                 <p className="text-sm text-red-600">{errors.price}</p>
+              )}
+              {formData.price > 0 && (
+                <p className="text-xs text-gray-600">
+                  Valor: {formatCurrencyDisplay(formData.price)}
+                </p>
               )}
             </div>
           </div>
