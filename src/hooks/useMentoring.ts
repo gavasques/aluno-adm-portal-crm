@@ -122,7 +122,7 @@ export const useMentoring = () => {
             type: 'individual',
             title: `Sessão ${i} - ${mentoring.name}`,
             durationMinutes: 60,
-            status: 'aguardando_agendamento' as const // SEMPRE aguardando agendamento inicialmente
+            status: 'aguardando_agendamento'
           };
           dataService.createSession(sessionData);
         }
@@ -196,9 +196,11 @@ export const useMentoring = () => {
     try {
       // Determinar status baseado na presença de data/hora
       const hasScheduledDateTime = data.scheduledDate && data.scheduledDate !== '';
+      const status = hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento';
+      
       const sessionData = {
         ...data,
-        status: (hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento') as const
+        status
       };
       
       const newSession = dataService.createSession(sessionData);
@@ -275,7 +277,7 @@ export const useMentoring = () => {
       const updateData: UpdateSessionData = {
         scheduledDate,
         meetingLink,
-        status: 'agendada' as const,
+        status: 'agendada',
         observations: notes
       };
       

@@ -58,6 +58,13 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
     return { completed, total, percentage: total > 0 ? (completed / total) * 100 : 0 };
   };
 
+  const handleScheduleSession = (data: { scheduledDate: string; meetingLink?: string; notes?: string }) => {
+    if (scheduleDialog.session) {
+      onScheduleSession(scheduleDialog.session.id, data);
+      setScheduleDialog({ open: false });
+    }
+  };
+
   const progress = getSessionProgress();
 
   return (
@@ -261,7 +268,7 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
         open={scheduleDialog.open}
         onOpenChange={(open) => setScheduleDialog({ open })}
         session={scheduleDialog.session}
-        onSchedule={onScheduleSession}
+        onSchedule={handleScheduleSession}
       />
 
       <SessionStatusDialog
