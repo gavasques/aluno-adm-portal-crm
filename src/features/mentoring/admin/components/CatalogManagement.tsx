@@ -110,7 +110,7 @@ export const CatalogManagement: React.FC = () => {
     setStatusFilter('');
   };
 
-  const hasActiveFilters = debouncedSearchTerm || typeFilter || statusFilter;
+  const hasActiveFilters = Boolean(debouncedSearchTerm || typeFilter || statusFilter);
 
   // Debug logs melhorados
   useEffect(() => {
