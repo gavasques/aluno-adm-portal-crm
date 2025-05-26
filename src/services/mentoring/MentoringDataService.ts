@@ -1,11 +1,15 @@
 
-import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption } from '@/types/mentoring.types';
-import { expandedMentoringCatalog } from '@/data/expandedMentoringData';
+import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption, StudentMentoringEnrollment, MentoringSession, MentoringMaterial, CreateSessionData, UpdateSessionData, CreateExtensionData, MentoringExtension } from '@/types/mentoring.types';
+import { expandedMentoringCatalog, expandedStudentEnrollments, expandedMentoringSessions, expandedMentoringMaterials } from '@/data/expandedMentoringData';
 import { calculateSessionsFromFrequency } from '@/utils/mentoringCalculations';
 
 export class MentoringDataService {
   private catalogs: MentoringCatalog[] = [...expandedMentoringCatalog];
+  private enrollments: StudentMentoringEnrollment[] = [...expandedStudentEnrollments];
+  private sessions: MentoringSession[] = [...expandedMentoringSessions];
+  private materials: MentoringMaterial[] = [...expandedMentoringMaterials];
 
+  // Catalog methods
   getCatalogs(): MentoringCatalog[] {
     return this.catalogs.map(catalog => ({
       ...catalog,
@@ -84,5 +88,143 @@ export class MentoringDataService {
 
     this.catalogs.splice(index, 1);
     return true;
+  }
+
+  // Enrollment methods
+  getEnrollments(): StudentMentoringEnrollment[] {
+    return [...this.enrollments];
+  }
+
+  getStudentEnrollments(studentId: string): StudentMentoringEnrollment[] {
+    return this.enrollments.filter(e => e.studentId === studentId);
+  }
+
+  addExtension(data: CreateExtensionData): boolean {
+    const enrollment = this.enrollments.find(e => e.id === data.enrollmentId);
+    if (!enrollment) return false;
+
+    const extension: MentoringExtension = {
+      id: `ext-${Date.now()}`,
+      enrollmentId: data.enrollmentId,
+      extensionMonths: data.extensionMonths,
+      appliedDate: new Date().toISOString(),
+      notes: data.notes,
+      adminId: 'current-admin-id',
+      createdAt: new Date().toISOString()
+    };
+
+    const currentEndDate = new Date(enrollment.endDate);
+    const newEndDate = new Date(currentEndDate);
+    newEndDate.setMonth(newEndDate.getMonth() + data.extensionMonths);
+
+    enrollment.endDate = newEndDate.toISOString();
+    enrollment.originalEndDate = enrollment.originalEndDate || enrollment.endDate;
+    enrollment.extensions = [...(enrollment.extensions || []), extension];
+    enrollment.hasExtension = true;
+    enrollment.updatedAt = new Date().toISOString();
+
+    return true;
+  }
+
+  getEnrollmentProgress(enrollment: StudentMentoringEnrollment) {
+    const completedSessions = enrollment.sessionsUsed || 0;
+    const totalSessions = enrollment.totalSessions;
+    const scheduledSessions = 0;
+    const pendingSessions = Math.max(0, totalSessions - completedSessions - scheduledSessions);
+    const percentage = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
+    
+    const daysRemaining = Math.ceil(
+      (new Date(enrollment.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    return {
+      percentage: Math.min(percentage, 100),
+      completedSessions,
+      sessionsUsed: completedSessions,
+      totalSessions,
+      pendingSessions,
+      scheduledSessions,
+      daysRemaining: Math.max(daysRemaining, 0),
+      isExpired: daysRemaining < 0,
+      isCompleted: completedSessions >= totalSessions
+    };
+  }
+
+  // Session methods
+  getSessions(): MentoringSession[] {
+    return [...this.sessions];
+  }
+
+  getEnrollmentSessions(enrollmentId: string): MentoringSession[] {
+    return this.sessions.filter(s => s.enrollmentId === enrollmentId);
+  }
+
+  getSessionDetails(sessionId: string): MentoringSession | undefined {
+    return this.sessions.find(s => s.id === sessionId);
+  }
+
+  getUpcomingSessions(studentId: string): MentoringSession[] {
+    const studentEnrollments = this.getStudentEnrollments(studentId);
+    const enrollmentIds = studentEnrollments.map(e => e.id);
+    
+    return this.sessions.filter(session => 
+      enrollmentIds.includes(session.enrollmentId) && 
+      session.status === 'agendada' &&
+      session.scheduledDate &&
+      new Date(session.scheduledDate) > new Date()
+    ).sort((a, b) => new Date(a.scheduledDate!).getTime() - new Date(b.scheduledDate!).getTime());
+  }
+
+  createSession(data: CreateSessionData): MentoringSession {
+    const newSession: MentoringSession = {
+      id: `session-${Date.now()}`,
+      ...data,
+      sessionNumber: this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1,
+      status: 'agendada',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.sessions.push(newSession);
+    return newSession;
+  }
+
+  updateSession(sessionId: string, data: UpdateSessionData): boolean {
+    const index = this.sessions.findIndex(s => s.id === sessionId);
+    if (index === -1) return false;
+
+    this.sessions[index] = {
+      ...this.sessions[index],
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+    return true;
+  }
+
+  scheduleSession(sessionId: string, scheduledDate: string, meetingLink?: string): boolean {
+    const index = this.sessions.findIndex(s => s.id === sessionId);
+    if (index === -1) return false;
+
+    this.sessions[index] = {
+      ...this.sessions[index],
+      scheduledDate,
+      meetingLink,
+      status: 'agendada',
+      updatedAt: new Date().toISOString()
+    };
+    return true;
+  }
+
+  // Material methods
+  getMaterials(): MentoringMaterial[] {
+    return [...this.materials];
+  }
+
+  getEnrollmentMaterials(enrollmentId: string): MentoringMaterial[] {
+    return this.materials.filter(m => m.enrollmentId === enrollmentId);
+  }
+
+  getSessionMaterials(sessionId: string): MentoringMaterial[] {
+    return this.materials.filter(m => m.sessionId === sessionId);
   }
 }

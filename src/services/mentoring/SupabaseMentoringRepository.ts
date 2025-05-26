@@ -11,6 +11,7 @@ import {
   MentoringExtension,
   MentoringExtensionOption
 } from '@/types/mentoring.types';
+import { calculateSessionsFromFrequency } from '@/utils/mentoringCalculations';
 
 interface SupabaseMentoringCatalog {
   id: string;
@@ -38,6 +39,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       type: (data.type as 'Individual' | 'Grupo'),
       instructor: data.instructor,
       durationMonths: data.duration_months,
+      frequency: 'Semanal', // Default frequency, could be stored in DB
       numberOfSessions: data.number_of_sessions,
       totalSessions: data.total_sessions,
       price: data.price,
@@ -211,7 +213,8 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       id: ext.id,
       months: ext.months,
       price: ext.price,
-      description: ext.description || '' // Garantir que description nunca seja null
+      totalSessions: calculateSessionsFromFrequency(ext.months, 'Semanal'), // Calculate based on frequency
+      description: ext.description || ''
     }));
 
     console.log('📦 Extensões encontradas:', extensions);
