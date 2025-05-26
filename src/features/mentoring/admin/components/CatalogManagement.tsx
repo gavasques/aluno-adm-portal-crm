@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import CatalogFormDialog from '@/components/admin/mentoring/catalog/CatalogFormDialog';
+import CatalogCard from '@/components/admin/mentoring/catalog/CatalogCard';
 import { useMentoringCatalog } from '@/hooks/mentoring/useMentoringCatalog';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { 
