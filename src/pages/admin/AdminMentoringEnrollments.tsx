@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -6,6 +5,7 @@ import { useMentoring } from '@/hooks/useMentoring';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
+import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetailDialog';
 import { EnrollmentsHeader } from '@/components/admin/mentoring/enrollments/EnrollmentsHeader';
 import { EnrollmentCard } from '@/components/admin/mentoring/enrollments/EnrollmentCard';
 import { EnrollmentsList } from '@/components/admin/mentoring/enrollments/EnrollmentsList';
@@ -21,6 +21,7 @@ const AdminMentoringEnrollments = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
+  const [viewingEnrollment, setViewingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
@@ -65,6 +66,10 @@ const AdminMentoringEnrollments = () => {
   const handleEditEnrollment = (data: any) => {
     console.log('Editing enrollment:', data);
     setEditingEnrollment(null);
+  };
+
+  const handleViewEnrollment = (enrollment: StudentMentoringEnrollment) => {
+    setViewingEnrollment(enrollment);
   };
 
   const handleDeleteEnrollment = (id: string) => {
@@ -164,7 +169,7 @@ const AdminMentoringEnrollments = () => {
                 <EnrollmentCard
                   key={enrollment.id}
                   enrollment={enrollment}
-                  onView={(enrollment) => console.log('View:', enrollment)}
+                  onView={handleViewEnrollment}
                   onEdit={setEditingEnrollment}
                   onDelete={handleDeleteEnrollment}
                   onAddExtension={handleAddExtension}
@@ -176,7 +181,7 @@ const AdminMentoringEnrollments = () => {
           ) : (
             <EnrollmentsList
               enrollments={filteredEnrollments}
-              onView={(enrollment) => console.log('View:', enrollment)}
+              onView={handleViewEnrollment}
               onEdit={setEditingEnrollment}
               onDelete={handleDeleteEnrollment}
               onAddExtension={handleAddExtension}
@@ -220,6 +225,15 @@ const AdminMentoringEnrollments = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* View Detail Dialog */}
+      <EnrollmentDetailDialog
+        open={!!viewingEnrollment}
+        onOpenChange={(open) => {
+          if (!open) setViewingEnrollment(null);
+        }}
+        enrollment={viewingEnrollment}
+      />
 
       {/* Extension Dialog */}
       <ExtensionDialog

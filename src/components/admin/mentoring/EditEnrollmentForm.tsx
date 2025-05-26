@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { User, GraduationCap, Users, Calendar } from 'lucide-react';
+import { User, GraduationCap, Users, Calendar, AlertCircle } from 'lucide-react';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
@@ -17,6 +17,9 @@ const editEnrollmentSchema = z.object({
   responsibleMentor: z.string().min(1, 'Mentor responsável é obrigatório'),
   startDate: z.string().min(1, 'Data de início é obrigatória'),
   endDate: z.string().min(1, 'Data de fim é obrigatória'),
+  status: z.enum(['ativa', 'concluida', 'cancelada', 'pausada'], {
+    required_error: 'Status é obrigatório'
+  }),
   observations: z.string().optional()
 });
 
@@ -38,9 +41,20 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
       responsibleMentor: enrollment.responsibleMentor,
       startDate: enrollment.startDate,
       endDate: enrollment.endDate,
+      status: enrollment.status,
       observations: enrollment.observations || ''
     }
   });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ativa': return 'bg-green-100 text-green-800 border-green-200';
+      case 'concluida': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'pausada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -131,6 +145,54 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
                           </SelectItem>
                         ))
                       )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Status */}
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Status *
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ativa">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          Ativa
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pausada">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                          Pausada
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="concluida">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          Concluída
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="cancelada">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          Cancelada
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
