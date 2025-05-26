@@ -1,9 +1,9 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { MentoringRepository } from '../services/MentoringRepository';
+import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { mentoringQueryKeys } from './queryKeys';
 
-const repository = new MentoringRepository();
+const repository = new SupabaseMentoringRepository();
 
 export const useMentoringReadQueries = () => {
   const useCatalogs = () => {
