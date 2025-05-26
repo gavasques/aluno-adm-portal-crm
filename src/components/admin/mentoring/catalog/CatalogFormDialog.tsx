@@ -7,10 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, X, BookOpen, Clock } from 'lucide-react';
+import { Save, X, BookOpen, Clock, Link as LinkIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
-import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption } from '@/types/mentoring.types';
+import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption, CheckoutLinks } from '@/types/mentoring.types';
 import ExtensionsManager from './ExtensionsManager';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -37,13 +37,18 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     name: '',
     type: 'Individual',
     instructor: '',
-    durationMonths: 3, // Mudado de durationWeeks para durationMonths com valor padrão 3
+    durationMonths: 3,
     numberOfSessions: 4,
     price: 0,
     description: '',
     active: true,
     status: 'Ativa',
-    extensions: []
+    extensions: [],
+    checkoutLinks: {
+      mercadoPago: '',
+      hubla: '',
+      hotmart: ''
+    }
   });
 
   // Configuração do editor de texto rico
@@ -71,26 +76,36 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         name: catalog.name,
         type: catalog.type,
         instructor: catalog.instructor,
-        durationMonths: catalog.durationMonths || 3, // Fallback para meses
+        durationMonths: catalog.durationMonths || 3,
         numberOfSessions: catalog.numberOfSessions,
         price: catalog.price,
         description: catalog.description,
         active: catalog.active,
         status: catalog.status,
-        extensions: catalog.extensions || []
+        extensions: catalog.extensions || [],
+        checkoutLinks: catalog.checkoutLinks || {
+          mercadoPago: '',
+          hubla: '',
+          hotmart: ''
+        }
       });
     } else {
       setFormData({
         name: '',
         type: 'Individual',
         instructor: '',
-        durationMonths: 3, // Valor padrão em meses
+        durationMonths: 3,
         numberOfSessions: 4,
         price: 0,
         description: '',
         active: true,
         status: 'Ativa',
-        extensions: []
+        extensions: [],
+        checkoutLinks: {
+          mercadoPago: '',
+          hubla: '',
+          hotmart: ''
+        }
       });
     }
   }, [catalog, open]);
@@ -149,9 +164,19 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     }));
   };
 
+  const handleCheckoutLinkChange = (platform: keyof CheckoutLinks, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      checkoutLinks: {
+        ...prev.checkoutLinks,
+        [platform]: value
+      }
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Save className="h-5 w-5" />
@@ -160,10 +185,14 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Informações Básicas
+            </TabsTrigger>
+            <TabsTrigger value="checkout" className="flex items-center gap-2">
+              <LinkIcon className="h-4 w-4" />
+              Checkout
             </TabsTrigger>
             <TabsTrigger value="extensions" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -193,8 +222,6 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                     theme="snow"
                     value={formData.description}
                     onChange={(value) => handleInputChange('description', value)}
-                    modules={quillModules}
-                    formats={quillFormats}
                     placeholder="Descreva os objetivos e conteúdo da mentoria..."
                     style={{ height: '150px' }}
                   />
@@ -293,6 +320,49 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
             </form>
           </TabsContent>
 
+          <TabsContent value="checkout" className="mt-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Links de Checkout da Mentoria Base</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Configure os links de checkout para as diferentes plataformas de pagamento
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mercadoPago">Mercado Pago</Label>
+                  <Input
+                    id="mercadoPago"
+                    placeholder="https://..."
+                    value={formData.checkoutLinks?.mercadoPago || ''}
+                    onChange={(e) => handleCheckoutLinkChange('mercadoPago', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="hubla">Hubla</Label>
+                  <Input
+                    id="hubla"
+                    placeholder="https://..."
+                    value={formData.checkoutLinks?.hubla || ''}
+                    onChange={(e) => handleCheckoutLinkChange('hubla', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="hotmart">Hotmart</Label>
+                  <Input
+                    id="hotmart"
+                    placeholder="https://..."
+                    value={formData.checkoutLinks?.hotmart || ''}
+                    onChange={(e) => handleCheckoutLinkChange('hotmart', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="extensions" className="mt-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -316,6 +386,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 extensions={formData.extensions || []}
                 onExtensionsChange={handleExtensionsChange}
                 baseDurationMonths={formData.durationMonths}
+                basePrice={formData.price}
               />
             </div>
           </TabsContent>

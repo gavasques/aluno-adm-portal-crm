@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { 
   Users, 
   DollarSign, 
@@ -13,7 +14,10 @@ import {
   Trash2,
   ToggleLeft,
   ToggleRight,
-  Star
+  Star,
+  ChevronDown,
+  Clock,
+  Link as LinkIcon
 } from 'lucide-react';
 import { MentoringCatalog } from '@/types/mentoring.types';
 
@@ -30,11 +34,21 @@ const CatalogCard: React.FC<CatalogCardProps> = ({
   onDelete,
   onToggleStatus
 }) => {
+  const [showExtensions, setShowExtensions] = useState(false);
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'Individual': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'Grupo': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const handleExtensionClick = (extension: any, platform: string, link: string) => {
+    if (link) {
+      window.open(link, '_blank');
+    } else {
+      console.log(`Link para ${platform} não configurado para esta extensão`);
     }
   };
 
@@ -51,6 +65,11 @@ const CatalogCard: React.FC<CatalogCardProps> = ({
               <Badge variant={catalog.active ? 'default' : 'secondary'} className="text-xs">
                 {catalog.active ? 'Ativo' : 'Inativo'}
               </Badge>
+              {catalog.extensions && catalog.extensions.length > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {catalog.extensions.length} extensão(ões)
+                </Badge>
+              )}
             </div>
           </div>
           <Button
@@ -99,6 +118,87 @@ const CatalogCard: React.FC<CatalogCardProps> = ({
               <span>{catalog.numberOfSessions} sessões</span>
             </div>
           </div>
+
+          {/* Extensões Disponíveis */}
+          {catalog.extensions && catalog.extensions.length > 0 && (
+            <div className="border-t pt-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-between">
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Extensões Disponíveis ({catalog.extensions.length})
+                    </span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80" align="start">
+                  {catalog.extensions.map((extension, index) => (
+                    <div key={extension.id}>
+                      <div className="px-3 py-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-sm">
+                            +{extension.months} {extension.months === 1 ? 'mês' : 'meses'}
+                          </span>
+                          <span className="text-sm text-green-600 font-medium">
+                            R$ {extension.price.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mb-2">
+                          Total: {catalog.durationMonths + extension.months} {(catalog.durationMonths + extension.months) === 1 ? 'mês' : 'meses'}
+                        </div>
+                        {extension.description && (
+                          <div className="text-xs text-gray-600 mb-2">
+                            {extension.description}
+                          </div>
+                        )}
+                        
+                        {/* Links de checkout para a extensão */}
+                        {extension.checkoutLinks && (
+                          <div className="flex gap-1">
+                            {extension.checkoutLinks.mercadoPago && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleExtensionClick(extension, 'Mercado Pago', extension.checkoutLinks!.mercadoPago!)}
+                              >
+                                <LinkIcon className="h-3 w-3 mr-1" />
+                                MP
+                              </Button>
+                            )}
+                            {extension.checkoutLinks.hubla && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleExtensionClick(extension, 'Hubla', extension.checkoutLinks!.hubla!)}
+                              >
+                                <LinkIcon className="h-3 w-3 mr-1" />
+                                Hubla
+                              </Button>
+                            )}
+                            {extension.checkoutLinks.hotmart && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleExtensionClick(extension, 'Hotmart', extension.checkoutLinks!.hotmart!)}
+                              >
+                                <LinkIcon className="h-3 w-3 mr-1" />
+                                Hotmart
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {index < catalog.extensions!.length - 1 && <DropdownMenuSeparator />}
+                    </div>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
           
           {/* Ações */}
           <div className="flex gap-1 pt-2 border-t border-gray-100">

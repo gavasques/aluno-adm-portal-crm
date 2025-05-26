@@ -6,24 +6,32 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Clock, DollarSign, Edit, Calculator } from 'lucide-react';
-import { MentoringExtensionOption } from '@/types/mentoring.types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Trash2, Clock, DollarSign, Edit, Calculator, Link as LinkIcon, Info } from 'lucide-react';
+import { MentoringExtensionOption, CheckoutLinks } from '@/types/mentoring.types';
 
 interface ExtensionsManagerProps {
   extensions: MentoringExtensionOption[];
   onExtensionsChange: (extensions: MentoringExtensionOption[]) => void;
   baseDurationMonths?: number;
+  basePrice?: number;
 }
 
 const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
   extensions,
   onExtensionsChange,
-  baseDurationMonths = 0
+  baseDurationMonths = 0,
+  basePrice = 0
 }) => {
   const [newExtension, setNewExtension] = useState<Partial<MentoringExtensionOption>>({
     months: 1,
-    price: 0,
-    description: ''
+    price: basePrice,
+    description: '',
+    checkoutLinks: {
+      mercadoPago: '',
+      hubla: '',
+      hotmart: ''
+    }
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -33,12 +41,13 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
   };
 
   const handleAddExtension = () => {
-    if (newExtension.months && newExtension.price !== undefined && newExtension.description) {
+    if (newExtension.months && newExtension.price !== undefined) {
       const extension: MentoringExtensionOption = {
         id: `ext-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         months: newExtension.months,
         price: newExtension.price,
-        description: newExtension.description.trim()
+        description: newExtension.description?.trim() || undefined,
+        checkoutLinks: newExtension.checkoutLinks
       };
       
       console.log('➕ Adicionando nova extensão:', extension);
@@ -46,7 +55,16 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
       onExtensionsChange(updatedExtensions);
       
       // Resetar formulário
-      setNewExtension({ months: 1, price: 0, description: '' });
+      setNewExtension({ 
+        months: 1, 
+        price: basePrice, 
+        description: '',
+        checkoutLinks: {
+          mercadoPago: '',
+          hubla: '',
+          hotmart: ''
+        }
+      });
     }
   };
 
@@ -64,6 +82,19 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
     onExtensionsChange(updatedExtensions);
   };
 
+  const handleUpdateCheckoutLink = (id: string, platform: keyof CheckoutLinks, value: string) => {
+    const updatedExtensions = extensions.map(ext => 
+      ext.id === id ? { 
+        ...ext, 
+        checkoutLinks: { 
+          ...ext.checkoutLinks, 
+          [platform]: value 
+        } 
+      } : ext
+    );
+    onExtensionsChange(updatedExtensions);
+  };
+
   const handleEditToggle = (id: string) => {
     setEditingId(editingId === id ? null : id);
   };
@@ -72,9 +103,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
   const canAddExtension = newExtension.months && 
                          newExtension.months > 0 && 
                          newExtension.price !== undefined && 
-                         newExtension.price >= 0 && 
-                         newExtension.description && 
-                         newExtension.description.trim().length > 0;
+                         newExtension.price >= 0;
 
   return (
     <div className="space-y-6">
@@ -107,7 +136,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4 text-green-600" />
                         <span className="font-semibold text-green-700">
-                          R$ {extension.price.toFixed(2)}
+                          R$ {extension.price.toFixed(2)} (Total)
                         </span>
                       </div>
                     </div>
@@ -126,7 +155,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs">Preço (R$)</Label>
+                            <Label className="text-xs">Preço Total (R$)</Label>
                             <Input
                               type="number"
                               min="0"
@@ -138,18 +167,65 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Descrição</Label>
+                          <Label className="text-xs">Descrição (opcional)</Label>
                           <Textarea
-                            value={extension.description}
+                            value={extension.description || ''}
                             onChange={(e) => handleUpdateExtension(extension.id, 'description', e.target.value)}
                             rows={2}
                             className="text-sm"
+                            placeholder="Descrição opcional da extensão..."
                           />
+                        </div>
+                        
+                        {/* Links de Checkout */}
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium">Links de Checkout</Label>
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs w-20">Mercado Pago:</Label>
+                              <Input
+                                placeholder="https://..."
+                                value={extension.checkoutLinks?.mercadoPago || ''}
+                                onChange={(e) => handleUpdateCheckoutLink(extension.id, 'mercadoPago', e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs w-20">Hubla:</Label>
+                              <Input
+                                placeholder="https://..."
+                                value={extension.checkoutLinks?.hubla || ''}
+                                onChange={(e) => handleUpdateCheckoutLink(extension.id, 'hubla', e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs w-20">Hotmart:</Label>
+                              <Input
+                                placeholder="https://..."
+                                value={extension.checkoutLinks?.hotmart || ''}
+                                onChange={(e) => handleUpdateCheckoutLink(extension.id, 'hotmart', e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-600">
-                        {extension.description}
+                      <div className="space-y-2">
+                        {extension.description && (
+                          <div className="text-sm text-gray-600">
+                            {extension.description}
+                          </div>
+                        )}
+                        
+                        {/* Links de Checkout Existentes */}
+                        {(extension.checkoutLinks?.mercadoPago || extension.checkoutLinks?.hubla || extension.checkoutLinks?.hotmart) && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <LinkIcon className="h-3 w-3" />
+                            <span>Links de checkout configurados</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -218,7 +294,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="new-price" className="text-sm font-medium">
-                Preço (R$) *
+                Preço Total (R$) *
               </Label>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-gray-400" />
@@ -229,16 +305,20 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                   step="0.01"
                   value={newExtension.price || ''}
                   onChange={(e) => setNewExtension({...newExtension, price: Number(e.target.value)})}
-                  placeholder="Ex: 300.00"
+                  placeholder="Ex: 500.00"
                   className="h-9"
                 />
+              </div>
+              <div className="flex items-start gap-1 text-xs text-blue-600">
+                <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                <span>Valor total que o cliente pagará (mentoria + extensão)</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="new-description" className="text-sm font-medium">
-              Descrição *
+              Descrição (opcional)
             </Label>
             <Textarea
               id="new-description"
@@ -248,6 +328,58 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
               rows={3}
               className="text-sm"
             />
+          </div>
+
+          {/* Links de Checkout */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Links de Checkout (opcional)</Label>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm w-24">Mercado Pago:</Label>
+                <Input
+                  placeholder="https://..."
+                  value={newExtension.checkoutLinks?.mercadoPago || ''}
+                  onChange={(e) => setNewExtension({
+                    ...newExtension, 
+                    checkoutLinks: { 
+                      ...newExtension.checkoutLinks, 
+                      mercadoPago: e.target.value 
+                    }
+                  })}
+                  className="h-9"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm w-24">Hubla:</Label>
+                <Input
+                  placeholder="https://..."
+                  value={newExtension.checkoutLinks?.hubla || ''}
+                  onChange={(e) => setNewExtension({
+                    ...newExtension, 
+                    checkoutLinks: { 
+                      ...newExtension.checkoutLinks, 
+                      hubla: e.target.value 
+                    }
+                  })}
+                  className="h-9"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm w-24">Hotmart:</Label>
+                <Input
+                  placeholder="https://..."
+                  value={newExtension.checkoutLinks?.hotmart || ''}
+                  onChange={(e) => setNewExtension({
+                    ...newExtension, 
+                    checkoutLinks: { 
+                      ...newExtension.checkoutLinks, 
+                      hotmart: e.target.value 
+                    }
+                  })}
+                  className="h-9"
+                />
+              </div>
+            </div>
           </div>
 
           <Button 
@@ -261,7 +393,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
           
           {!canAddExtension && (
             <p className="text-xs text-gray-500 text-center">
-              Preencha todos os campos obrigatórios para adicionar a extensão
+              Preencha os campos obrigatórios para adicionar a extensão
             </p>
           )}
         </CardContent>

@@ -1,10 +1,9 @@
-
 export interface MentoringCatalog {
   id: string;
   name: string;
   type: 'Individual' | 'Grupo';
   instructor: string;
-  durationMonths: number; // Mudado de durationWeeks para durationMonths
+  durationMonths: number;
   numberOfSessions: number;
   totalSessions: number;
   price: number;
@@ -16,13 +15,21 @@ export interface MentoringCatalog {
   createdAt: string;
   updatedAt: string;
   extensions?: MentoringExtensionOption[];
+  checkoutLinks?: CheckoutLinks;
+}
+
+export interface CheckoutLinks {
+  mercadoPago?: string;
+  hubla?: string;
+  hotmart?: string;
 }
 
 export interface MentoringExtensionOption {
   id: string;
   months: number;
   price: number;
-  description: string;
+  description?: string;
+  checkoutLinks?: CheckoutLinks;
 }
 
 export interface MentoringExtension {
@@ -124,13 +131,14 @@ export interface CreateMentoringCatalogData {
   name: string;
   type: 'Individual' | 'Grupo';
   instructor: string;
-  durationMonths: number; // Mudado de durationWeeks para durationMonths
+  durationMonths: number;
   numberOfSessions: number;
   price: number;
   description: string;
   active?: boolean;
   status?: 'Ativa' | 'Inativa' | 'Cancelada';
   extensions?: MentoringExtensionOption[];
+  checkoutLinks?: CheckoutLinks;
 }
 
 export interface CreateSessionData {
