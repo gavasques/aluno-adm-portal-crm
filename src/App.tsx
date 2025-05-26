@@ -2,14 +2,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Login } from '@/pages/Index';
-import { Register } from '@/pages/Index';
-import { ForgotPassword } from '@/pages/Index';
-import { ResetPassword } from '@/pages/ResetPassword';
-import { StudentDashboard } from '@/pages/student/Dashboard';
+import Index from '@/pages/Index';
+import ResetPassword from '@/pages/ResetPassword';
+import StudentDashboard from '@/pages/student/Dashboard';
 import StudentMentoring from '@/pages/student/Mentoring';
 import StudentMentoringDetails from '@/pages/student/MentoringDetail';
-import { AdminDashboard } from '@/pages/admin/Dashboard';
+import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminMentoring from '@/pages/admin/Mentoring';
 import AdminMentoringDetails from '@/pages/admin/MentoringDetail';
 import AdminUsers from '@/pages/admin/Users';
@@ -41,9 +39,9 @@ function App() {
     <Router>
       <Routes>
         {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/login" element={<Index />} />
+        <Route path="/register" element={<Index />} />
+        <Route path="/forgot-password" element={<Index />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Student Routes */}

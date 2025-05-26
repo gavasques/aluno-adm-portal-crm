@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -133,12 +132,12 @@ const StudentMentoringSession = () => {
             </div>
 
             <div className="space-y-4">
-              {session.status === 'agendada' && session.accessLink && (
+              {session.status === 'agendada' && session.meetingLink && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">Acesso</label>
                   <div className="mt-2">
                     <Button 
-                      onClick={() => window.open(session.accessLink, '_blank')}
+                      onClick={() => window.open(session.meetingLink, '_blank')}
                       className="w-full"
                     >
                       <Play className="h-4 w-4 mr-2" />

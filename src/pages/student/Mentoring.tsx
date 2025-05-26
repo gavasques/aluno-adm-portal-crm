@@ -129,7 +129,7 @@ const StudentMentoring = () => {
                   title={session.title}
                   date={session.scheduledDate}
                   duration={session.durationMinutes}
-                  status={session.status}
+                  status={session.status as 'cancelada' | 'agendada' | 'realizada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor'}
                   meetingLink={session.meetingLink}
                   onAccess={() => session.meetingLink && window.open(session.meetingLink, '_blank')}
                 />
