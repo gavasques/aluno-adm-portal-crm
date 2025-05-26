@@ -13,6 +13,7 @@ import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import CatalogFormDialog from '@/components/admin/mentoring/catalog/CatalogFormDialog';
 import { useMentoringCatalog } from '@/hooks/mentoring/useMentoringCatalog';
+import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { 
   BookOpen, 
   Plus, 
@@ -33,6 +34,7 @@ export const CatalogManagement: React.FC = () => {
   const { filteredCatalogs, filters, setFilters, clearFilters } = useMentoringFilters();
   const { searchTerm, debouncedSearchTerm, setSearchTerm } = useDebouncedSearch();
   const { createCatalog, loading: catalogLoading } = useMentoringCatalog();
+  const { mentors } = useMentorsForEnrollment();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -72,6 +74,26 @@ export const CatalogManagement: React.FC = () => {
 
   const handleStatusFilter = (value: string) => {
     setFilters({ status: value || undefined });
+  };
+
+  // Função para obter o nome do mentor pelo ID ou retornar o nome se já for string
+  const getMentorName = (instructor: string) => {
+    // Se já é um nome (não é um UUID), retorna como está
+    if (!instructor.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return instructor;
+    }
+    
+    // Se é um UUID, procura o mentor na lista
+    const mentor = mentors.find(m => m.id === instructor);
+    return mentor ? mentor.name : instructor;
+  };
+
+  // Função para remover tags HTML e renderizar texto limpo
+  const getCleanDescription = (htmlDescription: string) => {
+    // Remove tags HTML e retorna apenas o texto
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlDescription;
+    return tempDiv.textContent || tempDiv.innerText || htmlDescription;
   };
 
   const breadcrumbItems = [
@@ -313,7 +335,7 @@ export const CatalogManagement: React.FC = () => {
                       <h3 className="font-bold text-base text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
                         {catalog.name}
                       </h3>
-                      <p className="text-gray-600 text-xs mt-1">por {catalog.instructor}</p>
+                      <p className="text-gray-600 text-xs mt-1">por {getMentorName(catalog.instructor)}</p>
                     </div>
                   </div>
                   <Badge 
@@ -359,7 +381,7 @@ export const CatalogManagement: React.FC = () => {
                   </div>
                   
                   <div className="pt-2 border-t border-gray-100">
-                    <p className="text-gray-700 text-xs line-clamp-2">{catalog.description}</p>
+                    <p className="text-gray-700 text-xs line-clamp-2">{getCleanDescription(catalog.description)}</p>
                   </div>
                 </div>
               </CardContent>
