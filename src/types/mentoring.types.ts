@@ -1,4 +1,3 @@
-
 export interface MentoringCatalog {
   id: string;
   name: string;
@@ -14,6 +13,14 @@ export interface MentoringCatalog {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  extensions?: MentoringExtensionOption[];
+}
+
+export interface MentoringExtensionOption {
+  id: string;
+  months: number;
+  price: number;
+  description: string;
 }
 
 export interface MentoringExtension {
@@ -120,6 +127,7 @@ export interface CreateMentoringCatalogData {
   price: number;
   description: string;
   active?: boolean;
+  extensions?: MentoringExtensionOption[];
 }
 
 export interface CreateSessionData {

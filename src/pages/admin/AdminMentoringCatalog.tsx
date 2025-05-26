@@ -43,6 +43,12 @@ interface MentoringSession {
   type: "Individual" | "Grupo";
   price: number;
   description: string;
+  extensions?: Array<{
+    id: string;
+    months: number;
+    price: number;
+    description: string;
+  }>;
 }
 
 const mockMentoringSessions: MentoringSession[] = [
@@ -57,7 +63,21 @@ const mockMentoringSessions: MentoringSession[] = [
     category: "E-commerce",
     type: "Grupo",
     price: 299,
-    description: "Aprenda as melhores estratégias para aumentar suas vendas online"
+    description: "Aprenda as melhores estratégias para aumentar suas vendas online",
+    extensions: [
+      {
+        id: "ext-1",
+        months: 1,
+        price: 150,
+        description: "Extensão de 1 mês com suporte adicional"
+      },
+      {
+        id: "ext-2",
+        months: 3,
+        price: 400,
+        description: "Extensão de 3 meses com mentoria intensiva"
+      }
+    ]
   },
   {
     id: "2",
@@ -70,7 +90,21 @@ const mockMentoringSessions: MentoringSession[] = [
     category: "Marketing",
     type: "Individual",
     price: 199,
-    description: "Domine as técnicas mais avançadas de marketing digital"
+    description: "Domine as técnicas mais avançadas de marketing digital",
+    extensions: [
+      {
+        id: "ext-3",
+        months: 2,
+        price: 280,
+        description: "Extensão de 2 meses com foco em campanhas avançadas"
+      },
+      {
+        id: "ext-4",
+        months: 6,
+        price: 750,
+        description: "Extensão de 6 meses com acompanhamento completo"
+      }
+    ]
   },
   {
     id: "3",
@@ -83,7 +117,15 @@ const mockMentoringSessions: MentoringSession[] = [
     category: "Gestão",
     type: "Grupo",
     price: 349,
-    description: "Como otimizar sua cadeia de fornecedores para máxima eficiência"
+    description: "Como otimizar sua cadeia de fornecedores para máxima eficiência",
+    extensions: [
+      {
+        id: "ext-5",
+        months: 1,
+        price: 180,
+        description: "Extensão de 1 mês com consultoria personalizada"
+      }
+    ]
   }
 ];
 

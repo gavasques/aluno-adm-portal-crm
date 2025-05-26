@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   User, 
   Calendar, 
@@ -13,6 +14,7 @@ import {
   Plus,
   Edit
 } from 'lucide-react';
+import { MentoringExtensionOption } from '@/types/mentoring.types';
 
 interface MentoringCatalog {
   id: string;
@@ -26,12 +28,7 @@ interface MentoringCatalog {
   type: "Individual" | "Grupo";
   price: number;
   description: string;
-}
-
-interface Extension {
-  months: number;
-  price: number;
-  description: string;
+  extensions?: MentoringExtensionOption[];
 }
 
 interface CatalogDetailModalProps {
@@ -48,13 +45,6 @@ const CatalogDetailModal: React.FC<CatalogDetailModalProps> = ({
   onEdit
 }) => {
   if (!catalog) return null;
-
-  const extensions: Extension[] = [
-    { months: 1, price: 150, description: "Extensão de 1 mês adicional" },
-    { months: 2, price: 280, description: "Extensão de 2 meses adicionais" },
-    { months: 3, price: 400, description: "Extensão de 3 meses adicionais" },
-    { months: 6, price: 750, description: "Extensão de 6 meses adicionais" }
-  ];
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -76,7 +66,7 @@ const CatalogDetailModal: React.FC<CatalogDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span className="text-xl font-bold">{catalog.title}</span>
@@ -94,49 +84,56 @@ const CatalogDetailModal: React.FC<CatalogDetailModalProps> = ({
 
         <div className="space-y-6">
           {/* Informações Básicas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Mentor:</span>
-                <span className="font-medium">{catalog.mentor}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Duração:</span>
-                <span className="font-medium">{catalog.duration}</span>
-              </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Informações da Mentoria</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Mentor:</span>
+                    <span className="font-medium">{catalog.mentor}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Duração:</span>
+                    <span className="font-medium">{catalog.duration}</span>
+                  </div>
 
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Alunos:</span>
-                <span className="font-medium">{catalog.students}</span>
-              </div>
-            </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Alunos:</span>
+                    <span className="font-medium">{catalog.students}</span>
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Tipo:</span>
-                <Badge className={getTypeColor(catalog.type)}>
-                  {catalog.type}
-                </Badge>
-              </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Tipo:</span>
+                    <Badge className={getTypeColor(catalog.type)}>
+                      {catalog.type}
+                    </Badge>
+                  </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Status:</span>
-                <Badge className={getStatusColor(catalog.status)}>
-                  {catalog.status}
-                </Badge>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Status:</span>
+                    <Badge className={getStatusColor(catalog.status)}>
+                      {catalog.status}
+                    </Badge>
+                  </div>
 
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Preço:</span>
-                <span className="font-bold text-green-600">R$ {catalog.price}</span>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Preço:</span>
+                    <span className="font-bold text-green-600">R$ {catalog.price}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <Separator />
 
@@ -149,33 +146,45 @@ const CatalogDetailModal: React.FC<CatalogDetailModalProps> = ({
           <Separator />
 
           {/* Extensões Disponíveis */}
-          <div>
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Extensões Disponíveis
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {extensions.map((extension) => (
-                <div
-                  key={extension.months}
-                  className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">
-                        {extension.months} {extension.months === 1 ? 'Mês' : 'Meses'}
-                      </span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Extensões Disponíveis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {catalog.extensions && catalog.extensions.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {catalog.extensions.map((extension) => (
+                    <div
+                      key={extension.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                          <span className="font-medium">
+                            {extension.months} {extension.months === 1 ? 'Mês' : 'Meses'}
+                          </span>
+                        </div>
+                        <span className="font-bold text-green-600">
+                          R$ {extension.price}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">{extension.description}</p>
                     </div>
-                    <span className="font-bold text-green-600">
-                      R$ {extension.price}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{extension.description}</p>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Clock className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">Nenhuma extensão configurada</p>
+                  <p className="text-xs">Configure extensões para oferecer aos alunos</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           <Separator />
 
