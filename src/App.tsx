@@ -34,6 +34,7 @@ import BonusDetail from "./pages/admin/BonusDetail";
 import AdminTasks from "./pages/admin/Tasks";
 import AdminCRM from "./pages/admin/CRM";
 import AdminAuditDashboard from "./pages/admin/Audit";
+import AdminSettings from "./pages/admin/Settings";
 
 // Mentoring Pages
 import AdminMentoringManagement from "./pages/admin/AdminMentoringManagement";
@@ -85,6 +86,7 @@ function App() {
                 <Route path="tarefas" element={<AdminTasks />} />
                 <Route path="crm" element={<AdminCRM />} />
                 <Route path="auditoria" element={<AdminAuditDashboard />} />
+                <Route path="configuracoes" element={<AdminSettings />} />
                 
                 {/* Mentoring Management Routes */}
                 <Route path="mentorias" element={<AdminMentoringManagement />} />
