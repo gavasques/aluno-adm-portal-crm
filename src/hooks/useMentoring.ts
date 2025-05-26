@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { 
   MentoringCatalog, 
@@ -121,7 +122,7 @@ export const useMentoring = () => {
             type: 'individual',
             title: `Sessão ${i} - ${mentoring.name}`,
             durationMinutes: 60,
-            status: 'aguardando_agendamento' // SEMPRE aguardando agendamento inicialmente
+            status: 'aguardando_agendamento' as const // SEMPRE aguardando agendamento inicialmente
           };
           dataService.createSession(sessionData);
         }
@@ -197,7 +198,7 @@ export const useMentoring = () => {
       const hasScheduledDateTime = data.scheduledDate && data.scheduledDate !== '';
       const sessionData = {
         ...data,
-        status: hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento'
+        status: (hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento') as const
       };
       
       const newSession = dataService.createSession(sessionData);
@@ -274,7 +275,7 @@ export const useMentoring = () => {
       const updateData: UpdateSessionData = {
         scheduledDate,
         meetingLink,
-        status: 'agendada',
+        status: 'agendada' as const,
         observations: notes
       };
       

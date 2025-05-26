@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ import { useAuth } from '@/hooks/useAuth';
 import StandaloneSessionForm from '@/components/admin/mentoring/StandaloneSessionForm';
 import { SessionsList } from '@/components/admin/mentoring/sessions/SessionsList';
 import { SessionDetailDialog } from '@/components/admin/mentoring/sessions/SessionDetailDialog';
+import { SessionScheduleDialog } from '@/components/admin/mentoring/sessions/SessionScheduleDialog';
 import { format, isToday, isTomorrow, isWithinInterval, addDays, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
