@@ -10,12 +10,12 @@ interface Mentor {
 
 export const useMentorsForEnrollment = () => {
   const [mentors, setMentors] = useState<Mentor[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchMentors = async () => {
     setLoading(true);
     try {
-      console.log('Buscando mentores...');
+      console.log('🔍 Buscando mentores...');
       
       // Buscar usuários que têm is_mentor = true
       const { data, error } = await supabase
@@ -26,24 +26,29 @@ export const useMentorsForEnrollment = () => {
         .order('name');
 
       if (error) {
-        console.error('Erro ao buscar mentores:', error);
+        console.error('❌ Erro ao buscar mentores:', error);
         setMentors([]);
         return;
       }
 
-      console.log('Dados brutos dos mentores:', data);
+      console.log('📊 Dados brutos dos mentores:', data);
 
-      // Mapear dados para o formato esperado
-      const mentorsData = (data || []).map(profile => ({
-        id: profile.id,
-        name: profile.name || profile.email, // Usar email se name estiver vazio
-        email: profile.email
-      }));
+      // Mapear dados para o formato esperado, garantindo que sempre temos um nome
+      const mentorsData = (data || []).map(profile => {
+        const mentorName = profile.name || profile.email || 'Mentor sem nome';
+        console.log(`👤 Mentor processado: ID=${profile.id}, Nome="${mentorName}"`);
+        
+        return {
+          id: profile.id,
+          name: mentorName,
+          email: profile.email
+        };
+      });
 
-      console.log('Mentores formatados:', mentorsData);
+      console.log('✅ Mentores formatados:', mentorsData);
       setMentors(mentorsData);
     } catch (error) {
-      console.error('Erro ao buscar mentores:', error);
+      console.error('💥 Erro ao buscar mentores:', error);
       setMentors([]);
     } finally {
       setLoading(false);

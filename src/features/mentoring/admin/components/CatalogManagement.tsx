@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useMentoringContext } from '../../contexts/MentoringContext';
 import { useMentoringOperations } from '../../hooks/useMentoringOperations';
@@ -43,11 +42,18 @@ export const CatalogManagement: React.FC = () => {
     setFilters({ search: debouncedSearchTerm });
   }, [debouncedSearchTerm, setFilters]);
 
-  // Debug logs
+  // Debug logs melhorados
   useEffect(() => {
-    console.log('Mentors carregados:', mentors);
-    console.log('Catalogs disponíveis:', state.catalogs);
-  }, [mentors, state.catalogs]);
+    console.log('🔄 Estado atual:');
+    console.log('📚 Catalogs disponíveis:', state.catalogs);
+    console.log('👥 Mentors carregados:', mentors);
+    console.log('⏳ Mentors loading:', mentorsLoading);
+    
+    // Log detalhado de cada catálogo
+    state.catalogs.forEach(catalog => {
+      console.log(`📖 Catálogo "${catalog.name}": instructor="${catalog.instructor}"`);
+    });
+  }, [mentors, state.catalogs, mentorsLoading]);
 
   const stats = {
     total: state.catalogs.length,
@@ -82,28 +88,47 @@ export const CatalogManagement: React.FC = () => {
     setFilters({ status: value || undefined });
   };
 
-  // Função melhorada para obter o nome do mentor
+  // Função corrigida para obter o nome do mentor
   const getMentorName = (instructor: string) => {
-    console.log('Buscando mentor para instructor:', instructor);
-    console.log('Mentors disponíveis:', mentors);
+    console.log('🔍 Buscando mentor para instructor:', instructor);
+    console.log('👥 Mentors disponíveis para busca:', mentors);
     
-    if (!instructor) return 'Sem mentor';
+    if (!instructor) {
+      console.log('❌ Instructor está vazio');
+      return 'Sem mentor';
+    }
+    
+    // Se o mentor está carregando, mostrar estado de loading
+    if (mentorsLoading) {
+      console.log('⏳ Mentores ainda carregando...');
+      return 'Carregando...';
+    }
     
     // Se já é um nome (não é um UUID), retorna como está
-    if (!instructor.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(instructor);
+    if (!isUUID) {
+      console.log('✅ Instructor já é um nome:', instructor);
       return instructor;
     }
     
     // Se é um UUID, procura o mentor na lista
+    console.log('🔎 Procurando mentor com UUID:', instructor);
     const mentor = mentors.find(m => m.id === instructor);
-    const result = mentor ? mentor.name : instructor;
-    console.log('Resultado da busca do mentor:', result);
-    return result;
+    
+    if (mentor) {
+      console.log('✅ Mentor encontrado:', mentor.name);
+      return mentor.name;
+    } else {
+      console.log('❌ Mentor não encontrado, usando instructor original');
+      return instructor; // Fallback para o UUID se não encontrar
+    }
   };
 
-  // Função para renderizar descrição HTML formatada
+  // Função para renderizar descrição HTML formatada com 20 linhas
   const renderFormattedDescription = (htmlDescription: string) => {
     if (!htmlDescription) return '';
+    
+    console.log('📝 Renderizando descrição:', htmlDescription.substring(0, 100) + '...');
     
     // Sanitizar e renderizar HTML básico
     const cleanHtml = htmlDescription
@@ -112,11 +137,12 @@ export const CatalogManagement: React.FC = () => {
     
     return (
       <div 
-        className="text-gray-700 text-xs leading-relaxed max-h-80 overflow-y-auto prose prose-xs"
+        className="text-gray-700 text-xs leading-relaxed prose prose-xs"
         dangerouslySetInnerHTML={{ __html: cleanHtml }}
         style={{
-          maxHeight: '20rem', // Aproximadamente 20 linhas
-          lineHeight: '1.4'
+          maxHeight: '28rem', // Espaço para aproximadamente 20 linhas
+          lineHeight: '1.4',
+          overflow: 'hidden'
         }}
       />
     );
@@ -334,7 +360,7 @@ export const CatalogManagement: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Catalog List compacto */}
+        {/* Catalog List com cards expandidos */}
         <div className={`grid gap-3 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
           {filteredCatalogs.map((catalog) => (
             <Card
@@ -362,7 +388,7 @@ export const CatalogManagement: React.FC = () => {
                         {catalog.name}
                       </h3>
                       <p className="text-gray-600 text-xs mt-1">
-                        por {mentorsLoading ? 'Carregando...' : getMentorName(catalog.instructor)}
+                        por {getMentorName(catalog.instructor)}
                       </p>
                     </div>
                   </div>
@@ -409,7 +435,9 @@ export const CatalogManagement: React.FC = () => {
                   </div>
                   
                   <div className="pt-2 border-t border-gray-100">
-                    {renderFormattedDescription(catalog.description)}
+                    <div className="max-h-96 overflow-y-auto">
+                      {renderFormattedDescription(catalog.description)}
+                    </div>
                   </div>
                 </div>
               </CardContent>
