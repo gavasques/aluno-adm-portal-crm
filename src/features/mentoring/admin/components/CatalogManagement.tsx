@@ -45,6 +45,14 @@ export const CatalogManagement: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState<MentoringCatalog | null>(null);
 
+  // Debug log para verificar qual modal está sendo usado
+  console.log('🎯 Estado dos modais:', { 
+    showCreateDialog, 
+    showDetailDialog, 
+    showEditDialog, 
+    selectedCatalog: selectedCatalog?.id 
+  });
+
   // Filtrar catálogos
   const filteredCatalogs = catalogs.filter(catalog => {
     const matchesSearch = !debouncedSearchTerm || 
@@ -68,6 +76,7 @@ export const CatalogManagement: React.FC = () => {
   };
 
   const handleCreateCatalog = () => {
+    console.log('🚀 Abrindo modal de criação');
     setShowCreateDialog(true);
   };
 
@@ -90,7 +99,7 @@ export const CatalogManagement: React.FC = () => {
   };
 
   const handleEditCatalog = (catalog: MentoringCatalog) => {
-    console.log('✏️ Editando catálogo:', catalog.id);
+    console.log('✏️ Editando catálogo - USANDO CatalogEditModal:', catalog.id);
     setSelectedCatalog(catalog);
     setShowEditDialog(true);
   };
@@ -424,7 +433,10 @@ export const CatalogManagement: React.FC = () => {
                       variant="ghost" 
                       size="sm" 
                       className="flex-1 h-7 text-xs"
-                      onClick={() => handleEditCatalog(catalog)}
+                      onClick={() => {
+                        console.log('🎯 Botão Editar clicado - Abrindo CatalogEditModal');
+                        handleEditCatalog(catalog);
+                      }}
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Editar
@@ -476,11 +488,12 @@ export const CatalogManagement: React.FC = () => {
         onEdit={handleEditCatalog}
       />
 
-      {/* Dialog de edição */}
+      {/* MODAL DE EDIÇÃO - Usando CatalogEditModal com design moderno */}
       <CatalogEditModal
         catalog={selectedCatalog}
         isOpen={showEditDialog}
         onClose={() => {
+          console.log('🔒 Fechando CatalogEditModal');
           setShowEditDialog(false);
           setSelectedCatalog(null);
         }}

@@ -43,12 +43,21 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<MentoringCatalog | null>(null);
 
+  // Debug logs para verificar renderização
+  console.log('🎨 CatalogEditModal renderizado:', { 
+    isOpen, 
+    catalogId: catalog?.id, 
+    catalogName: catalog?.name 
+  });
+
   useEffect(() => {
+    console.log('🔄 CatalogEditModal - Effect triggered:', { isOpen, catalog });
     if (catalog) {
       setFormData({ 
         ...catalog,
         extensions: catalog.extensions || []
       });
+      console.log('✅ CatalogEditModal - FormData setado:', catalog);
     }
   }, [catalog]);
 
@@ -71,6 +80,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
   };
 
   const handleSave = () => {
+    console.log('💾 CatalogEditModal - Salvando:', formData);
     if (formData) {
       onSave(formData);
       onClose();
@@ -91,7 +101,12 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
       : "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 border-gray-200";
   };
 
-  if (!formData) return null;
+  if (!formData) {
+    console.log('❌ CatalogEditModal - Sem formData, não renderizando');
+    return null;
+  }
+
+  console.log('🎯 CatalogEditModal - Renderizando modal completo para:', formData.name);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -104,7 +119,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold text-gray-900">
-                  Editar Mentoria
+                  ✨ Editar Mentoria - DESIGN MODERNO ✨
                 </DialogTitle>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge size="sm" className={`text-xs px-2 py-1 border ${getTypeColor(formData.type)}`}>
@@ -155,15 +170,15 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4 mt-6">
-            {/* Card de Informações Básicas */}
-            <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-500">
-              <CardHeader className="pb-4">
+            {/* Card de Informações Básicas com design moderno */}
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500">
+              <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-purple-50">
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-blue-500" />
-                  Dados da Mentoria
+                  📋 Dados da Mentoria
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-1">
@@ -175,7 +190,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="Nome da mentoria"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
                     />
                   </div>
 
@@ -189,7 +204,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       value={formData.instructor}
                       onChange={(e) => handleInputChange('instructor', e.target.value)}
                       placeholder="Nome do mentor"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
                     />
                   </div>
 
@@ -202,7 +217,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       value={formData.type}
                       onValueChange={(value: "Individual" | "Grupo") => handleInputChange('type', value)}
                     >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 h-10 text-sm transition-all duration-200">
+                      <SelectTrigger className="border-gray-200 focus:border-blue-500 h-10 text-sm transition-all duration-200 shadow-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg">
@@ -233,7 +248,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       value={formData.durationMonths}
                       onChange={(e) => handleInputChange('durationMonths', Number(e.target.value))}
                       placeholder="3"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
                     />
                   </div>
 
@@ -248,7 +263,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       value={formData.numberOfSessions}
                       onChange={(e) => handleInputChange('numberOfSessions', Number(e.target.value))}
                       placeholder="12"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
                     />
                   </div>
 
@@ -263,14 +278,14 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       value={formData.price}
                       onChange={(e) => handleInputChange('price', Number(e.target.value))}
                       placeholder="299"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
                     />
                   </div>
                 </div>
 
                 <Separator className="my-4" />
 
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${formData.active ? 'bg-green-500' : 'bg-gray-400'} transition-colors duration-200`}></div>
                     <Label htmlFor="active" className="text-sm font-medium text-gray-700">
@@ -290,40 +305,40 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
               </CardContent>
             </Card>
 
-            {/* Card de Descrição */}
-            <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-all duration-300 border-l-4 border-l-purple-500">
-              <CardHeader className="pb-4">
+            {/* Card de Descrição com design moderno */}
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300 border-l-4 border-l-purple-500">
+              <CardHeader className="pb-4 bg-gradient-to-r from-purple-50 to-pink-50">
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Edit className="h-5 w-5 text-purple-500" />
-                  Descrição da Mentoria
+                  📝 Descrição da Mentoria
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Descreva os objetivos e conteúdo da mentoria..."
                   rows={4}
-                  className="border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-sm resize-none transition-all duration-200"
+                  className="border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-sm resize-none transition-all duration-200 shadow-sm"
                 />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="checkout" className="mt-6">
-            <Card className="border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100 hover:shadow-md transition-all duration-300 border-l-4 border-l-green-600">
-              <CardHeader className="pb-4">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-xl transition-all duration-300 border-l-4 border-l-green-600">
+              <CardHeader className="pb-4 bg-gradient-to-r from-green-100 to-emerald-100">
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Link className="h-5 w-5 text-green-600" />
-                  Links de Checkout
+                  🔗 Links de Checkout
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Configure os links de pagamento para esta mentoria</p>
               </CardHeader>
               <CardContent className="text-center py-8">
                 <div className="text-gray-500">
                   <Link className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm font-medium">Funcionalidade em desenvolvimento</p>
+                  <p className="text-sm font-medium">🚧 Funcionalidade em desenvolvimento</p>
                   <p className="text-xs">Em breve você poderá configurar links de checkout</p>
                 </div>
               </CardContent>
@@ -331,11 +346,11 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
           </TabsContent>
 
           <TabsContent value="extensions" className="mt-6">
-            <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-600">
-              <CardHeader className="pb-4">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-600">
+              <CardHeader className="pb-4 bg-gradient-to-r from-blue-100 to-indigo-100">
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Zap className="h-5 w-5 text-blue-600" />
-                  Gerenciar Extensões
+                  ⚡ Gerenciar Extensões
                   {formData.extensions && formData.extensions.length > 0 && (
                     <Badge variant="outline" size="sm" className="ml-2 bg-blue-100 text-blue-700 border-blue-200">
                       {formData.extensions.length} ativa(s)
@@ -344,7 +359,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Configure extensões adicionais para oferecer aos alunos</p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <ExtensionsManager
                   extensions={formData.extensions || []}
                   onExtensionsChange={handleExtensionsChange}
@@ -354,7 +369,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="pt-6 border-t border-gray-100 mt-6 bg-gray-50 rounded-b-lg -mx-6 px-6 pb-6">
+        <DialogFooter className="pt-6 border-t border-gray-100 mt-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-b-lg -mx-6 px-6 pb-6">
           <div className="flex gap-3 w-full justify-end">
             <Button 
               variant="outline" 
@@ -369,7 +384,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300 h-10 px-4 text-sm"
             >
               <Save className="h-4 w-4 mr-2" />
-              Salvar Alterações
+              💾 Salvar Alterações
             </Button>
           </div>
         </DialogFooter>
