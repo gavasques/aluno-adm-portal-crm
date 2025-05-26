@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Mentor {
   id: string;
@@ -12,25 +13,62 @@ export const useMentors = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simular dados de mentores - em produção seria uma API call
-    const mockMentors: Mentor[] = [
-      { id: '1', name: 'João Silva', email: 'joao@exemplo.com' },
-      { id: '2', name: 'Maria Santos', email: 'maria@exemplo.com' },
-      { id: '3', name: 'Pedro Costa', email: 'pedro@exemplo.com' },
-      { id: '4', name: 'Ana Oliveira', email: 'ana@exemplo.com' }
-    ];
-
-    setTimeout(() => {
-      setMentors(mockMentors);
-      setLoading(false);
-    }, 500);
+    fetchMentors();
   }, []);
 
-  const updateMentorStatus = async (mentorId: string, isActive: boolean) => {
-    // Simular atualização do status do mentor
-    console.log(`Atualizando mentor ${mentorId} para status: ${isActive ? 'ativo' : 'inativo'}`);
-    return true;
+  const fetchMentors = async () => {
+    setLoading(true);
+    try {
+      // Buscar usuários que têm is_mentor = true
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, email, is_mentor')
+        .eq('is_mentor', true)
+        .eq('status', 'Ativo')
+        .order('name');
+
+      if (error) {
+        console.error('Erro ao buscar mentores:', error);
+        setMentors([]);
+        return;
+      }
+
+      // Mapear dados para o formato esperado
+      const mentorsData = (data || []).map(profile => ({
+        id: profile.id,
+        name: profile.name || profile.email, // Usar email se name estiver vazio
+        email: profile.email
+      }));
+
+      setMentors(mentorsData);
+    } catch (error) {
+      console.error('Erro ao buscar mentores:', error);
+      setMentors([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { mentors, loading, updateMentorStatus };
+  const updateMentorStatus = async (mentorId: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_mentor: isActive })
+        .eq('id', mentorId);
+
+      if (error) {
+        console.error('Erro ao atualizar status do mentor:', error);
+        return false;
+      }
+
+      // Recarregar a lista de mentores após a atualização
+      await fetchMentors();
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar status do mentor:', error);
+      return false;
+    }
+  };
+
+  return { mentors, loading, updateMentorStatus, refreshMentors: fetchMentors };
 };
