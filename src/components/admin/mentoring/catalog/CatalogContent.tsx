@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useMentoring } from '@/hooks/useMentoring';
+import { useSupabaseMentoringCatalog } from '@/hooks/mentoring/useSupabaseMentoringCatalog';
 import CatalogHeader from './CatalogHeader';
 import CatalogStatsCards from './CatalogStatsCards';
 import CatalogFilters from './CatalogFilters';
@@ -13,13 +13,12 @@ import { useToast } from '@/hooks/use-toast';
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 
 const CatalogContent: React.FC = () => {
-  const { catalogs, createMentoringCatalog, updateMentoringCatalog, deleteMentoringCatalog } = useMentoring();
+  const { catalogs, createCatalog, updateCatalog, deleteCatalog, loading } = useSupabaseMentoringCatalog();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [loading, setLoading] = useState(false);
 
   // Dialog states
   const [detailDialog, setDetailDialog] = useState<{
@@ -63,88 +62,34 @@ const CatalogContent: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     try {
-      const success = await deleteMentoringCatalog(id);
-      if (success) {
-        toast({
-          title: "Sucesso",
-          description: "Mentoria excluída com sucesso!",
-        });
-      } else {
-        throw new Error('Falha ao excluir mentoria');
-      }
+      await deleteCatalog(id);
     } catch (error) {
       console.error('Erro ao excluir mentoria:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir mentoria. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    setLoading(true);
     try {
-      const catalog = catalogs.find(c => c.id === id);
-      if (!catalog) throw new Error('Mentoria não encontrada');
-
-      const success = await updateMentoringCatalog(id, { active: !currentStatus });
-      if (success) {
-        toast({
-          title: "Sucesso",
-          description: `Mentoria ${!currentStatus ? 'ativada' : 'desativada'} com sucesso!`,
-        });
-      } else {
-        throw new Error('Falha ao atualizar status');
-      }
+      await updateCatalog(id, { active: !currentStatus });
     } catch (error) {
       console.error('Erro ao alterar status:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao alterar status da mentoria. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleFormSubmit = async (data: CreateMentoringCatalogData) => {
-    setLoading(true);
     try {
       if (formDialog.catalog) {
         // Editando mentoria existente
-        const success = await updateMentoringCatalog(formDialog.catalog.id, data);
-        if (success) {
-          toast({
-            title: "Sucesso",
-            description: "Mentoria atualizada com sucesso!",
-          });
-        } else {
-          throw new Error('Falha ao atualizar mentoria');
-        }
+        await updateCatalog(formDialog.catalog.id, data);
       } else {
         // Criando nova mentoria
-        await createMentoringCatalog(data);
-        toast({
-          title: "Sucesso",
-          description: "Mentoria criada com sucesso!",
-        });
+        await createCatalog(data);
       }
+      setFormDialog({ open: false, catalog: null });
     } catch (error) {
       console.error('Erro ao salvar mentoria:', error);
-      toast({
-        title: "Erro",
-        description: `Erro ao ${formDialog.catalog ? 'atualizar' : 'criar'} mentoria. Tente novamente.`,
-        variant: "destructive",
-      });
       throw error; // Re-throw para manter o dialog aberto
-    } finally {
-      setLoading(false);
     }
   };
 

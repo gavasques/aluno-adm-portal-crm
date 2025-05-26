@@ -226,6 +226,95 @@ export type Database = {
         }
         Relationships: []
       }
+      mentoring_catalogs: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          duration_weeks: number
+          id: string
+          image_url: string | null
+          instructor: string
+          name: string
+          number_of_sessions: number
+          price: number
+          status: string
+          tags: string[] | null
+          total_sessions: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description: string
+          duration_weeks: number
+          id?: string
+          image_url?: string | null
+          instructor: string
+          name: string
+          number_of_sessions: number
+          price: number
+          status?: string
+          tags?: string[] | null
+          total_sessions: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          duration_weeks?: number
+          id?: string
+          image_url?: string | null
+          instructor?: string
+          name?: string
+          number_of_sessions?: number
+          price?: number
+          status?: string
+          tags?: string[] | null
+          total_sessions?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentoring_extensions: {
+        Row: {
+          catalog_id: string
+          created_at: string
+          description: string
+          id: string
+          months: number
+          price: number
+        }
+        Insert: {
+          catalog_id: string
+          created_at?: string
+          description: string
+          id?: string
+          months: number
+          price: number
+        }
+        Update: {
+          catalog_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          months?: number
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentoring_extensions_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_catalogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_actions: {
         Row: {
           action_key: string

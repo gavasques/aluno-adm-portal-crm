@@ -166,11 +166,14 @@ export interface ScheduleSessionData {
 
 export interface EnrollmentProgress {
   completedSessions: number;
+  sessionsUsed: number;
   totalSessions: number;
   pendingSessions: number;
   scheduledSessions: number;
   percentage: number;
   daysRemaining: number;
+  isExpired: boolean;
+  isCompleted: boolean;
 }
 
 // Session Status Types for UI components
