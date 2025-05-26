@@ -48,8 +48,11 @@ export interface ValidationResult {
 
 export interface EnrollmentProgress {
   percentage: number;
+  completedSessions: number;
   sessionsUsed: number;
   totalSessions: number;
+  pendingSessions: number;
+  scheduledSessions: number;
   daysRemaining: number;
   isExpired: boolean;
   isCompleted: boolean;

@@ -92,13 +92,9 @@ const AdminIndividualEnrollments = () => {
     }
   };
 
-  // Novos handlers para sessões
+  // Novos handlers para sessões - corrigindo a chamada da função scheduleSession
   const handleScheduleSession = async (sessionId: string, data: any) => {
-    const success = await scheduleSession({
-      sessionId,
-      scheduledDate: data.scheduledDate,
-      meetingLink: data.meetingLink
-    });
+    const success = await scheduleSession(sessionId, data.scheduledDate, data.meetingLink);
     if (success) {
       console.log('Sessão agendada com sucesso');
     }
