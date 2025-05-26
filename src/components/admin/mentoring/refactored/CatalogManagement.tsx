@@ -132,7 +132,7 @@ export const CatalogManagement: React.FC = () => {
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span>Duração:</span>
-                <span>{catalog.durationWeeks} semanas</span>
+                <span>{catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span>Sessões:</span>

@@ -25,6 +25,18 @@ export const useMentoringSessions = () => {
     return sessions.filter(session => session.enrollmentId === enrollmentId);
   };
 
+  const getUpcomingSessions = (studentId: string) => {
+    const studentEnrollments = dataService.getEnrollments().filter(e => e.studentId === studentId);
+    const enrollmentIds = studentEnrollments.map(e => e.id);
+    
+    return sessions.filter(session => 
+      enrollmentIds.includes(session.enrollmentId) && 
+      session.status === 'agendada' &&
+      session.scheduledDate &&
+      new Date(session.scheduledDate) > new Date()
+    ).sort((a, b) => new Date(a.scheduledDate!).getTime() - new Date(b.scheduledDate!).getTime());
+  };
+
   const createSession = async (data: CreateSessionData) => {
     setLoading(true);
     try {
@@ -54,6 +66,7 @@ export const useMentoringSessions = () => {
     loading,
     getSessionDetails,
     getEnrollmentSessions,
+    getUpcomingSessions,
     createSession,
     updateSession,
     refreshSessions

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -91,7 +92,7 @@ const CatalogCard: React.FC<CatalogCardProps> = ({
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <span>{catalog.durationWeeks} semanas</span>
+              <span>{catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Star className="h-4 w-4 text-gray-400" />

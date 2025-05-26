@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -94,7 +95,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
-                    {catalog.durationWeeks} sem
+                    {catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}
                   </TableCell>
                   <TableCell className="text-center">
                     {catalog.numberOfSessions}

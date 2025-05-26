@@ -424,7 +424,7 @@ const AdminMentoringCatalog = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-600 text-xs">Duração:</span>
-                        <span className="font-medium text-xs">{session.durationWeeks} sem</span>
+                        <span className="font-medium text-xs">{session.durationMonths} {session.durationMonths === 1 ? 'mês' : 'meses'}</span>
                       </div>
                       <div className="flex items-center justify-between col-span-2">
                         <span className="text-gray-600 text-xs">Preço:</span>
@@ -507,7 +507,7 @@ const AdminMentoringCatalog = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>{session.instructor}</TableCell>
-                    <TableCell>{session.durationWeeks} semanas</TableCell>
+                    <TableCell>{session.durationMonths} {session.durationMonths === 1 ? 'mês' : 'meses'}</TableCell>
                     <TableCell>{session.numberOfSessions}</TableCell>
                     <TableCell>
                       <span className="font-medium text-green-600">
