@@ -17,13 +17,12 @@ import AdminGroupSessions from '@/pages/admin/AdminGroupSessions';
 
 const RouteGuard = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
   const { user, loading } = useAuth();
-  const isAuthenticated = !!user;
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" />;
   }
 
@@ -31,7 +30,7 @@ const RouteGuard = ({ children, allowedRoles }: { children: React.ReactNode, all
     return <div>Unauthorized</div>;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 function App() {
