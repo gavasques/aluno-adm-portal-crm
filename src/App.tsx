@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Index from '@/pages/Index';
 import ResetPassword from '@/pages/ResetPassword';
@@ -35,34 +35,32 @@ const RouteGuard = ({ children, allowedRoles }: { children: React.ReactNode, all
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Auth Routes */}
-        <Route path="/login" element={<Index />} />
-        <Route path="/register" element={<Index />} />
-        <Route path="/forgot-password" element={<Index />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+    <Routes>
+      {/* Auth Routes */}
+      <Route path="/login" element={<Index />} />
+      <Route path="/register" element={<Index />} />
+      <Route path="/forgot-password" element={<Index />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        {/* Student Routes */}
-        <Route path="/aluno" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentDashboard /></RouteGuard>} />
-        <Route path="/aluno/mentorias" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoring /></RouteGuard>} />
-        <Route path="/aluno/mentorias/:id" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoringDetails /></RouteGuard>} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={<RouteGuard allowedRoles={['Admin']}><AdminDashboard /></RouteGuard>} />
-        <Route path="/admin/mentorias" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoring /></RouteGuard>} />
-        <Route path="/admin/mentorias/:id" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoringDetails /></RouteGuard>} />
-        <Route path="/admin/usuarios" element={<RouteGuard allowedRoles={['Admin']}><AdminUsers /></RouteGuard>} />
-        <Route path="/admin/grupos" element={<RouteGuard allowedRoles={['Admin']}><AdminGroups /></RouteGuard>} />
-        
-        {/* Mentoring Session Routes */}
-        <Route path="/admin/mentorias/sessoes-individuais" element={<RouteGuard allowedRoles={['Admin']}><AdminIndividualSessions /></RouteGuard>} />
-        <Route path="/admin/mentorias/sessoes-grupo" element={<RouteGuard allowedRoles={['Admin']}><AdminGroupSessions /></RouteGuard>} />
-        
-        {/* Default Route */}
-        <Route path="/" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router>
+      {/* Student Routes */}
+      <Route path="/aluno" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentDashboard /></RouteGuard>} />
+      <Route path="/aluno/mentorias" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoring /></RouteGuard>} />
+      <Route path="/aluno/mentorias/:id" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoringDetails /></RouteGuard>} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin" element={<RouteGuard allowedRoles={['Admin']}><AdminDashboard /></RouteGuard>} />
+      <Route path="/admin/mentorias" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoring /></RouteGuard>} />
+      <Route path="/admin/mentorias/:id" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoringDetails /></RouteGuard>} />
+      <Route path="/admin/usuarios" element={<RouteGuard allowedRoles={['Admin']}><AdminUsers /></RouteGuard>} />
+      <Route path="/admin/grupos" element={<RouteGuard allowedRoles={['Admin']}><AdminGroups /></RouteGuard>} />
+      
+      {/* Mentoring Session Routes */}
+      <Route path="/admin/mentorias/sessoes-individuais" element={<RouteGuard allowedRoles={['Admin']}><AdminIndividualSessions /></RouteGuard>} />
+      <Route path="/admin/mentorias/sessoes-grupo" element={<RouteGuard allowedRoles={['Admin']}><AdminGroupSessions /></RouteGuard>} />
+      
+      {/* Default Route */}
+      <Route path="/" element={<Navigate to="/login" />} />
+    </Routes>
   );
 }
 
