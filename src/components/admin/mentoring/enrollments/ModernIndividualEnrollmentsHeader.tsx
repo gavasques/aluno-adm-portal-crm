@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, GraduationCap, Users, CheckCircle, PauseCircle } from 'lucide-react';
+import { ViewModeToggle } from './ViewModeToggle';
 
 interface ModernIndividualEnrollmentsHeaderProps {
   searchTerm: string;
@@ -13,6 +14,8 @@ interface ModernIndividualEnrollmentsHeaderProps {
   setStatusFilter: (status: string) => void;
   typeFilter: string;
   setTypeFilter: (type: string) => void;
+  viewMode: 'cards' | 'list';
+  onViewModeChange: (mode: 'cards' | 'list') => void;
   onAddEnrollment: () => void;
   statistics: {
     total: number;
@@ -29,6 +32,8 @@ export const ModernIndividualEnrollmentsHeader: React.FC<ModernIndividualEnrollm
   setStatusFilter,
   typeFilter,
   setTypeFilter,
+  viewMode,
+  onViewModeChange,
   onAddEnrollment,
   statistics
 }) => {
@@ -103,42 +108,49 @@ export const ModernIndividualEnrollmentsHeader: React.FC<ModernIndividualEnrollm
 
       {/* Filtros */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar por mentoria ou mentor..."
-              className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
+            <div className="relative flex-1 w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar por mentoria ou mentor..."
+                className="pl-10 h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40 h-10 border-gray-200">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="ativa">Ativa</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
+                  <SelectItem value="pausada">Pausada</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-40 h-10 border-gray-200">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  <SelectItem value="Individual">Individual</SelectItem>
+                  <SelectItem value="Grupo">Grupo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
-          <div className="flex gap-3 w-full sm:w-auto">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40 h-10 border-gray-200">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
-                <SelectItem value="ativa">Ativa</SelectItem>
-                <SelectItem value="concluida">Concluída</SelectItem>
-                <SelectItem value="pausada">Pausada</SelectItem>
-                <SelectItem value="cancelada">Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-40 h-10 border-gray-200">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
-                <SelectItem value="Individual">Individual</SelectItem>
-                <SelectItem value="Grupo">Grupo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <ViewModeToggle 
+            viewMode={viewMode} 
+            onViewModeChange={onViewModeChange}
+          />
         </div>
       </div>
     </div>

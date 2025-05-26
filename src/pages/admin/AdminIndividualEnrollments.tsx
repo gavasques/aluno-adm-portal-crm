@@ -10,13 +10,15 @@ import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
 import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetailDialog';
 import { ModernIndividualEnrollmentsHeader } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsHeader';
 import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
+import { ModernIndividualEnrollmentsList } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsList';
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 const AdminIndividualEnrollmentsContent = () => {
-  const { enrollments, getEnrollmentProgress, addExtension } = useMentoring();
+  const { enrollments, getEnrollmentProgress, addExtension, refreshData } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [viewingEnrollment, setViewingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
@@ -42,8 +44,8 @@ const AdminIndividualEnrollmentsContent = () => {
         enrollment.mentoring.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = !statusFilter || enrollment.status === statusFilter;
-      const matchesType = !typeFilter || enrollment.mentoring.type === typeFilter;
+      const matchesStatus = !statusFilter || statusFilter === 'all' || enrollment.status === statusFilter;
+      const matchesType = !typeFilter || typeFilter === 'all' || enrollment.mentoring.type === typeFilter;
       
       return matchesSearch && matchesStatus && matchesType;
     });
@@ -63,11 +65,15 @@ const AdminIndividualEnrollmentsContent = () => {
   const handleCreateEnrollment = (data: any) => {
     console.log('Creating individual enrollment:', data);
     setShowForm(false);
+    // Refresh data to show new enrollment
+    refreshData();
   };
 
   const handleEditEnrollment = (data: any) => {
     console.log('Editing individual enrollment:', data);
     setEditingEnrollment(null);
+    // Refresh data to show updated enrollment
+    refreshData();
   };
 
   const handleViewEnrollment = (enrollment: StudentMentoringEnrollment) => {
@@ -77,6 +83,8 @@ const AdminIndividualEnrollmentsContent = () => {
   const handleDeleteEnrollment = (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta inscrição individual?')) {
       console.log('Deleting individual enrollment:', id);
+      // Refresh data after deletion
+      refreshData();
     }
   };
 
@@ -89,6 +97,7 @@ const AdminIndividualEnrollmentsContent = () => {
     const success = await addExtension(data);
     if (success) {
       console.log('Extensão adicionada com sucesso');
+      refreshData();
     }
   };
 
@@ -118,11 +127,13 @@ const AdminIndividualEnrollmentsContent = () => {
         setStatusFilter={setStatusFilter}
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onAddEnrollment={() => setShowForm(true)}
         statistics={statistics}
       />
 
-      {/* Cards das Inscrições */}
+      {/* Conteúdo */}
       {filteredEnrollments.length === 0 ? (
         <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
           <div className="max-w-md mx-auto">
@@ -142,20 +153,34 @@ const AdminIndividualEnrollmentsContent = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredEnrollments.map((enrollment) => (
-            <ModernIndividualEnrollmentCard
-              key={enrollment.id}
-              enrollment={enrollment}
+        <>
+          {viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredEnrollments.map((enrollment) => (
+                <ModernIndividualEnrollmentCard
+                  key={enrollment.id}
+                  enrollment={enrollment}
+                  onView={handleViewEnrollment}
+                  onEdit={setEditingEnrollment}
+                  onDelete={handleDeleteEnrollment}
+                  onAddExtension={handleAddExtension}
+                  onToggleSelection={toggleEnrollmentSelection}
+                  isSelected={selectedEnrollments.includes(enrollment.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <ModernIndividualEnrollmentsList
+              enrollments={filteredEnrollments}
               onView={handleViewEnrollment}
               onEdit={setEditingEnrollment}
               onDelete={handleDeleteEnrollment}
               onAddExtension={handleAddExtension}
               onToggleSelection={toggleEnrollmentSelection}
-              isSelected={selectedEnrollments.includes(enrollment.id)}
+              selectedEnrollments={selectedEnrollments}
             />
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Diálogos */}
