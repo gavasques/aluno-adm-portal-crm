@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CatalogDetailModal from "@/components/admin/mentoring/catalog/CatalogDetailModal";
+import CatalogEditModal from "@/components/admin/mentoring/catalog/CatalogEditModal";
 
 interface MentoringSession {
   id: string;
@@ -92,6 +94,8 @@ const AdminMentoringCatalog = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCatalog, setSelectedCatalog] = useState<MentoringSession | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [catalogs, setCatalogs] = useState<MentoringSession[]>(mockMentoringSessions);
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
@@ -99,7 +103,7 @@ const AdminMentoringCatalog = () => {
     { label: 'Catálogo de Mentorias' }
   ];
 
-  const filteredSessions = mockMentoringSessions.filter(session => {
+  const filteredSessions = catalogs.filter(session => {
     const matchesSearch = session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          session.mentor.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          session.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -140,15 +144,22 @@ const AdminMentoringCatalog = () => {
   };
 
   const handleEditCatalog = (catalog: MentoringSession) => {
-    console.log("Editar mentoria:", catalog);
-    // Aqui você implementaria a lógica de edição
+    setSelectedCatalog(catalog);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveCatalog = (updatedCatalog: MentoringSession) => {
+    setCatalogs(prev => prev.map(catalog => 
+      catalog.id === updatedCatalog.id ? updatedCatalog : catalog
+    ));
+    console.log("Mentoria atualizada:", updatedCatalog);
   };
 
   const stats = {
-    total: mockMentoringSessions.length,
-    individual: mockMentoringSessions.filter(s => s.type === "Individual").length,
-    grupo: mockMentoringSessions.filter(s => s.type === "Grupo").length,
-    ativas: mockMentoringSessions.filter(s => s.status === "Agendada" || s.status === "Em Andamento").length
+    total: catalogs.length,
+    individual: catalogs.filter(s => s.type === "Individual").length,
+    grupo: catalogs.filter(s => s.type === "Grupo").length,
+    ativas: catalogs.filter(s => s.status === "Agendada" || s.status === "Em Andamento").length
   };
 
   return (
@@ -631,6 +642,14 @@ const AdminMentoringCatalog = () => {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         onEdit={handleEditCatalog}
+      />
+
+      {/* Modal de Edição */}
+      <CatalogEditModal
+        catalog={selectedCatalog}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveCatalog}
       />
     </div>
   );
