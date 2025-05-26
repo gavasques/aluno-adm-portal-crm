@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,18 +17,27 @@ import {
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-interface Course {
+export type CourseStatus = "Ativo" | "Inativo" | "Em Breve";
+
+export interface Course {
   id: string;
-  title: string;
-  description: string;
-  instructor: string;
+  courseId?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  instructor?: string;
   price: number;
-  duration: string;
-  students: number;
-  rating: number;
-  status: "Ativo" | "Inativo" | "Em Breve";
-  category: string;
+  duration?: string;
+  students?: number;
+  rating?: number;
+  status: "active" | "inactive" | "coming_soon";
+  category?: string;
   image?: string;
+  platform?: string;
+  platformLink?: string;
+  salesPageLink?: string;
+  accessPeriod?: number;
+  createdAt?: Date;
 }
 
 const mockCourses: Course[] = [
@@ -42,7 +50,7 @@ const mockCourses: Course[] = [
     duration: "40h",
     students: 234,
     rating: 4.8,
-    status: "Ativo",
+    status: "active",
     category: "E-commerce"
   },
   {
@@ -54,7 +62,7 @@ const mockCourses: Course[] = [
     duration: "25h",
     students: 156,
     rating: 4.7,
-    status: "Ativo",
+    status: "active",
     category: "Marketing"
   },
   {
@@ -66,7 +74,7 @@ const mockCourses: Course[] = [
     duration: "15h",
     students: 89,
     rating: 4.6,
-    status: "Em Breve",
+    status: "coming_soon",
     category: "Gestão"
   }
 ];
@@ -76,22 +84,37 @@ const Courses = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>("Todos");
 
   const filteredCourses = mockCourses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
+    const courseName = course.title || course.name || "";
+    const instructorName = course.instructor || "";
+    const matchesSearch = courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         instructorName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === "Todos" || course.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Ativo":
+      case "active":
         return "bg-green-100 text-green-700 border-green-200";
-      case "Inativo":
+      case "inactive":
         return "bg-red-100 text-red-700 border-red-200";
-      case "Em Breve":
+      case "coming_soon":
         return "bg-blue-100 text-blue-700 border-blue-200";
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "active":
+        return "Ativo";
+      case "inactive":
+        return "Inativo";
+      case "coming_soon":
+        return "Em Breve";
+      default:
+        return status;
     }
   };
 
@@ -218,7 +241,7 @@ const Courses = () => {
                 />
               </div>
               <div className="flex gap-2">
-                {["Todos", "Ativo", "Inativo", "Em Breve"].map((status) => (
+                {["Todos", "active", "inactive", "coming_soon"].map((status) => (
                   <Button
                     key={status}
                     variant={selectedStatus === status ? "default" : "outline"}
@@ -226,7 +249,7 @@ const Courses = () => {
                     onClick={() => setSelectedStatus(status)}
                     className="text-xs"
                   >
-                    {status}
+                    {status === "Todos" ? "Todos" : getStatusText(status)}
                   </Button>
                 ))}
               </div>
@@ -258,7 +281,7 @@ const Courses = () => {
                     >
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-900">{course.title}</span>
+                          <span className="font-medium text-gray-900">{course.title || course.name}</span>
                           <span className="text-sm text-gray-500 truncate max-w-xs">
                             {course.description}
                           </span>
@@ -270,7 +293,7 @@ const Courses = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
-                            {course.instructor.charAt(0)}
+                            {course.instructor?.charAt(0) || 'A'}
                           </div>
                           <span className="text-gray-900">{course.instructor}</span>
                         </div>
@@ -297,7 +320,7 @@ const Courses = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={getStatusColor(course.status)}>
-                          {course.status}
+                          {getStatusText(course.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
