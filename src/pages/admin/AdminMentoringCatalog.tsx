@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CatalogFormDialog from "@/components/admin/mentoring/catalog/CatalogFormDialog";
+import CatalogDetailDialog from "@/components/admin/mentoring/catalog/CatalogDetailDialog";
 import { useSupabaseMentoringCatalog } from "@/hooks/mentoring/useSupabaseMentoringCatalog";
 import { useToast } from "@/hooks/use-toast";
 import { MentoringCatalog, CreateMentoringCatalogData } from "@/types/mentoring.types";
@@ -471,8 +473,86 @@ const AdminMentoringCatalog = () => {
           ))}
         </div>
       ) : (
-        // Vista em Lista similar...
-        <div>Lista view placeholder</div>
+        // Vista em Lista
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Lista de Mentorias</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Instructor</TableHead>
+                  <TableHead>Duração</TableHead>
+                  <TableHead>Sessões</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSessions.map((session) => (
+                  <TableRow key={session.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      <div>
+                        <p className="font-medium">{session.name}</p>
+                        <p className="text-sm text-gray-500 truncate max-w-xs">{session.description}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getTypeColor(session.type)}>
+                        {session.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{session.instructor}</TableCell>
+                    <TableCell>{session.durationWeeks} semanas</TableCell>
+                    <TableCell>{session.numberOfSessions}</TableCell>
+                    <TableCell>
+                      <span className="font-medium text-green-600">
+                        R$ {session.price.toLocaleString()}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(session.active)}>
+                        {session.active ? 'Ativa' : 'Inativa'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleViewCatalog(session)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEditCatalog(session)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                          onClick={() => handleDeleteCatalog(session)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
       {/* Dialogs */}
@@ -485,13 +565,22 @@ const AdminMentoringCatalog = () => {
       />
 
       {selectedCatalog && (
-        <CatalogFormDialog
-          open={isEditModalOpen}
-          onOpenChange={setIsEditModalOpen}
-          catalog={selectedCatalog}
-          onSubmit={handleSaveCatalog}
-          isLoading={loading}
-        />
+        <>
+          <CatalogDetailDialog
+            open={isDetailModalOpen}
+            onOpenChange={setIsDetailModalOpen}
+            catalog={selectedCatalog}
+            onEdit={handleEditCatalog}
+          />
+
+          <CatalogFormDialog
+            open={isEditModalOpen}
+            onOpenChange={setIsEditModalOpen}
+            catalog={selectedCatalog}
+            onSubmit={handleSaveCatalog}
+            isLoading={loading}
+          />
+        </>
       )}
     </div>
   );
