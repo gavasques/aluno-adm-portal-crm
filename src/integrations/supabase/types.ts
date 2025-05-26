@@ -231,7 +231,7 @@ export type Database = {
           active: boolean
           created_at: string
           description: string
-          duration_weeks: number
+          duration_months: number
           id: string
           image_url: string | null
           instructor: string
@@ -248,7 +248,7 @@ export type Database = {
           active?: boolean
           created_at?: string
           description: string
-          duration_weeks: number
+          duration_months: number
           id?: string
           image_url?: string | null
           instructor: string
@@ -265,7 +265,7 @@ export type Database = {
           active?: boolean
           created_at?: string
           description?: string
-          duration_weeks?: number
+          duration_months?: number
           id?: string
           image_url?: string | null
           instructor?: string
@@ -306,6 +306,13 @@ export type Database = {
           price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_mentoring_extensions_catalog"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_catalogs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mentoring_extensions_catalog_id_fkey"
             columns: ["catalog_id"]

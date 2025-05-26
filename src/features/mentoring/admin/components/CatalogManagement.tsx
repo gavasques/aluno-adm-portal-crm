@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useMentoringContext } from '../../contexts/MentoringContext';
 import { useMentoringOperations } from '../../hooks/useMentoringOperations';
@@ -13,7 +12,7 @@ import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import CatalogFormDialog from '@/components/admin/mentoring/catalog/CatalogFormDialog';
 import CatalogDetailDialog from '@/components/admin/mentoring/catalog/CatalogDetailDialog';
-import { useMentoringCatalog } from '@/hooks/mentoring/useMentoringCatalog';
+import { useSupabaseMentoringCatalog } from '@/hooks/mentoring/useSupabaseMentoringCatalog';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { 
   BookOpen, 
@@ -35,40 +34,35 @@ import {
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 
 export const CatalogManagement: React.FC = () => {
-  const { state } = useMentoringContext();
-  const { loading } = useMentoringOperations();
-  const { filteredCatalogs, filters, setFilters, clearFilters } = useMentoringFilters();
-  const { searchTerm, debouncedSearchTerm, setSearchTerm } = useDebouncedSearch();
-  const { createCatalog, loading: catalogLoading } = useMentoringCatalog();
+  const { catalogs, loading, createCatalog, updateCatalog, deleteCatalog } = useSupabaseMentoringCatalog();
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { searchTerm, debouncedSearchTerm, setSearchTerm } = useDebouncedSearch();
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState<MentoringCatalog | null>(null);
 
-  // Update filters when search term changes
-  useEffect(() => {
-    setFilters({ search: debouncedSearchTerm });
-  }, [debouncedSearchTerm, setFilters]);
-
-  // Debug logs melhorados
-  useEffect(() => {
-    console.log('🔄 Estado atual:');
-    console.log('📚 Catalogs disponíveis:', state.catalogs);
-    console.log('👥 Mentors carregados:', mentors);
-    console.log('⏳ Mentors loading:', mentorsLoading);
+  // Filtrar catálogos
+  const filteredCatalogs = catalogs.filter(catalog => {
+    const matchesSearch = !debouncedSearchTerm || 
+      catalog.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      catalog.instructor.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      catalog.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     
-    // Log detalhado de cada catálogo
-    state.catalogs.forEach(catalog => {
-      console.log(`📖 Catálogo "${catalog.name}": instructor="${catalog.instructor}"`);
-    });
-  }, [mentors, state.catalogs, mentorsLoading]);
+    const matchesType = !typeFilter || catalog.type === typeFilter;
+    const matchesStatus = !statusFilter || 
+      (statusFilter === 'active' && catalog.active) ||
+      (statusFilter === 'inactive' && !catalog.active);
+    
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
   const stats = {
-    total: state.catalogs.length,
-    active: state.catalogs.filter(c => c.active).length,
-    individual: state.catalogs.filter(c => c.type === 'Individual').length,
-    group: state.catalogs.filter(c => c.type === 'Grupo').length
+    total: catalogs.length,
+    active: catalogs.filter(c => c.active).length,
+    individual: catalogs.filter(c => c.type === 'Individual').length,
+    group: catalogs.filter(c => c.type === 'Grupo').length
   };
 
   const handleCreateCatalog = () => {
@@ -77,6 +71,7 @@ export const CatalogManagement: React.FC = () => {
 
   const handleSubmitCatalog = async (data: CreateMentoringCatalogData): Promise<void> => {
     try {
+      console.log('📝 Dados do formulário:', data);
       await createCatalog(data);
       setShowCreateDialog(false);
     } catch (error) {
@@ -86,25 +81,38 @@ export const CatalogManagement: React.FC = () => {
   };
 
   const handleViewCatalog = (catalog: MentoringCatalog) => {
-    console.log('View catalog:', catalog.id);
+    console.log('🔍 Visualizando catálogo:', catalog);
+    console.log('📦 Extensões do catálogo:', catalog.extensions);
     setSelectedCatalog(catalog);
     setShowDetailDialog(true);
   };
 
   const handleEditCatalog = (catalog: MentoringCatalog) => {
-    console.log('Edit catalog:', catalog.id);
+    console.log('✏️ Editando catálogo:', catalog.id);
     // TODO: Implementar edição
   };
 
-  const handleTypeFilter = (value: string) => {
-    setFilters({ type: value || undefined });
+  const clearFilters = () => {
+    setSearchTerm('');
+    setTypeFilter('');
+    setStatusFilter('');
   };
 
-  const handleStatusFilter = (value: string) => {
-    setFilters({ status: value || undefined });
-  };
+  const hasActiveFilters = debouncedSearchTerm || typeFilter || statusFilter;
 
-  // Função corrigida para obter o nome do mentor
+  // Debug logs melhorados
+  useEffect(() => {
+    console.log('🔄 Estado atual:');
+    console.log('📚 Catalogs disponíveis:', catalogs);
+    console.log('👥 Mentors carregados:', mentors);
+    console.log('⏳ Mentors loading:', mentorsLoading);
+    
+    // Log detalhado de cada catálogo
+    catalogs.forEach(catalog => {
+      console.log(`📖 Catálogo "${catalog.name}": instructor="${catalog.instructor}"`);
+    });
+  }, [mentors, catalogs, mentorsLoading]);
+
   const getMentorName = (instructor: string) => {
     console.log('🔍 Buscando mentor para instructor:', instructor);
     console.log('👥 Mentors disponíveis para busca:', mentors);
@@ -114,20 +122,17 @@ export const CatalogManagement: React.FC = () => {
       return 'Sem mentor';
     }
     
-    // Se o mentor está carregando, mostrar estado de loading
     if (mentorsLoading) {
       console.log('⏳ Mentores ainda carregando...');
       return 'Carregando...';
     }
     
-    // Se já é um nome (não é um UUID), retorna como está
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(instructor);
     if (!isUUID) {
       console.log('✅ Instructor já é um nome:', instructor);
       return instructor;
     }
     
-    // Se é um UUID, procura o mentor na lista
     console.log('🔎 Procurando mentor com UUID:', instructor);
     const mentor = mentors.find(m => m.id === instructor);
     
@@ -170,7 +175,7 @@ export const CatalogManagement: React.FC = () => {
     { label: 'Catálogo' }
   ];
 
-  if (loading) {
+  if (loading && catalogs.length === 0) {
     return <MentoringLoadingState variant="card" count={6} message="Carregando catálogo de mentorias..." />;
   }
 
@@ -286,7 +291,7 @@ export const CatalogManagement: React.FC = () => {
 
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-          <Select onValueChange={handleTypeFilter}>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-32 h-8 text-xs">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -297,7 +302,7 @@ export const CatalogManagement: React.FC = () => {
             </SelectContent>
           </Select>
 
-          <Select onValueChange={handleStatusFilter}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-32 h-8 text-xs">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -308,7 +313,7 @@ export const CatalogManagement: React.FC = () => {
             </SelectContent>
           </Select>
 
-          {Object.keys(filters).length > 0 && (
+          {hasActiveFilters && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -346,6 +351,11 @@ export const CatalogManagement: React.FC = () => {
                         >
                           {catalog.active ? 'Ativa' : 'Inativa'}
                         </Badge>
+                        {catalog.extensions && catalog.extensions.length > 0 && (
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                            {catalog.extensions.length} ext.
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -407,15 +417,15 @@ export const CatalogManagement: React.FC = () => {
           <div className="text-center py-8 lg:py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {Object.keys(filters).length > 0 ? 'Nenhuma mentoria encontrada' : 'Nenhuma mentoria cadastrada'}
+              {hasActiveFilters ? 'Nenhuma mentoria encontrada' : 'Nenhuma mentoria cadastrada'}
             </h3>
             <p className="text-gray-500 mb-4">
-              {Object.keys(filters).length > 0 
+              {hasActiveFilters 
                 ? 'Tente ajustar os filtros para encontrar mentorias.' 
                 : 'Comece criando sua primeira mentoria.'
               }
             </p>
-            {Object.keys(filters).length === 0 && (
+            {!hasActiveFilters && (
               <Button onClick={handleCreateCatalog}>
                 <Plus className="h-4 w-4 mr-2" />
                 Criar primeira mentoria
@@ -431,7 +441,7 @@ export const CatalogManagement: React.FC = () => {
         onOpenChange={setShowCreateDialog}
         catalog={null}
         onSubmit={handleSubmitCatalog}
-        isLoading={catalogLoading}
+        isLoading={loading}
       />
 
       {/* Dialog de detalhes */}

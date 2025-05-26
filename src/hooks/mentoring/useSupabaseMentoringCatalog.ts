@@ -15,6 +15,7 @@ export const useSupabaseMentoringCatalog = () => {
     setLoading(true);
     try {
       const data = await repository.getCatalogs();
+      console.log('📚 Catálogos carregados com extensões:', data);
       setCatalogs(data);
     } catch (error) {
       console.error('Error fetching catalogs:', error);
@@ -31,7 +32,9 @@ export const useSupabaseMentoringCatalog = () => {
   const createCatalog = useCallback(async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
     setLoading(true);
     try {
+      console.log('🔄 Criando catálogo com dados:', data);
       const newCatalog = await repository.createCatalog(data);
+      console.log('✅ Catálogo criado:', newCatalog);
       setCatalogs(prev => [newCatalog, ...prev]);
       toast({
         title: "Sucesso",
@@ -54,6 +57,7 @@ export const useSupabaseMentoringCatalog = () => {
   const updateCatalog = useCallback(async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> => {
     setLoading(true);
     try {
+      console.log('🔄 Atualizando catálogo:', id, data);
       const success = await repository.updateCatalog(id, data);
       if (success) {
         await fetchCatalogs(); // Reload data

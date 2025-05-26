@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { IMentoringRepository } from '@/features/mentoring/types/contracts.types';
 import { 
@@ -9,7 +8,8 @@ import {
   CreateMentoringCatalogData,
   CreateSessionData,
   CreateExtensionData,
-  MentoringExtension
+  MentoringExtension,
+  MentoringExtensionOption
 } from '@/types/mentoring.types';
 
 interface SupabaseMentoringCatalog {
@@ -17,7 +17,7 @@ interface SupabaseMentoringCatalog {
   name: string;
   type: string;
   instructor: string;
-  duration_weeks: number;
+  duration_months: number;
   number_of_sessions: number;
   total_sessions: number;
   price: number;
@@ -37,7 +37,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       name: data.name,
       type: (data.type as 'Individual' | 'Grupo'),
       instructor: data.instructor,
-      durationMonths: Math.ceil(data.duration_weeks / 4), // Convertendo semanas para meses
+      durationMonths: data.duration_months,
       numberOfSessions: data.number_of_sessions,
       totalSessions: data.total_sessions,
       price: data.price,
@@ -57,7 +57,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       name: data.name,
       type: data.type,
       instructor: data.instructor,
-      duration_weeks: data.durationMonths * 4, // Convertendo meses para semanas
+      duration_months: data.durationMonths,
       number_of_sessions: data.numberOfSessions,
       total_sessions: data.numberOfSessions,
       price: data.price,
@@ -79,7 +79,15 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar catálogo de mentorias');
     }
 
-    return (data || []).map((item) => this.transformFromSupabase(item as SupabaseMentoringCatalog));
+    const catalogs = (data || []).map((item) => this.transformFromSupabase(item as SupabaseMentoringCatalog));
+    
+    // Buscar extensões para cada catálogo
+    for (const catalog of catalogs) {
+      const extensions = await this.getCatalogExtensions(catalog.id);
+      catalog.extensions = extensions;
+    }
+
+    return catalogs;
   }
 
   async getCatalogById(id: string): Promise<MentoringCatalog | null> {
@@ -97,7 +105,10 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar mentoria');
     }
 
-    return this.transformFromSupabase(data as SupabaseMentoringCatalog);
+    const catalog = this.transformFromSupabase(data as SupabaseMentoringCatalog);
+    catalog.extensions = await this.getCatalogExtensions(catalog.id);
+    
+    return catalog;
   }
 
   async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
@@ -114,7 +125,15 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao criar mentoria');
     }
 
-    return this.transformFromSupabase(result as SupabaseMentoringCatalog);
+    const catalog = this.transformFromSupabase(result as SupabaseMentoringCatalog);
+    
+    // Criar extensões se fornecidas
+    if (data.extensions && data.extensions.length > 0) {
+      await this.createCatalogExtensions(catalog.id, data.extensions);
+      catalog.extensions = await this.getCatalogExtensions(catalog.id);
+    }
+
+    return catalog;
   }
 
   async updateCatalog(id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> {
@@ -123,7 +142,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     if (data.name !== undefined) updateData.name = data.name;
     if (data.type !== undefined) updateData.type = data.type;
     if (data.instructor !== undefined) updateData.instructor = data.instructor;
-    if (data.durationMonths !== undefined) updateData.duration_weeks = data.durationMonths * 4;
+    if (data.durationMonths !== undefined) updateData.duration_months = data.durationMonths;
     if (data.numberOfSessions !== undefined) {
       updateData.number_of_sessions = data.numberOfSessions;
       updateData.total_sessions = data.numberOfSessions;
@@ -143,6 +162,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao atualizar mentoria');
     }
 
+    // Atualizar extensões se fornecidas
+    if (data.extensions !== undefined) {
+      await this.updateCatalogExtensions(id, data.extensions);
+    }
+
     return true;
   }
 
@@ -158,6 +182,58 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     }
 
     return true;
+  }
+
+  // Extension operations
+  async getCatalogExtensions(catalogId: string): Promise<MentoringExtensionOption[]> {
+    const { data, error } = await supabase
+      .from('mentoring_extensions')
+      .select('*')
+      .eq('catalog_id', catalogId)
+      .order('months', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching extensions:', error);
+      return [];
+    }
+
+    return (data || []).map(ext => ({
+      id: ext.id,
+      months: ext.months,
+      price: ext.price,
+      description: ext.description
+    }));
+  }
+
+  async createCatalogExtensions(catalogId: string, extensions: MentoringExtensionOption[]): Promise<void> {
+    const extensionsData = extensions.map(ext => ({
+      catalog_id: catalogId,
+      months: ext.months,
+      price: ext.price,
+      description: ext.description
+    }));
+
+    const { error } = await supabase
+      .from('mentoring_extensions')
+      .insert(extensionsData);
+
+    if (error) {
+      console.error('Error creating extensions:', error);
+      throw new Error('Erro ao criar extensões');
+    }
+  }
+
+  async updateCatalogExtensions(catalogId: string, extensions: MentoringExtensionOption[]): Promise<void> {
+    // Primeiro, remove todas as extensões existentes
+    await supabase
+      .from('mentoring_extensions')
+      .delete()
+      .eq('catalog_id', catalogId);
+
+    // Depois, cria as novas extensões
+    if (extensions && extensions.length > 0) {
+      await this.createCatalogExtensions(catalogId, extensions);
+    }
   }
 
   // Enrollment operations (mock for now)
