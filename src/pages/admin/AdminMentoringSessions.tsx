@@ -52,6 +52,20 @@ const AdminMentoringSessions = () => {
 
   const isAdmin = user?.role === 'Admin';
 
+  // Mock student names based on student IDs
+  const studentNames = {
+    'student-001': 'João Silva',
+    'student-002': 'Maria Santos',
+    'student-003': 'Pedro Oliveira',
+    'student-004': 'Ana Costa',
+    'student-005': 'Carlos Ferreira',
+    'student-006': 'Juliana Rodrigues',
+    'student-007': 'Roberto Lima',
+    'student-008': 'Fernanda Alves',
+    'student-009': 'Ricardo Pereira',
+    'student-010': 'Camila Barbosa'
+  };
+
   // Dados enriquecidos das sessões
   const enrichedSessions = useMemo(() => {
     return sessions.map(session => {
@@ -63,11 +77,13 @@ const AdminMentoringSessions = () => {
           return currentSessions.findIndex(s => s.id === session.id) + 1;
         }, 0);
 
+      const studentName = enrollment ? studentNames[enrollment.studentId as keyof typeof studentNames] || 'Aluno não encontrado' : 'Aluno não encontrado';
+
       return {
         ...session,
         enrollment,
         sessionNumber,
-        studentName: 'Bianca Mentora', // Em um sistema real, viria do enrollment
+        studentName,
         mentorName: enrollment?.responsibleMentor || 'Mentor não definido',
         mentoringName: enrollment?.mentoring.name || 'Mentoria não encontrada',
         totalSessions: enrollment?.totalSessions || 0
