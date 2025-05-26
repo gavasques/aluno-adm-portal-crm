@@ -44,25 +44,45 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
   const progressPercentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Não abrir se clicou no checkbox ou nos botões de ação
+    if (
+      (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+      (e.target as HTMLElement).closest('button')
+    ) {
+      return;
+    }
+    onView(enrollment);
+  };
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <Card className={`hover:shadow-lg transition-all duration-300 cursor-pointer group ${
-      isSelected ? 'ring-2 ring-blue-500 shadow-md' : ''
-    }`}>
+    <Card 
+      className={`hover:shadow-lg transition-all duration-300 cursor-pointer group ${
+        isSelected ? 'ring-2 ring-blue-500 shadow-md' : ''
+      }`}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="space-y-4">
           {/* Header com Checkbox e Status */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => onToggleSelection(enrollment.id)}
-                className="rounded border-gray-300"
-              />
+              <div onClick={handleCheckboxClick}>
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleSelection(enrollment.id)}
+                  className="rounded border-gray-300"
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-gray-400" />
                 <div className="flex flex-col">
-                  <span className="font-medium text-sm">Nome do Aluno</span>
+                  <span className="font-medium text-sm">Bianca Mentora</span>
                   <span className="text-xs text-gray-500">{enrollment.responsibleMentor}</span>
                 </div>
               </div>
@@ -112,7 +132,10 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => onView(enrollment)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView(enrollment);
+                }}
                 className="h-8 w-8 p-0 hover:bg-blue-50"
               >
                 <Eye className="h-3 w-3" />
@@ -120,7 +143,10 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onEdit(enrollment)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(enrollment);
+                }}
                 className="h-8 w-8 p-0 hover:bg-green-50"
               >
                 <Edit className="h-3 w-3" />
@@ -128,7 +154,10 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onAddExtension(enrollment)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddExtension(enrollment);
+                }}
                 className="h-8 w-8 p-0 hover:bg-orange-50"
                 title="Adicionar Extensão"
               >
@@ -138,7 +167,10 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => onDelete(enrollment.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(enrollment.id);
+              }}
               className="h-8 w-8 p-0 hover:bg-red-50 text-red-600"
             >
               <Trash2 className="h-3 w-3" />

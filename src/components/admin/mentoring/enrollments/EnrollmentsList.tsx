@@ -37,6 +37,21 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
     }
   };
 
+  const handleRowClick = (enrollment: StudentMentoringEnrollment, e: React.MouseEvent) => {
+    // Não abrir se clicou no checkbox ou nos botões de ação
+    if (
+      (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+      (e.target as HTMLElement).closest('button')
+    ) {
+      return;
+    }
+    onView(enrollment);
+  };
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <Table>
@@ -59,18 +74,24 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
         </TableHeader>
         <TableBody>
           {enrollments.map((enrollment) => (
-            <TableRow key={enrollment.id} className="hover:bg-gray-50 transition-colors">
+            <TableRow 
+              key={enrollment.id} 
+              className="hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={(e) => handleRowClick(enrollment, e)}
+            >
               <TableCell>
-                <input
-                  type="checkbox"
-                  checked={selectedEnrollments.includes(enrollment.id)}
-                  onChange={() => onToggleSelection(enrollment.id)}
-                  className="rounded border-gray-300"
-                />
+                <div onClick={handleCheckboxClick}>
+                  <input
+                    type="checkbox"
+                    checked={selectedEnrollments.includes(enrollment.id)}
+                    onChange={() => onToggleSelection(enrollment.id)}
+                    className="rounded border-gray-300"
+                  />
+                </div>
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
-                  <div className="font-medium text-sm">Nome do Aluno</div>
+                  <div className="font-medium text-sm">Bianca Mentora</div>
                   <div className="text-xs text-gray-500">{enrollment.responsibleMentor}</div>
                 </div>
               </TableCell>
@@ -111,7 +132,10 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => onView(enrollment)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onView(enrollment);
+                    }}
                     className="h-8 w-8 p-0 hover:bg-blue-50"
                   >
                     <Eye className="h-3 w-3" />
@@ -119,7 +143,10 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => onEdit(enrollment)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(enrollment);
+                    }}
                     className="h-8 w-8 p-0 hover:bg-green-50"
                   >
                     <Edit className="h-3 w-3" />
@@ -127,7 +154,10 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => onAddExtension(enrollment)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddExtension(enrollment);
+                    }}
                     className="h-8 w-8 p-0 hover:bg-orange-50"
                     title="Adicionar Extensão"
                   >
@@ -136,7 +166,10 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => onDelete(enrollment.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(enrollment.id);
+                    }}
                     className="h-8 w-8 p-0 hover:bg-red-50 text-red-600"
                   >
                     <Trash2 className="h-3 w-3" />
