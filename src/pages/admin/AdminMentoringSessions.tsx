@@ -206,6 +206,18 @@ const AdminMentoringSessions = () => {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'agendada': return 'Agendada';
+      case 'realizada': return 'Realizada';
+      case 'cancelada': return 'Cancelada';
+      case 'reagendada': return 'Reagendada';
+      case 'ausente_aluno': return 'Ausente - Aluno';
+      case 'ausente_mentor': return 'Ausente - Mentor';
+      default: return status;
+    }
+  };
+
   const handleCreateSession = async (data: any) => {
     try {
       console.log('Creating session with data:', data);
@@ -261,7 +273,7 @@ const AdminMentoringSessions = () => {
       <BreadcrumbNav items={breadcrumbItems} showBackButton={true} />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestão de Sessões</h1>
           <p className="text-gray-600 mt-1">
@@ -278,7 +290,7 @@ const AdminMentoringSessions = () => {
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('cards')}
-              className="h-8"
+              className="h-8 px-3"
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
@@ -286,7 +298,7 @@ const AdminMentoringSessions = () => {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('list')}
-              className="h-8"
+              className="h-8 px-3"
             >
               <List className="h-4 w-4" />
             </Button>
@@ -303,9 +315,9 @@ const AdminMentoringSessions = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Sessões</p>
@@ -319,7 +331,7 @@ const AdminMentoringSessions = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Agendadas</p>
@@ -335,7 +347,7 @@ const AdminMentoringSessions = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Realizadas</p>
@@ -351,7 +363,7 @@ const AdminMentoringSessions = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Canceladas</p>
@@ -372,8 +384,8 @@ const AdminMentoringSessions = () => {
         <CardContent className="p-4">
           <div className="space-y-4">
             {/* Primeira linha de filtros */}
-            <div className="flex gap-4 items-center">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Buscar por aluno, mentor ou mentoria..."
@@ -383,7 +395,7 @@ const AdminMentoringSessions = () => {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -397,7 +409,7 @@ const AdminMentoringSessions = () => {
                 </SelectContent>
               </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -409,7 +421,7 @@ const AdminMentoringSessions = () => {
             </div>
 
             {/* Segunda linha de filtros */}
-            <div className="flex gap-4 items-center">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <Input
                 placeholder="Filtrar por aluno..."
                 className="flex-1"
@@ -423,7 +435,7 @@ const AdminMentoringSessions = () => {
                 onChange={(e) => setMentorFilter(e.target.value)}
               />
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Data" />
                 </SelectTrigger>
                 <SelectContent>
@@ -433,7 +445,7 @@ const AdminMentoringSessions = () => {
                   <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap">
                 <Filter className="h-4 w-4 mr-2" />
                 Limpar
               </Button>
@@ -452,66 +464,75 @@ const AdminMentoringSessions = () => {
           isAdmin={isAdmin}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredSessions.map((session) => (
             <Card 
               key={session.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
+              className="hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-200 hover:border-gray-300"
               onClick={() => setViewingSession(session)}
             >
               <CardContent className="p-4">
-                <div className="space-y-4">
+                <div className="space-y-3">
+                  {/* Header com ícone e status */}
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5 text-purple-600" />
-                      <div>
-                        <h4 className="font-medium">{session.mentoringName}</h4>
-                        <p className="text-sm text-gray-500">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="p-2 bg-purple-100 rounded-lg shrink-0">
+                        <GraduationCap className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-sm truncate">{session.mentoringName}</h4>
+                        <p className="text-xs text-gray-500">
                           Sessão {session.sessionNumber}/{session.totalSessions}
                         </p>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(session.status)}>
-                      {session.status}
+                    <Badge className={`${getStatusColor(session.status)} text-xs shrink-0 ml-2`}>
+                      {getStatusLabel(session.status)}
                     </Badge>
                   </div>
 
+                  {/* Informações do aluno e mentor */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <div>
-                        <span className="text-sm font-medium">Aluno:</span>
-                        <span className="text-sm text-gray-600 ml-2">{session.studentName}</span>
+                      <User className="h-3 w-3 text-gray-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-medium">Aluno:</span>
+                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.studentName}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-gray-400" />
-                      <div>
-                        <span className="text-sm font-medium">Mentor:</span>
-                        <span className="text-sm text-gray-600 ml-2">{session.mentorName}</span>
+                      <Users className="h-3 w-3 text-gray-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-medium">Mentor:</span>
+                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.mentorName}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  {/* Data, hora e tipo */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(session.scheduledDate), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                      <Calendar className="h-3 w-3" />
+                      <span>{format(new Date(session.scheduledDate), 'dd/MM/yyyy', { locale: ptBR })}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
+                      <Clock className="h-3 w-3" />
+                      <span>{format(new Date(session.scheduledDate), 'HH:mm', { locale: ptBR })}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
                       <span>{session.durationMinutes} min</span>
                     </div>
-                    <Badge variant="outline" className="capitalize">{session.type}</Badge>
+                    <Badge variant="outline" className="text-xs capitalize">{session.type}</Badge>
                   </div>
 
+                  {/* Botões de ação */}
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     {session.status === 'agendada' && session.accessLink && (
-                      <Button size="sm" className="flex-1" onClick={(e) => {
+                      <Button size="sm" className="flex-1 h-8 text-xs" onClick={(e) => {
                         e.stopPropagation();
                         window.open(session.accessLink, '_blank');
                       }}>
-                        <Play className="h-4 w-4 mr-2" />
+                        <Play className="h-3 w-3 mr-1" />
                         Entrar
                       </Button>
                     )}
@@ -520,24 +541,25 @@ const AdminMentoringSessions = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        className="h-8 w-8 p-0"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingSession(session);
                         }}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3 w-3" />
                       </Button>
                       {isAdmin && (
                         <Button 
                           variant="ghost" 
                           size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteSession(session.id);
                           }}
-                          className="text-red-600 hover:text-red-700"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
