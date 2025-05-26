@@ -27,7 +27,7 @@ const AdminIndividualEnrollments = () => {
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
     { label: 'Mentorias', href: '/admin/mentorias' },
-    { label: 'Inscrições Individuais' }
+    { label: 'Individual' }
   ];
 
   // Filtrar apenas inscrições individuais (sem groupId)
@@ -156,7 +156,7 @@ const AdminIndividualEnrollments = () => {
         activeEnrollments={statistics.active}
         completedEnrollments={statistics.completed}
         pausedEnrollments={statistics.paused}
-        title="Inscrições Individuais"
+        title="Individual"
         description="Gerencie as inscrições individuais de mentoria"
       />
 
