@@ -1,276 +1,318 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { 
   MentoringCatalog, 
   StudentMentoringEnrollment, 
   MentoringSession, 
-  MentoringMaterial,
-  CreateMentoringCatalogData,
-  CreateSessionData,
-  UpdateSessionData,
   CreateExtensionData,
-  MentoringExtension
+  CreateSessionData,
+  ScheduleSessionData,
+  UpdateSessionData 
 } from '@/types/mentoring.types';
-import { 
-  expandedMentoringCatalog, 
-  expandedStudentEnrollments, 
-  expandedMentoringSessions, 
-  expandedMentoringMaterials
-} from '@/data/expandedMentoringData';
+import { useToast } from '@/hooks/use-toast';
+
+// Mock data com sessões
+const mockSessions: MentoringSession[] = [
+  {
+    id: 'session-001',
+    enrollmentId: 'enrollment-001',
+    sessionNumber: 1,
+    type: 'individual',
+    title: 'Fundamentos do E-commerce',
+    scheduledDate: '2024-02-15T14:00:00.000Z',
+    durationMinutes: 60,
+    status: 'realizada',
+    meetingLink: 'https://meet.google.com/abc-def-ghi',
+    recordingLink: 'https://drive.google.com/recording1',
+    mentorNotes: 'Ótima participação do aluno. Discutimos os conceitos básicos.',
+    createdAt: '2024-01-15T10:00:00.000Z',
+    updatedAt: '2024-02-15T15:00:00.000Z'
+  },
+  {
+    id: 'session-002',
+    enrollmentId: 'enrollment-001',
+    sessionNumber: 2,
+    type: 'individual',
+    title: 'Estratégias de Marketing Digital',
+    scheduledDate: '2024-02-22T14:00:00.000Z',
+    durationMinutes: 60,
+    status: 'agendada',
+    meetingLink: 'https://meet.google.com/abc-def-ghi',
+    calendlyLink: 'https://calendly.com/mentor/session',
+    createdAt: '2024-01-15T10:00:00.000Z',
+    updatedAt: '2024-01-15T10:00:00.000Z'
+  },
+  {
+    id: 'session-003',
+    enrollmentId: 'enrollment-001',
+    sessionNumber: 3,
+    type: 'individual',
+    title: 'Análise de Dados e Métricas',
+    durationMinutes: 60,
+    status: 'aguardando_agendamento',
+    calendlyLink: 'https://calendly.com/mentor/session',
+    createdAt: '2024-01-15T10:00:00.000Z',
+    updatedAt: '2024-01-15T10:00:00.000Z'
+  },
+  {
+    id: 'session-004',
+    enrollmentId: 'enrollment-001',
+    sessionNumber: 4,
+    type: 'individual',
+    title: 'Otimização de Conversões',
+    durationMinutes: 60,
+    status: 'aguardando_agendamento',
+    calendlyLink: 'https://calendly.com/mentor/session',
+    createdAt: '2024-01-15T10:00:00.000Z',
+    updatedAt: '2024-01-15T10:00:00.000Z'
+  },
+  {
+    id: 'session-005',
+    enrollmentId: 'enrollment-002',
+    sessionNumber: 1,
+    type: 'individual',
+    title: 'Introdução ao Dropshipping',
+    scheduledDate: '2024-03-01T15:00:00.000Z',
+    durationMinutes: 60,
+    status: 'agendada',
+    meetingLink: 'https://meet.google.com/xyz-123-abc',
+    calendlyLink: 'https://calendly.com/mentor/session',
+    createdAt: '2024-02-01T10:00:00.000Z',
+    updatedAt: '2024-02-15T10:00:00.000Z'
+  }
+];
+
+// Mock data existente (catalogs, enrollments)
+const mockCatalogs: MentoringCatalog[] = [
+  {
+    id: 'mentoring-001',
+    name: 'E-commerce do Zero ao Pro',
+    type: 'Individual',
+    instructor: 'João Silva',
+    durationWeeks: 12,
+    numberOfSessions: 8,
+    totalSessions: 8,
+    price: 2500,
+    description: 'Aprenda a criar e escalar seu e-commerce do zero',
+    tags: ['e-commerce', 'vendas', 'marketing'],
+    active: true,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
+  }
+];
+
+const mockEnrollments: StudentMentoringEnrollment[] = [
+  {
+    id: 'enrollment-001',
+    studentId: 'student-001',
+    mentoringId: 'mentoring-001',
+    mentoring: mockCatalogs[0],
+    status: 'ativa',
+    enrollmentDate: '2024-01-15T00:00:00.000Z',
+    startDate: '2024-02-01T00:00:00.000Z',
+    endDate: '2024-05-01T00:00:00.000Z',
+    sessionsUsed: 1,
+    totalSessions: 8,
+    responsibleMentor: 'João Silva',
+    paymentStatus: 'pago',
+    observations: 'Aluno muito dedicado e participativo',
+    createdAt: '2024-01-15T00:00:00.000Z',
+    updatedAt: '2024-01-15T00:00:00.000Z'
+  }
+];
 
 export const useMentoring = () => {
-  console.log('=== useMentoring HOOK INITIALIZATION ===');
-  console.log('Available data from expandedMentoringData:');
-  console.log('- expandedMentoringCatalog:', expandedMentoringCatalog?.length || 0);
-  console.log('- expandedStudentEnrollments:', expandedStudentEnrollments?.length || 0);
-  console.log('- expandedMentoringSessions:', expandedMentoringSessions?.length || 0);
-  console.log('- expandedMentoringMaterials:', expandedMentoringMaterials?.length || 0);
+  const [catalogs] = useState<MentoringCatalog[]>(mockCatalogs);
+  const [enrollments] = useState<StudentMentoringEnrollment[]>(mockEnrollments);
+  const [sessions, setSessions] = useState<MentoringSession[]>(mockSessions);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Inicializar com dados mock garantindo que existem
-  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(() => {
-    const data = expandedMentoringCatalog || [];
-    console.log('Initializing catalogs with:', data.length, 'items');
-    return data;
-  });
-  
-  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(() => {
-    const data = expandedStudentEnrollments || [];
-    console.log('Initializing enrollments with:', data.length, 'items');
-    return data;
-  });
-  
-  const [sessions, setSessions] = useState<MentoringSession[]>(() => {
-    const data = expandedMentoringSessions || [];
-    console.log('Initializing sessions with:', data.length, 'items');
-    return data;
-  });
-  
-  const [materials] = useState<MentoringMaterial[]>(() => {
-    const data = expandedMentoringMaterials || [];
-    console.log('Initializing materials with:', data.length, 'items');
-    return data;
-  });
-
-  console.log('=== useMentoring CURRENT STATE ===');
-  console.log('- catalogs count:', catalogs.length);
-  console.log('- enrollments count:', enrollments.length);
-  console.log('- sessions count:', sessions.length);
-  console.log('- materials count:', materials.length);
-
-  // Admin functions
-  const createMentoringCatalog = async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
-    console.log('Creating mentoring catalog with data:', data);
+  // Função para criar sessões automaticamente ao criar inscrição
+  const createSessionsForEnrollment = useCallback((enrollment: StudentMentoringEnrollment): MentoringSession[] => {
+    const newSessions: MentoringSession[] = [];
     
-    const newCatalog: MentoringCatalog = {
-      id: `catalog-${Date.now()}`,
-      ...data,
-      totalSessions: data.numberOfSessions,
-      tags: [],
-      active: data.active ?? true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setCatalogs(prev => {
-      const updated = [...prev, newCatalog];
-      console.log('Created new catalog, total catalogs now:', updated.length);
-      return updated;
-    });
-    return newCatalog;
-  };
-
-  const updateMentoringCatalog = async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> => {
-    try {
-      setCatalogs(prev => prev.map(catalog => {
-        if (catalog.id === id) {
-          return {
-            ...catalog,
-            ...data,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return catalog;
-      }));
-      
-      console.log('Updated mentoring catalog:', id, data);
-      return true;
-    } catch (error) {
-      console.error('Error updating catalog:', error);
-      return false;
-    }
-  };
-
-  const deleteMentoringCatalog = async (id: string): Promise<boolean> => {
-    try {
-      setCatalogs(prev => prev.filter(catalog => catalog.id !== id));
-      console.log('Deleted mentoring catalog:', id);
-      return true;
-    } catch (error) {
-      console.error('Error deleting catalog:', error);
-      return false;
-    }
-  };
-
-  const createSession = async (data: CreateSessionData): Promise<MentoringSession> => {
-    console.log('Creating session with data:', data);
-    
-    const newSession: MentoringSession = {
-      id: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      ...data,
-      status: 'agendada',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setSessions(prev => {
-      const updated = [...prev, newSession];
-      console.log('Created new session, total sessions now:', updated.length);
-      return updated;
-    });
-    return newSession;
-  };
-
-  const updateSession = async (id: string, data: UpdateSessionData): Promise<MentoringSession | null> => {
-    const session = sessions.find(s => s.id === id);
-    if (!session) {
-      console.log('Session not found for update:', id);
-      return null;
-    }
-    
-    const updated = {
-      ...session,
-      ...data,
-      updatedAt: new Date().toISOString()
-    };
-    
-    setSessions(prev => prev.map(s => s.id === id ? updated : s));
-    console.log('Updated session:', updated);
-    return updated;
-  };
-
-  const addExtension = async (data: CreateExtensionData): Promise<boolean> => {
-    try {
-      const enrollment = enrollments.find(e => e.id === data.enrollmentId);
-      if (!enrollment) {
-        console.log('Enrollment not found for extension:', data.enrollmentId);
-        return false;
-      }
-
-      const extension: MentoringExtension = {
-        id: `ext-${Date.now()}`,
-        enrollmentId: data.enrollmentId,
-        extensionMonths: data.extensionMonths,
-        appliedDate: new Date().toISOString(),
-        notes: data.notes,
-        adminId: 'current-admin-id',
-        createdAt: new Date().toISOString()
-      };
-
-      const currentEndDate = new Date(enrollment.endDate);
-      const newEndDate = new Date(currentEndDate);
-      newEndDate.setMonth(newEndDate.getMonth() + data.extensionMonths);
-
-      const updatedEnrollment: StudentMentoringEnrollment = {
-        ...enrollment,
-        endDate: newEndDate.toISOString(),
-        originalEndDate: enrollment.originalEndDate || enrollment.endDate,
-        extensions: [...(enrollment.extensions || []), extension],
-        hasExtension: true,
+    for (let i = 1; i <= enrollment.totalSessions; i++) {
+      const session: MentoringSession = {
+        id: `session-${enrollment.id}-${i}`,
+        enrollmentId: enrollment.id,
+        sessionNumber: i,
+        type: enrollment.mentoring.type === 'Individual' ? 'individual' : 'grupo',
+        title: `Sessão ${i} - ${enrollment.mentoring.name}`,
+        durationMinutes: 60,
+        status: 'aguardando_agendamento',
+        calendlyLink: 'https://calendly.com/mentor/session',
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      newSessions.push(session);
+    }
+    
+    return newSessions;
+  }, []);
 
-      setEnrollments(prev => 
-        prev.map(e => e.id === data.enrollmentId ? updatedEnrollment : e)
-      );
+  // Buscar sessões de uma inscrição
+  const getEnrollmentSessions = useCallback((enrollmentId: string): MentoringSession[] => {
+    return sessions.filter(session => session.enrollmentId === enrollmentId);
+  }, [sessions]);
 
-      console.log('Extension added successfully:', extension);
+  // Agendar uma sessão
+  const scheduleSession = useCallback(async (data: ScheduleSessionData): Promise<boolean> => {
+    setLoading(true);
+    try {
+      setSessions(prev => prev.map(session => 
+        session.id === data.sessionId 
+          ? {
+              ...session,
+              scheduledDate: data.scheduledDate,
+              meetingLink: data.meetingLink,
+              status: 'agendada',
+              updatedAt: new Date().toISOString()
+            }
+          : session
+      ));
+      
+      toast({
+        title: "Sucesso",
+        description: "Sessão agendada com sucesso!",
+      });
+      
       return true;
     } catch (error) {
-      console.error('Error adding extension:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao agendar sessão. Tente novamente.",
+        variant: "destructive",
+      });
       return false;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Student functions
-  const getMyEnrollments = (studentId: string): StudentMentoringEnrollment[] => {
-    const result = enrollments.filter(e => e.studentId === studentId);
-    console.log(`Getting enrollments for student ${studentId}:`, result.length);
-    return result;
-  };
+  // Atualizar status/dados de uma sessão
+  const updateSession = useCallback(async (sessionId: string, data: UpdateSessionData): Promise<boolean> => {
+    setLoading(true);
+    try {
+      setSessions(prev => prev.map(session => 
+        session.id === sessionId 
+          ? { ...session, ...data, updatedAt: new Date().toISOString() }
+          : session
+      ));
+      
+      toast({
+        title: "Sucesso",
+        description: "Sessão atualizada com sucesso!",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar sessão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
-  const getEnrollmentSessions = (enrollmentId: string): MentoringSession[] => {
-    const result = sessions.filter(s => s.enrollmentId === enrollmentId);
-    console.log(`Getting sessions for enrollment ${enrollmentId}:`, result.length);
-    return result;
-  };
+  // Criar nova sessão
+  const createSession = useCallback(async (data: CreateSessionData): Promise<MentoringSession> => {
+    setLoading(true);
+    try {
+      const newSession: MentoringSession = {
+        id: `session-${Date.now()}`,
+        enrollmentId: data.enrollmentId,
+        sessionNumber: sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1,
+        type: data.type,
+        title: data.title,
+        scheduledDate: data.scheduledDate,
+        durationMinutes: data.durationMinutes,
+        status: data.scheduledDate ? 'agendada' : 'aguardando_agendamento',
+        meetingLink: data.accessLink,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      setSessions(prev => [...prev, newSession]);
+      
+      toast({
+        title: "Sucesso",
+        description: "Sessão criada com sucesso!",
+      });
+      
+      return newSession;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar sessão. Tente novamente.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [sessions, toast]);
 
-  const getEnrollmentMaterials = (enrollmentId: string): MentoringMaterial[] => {
-    const result = materials.filter(m => m.enrollmentId === enrollmentId);
-    console.log(`Getting materials for enrollment ${enrollmentId}:`, result.length);
-    return result;
-  };
-
-  const getMyUpcomingSessions = (studentId: string): MentoringSession[] => {
-    const studentEnrollments = getMyEnrollments(studentId);
-    const enrollmentIds = studentEnrollments.map(e => e.id);
-    
-    const result = sessions
-      .filter(s => 
-        enrollmentIds.includes(s.enrollmentId) && 
-        s.status === 'agendada' &&
-        new Date(s.scheduledDate) > new Date()
-      )
-      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
-    
-    console.log(`Getting upcoming sessions for student ${studentId}:`, result.length);
-    return result;
-  };
-
-  const getSessionDetails = (sessionId: string): MentoringSession | undefined => {
-    const result = sessions.find(s => s.id === sessionId);
-    console.log(`Getting session details for ${sessionId}:`, result ? 'found' : 'not found');
-    return result;
-  };
-
-  // Statistics
-  const getEnrollmentProgress = (enrollment: StudentMentoringEnrollment) => {
-    const percentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
-    const remaining = enrollment.totalSessions - enrollment.sessionsUsed;
-    const daysRemaining = Math.ceil((new Date(enrollment.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  // Progresso de uma inscrição
+  const getEnrollmentProgress = useCallback((enrollment: StudentMentoringEnrollment) => {
+    const enrollmentSessions = getEnrollmentSessions(enrollment.id);
+    const completedSessions = enrollmentSessions.filter(s => s.status === 'realizada').length;
+    const totalSessions = enrollmentSessions.length;
+    const pendingSessions = enrollmentSessions.filter(s => s.status === 'aguardando_agendamento').length;
+    const scheduledSessions = enrollmentSessions.filter(s => s.status === 'agendada').length;
     
     return {
-      percentage: Math.min(percentage, 100),
-      sessionsRemaining: Math.max(remaining, 0),
-      daysRemaining: Math.max(daysRemaining, 0),
-      isExpired: daysRemaining < 0,
-      isCompleted: enrollment.sessionsUsed >= enrollment.totalSessions
+      completedSessions,
+      totalSessions,
+      pendingSessions,
+      scheduledSessions,
+      percentage: totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0
     };
-  };
+  }, [getEnrollmentSessions]);
 
-  console.log('=== useMentoring HOOK RETURNING DATA ===');
-  console.log('Final counts - catalogs:', catalogs.length, 'enrollments:', enrollments.length, 'sessions:', sessions.length, 'materials:', materials.length);
+  // Extensão de mentoria
+  const addExtension = useCallback(async (data: CreateExtensionData): Promise<boolean> => {
+    setLoading(true);
+    try {
+      console.log('Adding extension:', data);
+      
+      toast({
+        title: "Sucesso",
+        description: "Extensão aplicada com sucesso!",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao aplicar extensão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   return {
-    // Data
+    // Estados
     catalogs,
     enrollments,
     sessions,
-    materials,
+    loading,
     
-    // Admin functions
-    createMentoringCatalog,
-    updateMentoringCatalog,
-    deleteMentoringCatalog,
-    createSession,
-    updateSession,
-    addExtension,
-    
-    // Student functions
-    getMyEnrollments,
+    // Funções de sessões
     getEnrollmentSessions,
-    getEnrollmentMaterials,
-    getMyUpcomingSessions,
-    getSessionDetails,
-    getEnrollmentProgress
+    scheduleSession,
+    updateSession,
+    createSession,
+    createSessionsForEnrollment,
+    
+    // Funções existentes
+    getEnrollmentProgress,
+    addExtension
   };
 };

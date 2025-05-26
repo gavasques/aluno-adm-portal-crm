@@ -45,7 +45,6 @@ export interface StudentMentoringEnrollment {
   hasExtension?: boolean;
   createdAt: string;
   updatedAt: string;
-  // Novo campo para agrupar inscrições
   groupId?: string;
 }
 
@@ -67,13 +66,15 @@ export interface MentoringSession {
   id: string;
   enrollmentId: string;
   enrollment?: StudentMentoringEnrollment;
+  sessionNumber: number;
   type: 'individual' | 'grupo';
   title: string;
-  scheduledDate: string;
+  scheduledDate?: string;
   durationMinutes: number;
-  accessLink?: string;
+  status: 'aguardando_agendamento' | 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
+  calendlyLink?: string;
+  meetingLink?: string;
   recordingLink?: string;
-  status: 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor';
   mentorNotes?: string;
   studentNotes?: string;
   createdAt: string;
@@ -124,20 +125,28 @@ export interface CreateSessionData {
   enrollmentId: string;
   type: 'individual' | 'grupo';
   title: string;
-  scheduledDate: string;
+  scheduledDate?: string;
   durationMinutes: number;
   accessLink?: string;
 }
 
 export interface UpdateSessionData extends Partial<CreateSessionData> {
-  status?: 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor';
+  status?: 'aguardando_agendamento' | 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
   mentorNotes?: string;
   studentNotes?: string;
   recordingLink?: string;
+  calendlyLink?: string;
+  meetingLink?: string;
 }
 
 export interface CreateExtensionData {
   enrollmentId: string;
   extensionMonths: number;
   notes?: string;
+}
+
+export interface ScheduleSessionData {
+  sessionId: string;
+  scheduledDate: string;
+  meetingLink?: string;
 }

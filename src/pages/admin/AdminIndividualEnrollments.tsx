@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -13,7 +12,7 @@ import { IndividualEnrollmentSection } from '@/components/admin/mentoring/enroll
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 const AdminIndividualEnrollments = () => {
-  const { enrollments, getEnrollmentProgress, addExtension } = useMentoring();
+  const { enrollments, getEnrollmentProgress, addExtension, scheduleSession, updateSession } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -90,6 +89,25 @@ const AdminIndividualEnrollments = () => {
     const success = await addExtension(data);
     if (success) {
       console.log('Extensão adicionada com sucesso');
+    }
+  };
+
+  // Novos handlers para sessões
+  const handleScheduleSession = async (sessionId: string, data: any) => {
+    const success = await scheduleSession({
+      sessionId,
+      scheduledDate: data.scheduledDate,
+      meetingLink: data.meetingLink
+    });
+    if (success) {
+      console.log('Sessão agendada com sucesso');
+    }
+  };
+
+  const handleUpdateSession = async (sessionId: string, data: any) => {
+    const success = await updateSession(sessionId, data);
+    if (success) {
+      console.log('Sessão atualizada com sucesso');
     }
   };
 
