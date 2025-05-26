@@ -26,5 +26,11 @@ export const useMentors = () => {
     }, 500);
   }, []);
 
-  return { mentors, loading };
+  const updateMentorStatus = async (mentorId: string, isActive: boolean) => {
+    // Simular atualização do status do mentor
+    console.log(`Atualizando mentor ${mentorId} para status: ${isActive ? 'ativo' : 'inativo'}`);
+    return true;
+  };
+
+  return { mentors, loading, updateMentorStatus };
 };

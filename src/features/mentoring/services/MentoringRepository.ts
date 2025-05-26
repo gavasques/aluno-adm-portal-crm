@@ -33,6 +33,7 @@ export class MentoringRepository implements IMentoringRepository {
       totalSessions: data.numberOfSessions,
       tags: [],
       active: data.active ?? true,
+      status: data.status ?? 'Ativa',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

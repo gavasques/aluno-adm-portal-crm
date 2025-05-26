@@ -15,6 +15,7 @@ const mockGroupMentoringCatalogs: MentoringCatalog[] = [
     description: 'Mentoria em grupo focada em estratégias avançadas de e-commerce',
     tags: ['e-commerce', 'vendas', 'marketing'],
     active: true,
+    status: 'Ativa',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z'
   },
@@ -30,6 +31,7 @@ const mockGroupMentoringCatalogs: MentoringCatalog[] = [
     description: 'Mentoria em grupo sobre gestão eficiente de fornecedores',
     tags: ['fornecedores', 'gestão', 'negociação'],
     active: true,
+    status: 'Ativa',
     createdAt: '2024-02-01T10:00:00Z',
     updatedAt: '2024-02-01T10:00:00Z'
   }

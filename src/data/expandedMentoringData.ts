@@ -1,3 +1,4 @@
+
 import {
   MentoringCatalog,
   StudentMentoringEnrollment,
@@ -19,6 +20,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 12,
     totalSessions: 12,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/ecommerce.jpg',
     createdAt: '2024-11-01T00:00:00Z',
     updatedAt: '2024-11-01T00:00:00Z'
@@ -35,6 +37,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 8,
     totalSessions: 8,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/digital-marketing.jpg',
     createdAt: '2024-11-05T00:00:00Z',
     updatedAt: '2024-11-05T00:00:00Z'
@@ -51,6 +54,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 10,
     totalSessions: 10,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/leadership.jpg',
     createdAt: '2024-11-10T00:00:00Z',
     updatedAt: '2024-11-10T00:00:00Z'
@@ -67,6 +71,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 6,
     totalSessions: 6,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/growth-hacking.jpg',
     createdAt: '2024-11-15T00:00:00Z',
     updatedAt: '2024-11-15T00:00:00Z'
@@ -83,6 +88,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 8,
     totalSessions: 8,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/finance.jpg',
     createdAt: '2024-11-20T00:00:00Z',
     updatedAt: '2024-11-20T00:00:00Z'
@@ -99,6 +105,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 6,
     totalSessions: 6,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/sales.jpg',
     createdAt: '2024-11-25T00:00:00Z',
     updatedAt: '2024-11-25T00:00:00Z'
@@ -115,6 +122,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 12,
     totalSessions: 12,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/innovation.jpg',
     createdAt: '2024-11-30T00:00:00Z',
     updatedAt: '2024-11-30T00:00:00Z'
@@ -131,6 +139,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 8,
     totalSessions: 8,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/project-management.jpg',
     createdAt: '2024-12-05T00:00:00Z',
     updatedAt: '2024-12-05T00:00:00Z'
@@ -147,6 +156,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 10,
     totalSessions: 10,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/customer-success.jpg',
     createdAt: '2024-12-10T00:00:00Z',
     updatedAt: '2024-12-10T00:00:00Z'
@@ -163,6 +173,7 @@ export const expandedMentoringCatalog: MentoringCatalog[] = [
     numberOfSessions: 6,
     totalSessions: 6,
     active: true,
+    status: 'Ativa',
     imageUrl: '/images/mentoring/business-intelligence.jpg',
     createdAt: '2024-12-15T00:00:00Z',
     updatedAt: '2024-12-15T00:00:00Z'
