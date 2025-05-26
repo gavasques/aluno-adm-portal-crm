@@ -62,6 +62,7 @@ const Registers = () => {
     { 
       value: "mentoring", 
       label: "Mentorias", 
+      shortLabel: "Mentor",
       icon: Users, 
       count: 12,
       color: "from-blue-500 to-indigo-600"
@@ -69,6 +70,7 @@ const Registers = () => {
     { 
       value: "bonus", 
       label: "Bônus", 
+      shortLabel: "Bônus",
       icon: Gift, 
       count: 8,
       color: "from-amber-500 to-orange-600"
@@ -76,6 +78,7 @@ const Registers = () => {
     { 
       value: "categories", 
       label: "Categorias", 
+      shortLabel: "Categ",
       icon: FolderOpen, 
       count: 15,
       color: "from-green-500 to-emerald-600"
@@ -83,6 +86,7 @@ const Registers = () => {
     { 
       value: "software-types", 
       label: "Ferramentas", 
+      shortLabel: "Ferram",
       icon: Settings, 
       count: 24,
       color: "from-purple-500 to-violet-600"
@@ -90,6 +94,7 @@ const Registers = () => {
     { 
       value: "partner-types", 
       label: "Parceiros", 
+      shortLabel: "Parcer",
       icon: HandHeart, 
       count: 18,
       color: "from-pink-500 to-rose-600"
@@ -97,6 +102,7 @@ const Registers = () => {
     { 
       value: "courses", 
       label: "Cursos", 
+      shortLabel: "Cursos",
       icon: GraduationCap, 
       count: 6,
       color: "from-teal-500 to-cyan-600"
@@ -240,20 +246,22 @@ const Registers = () => {
                 </DropdownMenu>
               </div>
 
-              {/* Desktop Tabs */}
+              {/* Desktop Tabs - Compact Version */}
               <TabsList className="hidden lg:flex w-full justify-start p-0 bg-gray-50 rounded-none border-b h-auto">
                 {tabsData.map((tab) => (
                   <TabsTrigger 
                     key={tab.value}
                     value={tab.value}
-                    className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-4 py-3 flex items-center gap-2 text-sm"
+                    className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-2 py-2 flex flex-col items-center gap-1 text-xs min-w-0 flex-1"
                   >
-                    <tab.icon className="h-4 w-4" />
-                    <span className="hidden xl:inline">{tab.label}</span>
-                    <span className="xl:hidden">{tab.label.split(' ')[0]}</span>
-                    <Badge variant="secondary" className="ml-1 text-xs">
-                      {tab.count}
-                    </Badge>
+                    <tab.icon className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="hidden xl:block text-xs font-medium truncate">{tab.label}</span>
+                      <span className="xl:hidden text-xs font-medium truncate">{tab.shortLabel}</span>
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-auto min-h-0">
+                        {tab.count}
+                      </Badge>
+                    </div>
                   </TabsTrigger>
                 ))}
               </TabsList>
