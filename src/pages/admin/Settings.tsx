@@ -35,9 +35,7 @@ const settingsFormSchema = z.object({
   email: z.string().email({
     message: "Por favor insira um email válido.",
   }),
-  password: z.string().min(6, {
-    message: "Senha deve ter pelo menos 6 caracteres.",
-  }),
+  password: z.string().optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsFormSchema>;
@@ -172,11 +170,11 @@ const AdminSettings = () => {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 text-blue-700">
                           <Lock className="h-4 w-4" />
-                          Nova Senha
+                          Nova Senha (opcional)
                         </FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="Nova senha" 
+                            placeholder="Deixe em branco para manter a senha atual" 
                             type="password" 
                             {...field} 
                             className="focus:ring-blue-500 focus:border-blue-500"
