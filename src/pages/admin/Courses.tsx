@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export type CourseStatus = "Ativo" | "Inativo" | "Em Breve";
+export type CourseStatus = "active" | "inactive" | "coming_soon";
 
 export interface Course {
   id: string;
@@ -30,7 +31,7 @@ export interface Course {
   duration?: string;
   students?: number;
   rating?: number;
-  status: "active" | "inactive" | "coming_soon";
+  status: CourseStatus;
   category?: string;
   image?: string;
   platform?: string;

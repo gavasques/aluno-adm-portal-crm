@@ -95,7 +95,7 @@ const CourseDetails = () => {
       // Dados fictícios para o curso
       setCourse({
         id: id || "1",
-        courseId: "CRS001", // Adicionando a propriedade courseId que estava faltando
+        courseId: "CRS001",
         name: "Curso de E-commerce",
         status: "active" as CourseStatus,
         platform: "Hotmart",
