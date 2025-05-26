@@ -14,7 +14,10 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Plus
+  Plus,
+  BookOpen,
+  UserCheck,
+  Users2
 } from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
 import { mockMentoringStats, mockStudentEnrollments, mockMentoringSessions } from '@/data/mentoringData';
@@ -38,11 +41,11 @@ const AdminMentoringDashboard = () => {
           <p className="text-gray-600 mt-1">Dashboard completo das mentorias e alunos</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" onClick={() => navigate('/admin/mentorias')}>
-            <GraduationCap className="h-4 w-4 mr-2" />
-            Catálogo
+          <Button variant="outline" onClick={() => navigate('/admin/mentorias/catalogo')}>
+            <BookOpen className="h-4 w-4 mr-2" />
+            Ver Catálogo
           </Button>
-          <Button onClick={() => navigate('/admin/gestao-mentorias/inscricoes')}>
+          <Button onClick={() => navigate('/admin/inscricoes-individuais')}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Inscrição
           </Button>
@@ -124,6 +127,49 @@ const AdminMentoringDashboard = () => {
         </Card>
       </div>
 
+      {/* Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/mentorias/catalogo')}>
+          <CardContent className="p-6 text-center">
+            <div className="p-4 bg-blue-100 rounded-lg inline-block mb-4">
+              <BookOpen className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Catálogo de Mentorias</h3>
+            <p className="text-sm text-gray-600">Gerencie o catálogo de mentorias disponíveis</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/inscricoes-individuais')}>
+          <CardContent className="p-6 text-center">
+            <div className="p-4 bg-green-100 rounded-lg inline-block mb-4">
+              <UserCheck className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Inscrições Individuais</h3>
+            <p className="text-sm text-gray-600">Gerencie inscrições em mentorias individuais</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/inscricoes-grupo')}>
+          <CardContent className="p-6 text-center">
+            <div className="p-4 bg-purple-100 rounded-lg inline-block mb-4">
+              <Users2 className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Inscrições em Grupo</h3>
+            <p className="text-sm text-gray-600">Gerencie inscrições em mentorias em grupo</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/mentorias/sessoes-individuais')}>
+          <CardContent className="p-6 text-center">
+            <div className="p-4 bg-orange-100 rounded-lg inline-block mb-4">
+              <Calendar className="h-8 w-8 text-orange-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Sessões Individuais</h3>
+            <p className="text-sm text-gray-600">Agende e gerencie sessões individuais</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -143,15 +189,23 @@ const AdminMentoringDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => navigate('/admin/gestao-mentorias/inscricoes')}
+                  onClick={() => navigate('/admin/inscricoes-individuais')}
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Gerenciar Inscrições
+                  Gerenciar Inscrições Individuais
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => navigate('/admin/gestao-mentorias/sessoes')}
+                  onClick={() => navigate('/admin/inscricoes-grupo')}
+                >
+                  <Users2 className="h-4 w-4 mr-2" />
+                  Gerenciar Inscrições em Grupo
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/admin/mentorias/sessoes-individuais')}
                 >
                   <Calendar className="h-4 w-4 mr-2" />
                   Agendar Sessões
@@ -159,15 +213,7 @@ const AdminMentoringDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => navigate('/admin/gestao-mentorias/materiais')}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Central de Materiais
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => navigate('/admin/mentorias')}
+                  onClick={() => navigate('/admin/mentorias/catalogo')}
                 >
                   <GraduationCap className="h-4 w-4 mr-2" />
                   Catálogo de Mentorias

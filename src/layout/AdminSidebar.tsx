@@ -188,7 +188,10 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/mentorias" icon={GraduationCap} showAlways={true}>Gestão de Mentorias</NavItem>
+                  <NavItem href="/admin/mentorias" icon={GraduationCap} showAlways={true}>Dashboard de Mentorias</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/mentorias/catalogo" icon={BookOpen} showAlways={true}>Catálogo</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/inscricoes-individuais" icon={UserCheck} showAlways={true}>Inscrições Individuais</NavItem>

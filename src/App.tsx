@@ -8,7 +8,8 @@ import StudentDashboard from '@/pages/student/Dashboard';
 import StudentMentoring from '@/pages/student/Mentoring';
 import StudentMentoringDetails from '@/pages/student/MentoringDetail';
 import AdminDashboard from '@/pages/admin/Dashboard';
-import AdminMentoring from '@/pages/admin/Mentoring';
+import AdminMentoringDashboard from '@/pages/admin/AdminMentoringDashboard';
+import AdminMentoringCatalog from '@/pages/admin/AdminMentoringCatalog';
 import AdminMentoringDetails from '@/pages/admin/MentoringDetail';
 import AdminMentoringEnrollments from '@/pages/admin/AdminMentoringEnrollments';
 import AdminIndividualEnrollments from '@/pages/admin/AdminIndividualEnrollments';
@@ -57,7 +58,8 @@ function App() {
         </RouteGuard>
       }>
         <Route index element={<AdminDashboard />} />
-        <Route path="mentorias" element={<AdminMentoring />} />
+        <Route path="mentorias" element={<AdminMentoringDashboard />} />
+        <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
         <Route path="mentorias/:id" element={<AdminMentoringDetails />} />
         <Route path="inscricoes" element={<AdminMentoringEnrollments />} />
         <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
