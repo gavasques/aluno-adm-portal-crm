@@ -53,11 +53,11 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     });
     console.log("========================");
 
-    // Se não está autenticado, redirecionar para home
+    // Se não está autenticado, redirecionar para login
     if (!user) {
-      console.log("Usuário não autenticado, redirecionando para home");
+      console.log("Usuário não autenticado, redirecionando para login");
       hasRedirectedRef.current = true;
-      navigate("/");
+      navigate("/login");
       return;
     }
 

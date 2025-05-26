@@ -1,3 +1,4 @@
+
 import { AuthTabs } from "@/components/ui/auth-tabs";
 import { useAuth } from "@/hooks/auth";
 import { Navigate } from "react-router-dom";
@@ -18,6 +19,7 @@ const Index = () => {
     );
   }
 
+  // Se está em modo de recuperação, mostrar o formulário
   if (isInRecoveryMode && isInRecoveryMode()) {
     console.log("Página de login em modo de recuperação - mostrando login manual");
     return (
@@ -30,11 +32,12 @@ const Index = () => {
     );
   }
 
+  // Se o usuário já está logado, redirecionar para a área do aluno
   if (user) {
-    // Redirecionar para as novas URLs otimizadas
-    return <Navigate to="/aluno" />;
+    return <Navigate to="/aluno" replace />;
   }
 
+  // Mostrar a página de login/registro
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="container mx-auto px-4 py-8">

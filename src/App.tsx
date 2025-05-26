@@ -31,13 +31,13 @@ function App() {
 
   return (
     <Routes>
-      {/* Auth Routes - No layout */}
+      {/* Public Routes - No protection needed */}
       <Route path="/login" element={<Index />} />
       <Route path="/register" element={<Index />} />
       <Route path="/forgot-password" element={<Index />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-      {/* Student Routes with Layout */}
+      {/* Student Routes with Layout and Protection */}
       <Route path="/aluno" element={
         <RouteGuard requiredMenuKey="student-dashboard">
           <StudentLayout />
@@ -48,7 +48,7 @@ function App() {
         <Route path="mentorias/:id" element={<StudentMentoringDetails />} />
       </Route>
       
-      {/* Admin Routes with Layout */}
+      {/* Admin Routes with Layout and Protection */}
       <Route path="/admin" element={
         <RouteGuard requireAdminAccess>
           <AdminLayout />
@@ -63,7 +63,7 @@ function App() {
         <Route path="mentorias/sessoes-grupo" element={<AdminGroupSessions />} />
       </Route>
       
-      {/* Default Route */}
+      {/* Default Route - Redirect based on authentication */}
       <Route path="/" element={
         user ? <Navigate to="/aluno" replace /> : <Navigate to="/login" replace />
       } />
