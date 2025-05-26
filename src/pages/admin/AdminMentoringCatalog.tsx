@@ -27,8 +27,6 @@ import {
   Trash2
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import CatalogDetailModal from "@/components/admin/mentoring/catalog/CatalogDetailModal";
-import CatalogEditModal from "@/components/admin/mentoring/catalog/CatalogEditModal";
 import CatalogFormDialog from "@/components/admin/mentoring/catalog/CatalogFormDialog";
 import { useSupabaseMentoringCatalog } from "@/hooks/mentoring/useSupabaseMentoringCatalog";
 import { useToast } from "@/hooks/use-toast";
@@ -487,24 +485,13 @@ const AdminMentoringCatalog = () => {
       />
 
       {selectedCatalog && (
-        <>
-          <CatalogDetailModal
-            catalog={selectedCatalog}
-            isOpen={isDetailModalOpen}
-            onClose={() => setIsDetailModalOpen(false)}
-            onEdit={() => {
-              setIsDetailModalOpen(false);
-              setIsEditModalOpen(true);
-            }}
-          />
-
-          <CatalogEditModal
-            catalog={selectedCatalog}
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSave={handleSaveCatalog}
-          />
-        </>
+        <CatalogFormDialog
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          catalog={selectedCatalog}
+          onSubmit={handleSaveCatalog}
+          isLoading={loading}
+        />
       )}
     </div>
   );
