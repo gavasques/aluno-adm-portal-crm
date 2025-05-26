@@ -134,7 +134,8 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
 
   // Enrollment operations
   async getEnrollments(): Promise<StudentMentoringEnrollment[]> {
-    const { data, error } = await supabase
+    // Usando approach direto sem tipagem específica
+    const { data, error } = await (supabase as any)
       .from('mentoring_enrollments')
       .select(`
         *,
@@ -147,11 +148,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar inscrições');
     }
 
-    return (data || []).map(item => this.transformEnrollmentFromSupabase(item));
+    return (data || []).map((item: any) => this.transformEnrollmentFromSupabase(item));
   }
 
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mentoring_enrollments')
       .select(`
         *,
@@ -165,11 +166,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar inscrições do aluno');
     }
 
-    return (data || []).map(item => this.transformEnrollmentFromSupabase(item));
+    return (data || []).map((item: any) => this.transformEnrollmentFromSupabase(item));
   }
 
   async addExtension(data: CreateExtensionData): Promise<boolean> {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('mentoring_enrollment_extensions')
       .insert([{
         enrollment_id: data.enrollmentId,
@@ -188,7 +189,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
 
   // Session operations
   async getSessions(): Promise<MentoringSession[]> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mentoring_sessions')
       .select(`
         *,
@@ -201,11 +202,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar sessões');
     }
 
-    return (data || []).map(item => this.transformSessionFromSupabase(item));
+    return (data || []).map((item: any) => this.transformSessionFromSupabase(item));
   }
 
   async getEnrollmentSessions(enrollmentId: string): Promise<MentoringSession[]> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mentoring_sessions')
       .select('*')
       .eq('enrollment_id', enrollmentId)
@@ -216,11 +217,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar sessões da inscrição');
     }
 
-    return (data || []).map(item => this.transformSessionFromSupabase(item));
+    return (data || []).map((item: any) => this.transformSessionFromSupabase(item));
   }
 
   async createSession(data: CreateSessionData): Promise<MentoringSession> {
-    const { data: result, error } = await supabase
+    const { data: result, error } = await (supabase as any)
       .from('mentoring_sessions')
       .insert([this.transformSessionToSupabase(data)])
       .select()
@@ -236,7 +237,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
 
   // Material operations
   async getMaterials(): Promise<MentoringMaterial[]> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mentoring_materials')
       .select('*')
       .order('created_at', { ascending: false });
@@ -246,11 +247,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar materiais');
     }
 
-    return (data || []).map(item => this.transformMaterialFromSupabase(item));
+    return (data || []).map((item: any) => this.transformMaterialFromSupabase(item));
   }
 
   async getEnrollmentMaterials(enrollmentId: string): Promise<MentoringMaterial[]> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mentoring_materials')
       .select('*')
       .eq('enrollment_id', enrollmentId)
@@ -261,11 +262,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar materiais da inscrição');
     }
 
-    return (data || []).map(item => this.transformMaterialFromSupabase(item));
+    return (data || []).map((item: any) => this.transformMaterialFromSupabase(item));
   }
 
   async getSessionMaterials(sessionId: string): Promise<MentoringMaterial[]> {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mentoring_materials')
       .select('*')
       .eq('session_id', sessionId)
@@ -276,7 +277,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar materiais da sessão');
     }
 
-    return (data || []).map(item => this.transformMaterialFromSupabase(item));
+    return (data || []).map((item: any) => this.transformMaterialFromSupabase(item));
   }
 
   // Extension operations

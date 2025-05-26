@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { 
@@ -263,24 +262,24 @@ export const useSupabaseMentoring = () => {
     loading,
     
     // Catalog methods
-    createCatalog,
-    updateCatalog,
-    deleteCatalog,
+    createCatalog: repository.createCatalog.bind(repository),
+    updateCatalog: repository.updateCatalog.bind(repository),
+    deleteCatalog: repository.deleteCatalog.bind(repository),
     refreshCatalogs,
     
     // Enrollment methods
-    getStudentEnrollments,
-    addExtension,
+    getStudentEnrollments: repository.getStudentEnrollments.bind(repository),
+    addExtension: repository.addExtension.bind(repository),
     refreshEnrollments,
     
     // Session methods
-    getEnrollmentSessions,
-    createSession,
+    getEnrollmentSessions: repository.getEnrollmentSessions.bind(repository),
+    createSession: repository.createSession.bind(repository),
     refreshSessions,
     
     // Material methods
-    getEnrollmentMaterials,
-    getSessionMaterials,
+    getEnrollmentMaterials: repository.getEnrollmentMaterials.bind(repository),
+    getSessionMaterials: repository.getSessionMaterials.bind(repository),
     refreshMaterials,
     
     // Repository access
