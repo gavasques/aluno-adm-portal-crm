@@ -61,7 +61,10 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
               />
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-gray-400" />
-                <span className="font-medium text-sm">{enrollment.responsibleMentor}</span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">Nome do Aluno</span>
+                  <span className="text-xs text-gray-500">{enrollment.responsibleMentor}</span>
+                </div>
               </div>
             </div>
             <Badge className={`${getStatusColor(enrollment.status)} text-xs`}>
@@ -75,9 +78,9 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
               <GraduationCap className="h-4 w-4 text-gray-400 mt-0.5" />
               <div className="flex-1">
                 <div className="font-medium text-sm">{enrollment.mentoring.name}</div>
-                <div className="text-xs text-gray-500">{enrollment.mentoring.type}</div>
+                <Badge variant="outline" className="text-xs mt-1">{enrollment.mentoring.type}</Badge>
                 {enrollment.hasExtension && (
-                  <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs mt-1">
+                  <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs mt-1 ml-2">
                     <Timer className="h-3 w-3 mr-1" />
                     Extensão
                   </Badge>

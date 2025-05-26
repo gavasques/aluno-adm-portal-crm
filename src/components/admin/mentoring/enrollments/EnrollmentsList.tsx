@@ -50,7 +50,7 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                 className="rounded border-gray-300"
               />
             </TableHead>
-            <TableHead className="font-semibold">Mentor</TableHead>
+            <TableHead className="font-semibold">Aluno</TableHead>
             <TableHead className="font-semibold">Mentoria</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Progresso</TableHead>
@@ -69,7 +69,10 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                 />
               </TableCell>
               <TableCell>
-                <div className="font-medium text-sm">{enrollment.responsibleMentor}</div>
+                <div className="space-y-1">
+                  <div className="font-medium text-sm">Nome do Aluno</div>
+                  <div className="text-xs text-gray-500">{enrollment.responsibleMentor}</div>
+                </div>
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
