@@ -3,17 +3,13 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Eye, 
   Edit, 
   Trash2, 
   Timer, 
-  Calendar,
-  User,
   GraduationCap,
-  MoreVertical,
-  Clock
+  User
 } from 'lucide-react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
@@ -52,11 +48,11 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     <Card className={`hover:shadow-lg transition-all duration-300 cursor-pointer group ${
       isSelected ? 'ring-2 ring-blue-500 shadow-md' : ''
     }`}>
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         <div className="space-y-4">
           {/* Header com Checkbox e Status */}
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={isSelected}
@@ -64,15 +60,8 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 className="rounded border-gray-300"
               />
               <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                    {enrollment.studentId.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-sm">Aluno {enrollment.studentId}</p>
-                  <p className="text-xs text-gray-500">{enrollment.responsibleMentor}</p>
-                </div>
+                <User className="h-4 w-4 text-gray-400" />
+                <span className="font-medium text-sm">{enrollment.responsibleMentor}</span>
               </div>
             </div>
             <Badge className={`${getStatusColor(enrollment.status)} text-xs`}>
@@ -82,24 +71,17 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
           {/* Mentoria Info */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-gray-400" />
-              <span className="font-medium text-sm">{enrollment.mentoring.name}</span>
-              {enrollment.hasExtension && (
-                <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                  <Timer className="h-3 w-3 mr-1" />
-                  Extensão
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-600">
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <span>{enrollment.mentoring.type}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                <span>{new Date(enrollment.startDate).toLocaleDateString('pt-BR')}</span>
+            <div className="flex items-start gap-2">
+              <GraduationCap className="h-4 w-4 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="font-medium text-sm">{enrollment.mentoring.name}</div>
+                <div className="text-xs text-gray-500">{enrollment.mentoring.type}</div>
+                {enrollment.hasExtension && (
+                  <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs mt-1">
+                    <Timer className="h-3 w-3 mr-1" />
+                    Extensão
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -116,9 +98,8 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>{Math.round(progressPercentage)}% concluído</span>
-              <span>Fim: {new Date(enrollment.endDate).toLocaleDateString('pt-BR')}</span>
+            <div className="text-xs text-gray-500 text-center">
+              {Math.round(progressPercentage)}% concluído
             </div>
           </div>
 

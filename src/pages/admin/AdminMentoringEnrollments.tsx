@@ -53,7 +53,7 @@ const AdminMentoringEnrollments = () => {
     };
   }, [enrollments]);
 
-  const hasFilters = searchTerm || statusFilter || typeFilter;
+  const hasFilters = Boolean(searchTerm || statusFilter || typeFilter);
 
   // Handlers
   const handleCreateEnrollment = (data: any) => {

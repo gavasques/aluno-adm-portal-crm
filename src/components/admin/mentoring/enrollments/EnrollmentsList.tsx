@@ -3,7 +3,6 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Eye, Edit, Trash2, Timer } from 'lucide-react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
@@ -51,13 +50,10 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                 className="rounded border-gray-300"
               />
             </TableHead>
-            <TableHead className="font-semibold">Aluno</TableHead>
+            <TableHead className="font-semibold">Mentor</TableHead>
             <TableHead className="font-semibold">Mentoria</TableHead>
-            <TableHead className="font-semibold">Tipo</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold">Progresso</TableHead>
-            <TableHead className="font-semibold">Início</TableHead>
-            <TableHead className="font-semibold">Fim</TableHead>
             <TableHead className="font-semibold text-center">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -73,31 +69,21 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                 />
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                      {enrollment.studentId.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium text-sm">Aluno {enrollment.studentId}</div>
-                    <div className="text-xs text-gray-500">{enrollment.responsibleMentor}</div>
+                <div className="font-medium text-sm">{enrollment.responsibleMentor}</div>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <div className="font-medium text-sm">{enrollment.mentoring.name}</div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">{enrollment.mentoring.type}</Badge>
+                    {enrollment.hasExtension && (
+                      <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                        <Timer className="h-3 w-3 mr-1" />
+                        Extensão
+                      </Badge>
+                    )}
                   </div>
                 </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="font-medium text-sm">{enrollment.mentoring.name}</div>
-                  {enrollment.hasExtension && (
-                    <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                      <Timer className="h-3 w-3 mr-1" />
-                      Extensão
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="text-xs">{enrollment.mentoring.type}</Badge>
               </TableCell>
               <TableCell>
                 <Badge className={`${getStatusColor(enrollment.status)} text-xs`}>
@@ -109,25 +95,12 @@ export const EnrollmentsList: React.FC<EnrollmentsListProps> = ({
                   <div className="text-xs text-gray-600">
                     {enrollment.sessionsUsed}/{enrollment.totalSessions} sessões
                   </div>
-                  <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                  <div className="w-20 bg-gray-200 rounded-full h-1.5">
                     <div 
                       className="bg-blue-600 h-1.5 rounded-full" 
                       style={{ width: `${(enrollment.sessionsUsed / enrollment.totalSessions) * 100}%` }}
                     />
                   </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-sm text-gray-600">
-                {new Date(enrollment.startDate).toLocaleDateString('pt-BR')}
-              </TableCell>
-              <TableCell>
-                <div className="text-sm text-gray-600">
-                  {new Date(enrollment.endDate).toLocaleDateString('pt-BR')}
-                  {enrollment.originalEndDate && (
-                    <div className="text-xs text-gray-500">
-                      Original: {new Date(enrollment.originalEndDate).toLocaleDateString('pt-BR')}
-                    </div>
-                  )}
                 </div>
               </TableCell>
               <TableCell>
