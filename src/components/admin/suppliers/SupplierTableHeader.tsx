@@ -19,33 +19,43 @@ const SupplierTableHeader: React.FC<SupplierTableHeaderProps> = ({
 }) => {
   return (
     <TableHeader>
-      <TableRow>
+      <TableRow className="hover:bg-transparent border-b bg-gray-50/50">
         <TableHead>
           <Button 
             variant="ghost" 
             onClick={() => onSort("name")} 
-            className="flex items-center gap-1 font-medium"
+            className="flex items-center gap-1 font-semibold text-gray-900 hover:bg-transparent p-0"
           >
             Nome 
-            <ArrowUpDown className={`h-4 w-4 ${sortField === "name" ? "text-portal-primary" : ""}`} />
+            <ArrowUpDown className={`h-4 w-4 ${sortField === "name" ? "text-blue-600" : "text-gray-400"}`} />
+            {sortField === "name" && (
+              <span className="text-xs text-blue-600">
+                {sortDirection === "asc" ? "↑" : "↓"}
+              </span>
+            )}
           </Button>
         </TableHead>
         <TableHead>
           <Button 
             variant="ghost" 
             onClick={() => onSort("category")} 
-            className="flex items-center gap-1 font-medium"
+            className="flex items-center gap-1 font-semibold text-gray-900 hover:bg-transparent p-0"
           >
             Categoria 
-            <ArrowUpDown className={`h-4 w-4 ${sortField === "category" ? "text-portal-primary" : ""}`} />
+            <ArrowUpDown className={`h-4 w-4 ${sortField === "category" ? "text-blue-600" : "text-gray-400"}`} />
+            {sortField === "category" && (
+              <span className="text-xs text-blue-600">
+                {sortDirection === "asc" ? "↑" : "↓"}
+              </span>
+            )}
           </Button>
         </TableHead>
-        <TableHead>Tipo</TableHead>
-        <TableHead>Marcas</TableHead>
-        <TableHead>Avaliação</TableHead>
-        <TableHead>Comentários</TableHead>
-        {isAdmin && <TableHead>Status</TableHead>}
-        {isAdmin && <TableHead className="text-right">Ações</TableHead>}
+        <TableHead className="font-semibold text-gray-900">Tipo</TableHead>
+        <TableHead className="font-semibold text-gray-900">Marcas</TableHead>
+        <TableHead className="font-semibold text-gray-900">Avaliação</TableHead>
+        <TableHead className="font-semibold text-gray-900">Comentários</TableHead>
+        {isAdmin && <TableHead className="font-semibold text-gray-900">Status</TableHead>}
+        {isAdmin && <TableHead className="font-semibold text-gray-900 text-right">Ações</TableHead>}
       </TableRow>
     </TableHeader>
   );
