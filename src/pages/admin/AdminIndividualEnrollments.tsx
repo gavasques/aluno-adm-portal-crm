@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useMentoring } from '@/hooks/useMentoring';
+import { MentoringProviders } from '@/features/mentoring/providers/MentoringProviders';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
@@ -11,7 +12,7 @@ import { BulkActions } from '@/components/admin/mentoring/enrollments/BulkAction
 import { IndividualEnrollmentSection } from '@/components/admin/mentoring/enrollments/IndividualEnrollmentSection';
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
 
-const AdminIndividualEnrollments = () => {
+const AdminIndividualEnrollmentsContent = () => {
   const { enrollments, getEnrollmentProgress, addExtension, scheduleSession, updateSession } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -185,7 +186,7 @@ const AdminIndividualEnrollments = () => {
       <Dialog open={showForm} onOpenChange={(open) => {
         if (!open) setShowForm(false);
       }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova Inscrição Individual</DialogTitle>
           </DialogHeader>
@@ -228,6 +229,14 @@ const AdminIndividualEnrollments = () => {
         onSubmit={handleExtensionSubmit}
       />
     </div>
+  );
+};
+
+const AdminIndividualEnrollments = () => {
+  return (
+    <MentoringProviders>
+      <AdminIndividualEnrollmentsContent />
+    </MentoringProviders>
   );
 };
 
