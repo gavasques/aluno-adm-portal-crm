@@ -10,6 +10,8 @@ import StudentMentoringDetails from '@/pages/student/MentoringDetail';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminMentoring from '@/pages/admin/Mentoring';
 import AdminMentoringDetails from '@/pages/admin/MentoringDetail';
+import AdminMentoringEnrollments from '@/pages/admin/AdminMentoringEnrollments';
+import AdminIndividualEnrollments from '@/pages/admin/AdminIndividualEnrollments';
 import AdminUsers from '@/pages/admin/Users';
 import AdminGroups from '@/pages/admin/AdminGroups';
 import AdminIndividualSessions from '@/pages/admin/AdminIndividualSessions';
@@ -57,6 +59,9 @@ function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="mentorias" element={<AdminMentoring />} />
         <Route path="mentorias/:id" element={<AdminMentoringDetails />} />
+        <Route path="inscricoes" element={<AdminMentoringEnrollments />} />
+        <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
+        <Route path="inscricoes-grupo" element={<AdminMentoringEnrollments />} />
         <Route path="usuarios" element={<AdminUsers />} />
         <Route path="grupos" element={<AdminGroups />} />
         <Route path="mentorias/sessoes-individuais" element={<AdminIndividualSessions />} />
