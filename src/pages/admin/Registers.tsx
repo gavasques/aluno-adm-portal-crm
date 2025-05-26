@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import { 
-  Users, 
   Gift, 
   FolderOpen, 
   Settings, 
@@ -25,7 +24,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Mentoring from "./Mentoring";
 import Bonus from "./Bonus";
 import Categories from "./Categories";
 import SoftwareTypes from "./SoftwareTypes";
@@ -35,14 +33,14 @@ import Courses from "./Courses";
 const Registers = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("mentoring");
+  const [activeTab, setActiveTab] = useState("bonus");
   const [searchQuery, setSearchQuery] = useState("");
   
   // Extrair o parâmetro 'tab' da URL, se existir
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
-    if (tabParam) {
+    if (tabParam && tabParam !== "mentoring") {
       setActiveTab(tabParam);
     }
   }, [location.search]);
@@ -59,14 +57,6 @@ const Registers = () => {
   ];
 
   const tabsData = [
-    { 
-      value: "mentoring", 
-      label: "Mentorias", 
-      shortLabel: "Mentor",
-      icon: Users, 
-      count: 12,
-      color: "from-blue-500 to-indigo-600"
-    },
     { 
       value: "bonus", 
       label: "Bônus", 
@@ -173,7 +163,7 @@ const Registers = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {tabsData.map((tab, index) => (
               <motion.div
                 key={tab.value}
@@ -208,7 +198,7 @@ const Registers = () => {
         >
           <Card className="border-0 shadow-lg overflow-hidden">
             <Tabs 
-              defaultValue="mentoring" 
+              defaultValue="bonus" 
               className="w-full" 
               value={activeTab}
               onValueChange={handleTabChange}
@@ -265,10 +255,6 @@ const Registers = () => {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              
-              <TabsContent value="mentoring" className="mt-0 p-6">
-                <Mentoring />
-              </TabsContent>
               
               <TabsContent value="bonus" className="mt-0 p-6">
                 <Bonus />
