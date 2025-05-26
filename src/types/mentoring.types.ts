@@ -1,3 +1,4 @@
+
 export interface MentoringCatalog {
   id: string;
   name: string;
@@ -11,6 +12,7 @@ export interface MentoringCatalog {
   tags: string[];
   imageUrl?: string;
   active: boolean;
+  status: 'Ativa' | 'Inativa' | 'Cancelada';
   createdAt: string;
   updatedAt: string;
   extensions?: MentoringExtensionOption[];
@@ -127,6 +129,7 @@ export interface CreateMentoringCatalogData {
   price: number;
   description: string;
   active?: boolean;
+  status?: 'Ativa' | 'Inativa' | 'Cancelada';
   extensions?: MentoringExtensionOption[];
 }
 

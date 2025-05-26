@@ -11,7 +11,6 @@ import {
   Plus, 
   Search, 
   Calendar, 
-  Users, 
   Clock,
   Filter,
   Eye,
@@ -25,20 +24,23 @@ import {
   Target,
   DollarSign,
   User,
-  Edit
+  Edit,
+  Trash2
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CatalogDetailModal from "@/components/admin/mentoring/catalog/CatalogDetailModal";
 import CatalogEditModal from "@/components/admin/mentoring/catalog/CatalogEditModal";
+import CatalogFormDialog from "@/components/admin/mentoring/catalog/CatalogFormDialog";
+import { useMentoringCatalog } from "@/hooks/mentoring/useMentoringCatalog";
+import { useToast } from "@/hooks/use-toast";
 
 interface MentoringSession {
   id: string;
   title: string;
   mentor: string;
-  students: number;
   duration: string;
   date: string;
-  status: "Agendada" | "Em Andamento" | "Concluída" | "Cancelada";
+  status: "Ativa" | "Inativa" | "Cancelada";
   category: string;
   type: "Individual" | "Grupo";
   price: number;
@@ -56,10 +58,9 @@ const mockMentoringSessions: MentoringSession[] = [
     id: "1",
     title: "Estratégias de E-commerce",
     mentor: "João Silva",
-    students: 12,
     duration: "2h",
     date: "2024-01-15",
-    status: "Agendada",
+    status: "Ativa",
     category: "E-commerce",
     type: "Grupo",
     price: 299,
@@ -83,10 +84,9 @@ const mockMentoringSessions: MentoringSession[] = [
     id: "2",
     title: "Marketing Digital Avançado",
     mentor: "Maria Santos",
-    students: 8,
     duration: "1h30m",
     date: "2024-01-12",
-    status: "Concluída",
+    status: "Ativa",
     category: "Marketing",
     type: "Individual",
     price: 199,
@@ -110,10 +110,9 @@ const mockMentoringSessions: MentoringSession[] = [
     id: "3",
     title: "Gestão de Fornecedores",
     mentor: "Pedro Costa",
-    students: 15,
     duration: "2h30m",
     date: "2024-01-10",
-    status: "Concluída",
+    status: "Inativa",
     category: "Gestão",
     type: "Grupo",
     price: 349,
@@ -137,7 +136,10 @@ const AdminMentoringCatalog = () => {
   const [selectedCatalog, setSelectedCatalog] = useState<MentoringSession | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [catalogs, setCatalogs] = useState<MentoringSession[]>(mockMentoringSessions);
+  const { createCatalog, loading: catalogLoading } = useMentoringCatalog();
+  const { toast } = useToast();
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
@@ -156,11 +158,9 @@ const AdminMentoringCatalog = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Agendada":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      case "Em Andamento":
+      case "Ativa":
         return "bg-green-100 text-green-700 border-green-200";
-      case "Concluída":
+      case "Inativa":
         return "bg-gray-100 text-gray-700 border-gray-200";
       case "Cancelada":
         return "bg-red-100 text-red-700 border-red-200";
@@ -180,6 +180,10 @@ const AdminMentoringCatalog = () => {
     }
   };
 
+  const handleCreateCatalog = () => {
+    setIsCreateModalOpen(true);
+  };
+
   const handleViewCatalog = (catalog: MentoringSession) => {
     setSelectedCatalog(catalog);
     setIsDetailModalOpen(true);
@@ -188,6 +192,48 @@ const AdminMentoringCatalog = () => {
   const handleEditCatalog = (catalog: MentoringSession) => {
     setSelectedCatalog(catalog);
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteCatalog = (catalog: MentoringSession) => {
+    if (window.confirm(`Tem certeza que deseja excluir a mentoria "${catalog.title}"?`)) {
+      setCatalogs(prev => prev.filter(c => c.id !== catalog.id));
+      toast({
+        title: "Sucesso",
+        description: "Mentoria excluída com sucesso!",
+      });
+    }
+  };
+
+  const handleSubmitCatalog = async (data: any): Promise<void> => {
+    try {
+      const newCatalog: MentoringSession = {
+        id: `catalog-${Date.now()}`,
+        title: data.name,
+        mentor: data.instructor,
+        duration: `${data.durationWeeks} semanas`,
+        date: new Date().toISOString().split('T')[0],
+        status: data.active ? "Ativa" : "Inativa",
+        category: "Nova Categoria",
+        type: data.type,
+        price: data.price,
+        description: data.description,
+        extensions: data.extensions || []
+      };
+      
+      setCatalogs(prev => [...prev, newCatalog]);
+      setIsCreateModalOpen(false);
+      
+      toast({
+        title: "Sucesso",
+        description: "Mentoria criada com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar mentoria. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveCatalog = (updatedCatalog: MentoringSession) => {
@@ -201,7 +247,7 @@ const AdminMentoringCatalog = () => {
     total: catalogs.length,
     individual: catalogs.filter(s => s.type === "Individual").length,
     grupo: catalogs.filter(s => s.type === "Grupo").length,
-    ativas: catalogs.filter(s => s.status === "Agendada" || s.status === "Em Andamento").length
+    ativas: catalogs.filter(s => s.status === "Ativa").length
   };
 
   return (
@@ -236,7 +282,10 @@ const AdminMentoringCatalog = () => {
               className="pl-8 w-full sm:w-56 h-8 border border-gray-200 focus:border-blue-500 rounded-lg text-sm"
             />
           </div>
-          <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 h-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm">
+          <Button 
+            onClick={handleCreateCatalog}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 h-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm"
+          >
             <Plus className="h-3 w-3 mr-1" />
             Nova Mentoria
           </Button>
@@ -329,12 +378,12 @@ const AdminMentoringCatalog = () => {
                   <p className="text-xs font-medium text-yellow-600 mb-1">Grupo</p>
                   <p className="text-lg lg:text-xl font-bold text-yellow-900">{stats.grupo}</p>
                   <div className="flex items-center mt-1">
-                    <Users className="h-2 w-2 text-yellow-500 mr-1" />
+                    <GraduationCap className="h-2 w-2 text-yellow-500 mr-1" />
                     <span className="text-xs text-yellow-600">turmas</span>
                   </div>
                 </div>
                 <div className="p-1.5 lg:p-2 bg-yellow-500 rounded-lg">
-                  <Users className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
+                  <GraduationCap className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
                 </div>
               </div>
             </CardContent>
@@ -379,9 +428,8 @@ const AdminMentoringCatalog = () => {
                 className="w-full h-8 px-2 text-xs border border-gray-200 rounded-lg focus:border-blue-500"
               >
                 <option value="Todas">Todos status</option>
-                <option value="Agendada">Agendadas</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluída">Concluídas</option>
+                <option value="Ativa">Ativas</option>
+                <option value="Inativa">Inativas</option>
                 <option value="Cancelada">Canceladas</option>
               </select>
             </div>
@@ -454,7 +502,7 @@ const AdminMentoringCatalog = () => {
                         {session.type === 'Individual' ? (
                           <User className="h-3 w-3" />
                         ) : (
-                          <Users className="h-3 w-3" />
+                          <GraduationCap className="h-3 w-3" />
                         )}
                       </div>
                       <div>
@@ -483,11 +531,7 @@ const AdminMentoringCatalog = () => {
                         <span className="text-gray-600 text-xs">Duração:</span>
                         <span className="font-medium text-xs">{session.duration}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600 text-xs">Alunos:</span>
-                        <span className="font-medium text-xs">{session.students}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between col-span-2">
                         <span className="text-gray-600 text-xs">Preço:</span>
                         <span className="font-bold text-green-600 text-xs">R$ {session.price}</span>
                       </div>
@@ -501,6 +545,11 @@ const AdminMentoringCatalog = () => {
                       <Badge variant="outline" className="text-xs">
                         {session.category}
                       </Badge>
+                      {session.extensions && session.extensions.length > 0 && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                          {session.extensions.length} extensões
+                        </Badge>
+                      )}
                     </div>
 
                     <Separator className="my-2" />
@@ -524,6 +573,14 @@ const AdminMentoringCatalog = () => {
                         <Edit className="h-3 w-3 mr-1" />
                         Editar
                       </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 px-2 text-xs hover:bg-red-50 text-red-600"
+                        onClick={() => handleDeleteCatalog(session)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -542,7 +599,6 @@ const AdminMentoringCatalog = () => {
                     <TableHead className="font-semibold text-gray-900 text-sm">Mentoria</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-sm">Tipo</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-sm">Mentor</TableHead>
-                    <TableHead className="font-semibold text-gray-900 text-sm text-center">Alunos</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-sm text-center">Duração</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-sm text-center">Status</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-sm text-center">Preço</TableHead>
@@ -581,12 +637,6 @@ const AdminMentoringCatalog = () => {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <Users className="h-3 w-3 text-gray-400" />
-                          <span className="text-sm">{session.students}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
                           <Clock className="h-3 w-3 text-gray-400" />
                           <span className="text-sm">{session.duration}</span>
                         </div>
@@ -621,6 +671,14 @@ const AdminMentoringCatalog = () => {
                           >
                             <Edit className="h-3 w-3 mr-1" />
                             Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 hover:bg-red-50 text-red-600 text-xs"
+                            onClick={() => handleDeleteCatalog(session)}
+                          >
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </TableCell>
@@ -668,7 +726,10 @@ const AdminMentoringCatalog = () => {
                     Limpar Filtros
                   </Button>
                 )}
-                <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm">
+                <Button 
+                  onClick={handleCreateCatalog}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-sm"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Mentoria
                 </Button>
@@ -692,6 +753,14 @@ const AdminMentoringCatalog = () => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveCatalog}
+      />
+
+      {/* Modal de Criação */}
+      <CatalogFormDialog
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSubmit={handleSubmitCatalog}
+        isLoading={catalogLoading}
       />
     </div>
   );

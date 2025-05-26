@@ -15,10 +15,9 @@ interface MentoringCatalog {
   id: string;
   title: string;
   mentor: string;
-  students: number;
   duration: string;
   date: string;
-  status: "Agendada" | "Em Andamento" | "Concluída" | "Cancelada";
+  status: "Ativa" | "Inativa" | "Cancelada";
   category: string;
   type: "Individual" | "Grupo";
   price: number;
@@ -169,30 +168,18 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="students">Máximo de Alunos</Label>
-                <Input
-                  id="students"
-                  type="number"
-                  value={formData.students}
-                  onChange={(e) => handleInputChange('students', Number(e.target.value))}
-                  placeholder="10"
-                />
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-2 col-span-2">
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value: "Agendada" | "Em Andamento" | "Concluída" | "Cancelada") => handleInputChange('status', value)}
+                  onValueChange={(value: "Ativa" | "Inativa" | "Cancelada") => handleInputChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Agendada">Agendada</SelectItem>
-                    <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                    <SelectItem value="Concluída">Concluída</SelectItem>
+                    <SelectItem value="Ativa">Ativa</SelectItem>
+                    <SelectItem value="Inativa">Inativa</SelectItem>
                     <SelectItem value="Cancelada">Cancelada</SelectItem>
                   </SelectContent>
                 </Select>

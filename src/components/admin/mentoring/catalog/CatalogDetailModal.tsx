@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   User, 
   Calendar, 
-  Star, 
   DollarSign, 
   Clock, 
   Plus,
@@ -20,10 +19,9 @@ interface MentoringCatalog {
   id: string;
   title: string;
   mentor: string;
-  students: number;
   duration: string;
   date: string;
-  status: "Agendada" | "Em Andamento" | "Concluída" | "Cancelada";
+  status: "Ativa" | "Inativa" | "Cancelada";
   category: string;
   type: "Individual" | "Grupo";
   price: number;
@@ -48,17 +46,16 @@ const CatalogDetailModal: React.FC<CatalogDetailModalProps> = ({
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'Individual': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Grupo': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Individual': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Grupo': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Agendada": return "bg-blue-100 text-blue-700 border-blue-200";
-      case "Em Andamento": return "bg-green-100 text-green-700 border-green-200";
-      case "Concluída": return "bg-gray-100 text-gray-700 border-gray-200";
+      case "Ativa": return "bg-green-100 text-green-700 border-green-200";
+      case "Inativa": return "bg-gray-100 text-gray-700 border-gray-200";
       case "Cancelada": return "bg-red-100 text-red-700 border-red-200";
       default: return "bg-gray-100 text-gray-700 border-gray-200";
     }
@@ -104,9 +101,10 @@ const CatalogDetailModal: React.FC<CatalogDetailModalProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Alunos:</span>
-                    <span className="font-medium">{catalog.students}</span>
+                    <span className="text-sm text-gray-600">Categoria:</span>
+                    <Badge variant="outline" className="text-xs">
+                      {catalog.category}
+                    </Badge>
                   </div>
                 </div>
 
