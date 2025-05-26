@@ -95,6 +95,10 @@ function App() {
                 <Route path="mentorias/sessoes" element={<AdminMentoringSessions />} />
                 <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
                 <Route path="mentorias/:id" element={<MentoringDetail />} />
+                
+                {/* New Separate Enrollment Routes */}
+                <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
+                <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
               </Route>
 
               {/* Student Routes */}

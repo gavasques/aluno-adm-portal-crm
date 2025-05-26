@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock, GraduationCap, Building, CheckCircle, Shield, Activity, Bell, LogOut, ChevronDown } from "lucide-react";
+import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock, GraduationCap, Building, CheckCircle, Shield, Activity, Bell, LogOut, ChevronDown, UserCheck, Users2 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -173,6 +173,12 @@ const AdminSidebar = () => {
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/mentorias" icon={GraduationCap} showAlways={true}>Gestão de Mentorias</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/inscricoes-individuais" icon={UserCheck} showAlways={true}>Inscrições Individuais</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/inscricoes-grupo" icon={Users2} showAlways={true}>Inscrições em Grupo</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/cadastros" icon={Database} menuKey="registers">Cadastros</NavItem>
