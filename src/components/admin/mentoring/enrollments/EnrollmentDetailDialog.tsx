@@ -23,13 +23,13 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
   onOpenChange,
   enrollment
 }) => {
-  const { getEnrollmentSessions } = useMentoring();
+  const { getEnrollmentSessions, getEnrollmentProgress } = useMentoring();
   const [activeTab, setActiveTab] = useState('details');
 
   if (!enrollment) return null;
 
   const sessions = getEnrollmentSessions(enrollment.id);
-  const progress = enrollment.getEnrollmentProgress ? enrollment.getEnrollmentProgress(enrollment) : null;
+  const progress = getEnrollmentProgress(enrollment);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -107,7 +107,7 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-500 h-2 rounded-full" 
-                      style={{ width: `${(enrollment.sessionsUsed / enrollment.totalSessions) * 100}%` }}
+                      style={{ width: `${progress.percentage}%` }}
                     />
                   </div>
                 </CardContent>
@@ -158,6 +158,19 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
                       {format(new Date(enrollment.endDate), 'dd/MM/yyyy', { locale: ptBR })}
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Dias restantes */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Tempo Restante</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <div className="text-2xl font-bold text-orange-600">{progress.daysRemaining}</div>
+                  <div className="text-sm text-gray-600">dias restantes</div>
                 </div>
               </CardContent>
             </Card>

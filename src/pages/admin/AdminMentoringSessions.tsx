@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import {
   Users,
   Play,
   GraduationCap,
-  User,
+  UserPlus,
   Grid3X3,
   List
 } from 'lucide-react';
@@ -40,13 +41,9 @@ const AdminMentoringSessions = () => {
   console.log('- user:', user);
   console.log('- sessions count:', sessions?.length || 0);
   console.log('- enrollments count:', enrollments?.length || 0);
-  console.log('- sessions data:', sessions);
-  console.log('- enrollments data:', enrollments);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [studentFilter, setStudentFilter] = useState('');
   const [mentorFilter, setMentorFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -57,32 +54,11 @@ const AdminMentoringSessions = () => {
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
     { label: 'Mentorias', href: '/admin/mentorias' },
-    { label: 'Gestão de Sessões' }
+    { label: 'Todas as Sessões' }
   ];
 
-  // Verificar se é admin - simplificando a lógica para garantir que funcione
-  const isAdmin = !user || user?.role === 'Admin' || user?.role === 'admin' || true; // Forçando admin para desenvolvimento
-  console.log('- isAdmin check:', {
-    hasUser: !!user,
-    userRole: user?.role,
-    finalIsAdmin: isAdmin
-  });
+  const isAdmin = !user || user?.role === 'Admin' || user?.role === 'admin' || true;
 
-  // Mock student names based on student IDs
-  const studentNames = {
-    'student-001': 'João Silva',
-    'student-002': 'Maria Santos',
-    'student-003': 'Pedro Oliveira',
-    'student-004': 'Ana Costa',
-    'student-005': 'Carlos Ferreira',
-    'student-006': 'Juliana Rodrigues',
-    'student-007': 'Roberto Lima',
-    'student-008': 'Fernanda Alves',
-    'student-009': 'Ricardo Pereira',
-    'student-010': 'Camila Barbosa'
-  };
-
-  // Função para formatar data com validação
   const formatSafeDate = (dateString: string | undefined, formatStr: string) => {
     if (!dateString) return 'Data não definida';
     
@@ -96,9 +72,9 @@ const AdminMentoringSessions = () => {
     }
   };
 
-  // Dados enriquecidos das sessões
+  // Sessões com dados enriquecidos
   const enrichedSessions = useMemo(() => {
-    console.log('Enriching sessions - raw sessions:', sessions?.length || 0, 'enrollments:', enrollments?.length || 0);
+    console.log('Enriching sessions');
     
     if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
       console.log('No sessions to enrich');
@@ -106,7 +82,7 @@ const AdminMentoringSessions = () => {
     }
 
     if (!enrollments || !Array.isArray(enrollments)) {
-      console.log('No enrollments data for enrichment');
+      console.log('No enrollments data for enriching');
       return [];
     }
     
@@ -121,39 +97,31 @@ const AdminMentoringSessions = () => {
         })
         .findIndex(s => s.id === session.id) + 1;
 
-      const studentName = enrollment ? studentNames[enrollment.studentId as keyof typeof studentNames] || 'Aluno não encontrado' : 'Aluno não encontrado';
-
-      const enrichedSession = {
+      return {
         ...session,
         enrollment,
         sessionNumber,
-        studentName,
+        studentName: enrollment?.studentId || 'Estudante não encontrado',
         mentorName: enrollment?.responsibleMentor || 'Mentor não definido',
         mentoringName: enrollment?.mentoring.name || 'Mentoria não encontrada',
         totalSessions: enrollment?.totalSessions || 0
       };
-
-      return enrichedSession;
     });
 
-    console.log('Enriched sessions result:', enriched.length);
+    console.log('Sessions enriched:', enriched.length);
     return enriched;
   }, [sessions, enrollments]);
 
-  console.log('- enrichedSessions count:', enrichedSessions.length);
-
-  // Filtrar sessões baseado em permissões
+  // Aplicar filtros
   const filteredSessions = useMemo(() => {
     let filtered = enrichedSessions;
 
-    // Se não é admin, mostrar apenas sessões dos alunos relacionados ao mentor
     if (!isAdmin && user?.email) {
       filtered = filtered.filter(session => 
         session.mentorName === user.email || session.mentorName.includes(user.email)
       );
     }
 
-    // Filtros de busca
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(session =>
@@ -167,24 +135,13 @@ const AdminMentoringSessions = () => {
       filtered = filtered.filter(session => session.status === statusFilter);
     }
 
-    if (typeFilter) {
-      filtered = filtered.filter(session => session.type === typeFilter);
-    }
-
-    if (studentFilter) {
-      filtered = filtered.filter(session => 
-        session.studentName.toLowerCase().includes(studentFilter.toLowerCase())
-      );
-    }
-
     if (mentorFilter) {
       filtered = filtered.filter(session => 
         session.mentorName.toLowerCase().includes(mentorFilter.toLowerCase())
       );
     }
 
-    // Filtros de data
-    if (dateFilter && sessions.scheduledDate) {
+    if (dateFilter) {
       const today = new Date();
     
       filtered = filtered.filter(sessionItem => {
@@ -215,9 +172,7 @@ const AdminMentoringSessions = () => {
     }
 
     return filtered;
-  }, [enrichedSessions, searchTerm, statusFilter, typeFilter, studentFilter, mentorFilter, dateFilter, isAdmin, user, sessions]);
-
-  console.log('- filteredSessions count:', filteredSessions.length);
+  }, [enrichedSessions, searchTerm, statusFilter, mentorFilter, dateFilter, isAdmin, user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -248,18 +203,18 @@ const AdminMentoringSessions = () => {
     try {
       console.log('Creating session with data:', data);
       
-      // Combinar data e hora para criar o scheduledDate
       const scheduledDate = data.scheduledDate && data.scheduledTime 
         ? new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString()
         : undefined;
       
       const sessionData = {
         enrollmentId: data.enrollmentId,
-        type: data.type,
+        type: data.type || 'individual' as const,
         title: data.title,
         scheduledDate,
         durationMinutes: data.durationMinutes,
-        meetingLink: data.meetingLink || undefined
+        meetingLink: data.meetingLink || undefined,
+        groupId: data.groupId
       };
       
       await createSession(sessionData);
@@ -270,49 +225,25 @@ const AdminMentoringSessions = () => {
     }
   };
 
-  const handleEditSession = (data: any) => {
-    console.log('Editing session:', data);
-    setEditingSession(null);
-  };
-
-  const handleSaveSession = (sessionData: any) => {
-    console.log('Saving session:', sessionData);
-    setViewingSession(null);
-  };
-
-  const handleDeleteSession = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta sessão?')) {
-      console.log('Deleting session:', id);
-    }
-  };
-
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
-    setTypeFilter('');
-    setStudentFilter('');
     setMentorFilter('');
     setDateFilter('');
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* Breadcrumb */}
       <BreadcrumbNav items={breadcrumbItems} showBackButton={true} />
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestão de Sessões</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Gestão de Todas as Sessões</h1>
           <p className="text-gray-600 mt-1">
             {isAdmin ? 'Gerencie todas as sessões de mentorias' : 'Suas sessões de mentoria'}
           </p>
-          <div className="mt-2 text-sm text-gray-500">
-            Debug: {sessions?.length || 0} sessões | {enrollments?.length || 0} inscrições | Admin: {isAdmin ? 'Sim' : 'Não'}
-          </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
@@ -332,9 +263,8 @@ const AdminMentoringSessions = () => {
             </Button>
           </div>
           
-          {/* Botão Nova Sessão */}
           {isAdmin && (
-            <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setShowForm(true)} className="bg-green-600 hover:bg-green-700">
               <Plus className="h-4 w-4 mr-2" />
               Nova Sessão
             </Button>
@@ -394,13 +324,13 @@ const AdminMentoringSessions = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Canceladas</p>
+                <p className="text-sm font-medium text-gray-600">Individuais</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {filteredSessions.filter(s => s.status === 'cancelada').length}
+                  {filteredSessions.filter(s => s.type === 'individual').length}
                 </p>
               </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <Users className="h-6 w-6 text-red-600" />
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <UserPlus className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -411,7 +341,6 @@ const AdminMentoringSessions = () => {
       <Card>
         <CardContent className="p-4">
           <div className="space-y-4">
-            {/* Primeira linha de filtros */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -432,36 +361,10 @@ const AdminMentoringSessions = () => {
                   <SelectItem value="realizada">Realizada</SelectItem>
                   <SelectItem value="cancelada">Cancelada</SelectItem>
                   <SelectItem value="reagendada">Reagendada</SelectItem>
-                  <SelectItem value="ausente_aluno">Ausente - Aluno</SelectItem>
-                  <SelectItem value="ausente_mentor">Ausente - Mentor</SelectItem>
+                  <SelectItem value="no_show_aluno">No-show Aluno</SelectItem>
+                  <SelectItem value="no_show_mentor">No-show Mentor</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
-                  <SelectItem value="individual">Individual</SelectItem>
-                  <SelectItem value="grupo">Grupo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Segunda linha de filtros */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <Input
-                placeholder="Filtrar por aluno..."
-                className="flex-1"
-                value={studentFilter}
-                onChange={(e) => setStudentFilter(e.target.value)}
-              />
-              <Input
-                placeholder="Filtrar por mentor..."
-                className="flex-1"
-                value={mentorFilter}
-                onChange={(e) => setMentorFilter(e.target.value)}
-              />
               <Select value={dateFilter} onValueChange={setDateFilter}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Data" />
@@ -492,7 +395,7 @@ const AdminMentoringSessions = () => {
           isAdmin={isAdmin}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSessions.map((session) => (
             <Card 
               key={session.id} 
@@ -501,14 +404,13 @@ const AdminMentoringSessions = () => {
             >
               <CardContent className="p-4">
                 <div className="space-y-3">
-                  {/* Header com ícone e status */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="p-2 bg-purple-100 rounded-lg shrink-0">
-                        <GraduationCap className="h-4 w-4 text-purple-600" />
+                      <div className="p-2 bg-blue-100 rounded-lg shrink-0">
+                        <Video className="h-4 w-4 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-sm truncate">{session.mentoringName}</h4>
+                        <h4 className="font-medium text-sm truncate">{session.studentName}</h4>
                         <p className="text-xs text-gray-500">
                           Sessão {session.sessionNumber}/{session.totalSessions}
                         </p>
@@ -519,13 +421,12 @@ const AdminMentoringSessions = () => {
                     </Badge>
                   </div>
 
-                  {/* Informações do aluno e mentor */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <User className="h-3 w-3 text-gray-400 shrink-0" />
+                      <GraduationCap className="h-3 w-3 text-gray-400 shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-medium">Aluno:</span>
-                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.studentName}</span>
+                        <span className="text-xs font-medium">Mentoria:</span>
+                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.mentoringName}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -537,7 +438,6 @@ const AdminMentoringSessions = () => {
                     </div>
                   </div>
 
-                  {/* Data, hora e tipo */}
                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
                     {session.scheduledDate ? (
                       <>
@@ -559,10 +459,11 @@ const AdminMentoringSessions = () => {
                     <div className="flex items-center gap-1">
                       <span>{session.durationMinutes} min</span>
                     </div>
-                    <Badge variant="outline" className="text-xs capitalize">{session.type}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {session.type === 'individual' ? 'Individual' : 'Grupo'}
+                    </Badge>
                   </div>
 
-                  {/* Botões de ação */}
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     {session.status === 'agendada' && session.meetingLink && (
                       <Button size="sm" className="flex-1 h-8 text-xs" onClick={(e) => {
@@ -615,25 +516,16 @@ const AdminMentoringSessions = () => {
             <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma sessão encontrada</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || statusFilter || typeFilter || studentFilter || mentorFilter || dateFilter
+              {searchTerm || statusFilter || mentorFilter || dateFilter
                 ? 'Tente ajustar os filtros para encontrar as sessões desejadas.'
                 : 'Não há sessões agendadas no momento.'}
             </p>
-            <div className="space-y-2">
-              <div className="text-sm text-gray-500">
-                Debug Info: {sessions?.length || 0} sessões totais, {enrollments?.length || 0} inscrições
-              </div>
-              {(searchTerm || statusFilter || typeFilter || studentFilter || mentorFilter || dateFilter) ? (
-                <Button variant="outline" onClick={clearFilters}>
-                  Limpar Filtros
-                </Button>
-              ) : isAdmin ? (
-                <Button onClick={() => setShowForm(true)} className="mt-2">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Primeira Sessão
-                </Button>
-              ) : null}
-            </div>
+            {isAdmin && !searchTerm && !statusFilter && !mentorFilter && !dateFilter && (
+              <Button onClick={() => setShowForm(true)} className="mt-2">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeira Sessão
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}

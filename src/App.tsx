@@ -1,23 +1,25 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Login } from '@/pages/auth/Login';
-import { Register } from '@/pages/auth/Register';
-import { ForgotPassword } from '@/pages/auth/ForgotPassword';
-import { ResetPassword } from '@/pages/auth/ResetPassword';
-import { StudentDashboard } from '@/pages/student/StudentDashboard';
+import { Login } from '@/pages/Index';
+import { Register } from '@/pages/Index';
+import { ForgotPassword } from '@/pages/Index';
+import { ResetPassword } from '@/pages/ResetPassword';
+import { StudentDashboard } from '@/pages/student/Dashboard';
 import StudentMentoring from '@/pages/student/Mentoring';
-import StudentMentoringDetails from '@/pages/student/MentoringDetails';
-import { AdminDashboard } from '@/pages/admin/AdminDashboard';
-import AdminMentoring from '@/pages/admin/AdminMentoring';
-import AdminMentoringDetails from '@/pages/admin/AdminMentoringDetails';
-import AdminUsers from '@/pages/admin/AdminUsers';
+import StudentMentoringDetails from '@/pages/student/MentoringDetail';
+import { AdminDashboard } from '@/pages/admin/Dashboard';
+import AdminMentoring from '@/pages/admin/Mentoring';
+import AdminMentoringDetails from '@/pages/admin/MentoringDetail';
+import AdminUsers from '@/pages/admin/Users';
 import AdminGroups from '@/pages/admin/AdminGroups';
 import AdminIndividualSessions from '@/pages/admin/AdminIndividualSessions';
 import AdminGroupSessions from '@/pages/admin/AdminGroupSessions';
 
 const RouteGuard = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user;
 
   if (loading) {
     return <div>Loading...</div>;
