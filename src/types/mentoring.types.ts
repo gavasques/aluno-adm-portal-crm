@@ -45,6 +45,22 @@ export interface StudentMentoringEnrollment {
   hasExtension?: boolean;
   createdAt: string;
   updatedAt: string;
+  // Novo campo para agrupar inscrições
+  groupId?: string;
+}
+
+export interface GroupEnrollment {
+  id: string;
+  groupName: string;
+  mentoring: MentoringCatalog;
+  status: 'ativa' | 'concluida' | 'cancelada' | 'pausada';
+  responsibleMentor: string;
+  startDate: string;
+  endDate: string;
+  totalSessions: number;
+  participants: StudentMentoringEnrollment[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MentoringSession {

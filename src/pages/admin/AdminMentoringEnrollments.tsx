@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -7,11 +8,11 @@ import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm'
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
 import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetailDialog';
 import { EnrollmentsHeader } from '@/components/admin/mentoring/enrollments/EnrollmentsHeader';
-import { EnrollmentCard } from '@/components/admin/mentoring/enrollments/EnrollmentCard';
-import { EnrollmentsList } from '@/components/admin/mentoring/enrollments/EnrollmentsList';
-import { EnrollmentsEmptyState } from '@/components/admin/mentoring/enrollments/EnrollmentsEmptyState';
 import { BulkActions } from '@/components/admin/mentoring/enrollments/BulkActions';
-import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
+import { IndividualEnrollmentSection } from '@/components/admin/mentoring/enrollments/IndividualEnrollmentSection';
+import { GroupEnrollmentSection } from '@/components/admin/mentoring/enrollments/GroupEnrollmentSection';
+import { CreateExtensionData, StudentMentoringEnrollment, GroupEnrollment } from '@/types/mentoring.types';
+import { mockGroupEnrollments } from '@/data/mockGroupEnrollments';
 
 const AdminMentoringEnrollments = () => {
   const { enrollments, getEnrollmentProgress, addExtension } = useMentoring();
@@ -23,8 +24,12 @@ const AdminMentoringEnrollments = () => {
   const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [viewingEnrollment, setViewingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
+
+  // Mock groups data - in real implementation, this would come from a hook
+  const [groups] = useState<GroupEnrollment[]>(mockGroupEnrollments);
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
@@ -32,9 +37,20 @@ const AdminMentoringEnrollments = () => {
     { label: 'Inscrições' }
   ];
 
-  // Filtros e estatísticas
-  const filteredEnrollments = useMemo(() => {
-    return enrollments.filter(enrollment => {
+  // Separar inscrições individuais das que fazem parte de grupos
+  const { individualEnrollments, groupEnrollments } = useMemo(() => {
+    const individual = enrollments.filter(e => !e.groupId);
+    const group = enrollments.filter(e => e.groupId);
+    
+    return {
+      individualEnrollments: individual,
+      groupEnrollments: group
+    };
+  }, [enrollments]);
+
+  // Filtros para inscrições individuais
+  const filteredIndividualEnrollments = useMemo(() => {
+    return individualEnrollments.filter(enrollment => {
       const matchesSearch = !searchTerm || 
         enrollment.mentoring.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
@@ -44,20 +60,43 @@ const AdminMentoringEnrollments = () => {
       
       return matchesSearch && matchesStatus && matchesType;
     });
-  }, [enrollments, searchTerm, statusFilter, typeFilter]);
+  }, [individualEnrollments, searchTerm, statusFilter, typeFilter]);
 
+  // Filtros para grupos
+  const filteredGroups = useMemo(() => {
+    return groups.filter(group => {
+      const matchesSearch = !searchTerm || 
+        group.groupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        group.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = !statusFilter || group.status === statusFilter;
+      const matchesType = !typeFilter || group.mentoring.type === typeFilter;
+      
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [groups, searchTerm, statusFilter, typeFilter]);
+
+  // Estatísticas atualizadas
   const statistics = useMemo(() => {
+    const totalIndividual = individualEnrollments.length;
+    const totalGroups = groups.length;
+    const totalGroupParticipants = groups.reduce((sum, g) => sum + g.participants.length, 0);
+    const total = totalIndividual + totalGroupParticipants;
+    
     return {
-      total: enrollments.length,
-      active: enrollments.filter(e => e.status === 'ativa').length,
-      completed: enrollments.filter(e => e.status === 'concluida').length,
-      paused: enrollments.filter(e => e.status === 'pausada').length,
+      total,
+      active: individualEnrollments.filter(e => e.status === 'ativa').length + 
+              groups.filter(g => g.status === 'ativa').reduce((sum, g) => sum + g.participants.length, 0),
+      completed: individualEnrollments.filter(e => e.status === 'concluida').length +
+                 groups.filter(g => g.status === 'concluida').reduce((sum, g) => sum + g.participants.length, 0),
+      paused: individualEnrollments.filter(e => e.status === 'pausada').length +
+              groups.filter(g => g.status === 'pausada').reduce((sum, g) => sum + g.participants.length, 0),
     };
-  }, [enrollments]);
+  }, [individualEnrollments, groups]);
 
   const hasFilters = Boolean(searchTerm || statusFilter || typeFilter);
 
-  // Handlers
+  // Handlers existentes
   const handleCreateEnrollment = (data: any) => {
     console.log('Creating enrollment:', data);
     setShowForm(false);
@@ -90,11 +129,41 @@ const AdminMentoringEnrollments = () => {
     }
   };
 
-  const handleBulkAction = (action: string) => {
-    console.log(`Bulk action ${action} for:`, selectedEnrollments);
+  // Novos handlers para grupos
+  const handleViewGroup = (group: GroupEnrollment) => {
+    console.log('Viewing group:', group);
   };
 
-  const toggleSelection = (id: string) => {
+  const handleEditGroup = (group: GroupEnrollment) => {
+    console.log('Editing group:', group);
+  };
+
+  const handleDeleteGroup = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este grupo?')) {
+      console.log('Deleting group:', id);
+    }
+  };
+
+  const handleAddStudent = (group: GroupEnrollment) => {
+    console.log('Adding student to group:', group);
+  };
+
+  const handleRemoveStudent = (groupId: string, studentId: string) => {
+    if (confirm('Tem certeza que deseja remover este aluno do grupo?')) {
+      console.log('Removing student:', studentId, 'from group:', groupId);
+    }
+  };
+
+  const handleAddGroup = () => {
+    console.log('Adding new group');
+  };
+
+  // Handlers de seleção
+  const handleBulkAction = (action: string) => {
+    console.log(`Bulk action ${action} for enrollments:`, selectedEnrollments, 'groups:', selectedGroups);
+  };
+
+  const toggleEnrollmentSelection = (id: string) => {
     setSelectedEnrollments(prev => 
       prev.includes(id) 
         ? prev.filter(item => item !== id)
@@ -102,11 +171,19 @@ const AdminMentoringEnrollments = () => {
     );
   };
 
-  const selectAll = () => {
+  const toggleGroupSelection = (id: string) => {
+    setSelectedGroups(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const selectAllIndividual = () => {
     setSelectedEnrollments(
-      selectedEnrollments.length === filteredEnrollments.length 
+      selectedEnrollments.length === filteredIndividualEnrollments.length 
         ? [] 
-        : filteredEnrollments.map(e => e.id)
+        : filteredIndividualEnrollments.map(e => e.id)
     );
   };
 
@@ -118,10 +195,11 @@ const AdminMentoringEnrollments = () => {
 
   const clearSelection = () => {
     setSelectedEnrollments([]);
+    setSelectedGroups([]);
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6 animate-fade-in">
+    <div className="container mx-auto py-6 space-y-8 animate-fade-in">
       {/* Breadcrumb Navigation */}
       <BreadcrumbNav 
         items={breadcrumbItems} 
@@ -149,51 +227,39 @@ const AdminMentoringEnrollments = () => {
 
       {/* Ações em Lote */}
       <BulkActions
-        selectedCount={selectedEnrollments.length}
+        selectedCount={selectedEnrollments.length + selectedGroups.length}
         onBulkAction={handleBulkAction}
         onClearSelection={clearSelection}
       />
 
-      {/* Lista/Cards de Inscrições */}
-      {filteredEnrollments.length === 0 ? (
-        <EnrollmentsEmptyState
-          hasFilters={hasFilters}
-          onAddEnrollment={() => setShowForm(true)}
-          onClearFilters={clearFilters}
-        />
-      ) : (
-        <div className="space-y-4">
-          {viewMode === 'cards' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredEnrollments.map((enrollment) => (
-                <EnrollmentCard
-                  key={enrollment.id}
-                  enrollment={enrollment}
-                  onView={handleViewEnrollment}
-                  onEdit={setEditingEnrollment}
-                  onDelete={handleDeleteEnrollment}
-                  onAddExtension={handleAddExtension}
-                  onToggleSelection={toggleSelection}
-                  isSelected={selectedEnrollments.includes(enrollment.id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <EnrollmentsList
-              enrollments={filteredEnrollments}
-              onView={handleViewEnrollment}
-              onEdit={setEditingEnrollment}
-              onDelete={handleDeleteEnrollment}
-              onAddExtension={handleAddExtension}
-              onToggleSelection={toggleSelection}
-              selectedEnrollments={selectedEnrollments}
-              onSelectAll={selectAll}
-            />
-          )}
-        </div>
-      )}
+      {/* Seção de Inscrições em Grupo */}
+      <GroupEnrollmentSection
+        groups={filteredGroups}
+        selectedGroups={selectedGroups}
+        onView={handleViewGroup}
+        onEdit={handleEditGroup}
+        onDelete={handleDeleteGroup}
+        onAddStudent={handleAddStudent}
+        onRemoveStudent={handleRemoveStudent}
+        onToggleSelection={toggleGroupSelection}
+        onAddGroup={handleAddGroup}
+      />
 
-      {/* Create Form Dialog */}
+      {/* Seção de Inscrições Individuais */}
+      <IndividualEnrollmentSection
+        enrollments={filteredIndividualEnrollments}
+        viewMode={viewMode}
+        selectedEnrollments={selectedEnrollments}
+        onView={handleViewEnrollment}
+        onEdit={setEditingEnrollment}
+        onDelete={handleDeleteEnrollment}
+        onAddExtension={handleAddExtension}
+        onToggleSelection={toggleEnrollmentSelection}
+        onSelectAll={selectAllIndividual}
+        onAddEnrollment={() => setShowForm(true)}
+      />
+
+      {/* Diálogos existentes */}
       <Dialog open={showForm} onOpenChange={(open) => {
         if (!open) setShowForm(false);
       }}>
@@ -208,7 +274,6 @@ const AdminMentoringEnrollments = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Form Dialog */}
       <Dialog open={!!editingEnrollment} onOpenChange={(open) => {
         if (!open) setEditingEnrollment(null);
       }}>
@@ -226,7 +291,6 @@ const AdminMentoringEnrollments = () => {
         </DialogContent>
       </Dialog>
 
-      {/* View Detail Dialog */}
       <EnrollmentDetailDialog
         open={!!viewingEnrollment}
         onOpenChange={(open) => {
@@ -235,7 +299,6 @@ const AdminMentoringEnrollments = () => {
         enrollment={viewingEnrollment}
       />
 
-      {/* Extension Dialog */}
       <ExtensionDialog
         open={showExtensionDialog}
         onOpenChange={setShowExtensionDialog}
