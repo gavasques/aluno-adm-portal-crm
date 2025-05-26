@@ -4,10 +4,13 @@ import {
   MentoringCatalog, 
   StudentMentoringEnrollment, 
   MentoringSession, 
+  MentoringMaterial,
   CreateExtensionData,
   CreateSessionData,
   ScheduleSessionData,
-  UpdateSessionData 
+  UpdateSessionData,
+  CreateMentoringCatalogData,
+  EnrollmentProgress
 } from '@/types/mentoring.types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,48 +44,10 @@ const mockSessions: MentoringSession[] = [
     calendlyLink: 'https://calendly.com/mentor/session',
     createdAt: '2024-01-15T10:00:00.000Z',
     updatedAt: '2024-01-15T10:00:00.000Z'
-  },
-  {
-    id: 'session-003',
-    enrollmentId: 'enrollment-001',
-    sessionNumber: 3,
-    type: 'individual',
-    title: 'Análise de Dados e Métricas',
-    durationMinutes: 60,
-    status: 'aguardando_agendamento',
-    calendlyLink: 'https://calendly.com/mentor/session',
-    createdAt: '2024-01-15T10:00:00.000Z',
-    updatedAt: '2024-01-15T10:00:00.000Z'
-  },
-  {
-    id: 'session-004',
-    enrollmentId: 'enrollment-001',
-    sessionNumber: 4,
-    type: 'individual',
-    title: 'Otimização de Conversões',
-    durationMinutes: 60,
-    status: 'aguardando_agendamento',
-    calendlyLink: 'https://calendly.com/mentor/session',
-    createdAt: '2024-01-15T10:00:00.000Z',
-    updatedAt: '2024-01-15T10:00:00.000Z'
-  },
-  {
-    id: 'session-005',
-    enrollmentId: 'enrollment-002',
-    sessionNumber: 1,
-    type: 'individual',
-    title: 'Introdução ao Dropshipping',
-    scheduledDate: '2024-03-01T15:00:00.000Z',
-    durationMinutes: 60,
-    status: 'agendada',
-    meetingLink: 'https://meet.google.com/xyz-123-abc',
-    calendlyLink: 'https://calendly.com/mentor/session',
-    createdAt: '2024-02-01T10:00:00.000Z',
-    updatedAt: '2024-02-15T10:00:00.000Z'
   }
 ];
 
-// Mock data existente (catalogs, enrollments)
+// Mock catalogs
 const mockCatalogs: MentoringCatalog[] = [
   {
     id: 'mentoring-001',
@@ -121,10 +86,13 @@ const mockEnrollments: StudentMentoringEnrollment[] = [
   }
 ];
 
+const mockMaterials: MentoringMaterial[] = [];
+
 export const useMentoring = () => {
-  const [catalogs] = useState<MentoringCatalog[]>(mockCatalogs);
+  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(mockCatalogs);
   const [enrollments] = useState<StudentMentoringEnrollment[]>(mockEnrollments);
   const [sessions, setSessions] = useState<MentoringSession[]>(mockSessions);
+  const [materials] = useState<MentoringMaterial[]>(mockMaterials);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -155,6 +123,16 @@ export const useMentoring = () => {
   const getEnrollmentSessions = useCallback((enrollmentId: string): MentoringSession[] => {
     return sessions.filter(session => session.enrollmentId === enrollmentId);
   }, [sessions]);
+
+  // Buscar detalhes de uma sessão
+  const getSessionDetails = useCallback((sessionId: string): MentoringSession | undefined => {
+    return sessions.find(session => session.id === sessionId);
+  }, [sessions]);
+
+  // Buscar materiais de uma inscrição
+  const getEnrollmentMaterials = useCallback((enrollmentId: string): MentoringMaterial[] => {
+    return materials.filter(material => material.enrollmentId === enrollmentId);
+  }, [materials]);
 
   // Agendar uma sessão
   const scheduleSession = useCallback(async (data: ScheduleSessionData): Promise<boolean> => {
@@ -231,7 +209,7 @@ export const useMentoring = () => {
         scheduledDate: data.scheduledDate,
         durationMinutes: data.durationMinutes,
         status: data.scheduledDate ? 'agendada' : 'aguardando_agendamento',
-        meetingLink: data.accessLink,
+        meetingLink: data.meetingLink,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -257,7 +235,7 @@ export const useMentoring = () => {
   }, [sessions, toast]);
 
   // Progresso de uma inscrição
-  const getEnrollmentProgress = useCallback((enrollment: StudentMentoringEnrollment) => {
+  const getEnrollmentProgress = useCallback((enrollment: StudentMentoringEnrollment): EnrollmentProgress => {
     const enrollmentSessions = getEnrollmentSessions(enrollment.id);
     const completedSessions = enrollmentSessions.filter(s => s.status === 'realizada').length;
     const totalSessions = enrollmentSessions.length;
@@ -297,19 +275,111 @@ export const useMentoring = () => {
     }
   }, [toast]);
 
+  // Catalog management
+  const createMentoringCatalog = useCallback(async (data: CreateMentoringCatalogData): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const newCatalog: MentoringCatalog = {
+        id: `catalog-${Date.now()}`,
+        ...data,
+        totalSessions: data.numberOfSessions,
+        tags: [],
+        active: data.active ?? true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      setCatalogs(prev => [...prev, newCatalog]);
+      
+      toast({
+        title: "Sucesso",
+        description: "Mentoria criada com sucesso!",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar mentoria. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  const updateMentoringCatalog = useCallback(async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> => {
+    setLoading(true);
+    try {
+      setCatalogs(prev => prev.map(catalog => 
+        catalog.id === id 
+          ? { ...catalog, ...data, updatedAt: new Date().toISOString() }
+          : catalog
+      ));
+      
+      toast({
+        title: "Sucesso",
+        description: "Mentoria atualizada com sucesso!",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar mentoria. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  const deleteMentoringCatalog = useCallback(async (id: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      setCatalogs(prev => prev.filter(catalog => catalog.id !== id));
+      
+      toast({
+        title: "Sucesso",
+        description: "Mentoria removida com sucesso!",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover mentoria. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   return {
     // Estados
     catalogs,
     enrollments,
     sessions,
+    materials,
     loading,
     
     // Funções de sessões
     getEnrollmentSessions,
+    getSessionDetails,
+    getEnrollmentMaterials,
     scheduleSession,
     updateSession,
     createSession,
     createSessionsForEnrollment,
+    
+    // Funções de catálogo
+    createMentoringCatalog,
+    updateMentoringCatalog,
+    deleteMentoringCatalog,
     
     // Funções existentes
     getEnrollmentProgress,

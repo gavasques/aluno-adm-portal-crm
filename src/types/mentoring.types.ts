@@ -150,3 +150,11 @@ export interface ScheduleSessionData {
   scheduledDate: string;
   meetingLink?: string;
 }
+
+export interface EnrollmentProgress {
+  completedSessions: number;
+  totalSessions: number;
+  pendingSessions: number;
+  scheduledSessions: number;
+  percentage: number;
+}

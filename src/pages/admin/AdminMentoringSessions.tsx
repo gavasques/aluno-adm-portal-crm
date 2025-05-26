@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -185,16 +184,16 @@ const AdminMentoringSessions = () => {
     }
 
     // Filtros de data
-    if (dateFilter && session.scheduledDate) {
+    if (dateFilter && sessions.scheduledDate) {
       const today = new Date();
+    
+      filtered = filtered.filter(sessionItem => {
+        if (!sessionItem.scheduledDate) return false;
       
-      filtered = filtered.filter(session => {
-        if (!session.scheduledDate) return false;
-        
         try {
-          const sessionDate = new Date(session.scheduledDate);
+          const sessionDate = new Date(sessionItem.scheduledDate);
           if (!isValid(sessionDate)) return false;
-          
+        
           switch (dateFilter) {
             case 'hoje':
               return isToday(sessionDate);
@@ -216,7 +215,7 @@ const AdminMentoringSessions = () => {
     }
 
     return filtered;
-  }, [enrichedSessions, searchTerm, statusFilter, typeFilter, studentFilter, mentorFilter, dateFilter, isAdmin, user]);
+  }, [enrichedSessions, searchTerm, statusFilter, typeFilter, studentFilter, mentorFilter, dateFilter, isAdmin, user, sessions]);
 
   console.log('- filteredSessions count:', filteredSessions.length);
 

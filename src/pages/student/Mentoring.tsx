@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -131,8 +130,8 @@ const StudentMentoring = () => {
                   date={session.scheduledDate}
                   duration={session.durationMinutes}
                   status={session.status}
-                  accessLink={session.accessLink}
-                  onAccess={() => window.open(session.accessLink, '_blank')}
+                  meetingLink={session.meetingLink}
+                  onAccess={() => session.meetingLink && window.open(session.meetingLink, '_blank')}
                 />
               ))}
             </div>

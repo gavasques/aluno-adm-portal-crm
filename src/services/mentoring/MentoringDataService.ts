@@ -109,6 +109,7 @@ export class MentoringDataService {
     const newSession: MentoringSession = {
       id: `session-${Date.now()}`,
       ...data,
+      sessionNumber: this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1,
       status: 'agendada',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
