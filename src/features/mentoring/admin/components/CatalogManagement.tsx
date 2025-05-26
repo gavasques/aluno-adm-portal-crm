@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useMentoringContext } from '../../contexts/MentoringContext';
 import { useMentoringOperations } from '../../hooks/useMentoringOperations';
@@ -417,6 +418,7 @@ export const CatalogManagement: React.FC = () => {
       <CatalogFormDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
+        catalog={null}
         onSubmit={handleSubmitCatalog}
         isLoading={catalogLoading}
       />
