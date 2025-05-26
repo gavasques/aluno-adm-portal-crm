@@ -6,8 +6,11 @@ export interface MentoringCatalog {
   instructor: string;
   durationWeeks: number;
   numberOfSessions: number;
+  totalSessions: number;
   price: number;
   description: string;
+  tags: string[];
+  imageUrl?: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -29,15 +32,17 @@ export interface StudentMentoringEnrollment {
   mentoringId: string;
   mentoring: MentoringCatalog;
   status: 'ativa' | 'concluida' | 'cancelada' | 'pausada';
+  enrollmentDate: string;
   startDate: string;
   endDate: string;
   originalEndDate?: string;
   sessionsUsed: number;
   totalSessions: number;
   responsibleMentor: string;
-  observations: string;
-  extensions: MentoringExtension[];
-  hasExtension: boolean;
+  paymentStatus: string;
+  observations?: string;
+  extensions?: MentoringExtension[];
+  hasExtension?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,7 +57,7 @@ export interface MentoringSession {
   durationMinutes: number;
   accessLink?: string;
   recordingLink?: string;
-  status: 'agendada' | 'realizada' | 'cancelada' | 'reagendada';
+  status: 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor';
   mentorNotes?: string;
   studentNotes?: string;
   createdAt: string;
@@ -66,14 +71,17 @@ export interface MentoringMaterial {
   session?: MentoringSession;
   enrollment?: StudentMentoringEnrollment;
   fileName: string;
-  storagePath: string;
-  fileType: string;
-  sizeMB: number;
-  uploaderId: string;
-  uploaderType: 'admin' | 'mentor' | 'aluno';
+  fileUrl: string;
+  type: string;
   description?: string;
-  tags: string[];
+  storagePath?: string;
+  fileType?: string;
+  sizeMB?: number;
+  uploaderId?: string;
+  uploaderType?: 'admin' | 'mentor' | 'aluno';
+  tags?: string[];
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface MentoringStats {
@@ -106,7 +114,7 @@ export interface CreateSessionData {
 }
 
 export interface UpdateSessionData extends Partial<CreateSessionData> {
-  status?: 'agendada' | 'realizada' | 'cancelada' | 'reagendada';
+  status?: 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor';
   mentorNotes?: string;
   studentNotes?: string;
   recordingLink?: string;
