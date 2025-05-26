@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 import { MentoringDataService } from '@/services/mentoring/MentoringDataService';
 import { useToast } from '@/hooks/use-toast';
+import { calculateSessionsFromFrequency } from '@/utils/mentoringCalculations';
 
 const dataService = new MentoringDataService();
 
@@ -22,6 +23,7 @@ export const useMentoringCatalog = () => {
           id: `ext-1-${catalog.id}`,
           months: 3,
           price: catalog.price * 0.3,
+          totalSessions: calculateSessionsFromFrequency(3, catalog.frequency || 'Semanal'),
           description: `Extensão de 3 meses para ${catalog.name}`,
           checkoutLinks: {
             mercadoPago: 'https://mercadopago.com/checkout/ext-3-months',
@@ -33,6 +35,7 @@ export const useMentoringCatalog = () => {
           id: `ext-2-${catalog.id}`,
           months: 6,
           price: catalog.price * 0.5,
+          totalSessions: calculateSessionsFromFrequency(6, catalog.frequency || 'Semanal'),
           description: `Extensão de 6 meses para ${catalog.name}`,
           checkoutLinks: {
             mercadoPago: 'https://mercadopago.com/checkout/ext-6-months',
@@ -58,6 +61,7 @@ export const useMentoringCatalog = () => {
             id: `ext-1-${newCatalog.id}`,
             months: 3,
             price: newCatalog.price * 0.3,
+            totalSessions: calculateSessionsFromFrequency(3, newCatalog.frequency || 'Semanal'),
             description: `Extensão de 3 meses para ${newCatalog.name}`,
             checkoutLinks: {
               mercadoPago: 'https://mercadopago.com/checkout/ext-3-months',

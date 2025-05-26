@@ -29,11 +29,20 @@ export class MentoringRepository implements IMentoringRepository {
   async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
     const newCatalog: MentoringCatalog = {
       id: `catalog-${Date.now()}`,
-      ...data,
-      totalSessions: data.numberOfSessions,
+      name: data.name,
+      type: data.type,
+      instructor: data.instructor,
+      durationMonths: data.durationMonths,
+      frequency: data.frequency || 'Semanal',
+      numberOfSessions: data.numberOfSessions || 0,
+      totalSessions: data.numberOfSessions || 0,
+      price: data.price,
+      description: data.description,
       tags: [],
       active: data.active ?? true,
       status: data.status ?? 'Ativa',
+      extensions: data.extensions || [],
+      checkoutLinks: data.checkoutLinks,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

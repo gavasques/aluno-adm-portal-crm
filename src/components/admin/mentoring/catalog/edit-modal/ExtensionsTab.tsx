@@ -9,9 +9,18 @@ import { MentoringExtensionOption } from '@/types/mentoring.types';
 interface ExtensionsTabProps {
   extensions: MentoringExtensionOption[];
   onExtensionsChange: (extensions: MentoringExtensionOption[]) => void;
+  baseDurationMonths?: number;
+  basePrice?: number;
+  frequency?: 'Semanal' | 'Quinzenal' | 'Mensal';
 }
 
-const ExtensionsTab: React.FC<ExtensionsTabProps> = ({ extensions, onExtensionsChange }) => {
+const ExtensionsTab: React.FC<ExtensionsTabProps> = ({ 
+  extensions, 
+  onExtensionsChange,
+  baseDurationMonths = 3,
+  basePrice = 100,
+  frequency = 'Semanal'
+}) => {
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-600">
       <CardHeader className="pb-4 bg-gradient-to-r from-blue-100 to-indigo-100">
@@ -30,6 +39,9 @@ const ExtensionsTab: React.FC<ExtensionsTabProps> = ({ extensions, onExtensionsC
         <ExtensionsManager
           extensions={extensions || []}
           onExtensionsChange={onExtensionsChange}
+          baseDurationMonths={baseDurationMonths}
+          basePrice={basePrice}
+          frequency={frequency}
         />
       </CardContent>
     </Card>
