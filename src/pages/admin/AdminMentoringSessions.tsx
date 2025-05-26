@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
 import { useAuth } from '@/hooks/useAuth';
-import SessionForm from '@/components/admin/mentoring/SessionForm';
+import StandaloneSessionForm from '@/components/admin/mentoring/StandaloneSessionForm';
 import { SessionsList } from '@/components/admin/mentoring/sessions/SessionsList';
 import { SessionDetailDialog } from '@/components/admin/mentoring/sessions/SessionDetailDialog';
 import { format, isToday, isTomorrow, isWithinInterval, addDays, isValid } from 'date-fns';
@@ -543,7 +543,7 @@ const AdminMentoringSessions = () => {
                 {editingSession ? 'Editar Sessão' : 'Nova Sessão'}
               </DialogTitle>
             </DialogHeader>
-            <SessionForm
+            <StandaloneSessionForm
               onSubmit={editingSession ? (data) => console.log('Edit session:', data) : handleCreateSession}
               onCancel={() => {
                 setShowForm(false);

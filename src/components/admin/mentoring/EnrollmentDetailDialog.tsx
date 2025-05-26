@@ -20,7 +20,7 @@ import {
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import SessionsTab from './sessions/SessionsTab';
+import { SessionsTab } from './sessions/SessionsTab';
 
 interface EnrollmentDetailDialogProps {
   open: boolean;
@@ -321,9 +321,9 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
           <TabsContent value="sessions">
             <SessionsTab 
               enrollment={enrollment}
+              sessions={[]}
               onCreateSession={(data) => console.log('Criar sessão:', data)}
               onUpdateSession={(id, data) => console.log('Atualizar sessão:', id, data)}
-              onScheduleSession={(id, data) => console.log('Agendar sessão:', id, data)}
             />
           </TabsContent>
 

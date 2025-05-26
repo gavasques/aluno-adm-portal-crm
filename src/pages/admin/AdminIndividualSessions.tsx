@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
 import { useAuth } from '@/hooks/useAuth';
-import SessionForm from '@/components/admin/mentoring/SessionForm';
+import StandaloneSessionForm from '@/components/admin/mentoring/StandaloneSessionForm';
 import { SessionsList } from '@/components/admin/mentoring/sessions/SessionsList';
 import { SessionDetailDialog } from '@/components/admin/mentoring/sessions/SessionDetailDialog';
 import { format, isToday, isTomorrow, isWithinInterval, addDays, isValid } from 'date-fns';
@@ -546,7 +545,7 @@ const AdminIndividualSessions = () => {
                 {editingSession ? 'Editar Sessão Individual' : 'Nova Sessão Individual'}
               </DialogTitle>
             </DialogHeader>
-            <SessionForm
+            <StandaloneSessionForm
               onSubmit={editingSession ? (data) => console.log('Edit session:', data) : handleCreateSession}
               onCancel={() => {
                 setShowForm(false);
