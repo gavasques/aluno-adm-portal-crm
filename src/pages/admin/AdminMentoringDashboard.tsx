@@ -128,7 +128,7 @@ const AdminMentoringDashboard = () => {
       </div>
 
       {/* Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/mentorias/catalogo')}>
           <CardContent className="p-6 text-center">
             <div className="p-4 bg-blue-100 rounded-lg inline-block mb-4">
@@ -166,6 +166,16 @@ const AdminMentoringDashboard = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Sessões Individuais</h3>
             <p className="text-sm text-gray-600">Agende e gerencie sessões individuais</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/mentorias/sessoes-grupo')}>
+          <CardContent className="p-6 text-center">
+            <div className="p-4 bg-red-100 rounded-lg inline-block mb-4">
+              <Clock className="h-8 w-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Sessões em Grupo</h3>
+            <p className="text-sm text-gray-600">Agende e gerencie sessões em grupo</p>
           </CardContent>
         </Card>
       </div>
