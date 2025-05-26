@@ -196,9 +196,9 @@ export const useMentoring = () => {
     try {
       // Determinar status baseado na presença de data/hora
       const hasScheduledDateTime = data.scheduledDate && data.scheduledDate !== '';
-      const status = hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento';
+      const status: 'aguardando_agendamento' | 'agendada' = hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento';
       
-      const sessionData = {
+      const sessionData: CreateSessionData = {
         ...data,
         status
       };
