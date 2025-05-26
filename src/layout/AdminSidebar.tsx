@@ -191,10 +191,10 @@ const AdminSidebar = () => {
                   <NavItem href="/admin/mentorias" icon={GraduationCap} showAlways={true}>Gestão de Mentorias</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/inscricoes-individuais" icon={UserCheck} showAlways={true}>Inscrições Individuais</NavItem>
+                  <NavItem href="/admin/inscricoes-individuais" icon={UserCheck} showAlways={true}>Individuais</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/inscricoes-grupo" icon={Users2} showAlways={true}>Inscrições em Grupo</NavItem>
+                  <NavItem href="/admin/inscricoes-grupo" icon={Users2} showAlways={true}>Grupos</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
