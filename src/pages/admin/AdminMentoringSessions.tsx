@@ -45,9 +45,10 @@ const AdminMentoringSessions = () => {
   const [viewingSession, setViewingSession] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
-  console.log('AdminMentoringSessions - user:', user);
-  console.log('AdminMentoringSessions - sessions count:', sessions.length);
-  console.log('AdminMentoringSessions - enrollments count:', enrollments.length);
+  console.log('AdminMentoringSessions render:');
+  console.log('- user:', user);
+  console.log('- sessions count:', sessions.length);
+  console.log('- enrollments count:', enrollments.length);
 
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
@@ -55,9 +56,9 @@ const AdminMentoringSessions = () => {
     { label: 'Gestão de Sessões' }
   ];
 
-  // Verificar se é admin - permitir acesso se for Admin ou se não houver usuário (desenvolvimento)
+  // Verificar se é admin - permitir acesso total se não houver usuário (desenvolvimento) ou se for Admin
   const isAdmin = !user || user?.role === 'Admin';
-  console.log('AdminMentoringSessions - isAdmin:', isAdmin);
+  console.log('- isAdmin:', isAdmin, 'user role:', user?.role);
 
   // Mock student names based on student IDs
   const studentNames = {
@@ -98,7 +99,7 @@ const AdminMentoringSessions = () => {
     });
   }, [sessions, enrollments]);
 
-  console.log('AdminMentoringSessions - enrichedSessions count:', enrichedSessions.length);
+  console.log('- enrichedSessions count:', enrichedSessions.length);
 
   // Filtrar sessões baseado em permissões
   const filteredSessions = useMemo(() => {
@@ -167,7 +168,7 @@ const AdminMentoringSessions = () => {
     return filtered;
   }, [enrichedSessions, searchTerm, statusFilter, typeFilter, studentFilter, mentorFilter, dateFilter, isAdmin, user]);
 
-  console.log('AdminMentoringSessions - filteredSessions count:', filteredSessions.length);
+  console.log('- filteredSessions count:', filteredSessions.length);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -183,7 +184,7 @@ const AdminMentoringSessions = () => {
 
   const handleCreateSession = async (data: any) => {
     try {
-      console.log('Creating session:', data);
+      console.log('Creating session with data:', data);
       
       // Combinar data e hora para criar o scheduledDate
       const scheduledDate = new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString();
@@ -199,6 +200,7 @@ const AdminMentoringSessions = () => {
       
       await createSession(sessionData);
       setShowForm(false);
+      console.log('Session created successfully');
     } catch (error) {
       console.error('Error creating session:', error);
     }
@@ -263,8 +265,9 @@ const AdminMentoringSessions = () => {
             </Button>
           </div>
           
+          {/* Sempre mostrar o botão Nova Sessão para admin */}
           {isAdmin && (
-            <Button onClick={() => setShowForm(true)}>
+            <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Nova Sessão
             </Button>
@@ -530,17 +533,16 @@ const AdminMentoringSessions = () => {
                 ? 'Tente ajustar os filtros para encontrar as sessões desejadas.'
                 : 'Não há sessões agendadas no momento.'}
             </p>
-            {(searchTerm || statusFilter || typeFilter || studentFilter || mentorFilter || dateFilter) && (
+            {(searchTerm || statusFilter || typeFilter || studentFilter || mentorFilter || dateFilter) ? (
               <Button variant="outline" onClick={clearFilters}>
                 Limpar Filtros
               </Button>
-            )}
-            {isAdmin && !searchTerm && !statusFilter && !typeFilter && !studentFilter && !mentorFilter && !dateFilter && (
+            ) : isAdmin ? (
               <Button onClick={() => setShowForm(true)} className="mt-2">
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Primeira Sessão
               </Button>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       )}

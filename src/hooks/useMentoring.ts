@@ -19,14 +19,32 @@ import {
 } from '@/data/expandedMentoringData';
 
 export const useMentoring = () => {
-  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(expandedMentoringCatalog);
-  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(expandedStudentEnrollments);
-  const [sessions, setSessions] = useState<MentoringSession[]>(expandedMentoringSessions);
-  const [materials] = useState<MentoringMaterial[]>(expandedMentoringMaterials);
+  // Inicializar com dados mock
+  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(() => {
+    console.log('Initializing catalogs with mock data:', expandedMentoringCatalog.length);
+    return expandedMentoringCatalog;
+  });
+  
+  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(() => {
+    console.log('Initializing enrollments with mock data:', expandedStudentEnrollments.length);
+    return expandedStudentEnrollments;
+  });
+  
+  const [sessions, setSessions] = useState<MentoringSession[]>(() => {
+    console.log('Initializing sessions with mock data:', expandedMentoringSessions.length);
+    return expandedMentoringSessions;
+  });
+  
+  const [materials] = useState<MentoringMaterial[]>(() => {
+    console.log('Initializing materials with mock data:', expandedMentoringMaterials.length);
+    return expandedMentoringMaterials;
+  });
 
-  console.log('useMentoring - catalogs:', catalogs.length);
-  console.log('useMentoring - enrollments:', enrollments.length);
-  console.log('useMentoring - sessions:', sessions.length);
+  console.log('useMentoring hook - Current state:');
+  console.log('- catalogs:', catalogs.length);
+  console.log('- enrollments:', enrollments.length);
+  console.log('- sessions:', sessions.length);
+  console.log('- materials:', materials.length);
 
   // Admin functions
   const createMentoringCatalog = async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
@@ -40,8 +58,11 @@ export const useMentoring = () => {
       updatedAt: new Date().toISOString()
     };
     
-    setCatalogs(prev => [...prev, newCatalog]);
-    console.log('Creating mentoring catalog:', newCatalog);
+    setCatalogs(prev => {
+      const updated = [...prev, newCatalog];
+      console.log('Created new catalog, total catalogs:', updated.length);
+      return updated;
+    });
     return newCatalog;
   };
 
@@ -79,15 +100,18 @@ export const useMentoring = () => {
 
   const createSession = async (data: CreateSessionData): Promise<MentoringSession> => {
     const newSession: MentoringSession = {
-      id: `session-${Date.now()}`,
+      id: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...data,
       status: 'agendada',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     
-    setSessions(prev => [...prev, newSession]);
-    console.log('Creating session:', newSession);
+    setSessions(prev => {
+      const updated = [...prev, newSession];
+      console.log('Created new session, total sessions:', updated.length);
+      return updated;
+    });
     return newSession;
   };
 
@@ -102,7 +126,7 @@ export const useMentoring = () => {
     };
     
     setSessions(prev => prev.map(s => s.id === id ? updated : s));
-    console.log('Updating session:', updated);
+    console.log('Updated session:', updated);
     return updated;
   };
 
