@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ import { ptBR } from 'date-fns/locale';
 const AdminGroupSessions = () => {
   console.log('=== AdminGroupSessions COMPONENT RENDER ===');
   
-  const { sessions, enrollments, createSession } = useMentoring();
+  const { sessions, enrollments, createSession, updateSession } = useMentoring();
   const { user } = useAuth();
   
   console.log('AdminGroupSessions render data:');
@@ -99,22 +98,14 @@ const AdminGroupSessions = () => {
           })
           .findIndex(s => s.id === session.id) + 1;
 
-        // Para sessões em grupo, vamos buscar quantos participantes tem
-        const groupParticipants = enrollments.filter(e => 
-          e.mentoring.type === 'Grupo' && 
-          e.mentoring.id === enrollment?.mentoring.id
-        );
-
         return {
           ...session,
           enrollment,
           sessionNumber,
-          groupName: enrollment?.mentoring.name || 'Grupo não encontrado',
+          studentName: enrollment?.studentId || 'Estudante não encontrado',
           mentorName: enrollment?.responsibleMentor || 'Mentor não definido',
           mentoringName: enrollment?.mentoring.name || 'Mentoria não encontrada',
-          totalSessions: enrollment?.totalSessions || 0,
-          participantsCount: groupParticipants.length,
-          participants: groupParticipants
+          totalSessions: enrollment?.totalSessions || 0
         };
       });
 
@@ -135,7 +126,7 @@ const AdminGroupSessions = () => {
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(session =>
-        session.groupName.toLowerCase().includes(search) ||
+        session.studentName.toLowerCase().includes(search) ||
         session.mentorName.toLowerCase().includes(search) ||
         session.mentoringName.toLowerCase().includes(search)
       );
@@ -187,7 +178,7 @@ const AdminGroupSessions = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'agendada': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
+      case 'concluida': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
       case 'reagendada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'no_show_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -200,10 +191,10 @@ const AdminGroupSessions = () => {
     switch (status) {
       case 'aguardando_agendamento': return 'Aguardando Agendamento';
       case 'agendada': return 'Agendada';
-      case 'realizada': return 'Realizada';
+      case 'concluida': return 'Concluída';
       case 'cancelada': return 'Cancelada';
       case 'reagendada': return 'Reagendada';
-      case 'no_show_aluno': return 'No-show Participante';
+      case 'no_show_aluno': return 'No-show Aluno';
       case 'no_show_mentor': return 'No-show Mentor';
       default: return status;
     }
@@ -291,8 +282,8 @@ const AdminGroupSessions = () => {
                 <p className="text-sm font-medium text-gray-600">Sessões em Grupo</p>
                 <p className="text-2xl font-bold text-gray-900">{filteredSessions.length}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Users className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Video className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -318,13 +309,13 @@ const AdminGroupSessions = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Realizadas</p>
+                <p className="text-sm font-medium text-gray-600">Concluídas</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {filteredSessions.filter(s => s.status === 'realizada').length}
+                  {filteredSessions.filter(s => s.status === 'concluida').length}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Play className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Play className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -334,13 +325,13 @@ const AdminGroupSessions = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Participantes</p>
+                <p className="text-sm font-medium text-gray-600">Total Grupos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {filteredSessions.reduce((acc, session) => acc + (session.participantsCount || 0), 0)}
+                  {new Set(filteredSessions.map(s => s.groupId)).size}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
-                <UserPlus className="h-6 w-6 text-purple-600" />
+                <Users className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -355,7 +346,7 @@ const AdminGroupSessions = () => {
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar por grupo, mentor ou mentoria..."
+                  placeholder="Buscar por aluno, mentor ou mentoria..."
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -368,10 +359,10 @@ const AdminGroupSessions = () => {
                 <SelectContent>
                   <SelectItem value="">Todos os status</SelectItem>
                   <SelectItem value="agendada">Agendada</SelectItem>
-                  <SelectItem value="realizada">Realizada</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
                   <SelectItem value="cancelada">Cancelada</SelectItem>
                   <SelectItem value="reagendada">Reagendada</SelectItem>
-                  <SelectItem value="no_show_aluno">No-show Participante</SelectItem>
+                  <SelectItem value="no_show_aluno">No-show Aluno</SelectItem>
                   <SelectItem value="no_show_mentor">No-show Mentor</SelectItem>
                 </SelectContent>
               </Select>
@@ -416,11 +407,11 @@ const AdminGroupSessions = () => {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <div className="p-2 bg-green-100 rounded-lg shrink-0">
-                        <Users className="h-4 w-4 text-green-600" />
+                      <div className="p-2 bg-purple-100 rounded-lg shrink-0">
+                        <Users className="h-4 w-4 text-purple-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-sm truncate">{session.groupName}</h4>
+                        <h4 className="font-medium text-sm truncate">{session.studentName}</h4>
                         <p className="text-xs text-gray-500">
                           Sessão {session.sessionNumber}/{session.totalSessions}
                         </p>
@@ -433,14 +424,14 @@ const AdminGroupSessions = () => {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <UserPlus className="h-3 w-3 text-gray-400 shrink-0" />
+                      <GraduationCap className="h-3 w-3 text-gray-400 shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-medium">Participantes:</span>
-                        <span className="text-xs text-gray-600 ml-1">{session.participantsCount || 0}</span>
+                        <span className="text-xs font-medium">Mentoria:</span>
+                        <span className="text-xs text-gray-600 ml-1 truncate block">{session.mentoringName}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <GraduationCap className="h-3 w-3 text-gray-400 shrink-0" />
+                      <Users className="h-3 w-3 text-gray-400 shrink-0" />
                       <div className="min-w-0 flex-1">
                         <span className="text-xs font-medium">Mentor:</span>
                         <span className="text-xs text-gray-600 ml-1 truncate block">{session.mentorName}</span>
@@ -469,7 +460,9 @@ const AdminGroupSessions = () => {
                     <div className="flex items-center gap-1">
                       <span>{session.durationMinutes} min</span>
                     </div>
-                    <Badge variant="outline" className="text-xs">Grupo</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Grupo
+                    </Badge>
                   </div>
 
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
@@ -571,6 +564,7 @@ const AdminGroupSessions = () => {
         onOpenChange={(open) => {
           if (!open) setViewingSession(null);
         }}
+        onUpdate={updateSession}
       />
     </div>
   );

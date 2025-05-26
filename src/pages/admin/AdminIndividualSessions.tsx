@@ -33,7 +33,7 @@ import { ptBR } from 'date-fns/locale';
 const AdminIndividualSessions = () => {
   console.log('=== AdminIndividualSessions COMPONENT RENDER ===');
   
-  const { sessions, enrollments, createSession } = useMentoring();
+  const { sessions, enrollments, createSession, updateSession } = useMentoring();
   const { user } = useAuth();
   
   console.log('AdminIndividualSessions render data:');
@@ -178,7 +178,7 @@ const AdminIndividualSessions = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'agendada': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
+      case 'concluida': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
       case 'reagendada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'no_show_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -191,7 +191,7 @@ const AdminIndividualSessions = () => {
     switch (status) {
       case 'aguardando_agendamento': return 'Aguardando Agendamento';
       case 'agendada': return 'Agendada';
-      case 'realizada': return 'Realizada';
+      case 'concluida': return 'Concluída';
       case 'cancelada': return 'Cancelada';
       case 'reagendada': return 'Reagendada';
       case 'no_show_aluno': return 'No-show Aluno';
@@ -309,9 +309,9 @@ const AdminIndividualSessions = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Realizadas</p>
+                <p className="text-sm font-medium text-gray-600">Concluídas</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {filteredSessions.filter(s => s.status === 'realizada').length}
+                  {filteredSessions.filter(s => s.status === 'concluida').length}
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -359,7 +359,7 @@ const AdminIndividualSessions = () => {
                 <SelectContent>
                   <SelectItem value="">Todos os status</SelectItem>
                   <SelectItem value="agendada">Agendada</SelectItem>
-                  <SelectItem value="realizada">Realizada</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
                   <SelectItem value="cancelada">Cancelada</SelectItem>
                   <SelectItem value="reagendada">Reagendada</SelectItem>
                   <SelectItem value="no_show_aluno">No-show Aluno</SelectItem>
@@ -564,6 +564,7 @@ const AdminIndividualSessions = () => {
         onOpenChange={(open) => {
           if (!open) setViewingSession(null);
         }}
+        onUpdate={updateSession}
       />
     </div>
   );
