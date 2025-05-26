@@ -30,7 +30,7 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
     switch (status) {
       case 'aguardando_agendamento': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'agendada': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
+      case 'concluida': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
       case 'reagendada': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'no_show_aluno': return 'bg-red-100 text-red-800 border-red-200';
@@ -43,7 +43,7 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
     switch (status) {
       case 'aguardando_agendamento': return 'Aguardando Agendamento';
       case 'agendada': return 'Agendada';
-      case 'realizada': return 'Realizada';
+      case 'concluida': return 'Concluída';
       case 'cancelada': return 'Cancelada';
       case 'reagendada': return 'Reagendada';
       case 'no_show_aluno': return 'No-show Aluno';
@@ -53,7 +53,7 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
   };
 
   const getSessionProgress = () => {
-    const completed = sessions.filter(s => s.status === 'realizada').length;
+    const completed = sessions.filter(s => s.status === 'concluida').length;
     const total = sessions.length;
     return { completed, total, percentage: total > 0 ? (completed / total) * 100 : 0 };
   };
@@ -73,7 +73,7 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Sessões Realizadas</span>
+              <span className="text-sm font-medium">Sessões Concluídas</span>
               <span className="text-sm text-gray-600">{progress.completed}/{progress.total}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -97,9 +97,9 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
               </div>
               <div>
                 <div className="text-2xl font-bold text-green-600">
-                  {sessions.filter(s => s.status === 'realizada').length}
+                  {sessions.filter(s => s.status === 'concluida').length}
                 </div>
-                <div className="text-xs text-gray-500">Realizadas</div>
+                <div className="text-xs text-gray-500">Concluídas</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-red-600">

@@ -16,7 +16,7 @@ const statusSchema = z.object({
   status: z.enum([
     'aguardando_agendamento',
     'agendada', 
-    'realizada',
+    'concluida',
     'cancelada',
     'reagendada',
     'no_show_aluno',
@@ -81,12 +81,12 @@ export const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
           label: 'Agendada',
           description: 'Sessão agendada e confirmada'
         };
-      case 'realizada':
+      case 'concluida':
         return {
           icon: CheckCircle,
           color: 'text-green-600',
           bg: 'bg-green-100',
-          label: 'Realizada',
+          label: 'Concluída',
           description: 'Sessão foi realizada com sucesso'
         };
       case 'cancelada':
@@ -135,7 +135,7 @@ export const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
   const statusOptions = [
     'aguardando_agendamento',
     'agendada',
-    'realizada',
+    'concluida',
     'cancelada',
     'reagendada',
     'no_show_aluno',
@@ -233,7 +233,7 @@ export const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
                 )}
               />
 
-              {form.watch('status') === 'realizada' && (
+              {form.watch('status') === 'concluida' && (
                 <FormField
                   control={form.control}
                   name="recordingLink"

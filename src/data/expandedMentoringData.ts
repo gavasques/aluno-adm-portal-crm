@@ -1,4 +1,3 @@
-
 import {
   MentoringCatalog,
   StudentMentoringEnrollment,
@@ -354,7 +353,7 @@ export const expandedStudentEnrollments: StudentMentoringEnrollment[] = [
   }
 ];
 
-// Mock Mentoring Sessions - Updated with correct types
+// Mock Mentoring Sessions - Updated with correct status values
 export const expandedMentoringSessions: MentoringSession[] = [
   {
     id: 'session-001',
@@ -378,7 +377,7 @@ export const expandedMentoringSessions: MentoringSession[] = [
     title: 'Sessão 2 - Product Management',
     scheduledDate: '2024-12-20T14:00:00Z',
     durationMinutes: 60,
-    status: 'realizada',
+    status: 'concluida',
     type: 'individual',
     meetingLink: 'https://meet.google.com/xyz-uvwx-yz',
     mentorNotes: 'Excelente participação do aluno. Conseguiu aplicar os conceitos discutidos.',
@@ -423,7 +422,7 @@ export const expandedMentoringSessions: MentoringSession[] = [
     title: 'Sessão 2 - Growth Hacking Avançado',
     scheduledDate: '2024-12-18T11:00:00Z',
     durationMinutes: 75,
-    status: 'realizada',
+    status: 'concluida',
     type: 'individual',
     meetingLink: 'https://meet.google.com/grw-hack-002',
     mentorNotes: 'Aluno demonstrou grande evolução desde a primeira sessão. Aplicou técnicas de growth com sucesso.',
@@ -498,7 +497,7 @@ export const expandedMentoringSessions: MentoringSession[] = [
     title: 'Sessão 4 - Gestão de Projetos Ágeis',
     scheduledDate: '2024-12-17T09:30:00Z',
     durationMinutes: 90,
-    status: 'realizada',
+    status: 'concluida',
     type: 'individual',
     meetingLink: 'https://meet.google.com/gest-proj-004',
     mentorNotes: 'Sessão focada em metodologias ágeis. Aluno mostrou boa compreensão dos conceitos.',
@@ -558,7 +557,7 @@ export const expandedMentoringSessions: MentoringSession[] = [
     title: 'Sessão 3 - Business Intelligence',
     scheduledDate: '2024-12-23T13:00:00Z',
     durationMinutes: 90,
-    status: 'realizada',
+    status: 'concluida',
     type: 'individual',
     meetingLink: 'https://meet.google.com/bus-int-003',
     mentorNotes: 'Excelente progresso na análise de dados. Aluno domina as ferramentas apresentadas.',
@@ -573,7 +572,7 @@ export const expandedMentoringSessions: MentoringSession[] = [
     title: 'Sessão 1 - Growth Hacking Fundamentos',
     scheduledDate: '2024-12-16T15:00:00Z',
     durationMinutes: 75,
-    status: 'realizada',
+    status: 'concluida',
     type: 'individual',
     meetingLink: 'https://meet.google.com/grw-hack-001',
     mentorNotes: 'Primeira sessão introdutória muito produtiva. Aluno demonstrou grande interesse.',
