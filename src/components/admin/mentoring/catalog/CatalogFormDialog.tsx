@@ -108,7 +108,9 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         title: "Sucesso",
         description: catalog ? "Mentoria atualizada com sucesso!" : "Mentoria criada com sucesso!",
       });
+      onOpenChange(false);
     } catch (error) {
+      console.error('Erro ao salvar mentoria:', error);
       toast({
         title: "Erro",
         description: "Erro ao salvar mentoria. Tente novamente.",
@@ -122,6 +124,14 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleMentorChange = (mentorId: string) => {
+    // Encontrar o mentor selecionado e usar o nome dele
+    const selectedMentor = mentors.find(mentor => mentor.id === mentorId);
+    if (selectedMentor) {
+      handleInputChange('instructor', selectedMentor.name);
+    }
   };
 
   return (
@@ -184,8 +194,8 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="instructor">Mentor *</Label>
               <Select
-                value={formData.instructor}
-                onValueChange={(value) => handleInputChange('instructor', value)}
+                value={mentors.find(m => m.name === formData.instructor)?.id || ''}
+                onValueChange={handleMentorChange}
                 disabled={mentorsLoading}
               >
                 <SelectTrigger>
@@ -193,7 +203,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {mentors.map((mentor) => (
-                    <SelectItem key={mentor.id} value={mentor.name}>
+                    <SelectItem key={mentor.id} value={mentor.id}>
                       {mentor.name}
                     </SelectItem>
                   ))}
