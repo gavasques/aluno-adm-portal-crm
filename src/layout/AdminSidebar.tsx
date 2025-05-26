@@ -163,14 +163,30 @@ const AdminSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/usuarios" icon={Users} menuKey="users">Gestão de Usuários</NavItem>
+                  <NavItem href="/admin/usuarios" icon={Users} menuKey="users">Usuários</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/permissoes" icon={Lock} menuKey="permissions">Gestão de Permissões</NavItem>
+                  <NavItem href="/admin/permissoes" icon={Lock} menuKey="permissions">Permissões</NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/alunos" icon={User} menuKey="students">Gestão de Alunos</NavItem>
+                  <NavItem href="/admin/alunos" icon={User} menuKey="students">Alunos</NavItem>
                 </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/cadastros" icon={Database} menuKey="registers">Cadastros</NavItem>
+                </motion.div>
+                <motion.div variants={itemAnimation}>
+                  <NavItem href="/admin/auditoria" icon={Shield} menuKey="audit">Auditoria</NavItem>
+                </motion.div>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
+              Mentorias
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/mentorias" icon={GraduationCap} showAlways={true}>Gestão de Mentorias</NavItem>
                 </motion.div>
@@ -179,12 +195,6 @@ const AdminSidebar = () => {
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/inscricoes-grupo" icon={Users2} showAlways={true}>Inscrições em Grupo</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/cadastros" icon={Database} menuKey="registers">Cadastros</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/auditoria" icon={Shield} menuKey="audit">Auditoria</NavItem>
                 </motion.div>
               </SidebarMenu>
             </SidebarGroupContent>
