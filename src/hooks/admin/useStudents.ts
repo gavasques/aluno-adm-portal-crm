@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { STUDENTS } from "@/data/students";
@@ -15,6 +14,7 @@ export const useStudents = () => {
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   
   // Filter students based on search query and status filter
   const filteredStudents = useMemo(() => {
@@ -112,6 +112,8 @@ export const useStudents = () => {
     setStatusFilter,
     showAddStudentDialog,
     setShowAddStudentDialog,
+    viewMode,
+    setViewMode,
     
     // Computed values
     filteredStudents,

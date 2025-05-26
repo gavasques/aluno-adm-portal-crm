@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +16,11 @@ import { Search, Users, UserPlus, Filter, Download } from "lucide-react";
 
 // Import the hook and components
 import { useStudents } from "@/hooks/admin/useStudents";
-import { StudentsHeader } from "@/components/admin/students/StudentsHeader";
+import { StudentsViewToggle } from "@/components/admin/students/StudentsViewToggle";
 
 // Import existing components
 import StudentList from "@/components/admin/students/StudentList";
+import StudentListView from "@/components/admin/students/StudentListView";
 import StudentDeleteDialog from "@/components/admin/students/StudentDeleteDialog";
 import StudentAddDialog from "@/components/admin/students/StudentAddDialog";
 
@@ -42,6 +42,8 @@ const Students = () => {
     setStatusFilter,
     showAddStudentDialog,
     setShowAddStudentDialog,
+    viewMode,
+    setViewMode,
     filteredStudents,
     currentItems,
     totalPages,
@@ -129,7 +131,7 @@ const Students = () => {
         >
           <Card className="border-0 shadow-md">
             <CardContent className="p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex flex-col lg:flex-row gap-4 items-center">
                 {/* Search Field */}
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -162,6 +164,12 @@ const Students = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* View Toggle */}
+                <StudentsViewToggle 
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                />
               </div>
             </CardContent>
           </Card>
@@ -173,12 +181,21 @@ const Students = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <StudentList 
-            students={currentItems}
-            onDeleteClick={handleDeleteClick}
-            sortDirection={sortDirection}
-            toggleSort={toggleSort}
-          />
+          {viewMode === "cards" ? (
+            <StudentList 
+              students={currentItems}
+              onDeleteClick={handleDeleteClick}
+              sortDirection={sortDirection}
+              toggleSort={toggleSort}
+            />
+          ) : (
+            <StudentListView 
+              students={currentItems}
+              onDeleteClick={handleDeleteClick}
+              sortDirection={sortDirection}
+              toggleSort={toggleSort}
+            />
+          )}
         </motion.div>
 
         {/* Pagination */}
