@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -13,6 +12,7 @@ import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enr
 import { ModernIndividualEnrollmentsList } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsList';
 import { EnrollmentsPagination } from '@/components/admin/mentoring/enrollments/EnrollmentsPagination';
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
+import { Button } from '@/components/ui/button';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -180,12 +180,12 @@ const AdminIndividualEnrollments = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma inscrição individual</h3>
             <p className="text-gray-600 text-sm mb-6">Comece criando a primeira inscrição individual de mentoria.</p>
-            <button
+            <Button
               onClick={() => setShowForm(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
             >
               Criar Primeira Inscrição
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

@@ -221,9 +221,34 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
   }
 
   async createSession(data: CreateSessionData): Promise<MentoringSession> {
+    // Calcular o número da sessão
+    const { data: existingSessions } = await supabase
+      .from('mentoring_sessions')
+      .select('session_number')
+      .eq('enrollment_id', data.enrollmentId)
+      .order('session_number', { ascending: false })
+      .limit(1);
+
+    const nextSessionNumber = existingSessions && existingSessions.length > 0 
+      ? existingSessions[0].session_number + 1 
+      : 1;
+
+    const sessionData = {
+      enrollment_id: data.enrollmentId,
+      session_number: nextSessionNumber,
+      type: data.type,
+      title: data.title,
+      scheduled_date: data.scheduledDate,
+      duration_minutes: data.durationMinutes,
+      meeting_link: data.meetingLink,
+      group_id: data.groupId,
+      status: data.status || 'aguardando_agendamento',
+      observations: data.observations
+    };
+
     const { data: result, error } = await (supabase as any)
       .from('mentoring_sessions')
-      .insert([this.transformSessionToSupabase(data)])
+      .insert([sessionData])
       .select()
       .single();
 

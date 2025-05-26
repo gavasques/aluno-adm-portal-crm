@@ -1,30 +1,24 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   User, 
-  GraduationCap, 
   Calendar, 
   Clock, 
-  Users,
-  AlertCircle,
-  Timer,
-  Target,
-  BookOpen,
-  DollarSign,
-  FileText,
-  Video,
-  Upload
+  GraduationCap, 
+  FileText, 
+  Activity,
+  Plus,
+  X
 } from 'lucide-react';
-import { StudentMentoringEnrollment } from '@/types/mentoring.types';
+import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { SessionsTab } from './sessions/SessionsTab';
-import { MaterialUploadDialog } from './MaterialUploadDialog';
-import { useMentoring } from '@/hooks/useMentoring';
+import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
+import PendingSessionsCard from './PendingSessionsCard';
 
 interface EnrollmentDetailDialogProps {
   open: boolean;
@@ -32,22 +26,19 @@ interface EnrollmentDetailDialogProps {
   enrollment: StudentMentoringEnrollment | null;
 }
 
-export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
-  open,
-  onOpenChange,
-  enrollment
-}) => {
-  const [showMaterialUpload, setShowMaterialUpload] = useState(false);
-  const { 
-    getEnrollmentSessions, 
-    createSession, 
-    updateSession, 
-    deleteSession 
-  } = useMentoring();
+export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: EnrollmentDetailDialogProps) => {
+  const { sessions, createSession, refreshSessions } = useSupabaseMentoring();
+  const [enrollmentSessions, setEnrollmentSessions] = useState<MentoringSession[]>([]);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+
+  useEffect(() => {
+    if (enrollment && sessions) {
+      const filtered = sessions.filter(session => session.enrollmentId === enrollment.id);
+      setEnrollmentSessions(filtered);
+    }
+  }, [enrollment, sessions]);
 
   if (!enrollment) return null;
-
-  const sessions = getEnrollmentSessions(enrollment.id);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,335 +50,182 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
-    } catch {
-      return dateString;
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'ativa': return 'Ativa';
+      case 'concluida': return 'Concluída';
+      case 'pausada': return 'Pausada';
+      case 'cancelada': return 'Cancelada';
+      default: return status;
     }
   };
 
-  const progressPercentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
+  const pendingSessions = enrollmentSessions.filter(session => session.status === 'aguardando_agendamento');
+  const scheduledSessions = enrollmentSessions.filter(session => session.status !== 'aguardando_agendamento');
+
+  const handleCreateSession = async (data: any) => {
+    setIsCreatingSession(true);
+    try {
+      await createSession(data);
+      await refreshSessions();
+    } catch (error) {
+      console.error('Error creating session:', error);
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
+  const handleSessionScheduled = (sessionId: string) => {
+    console.log('Session scheduled:', sessionId);
+    refreshSessions();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Detalhes da Inscrição Individual
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              Detalhes da Inscrição
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="sessions">Sessões</TabsTrigger>
-            <TabsTrigger value="materials">Materiais</TabsTrigger>
+            <TabsTrigger value="details">Informações</TabsTrigger>
+            <TabsTrigger value="sessions">Sessões ({enrollmentSessions.length})</TabsTrigger>
+            <TabsTrigger value="pending">Pendentes ({pendingSessions.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Status e Informações Gerais */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5" />
-                    Status da Inscrição
-                  </span>
-                  <Badge className={`${getStatusColor(enrollment.status)} text-sm`}>
-                    {enrollment.status}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Data de Início</p>
-                      <p className="font-medium">{formatDate(enrollment.startDate)}</p>
-                    </div>
+          <TabsContent value="details" className="space-y-6 max-h-[60vh] overflow-y-auto">
+            {/* Informações básicas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Aluno</p>
+                    <p className="text-gray-900">{enrollment.studentId}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Data de Fim</p>
-                      <p className="font-medium">{formatDate(enrollment.endDate)}</p>
-                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Mentoria</p>
+                    <p className="text-gray-900">{enrollment.mentoring.name}</p>
                   </div>
-                  {enrollment.hasExtension && enrollment.originalEndDate && (
-                    <div className="flex items-center gap-2">
-                      <Timer className="h-4 w-4 text-orange-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Data Original</p>
-                        <p className="font-medium">{formatDate(enrollment.originalEndDate)}</p>
-                        <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs mt-1">
-                          Extensão Aplicada
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Mentor Responsável</p>
+                    <p className="text-gray-900">{enrollment.responsibleMentor}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Status</p>
+                    <Badge className={getStatusColor(enrollment.status)}>
+                      {getStatusLabel(enrollment.status)}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Período</p>
+                    <p className="text-gray-900">
+                      {format(new Date(enrollment.startDate), 'dd/MM/yyyy', { locale: ptBR })} - {' '}
+                      {format(new Date(enrollment.endDate), 'dd/MM/yyyy', { locale: ptBR })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Progresso</p>
+                    <p className="text-gray-900">
+                      {enrollment.sessionsUsed} de {enrollment.totalSessions} sessões realizadas
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {enrollment.observations && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-4 w-4 text-gray-500" />
+                  <p className="text-sm font-medium text-gray-600">Observações</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-gray-700">{enrollment.observations}</p>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="sessions" className="max-h-[60vh] overflow-y-auto">
+            <div className="space-y-4">
+              {scheduledSessions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>Nenhuma sessão agendada ainda</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {scheduledSessions.map((session) => (
+                    <div key={session.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{session.title}</h4>
+                        <Badge variant="outline">
+                          {session.status}
                         </Badge>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Informações do Aluno */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Informações do Aluno
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                    B
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Bianca Mentora</h3>
-                    <p className="text-sm text-gray-600">bianca.c.arantes@gmail.com</p>
-                    <p className="text-xs text-gray-500">ID: {enrollment.studentId}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Informações da Mentoria */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Informações da Mentoria
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-semibold">{enrollment.mentoring.name}</h3>
-                  <p className="text-gray-600">{enrollment.mentoring.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Tipo</p>
-                      <Badge variant="outline">{enrollment.mentoring.type}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Duração</p>
-                      <p className="font-medium">{enrollment.mentoring.durationMonths} {enrollment.mentoring.durationMonths === 1 ? 'mês' : 'meses'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Sessões</p>
-                      <p className="font-medium">{enrollment.mentoring.numberOfSessions} sessões</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Valor</p>
-                      <p className="font-medium">R$ {enrollment.mentoring.price.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Mentor Responsável */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Mentor Responsável
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-medium">
-                    {enrollment.responsibleMentor.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{enrollment.responsibleMentor}</h3>
-                    <p className="text-sm text-gray-600">Mentor responsável pela mentoria</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Progresso */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Progresso da Mentoria
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Sessões Utilizadas</span>
-                  <span className="font-medium">{enrollment.sessionsUsed}/{enrollment.totalSessions}</span>
-                </div>
-                
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-blue-600 h-3 rounded-full transition-all duration-300" 
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-                
-                <div className="text-center">
-                  <span className="text-2xl font-bold text-blue-600">{Math.round(progressPercentage)}%</span>
-                  <p className="text-sm text-gray-600">Concluído</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Extensões */}
-            {enrollment.hasExtension && enrollment.extensions && enrollment.extensions.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Timer className="h-5 w-5" />
-                    Extensões Aplicadas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {enrollment.extensions.map((extension, index) => (
-                      <div key={extension.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium">Extensão #{index + 1}</p>
-                            <p className="text-sm text-gray-600">
-                              +{extension.extensionMonths} meses
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Aplicada em: {formatDate(extension.appliedDate)}
-                            </p>
-                          </div>
-                          <Badge className="bg-orange-100 text-orange-800 border-orange-200">
-                            {extension.extensionMonths} meses
-                          </Badge>
-                        </div>
-                        {extension.notes && (
-                          <div className="mt-2 pt-2 border-t border-orange-200">
-                            <p className="text-sm text-gray-700">{extension.notes}</p>
-                          </div>
+                      <div className="text-sm text-gray-600">
+                        {session.scheduledDate && (
+                          <p>
+                            {format(new Date(session.scheduledDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
                         )}
+                        <p>{session.durationMinutes} minutos</p>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Observações */}
-            {enrollment.observations && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Observações
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 whitespace-pre-wrap">{enrollment.observations}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Informações de Sistema */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm text-gray-600">Informações do Sistema</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600">Criado em:</p>
-                    <p className="font-medium">{formatDate(enrollment.createdAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Última atualização:</p>
-                    <p className="font-medium">{formatDate(enrollment.updatedAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">ID da Inscrição:</p>
-                    <p className="font-mono text-xs">{enrollment.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">ID da Mentoria:</p>
-                    <p className="font-mono text-xs">{enrollment.mentoringId}</p>
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </TabsContent>
 
-          <TabsContent value="sessions">
-            <SessionsTab 
+          <TabsContent value="pending" className="max-h-[60vh] overflow-y-auto">
+            <PendingSessionsCard
               enrollment={enrollment}
-              sessions={sessions}
-              onCreateSession={createSession}
-              onUpdateSession={updateSession}
-              onDeleteSession={deleteSession}
+              pendingSessions={pendingSessions}
+              onCreateSession={handleCreateSession}
+              onSessionScheduled={handleSessionScheduled}
+              isLoading={isCreatingSession}
             />
           </TabsContent>
-
-          <TabsContent value="materials">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Materiais da Mentoria
-                  </span>
-                  <Button onClick={() => setShowMaterialUpload(true)}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Adicionar Material
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Nenhum material disponível
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    Os materiais das sessões aparecerão aqui.
-                  </p>
-                  <Button onClick={() => setShowMaterialUpload(true)}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Enviar primeiro material
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
-
-        {/* Material Upload Dialog */}
-        <MaterialUploadDialog
-          open={showMaterialUpload}
-          onOpenChange={setShowMaterialUpload}
-          enrollmentId={enrollment.id}
-          onUploadSuccess={() => {
-            console.log('Material uploaded successfully');
-            // Aqui você atualizaria a lista de materiais
-          }}
-        />
       </DialogContent>
     </Dialog>
   );
 };
-
-export default EnrollmentDetailDialog;

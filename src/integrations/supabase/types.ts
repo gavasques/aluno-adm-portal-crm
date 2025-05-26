@@ -387,6 +387,112 @@ export type Database = {
         }
         Relationships: []
       }
+      mentoring_enrollment_extensions: {
+        Row: {
+          admin_id: string | null
+          applied_date: string
+          created_at: string
+          enrollment_id: string
+          extension_months: number
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          applied_date?: string
+          created_at?: string
+          enrollment_id: string
+          extension_months: number
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          applied_date?: string
+          created_at?: string
+          enrollment_id?: string
+          extension_months?: number
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentoring_enrollment_extensions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentoring_enrollments: {
+        Row: {
+          created_at: string
+          end_date: string
+          enrollment_date: string
+          group_id: string | null
+          has_extension: boolean | null
+          id: string
+          mentoring_id: string
+          observations: string | null
+          original_end_date: string | null
+          payment_status: string
+          responsible_mentor: string
+          sessions_used: number
+          start_date: string
+          status: string
+          student_id: string
+          total_sessions: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          enrollment_date?: string
+          group_id?: string | null
+          has_extension?: boolean | null
+          id?: string
+          mentoring_id: string
+          observations?: string | null
+          original_end_date?: string | null
+          payment_status?: string
+          responsible_mentor: string
+          sessions_used?: number
+          start_date: string
+          status?: string
+          student_id: string
+          total_sessions: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          enrollment_date?: string
+          group_id?: string | null
+          has_extension?: boolean | null
+          id?: string
+          mentoring_id?: string
+          observations?: string | null
+          original_end_date?: string | null
+          payment_status?: string
+          responsible_mentor?: string
+          sessions_used?: number
+          start_date?: string
+          status?: string
+          student_id?: string
+          total_sessions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentoring_enrollments_mentoring_id_fkey"
+            columns: ["mentoring_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_catalogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentoring_extensions: {
         Row: {
           catalog_id: string
@@ -425,6 +531,143 @@ export type Database = {
             columns: ["catalog_id"]
             isOneToOne: false
             referencedRelation: "mentoring_catalogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentoring_materials: {
+        Row: {
+          created_at: string
+          description: string | null
+          enrollment_id: string | null
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          session_id: string | null
+          size_mb: number | null
+          storage_path: string | null
+          tags: string[] | null
+          updated_at: string
+          uploader_id: string | null
+          uploader_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enrollment_id?: string | null
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          session_id?: string | null
+          size_mb?: number | null
+          storage_path?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          uploader_id?: string | null
+          uploader_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enrollment_id?: string | null
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          session_id?: string | null
+          size_mb?: number | null
+          storage_path?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          uploader_id?: string | null
+          uploader_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentoring_materials_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentoring_materials_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentoring_sessions: {
+        Row: {
+          calendly_link: string | null
+          created_at: string
+          duration_minutes: number
+          enrollment_id: string
+          group_id: string | null
+          id: string
+          meeting_link: string | null
+          mentor_notes: string | null
+          observations: string | null
+          recording_link: string | null
+          scheduled_date: string | null
+          session_number: number
+          status: string
+          student_notes: string | null
+          title: string
+          transcription: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          calendly_link?: string | null
+          created_at?: string
+          duration_minutes?: number
+          enrollment_id: string
+          group_id?: string | null
+          id?: string
+          meeting_link?: string | null
+          mentor_notes?: string | null
+          observations?: string | null
+          recording_link?: string | null
+          scheduled_date?: string | null
+          session_number: number
+          status?: string
+          student_notes?: string | null
+          title: string
+          transcription?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          calendly_link?: string | null
+          created_at?: string
+          duration_minutes?: number
+          enrollment_id?: string
+          group_id?: string | null
+          id?: string
+          meeting_link?: string | null
+          mentor_notes?: string | null
+          observations?: string | null
+          recording_link?: string | null
+          scheduled_date?: string | null
+          session_number?: number
+          status?: string
+          student_notes?: string | null
+          title?: string
+          transcription?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentoring_sessions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "mentoring_enrollments"
             referencedColumns: ["id"]
           },
         ]

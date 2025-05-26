@@ -155,6 +155,7 @@ export interface CreateSessionData {
   meetingLink?: string;
   groupId?: string;
   status?: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
+  observations?: string;
 }
 
 export interface UpdateSessionData extends Partial<CreateSessionData> {

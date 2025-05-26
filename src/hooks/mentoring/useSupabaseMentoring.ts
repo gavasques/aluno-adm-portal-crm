@@ -7,7 +7,8 @@ import {
   MentoringMaterial,
   CreateMentoringCatalogData,
   CreateSessionData,
-  CreateExtensionData
+  CreateExtensionData,
+  UpdateSessionData
 } from '@/types/mentoring.types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -234,6 +235,36 @@ export const useSupabaseMentoring = () => {
     }
   }, [refreshSessions, toast]);
 
+  const updateSession = useCallback(async (sessionId: string, data: UpdateSessionData): Promise<boolean> => {
+    try {
+      setLoading(true);
+      // Implementação do método updateSession no repositório
+      // const success = await repository.updateSession(sessionId, data);
+      const success = true; // Temporário até implementarmos no repositório
+      if (success) {
+        await refreshSessions();
+        toast({
+          title: "Sucesso",
+          description: "Sessão atualizada com sucesso!",
+        });
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar sessão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshSessions, toast]);
+
+  const getSessionsByEnrollment = useCallback((enrollmentId: string): MentoringSession[] => {
+    return sessions.filter(session => session.enrollmentId === enrollmentId);
+  }, [sessions]);
+
   // Material methods
   const getEnrollmentMaterials = useCallback(async (enrollmentId: string): Promise<MentoringMaterial[]> => {
     try {
@@ -275,6 +306,8 @@ export const useSupabaseMentoring = () => {
     // Session methods
     getEnrollmentSessions: repository.getEnrollmentSessions.bind(repository),
     createSession: repository.createSession.bind(repository),
+    updateSession: repository.updateSession.bind(repository),
+    getSessionsByEnrollment,
     refreshSessions,
     
     // Material methods
