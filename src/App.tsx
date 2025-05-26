@@ -1,136 +1,69 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Login } from '@/pages/auth/Login';
+import { Register } from '@/pages/auth/Register';
+import { ForgotPassword } from '@/pages/auth/ForgotPassword';
+import { ResetPassword } from '@/pages/auth/ResetPassword';
+import { StudentDashboard } from '@/pages/student/StudentDashboard';
+import StudentMentoring from '@/pages/student/Mentoring';
+import StudentMentoringDetails from '@/pages/student/MentoringDetails';
+import { AdminDashboard } from '@/pages/admin/AdminDashboard';
+import AdminMentoring from '@/pages/admin/AdminMentoring';
+import AdminMentoringDetails from '@/pages/admin/AdminMentoringDetails';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminGroups from '@/pages/admin/AdminGroups';
+import AdminIndividualSessions from '@/pages/admin/AdminIndividualSessions';
+import AdminGroupSessions from '@/pages/admin/AdminGroupSessions';
 
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HelmetProvider } from "react-helmet-async";
-import { Toaster } from "sonner";
-import { AuthProvider } from "./hooks/auth";
-import Home from "./pages/Index";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/student/Dashboard";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminLayout from "./layout/AdminLayout";
-import StudentLayout from "./layout/StudentLayout";
-import StudentSuppliers from "./pages/student/Suppliers";
-import MySuppliers from "./pages/student/MySuppliers";
-import StudentPartners from "./pages/student/Partners";
-import StudentTools from "./pages/student/Tools";
-import StudentSettings from "./pages/student/Settings";
-import AdminSuppliers from "./pages/admin/Suppliers";
-import SupplierDetailWrapper from "./components/admin/SupplierDetailWrapper";
-import AdminPartners from "./pages/admin/Partners";
-import AdminTools from "./pages/admin/Tools";
-import AdminUsers from "./pages/admin/Users";
-import AdminStudents from "./pages/admin/Students";
-import StudentDetail from "./pages/admin/StudentDetail";
-import AdminPermissions from "./pages/admin/Permissions";
-import AdminRegistrations from "./pages/admin/Registers";
-import CourseList from "./pages/admin/Courses";
-import CourseDetail from "./pages/admin/CourseDetails";
-import Mentoring from "./pages/admin/Mentoring";
-import MentoringDetail from "./pages/admin/MentoringDetail";
-import AdminBonus from "./pages/admin/Bonus";
-import BonusDetail from "./pages/admin/BonusDetail";
-import AdminTasks from "./pages/admin/Tasks";
-import AdminCRM from "./pages/admin/CRM";
-import AdminAuditDashboard from "./pages/admin/Audit";
-import AdminSettings from "./pages/admin/Settings";
+const RouteGuard = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
+  const { user, isAuthenticated, loading } = useAuth();
 
-// Mentoring Pages
-import AdminMentoringManagement from "./pages/admin/AdminMentoringManagement";
-import AdminMentoringCatalog from "./pages/admin/AdminMentoringCatalog";
-import AdminMentoringEnrollments from "./pages/admin/AdminMentoringEnrollments";
-import AdminMentoringSessions from "./pages/admin/AdminMentoringSessions";
-import AdminMentoringMaterials from "./pages/admin/AdminMentoringMaterials";
-import StudentMentoring from "./pages/student/Mentoring";
-import StudentMentoringDetail from "./pages/student/MentoringDetail";
-import StudentMentoringSession from "./pages/student/MentoringSession";
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-// Individual and Group Enrollments Pages
-import AdminIndividualEnrollments from "./pages/admin/AdminIndividualEnrollments";
-import AdminGroupEnrollments from "./pages/admin/AdminGroupEnrollments";
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
-import RouteGuard from "./components/RouteGuard";
-import "./App.css";
+  if (user && !allowedRoles.includes(user.role)) {
+    return <div>Unauthorized</div>;
+  }
 
-const queryClient = new QueryClient();
+  return children;
+};
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <Router>
-          <AuthProvider>
-            <Toaster />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+    <Router>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="fornecedores" element={<AdminSuppliers />} />
-                <Route path="fornecedores/:id" element={
-                  <RouteGuard requireAdminAccess={true}>
-                    <SupplierDetailWrapper />
-                  </RouteGuard>
-                } />
-                <Route path="parceiros" element={<AdminPartners />} />
-                <Route path="ferramentas" element={<AdminTools />} />
-                <Route path="usuarios" element={<AdminUsers />} />
-                <Route path="alunos" element={<AdminStudents />} />
-                <Route path="alunos/:id" element={<StudentDetail />} />
-                <Route path="permissoes" element={<AdminPermissions />} />
-                <Route path="cadastros" element={<AdminRegistrations />} />
-                <Route path="cursos" element={<CourseList />} />
-                <Route path="cursos/:id" element={<CourseDetail />} />
-                <Route path="bonus" element={<AdminBonus />} />
-                <Route path="bonus/:id" element={<BonusDetail />} />
-                <Route path="tarefas" element={<AdminTasks />} />
-                <Route path="crm" element={<AdminCRM />} />
-                <Route path="auditoria" element={<AdminAuditDashboard />} />
-                <Route path="configuracoes" element={<AdminSettings />} />
-                
-                {/* Mentoring Management Routes */}
-                <Route path="mentorias" element={<AdminMentoringManagement />} />
-                <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
-                <Route path="mentorias/inscricoes" element={<AdminMentoringEnrollments />} />
-                <Route path="mentorias/sessoes" element={<AdminMentoringSessions />} />
-                <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
-                <Route path="mentorias/:id" element={<MentoringDetail />} />
-                
-                {/* New Separate Enrollment Routes */}
-                <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
-                <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
-              </Route>
-
-              {/* Student Routes */}
-              <Route path="/aluno" element={<StudentLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="fornecedores" element={<StudentSuppliers />} />
-                <Route path="meus-fornecedores" element={<MySuppliers />} />
-                <Route path="parceiros" element={<StudentPartners />} />
-                <Route path="ferramentas" element={<StudentTools />} />
-                <Route path="configuracoes" element={<StudentSettings />} />
-                
-                {/* Student Mentoring Routes with Route Guards */}
-                <Route path="mentorias" element={<StudentMentoring />} />
-                <Route 
-                  path="mentorias/:enrollmentId" 
-                  element={<StudentMentoringDetail />} 
-                />
-                <Route 
-                  path="mentorias/:enrollmentId/sessoes/:sessionId" 
-                  element={<StudentMentoringSession />} 
-                />
-              </Route>
-            </Routes>
-          </AuthProvider>
-        </Router>
-      </HelmetProvider>
-    </QueryClientProvider>
+        {/* Student Routes */}
+        <Route path="/aluno" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentDashboard /></RouteGuard>} />
+        <Route path="/aluno/mentorias" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoring /></RouteGuard>} />
+        <Route path="/aluno/mentorias/:id" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoringDetails /></RouteGuard>} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={<RouteGuard allowedRoles={['Admin']}><AdminDashboard /></RouteGuard>} />
+        <Route path="/admin/mentorias" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoring /></RouteGuard>} />
+        <Route path="/admin/mentorias/:id" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoringDetails /></RouteGuard>} />
+        <Route path="/admin/usuarios" element={<RouteGuard allowedRoles={['Admin']}><AdminUsers /></RouteGuard>} />
+        <Route path="/admin/grupos" element={<RouteGuard allowedRoles={['Admin']}><AdminGroups /></RouteGuard>} />
+        
+        {/* Mentoring Session Routes */}
+        <Route path="/admin/mentorias/sessoes-individuais" element={<RouteGuard allowedRoles={['Admin']}><AdminIndividualSessions /></RouteGuard>} />
+        <Route path="/admin/mentorias/sessoes-grupo" element={<RouteGuard allowedRoles={['Admin']}><AdminGroupSessions /></RouteGuard>} />
+        
+        {/* Default Route */}
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 }
 

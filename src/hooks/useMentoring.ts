@@ -210,6 +210,7 @@ export const useMentoring = () => {
         durationMinutes: data.durationMinutes,
         status: data.scheduledDate ? 'agendada' : 'aguardando_agendamento',
         meetingLink: data.meetingLink,
+        groupId: data.groupId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -242,12 +243,17 @@ export const useMentoring = () => {
     const pendingSessions = enrollmentSessions.filter(s => s.status === 'aguardando_agendamento').length;
     const scheduledSessions = enrollmentSessions.filter(s => s.status === 'agendada').length;
     
+    const daysRemaining = Math.ceil(
+      (new Date(enrollment.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
     return {
       completedSessions,
       totalSessions,
       pendingSessions,
       scheduledSessions,
-      percentage: totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0
+      percentage: totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0,
+      daysRemaining: Math.max(daysRemaining, 0)
     };
   }, [getEnrollmentSessions]);
 

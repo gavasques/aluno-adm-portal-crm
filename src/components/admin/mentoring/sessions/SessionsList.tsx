@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Trash2, Play } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface SessionsListProps {
@@ -28,9 +28,21 @@ export const SessionsList: React.FC<SessionsListProps> = ({
       case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
       case 'reagendada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'ausente_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'ausente_mentor': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'no_show_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'no_show_mentor': return 'bg-purple-100 text-purple-800 border-purple-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const formatSafeDate = (dateString: string | undefined, formatStr: string) => {
+    if (!dateString) return 'Não agendada';
+    
+    try {
+      const date = new Date(dateString);
+      if (!isValid(date)) return 'Data inválida';
+      return format(date, formatStr, { locale: ptBR });
+    } catch (error) {
+      return 'Data inválida';
     }
   };
 
@@ -63,7 +75,9 @@ export const SessionsList: React.FC<SessionsListProps> = ({
             >
               <TableCell>
                 <div className="space-y-1">
-                  <div className="font-medium text-sm">{session.studentName}</div>
+                  <div className="font-medium text-sm">
+                    {session.studentName || session.groupName || 'Nome não encontrado'}
+                  </div>
                   <div className="text-xs text-gray-500">{session.mentorName}</div>
                 </div>
               </TableCell>
@@ -78,10 +92,10 @@ export const SessionsList: React.FC<SessionsListProps> = ({
               </TableCell>
               <TableCell>
                 <div className="text-sm">
-                  {format(new Date(session.scheduledDate), 'dd/MM/yyyy', { locale: ptBR })}
+                  {formatSafeDate(session.scheduledDate, 'dd/MM/yyyy')}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {format(new Date(session.scheduledDate), 'HH:mm', { locale: ptBR })}
+                  {formatSafeDate(session.scheduledDate, 'HH:mm')}
                 </div>
               </TableCell>
               <TableCell>
@@ -106,13 +120,13 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                     <Eye className="h-3 w-3" />
                   </Button>
                   
-                  {session.status === 'agendada' && session.accessLink && (
+                  {session.status === 'agendada' && session.meetingLink && (
                     <Button 
                       variant="ghost" 
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(session.accessLink, '_blank');
+                        window.open(session.meetingLink, '_blank');
                       }}
                       className="h-8 w-8 p-0 hover:bg-green-50"
                     >

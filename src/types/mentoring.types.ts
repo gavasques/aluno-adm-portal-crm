@@ -79,6 +79,7 @@ export interface MentoringSession {
   studentNotes?: string;
   createdAt: string;
   updatedAt: string;
+  groupId?: string;
 }
 
 export interface MentoringMaterial {
@@ -128,6 +129,7 @@ export interface CreateSessionData {
   scheduledDate?: string;
   durationMinutes: number;
   meetingLink?: string;
+  groupId?: string;
 }
 
 export interface UpdateSessionData extends Partial<CreateSessionData> {
@@ -157,4 +159,8 @@ export interface EnrollmentProgress {
   pendingSessions: number;
   scheduledSessions: number;
   percentage: number;
+  daysRemaining: number;
 }
+
+// Session Status Types for UI components
+export type SessionStatusFilter = 'cancelada' | 'agendada' | 'realizada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor' | 'aguardando_agendamento';
