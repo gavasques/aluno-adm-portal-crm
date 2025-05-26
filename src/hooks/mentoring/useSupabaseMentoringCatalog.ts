@@ -32,20 +32,27 @@ export const useSupabaseMentoringCatalog = () => {
   const createCatalog = useCallback(async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
     setLoading(true);
     try {
-      console.log('🔄 Criando catálogo com dados:', data);
+      console.log('🔄 Iniciando criação de catálogo:', data);
+      console.log('📦 Extensões a serem criadas:', data.extensions);
+      
       const newCatalog = await repository.createCatalog(data);
-      console.log('✅ Catálogo criado:', newCatalog);
+      
+      console.log('✅ Catálogo criado com sucesso:', newCatalog);
+      console.log('📦 Extensões do catálogo criado:', newCatalog.extensions);
+      
       setCatalogs(prev => [newCatalog, ...prev]);
+      
       toast({
         title: "Sucesso",
-        description: "Mentoria criada com sucesso!",
+        description: `Mentoria criada com sucesso${newCatalog.extensions && newCatalog.extensions.length > 0 ? ` com ${newCatalog.extensions.length} extensão(ões)` : ''}!`,
       });
+      
       return newCatalog;
     } catch (error) {
-      console.error('Error creating catalog:', error);
+      console.error('❌ Erro ao criar mentoria:', error);
       toast({
         title: "Erro",
-        description: "Erro ao criar mentoria. Tente novamente.",
+        description: "Erro ao criar mentoria. Verifique os dados e tente novamente.",
         variant: "destructive",
       });
       throw error;
@@ -57,21 +64,27 @@ export const useSupabaseMentoringCatalog = () => {
   const updateCatalog = useCallback(async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> => {
     setLoading(true);
     try {
-      console.log('🔄 Atualizando catálogo:', id, data);
+      console.log('🔄 Iniciando atualização do catálogo:', id, data);
+      console.log('📦 Extensões a serem atualizadas:', data.extensions);
+      
       const success = await repository.updateCatalog(id, data);
+      
       if (success) {
+        console.log('✅ Catálogo atualizado, recarregando dados...');
         await fetchCatalogs(); // Reload data
+        
         toast({
           title: "Sucesso",
           description: "Mentoria atualizada com sucesso!",
         });
       }
+      
       return success;
     } catch (error) {
-      console.error('Error updating catalog:', error);
+      console.error('❌ Erro ao atualizar mentoria:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar mentoria. Tente novamente.",
+        description: "Erro ao atualizar mentoria. Verifique os dados e tente novamente.",
         variant: "destructive",
       });
       return false;

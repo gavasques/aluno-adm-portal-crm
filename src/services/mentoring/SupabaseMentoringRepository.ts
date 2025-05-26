@@ -112,6 +112,8 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
   }
 
   async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
+    console.log('🔄 Criando catálogo com dados:', data);
+    
     const supabaseData = this.transformToSupabase(data);
     
     const { data: result, error } = await supabase
@@ -129,14 +131,18 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     
     // Criar extensões se fornecidas
     if (data.extensions && data.extensions.length > 0) {
+      console.log('📦 Criando extensões para catálogo:', catalog.id, data.extensions);
       await this.createCatalogExtensions(catalog.id, data.extensions);
       catalog.extensions = await this.getCatalogExtensions(catalog.id);
+      console.log('✅ Extensões criadas e carregadas:', catalog.extensions);
     }
 
     return catalog;
   }
 
   async updateCatalog(id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> {
+    console.log('🔄 Atualizando catálogo:', id, data);
+    
     const updateData: any = {};
     
     if (data.name !== undefined) updateData.name = data.name;
@@ -164,7 +170,9 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
 
     // Atualizar extensões se fornecidas
     if (data.extensions !== undefined) {
+      console.log('📦 Atualizando extensões do catálogo:', id, data.extensions);
       await this.updateCatalogExtensions(id, data.extensions);
+      console.log('✅ Extensões atualizadas');
     }
 
     return true;
@@ -184,8 +192,10 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     return true;
   }
 
-  // Extension operations
+  // Extension operations melhoradas
   async getCatalogExtensions(catalogId: string): Promise<MentoringExtensionOption[]> {
+    console.log('🔍 Buscando extensões para catálogo:', catalogId);
+    
     const { data, error } = await supabase
       .from('mentoring_extensions')
       .select('*')
@@ -197,42 +207,69 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       return [];
     }
 
-    return (data || []).map(ext => ({
+    const extensions = (data || []).map(ext => ({
       id: ext.id,
       months: ext.months,
       price: ext.price,
-      description: ext.description
+      description: ext.description || '' // Garantir que description nunca seja null
     }));
+
+    console.log('📦 Extensões encontradas:', extensions);
+    return extensions;
   }
 
   async createCatalogExtensions(catalogId: string, extensions: MentoringExtensionOption[]): Promise<void> {
-    const extensionsData = extensions.map(ext => ({
-      catalog_id: catalogId,
-      months: ext.months,
-      price: ext.price,
-      description: ext.description
-    }));
+    console.log('🔧 Criando extensões para catálogo:', catalogId);
+    console.log('📊 Dados das extensões:', extensions);
+    
+    // Sanitizar dados das extensões
+    const extensionsData = extensions.map(ext => {
+      const sanitizedExt = {
+        catalog_id: catalogId,
+        months: ext.months,
+        price: ext.price,
+        description: ext.description || '' // Converter undefined/null para string vazia
+      };
+      console.log('🧹 Extensão sanitizada:', sanitizedExt);
+      return sanitizedExt;
+    });
 
-    const { error } = await supabase
+    console.log('💾 Inserindo extensões no banco:', extensionsData);
+
+    const { data, error } = await supabase
       .from('mentoring_extensions')
-      .insert(extensionsData);
+      .insert(extensionsData)
+      .select();
 
     if (error) {
-      console.error('Error creating extensions:', error);
-      throw new Error('Erro ao criar extensões');
+      console.error('❌ Erro ao criar extensões:', error);
+      console.error('📝 Dados que causaram erro:', extensionsData);
+      throw new Error('Erro ao criar extensões: ' + error.message);
     }
+
+    console.log('✅ Extensões criadas com sucesso:', data);
   }
 
   async updateCatalogExtensions(catalogId: string, extensions: MentoringExtensionOption[]): Promise<void> {
+    console.log('🔄 Atualizando extensões do catálogo:', catalogId);
+    
     // Primeiro, remove todas as extensões existentes
-    await supabase
+    const { error: deleteError } = await supabase
       .from('mentoring_extensions')
       .delete()
       .eq('catalog_id', catalogId);
 
+    if (deleteError) {
+      console.error('❌ Erro ao remover extensões existentes:', deleteError);
+    } else {
+      console.log('🗑️ Extensões existentes removidas');
+    }
+
     // Depois, cria as novas extensões
     if (extensions && extensions.length > 0) {
       await this.createCatalogExtensions(catalogId, extensions);
+    } else {
+      console.log('📝 Nenhuma extensão para criar');
     }
   }
 

@@ -284,7 +284,7 @@ export type Database = {
         Row: {
           catalog_id: string
           created_at: string
-          description: string
+          description: string | null
           id: string
           months: number
           price: number
@@ -292,7 +292,7 @@ export type Database = {
         Insert: {
           catalog_id: string
           created_at?: string
-          description: string
+          description?: string | null
           id?: string
           months: number
           price: number
@@ -300,7 +300,7 @@ export type Database = {
         Update: {
           catalog_id?: string
           created_at?: string
-          description?: string
+          description?: string | null
           id?: string
           months?: number
           price?: number
