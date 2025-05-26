@@ -18,12 +18,15 @@ import {
   Users,
   Play,
   GraduationCap,
-  User
+  User,
+  Grid3X3,
+  List
 } from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
 import { useAuth } from '@/hooks/useAuth';
 import SessionForm from '@/components/admin/mentoring/SessionForm';
-import { SessionCard } from '@/components/mentoring/shared/SessionCard';
+import { SessionsList } from '@/components/admin/mentoring/sessions/SessionsList';
+import { SessionDetailDialog } from '@/components/admin/mentoring/sessions/SessionDetailDialog';
 import { format, isToday, isTomorrow, isWithinInterval, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -38,7 +41,8 @@ const AdminMentoringSessions = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingSession, setEditingSession] = useState<any>(null);
-  const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
+  const [viewingSession, setViewingSession] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
@@ -144,6 +148,8 @@ const AdminMentoringSessions = () => {
       case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
       case 'reagendada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'ausente_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'ausente_mentor': return 'bg-purple-100 text-purple-800 border-purple-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -158,18 +164,15 @@ const AdminMentoringSessions = () => {
     setEditingSession(null);
   };
 
+  const handleSaveSession = (sessionData: any) => {
+    console.log('Saving session:', sessionData);
+    setViewingSession(null);
+  };
+
   const handleDeleteSession = (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta sessão?')) {
       console.log('Deleting session:', id);
     }
-  };
-
-  const toggleSelection = (id: string) => {
-    setSelectedSessions(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
   };
 
   const clearFilters = () => {
@@ -194,12 +197,34 @@ const AdminMentoringSessions = () => {
             {isAdmin ? 'Gerencie todas as sessões de mentorias' : 'Suas sessões de mentoria'}
           </p>
         </div>
-        {isAdmin && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Sessão
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="h-8"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {isAdmin && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Sessão
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -292,6 +317,8 @@ const AdminMentoringSessions = () => {
                   <SelectItem value="realizada">Realizada</SelectItem>
                   <SelectItem value="cancelada">Cancelada</SelectItem>
                   <SelectItem value="reagendada">Reagendada</SelectItem>
+                  <SelectItem value="ausente_aluno">Ausente - Aluno</SelectItem>
+                  <SelectItem value="ausente_mentor">Ausente - Mentor</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -340,93 +367,112 @@ const AdminMentoringSessions = () => {
         </CardContent>
       </Card>
 
-      {/* Sessions Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredSessions.map((session) => (
-          <Card key={session.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-4">
-              <div className="space-y-4">
-                {/* Header com Status */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <h4 className="font-medium">{session.mentoringName}</h4>
-                      <p className="text-sm text-gray-500">
-                        Sessão {session.sessionNumber}/{session.totalSessions}
-                      </p>
+      {/* Sessions Content */}
+      {viewMode === 'list' ? (
+        <SessionsList
+          sessions={filteredSessions}
+          onView={setViewingSession}
+          onEdit={setEditingSession}
+          onDelete={handleDeleteSession}
+          isAdmin={isAdmin}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredSessions.map((session) => (
+            <Card 
+              key={session.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setViewingSession(session)}
+            >
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <h4 className="font-medium">{session.mentoringName}</h4>
+                        <p className="text-sm text-gray-500">
+                          Sessão {session.sessionNumber}/{session.totalSessions}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className={getStatusColor(session.status)}>
+                      {session.status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <span className="text-sm font-medium">Aluno:</span>
+                        <span className="text-sm text-gray-600 ml-2">{session.studentName}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <span className="text-sm font-medium">Mentor:</span>
+                        <span className="text-sm text-gray-600 ml-2">{session.mentorName}</span>
+                      </div>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(session.status)}>
-                    {session.status}
-                  </Badge>
-                </div>
 
-                {/* Aluno e Mentor */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-400" />
-                    <div>
-                      <span className="text-sm font-medium">Aluno:</span>
-                      <span className="text-sm text-gray-600 ml-2">{session.studentName}</span>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{format(new Date(session.scheduledDate), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-400" />
-                    <div>
-                      <span className="text-sm font-medium">Mentor:</span>
-                      <span className="text-sm text-gray-600 ml-2">{session.mentorName}</span>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{session.durationMinutes} min</span>
                     </div>
+                    <Badge variant="outline" className="capitalize">{session.type}</Badge>
                   </div>
-                </div>
 
-                {/* Data e Duração */}
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{format(new Date(session.scheduledDate), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{session.durationMinutes} min</span>
-                  </div>
-                  <Badge variant="outline" className="capitalize">{session.type}</Badge>
-                </div>
-
-                {/* Ações */}
-                <div className="flex gap-2 pt-2 border-t border-gray-100">
-                  {session.status === 'agendada' && session.accessLink && (
-                    <Button size="sm" className="flex-1">
-                      <Play className="h-4 w-4 mr-2" />
-                      Entrar
-                    </Button>
-                  )}
-                  
-                  {isAdmin && (
+                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                    {session.status === 'agendada' && session.accessLink && (
+                      <Button size="sm" className="flex-1" onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(session.accessLink, '_blank');
+                      }}>
+                        <Play className="h-4 w-4 mr-2" />
+                        Entrar
+                      </Button>
+                    )}
+                    
                     <div className="flex gap-1">
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => setEditingSession(session)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingSession(session);
+                        }}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteSession(session.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isAdmin && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSession(session.id);
+                          }}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Empty State */}
       {filteredSessions.length === 0 && (
@@ -473,6 +519,17 @@ const AdminMentoringSessions = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Session Detail Dialog */}
+      <SessionDetailDialog
+        session={viewingSession}
+        open={!!viewingSession}
+        onOpenChange={(open) => {
+          if (!open) setViewingSession(null);
+        }}
+        onSave={handleSaveSession}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 };
