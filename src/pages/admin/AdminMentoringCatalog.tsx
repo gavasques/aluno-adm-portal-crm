@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,6 @@ import {
   Users, 
   Clock,
   Filter,
-  Star,
   Eye,
   Grid3X3,
   List,
@@ -25,9 +23,11 @@ import {
   Zap,
   Target,
   DollarSign,
-  User
+  User,
+  Edit
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import CatalogDetailModal from "@/components/admin/mentoring/catalog/CatalogDetailModal";
 
 interface MentoringSession {
   id: string;
@@ -37,7 +37,6 @@ interface MentoringSession {
   duration: string;
   date: string;
   status: "Agendada" | "Em Andamento" | "Concluída" | "Cancelada";
-  rating?: number;
   category: string;
   type: "Individual" | "Grupo";
   price: number;
@@ -66,7 +65,6 @@ const mockMentoringSessions: MentoringSession[] = [
     duration: "1h30m",
     date: "2024-01-12",
     status: "Concluída",
-    rating: 4.8,
     category: "Marketing",
     type: "Individual",
     price: 199,
@@ -80,7 +78,6 @@ const mockMentoringSessions: MentoringSession[] = [
     duration: "2h30m",
     date: "2024-01-10",
     status: "Concluída",
-    rating: 4.6,
     category: "Gestão",
     type: "Grupo",
     price: 349,
@@ -93,6 +90,8 @@ const AdminMentoringCatalog = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>("Todas");
   const [selectedType, setSelectedType] = useState<string>("Todos");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedCatalog, setSelectedCatalog] = useState<MentoringSession | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
@@ -133,6 +132,16 @@ const AdminMentoringCatalog = () => {
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
     }
+  };
+
+  const handleViewCatalog = (catalog: MentoringSession) => {
+    setSelectedCatalog(catalog);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleEditCatalog = (catalog: MentoringSession) => {
+    console.log("Editar mentoria:", catalog);
+    // Aqui você implementaria a lógica de edição
   };
 
   const stats = {
@@ -267,7 +276,7 @@ const AdminMentoringCatalog = () => {
                   <p className="text-xs font-medium text-yellow-600 mb-1">Grupo</p>
                   <p className="text-lg lg:text-xl font-bold text-yellow-900">{stats.grupo}</p>
                   <div className="flex items-center mt-1">
-                    <Star className="h-2 w-2 text-yellow-500 mr-1" />
+                    <Users className="h-2 w-2 text-yellow-500 mr-1" />
                     <span className="text-xs text-yellow-600">turmas</span>
                   </div>
                 </div>
@@ -435,28 +444,32 @@ const AdminMentoringCatalog = () => {
                       <p className="text-gray-700 text-xs line-clamp-2">{session.description}</p>
                     </div>
 
-                    {session.rating && (
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium text-xs">{session.rating}</span>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {session.category}
-                        </Badge>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between pt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {session.category}
+                      </Badge>
+                    </div>
 
                     <Separator className="my-2" />
 
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs hover:bg-blue-50 text-blue-600">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="flex-1 h-7 text-xs hover:bg-blue-50 text-blue-600"
+                        onClick={() => handleViewCatalog(session)}
+                      >
                         <Eye className="h-3 w-3 mr-1" />
                         Ver
                       </Button>
-                      <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs hover:bg-gray-50">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        Agendar
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="flex-1 h-7 text-xs hover:bg-gray-50"
+                        onClick={() => handleEditCatalog(session)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Editar
                       </Button>
                     </div>
                   </div>
@@ -542,6 +555,7 @@ const AdminMentoringCatalog = () => {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 hover:bg-blue-50 text-blue-600 text-xs"
+                            onClick={() => handleViewCatalog(session)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             Ver
@@ -550,9 +564,10 @@ const AdminMentoringCatalog = () => {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 hover:bg-gray-50 text-xs"
+                            onClick={() => handleEditCatalog(session)}
                           >
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Agendar
+                            <Edit className="h-3 w-3 mr-1" />
+                            Editar
                           </Button>
                         </div>
                       </TableCell>
@@ -609,6 +624,14 @@ const AdminMentoringCatalog = () => {
           </Card>
         </motion.div>
       )}
+
+      {/* Modal de Detalhes */}
+      <CatalogDetailModal
+        catalog={selectedCatalog}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        onEdit={handleEditCatalog}
+      />
     </div>
   );
 };
