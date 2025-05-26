@@ -218,7 +218,7 @@ const AdminSidebar = () => {
           
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
-              Geral ADM
+              Contatos Público
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
