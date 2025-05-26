@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionsTab } from './sessions/SessionsTab';
 import { MaterialUploadDialog } from './MaterialUploadDialog';
+import { useMentoring } from '@/hooks/useMentoring';
 
 interface EnrollmentDetailDialogProps {
   open: boolean;
@@ -38,8 +38,16 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
   enrollment
 }) => {
   const [showMaterialUpload, setShowMaterialUpload] = useState(false);
+  const { 
+    getEnrollmentSessions, 
+    createSession, 
+    updateSession, 
+    deleteSession 
+  } = useMentoring();
 
   if (!enrollment) return null;
+
+  const sessions = getEnrollmentSessions(enrollment.id);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -156,7 +164,7 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{enrollment.mentoring.name}</h3>
+                  <h3 className="font-semibold">{enrollment.mentoring.name}</h3>
                   <p className="text-gray-600">{enrollment.mentoring.description}</p>
                 </div>
                 
@@ -327,9 +335,10 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
           <TabsContent value="sessions">
             <SessionsTab 
               enrollment={enrollment}
-              sessions={[]}
-              onCreateSession={(data) => console.log('Criar sessão:', data)}
-              onUpdateSession={(id, data) => console.log('Atualizar sessão:', id, data)}
+              sessions={sessions}
+              onCreateSession={createSession}
+              onUpdateSession={updateSession}
+              onDeleteSession={deleteSession}
             />
           </TabsContent>
 

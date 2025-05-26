@@ -107,6 +107,45 @@ export const useMentoring = () => {
   }, [refreshData, toast]);
 
   // Enrollment methods
+  const createEnrollment = useCallback(async (enrollmentData: any): Promise<boolean> => {
+    setLoading(true);
+    try {
+      // Criar a inscrição
+      const newEnrollment = dataService.createEnrollment(enrollmentData);
+      
+      // Criar sessões automaticamente
+      const mentoring = dataService.getCatalogById(enrollmentData.mentoringId);
+      if (mentoring && newEnrollment) {
+        for (let i = 1; i <= mentoring.numberOfSessions; i++) {
+          const sessionData: CreateSessionData = {
+            enrollmentId: newEnrollment.id,
+            type: 'individual',
+            title: `Sessão ${i} - ${mentoring.name}`,
+            durationMinutes: 60,
+            status: 'aguardando_agendamento'
+          };
+          dataService.createSession(sessionData);
+        }
+      }
+      
+      refreshData();
+      toast({
+        title: "Sucesso",
+        description: "Inscrição criada com sessões geradas automaticamente!",
+      });
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar inscrição. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshData, toast]);
+
   const getMyEnrollments = useCallback((studentId: string) => {
     return dataService.getStudentEnrollments(studentId);
   }, []);
@@ -198,6 +237,30 @@ export const useMentoring = () => {
     }
   }, [refreshData, toast]);
 
+  const deleteSession = useCallback(async (sessionId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const success = dataService.deleteSession(sessionId);
+      if (success) {
+        refreshData();
+        toast({
+          title: "Sucesso",
+          description: "Sessão removida com sucesso!",
+        });
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover sessão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshData, toast]);
+
   const scheduleSession = useCallback(async (sessionId: string, scheduledDate: string, meetingLink?: string): Promise<boolean> => {
     setLoading(true);
     try {
@@ -241,11 +304,12 @@ export const useMentoring = () => {
     
     // Catalog methods
     createCatalog,
-    createMentoringCatalog, // Alias for compatibility
+    createMentoringCatalog: createCatalog, // Alias for compatibility
     updateMentoringCatalog,
     deleteMentoringCatalog,
     
     // Enrollment methods
+    createEnrollment,
     getMyEnrollments,
     addExtension,
     getEnrollmentProgress,
@@ -256,6 +320,7 @@ export const useMentoring = () => {
     getMyUpcomingSessions,
     createSession,
     updateSession,
+    deleteSession,
     scheduleSession,
     
     // Material methods

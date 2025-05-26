@@ -1,4 +1,3 @@
-
 export interface MentoringCatalog {
   id: string;
   name: string;
@@ -90,12 +89,14 @@ export interface MentoringSession {
   title: string;
   scheduledDate?: string;
   durationMinutes: number;
-  status: 'aguardando_agendamento' | 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
+  status: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
   calendlyLink?: string;
   meetingLink?: string;
   recordingLink?: string;
   mentorNotes?: string;
   studentNotes?: string;
+  observations?: string;
+  transcription?: string;
   createdAt: string;
   updatedAt: string;
   groupId?: string;
@@ -153,12 +154,15 @@ export interface CreateSessionData {
   durationMinutes: number;
   meetingLink?: string;
   groupId?: string;
+  status?: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
 }
 
 export interface UpdateSessionData extends Partial<CreateSessionData> {
-  status?: 'aguardando_agendamento' | 'agendada' | 'realizada' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
+  status?: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
   mentorNotes?: string;
   studentNotes?: string;
+  observations?: string;
+  transcription?: string;
   recordingLink?: string;
   calendlyLink?: string;
   meetingLink?: string;

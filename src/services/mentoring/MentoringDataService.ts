@@ -99,6 +99,34 @@ export class MentoringDataService {
     return this.enrollments.filter(e => e.studentId === studentId);
   }
 
+  createEnrollment(enrollmentData: any): StudentMentoringEnrollment {
+    const mentoring = this.getCatalogById(enrollmentData.mentoringId);
+    if (!mentoring) {
+      throw new Error('Mentoria não encontrada');
+    }
+
+    const newEnrollment: StudentMentoringEnrollment = {
+      id: `enrollment-${Date.now()}`,
+      studentId: enrollmentData.studentId || 'student-001',
+      mentoringId: enrollmentData.mentoringId,
+      mentoring: mentoring,
+      status: 'ativa',
+      enrollmentDate: new Date().toISOString(),
+      startDate: enrollmentData.startDate || new Date().toISOString(),
+      endDate: enrollmentData.endDate || new Date(Date.now() + mentoring.durationMonths * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      sessionsUsed: 0,
+      totalSessions: mentoring.numberOfSessions,
+      responsibleMentor: enrollmentData.responsibleMentor || mentoring.instructor,
+      paymentStatus: 'pago',
+      observations: enrollmentData.observations,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    this.enrollments.push(newEnrollment);
+    return newEnrollment;
+  }
+
   addExtension(data: CreateExtensionData): boolean {
     const enrollment = this.enrollments.find(e => e.id === data.enrollmentId);
     if (!enrollment) return false;
@@ -127,11 +155,20 @@ export class MentoringDataService {
   }
 
   getEnrollmentProgress(enrollment: StudentMentoringEnrollment) {
-    const completedSessions = enrollment.sessionsUsed || 0;
-    const totalSessions = enrollment.totalSessions;
-    const scheduledSessions = 0;
-    const pendingSessions = Math.max(0, totalSessions - completedSessions - scheduledSessions);
-    const percentage = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
+    const completedSessions = this.sessions.filter(s => 
+      s.enrollmentId === enrollment.id && s.status === 'concluida'
+    ).length;
+    
+    const noShowSessions = this.sessions.filter(s => 
+      s.enrollmentId === enrollment.id && s.status === 'no_show_aluno'
+    ).length;
+    
+    const totalSessions = this.sessions.filter(s => 
+      s.enrollmentId === enrollment.id
+    ).length;
+    
+    const availableSessions = totalSessions - noShowSessions;
+    const percentage = availableSessions > 0 ? (completedSessions / availableSessions) * 100 : 0;
     
     const daysRemaining = Math.ceil(
       (new Date(enrollment.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
@@ -141,12 +178,14 @@ export class MentoringDataService {
       percentage: Math.min(percentage, 100),
       completedSessions,
       sessionsUsed: completedSessions,
-      totalSessions,
-      pendingSessions,
-      scheduledSessions,
+      totalSessions: availableSessions,
+      pendingSessions: Math.max(0, availableSessions - completedSessions),
+      scheduledSessions: this.sessions.filter(s => 
+        s.enrollmentId === enrollment.id && s.status === 'agendada'
+      ).length,
       daysRemaining: Math.max(daysRemaining, 0),
       isExpired: daysRemaining < 0,
-      isCompleted: completedSessions >= totalSessions
+      isCompleted: completedSessions >= availableSessions
     };
   }
 
@@ -180,7 +219,7 @@ export class MentoringDataService {
       id: `session-${Date.now()}`,
       ...data,
       sessionNumber: this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1,
-      status: 'agendada',
+      status: data.status || 'aguardando_agendamento',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -198,6 +237,14 @@ export class MentoringDataService {
       ...data,
       updatedAt: new Date().toISOString()
     };
+    return true;
+  }
+
+  deleteSession(sessionId: string): boolean {
+    const index = this.sessions.findIndex(s => s.id === sessionId);
+    if (index === -1) return false;
+
+    this.sessions.splice(index, 1);
     return true;
   }
 
