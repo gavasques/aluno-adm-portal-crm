@@ -74,8 +74,8 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
 
   const statusConfig = getStatusConfig(enrollment.status);
   
-  // Calcular progresso
-  const completedSessions = enrollment.sessions?.filter(s => s.status === 'realizada').length || 0;
+  // Calcular progresso usando as propriedades corretas
+  const completedSessions = enrollment.sessionsUsed || 0;
   const totalSessions = enrollment.totalSessions || 0;
   const progressPercentage = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
 
