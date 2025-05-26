@@ -6,17 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Clock, DollarSign, Edit } from 'lucide-react';
+import { Plus, Trash2, Clock, DollarSign, Edit, Calculator } from 'lucide-react';
 import { MentoringExtensionOption } from '@/types/mentoring.types';
 
 interface ExtensionsManagerProps {
   extensions: MentoringExtensionOption[];
   onExtensionsChange: (extensions: MentoringExtensionOption[]) => void;
+  baseDurationMonths?: number;
 }
 
 const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
   extensions,
-  onExtensionsChange
+  onExtensionsChange,
+  baseDurationMonths = 0
 }) => {
   const [newExtension, setNewExtension] = useState<Partial<MentoringExtensionOption>>({
     months: 1,
@@ -25,6 +27,10 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const calculateTotalDuration = (extensionMonths: number) => {
+    return baseDurationMonths + extensionMonths;
+  };
 
   const handleAddExtension = () => {
     if (newExtension.months && newExtension.price !== undefined && newExtension.description) {
@@ -89,7 +95,13 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-blue-600" />
                         <span className="font-semibold text-blue-900">
-                          {extension.months} {extension.months === 1 ? 'mês' : 'meses'}
+                          +{extension.months} {extension.months === 1 ? 'mês' : 'meses'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calculator className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-green-700">
+                          Total: {calculateTotalDuration(extension.months)} {calculateTotalDuration(extension.months) === 1 ? 'mês' : 'meses'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -104,7 +116,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <Label className="text-xs">Duração (meses)</Label>
+                            <Label className="text-xs">Extensão (meses)</Label>
                             <Input
                               type="number"
                               min="1"
@@ -181,7 +193,7 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="new-months" className="text-sm font-medium">
-                Duração (meses) *
+                Tempo a Adicionar (meses) *
               </Label>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-400" />
@@ -196,6 +208,12 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
                   className="h-9"
                 />
               </div>
+              {newExtension.months && baseDurationMonths > 0 && (
+                <p className="text-xs text-green-600">
+                  <Calculator className="h-3 w-3 inline mr-1" />
+                  Total após extensão: {calculateTotalDuration(newExtension.months)} {calculateTotalDuration(newExtension.months) === 1 ? 'mês' : 'meses'}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -257,9 +275,11 @@ const ExtensionsManager: React.FC<ExtensionsManagerProps> = ({
           <p className="text-sm">
             Adicione extensões para oferecer opções de prolongamento aos clientes.
           </p>
-          <p className="text-xs mt-1">
-            Por exemplo: +1 mês, +3 meses, +6 meses, etc.
-          </p>
+          {baseDurationMonths > 0 && (
+            <p className="text-xs mt-1 text-blue-600">
+              Duração base: {baseDurationMonths} {baseDurationMonths === 1 ? 'mês' : 'meses'}
+            </p>
+          )}
         </div>
       )}
     </div>

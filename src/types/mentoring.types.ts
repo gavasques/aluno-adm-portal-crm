@@ -4,7 +4,7 @@ export interface MentoringCatalog {
   name: string;
   type: 'Individual' | 'Grupo';
   instructor: string;
-  durationWeeks: number;
+  durationMonths: number; // Mudado de durationWeeks para durationMonths
   numberOfSessions: number;
   totalSessions: number;
   price: number;
@@ -124,7 +124,7 @@ export interface CreateMentoringCatalogData {
   name: string;
   type: 'Individual' | 'Grupo';
   instructor: string;
-  durationWeeks: number;
+  durationMonths: number; // Mudado de durationWeeks para durationMonths
   numberOfSessions: number;
   price: number;
   description: string;

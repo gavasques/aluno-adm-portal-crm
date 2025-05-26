@@ -37,7 +37,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     name: '',
     type: 'Individual',
     instructor: '',
-    durationWeeks: 4,
+    durationMonths: 3, // Mudado de durationWeeks para durationMonths com valor padrão 3
     numberOfSessions: 4,
     price: 0,
     description: '',
@@ -71,7 +71,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         name: catalog.name,
         type: catalog.type,
         instructor: catalog.instructor,
-        durationWeeks: catalog.durationWeeks,
+        durationMonths: catalog.durationMonths || 3, // Fallback para meses
         numberOfSessions: catalog.numberOfSessions,
         price: catalog.price,
         description: catalog.description,
@@ -84,7 +84,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         name: '',
         type: 'Individual',
         instructor: '',
-        durationWeeks: 4,
+        durationMonths: 3, // Valor padrão em meses
         numberOfSessions: 4,
         price: 0,
         description: '',
@@ -243,13 +243,14 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               {/* Duração, Sessões e Preço */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="durationWeeks">Duração (semanas) *</Label>
+                  <Label htmlFor="durationMonths">Duração (meses) *</Label>
                   <Input
-                    id="durationWeeks"
+                    id="durationMonths"
                     type="number"
                     min="1"
-                    value={formData.durationWeeks}
-                    onChange={(e) => handleInputChange('durationWeeks', Number(e.target.value))}
+                    max="24"
+                    value={formData.durationMonths}
+                    onChange={(e) => handleInputChange('durationMonths', Number(e.target.value))}
                     required
                   />
                 </div>
@@ -300,6 +301,11 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                   <p className="text-sm text-gray-600">
                     Configure opções de extensão que podem ser oferecidas aos clientes
                   </p>
+                  {formData.durationMonths > 0 && (
+                    <p className="text-sm text-blue-600 mt-1">
+                      Duração base da mentoria: {formData.durationMonths} {formData.durationMonths === 1 ? 'mês' : 'meses'}
+                    </p>
+                  )}
                 </div>
                 <div className="text-sm text-gray-500">
                   {formData.extensions?.length || 0} extensão(ões) configurada(s)
@@ -309,6 +315,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               <ExtensionsManager
                 extensions={formData.extensions || []}
                 onExtensionsChange={handleExtensionsChange}
+                baseDurationMonths={formData.durationMonths}
               />
             </div>
           </TabsContent>

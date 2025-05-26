@@ -16,7 +16,7 @@ const initialCatalogs: MentoringCatalog[] = [
     name: 'Mentoria de Carreira',
     type: 'Individual',
     instructor: 'João Silva',
-    durationWeeks: 8,
+    durationMonths: 2, // Mudado de durationWeeks para durationMonths
     numberOfSessions: 8,
     totalSessions: 8,
     price: 499.99,
@@ -46,7 +46,7 @@ const initialCatalogs: MentoringCatalog[] = [
     name: 'Grupo de Estudos - React Avançado',
     type: 'Grupo',
     instructor: 'Maria Oliveira',
-    durationWeeks: 12,
+    durationMonths: 3, // Mudado de durationWeeks para durationMonths
     numberOfSessions: 12,
     totalSessions: 12,
     price: 299.99,
@@ -62,7 +62,7 @@ const initialCatalogs: MentoringCatalog[] = [
     name: 'Mentoria de Produtividade',
     type: 'Individual',
     instructor: 'Carlos Pereira',
-    durationWeeks: 6,
+    durationMonths: 2, // Mudado de durationWeeks para durationMonths
     numberOfSessions: 6,
     totalSessions: 6,
     price: 399.99,
@@ -78,7 +78,7 @@ const initialCatalogs: MentoringCatalog[] = [
     name: 'Bootcamp de Data Science',
     type: 'Grupo',
     instructor: 'Ana Souza',
-    durationWeeks: 16,
+    durationMonths: 4, // Mudado de durationWeeks para durationMonths
     numberOfSessions: 32,
     totalSessions: 32,
     price: 799.99,
@@ -94,7 +94,7 @@ const initialCatalogs: MentoringCatalog[] = [
     name: 'Mentoria de Marketing Digital',
     type: 'Individual',
     instructor: 'Mariana Costa',
-    durationWeeks: 10,
+    durationMonths: 3, // Mudado de durationWeeks para durationMonths
     numberOfSessions: 10,
     totalSessions: 10,
     price: 599.99,
@@ -110,7 +110,7 @@ const initialCatalogs: MentoringCatalog[] = [
     name: 'Curso de Design Thinking',
     type: 'Grupo',
     instructor: 'Roberto Almeida',
-    durationWeeks: 4,
+    durationMonths: 1, // Mudado de durationWeeks para durationMonths
     numberOfSessions: 8,
     totalSessions: 8,
     price: 199.99,
@@ -404,7 +404,7 @@ export class MentoringDataService {
       name: data.name,
       type: data.type,
       instructor: data.instructor,
-      durationWeeks: data.durationWeeks,
+      durationMonths: data.durationMonths, // Mudado de durationWeeks para durationMonths
       numberOfSessions: data.numberOfSessions,
       totalSessions: data.numberOfSessions,
       price: data.price,
@@ -414,7 +414,7 @@ export class MentoringDataService {
       status: data.status || 'Ativa',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      extensions: data.extensions || [] // Garantir que as extensões sejam salvas
+      extensions: data.extensions || []
     };
 
     console.log('✅ Catálogo criado com extensões:', newCatalog.extensions);

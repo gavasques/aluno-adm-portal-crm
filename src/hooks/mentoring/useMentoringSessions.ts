@@ -1,63 +1,61 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { MentoringSession, CreateSessionData, UpdateSessionData } from '@/types/mentoring.types';
 import { MentoringDataService } from '@/services/mentoring/MentoringDataService';
-import { useToast } from '@/hooks/use-toast';
 
 const dataService = new MentoringDataService();
 
 export const useMentoringSessions = () => {
   const [sessions, setSessions] = useState<MentoringSession[]>([]);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
-  const refreshSessions = useCallback(() => {
-    setSessions([...dataService.getSessions()]);
+  const refreshSessions = () => {
+    setSessions(dataService.getSessions());
+  };
+
+  useEffect(() => {
+    refreshSessions();
   }, []);
 
-  const getEnrollmentSessions = useCallback((enrollmentId: string): MentoringSession[] => {
-    return dataService.getEnrollmentSessions(enrollmentId);
-  }, []);
+  const getSessionDetails = (sessionId: string) => {
+    return sessions.find(session => session.id === sessionId);
+  };
 
-  const getSessionDetails = useCallback((sessionId: string): MentoringSession | undefined => {
-    return dataService.getSessionById(sessionId);
-  }, []);
+  const getEnrollmentSessions = (enrollmentId: string) => {
+    return sessions.filter(session => session.enrollmentId === enrollmentId);
+  };
 
-  const getUpcomingSessions = useCallback((studentId: string): MentoringSession[] => {
-    return dataService.getUpcomingSessions(studentId);
-  }, []);
-
-  const createSession = useCallback(async (data: CreateSessionData): Promise<MentoringSession> => {
+  const createSession = async (data: CreateSessionData) => {
     setLoading(true);
     try {
       const newSession = dataService.createSession(data);
       refreshSessions();
-      
-      toast({
-        title: "Sucesso",
-        description: "Sessão criada com sucesso!",
-      });
-      
       return newSession;
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao criar sessão. Tente novamente.",
-        variant: "destructive",
-      });
-      throw error;
     } finally {
       setLoading(false);
     }
-  }, [refreshSessions, toast]);
+  };
+
+  const updateSession = async (sessionId: string, data: UpdateSessionData) => {
+    setLoading(true);
+    try {
+      const success = dataService.updateSession(sessionId, data);
+      if (success) {
+        refreshSessions();
+      }
+      return success;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
     sessions,
     loading,
-    getEnrollmentSessions,
     getSessionDetails,
-    getUpcomingSessions,
+    getEnrollmentSessions,
     createSession,
+    updateSession,
     refreshSessions
   };
 };
