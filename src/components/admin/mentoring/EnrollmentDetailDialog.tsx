@@ -15,12 +15,14 @@ import {
   BookOpen,
   DollarSign,
   FileText,
-  Video
+  Video,
+  Upload
 } from 'lucide-react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionsTab } from './sessions/SessionsTab';
+import { MaterialUploadDialog } from './MaterialUploadDialog';
 
 interface EnrollmentDetailDialogProps {
   open: boolean;
@@ -33,6 +35,8 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
   onOpenChange,
   enrollment
 }) => {
+  const [showMaterialUpload, setShowMaterialUpload] = useState(false);
+
   if (!enrollment) return null;
 
   const getStatusColor = (status: string) => {
@@ -330,9 +334,15 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
           <TabsContent value="materials">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Materiais da Mentoria
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Materiais da Mentoria
+                  </span>
+                  <Button onClick={() => setShowMaterialUpload(true)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Adicionar Material
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -341,14 +351,29 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Nenhum material disponível
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 mb-4">
                     Os materiais das sessões aparecerão aqui.
                   </p>
+                  <Button onClick={() => setShowMaterialUpload(true)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Enviar primeiro material
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Material Upload Dialog */}
+        <MaterialUploadDialog
+          open={showMaterialUpload}
+          onOpenChange={setShowMaterialUpload}
+          enrollmentId={enrollment.id}
+          onUploadSuccess={() => {
+            console.log('Material uploaded successfully');
+            // Aqui você atualizaria a lista de materiais
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

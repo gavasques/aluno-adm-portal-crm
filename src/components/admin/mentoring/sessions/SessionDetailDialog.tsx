@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +21,7 @@ import {
 import { MentoringSession } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MaterialUploadDialog } from '../MaterialUploadDialog';
 
 interface SessionDetailDialogProps {
   open: boolean;
@@ -38,6 +38,7 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
   const [mentorNotes, setMentorNotes] = useState('');
   const [studentNotes, setStudentNotes] = useState('');
   const [newComment, setNewComment] = useState('');
+  const [showMaterialUpload, setShowMaterialUpload] = useState(false);
 
   // Mock comments data
   const [comments, setComments] = useState([
@@ -367,7 +368,7 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>Materiais da Sessão</span>
-                    <Button size="sm">
+                    <Button size="sm" onClick={() => setShowMaterialUpload(true)}>
                       <Upload className="h-4 w-4 mr-2" />
                       Upload
                     </Button>
@@ -402,7 +403,7 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
                       <p className="text-gray-500 mb-4">
                         Faça upload de materiais relacionados a esta sessão.
                       </p>
-                      <Button>
+                      <Button onClick={() => setShowMaterialUpload(true)}>
                         <Upload className="h-4 w-4 mr-2" />
                         Enviar primeiro material
                       </Button>
@@ -413,6 +414,18 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* Material Upload Dialog */}
+        <MaterialUploadDialog
+          open={showMaterialUpload}
+          onOpenChange={setShowMaterialUpload}
+          sessionId={session.id}
+          enrollmentId={session.enrollmentId}
+          onUploadSuccess={() => {
+            console.log('Material uploaded for session');
+            // Aqui você atualizaria a lista de materiais da sessão
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
