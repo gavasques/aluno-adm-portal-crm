@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { IMentoringRepository } from '@/features/mentoring/types/contracts.types';
 import { 
@@ -15,7 +14,7 @@ import {
 interface SupabaseMentoringCatalog {
   id: string;
   name: string;
-  type: 'Individual' | 'Grupo';
+  type: string;
   instructor: string;
   duration_weeks: number;
   number_of_sessions: number;
@@ -25,7 +24,7 @@ interface SupabaseMentoringCatalog {
   tags: string[];
   image_url?: string;
   active: boolean;
-  status: 'Ativa' | 'Inativa' | 'Cancelada';
+  status: string;
   created_at: string;
   updated_at: string;
 }
@@ -35,7 +34,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     return {
       id: data.id,
       name: data.name,
-      type: data.type,
+      type: (data.type as 'Individual' | 'Grupo'),
       instructor: data.instructor,
       durationWeeks: data.duration_weeks,
       numberOfSessions: data.number_of_sessions,
@@ -45,7 +44,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       tags: data.tags || [],
       imageUrl: data.image_url,
       active: data.active,
-      status: data.status,
+      status: (data.status as 'Ativa' | 'Inativa' | 'Cancelada'),
       createdAt: data.created_at,
       updatedAt: data.updated_at,
       extensions: []
@@ -79,7 +78,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar catálogo de mentorias');
     }
 
-    return data.map(this.transformFromSupabase);
+    return (data || []).map((item) => this.transformFromSupabase(item as SupabaseMentoringCatalog));
   }
 
   async getCatalogById(id: string): Promise<MentoringCatalog | null> {
@@ -97,7 +96,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao buscar mentoria');
     }
 
-    return this.transformFromSupabase(data);
+    return this.transformFromSupabase(data as SupabaseMentoringCatalog);
   }
 
   async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
@@ -114,7 +113,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       throw new Error('Erro ao criar mentoria');
     }
 
-    return this.transformFromSupabase(result);
+    return this.transformFromSupabase(result as SupabaseMentoringCatalog);
   }
 
   async updateCatalog(id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> {

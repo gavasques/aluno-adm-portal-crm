@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSupabaseMentoringCatalog } from '@/hooks/mentoring/useSupabaseMentoringCatalog';
 import CatalogHeader from './CatalogHeader';
@@ -80,16 +79,14 @@ const CatalogContent: React.FC = () => {
   const handleFormSubmit = async (data: CreateMentoringCatalogData) => {
     try {
       if (formDialog.catalog) {
-        // Editando mentoria existente
         await updateCatalog(formDialog.catalog.id, data);
       } else {
-        // Criando nova mentoria
         await createCatalog(data);
       }
       setFormDialog({ open: false, catalog: null });
     } catch (error) {
       console.error('Erro ao salvar mentoria:', error);
-      throw error; // Re-throw para manter o dialog aberto
+      throw error;
     }
   };
 
@@ -107,17 +104,14 @@ const CatalogContent: React.FC = () => {
 
   return (
     <>
-      {/* Header */}
       <CatalogHeader
         onCreateCatalog={handleCreateCatalog}
         totalCatalogs={catalogs.length}
         activeCatalogs={catalogs.filter(c => c.active).length}
       />
 
-      {/* Statistics Cards */}
       <CatalogStatsCards catalogs={catalogs} />
 
-      {/* Filters */}
       <CatalogFilters
         searchTerm={searchTerm}
         typeFilter={typeFilter}
@@ -128,7 +122,6 @@ const CatalogContent: React.FC = () => {
         onClearFilters={handleClearFilters}
       />
 
-      {/* Content */}
       {filteredCatalogs.length === 0 ? (
         <EmptyState 
           type="enrollments" 
@@ -145,7 +138,6 @@ const CatalogContent: React.FC = () => {
         />
       )}
 
-      {/* Dialogs */}
       <CatalogDetailDialog
         open={detailDialog.open}
         onOpenChange={(open) => setDetailDialog({ open, catalog: null })}
