@@ -32,7 +32,7 @@ import CatalogEditModal from "@/components/admin/mentoring/catalog/CatalogEditMo
 import CatalogFormDialog from "@/components/admin/mentoring/catalog/CatalogFormDialog";
 import { useSupabaseMentoringCatalog } from "@/hooks/mentoring/useSupabaseMentoringCatalog";
 import { useToast } from "@/hooks/use-toast";
-import { MentoringCatalog } from "@/types/mentoring.types";
+import { MentoringCatalog, CreateMentoringCatalogData } from "@/types/mentoring.types";
 
 const AdminMentoringCatalog = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,7 +104,7 @@ const AdminMentoringCatalog = () => {
     }
   };
 
-  const handleSubmitCatalog = async (data: any): Promise<void> => {
+  const handleSubmitCatalog = async (data: CreateMentoringCatalogData): Promise<void> => {
     try {
       await createCatalog(data);
       setIsCreateModalOpen(false);
@@ -114,7 +114,7 @@ const AdminMentoringCatalog = () => {
     }
   };
 
-  const handleSaveCatalog = async (updatedData: any) => {
+  const handleSaveCatalog = async (updatedData: CreateMentoringCatalogData) => {
     if (selectedCatalog) {
       try {
         await updateCatalog(selectedCatalog.id, updatedData);
