@@ -114,11 +114,14 @@ export class MentoringDataService {
     
     return {
       completedSessions,
+      sessionsUsed: completedSessions,
       totalSessions: enrollment.totalSessions,
       pendingSessions: Math.max(0, pendingSessions),
       scheduledSessions,
       percentage: Math.round((completedSessions / enrollment.totalSessions) * 100),
-      daysRemaining
+      daysRemaining,
+      isExpired: daysRemaining <= 0,
+      isCompleted: completedSessions >= enrollment.totalSessions
     };
   }
 

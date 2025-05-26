@@ -40,18 +40,26 @@ export class MentoringService implements IMentoringService {
   }
 
   calculateEnrollmentProgress(enrollment: StudentMentoringEnrollment): EnrollmentProgress {
-    const percentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
+    const completedSessions = enrollment.sessionsUsed || 0;
+    const totalSessions = enrollment.totalSessions;
+    const scheduledSessions = 0; // This would need to be calculated from actual sessions data
+    const pendingSessions = Math.max(0, totalSessions - completedSessions - scheduledSessions);
+    const percentage = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
+    
     const daysRemaining = Math.ceil(
       (new Date(enrollment.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
     );
     
     return {
       percentage: Math.min(percentage, 100),
-      sessionsUsed: enrollment.sessionsUsed,
-      totalSessions: enrollment.totalSessions,
+      completedSessions,
+      sessionsUsed: completedSessions,
+      totalSessions,
+      pendingSessions,
+      scheduledSessions,
       daysRemaining: Math.max(daysRemaining, 0),
       isExpired: daysRemaining < 0,
-      isCompleted: enrollment.sessionsUsed >= enrollment.totalSessions
+      isCompleted: completedSessions >= totalSessions
     };
   }
 
