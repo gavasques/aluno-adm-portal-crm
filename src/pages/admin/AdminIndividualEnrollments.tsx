@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -7,17 +8,15 @@ import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
 import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetailDialog';
-import { EnrollmentsHeader } from '@/components/admin/mentoring/enrollments/EnrollmentsHeader';
-import { BulkActions } from '@/components/admin/mentoring/enrollments/BulkActions';
-import { IndividualEnrollmentSection } from '@/components/admin/mentoring/enrollments/IndividualEnrollmentSection';
+import { ModernIndividualEnrollmentsHeader } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsHeader';
+import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 const AdminIndividualEnrollmentsContent = () => {
-  const { enrollments, getEnrollmentProgress, addExtension, scheduleSession, updateSession } = useMentoring();
+  const { enrollments, getEnrollmentProgress, addExtension } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [viewingEnrollment, setViewingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
@@ -28,7 +27,7 @@ const AdminIndividualEnrollmentsContent = () => {
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
     { label: 'Mentorias', href: '/admin/mentorias' },
-    { label: 'Individual' }
+    { label: 'Individuais' }
   ];
 
   // Filtrar apenas inscrições individuais (sem groupId)
@@ -93,25 +92,6 @@ const AdminIndividualEnrollmentsContent = () => {
     }
   };
 
-  // Novos handlers para sessões - corrigindo a chamada da função scheduleSession
-  const handleScheduleSession = async (sessionId: string, data: any) => {
-    const success = await scheduleSession(sessionId, data.scheduledDate, data.meetingLink);
-    if (success) {
-      console.log('Sessão agendada com sucesso');
-    }
-  };
-
-  const handleUpdateSession = async (sessionId: string, data: any) => {
-    const success = await updateSession(sessionId, data);
-    if (success) {
-      console.log('Sessão atualizada com sucesso');
-    }
-  };
-
-  const handleBulkAction = (action: string) => {
-    console.log(`Bulk action ${action} for individual enrollments:`, selectedEnrollments);
-  };
-
   const toggleEnrollmentSelection = (id: string) => {
     setSelectedEnrollments(prev => 
       prev.includes(id) 
@@ -120,20 +100,8 @@ const AdminIndividualEnrollmentsContent = () => {
     );
   };
 
-  const selectAllIndividual = () => {
-    setSelectedEnrollments(
-      selectedEnrollments.length === filteredEnrollments.length 
-        ? [] 
-        : filteredEnrollments.map(e => e.id)
-    );
-  };
-
-  const clearSelection = () => {
-    setSelectedEnrollments([]);
-  };
-
   return (
-    <div className="container mx-auto py-6 space-y-8 animate-fade-in">
+    <div className="container mx-auto py-6 space-y-6 animate-fade-in">
       {/* Breadcrumb Navigation */}
       <BreadcrumbNav 
         items={breadcrumbItems} 
@@ -142,45 +110,53 @@ const AdminIndividualEnrollmentsContent = () => {
         className="mb-4"
       />
 
-      {/* Header com Filtros e Estatísticas */}
-      <EnrollmentsHeader
+      {/* Header Moderno */}
+      <ModernIndividualEnrollmentsHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         onAddEnrollment={() => setShowForm(true)}
-        totalEnrollments={statistics.total}
-        activeEnrollments={statistics.active}
-        completedEnrollments={statistics.completed}
-        pausedEnrollments={statistics.paused}
-        title="Individual"
-        description="Gerencie as inscrições individuais de mentoria"
+        statistics={statistics}
       />
 
-      {/* Ações em Lote */}
-      <BulkActions
-        selectedCount={selectedEnrollments.length}
-        onBulkAction={handleBulkAction}
-        onClearSelection={clearSelection}
-      />
-
-      {/* Seção de Inscrições Individuais */}
-      <IndividualEnrollmentSection
-        enrollments={filteredEnrollments}
-        viewMode={viewMode}
-        selectedEnrollments={selectedEnrollments}
-        onView={handleViewEnrollment}
-        onEdit={setEditingEnrollment}
-        onDelete={handleDeleteEnrollment}
-        onAddExtension={handleAddExtension}
-        onToggleSelection={toggleEnrollmentSelection}
-        onSelectAll={selectAllIndividual}
-        onAddEnrollment={() => setShowForm(true)}
-      />
+      {/* Cards das Inscrições */}
+      {filteredEnrollments.length === 0 ? (
+        <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma inscrição individual</h3>
+            <p className="text-gray-600 text-sm mb-6">Comece criando a primeira inscrição individual de mentoria.</p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+            >
+              Criar Primeira Inscrição
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredEnrollments.map((enrollment) => (
+            <ModernIndividualEnrollmentCard
+              key={enrollment.id}
+              enrollment={enrollment}
+              onView={handleViewEnrollment}
+              onEdit={setEditingEnrollment}
+              onDelete={handleDeleteEnrollment}
+              onAddExtension={handleAddExtension}
+              onToggleSelection={toggleEnrollmentSelection}
+              isSelected={selectedEnrollments.includes(enrollment.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Diálogos */}
       <Dialog open={showForm} onOpenChange={(open) => {
