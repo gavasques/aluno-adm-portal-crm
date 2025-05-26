@@ -39,7 +39,7 @@ function App() {
 
       {/* Student Routes with Layout and Protection */}
       <Route path="/aluno" element={
-        <RouteGuard requiredMenuKey="student-dashboard">
+        <RouteGuard requiredMenuKey="dashboard">
           <StudentLayout />
         </RouteGuard>
       }>

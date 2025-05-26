@@ -74,12 +74,16 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       return;
     }
 
-    // Se requer menu específico e usuário não tem acesso
-    if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
-      console.log(`Acesso negado: usuário não tem acesso ao menu ${requiredMenuKey}`);
-      hasRedirectedRef.current = true;
-      setShowAccessDenied(true);
-      return;
+    // Se requer menu específico, verificar permissão
+    // IMPORTANTE: Admins têm acesso automático a todos os menus
+    if (requiredMenuKey && !permissions.hasAdminAccess) {
+      // Só verificar permissões específicas se não for admin
+      if (permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
+        console.log(`Acesso negado: usuário não tem acesso ao menu ${requiredMenuKey}`);
+        hasRedirectedRef.current = true;
+        setShowAccessDenied(true);
+        return;
+      }
     }
 
     console.log("Acesso permitido para usuário:", user.email);
@@ -114,7 +118,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     return null;
   }
 
-  if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
+  if (requiredMenuKey && !permissions.hasAdminAccess && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
     return null;
   }
 
