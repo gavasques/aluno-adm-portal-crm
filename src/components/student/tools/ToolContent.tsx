@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ToolsTable, { Tool } from "@/components/tools/ToolsTable";
 import ToolDetail from "@/components/student/tools/ToolDetail";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface ToolContentProps {
   tools: Tool[];
@@ -49,18 +50,13 @@ export function ToolContent({
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-white to-green-50">
-            <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white py-[9px] px-[12px] mx-0 my-0">
+            <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-xl font-bold">Lista de Ferramentas</span>
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.3 }}
-                    className="bg-white/20 px-3 py-1.5 rounded-full text-sm font-medium"
-                  >
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs px-2 py-1">
                     {tools.length} encontrada(s)
-                  </motion.div>
+                  </Badge>
                 </div>
               </CardTitle>
             </CardHeader>
