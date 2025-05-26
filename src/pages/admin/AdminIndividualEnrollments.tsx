@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useMentoring } from '@/hooks/useMentoring';
+import { usePagination } from '@/hooks/usePagination';
 import { MentoringProviders } from '@/features/mentoring/providers/MentoringProviders';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
@@ -11,7 +12,10 @@ import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetai
 import { ModernIndividualEnrollmentsHeader } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsHeader';
 import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
 import { ModernIndividualEnrollmentsList } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsList';
+import { EnrollmentsPagination } from '@/components/admin/mentoring/enrollments/EnrollmentsPagination';
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
+
+const ITEMS_PER_PAGE = 25;
 
 const AdminIndividualEnrollmentsContent = () => {
   const { enrollments, getEnrollmentProgress, addExtension, refreshData } = useMentoring();
@@ -19,6 +23,7 @@ const AdminIndividualEnrollmentsContent = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [viewingEnrollment, setViewingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
@@ -39,7 +44,7 @@ const AdminIndividualEnrollmentsContent = () => {
 
   // Aplicar filtros
   const filteredEnrollments = useMemo(() => {
-    return individualEnrollments.filter(enrollment => {
+    const filtered = individualEnrollments.filter(enrollment => {
       const matchesSearch = !searchTerm || 
         enrollment.mentoring.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
@@ -49,7 +54,19 @@ const AdminIndividualEnrollmentsContent = () => {
       
       return matchesSearch && matchesStatus && matchesType;
     });
+    
+    // Reset para a primeira página quando os filtros mudarem
+    setCurrentPage(1);
+    
+    return filtered;
   }, [individualEnrollments, searchTerm, statusFilter, typeFilter]);
+
+  // Aplicar paginação
+  const { paginatedItems: paginatedEnrollments, pageInfo } = usePagination({
+    items: filteredEnrollments,
+    pageSize: ITEMS_PER_PAGE,
+    currentPage
+  });
 
   // Estatísticas específicas para individuais
   const statistics = useMemo(() => {
@@ -65,14 +82,12 @@ const AdminIndividualEnrollmentsContent = () => {
   const handleCreateEnrollment = (data: any) => {
     console.log('Creating individual enrollment:', data);
     setShowForm(false);
-    // Refresh data to show new enrollment
     refreshData();
   };
 
   const handleEditEnrollment = (data: any) => {
     console.log('Editing individual enrollment:', data);
     setEditingEnrollment(null);
-    // Refresh data to show updated enrollment
     refreshData();
   };
 
@@ -83,7 +98,6 @@ const AdminIndividualEnrollmentsContent = () => {
   const handleDeleteEnrollment = (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta inscrição individual?')) {
       console.log('Deleting individual enrollment:', id);
-      // Refresh data after deletion
       refreshData();
     }
   };
@@ -107,6 +121,10 @@ const AdminIndividualEnrollmentsContent = () => {
         ? prev.filter(item => item !== id)
         : [...prev, id]
     );
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -153,10 +171,11 @@ const AdminIndividualEnrollmentsContent = () => {
           </div>
         </div>
       ) : (
-        <>
+        <div className="space-y-4">
+          {/* Cards ou Lista */}
           {viewMode === 'cards' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredEnrollments.map((enrollment) => (
+              {paginatedEnrollments.map((enrollment) => (
                 <ModernIndividualEnrollmentCard
                   key={enrollment.id}
                   enrollment={enrollment}
@@ -171,7 +190,7 @@ const AdminIndividualEnrollmentsContent = () => {
             </div>
           ) : (
             <ModernIndividualEnrollmentsList
-              enrollments={filteredEnrollments}
+              enrollments={paginatedEnrollments}
               onView={handleViewEnrollment}
               onEdit={setEditingEnrollment}
               onDelete={handleDeleteEnrollment}
@@ -180,7 +199,17 @@ const AdminIndividualEnrollmentsContent = () => {
               selectedEnrollments={selectedEnrollments}
             />
           )}
-        </>
+
+          {/* Paginação */}
+          <EnrollmentsPagination
+            currentPage={pageInfo.currentPage}
+            totalPages={pageInfo.totalPages}
+            onPageChange={handlePageChange}
+            totalItems={pageInfo.totalItems}
+            startIndex={pageInfo.startIndex}
+            endIndex={pageInfo.endIndex}
+          />
+        </div>
       )}
 
       {/* Diálogos */}
