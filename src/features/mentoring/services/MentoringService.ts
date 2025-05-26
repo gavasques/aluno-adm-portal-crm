@@ -29,7 +29,7 @@ export class MentoringService implements IMentoringService {
       errors.push('Número de sessões deve ser maior que zero');
     }
 
-    if (data.durationWeeks <= 0) {
+    if (data.durationMonths <= 0) {
       errors.push('Duração deve ser maior que zero');
     }
 

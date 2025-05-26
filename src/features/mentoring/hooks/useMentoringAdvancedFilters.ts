@@ -70,8 +70,8 @@ export const useMentoringAdvancedFilters = () => {
 
     if (filters.durationRange) {
       filtered = filtered.filter(catalog => 
-        catalog.durationWeeks >= filters.durationRange!.min && 
-        catalog.durationWeeks <= filters.durationRange!.max
+        catalog.durationMonths >= filters.durationRange!.min && 
+        catalog.durationMonths <= filters.durationRange!.max
       );
     }
 

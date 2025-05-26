@@ -158,7 +158,7 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-600">Duração</p>
-                    <p className="font-medium">{enrollment.mentoring.durationWeeks} semanas</p>
+                    <p className="font-medium">{enrollment.mentoring.durationMonths} {enrollment.mentoring.durationMonths === 1 ? 'mês' : 'meses'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

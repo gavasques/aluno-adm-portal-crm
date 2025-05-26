@@ -186,7 +186,7 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
                               <Badge variant="outline" className="text-xs">
                                 {catalog.type}
                               </Badge>
-                              <span>{catalog.durationWeeks} semanas</span>
+                              <span>{catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}</span>
                               <span>R$ {catalog.price.toFixed(2)}</span>
                             </div>
                           </div>

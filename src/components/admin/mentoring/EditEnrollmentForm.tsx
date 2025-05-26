@@ -88,7 +88,7 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
             </div>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="outline" className="text-xs">{enrollment.mentoring.type}</Badge>
-              <span className="text-xs text-gray-500">{enrollment.mentoring.durationWeeks} semanas</span>
+              <span className="text-xs text-gray-500">{enrollment.mentoring.durationMonths} {enrollment.mentoring.durationMonths === 1 ? 'mês' : 'meses'}</span>
               <span className="text-xs text-gray-500">R$ {enrollment.mentoring.price.toFixed(2)}</span>
             </div>
           </div>
