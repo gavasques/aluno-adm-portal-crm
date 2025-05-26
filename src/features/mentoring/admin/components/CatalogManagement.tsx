@@ -444,7 +444,7 @@ export const CatalogManagement: React.FC = () => {
         isLoading={loading}
       />
 
-      {/* Dialog de detalhes */}
+      {/* Dialog de detalhes - usando o novo componente */}
       <CatalogDetailDialog
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
