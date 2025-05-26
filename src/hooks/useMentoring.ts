@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { 
   MentoringCatalog, 
@@ -113,7 +112,7 @@ export const useMentoring = () => {
       // Criar a inscrição
       const newEnrollment = dataService.createEnrollment(enrollmentData);
       
-      // Criar sessões automaticamente
+      // Criar sessões automaticamente - TODAS AGUARDANDO AGENDAMENTO
       const mentoring = dataService.getCatalogById(enrollmentData.mentoringId);
       if (mentoring && newEnrollment) {
         for (let i = 1; i <= mentoring.numberOfSessions; i++) {
@@ -122,7 +121,7 @@ export const useMentoring = () => {
             type: 'individual',
             title: `Sessão ${i} - ${mentoring.name}`,
             durationMinutes: 60,
-            status: 'aguardando_agendamento'
+            status: 'aguardando_agendamento' // SEMPRE aguardando agendamento inicialmente
           };
           dataService.createSession(sessionData);
         }
@@ -131,7 +130,7 @@ export const useMentoring = () => {
       refreshData();
       toast({
         title: "Sucesso",
-        description: "Inscrição criada com sessões geradas automaticamente!",
+        description: `Inscrição criada com ${mentoring?.numberOfSessions || 0} sessões aguardando agendamento!`,
       });
       return true;
     } catch (error) {
@@ -194,11 +193,19 @@ export const useMentoring = () => {
   const createSession = useCallback(async (data: CreateSessionData): Promise<MentoringSession> => {
     setLoading(true);
     try {
-      const newSession = dataService.createSession(data);
+      // Determinar status baseado na presença de data/hora
+      const hasScheduledDateTime = data.scheduledDate && data.scheduledDate !== '';
+      const sessionData = {
+        ...data,
+        status: hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento'
+      };
+      
+      const newSession = dataService.createSession(sessionData);
       refreshData();
+      
       toast({
         title: "Sucesso",
-        description: "Sessão criada com sucesso!",
+        description: hasScheduledDateTime ? "Sessão criada e agendada!" : "Sessão criada aguardando agendamento!",
       });
       return newSession;
     } catch (error) {
@@ -261,10 +268,17 @@ export const useMentoring = () => {
     }
   }, [refreshData, toast]);
 
-  const scheduleSession = useCallback(async (sessionId: string, scheduledDate: string, meetingLink?: string): Promise<boolean> => {
+  const scheduleSession = useCallback(async (sessionId: string, scheduledDate: string, meetingLink?: string, notes?: string): Promise<boolean> => {
     setLoading(true);
     try {
-      const success = dataService.scheduleSession(sessionId, scheduledDate, meetingLink);
+      const updateData: UpdateSessionData = {
+        scheduledDate,
+        meetingLink,
+        status: 'agendada',
+        observations: notes
+      };
+      
+      const success = dataService.updateSession(sessionId, updateData);
       if (success) {
         refreshData();
         toast({

@@ -1,244 +1,154 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Calendar, Clock, Link2, Video, ExternalLink } from 'lucide-react';
-import { MentoringSession } from '@/types/mentoring.types';
-import { isValid } from 'date-fns';
-
-const scheduleSchema = z.object({
-  scheduledDate: z.string().min(1, 'Data é obrigatória'),
-  scheduledTime: z.string().min(1, 'Horário é obrigatório'),
-  meetingLink: z.string().url('Link deve ser uma URL válida').optional().or(z.literal('')),
-  calendlyLink: z.string().url('Link deve ser uma URL válida').optional().or(z.literal('')),
-  mentorNotes: z.string().optional()
-});
-
-type ScheduleFormData = z.infer<typeof scheduleSchema>;
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface SessionScheduleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  session?: MentoringSession;
-  onSchedule: (sessionId: string, data: any) => void;
+  session: any;
+  onSchedule: (data: { scheduledDate: string; meetingLink?: string; notes?: string }) => void;
 }
 
-export const SessionScheduleDialog: React.FC<SessionScheduleDialogProps> = ({
-  open,
-  onOpenChange,
-  session,
-  onSchedule
-}) => {
-  const form = useForm<ScheduleFormData>({
-    resolver: zodResolver(scheduleSchema),
-    defaultValues: {
-      scheduledDate: session?.scheduledDate ? (() => {
-        try {
-          const date = new Date(session.scheduledDate);
-          return isValid(date) ? date.toISOString().split('T')[0] : '';
-        } catch {
-          return '';
-        }
-      })() : '',
-      scheduledTime: session?.scheduledDate ? (() => {
-        try {
-          const date = new Date(session.scheduledDate);
-          return isValid(date) ? date.toISOString().split('T')[1].slice(0, 5) : '';
-        } catch {
-          return '';
-        }
-      })() : '',
-      meetingLink: session?.meetingLink || '',
-      calendlyLink: session?.calendlyLink || '',
-      mentorNotes: session?.mentorNotes || ''
-    }
-  });
+export const SessionScheduleDialog = ({ open, onOpenChange, session, onSchedule }: SessionScheduleDialogProps) => {
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState('');
+  const [meetingLink, setMeetingLink] = useState('');
+  const [notes, setNotes] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const handleSubmit = (data: ScheduleFormData) => {
-    if (!session) return;
+  const handleSchedule = () => {
+    if (!selectedDate || !selectedTime) return;
 
-    try {
-      const scheduledDateTime = new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString();
-      
-      onSchedule(session.id, {
-        scheduledDate: scheduledDateTime,
-        meetingLink: data.meetingLink || undefined,
-        calendlyLink: data.calendlyLink || undefined,
-        mentorNotes: data.mentorNotes || undefined,
-        status: 'agendada'
-      });
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error scheduling session:', error);
-    }
+    const scheduledDateTime = `${format(selectedDate, 'yyyy-MM-dd')}T${selectedTime}:00`;
+    
+    onSchedule({
+      scheduledDate: scheduledDateTime,
+      meetingLink: meetingLink || undefined,
+      notes: notes || undefined
+    });
+
+    // Reset form
+    setSelectedDate(undefined);
+    setSelectedTime('');
+    setMeetingLink('');
+    setNotes('');
+    onOpenChange(false);
   };
 
-  const openCalendly = () => {
-    if (session?.calendlyLink) {
-      window.open(session.calendlyLink, '_blank');
-    }
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setShowDatePicker(false);
   };
 
   if (!session) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Agendar Sessão {session.sessionNumber}
-          </DialogTitle>
+          <DialogTitle>Agendar Sessão</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Informações da Sessão */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">{session.title}</h4>
-            <div className="flex items-center gap-4 text-sm text-blue-700">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>{session.durationMinutes} minutos</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>Sessão {session.sessionNumber}</span>
-              </div>
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-medium text-sm text-gray-700 mb-2">Sessão</h4>
+            <p className="text-sm text-gray-900">{session.title}</p>
+          </div>
+
+          <div>
+            <Label>Data da Sessão</Label>
+            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? (
+                    format(selectedDate, "dd/MM/yyyy", { locale: ptBR })
+                  ) : (
+                    <span>Selecionar data</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="pointer-events-auto"
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div>
+            <Label htmlFor="time">Horário</Label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="time"
+                type="time"
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className="pl-10"
+                required
+              />
             </div>
           </div>
 
-          {/* Link do Calendly */}
-          {session.calendlyLink && (
-            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h5 className="font-medium text-yellow-900">Agendamento via Calendly</h5>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    O aluno pode agendar diretamente pelo Calendly e depois informar a data aqui.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={openCalendly}
-                  className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Abrir Calendly
-                </Button>
-              </div>
-            </div>
-          )}
+          <div>
+            <Label htmlFor="meetingLink">Link da Reunião (opcional)</Label>
+            <Input
+              id="meetingLink"
+              type="url"
+              value={meetingLink}
+              onChange={(e) => setMeetingLink(e.target.value)}
+              placeholder="https://meet.google.com/..."
+            />
+          </div>
 
-          {/* Formulário */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="scheduledDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data da Sessão</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div>
+            <Label htmlFor="notes">Observações (opcional)</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Adicione observações sobre esta sessão..."
+              rows={3}
+            />
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="scheduledTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horário</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="meetingLink"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link da Reunião (Opcional)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="https://meet.google.com/..." 
-                          {...field}
-                          className="pl-10"
-                        />
-                        <Video className="h-4 w-4 text-gray-400 absolute left-3 top-3" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="calendlyLink"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link do Calendly (Opcional)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="https://calendly.com/..." 
-                          {...field}
-                          className="pl-10"
-                        />
-                        <Link2 className="h-4 w-4 text-gray-400 absolute left-3 top-3" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="mentorNotes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notas do Mentor (Opcional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Observações sobre a sessão..."
-                        {...field}
-                        rows={3}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  Agendar Sessão
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSchedule}
+              disabled={!selectedDate || !selectedTime}
+            >
+              Agendar Sessão
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

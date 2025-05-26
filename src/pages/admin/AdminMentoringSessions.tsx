@@ -33,7 +33,7 @@ import { ptBR } from 'date-fns/locale';
 const AdminMentoringSessions = () => {
   console.log('=== AdminMentoringSessions COMPONENT RENDER ===');
   
-  const { sessions, enrollments, createSession, updateSession } = useMentoring();
+  const { sessions, enrollments, createSession, updateSession, scheduleSession } = useMentoring();
   const { user } = useAuth();
   
   console.log('AdminMentoringSessions render data:');
@@ -49,6 +49,8 @@ const AdminMentoringSessions = () => {
   const [editingSession, setEditingSession] = useState<any>(null);
   const [viewingSession, setViewingSession] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [schedulingSession, setSchedulingSession] = useState<any>(null);
 
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
@@ -202,15 +204,11 @@ const AdminMentoringSessions = () => {
     try {
       console.log('Creating session with data:', data);
       
-      const scheduledDate = data.scheduledDate && data.scheduledTime 
-        ? new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString()
-        : undefined;
-      
       const sessionData = {
         enrollmentId: data.enrollmentId,
         type: data.type || 'individual' as const,
         title: data.title,
-        scheduledDate,
+        scheduledDate: data.scheduledDate,
         durationMinutes: data.durationMinutes,
         meetingLink: data.meetingLink || undefined,
         groupId: data.groupId
@@ -222,6 +220,23 @@ const AdminMentoringSessions = () => {
     } catch (error) {
       console.error('Error creating session:', error);
     }
+  };
+
+  const handleScheduleSession = async (data: { scheduledDate: string; meetingLink?: string; notes?: string }) => {
+    if (!schedulingSession) return;
+    
+    try {
+      await scheduleSession(schedulingSession.id, data.scheduledDate, data.meetingLink, data.notes);
+      setShowScheduleDialog(false);
+      setSchedulingSession(null);
+    } catch (error) {
+      console.error('Error scheduling session:', error);
+    }
+  };
+
+  const openScheduleDialog = (session: any) => {
+    setSchedulingSession(session);
+    setShowScheduleDialog(true);
   };
 
   const clearFilters = () => {
@@ -391,6 +406,7 @@ const AdminMentoringSessions = () => {
           onView={setViewingSession}
           onEdit={setEditingSession}
           onDelete={(id) => console.log('Delete session:', id)}
+          onSchedule={openScheduleDialog}
           isAdmin={isAdmin}
         />
       ) : (
@@ -474,6 +490,16 @@ const AdminMentoringSessions = () => {
                       </Button>
                     )}
                     
+                    {session.status === 'aguardando_agendamento' && (
+                      <Button size="sm" className="flex-1 h-8 text-xs" onClick={(e) => {
+                        e.stopPropagation();
+                        openScheduleDialog(session);
+                      }}>
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Agendar
+                      </Button>
+                    )}
+                    
                     <div className="flex gap-1">
                       <Button 
                         variant="ghost" 
@@ -554,6 +580,14 @@ const AdminMentoringSessions = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Schedule Session Dialog */}
+      <SessionScheduleDialog
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+        session={schedulingSession}
+        onSchedule={handleScheduleSession}
+      />
 
       {/* Session Detail Dialog */}
       <SessionDetailDialog

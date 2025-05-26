@@ -1,9 +1,19 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2, Play } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Calendar, 
+  Clock, 
+  Users, 
+  Video, 
+  Edit, 
+  Trash2, 
+  Play,
+  Eye,
+  GraduationCap
+} from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -12,30 +22,47 @@ interface SessionsListProps {
   onView: (session: any) => void;
   onEdit: (session: any) => void;
   onDelete: (id: string) => void;
-  isAdmin: boolean;
+  onSchedule?: (session: any) => void;
+  isAdmin?: boolean;
 }
 
-export const SessionsList: React.FC<SessionsListProps> = ({
-  sessions,
-  onView,
-  onEdit,
-  onDelete,
-  isAdmin
-}) => {
+export const SessionsList = ({ 
+  sessions, 
+  onView, 
+  onEdit, 
+  onDelete, 
+  onSchedule,
+  isAdmin = false 
+}: SessionsListProps) => {
+  
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'aguardando_agendamento': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'agendada': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
+      case 'concluida': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
-      case 'reagendada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'no_show_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'reagendada': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'no_show_aluno': return 'bg-red-100 text-red-800 border-red-200';
       case 'no_show_mentor': return 'bg-purple-100 text-purple-800 border-purple-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'aguardando_agendamento': return 'Aguardando Agendamento';
+      case 'agendada': return 'Agendada';
+      case 'concluida': return 'Concluída';
+      case 'cancelada': return 'Cancelada';
+      case 'reagendada': return 'Reagendada';
+      case 'no_show_aluno': return 'No-show Aluno';
+      case 'no_show_mentor': return 'No-show Mentor';
+      default: return status;
+    }
+  };
+
   const formatSafeDate = (dateString: string | undefined, formatStr: string) => {
-    if (!dateString) return 'Não agendada';
+    if (!dateString) return 'Data não definida';
     
     try {
       const date = new Date(dateString);
@@ -46,125 +73,151 @@ export const SessionsList: React.FC<SessionsListProps> = ({
     }
   };
 
-  const handleRowClick = (session: any, e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
-    onView(session);
-  };
-
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead className="font-semibold">Aluno/Mentor</TableHead>
-            <TableHead className="font-semibold">Mentoria</TableHead>
-            <TableHead className="font-semibold">Data/Hora</TableHead>
-            <TableHead className="font-semibold">Duração</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="font-semibold text-center">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sessions.map((session) => (
-            <TableRow 
-              key={session.id} 
-              className="hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={(e) => handleRowClick(session, e)}
-            >
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium text-sm">
-                    {session.studentName || session.groupName || 'Nome não encontrado'}
-                  </div>
-                  <div className="text-xs text-gray-500">{session.mentorName}</div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium text-sm">{session.mentoringName}</div>
-                  <div className="text-xs text-gray-500">
-                    Sessão {session.sessionNumber}/{session.totalSessions}
-                  </div>
-                  <Badge variant="outline" className="text-xs">{session.type}</Badge>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="text-sm">
-                  {formatSafeDate(session.scheduledDate, 'dd/MM/yyyy')}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {formatSafeDate(session.scheduledDate, 'HH:mm')}
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm">{session.durationMinutes} min</span>
-              </TableCell>
-              <TableCell>
-                <Badge className={`${getStatusColor(session.status)} text-xs`}>
-                  {session.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center justify-center gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onView(session);
-                    }}
-                    className="h-8 w-8 p-0 hover:bg-blue-50"
-                  >
-                    <Eye className="h-3 w-3" />
-                  </Button>
+    <Card>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sessão
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Aluno/Mentoria
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Data/Hora
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {sessions.map((session) => (
+                <tr key={session.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                        <Video className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {session.title}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Sessão {session.sessionNumber}/{session.totalSessions}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
                   
-                  {session.status === 'agendada' && session.meetingLink && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(session.meetingLink, '_blank');
-                      }}
-                      className="h-8 w-8 p-0 hover:bg-green-50"
-                    >
-                      <Play className="h-3 w-3" />
-                    </Button>
-                  )}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {session.studentName}
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <GraduationCap className="h-3 w-3 mr-1" />
+                        {session.mentoringName}
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <Users className="h-3 w-3 mr-1" />
+                        {session.mentorName}
+                      </div>
+                    </div>
+                  </td>
                   
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(session);
-                    }}
-                    className="h-8 w-8 p-0 hover:bg-yellow-50"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {session.scheduledDate ? (
+                      <div className="text-sm text-gray-900">
+                        <div className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {formatSafeDate(session.scheduledDate, 'dd/MM/yyyy')}
+                        </div>
+                        <div className="flex items-center text-gray-500">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {formatSafeDate(session.scheduledDate, 'HH:mm')} ({session.durationMinutes}min)
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        Não agendada
+                      </div>
+                    )}
+                  </td>
                   
-                  {isAdmin && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(session.id);
-                      }}
-                      className="h-8 w-8 p-0 hover:bg-red-50 text-red-600"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Badge className={getStatusColor(session.status)}>
+                      {getStatusLabel(session.status)}
+                    </Badge>
+                  </td>
+                  
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center gap-1">
+                      {session.status === 'agendada' && session.meetingLink && (
+                        <Button 
+                          size="sm" 
+                          className="h-8"
+                          onClick={() => window.open(session.meetingLink, '_blank')}
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          Entrar
+                        </Button>
+                      )}
+                      
+                      {session.status === 'aguardando_agendamento' && onSchedule && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="h-8"
+                          onClick={() => onSchedule(session)}
+                        >
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Agendar
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => onView(session)}
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => onEdit(session)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      
+                      {isAdmin && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => onDelete(session.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

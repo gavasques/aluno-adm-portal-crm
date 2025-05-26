@@ -1,110 +1,185 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-
-const sessionSchema = z.object({
-  scheduledDate: z.string().min(1, 'Data é obrigatória'),
-  scheduledTime: z.string().min(1, 'Horário é obrigatório'),
-  durationMinutes: z.coerce.number().min(15, 'Duração mínima de 15 minutos').max(240, 'Duração máxima de 240 minutos'),
-  meetingLink: z.string().url('Link deve ser uma URL válida').optional().or(z.literal(''))
-});
-
-type SessionFormData = z.infer<typeof sessionSchema>;
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { useMentoring } from '@/hooks/useMentoring';
 
 interface StandaloneSessionFormProps {
-  onSubmit: (data: SessionFormData) => void;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
-  initialData?: Partial<SessionFormData>;
-  isLoading?: boolean;
+  initialData?: any;
 }
 
-const StandaloneSessionForm = ({ onSubmit, onCancel, initialData, isLoading }: StandaloneSessionFormProps) => {
-  const form = useForm<SessionFormData>({
-    resolver: zodResolver(sessionSchema),
-    defaultValues: {
-      scheduledDate: initialData?.scheduledDate || '',
-      scheduledTime: initialData?.scheduledTime || '',
-      durationMinutes: initialData?.durationMinutes || 60,
-      meetingLink: initialData?.meetingLink || ''
-    }
+const StandaloneSessionForm = ({ onSubmit, onCancel, initialData }: StandaloneSessionFormProps) => {
+  const { enrollments } = useMentoring();
+  const [formData, setFormData] = useState({
+    enrollmentId: initialData?.enrollmentId || '',
+    type: initialData?.type || 'individual',
+    title: initialData?.title || '',
+    scheduledDate: initialData?.scheduledDate ? new Date(initialData.scheduledDate) : undefined,
+    scheduledTime: initialData?.scheduledTime || '',
+    durationMinutes: initialData?.durationMinutes || 60,
+    meetingLink: initialData?.meetingLink || '',
+    groupId: initialData?.groupId || undefined
   });
 
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    if (formData.enrollmentId && !initialData) {
+      const enrollment = enrollments.find(e => e.id === formData.enrollmentId);
+      if (enrollment) {
+        const sessionCount = enrollments.filter(e => e.id === formData.enrollmentId).length;
+        setFormData(prev => ({
+          ...prev,
+          title: `Sessão ${sessionCount + 1} - ${enrollment.mentoring.name}`
+        }));
+      }
+    }
+  }, [formData.enrollmentId, enrollments, initialData]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const hasScheduledDateTime = formData.scheduledDate && formData.scheduledTime;
+    
+    const submitData = {
+      ...formData,
+      scheduledDate: hasScheduledDateTime 
+        ? `${format(formData.scheduledDate!, 'yyyy-MM-dd')}T${formData.scheduledTime}:00`
+        : undefined,
+      status: hasScheduledDateTime ? 'agendada' : 'aguardando_agendamento'
+    };
+    
+    onSubmit(submitData);
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setFormData(prev => ({ ...prev, scheduledDate: date }));
+    setShowDatePicker(false);
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="scheduledDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="enrollmentId">Inscrição</Label>
+        <Select
+          value={formData.enrollmentId}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, enrollmentId: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione uma inscrição" />
+          </SelectTrigger>
+          <SelectContent>
+            {enrollments.map((enrollment) => (
+              <SelectItem key={enrollment.id} value={enrollment.id}>
+                {enrollment.mentoring.name} - {enrollment.studentId}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          <FormField
-            control={form.control}
-            name="scheduledTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Horário</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <div>
+        <Label htmlFor="title">Título da Sessão</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          placeholder="Digite o título da sessão"
+          required
+        />
+      </div>
 
-          <FormField
-            control={form.control}
-            name="durationMinutes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duração (minutos)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="60" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="meetingLink"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Link de Acesso (Opcional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://meet.google.com/..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label>Data da Sessão (opcional)</Label>
+          <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.scheduledDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.scheduledDate ? (
+                  format(formData.scheduledDate, "dd/MM/yyyy", { locale: ptBR })
+                ) : (
+                  <span>Selecionar data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.scheduledDate}
+                onSelect={handleDateSelect}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Salvando...' : 'Salvar Sessão'}
-          </Button>
+        <div>
+          <Label htmlFor="scheduledTime">Horário (opcional)</Label>
+          <div className="relative">
+            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              id="scheduledTime"
+              type="time"
+              value={formData.scheduledTime}
+              onChange={(e) => setFormData(prev => ({ ...prev, scheduledTime: e.target.value }))}
+              className="pl-10"
+            />
+          </div>
         </div>
-      </form>
-    </Form>
+      </div>
+
+      <div>
+        <Label htmlFor="durationMinutes">Duração (minutos)</Label>
+        <Input
+          id="durationMinutes"
+          type="number"
+          value={formData.durationMinutes}
+          onChange={(e) => setFormData(prev => ({ ...prev, durationMinutes: parseInt(e.target.value) }))}
+          min="15"
+          max="240"
+          step="15"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="meetingLink">Link da Reunião (opcional)</Label>
+        <Input
+          id="meetingLink"
+          type="url"
+          value={formData.meetingLink}
+          onChange={(e) => setFormData(prev => ({ ...prev, meetingLink: e.target.value }))}
+          placeholder="https://meet.google.com/..."
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit">
+          {initialData ? 'Atualizar Sessão' : 'Criar Sessão'}
+        </Button>
+      </div>
+    </form>
   );
 };
 
