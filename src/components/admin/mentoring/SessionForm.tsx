@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useMentoring } from '@/hooks/useMentoring';
 
@@ -31,6 +30,8 @@ interface SessionFormProps {
 
 const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionFormProps) => {
   const { enrollments } = useMentoring();
+
+  console.log('SessionForm - enrollments count:', enrollments.length);
 
   const form = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema),

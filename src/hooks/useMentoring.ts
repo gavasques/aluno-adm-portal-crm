@@ -12,21 +12,21 @@ import {
   MentoringExtension
 } from '@/types/mentoring.types';
 import { 
-  mockMentoringCatalog, 
-  mockStudentEnrollments, 
-  mockMentoringSessions, 
-  mockMentoringMaterials,
-  getStudentEnrollments,
-  getSessionsByEnrollment,
-  getMaterialsByEnrollment,
-  getUpcomingSessions
-} from '@/data/mentoringData';
+  expandedMentoringCatalog, 
+  expandedStudentEnrollments, 
+  expandedMentoringSessions, 
+  expandedMentoringMaterials
+} from '@/data/expandedMentoringData';
 
 export const useMentoring = () => {
-  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(mockMentoringCatalog);
-  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(mockStudentEnrollments);
-  const [sessions] = useState<MentoringSession[]>(mockMentoringSessions);
-  const [materials] = useState<MentoringMaterial[]>(mockMentoringMaterials);
+  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(expandedMentoringCatalog);
+  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(expandedStudentEnrollments);
+  const [sessions, setSessions] = useState<MentoringSession[]>(expandedMentoringSessions);
+  const [materials] = useState<MentoringMaterial[]>(expandedMentoringMaterials);
+
+  console.log('useMentoring - catalogs:', catalogs.length);
+  console.log('useMentoring - enrollments:', enrollments.length);
+  console.log('useMentoring - sessions:', sessions.length);
 
   // Admin functions
   const createMentoringCatalog = async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
@@ -86,6 +86,7 @@ export const useMentoring = () => {
       updatedAt: new Date().toISOString()
     };
     
+    setSessions(prev => [...prev, newSession]);
     console.log('Creating session:', newSession);
     return newSession;
   };
@@ -100,6 +101,7 @@ export const useMentoring = () => {
       updatedAt: new Date().toISOString()
     };
     
+    setSessions(prev => prev.map(s => s.id === id ? updated : s));
     console.log('Updating session:', updated);
     return updated;
   };
@@ -115,16 +117,14 @@ export const useMentoring = () => {
         extensionMonths: data.extensionMonths,
         appliedDate: new Date().toISOString(),
         notes: data.notes,
-        adminId: 'current-admin-id', // In real app, get from auth context
+        adminId: 'current-admin-id',
         createdAt: new Date().toISOString()
       };
 
-      // Calculate new end date
       const currentEndDate = new Date(enrollment.endDate);
       const newEndDate = new Date(currentEndDate);
       newEndDate.setMonth(newEndDate.getMonth() + data.extensionMonths);
 
-      // Update enrollment
       const updatedEnrollment: StudentMentoringEnrollment = {
         ...enrollment,
         endDate: newEndDate.toISOString(),
@@ -134,7 +134,6 @@ export const useMentoring = () => {
         updatedAt: new Date().toISOString()
       };
 
-      // Update state
       setEnrollments(prev => 
         prev.map(e => e.id === data.enrollmentId ? updatedEnrollment : e)
       );
@@ -149,19 +148,28 @@ export const useMentoring = () => {
 
   // Student functions
   const getMyEnrollments = (studentId: string): StudentMentoringEnrollment[] => {
-    return getStudentEnrollments(studentId);
+    return enrollments.filter(e => e.studentId === studentId);
   };
 
   const getEnrollmentSessions = (enrollmentId: string): MentoringSession[] => {
-    return getSessionsByEnrollment(enrollmentId);
+    return sessions.filter(s => s.enrollmentId === enrollmentId);
   };
 
   const getEnrollmentMaterials = (enrollmentId: string): MentoringMaterial[] => {
-    return getMaterialsByEnrollment(enrollmentId);
+    return materials.filter(m => m.enrollmentId === enrollmentId);
   };
 
   const getMyUpcomingSessions = (studentId: string): MentoringSession[] => {
-    return getUpcomingSessions(studentId);
+    const studentEnrollments = getMyEnrollments(studentId);
+    const enrollmentIds = studentEnrollments.map(e => e.id);
+    
+    return sessions
+      .filter(s => 
+        enrollmentIds.includes(s.enrollmentId) && 
+        s.status === 'agendada' &&
+        new Date(s.scheduledDate) > new Date()
+      )
+      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
   };
 
   const getSessionDetails = (sessionId: string): MentoringSession | undefined => {

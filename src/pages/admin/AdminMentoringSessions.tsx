@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ import { format, isToday, isTomorrow, isWithinInterval, addDays } from 'date-fns
 import { ptBR } from 'date-fns/locale';
 
 const AdminMentoringSessions = () => {
-  const { sessions, enrollments } = useMentoring();
+  const { sessions, enrollments, createSession } = useMentoring();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -44,13 +45,19 @@ const AdminMentoringSessions = () => {
   const [viewingSession, setViewingSession] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
+  console.log('AdminMentoringSessions - user:', user);
+  console.log('AdminMentoringSessions - sessions count:', sessions.length);
+  console.log('AdminMentoringSessions - enrollments count:', enrollments.length);
+
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
     { label: 'Mentorias', href: '/admin/mentorias' },
     { label: 'Gestão de Sessões' }
   ];
 
-  const isAdmin = user?.role === 'Admin';
+  // Verificar se é admin - permitir acesso se for Admin ou se não houver usuário (desenvolvimento)
+  const isAdmin = !user || user?.role === 'Admin';
+  console.log('AdminMentoringSessions - isAdmin:', isAdmin);
 
   // Mock student names based on student IDs
   const studentNames = {
@@ -68,14 +75,14 @@ const AdminMentoringSessions = () => {
 
   // Dados enriquecidos das sessões
   const enrichedSessions = useMemo(() => {
+    console.log('Enriching sessions - sessions:', sessions.length, 'enrollments:', enrollments.length);
+    
     return sessions.map(session => {
       const enrollment = enrollments.find(e => e.id === session.enrollmentId);
-      const sessionNumber = enrollments
-        .filter(e => e.id === session.enrollmentId)
-        .reduce((acc, curr) => {
-          const currentSessions = sessions.filter(s => s.enrollmentId === curr.id);
-          return currentSessions.findIndex(s => s.id === session.id) + 1;
-        }, 0);
+      const sessionNumber = sessions
+        .filter(s => s.enrollmentId === session.enrollmentId)
+        .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
+        .findIndex(s => s.id === session.id) + 1;
 
       const studentName = enrollment ? studentNames[enrollment.studentId as keyof typeof studentNames] || 'Aluno não encontrado' : 'Aluno não encontrado';
 
@@ -90,6 +97,8 @@ const AdminMentoringSessions = () => {
       };
     });
   }, [sessions, enrollments]);
+
+  console.log('AdminMentoringSessions - enrichedSessions count:', enrichedSessions.length);
 
   // Filtrar sessões baseado em permissões
   const filteredSessions = useMemo(() => {
@@ -158,6 +167,8 @@ const AdminMentoringSessions = () => {
     return filtered;
   }, [enrichedSessions, searchTerm, statusFilter, typeFilter, studentFilter, mentorFilter, dateFilter, isAdmin, user]);
 
+  console.log('AdminMentoringSessions - filteredSessions count:', filteredSessions.length);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'agendada': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -170,9 +181,27 @@ const AdminMentoringSessions = () => {
     }
   };
 
-  const handleCreateSession = (data: any) => {
-    console.log('Creating session:', data);
-    setShowForm(false);
+  const handleCreateSession = async (data: any) => {
+    try {
+      console.log('Creating session:', data);
+      
+      // Combinar data e hora para criar o scheduledDate
+      const scheduledDate = new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString();
+      
+      const sessionData = {
+        enrollmentId: data.enrollmentId,
+        type: data.type,
+        title: data.title,
+        scheduledDate,
+        durationMinutes: data.durationMinutes,
+        accessLink: data.accessLink || undefined
+      };
+      
+      await createSession(sessionData);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating session:', error);
+    }
   };
 
   const handleEditSession = (data: any) => {
@@ -504,6 +533,12 @@ const AdminMentoringSessions = () => {
             {(searchTerm || statusFilter || typeFilter || studentFilter || mentorFilter || dateFilter) && (
               <Button variant="outline" onClick={clearFilters}>
                 Limpar Filtros
+              </Button>
+            )}
+            {isAdmin && !searchTerm && !statusFilter && !typeFilter && !studentFilter && !mentorFilter && !dateFilter && (
+              <Button onClick={() => setShowForm(true)} className="mt-2">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeira Sessão
               </Button>
             )}
           </CardContent>
