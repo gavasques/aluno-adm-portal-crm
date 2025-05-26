@@ -46,6 +46,10 @@ import StudentMentoring from "./pages/student/Mentoring";
 import StudentMentoringDetail from "./pages/student/MentoringDetail";
 import StudentMentoringSession from "./pages/student/MentoringSession";
 
+// Individual and Group Enrollments Pages
+import AdminIndividualEnrollments from "./pages/admin/AdminIndividualEnrollments";
+import AdminGroupEnrollments from "./pages/admin/AdminGroupEnrollments";
+
 import RouteGuard from "./components/RouteGuard";
 import "./App.css";
 
