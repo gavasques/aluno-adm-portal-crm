@@ -14,52 +14,59 @@ import AdminUsers from '@/pages/admin/Users';
 import AdminGroups from '@/pages/admin/AdminGroups';
 import AdminIndividualSessions from '@/pages/admin/AdminIndividualSessions';
 import AdminGroupSessions from '@/pages/admin/AdminGroupSessions';
+import RouteGuard from '@/components/RouteGuard';
+import StudentLayout from '@/layout/StudentLayout';
+import AdminLayout from '@/layout/AdminLayout';
 
-const RouteGuard = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
+function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (user && !allowedRoles.includes(user.role)) {
-    return <div>Unauthorized</div>;
-  }
-
-  return <>{children}</>;
-};
-
-function App() {
   return (
     <Routes>
-      {/* Auth Routes */}
+      {/* Auth Routes - No layout */}
       <Route path="/login" element={<Index />} />
       <Route path="/register" element={<Index />} />
       <Route path="/forgot-password" element={<Index />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-      {/* Student Routes */}
-      <Route path="/aluno" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentDashboard /></RouteGuard>} />
-      <Route path="/aluno/mentorias" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoring /></RouteGuard>} />
-      <Route path="/aluno/mentorias/:id" element={<RouteGuard allowedRoles={['Student', 'Admin', 'Mentor']}><StudentMentoringDetails /></RouteGuard>} />
+      {/* Student Routes with Layout */}
+      <Route path="/aluno" element={
+        <RouteGuard requiredMenuKey="student-dashboard">
+          <StudentLayout />
+        </RouteGuard>
+      }>
+        <Route index element={<StudentDashboard />} />
+        <Route path="mentorias" element={<StudentMentoring />} />
+        <Route path="mentorias/:id" element={<StudentMentoringDetails />} />
+      </Route>
       
-      {/* Admin Routes */}
-      <Route path="/admin" element={<RouteGuard allowedRoles={['Admin']}><AdminDashboard /></RouteGuard>} />
-      <Route path="/admin/mentorias" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoring /></RouteGuard>} />
-      <Route path="/admin/mentorias/:id" element={<RouteGuard allowedRoles={['Admin']}><AdminMentoringDetails /></RouteGuard>} />
-      <Route path="/admin/usuarios" element={<RouteGuard allowedRoles={['Admin']}><AdminUsers /></RouteGuard>} />
-      <Route path="/admin/grupos" element={<RouteGuard allowedRoles={['Admin']}><AdminGroups /></RouteGuard>} />
-      
-      {/* Mentoring Session Routes */}
-      <Route path="/admin/mentorias/sessoes-individuais" element={<RouteGuard allowedRoles={['Admin']}><AdminIndividualSessions /></RouteGuard>} />
-      <Route path="/admin/mentorias/sessoes-grupo" element={<RouteGuard allowedRoles={['Admin']}><AdminGroupSessions /></RouteGuard>} />
+      {/* Admin Routes with Layout */}
+      <Route path="/admin" element={
+        <RouteGuard requireAdminAccess>
+          <AdminLayout />
+        </RouteGuard>
+      }>
+        <Route index element={<AdminDashboard />} />
+        <Route path="mentorias" element={<AdminMentoring />} />
+        <Route path="mentorias/:id" element={<AdminMentoringDetails />} />
+        <Route path="usuarios" element={<AdminUsers />} />
+        <Route path="grupos" element={<AdminGroups />} />
+        <Route path="mentorias/sessoes-individuais" element={<AdminIndividualSessions />} />
+        <Route path="mentorias/sessoes-grupo" element={<AdminGroupSessions />} />
+      </Route>
       
       {/* Default Route */}
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={
+        user ? <Navigate to="/aluno" replace /> : <Navigate to="/login" replace />
+      } />
     </Routes>
   );
 }
