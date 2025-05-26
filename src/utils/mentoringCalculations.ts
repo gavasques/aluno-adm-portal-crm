@@ -4,9 +4,9 @@ export const calculateSessionsFromFrequency = (durationMonths: number, frequency
   
   switch (frequency) {
     case 'Semanal':
-      return Math.ceil(durationMonths * 4.33); // ~4.33 semanas por mês
+      return durationMonths * 4; // Exatamente 4 semanas por mês
     case 'Quinzenal':
-      return Math.ceil(durationMonths * 2); // 2 quinzenas por mês
+      return durationMonths * 2; // 2 quinzenas por mês
     case 'Mensal':
       return durationMonths; // 1 sessão por mês
     default:
