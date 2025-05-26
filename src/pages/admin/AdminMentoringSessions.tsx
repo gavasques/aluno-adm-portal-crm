@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,9 +76,9 @@ const AdminMentoringSessions = () => {
     let filtered = enrichedSessions;
 
     // Se não é admin, mostrar apenas sessões dos alunos relacionados ao mentor
-    if (!isAdmin && user?.is_mentor) {
+    if (!isAdmin && user?.email) {
       filtered = filtered.filter(session => 
-        session.mentorName === user.name || session.mentorName === user.email
+        session.mentorName === user.email || session.mentorName.includes(user.email)
       );
     }
 
@@ -115,7 +114,6 @@ const AdminMentoringSessions = () => {
 
     // Filtros de data
     if (dateFilter) {
-      const sessionDate = new Date(session.scheduledDate);
       const today = new Date();
       
       filtered = filtered.filter(session => {
