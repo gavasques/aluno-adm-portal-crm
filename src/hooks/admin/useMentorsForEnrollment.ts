@@ -6,10 +6,9 @@ interface Mentor {
   id: string;
   name: string;
   email: string;
-  status: string;
 }
 
-export const useMentors = () => {
+export const useMentorsForEnrollment = () => {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +17,7 @@ export const useMentors = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email, status')
+        .select('id, name, email')
         .eq('is_mentor', true)
         .eq('status', 'Ativo')
         .order('name');
