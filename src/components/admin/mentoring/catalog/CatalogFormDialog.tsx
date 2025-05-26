@@ -1,22 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Save, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
-import { useMentors } from '@/hooks/useMentors';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface CatalogFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  catalog?: MentoringCatalog | null;
+  catalog: MentoringCatalog | null;
   onSubmit: (data: CreateMentoringCatalogData) => Promise<void>;
-  isLoading?: boolean;
+  isLoading: boolean;
 }
 
 const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
@@ -24,9 +26,11 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
   onOpenChange,
   catalog,
   onSubmit,
-  isLoading = false
+  isLoading
 }) => {
-  const { mentors, loading: mentorsLoading } = useMentors();
+  const { toast } = useToast();
+  const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
+
   const [formData, setFormData] = useState<CreateMentoringCatalogData>({
     name: '',
     type: 'Individual',
@@ -35,11 +39,28 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     numberOfSessions: 4,
     price: 0,
     description: '',
-    active: true
+    active: true,
+    status: 'Ativa'
   });
 
-  const [priceInput, setPriceInput] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Configuração do editor de texto rico
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['blockquote', 'code-block'],
+      ['link'],
+      ['clean']
+    ]
+  };
+
+  const quillFormats = [
+    'header', 'bold', 'italic', 'underline',
+    'color', 'background', 'list', 'bullet',
+    'blockquote', 'code-block', 'link'
+  ];
 
   useEffect(() => {
     if (catalog) {
@@ -51,9 +72,9 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         numberOfSessions: catalog.numberOfSessions,
         price: catalog.price,
         description: catalog.description,
-        active: catalog.active
+        active: catalog.active,
+        status: catalog.status
       });
-      setPriceInput(catalog.price > 0 ? catalog.price.toString().replace('.', ',') : '');
     } else {
       setFormData({
         name: '',
@@ -63,165 +84,92 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         numberOfSessions: 4,
         price: 0,
         description: '',
-        active: true
+        active: true,
+        status: 'Ativa'
       });
-      setPriceInput('');
     }
-    setErrors({});
   }, [catalog, open]);
-
-  const formatCurrencyDisplay = (value: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2
-    }).format(value);
-  };
-
-  const parsePriceInput = (input: string): number => {
-    if (!input || input.trim() === '') return 0;
-    
-    // Remove todos os caracteres exceto números, vírgula e ponto
-    const cleanValue = input.replace(/[^\d,.]/g, '');
-    
-    // Se estiver vazio após limpeza, retorna 0
-    if (!cleanValue) return 0;
-    
-    // Substitui vírgula por ponto para parsing
-    const normalizedValue = cleanValue.replace(',', '.');
-    
-    // Converte para número
-    const parsed = parseFloat(normalizedValue);
-    return isNaN(parsed) ? 0 : parsed;
-  };
-
-  const handlePriceInputChange = (value: string) => {
-    // Permite apenas números, vírgula e ponto
-    const filteredValue = value.replace(/[^\d,.]/g, '');
-    setPriceInput(filteredValue);
-  };
-
-  const handlePriceBlur = () => {
-    const numericValue = parsePriceInput(priceInput);
-    setFormData(prev => ({ ...prev, price: numericValue }));
-    
-    // Formata o input para exibição
-    if (numericValue > 0) {
-      setPriceInput(numericValue.toString().replace('.', ','));
-    } else if (priceInput === '' || numericValue === 0) {
-      setPriceInput('');
-      setFormData(prev => ({ ...prev, price: 0 }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
-    }
-
-    if (!formData.instructor.trim()) {
-      newErrors.instructor = 'Mentor é obrigatório';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Descrição é obrigatória';
-    }
-
-    if (formData.durationWeeks < 1) {
-      newErrors.durationWeeks = 'Duração deve ser pelo menos 1 semana';
-    }
-
-    if (formData.numberOfSessions < 1) {
-      newErrors.numberOfSessions = 'Deve ter pelo menos 1 sessão';
-    }
-
-    if (formData.price < 0) {
-      newErrors.price = 'Preço não pode ser negativo';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Atualiza o preço final antes da validação
-    const finalPrice = parsePriceInput(priceInput);
-    const finalFormData = { ...formData, price: finalPrice };
-    
-    // Atualiza o estado para validação
-    setFormData(finalFormData);
-    
-    if (!validateForm()) {
+    if (!formData.name.trim() || !formData.instructor.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome da mentoria e mentor são obrigatórios",
+        variant: "destructive"
+      });
       return;
     }
 
     try {
-      await onSubmit(finalFormData);
-      onOpenChange(false);
+      await onSubmit(formData);
+      toast({
+        title: "Sucesso",
+        description: catalog ? "Mentoria atualizada com sucesso!" : "Mentoria criada com sucesso!",
+      });
     } catch (error) {
-      console.error('Erro ao salvar mentoria:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar mentoria. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleChange = (field: keyof CreateMentoringCatalogData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
+  const handleInputChange = (field: keyof CreateMentoringCatalogData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Save className="h-5 w-5" />
             {catalog ? 'Editar Mentoria' : 'Nova Mentoria'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Nome */}
+          {/* Nome da Mentoria */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Mentoria *</Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Ex: E-commerce Avançado"
-              className={errors.name ? 'border-red-500' : ''}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Nome da mentoria"
+              required
             />
-            {errors.name && (
-              <p className="text-sm text-red-600">{errors.name}</p>
-            )}
           </div>
 
-          {/* Descrição */}
+          {/* Descrição com Editor Rico */}
           <div className="space-y-2">
             <Label htmlFor="description">Descrição *</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Descreva o conteúdo e objetivos da mentoria..."
-              rows={3}
-              className={errors.description ? 'border-red-500' : ''}
-            />
-            {errors.description && (
-              <p className="text-sm text-red-600">{errors.description}</p>
-            )}
+            <div className="min-h-[200px]">
+              <ReactQuill
+                theme="snow"
+                value={formData.description}
+                onChange={(value) => handleInputChange('description', value)}
+                modules={quillModules}
+                formats={quillFormats}
+                placeholder="Descreva os objetivos e conteúdo da mentoria..."
+                style={{ height: '150px' }}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Tipo */}
+          {/* Tipo e Mentor */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Tipo *</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={(value: 'Individual' | 'Grupo') => handleChange('type', value)}
+              <Select
+                value={formData.type}
+                onValueChange={(value: 'Individual' | 'Grupo') => handleInputChange('type', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -233,38 +181,29 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
               </Select>
             </div>
 
-            {/* Mentor */}
             <div className="space-y-2">
               <Label htmlFor="instructor">Mentor *</Label>
-              <Select 
-                value={formData.instructor} 
-                onValueChange={(value) => handleChange('instructor', value)}
+              <Select
+                value={formData.instructor}
+                onValueChange={(value) => handleInputChange('instructor', value)}
                 disabled={mentorsLoading}
               >
-                <SelectTrigger className={errors.instructor ? 'border-red-500' : ''}>
+                <SelectTrigger>
                   <SelectValue placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"} />
                 </SelectTrigger>
                 <SelectContent>
                   {mentors.map((mentor) => (
-                    <SelectItem key={mentor.id} value={mentor.id}>
-                      {mentor.name} ({mentor.email})
+                    <SelectItem key={mentor.id} value={mentor.name}>
+                      {mentor.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.instructor && (
-                <p className="text-sm text-red-600">{errors.instructor}</p>
-              )}
-              {mentors.length === 0 && !mentorsLoading && (
-                <p className="text-sm text-amber-600">
-                  Nenhum mentor encontrado. Marque usuários como mentores na gestão de usuários.
-                </p>
-              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            {/* Duração */}
+          {/* Duração, Sessões e Preço */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="durationWeeks">Duração (semanas) *</Label>
               <Input
@@ -272,15 +211,11 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 type="number"
                 min="1"
                 value={formData.durationWeeks}
-                onChange={(e) => handleChange('durationWeeks', parseInt(e.target.value) || 0)}
-                className={errors.durationWeeks ? 'border-red-500' : ''}
+                onChange={(e) => handleInputChange('durationWeeks', Number(e.target.value))}
+                required
               />
-              {errors.durationWeeks && (
-                <p className="text-sm text-red-600">{errors.durationWeeks}</p>
-              )}
             </div>
 
-            {/* Sessões */}
             <div className="space-y-2">
               <Label htmlFor="numberOfSessions">Número de Sessões *</Label>
               <Input
@@ -288,65 +223,51 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 type="number"
                 min="1"
                 value={formData.numberOfSessions}
-                onChange={(e) => handleChange('numberOfSessions', parseInt(e.target.value) || 0)}
-                className={errors.numberOfSessions ? 'border-red-500' : ''}
+                onChange={(e) => handleInputChange('numberOfSessions', Number(e.target.value))}
+                required
               />
-              {errors.numberOfSessions && (
-                <p className="text-sm text-red-600">{errors.numberOfSessions}</p>
-              )}
             </div>
 
-            {/* Preço */}
             <div className="space-y-2">
               <Label htmlFor="price">Preço (R$) *</Label>
               <Input
                 id="price"
-                type="text"
-                value={priceInput}
-                onChange={(e) => handlePriceInputChange(e.target.value)}
-                onBlur={handlePriceBlur}
-                placeholder="0,00"
-                className={errors.price ? 'border-red-500' : ''}
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleInputChange('price', Number(e.target.value))}
+                required
               />
-              {errors.price && (
-                <p className="text-sm text-red-600">{errors.price}</p>
-              )}
-              {formData.price > 0 && (
-                <p className="text-xs text-gray-600">
-                  Valor: {formatCurrencyDisplay(formData.price)}
-                </p>
-              )}
             </div>
           </div>
 
-          {/* Status Ativo */}
+          {/* Status */}
           <div className="flex items-center space-x-2">
             <Switch
               id="active"
               checked={formData.active}
-              onCheckedChange={(checked) => handleChange('active', checked)}
+              onCheckedChange={(checked) => handleInputChange('active', checked)}
             />
             <Label htmlFor="active">Mentoria ativa</Label>
           </div>
 
-          <DialogFooter className="flex gap-2">
-            <Button 
+          {/* Ações */}
+          <div className="flex gap-2 justify-end pt-4 border-t">
+            <Button
               type="button"
-              variant="outline" 
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-4 w-4 mr-1" />
               Cancelar
             </Button>
-            <Button 
-              type="submit"
-              disabled={isLoading || mentorsLoading}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isLoading ? 'Salvando...' : catalog ? 'Salvar Alterações' : 'Criar Mentoria'}
+            <Button type="submit" disabled={isLoading}>
+              <Save className="h-4 w-4 mr-1" />
+              {isLoading ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
