@@ -1,6 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useMentoring } from '@/hooks/useMentoring';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
@@ -27,6 +27,7 @@ const AdminMentoringEnrollments = () => {
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
+  const [activeTab, setActiveTab] = useState('individual');
 
   // Mock groups data - in real implementation, this would come from a hook
   const [groups] = useState<GroupEnrollment[]>(mockGroupEnrollments);
@@ -232,32 +233,52 @@ const AdminMentoringEnrollments = () => {
         onClearSelection={clearSelection}
       />
 
-      {/* Seção de Inscrições em Grupo */}
-      <GroupEnrollmentSection
-        groups={filteredGroups}
-        selectedGroups={selectedGroups}
-        onView={handleViewGroup}
-        onEdit={handleEditGroup}
-        onDelete={handleDeleteGroup}
-        onAddStudent={handleAddStudent}
-        onRemoveStudent={handleRemoveStudent}
-        onToggleSelection={toggleGroupSelection}
-        onAddGroup={handleAddGroup}
-      />
+      {/* Tabs para separar Individuais e Grupos */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="individual" className="flex items-center gap-2">
+            Inscrições Individuais
+            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+              {filteredIndividualEnrollments.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="group" className="flex items-center gap-2">
+            Inscrições em Grupo
+            <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">
+              {filteredGroups.length}
+            </span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Seção de Inscrições Individuais */}
-      <IndividualEnrollmentSection
-        enrollments={filteredIndividualEnrollments}
-        viewMode={viewMode}
-        selectedEnrollments={selectedEnrollments}
-        onView={handleViewEnrollment}
-        onEdit={setEditingEnrollment}
-        onDelete={handleDeleteEnrollment}
-        onAddExtension={handleAddExtension}
-        onToggleSelection={toggleEnrollmentSelection}
-        onSelectAll={selectAllIndividual}
-        onAddEnrollment={() => setShowForm(true)}
-      />
+        <TabsContent value="individual" className="mt-6">
+          <IndividualEnrollmentSection
+            enrollments={filteredIndividualEnrollments}
+            viewMode={viewMode}
+            selectedEnrollments={selectedEnrollments}
+            onView={handleViewEnrollment}
+            onEdit={setEditingEnrollment}
+            onDelete={handleDeleteEnrollment}
+            onAddExtension={handleAddExtension}
+            onToggleSelection={toggleEnrollmentSelection}
+            onSelectAll={selectAllIndividual}
+            onAddEnrollment={() => setShowForm(true)}
+          />
+        </TabsContent>
+
+        <TabsContent value="group" className="mt-6">
+          <GroupEnrollmentSection
+            groups={filteredGroups}
+            selectedGroups={selectedGroups}
+            onView={handleViewGroup}
+            onEdit={handleEditGroup}
+            onDelete={handleDeleteGroup}
+            onAddStudent={handleAddStudent}
+            onRemoveStudent={handleRemoveStudent}
+            onToggleSelection={toggleGroupSelection}
+            onAddGroup={handleAddGroup}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Diálogos existentes */}
       <Dialog open={showForm} onOpenChange={(open) => {
