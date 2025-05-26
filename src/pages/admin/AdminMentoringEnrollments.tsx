@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useMentoring } from '@/hooks/useMentoring';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
+import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
 import { EnrollmentsHeader } from '@/components/admin/mentoring/enrollments/EnrollmentsHeader';
 import { EnrollmentCard } from '@/components/admin/mentoring/enrollments/EnrollmentCard';
@@ -19,7 +20,7 @@ const AdminMentoringEnrollments = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [showForm, setShowForm] = useState(false);
-  const [editingEnrollment, setEditingEnrollment] = useState<any>(null);
+  const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
   const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
@@ -187,27 +188,36 @@ const AdminMentoringEnrollments = () => {
         </div>
       )}
 
-      {/* Create/Edit Form Dialog */}
-      <Dialog open={showForm || !!editingEnrollment} onOpenChange={(open) => {
-        if (!open) {
-          setShowForm(false);
-          setEditingEnrollment(null);
-        }
+      {/* Create Form Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => {
+        if (!open) setShowForm(false);
       }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {editingEnrollment ? 'Editar Inscrição' : 'Nova Inscrição'}
-            </DialogTitle>
+            <DialogTitle>Nova Inscrição</DialogTitle>
           </DialogHeader>
           <EnrollmentForm
-            onSubmit={editingEnrollment ? handleEditEnrollment : handleCreateEnrollment}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingEnrollment(null);
-            }}
-            initialData={editingEnrollment}
+            onSubmit={handleCreateEnrollment}
+            onCancel={() => setShowForm(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Form Dialog */}
+      <Dialog open={!!editingEnrollment} onOpenChange={(open) => {
+        if (!open) setEditingEnrollment(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Inscrição</DialogTitle>
+          </DialogHeader>
+          {editingEnrollment && (
+            <EditEnrollmentForm
+              enrollment={editingEnrollment}
+              onSubmit={handleEditEnrollment}
+              onCancel={() => setEditingEnrollment(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
