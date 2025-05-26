@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import CatalogFormDialog from '@/components/admin/mentoring/catalog/CatalogFormDialog';
-import CatalogCard from '@/components/admin/mentoring/catalog/CatalogCard';
+import CatalogDetailDialog from '@/components/admin/mentoring/catalog/CatalogDetailDialog';
 import { useMentoringCatalog } from '@/hooks/mentoring/useMentoringCatalog';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { 
@@ -43,6 +43,8 @@ export const CatalogManagement: React.FC = () => {
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedCatalog, setSelectedCatalog] = useState<MentoringCatalog | null>(null);
 
   // Update filters when search term changes
   useEffect(() => {
@@ -85,6 +87,13 @@ export const CatalogManagement: React.FC = () => {
 
   const handleViewCatalog = (catalog: MentoringCatalog) => {
     console.log('View catalog:', catalog.id);
+    setSelectedCatalog(catalog);
+    setShowDetailDialog(true);
+  };
+
+  const handleEditCatalog = (catalog: MentoringCatalog) => {
+    console.log('Edit catalog:', catalog.id);
+    // TODO: Implementar edição
   };
 
   const handleTypeFilter = (value: string) => {
@@ -381,6 +390,7 @@ export const CatalogManagement: React.FC = () => {
                       variant="ghost" 
                       size="sm" 
                       className="flex-1 h-7 text-xs"
+                      onClick={() => handleEditCatalog(catalog)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Editar
@@ -422,6 +432,14 @@ export const CatalogManagement: React.FC = () => {
         catalog={null}
         onSubmit={handleSubmitCatalog}
         isLoading={catalogLoading}
+      />
+
+      {/* Dialog de detalhes */}
+      <CatalogDetailDialog
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+        catalog={selectedCatalog}
+        onEdit={handleEditCatalog}
       />
     </>
   );
