@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, X, BookOpen, Clock, Link as LinkIcon } from 'lucide-react';
+import { Save, X, BookOpen, Clock, Link as LinkIcon, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption, CheckoutLinks } from '@/types/mentoring.types';
+import { calculateSessionsFromFrequency, getFrequencyLabel } from '@/utils/mentoringCalculations';
 import ExtensionsManager from './ExtensionsManager';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -38,7 +38,8 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     type: 'Individual',
     instructor: '',
     durationMonths: 3,
-    numberOfSessions: 4,
+    frequency: 'Semanal',
+    numberOfSessions: 0,
     price: 0,
     description: '',
     active: true,
@@ -77,6 +78,7 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         type: catalog.type,
         instructor: catalog.instructor,
         durationMonths: catalog.durationMonths || 3,
+        frequency: catalog.frequency || 'Semanal',
         numberOfSessions: catalog.numberOfSessions,
         price: catalog.price,
         description: catalog.description,
@@ -90,12 +92,14 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         }
       });
     } else {
+      const initialSessions = calculateSessionsFromFrequency(3, 'Semanal');
       setFormData({
         name: '',
         type: 'Individual',
         instructor: '',
         durationMonths: 3,
-        numberOfSessions: 4,
+        frequency: 'Semanal',
+        numberOfSessions: initialSessions,
         price: 0,
         description: '',
         active: true,
@@ -109,6 +113,17 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
       });
     }
   }, [catalog, open]);
+
+  // Recalcular sessões quando duração ou frequência mudar
+  useEffect(() => {
+    const calculatedSessions = calculateSessionsFromFrequency(formData.durationMonths, formData.frequency);
+    if (calculatedSessions !== formData.numberOfSessions) {
+      setFormData(prev => ({
+        ...prev,
+        numberOfSessions: calculatedSessions
+      }));
+    }
+  }, [formData.durationMonths, formData.frequency]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,8 +282,8 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 </div>
               </div>
 
-              {/* Duração, Sessões e Preço */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Duração, Frequência e Sessões */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="durationMonths">Duração (meses) *</Label>
                   <Input
@@ -283,15 +298,41 @@ const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="numberOfSessions">Número de Sessões *</Label>
-                  <Input
-                    id="numberOfSessions"
-                    type="number"
-                    min="1"
-                    value={formData.numberOfSessions}
-                    onChange={(e) => handleInputChange('numberOfSessions', Number(e.target.value))}
-                    required
-                  />
+                  <Label htmlFor="frequency">Periodicidade *</Label>
+                  <Select
+                    value={formData.frequency}
+                    onValueChange={(value: 'Semanal' | 'Quinzenal' | 'Mensal') => handleInputChange('frequency', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Semanal">Semanal</SelectItem>
+                      <SelectItem value="Quinzenal">Quinzenal</SelectItem>
+                      <SelectItem value="Mensal">Mensal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    {getFrequencyLabel(formData.frequency)}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calculator className="h-4 w-4" />
+                    Sessões Calculadas
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={formData.numberOfSessions || 0}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <span className="text-xs text-gray-500">auto</span>
+                  </div>
+                  <p className="text-xs text-blue-600">
+                    {formData.durationMonths} meses × {formData.frequency.toLowerCase()}
+                  </p>
                 </div>
 
                 <div className="space-y-2">

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,14 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, GraduationCap, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, User, GraduationCap, Users, Calendar, Calculator, Plus } from 'lucide-react';
 import { useMentoring } from '@/hooks/useMentoring';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
+import { calculateEndDate } from '@/utils/mentoringCalculations';
 
 const enrollmentSchema = z.object({
   studentId: z.string().min(1, 'Selecione um aluno'),
   mentoringId: z.string().min(1, 'Selecione uma mentoria'),
+  selectedExtensions: z.array(z.string()).optional(),
   startDate: z.string().min(1, 'Data de início é obrigatória'),
   endDate: z.string().min(1, 'Data de fim é obrigatória'),
   responsibleMentor: z.string().min(1, 'Mentor responsável é obrigatório'),
@@ -38,12 +41,15 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedMentoring, setSelectedMentoring] = useState<any>(null);
+  const [selectedExtensions, setSelectedExtensions] = useState<string[]>([]);
 
   const form = useForm<EnrollmentFormData>({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
       studentId: initialData?.studentId || '',
       mentoringId: initialData?.mentoringId || '',
+      selectedExtensions: initialData?.selectedExtensions || [],
       startDate: initialData?.startDate || '',
       endDate: initialData?.endDate || '',
       responsibleMentor: initialData?.responsibleMentor || '',
@@ -56,6 +62,31 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
     return catalogs.filter(catalog => catalog.active);
   }, [catalogs]);
 
+  // Calcular duração total e data fim automaticamente
+  useEffect(() => {
+    const startDate = form.watch('startDate');
+    const mentoringId = form.watch('mentoringId');
+    
+    if (startDate && selectedMentoring) {
+      let totalMonths = selectedMentoring.durationMonths;
+      
+      // Adicionar meses das extensões selecionadas
+      if (selectedExtensions.length > 0) {
+        selectedExtensions.forEach(extensionId => {
+          const extension = selectedMentoring.extensions?.find((ext: any) => ext.id === extensionId);
+          if (extension) {
+            totalMonths += extension.months;
+          }
+        });
+      }
+      
+      const calculatedEndDate = calculateEndDate(startDate, totalMonths);
+      if (calculatedEndDate) {
+        form.setValue('endDate', calculatedEndDate);
+      }
+    }
+  }, [form.watch('startDate'), selectedMentoring, selectedExtensions, form]);
+
   const handleStudentSelect = (student: any) => {
     setSelectedStudent(student);
     form.setValue('studentId', student.id);
@@ -63,9 +94,56 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
     setSearchTerm('');
   };
 
+  const handleMentoringSelect = (mentoringId: string) => {
+    const mentoring = activeCatalogs.find(c => c.id === mentoringId);
+    setSelectedMentoring(mentoring);
+    setSelectedExtensions([]);
+    form.setValue('mentoringId', mentoringId);
+    form.setValue('selectedExtensions', []);
+  };
+
+  const handleExtensionToggle = (extensionId: string) => {
+    const newSelections = selectedExtensions.includes(extensionId)
+      ? selectedExtensions.filter(id => id !== extensionId)
+      : [...selectedExtensions, extensionId];
+    
+    setSelectedExtensions(newSelections);
+    form.setValue('selectedExtensions', newSelections);
+  };
+
+  const calculateTotalSessions = () => {
+    if (!selectedMentoring) return 0;
+    
+    let total = selectedMentoring.numberOfSessions || 0;
+    
+    selectedExtensions.forEach(extensionId => {
+      const extension = selectedMentoring.extensions?.find((ext: any) => ext.id === extensionId);
+      if (extension) {
+        total += extension.totalSessions || 0;
+      }
+    });
+    
+    return total;
+  };
+
+  const calculateTotalPrice = () => {
+    if (!selectedMentoring) return 0;
+    
+    let total = selectedMentoring.price || 0;
+    
+    selectedExtensions.forEach(extensionId => {
+      const extension = selectedMentoring.extensions?.find((ext: any) => ext.id === extensionId);
+      if (extension) {
+        total += extension.price || 0;
+      }
+    });
+    
+    return total;
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Busca de Aluno */}
         <FormField
           control={form.control}
@@ -155,51 +233,132 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Mentoria */}
-          <FormField
-            control={form.control}
-            name="mentoringId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  Mentoria *
-                </FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma mentoria" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {activeCatalogs.length === 0 ? (
-                      <div className="p-3 text-center text-gray-500 text-sm">
-                        Nenhuma mentoria ativa encontrada
-                      </div>
-                    ) : (
-                      activeCatalogs.map((catalog) => (
-                        <SelectItem key={catalog.id} value={catalog.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{catalog.name}</span>
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
-                              <Badge variant="outline" className="text-xs">
-                                {catalog.type}
-                              </Badge>
-                              <span>{catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}</span>
-                              <span>R$ {catalog.price.toFixed(2)}</span>
-                            </div>
+        {/* Mentoria */}
+        <FormField
+          control={form.control}
+          name="mentoringId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Mentoria *
+              </FormLabel>
+              <Select onValueChange={handleMentoringSelect} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma mentoria" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {activeCatalogs.length === 0 ? (
+                    <div className="p-3 text-center text-gray-500 text-sm">
+                      Nenhuma mentoria ativa encontrada
+                    </div>
+                  ) : (
+                    activeCatalogs.map((catalog) => (
+                      <SelectItem key={catalog.id} value={catalog.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{catalog.name}</span>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <Badge variant="outline" className="text-xs">
+                              {catalog.type}
+                            </Badge>
+                            <span>{catalog.durationMonths} meses</span>
+                            <span>{catalog.frequency}</span>
+                            <span>{catalog.numberOfSessions} sessões</span>
+                            <span>R$ {catalog.price.toFixed(2)}</span>
                           </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
+        {/* Extensões (se disponíveis) */}
+        {selectedMentoring && selectedMentoring.extensions && selectedMentoring.extensions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Plus className="h-4 w-4" />
+                Extensões Disponíveis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {selectedMentoring.extensions.map((extension: any) => (
+                <div
+                  key={extension.id}
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedExtensions.includes(extension.id)
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => handleExtensionToggle(extension.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Extensão de {extension.months} meses</p>
+                      <p className="text-sm text-gray-600">
+                        +{extension.totalSessions} sessões • R$ {extension.price.toFixed(2)}
+                      </p>
+                      {extension.description && (
+                        <p className="text-xs text-gray-500 mt-1">{extension.description}</p>
+                      )}
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border-2 ${
+                      selectedExtensions.includes(extension.id)
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedExtensions.includes(extension.id) && (
+                        <div className="w-full h-full rounded-full bg-white transform scale-50" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Resumo da Mentoria */}
+        {selectedMentoring && (
+          <Card className="bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Calculator className="h-4 w-4" />
+                Resumo da Inscrição
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Duração Total</p>
+                  <p className="font-medium">
+                    {selectedMentoring.durationMonths + selectedExtensions.reduce((acc, extId) => {
+                      const ext = selectedMentoring.extensions?.find((e: any) => e.id === extId);
+                      return acc + (ext?.months || 0);
+                    }, 0)} meses
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total de Sessões</p>
+                  <p className="font-medium">{calculateTotalSessions()} sessões</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Valor Total</p>
+                  <p className="font-medium text-green-600">R$ {calculateTotalPrice().toFixed(2)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Mentor Responsável */}
           <FormField
             control={form.control}
@@ -252,13 +411,16 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
             )}
           />
 
-          {/* Datas */}
+          {/* Data de Início */}
           <FormField
             control={form.control}
             name="startDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Data de Início *</FormLabel>
+                <FormLabel className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Data de Início *
+                </FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -267,15 +429,22 @@ const EnrollmentForm = ({ onSubmit, onCancel, initialData, isLoading }: Enrollme
             )}
           />
 
+          {/* Data de Fim (calculada automaticamente) */}
           <FormField
             control={form.control}
             name="endDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Data de Fim *</FormLabel>
+                <FormLabel className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Data de Fim (Calculada)
+                </FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input {...field} disabled className="bg-gray-50" />
                 </FormControl>
+                <p className="text-xs text-blue-600">
+                  Calculada automaticamente com base na duração e extensões
+                </p>
                 <FormMessage />
               </FormItem>
             )}

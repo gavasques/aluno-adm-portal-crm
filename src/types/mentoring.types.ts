@@ -5,6 +5,7 @@ export interface MentoringCatalog {
   type: 'Individual' | 'Grupo';
   instructor: string;
   durationMonths: number;
+  frequency: 'Semanal' | 'Quinzenal' | 'Mensal';
   numberOfSessions: number;
   totalSessions: number;
   price: number;
@@ -29,6 +30,7 @@ export interface MentoringExtensionOption {
   id: string;
   months: number;
   price: number;
+  totalSessions: number;
   description?: string;
   checkoutLinks?: CheckoutLinks;
 }
@@ -133,7 +135,8 @@ export interface CreateMentoringCatalogData {
   type: 'Individual' | 'Grupo';
   instructor: string;
   durationMonths: number;
-  numberOfSessions: number;
+  frequency: 'Semanal' | 'Quinzenal' | 'Mensal';
+  numberOfSessions?: number; // Agora será calculado automaticamente
   price: number;
   description: string;
   active?: boolean;
