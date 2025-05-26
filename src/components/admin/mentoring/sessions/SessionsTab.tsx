@@ -4,113 +4,74 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Calendar, 
   Clock, 
-  Plus, 
   Video, 
-  FileText, 
-  MessageSquare,
-  Upload,
-  Eye,
+  Plus, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle,
+  Play,
   Edit
 } from 'lucide-react';
-import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import SessionDetailDialog from './SessionDetailDialog';
+import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import SessionForm from '../SessionForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { SessionDetailDialog } from './SessionDetailDialog';
 
 interface SessionsTabProps {
   enrollment: StudentMentoringEnrollment;
-  onCreateSession?: (data: any) => void;
-  onUpdateSession?: (sessionId: string, data: any) => void;
-  onScheduleSession?: (sessionId: string, data: any) => void;
+  sessions: MentoringSession[];
+  onCreateSession: (data: any) => void;
+  onUpdateSession: (sessionId: string, data: any) => void;
 }
 
 export const SessionsTab: React.FC<SessionsTabProps> = ({
   enrollment,
+  sessions,
   onCreateSession,
-  onUpdateSession,
-  onScheduleSession
+  onUpdateSession
 }) => {
-  const [selectedSession, setSelectedSession] = useState<MentoringSession | null>(null);
-  const [showSessionDetail, setShowSessionDetail] = useState(false);
-  const [showCreateSession, setShowCreateSession] = useState(false);
-  const [editingSession, setEditingSession] = useState<MentoringSession | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [viewingSession, setViewingSession] = useState<MentoringSession | null>(null);
 
-  // Mock sessions data - em uma implementação real, seria obtido do backend
-  const mockSessions: MentoringSession[] = [
-    {
-      id: 'session-1',
-      enrollmentId: enrollment.id,
-      sessionNumber: 1,
-      type: 'individual',
-      title: 'Sessão Inicial - Diagnóstico',
-      scheduledDate: '2025-01-30T14:00:00Z',
-      durationMinutes: 60,
-      status: 'realizada',
-      meetingLink: 'https://meet.google.com/abc-def-ghi',
-      recordingLink: 'https://drive.google.com/recording1',
-      mentorNotes: 'Aluno demonstrou interesse em e-commerce. Definimos objetivos iniciais.',
-      studentNotes: 'Primeira sessão muito produtiva!',
-      createdAt: '2025-01-20T10:00:00Z',
-      updatedAt: '2025-01-30T15:00:00Z'
-    },
-    {
-      id: 'session-2', 
-      enrollmentId: enrollment.id,
-      sessionNumber: 2,
-      type: 'individual',
-      title: 'Planejamento Estratégico',
-      scheduledDate: '2025-02-06T14:00:00Z',
-      durationMinutes: 60,
-      status: 'agendada',
-      meetingLink: 'https://meet.google.com/xyz-abc-def',
-      createdAt: '2025-01-25T10:00:00Z',
-      updatedAt: '2025-01-25T10:00:00Z'
-    },
-    {
-      id: 'session-3',
-      enrollmentId: enrollment.id,
-      sessionNumber: 3,
-      type: 'individual',
-      title: 'Sessão 3 - A definir',
-      durationMinutes: 60,
-      status: 'aguardando_agendamento',
-      createdAt: '2025-01-25T10:00:00Z',
-      updatedAt: '2025-01-25T10:00:00Z'
-    }
-  ];
+  // Separar sessões por status
+  const upcomingSessions = sessions.filter(s => 
+    s.status === 'agendada' && 
+    s.scheduledDate && 
+    new Date(s.scheduledDate) > new Date()
+  );
+  
+  const completedSessions = sessions.filter(s => s.status === 'realizada');
+  const pendingSessions = sessions.filter(s => 
+    s.status === 'aguardando_agendamento' || 
+    !s.scheduledDate
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'realizada': return 'bg-green-100 text-green-800 border-green-200';
-      case 'agendada': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
-      case 'reagendada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'no_show_aluno': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'no_show_mentor': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'agendada': return 'bg-blue-100 text-blue-800';
+      case 'realizada': return 'bg-green-100 text-green-800';
+      case 'cancelada': return 'bg-red-100 text-red-800';
+      case 'aguardando_agendamento': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'aguardando_agendamento': return 'Aguardando Agendamento';
       case 'agendada': return 'Agendada';
       case 'realizada': return 'Realizada';
       case 'cancelada': return 'Cancelada';
-      case 'reagendada': return 'Reagendada';
-      case 'no_show_aluno': return 'Faltou Aluno';
-      case 'no_show_mentor': return 'Faltou Mentor';
+      case 'aguardando_agendamento': return 'Aguardando Agendamento';
       default: return status;
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Não agendada';
+  const formatSafeDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'dd/MM/yyyy HH:mm', { locale: ptBR });
     } catch {
@@ -118,84 +79,59 @@ export const SessionsTab: React.FC<SessionsTabProps> = ({
     }
   };
 
-  const upcomingSessions = mockSessions.filter(s => 
-    s.status === 'agendada' && 
-    s.scheduledDate && 
-    new Date(s.scheduledDate) > new Date()
-  ).sort((a, b) => new Date(a.scheduledDate!).getTime() - new Date(b.scheduledDate!).getTime());
-
-  const completedSessions = mockSessions.filter(s => s.status === 'realizada');
-  const pendingSessions = mockSessions.filter(s => s.status === 'aguardando_agendamento');
-
-  const handleViewSession = (session: MentoringSession) => {
-    setSelectedSession(session);
-    setShowSessionDetail(true);
-  };
-
-  const handleEditSession = (session: MentoringSession) => {
-    setEditingSession(session);
-  };
-
-  const handleCreateSession = (data: any) => {
-    console.log('Criando nova sessão:', data);
-    if (onCreateSession) {
-      onCreateSession({ ...data, enrollmentId: enrollment.id });
-    }
-    setShowCreateSession(false);
-  };
-
-  const SessionCard = ({ session }: { session: MentoringSession }) => (
-    <Card className="mb-3">
+  const renderSessionCard = (session: MentoringSession) => (
+    <Card 
+      key={session.id} 
+      className="hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => setViewingSession(session)}
+    >
       <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <h4 className="font-semibold text-gray-900">{session.title}</h4>
-            <p className="text-sm text-gray-600">Sessão #{session.sessionNumber}</p>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Video className="h-4 w-4 text-blue-600" />
+            <span className="font-medium text-sm">{session.title}</span>
           </div>
-          <Badge className={`${getStatusColor(session.status)} text-xs`}>
+          <Badge className={getStatusColor(session.status)}>
             {getStatusLabel(session.status)}
           </Badge>
         </div>
-
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <span>{formatDate(session.scheduledDate)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-gray-400" />
-            <span>{session.durationMinutes} min</span>
-          </div>
-        </div>
-
-        {session.meetingLink && (
-          <div className="mt-3 flex items-center gap-2 text-sm">
-            <Video className="h-4 w-4 text-blue-500" />
-            <a href={session.meetingLink} target="_blank" rel="noopener noreferrer" 
-               className="text-blue-600 hover:underline">
-              Link da reunião
-            </a>
+        
+        {session.scheduledDate && (
+          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>{formatSafeDate(session.scheduledDate)}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>{session.durationMinutes} min</span>
+            </div>
           </div>
         )}
 
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2">
+          {session.status === 'agendada' && session.meetingLink && (
+            <Button 
+              size="sm" 
+              className="flex-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(session.meetingLink, '_blank');
+              }}
+            >
+              <Play className="h-3 w-3 mr-1" />
+              Entrar
+            </Button>
+          )}
           <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleViewSession(session)}
-            className="text-xs"
+            variant="outline" 
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewingSession(session);
+            }}
           >
-            <Eye className="h-3 w-3 mr-1" />
-            Ver Detalhes
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleEditSession(session)}
-            className="text-xs"
-          >
-            <Edit className="h-3 w-3 mr-1" />
-            Editar
+            <Edit className="h-3 w-3" />
           </Button>
         </div>
       </CardContent>
@@ -203,133 +139,141 @@ export const SessionsTab: React.FC<SessionsTabProps> = ({
   );
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Header com botão de criar sessão */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold">Sessões da Mentoria</h3>
-            <p className="text-sm text-gray-600">
-              {completedSessions.length} de {mockSessions.length} sessões realizadas
-            </p>
+    <div className="space-y-6">
+      {/* Progresso das Sessões */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Progresso das Sessões</CardTitle>
+            <Button onClick={() => setShowCreateForm(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Sessão
+            </Button>
           </div>
-          <Button 
-            onClick={() => setShowCreateSession(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Sessão
-          </Button>
-        </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">
+              {enrollment.sessionsUsed} de {enrollment.totalSessions} sessões realizadas
+            </span>
+            <span className="text-sm text-gray-600">
+              {Math.round((enrollment.sessionsUsed / enrollment.totalSessions) * 100)}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+              style={{ 
+                width: `${(enrollment.sessionsUsed / enrollment.totalSessions) * 100}%` 
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Progresso das sessões */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Progresso das Sessões</span>
-              <span>{completedSessions.length}/{mockSessions.length}</span>
+      {/* Sessões */}
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="upcoming" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Próximas ({upcomingSessions.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Realizadas ({completedSessions.length})
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Pendentes ({pendingSessions.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upcoming" className="space-y-4">
+          {upcomingSessions.length > 0 ? (
+            <div className="grid gap-4">
+              {upcomingSessions.map(renderSessionCard)}
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${(completedSessions.length / mockSessions.length) * 100}%` }}
-              />
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Nenhuma sessão próxima
+                </h3>
+                <p className="text-gray-600">
+                  Não há sessões agendadas para os próximos dias.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          {completedSessions.length > 0 ? (
+            <div className="grid gap-4">
+              {completedSessions.map(renderSessionCard)}
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Nenhuma sessão realizada
+                </h3>
+                <p className="text-gray-600">
+                  As sessões realizadas aparecerão aqui.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
-        {/* Abas de sessões */}
-        <Tabs defaultValue="upcoming" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="upcoming">Próximas ({upcomingSessions.length})</TabsTrigger>
-            <TabsTrigger value="completed">Realizadas ({completedSessions.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pendentes ({pendingSessions.length})</TabsTrigger>
-          </TabsList>
+        <TabsContent value="pending" className="space-y-4">
+          {pendingSessions.length > 0 ? (
+            <div className="grid gap-4">
+              {pendingSessions.map(renderSessionCard)}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Nenhuma sessão pendente
+                </h3>
+                <p className="text-gray-600">
+                  Todas as sessões estão agendadas ou foram realizadas.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
-          <TabsContent value="upcoming" className="space-y-4">
-            {upcomingSessions.length > 0 ? (
-              upcomingSessions.map(session => (
-                <SessionCard key={session.id} session={session} />
-              ))
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Nenhuma sessão agendada
-                  </h3>
-                  <p className="text-gray-500">
-                    Agende as próximas sessões para continuar a mentoria.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="completed" className="space-y-4">
-            {completedSessions.length > 0 ? (
-              completedSessions.map(session => (
-                <SessionCard key={session.id} session={session} />
-              ))
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Nenhuma sessão realizada
-                  </h3>
-                  <p className="text-gray-500">
-                    As sessões realizadas aparecerão aqui.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="pending" className="space-y-4">
-            {pendingSessions.length > 0 ? (
-              pendingSessions.map(session => (
-                <SessionCard key={session.id} session={session} />
-              ))
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Nenhuma sessão pendente
-                  </h3>
-                  <p className="text-gray-500">
-                    Todas as sessões estão agendadas ou realizadas.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Dialog de detalhes da sessão */}
-      <SessionDetailDialog
-        open={showSessionDetail}
-        onOpenChange={setShowSessionDetail}
-        session={selectedSession}
-      />
-
-      {/* Dialog de criação de sessão */}
-      <Dialog open={showCreateSession} onOpenChange={setShowCreateSession}>
+      {/* Dialog para criar nova sessão */}
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nova Sessão</DialogTitle>
           </DialogHeader>
           <SessionForm
-            onSubmit={handleCreateSession}
-            onCancel={() => setShowCreateSession(false)}
-            initialData={{ enrollmentId: enrollment.id }}
+            enrollment={enrollment}
+            onSubmit={(data) => {
+              onCreateSession(data);
+              setShowCreateForm(false);
+            }}
+            onCancel={() => setShowCreateForm(false)}
           />
         </DialogContent>
       </Dialog>
-    </>
+
+      {/* Dialog de detalhes da sessão */}
+      <SessionDetailDialog
+        session={viewingSession}
+        open={!!viewingSession}
+        onOpenChange={(open) => {
+          if (!open) setViewingSession(null);
+        }}
+      />
+    </div>
   );
 };
-
-export default SessionsTab;

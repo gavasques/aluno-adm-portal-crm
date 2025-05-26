@@ -5,112 +5,56 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useMentoring } from '@/hooks/useMentoring';
+import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 const sessionSchema = z.object({
-  enrollmentId: z.string().min(1, 'Selecione uma inscrição'),
-  type: z.enum(['individual', 'grupo'], { required_error: 'Tipo é obrigatório' }),
-  title: z.string().min(1, 'Título é obrigatório'),
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
   scheduledTime: z.string().min(1, 'Horário é obrigatório'),
   durationMinutes: z.coerce.number().min(15, 'Duração mínima de 15 minutos').max(240, 'Duração máxima de 240 minutos'),
-  accessLink: z.string().url('Link deve ser uma URL válida').optional().or(z.literal(''))
+  meetingLink: z.string().url('Link deve ser uma URL válida').optional().or(z.literal(''))
 });
 
 type SessionFormData = z.infer<typeof sessionSchema>;
 
 interface SessionFormProps {
-  onSubmit: (data: SessionFormData) => void;
+  onSubmit: (data: SessionFormData & { enrollmentId: string; type: 'individual'; title: string }) => void;
   onCancel: () => void;
+  enrollment: StudentMentoringEnrollment;
   initialData?: Partial<SessionFormData>;
   isLoading?: boolean;
 }
 
-const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionFormProps) => {
-  const { enrollments } = useMentoring();
-
-  console.log('SessionForm - enrollments count:', enrollments.length);
-
+const SessionForm = ({ onSubmit, onCancel, enrollment, initialData, isLoading }: SessionFormProps) => {
   const form = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema),
     defaultValues: {
-      enrollmentId: initialData?.enrollmentId || '',
-      type: initialData?.type || 'individual',
-      title: initialData?.title || '',
       scheduledDate: initialData?.scheduledDate || '',
       scheduledTime: initialData?.scheduledTime || '',
       durationMinutes: initialData?.durationMinutes || 60,
-      accessLink: initialData?.accessLink || ''
+      meetingLink: initialData?.meetingLink || ''
     }
   });
 
+  const handleSubmit = (data: SessionFormData) => {
+    // Calcular o número da próxima sessão
+    const nextSessionNumber = enrollment.sessionsUsed + 1;
+    
+    // Gerar título automaticamente
+    const title = `Mentoria - ${enrollment.studentId} - Sessão ${nextSessionNumber} de ${enrollment.totalSessions}`;
+    
+    onSubmit({
+      ...data,
+      enrollmentId: enrollment.id,
+      type: 'individual',
+      title
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="enrollmentId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Inscrição</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma inscrição" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {enrollments.map((enrollment) => (
-                      <SelectItem key={enrollment.id} value={enrollment.id}>
-                        {enrollment.mentoring.name} - Aluno {enrollment.studentId}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo de Sessão</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="grupo">Grupo</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Título da Sessão</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: Fundamentos do E-commerce" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <FormField
             control={form.control}
             name="scheduledDate"
@@ -155,7 +99,7 @@ const SessionForm = ({ onSubmit, onCancel, initialData, isLoading }: SessionForm
 
           <FormField
             control={form.control}
-            name="accessLink"
+            name="meetingLink"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Link de Acesso (Opcional)</FormLabel>
