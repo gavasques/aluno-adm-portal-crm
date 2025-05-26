@@ -10,18 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Save, X, BookOpen, Plus, User, Users, Calendar, DollarSign, Settings, Edit, Zap } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Save, X, BookOpen, Plus, User, Users, Calendar, DollarSign, Settings, Edit, Zap, Clock, Target } from 'lucide-react';
 import ExtensionsManager from './ExtensionsManager';
 import { MentoringExtensionOption } from '@/types/mentoring.types';
 
 interface MentoringCatalog {
   id: string;
-  title: string;
-  mentor: string;
-  duration: string;
-  date: string;
-  status: "Ativa" | "Inativa" | "Cancelada";
-  category: string;
+  name: string;
+  instructor: string;
+  durationMonths: number;
+  numberOfSessions: number;
+  active: boolean;
   type: "Individual" | "Grupo";
   price: number;
   description: string;
@@ -85,24 +85,21 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Ativa": return "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300";
-      case "Inativa": return "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border-gray-300";
-      case "Cancelada": return "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300";
-      default: return "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border-gray-300";
-    }
+  const getStatusColor = (active: boolean) => {
+    return active 
+      ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300"
+      : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border-gray-300";
   };
 
   if (!formData) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white">
-        <DialogHeader className="pb-4">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
+        <DialogHeader className="pb-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg text-white shadow-lg">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl text-white shadow-lg">
                 <Edit className="h-5 w-5" />
               </div>
               <div>
@@ -117,9 +114,15 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                       <><Users className="h-3 w-3 mr-1" />{formData.type}</>
                     )}
                   </Badge>
-                  <Badge className={`text-xs px-2 py-1 border ${getStatusColor(formData.status)}`}>
-                    {formData.status}
+                  <Badge className={`text-xs px-2 py-1 border ${getStatusColor(formData.active)}`}>
+                    {formData.active ? 'Ativa' : 'Inativa'}
                   </Badge>
+                  {formData.extensions && formData.extensions.length > 0 && (
+                    <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200">
+                      <Plus className="h-3 w-3 mr-1" />
+                      {formData.extensions.length} extensão(ões)
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
@@ -127,17 +130,17 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
             <TabsTrigger 
               value="basic" 
-              className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 transition-all duration-200"
             >
               <Settings className="h-4 w-4" />
               Informações Básicas
             </TabsTrigger>
             <TabsTrigger 
               value="extensions" 
-              className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 transition-all duration-200"
             >
               <Zap className="h-4 w-4" />
               Extensões
@@ -146,7 +149,7 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
 
           <TabsContent value="basic" className="space-y-4 mt-4">
             {/* Card de Informações Básicas */}
-            <Card className="border-0 shadow-sm bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-md transition-all duration-300">
+            <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-500">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-blue-500" />
@@ -154,39 +157,48 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-sm font-medium text-gray-700">Título da Mentoria</Label>
+                    <Label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <Target className="h-3 w-3 text-gray-500" />
+                      Nome da Mentoria *
+                    </Label>
                     <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="Nome da mentoria"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm transition-all duration-200"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mentor" className="text-sm font-medium text-gray-700">Mentor</Label>
+                    <Label htmlFor="instructor" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <User className="h-3 w-3 text-gray-500" />
+                      Mentor *
+                    </Label>
                     <Input
-                      id="mentor"
-                      value={formData.mentor}
-                      onChange={(e) => handleInputChange('mentor', e.target.value)}
+                      id="instructor"
+                      value={formData.instructor}
+                      onChange={(e) => handleInputChange('instructor', e.target.value)}
                       placeholder="Nome do mentor"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm transition-all duration-200"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="type" className="text-sm font-medium text-gray-700">Tipo</Label>
+                    <Label htmlFor="type" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <Users className="h-3 w-3 text-gray-500" />
+                      Tipo *
+                    </Label>
                     <Select
                       value={formData.type}
                       onValueChange={(value: "Individual" | "Grupo") => handleInputChange('type', value)}
                     >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 h-9 text-sm">
+                      <SelectTrigger className="border-gray-200 focus:border-blue-500 h-9 text-sm transition-all duration-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
                         <SelectItem value="Individual">
                           <div className="flex items-center gap-2">
                             <User className="h-3 w-3" />
@@ -204,86 +216,80 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="category" className="text-sm font-medium text-gray-700">Categoria</Label>
+                    <Label htmlFor="durationMonths" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-gray-500" />
+                      Duração (meses) *
+                    </Label>
                     <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => handleInputChange('category', e.target.value)}
-                      placeholder="Categoria da mentoria"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm"
+                      id="durationMonths"
+                      type="number"
+                      value={formData.durationMonths}
+                      onChange={(e) => handleInputChange('durationMonths', Number(e.target.value))}
+                      placeholder="3"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm transition-all duration-200"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="duration" className="text-sm font-medium text-gray-700">Duração</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        id="duration"
-                        value={formData.duration}
-                        onChange={(e) => handleInputChange('duration', e.target.value)}
-                        placeholder="Ex: 2h, 1h30m"
-                        className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm"
-                      />
-                    </div>
+                    <Label htmlFor="numberOfSessions" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-gray-500" />
+                      Número de Sessões *
+                    </Label>
+                    <Input
+                      id="numberOfSessions"
+                      type="number"
+                      value={formData.numberOfSessions}
+                      onChange={(e) => handleInputChange('numberOfSessions', Number(e.target.value))}
+                      placeholder="12"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm transition-all duration-200"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price" className="text-sm font-medium text-gray-700">Preço (R$)</Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        id="price"
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', Number(e.target.value))}
-                        placeholder="299"
-                        className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm"
-                      />
-                    </div>
+                    <Label htmlFor="price" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <DollarSign className="h-3 w-3 text-gray-500" />
+                      Preço (R$) *
+                    </Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange('price', Number(e.target.value))}
+                      placeholder="299"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm transition-all duration-200"
+                    />
                   </div>
                 </div>
 
                 <Separator className="my-4" />
 
-                <div className="space-y-2">
-                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: "Ativa" | "Inativa" | "Cancelada") => handleInputChange('status', value)}
-                  >
-                    <SelectTrigger className="border-gray-200 focus:border-blue-500 h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ativa">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          Ativa
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="Inativa">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                          Inativa
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="Cancelada">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          Cancelada
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${formData.active ? 'bg-green-500' : 'bg-gray-400'} transition-colors duration-200`}></div>
+                    <Label htmlFor="active" className="text-sm font-medium text-gray-700">
+                      Status da Mentoria
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-600">{formData.active ? 'Ativa' : 'Inativa'}</span>
+                    <Switch
+                      id="active"
+                      checked={formData.active}
+                      onCheckedChange={(checked) => handleInputChange('active', checked)}
+                      className="data-[state=checked]:bg-green-500"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Card de Descrição */}
-            <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-all duration-300">
+            <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-all duration-300 border-l-4 border-l-purple-500">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold text-gray-900">Descrição</CardTitle>
+                <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                  <Edit className="h-4 w-4 text-purple-500" />
+                  Descrição da Mentoria
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <Textarea
@@ -292,19 +298,20 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Descreva os objetivos e conteúdo da mentoria..."
                   rows={4}
-                  className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-sm resize-none"
+                  className="border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-sm resize-none transition-all duration-200"
                 />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="extensions" className="mt-4">
-            <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-md transition-all duration-300">
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-600">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
                   <Zap className="h-4 w-4 text-blue-600" />
                   Gerenciar Extensões
                 </CardTitle>
+                <p className="text-xs text-gray-600 mt-1">Configure extensões adicionais para oferecer aos alunos</p>
               </CardHeader>
               <CardContent>
                 <ExtensionsManager
@@ -316,12 +323,12 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="pt-4 border-t border-gray-200 mt-6">
-          <div className="flex gap-2 w-full justify-end">
+        <DialogFooter className="pt-4 border-t border-gray-200 mt-6 bg-gray-50 rounded-b-lg -mx-6 px-6 pb-6">
+          <div className="flex gap-3 w-full justify-end">
             <Button 
               variant="outline" 
               onClick={onClose}
-              className="bg-white hover:bg-gray-50 border-gray-200 text-gray-700 h-9 px-4 text-sm"
+              className="bg-white hover:bg-gray-50 border-gray-200 text-gray-700 h-9 px-4 text-sm transition-all duration-200 hover:shadow-sm"
             >
               <X className="h-4 w-4 mr-1" />
               Cancelar
