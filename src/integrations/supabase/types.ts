@@ -202,6 +202,113 @@ export type Database = {
         }
         Relationships: []
       }
+      calendly_configs: {
+        Row: {
+          active: boolean | null
+          calendly_username: string
+          created_at: string | null
+          event_type_slug: string
+          id: string
+          mentor_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          calendly_username: string
+          created_at?: string | null
+          event_type_slug: string
+          id?: string
+          mentor_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          calendly_username?: string
+          created_at?: string | null
+          event_type_slug?: string
+          id?: string
+          mentor_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendly_configs_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendly_events: {
+        Row: {
+          calendly_cancel_url: string | null
+          calendly_event_uri: string
+          calendly_reschedule_url: string | null
+          created_at: string | null
+          duration_minutes: number
+          end_time: string
+          event_name: string
+          id: string
+          meeting_link: string | null
+          mentor_id: string | null
+          start_time: string
+          status: string | null
+          student_id: string | null
+          synced_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendly_cancel_url?: string | null
+          calendly_event_uri: string
+          calendly_reschedule_url?: string | null
+          created_at?: string | null
+          duration_minutes: number
+          end_time: string
+          event_name: string
+          id?: string
+          meeting_link?: string | null
+          mentor_id?: string | null
+          start_time: string
+          status?: string | null
+          student_id?: string | null
+          synced_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendly_cancel_url?: string | null
+          calendly_event_uri?: string
+          calendly_reschedule_url?: string | null
+          created_at?: string | null
+          duration_minutes?: number
+          end_time?: string
+          event_name?: string
+          id?: string
+          meeting_link?: string | null
+          mentor_id?: string | null
+          start_time?: string
+          status?: string | null
+          student_id?: string | null
+          synced_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendly_events_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendly_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string

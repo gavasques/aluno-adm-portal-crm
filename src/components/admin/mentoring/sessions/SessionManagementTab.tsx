@@ -9,6 +9,8 @@ import { ptBR } from 'date-fns/locale';
 import { MentoringSession, StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { SessionScheduleDialog } from './SessionScheduleDialog';
 import { SessionStatusDialog } from './SessionStatusDialog';
+import { CalendlyButton } from '@/components/calendly/CalendlyButton';
+import { CalendlyEventPayload } from '@/types/calendly.types';
 
 interface SessionManagementTabProps {
   enrollment: StudentMentoringEnrollment;
@@ -65,7 +67,23 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
     }
   };
 
+  const handleCalendlyEventScheduled = (sessionId: string) => (eventData: CalendlyEventPayload) => {
+    // Atualizar a sessão com os dados do Calendly
+    const sessionData = {
+      scheduledDate: eventData.payload.event.start_time,
+      status: 'agendada',
+      calendlyEventUri: eventData.payload.uri,
+      durationMinutes: eventData.payload.event.duration,
+      observations: `Agendado via Calendly: ${eventData.payload.event.name}`
+    };
+
+    onUpdateSession(sessionId, sessionData);
+  };
+
   const progress = getSessionProgress();
+  
+  // Get mentor ID from enrollment - in a real implementation this would come from the enrollment data
+  const mentorId = enrollment?.responsibleMentor || 'mentor-id-example';
 
   return (
     <div className="space-y-6">
@@ -226,14 +244,27 @@ export const SessionManagementTab: React.FC<SessionManagementTabProps> = ({
                 {/* Ações */}
                 <div className="flex flex-col gap-2 ml-4">
                   {session.status === 'aguardando_agendamento' && (
-                    <Button
-                      size="sm"
-                      onClick={() => setScheduleDialog({ open: true, session })}
-                      className="text-xs"
-                    >
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Agendar
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => setScheduleDialog({ open: true, session })}
+                        className="text-xs"
+                      >
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Agendar Manual
+                      </Button>
+                      
+                      <CalendlyButton
+                        mentorId={mentorId}
+                        onEventScheduled={handleCalendlyEventScheduled(session.id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Via Calendly
+                      </CalendlyButton>
+                    </div>
                   )}
                   
                   {session.status === 'agendada' && session.meetingLink && (
