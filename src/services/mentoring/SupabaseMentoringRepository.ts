@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { IMentoringRepository } from '@/features/mentoring/types/contracts.types';
 import { 
@@ -36,7 +37,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       name: data.name,
       type: (data.type as 'Individual' | 'Grupo'),
       instructor: data.instructor,
-      durationWeeks: data.duration_weeks,
+      durationMonths: Math.ceil(data.duration_weeks / 4), // Convertendo semanas para meses
       numberOfSessions: data.number_of_sessions,
       totalSessions: data.total_sessions,
       price: data.price,
@@ -56,7 +57,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       name: data.name,
       type: data.type,
       instructor: data.instructor,
-      duration_weeks: data.durationWeeks,
+      duration_weeks: data.durationMonths * 4, // Convertendo meses para semanas
       number_of_sessions: data.numberOfSessions,
       total_sessions: data.numberOfSessions,
       price: data.price,
@@ -122,7 +123,7 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     if (data.name !== undefined) updateData.name = data.name;
     if (data.type !== undefined) updateData.type = data.type;
     if (data.instructor !== undefined) updateData.instructor = data.instructor;
-    if (data.durationWeeks !== undefined) updateData.duration_weeks = data.durationWeeks;
+    if (data.durationMonths !== undefined) updateData.duration_weeks = data.durationMonths * 4;
     if (data.numberOfSessions !== undefined) {
       updateData.number_of_sessions = data.numberOfSessions;
       updateData.total_sessions = data.numberOfSessions;

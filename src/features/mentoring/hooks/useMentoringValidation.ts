@@ -11,8 +11,8 @@ export const useMentoringValidation = () => {
     if (!data.instructor || data.instructor.trim().length < 2) {
       errors.push('Instrutor é obrigatório');
     }
-    if (!data.durationWeeks || data.durationWeeks < 1) {
-      errors.push('Duração deve ser de pelo menos 1 semana');
+    if (!data.durationMonths || data.durationMonths < 1) {
+      errors.push('Duração deve ser de pelo menos 1 mês');
     }
     if (!data.numberOfSessions || data.numberOfSessions < 1) {
       errors.push('Deve ter pelo menos 1 sessão');

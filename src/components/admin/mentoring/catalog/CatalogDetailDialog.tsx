@@ -107,7 +107,7 @@ const CatalogDetailDialog: React.FC<CatalogDetailDialogProps> = ({
                     <Clock className="h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm font-medium">Duração</p>
-                      <p className="text-sm text-gray-600">{catalog.durationWeeks} semanas</p>
+                      <p className="text-sm text-gray-600">{catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}</p>
                     </div>
                   </div>
 
