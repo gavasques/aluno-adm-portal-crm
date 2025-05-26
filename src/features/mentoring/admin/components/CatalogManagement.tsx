@@ -12,6 +12,7 @@ import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { MentoringLoadingState } from '../../shared/components/LoadingState';
 import CatalogFormDialog from '@/components/admin/mentoring/catalog/CatalogFormDialog';
 import CatalogDetailDialog from '@/components/admin/mentoring/catalog/CatalogDetailDialog';
+import CatalogEditModal from '@/components/admin/mentoring/catalog/CatalogEditModal';
 import { useSupabaseMentoringCatalog } from '@/hooks/mentoring/useSupabaseMentoringCatalog';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { 
@@ -41,6 +42,7 @@ export const CatalogManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState<MentoringCatalog | null>(null);
 
   // Filtrar catálogos
@@ -89,7 +91,29 @@ export const CatalogManagement: React.FC = () => {
 
   const handleEditCatalog = (catalog: MentoringCatalog) => {
     console.log('✏️ Editando catálogo:', catalog.id);
-    // TODO: Implementar edição
+    setSelectedCatalog(catalog);
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateCatalog = async (updatedCatalog: MentoringCatalog) => {
+    try {
+      console.log('🔄 Atualizando catálogo:', updatedCatalog);
+      await updateCatalog(updatedCatalog.id, {
+        name: updatedCatalog.name,
+        type: updatedCatalog.type,
+        instructor: updatedCatalog.instructor,
+        durationMonths: updatedCatalog.durationMonths,
+        numberOfSessions: updatedCatalog.numberOfSessions,
+        price: updatedCatalog.price,
+        description: updatedCatalog.description,
+        active: updatedCatalog.active,
+        extensions: updatedCatalog.extensions
+      });
+      setShowEditDialog(false);
+      setSelectedCatalog(null);
+    } catch (error) {
+      console.error('Erro ao atualizar mentoria:', error);
+    }
   };
 
   const clearFilters = () => {
@@ -444,12 +468,23 @@ export const CatalogManagement: React.FC = () => {
         isLoading={loading}
       />
 
-      {/* Dialog de detalhes - usando o novo componente */}
+      {/* Dialog de detalhes */}
       <CatalogDetailDialog
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
         catalog={selectedCatalog}
         onEdit={handleEditCatalog}
+      />
+
+      {/* Dialog de edição */}
+      <CatalogEditModal
+        catalog={selectedCatalog}
+        isOpen={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setSelectedCatalog(null);
+        }}
+        onSave={handleUpdateCatalog}
       />
     </>
   );
