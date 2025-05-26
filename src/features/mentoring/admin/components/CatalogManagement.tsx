@@ -34,7 +34,7 @@ export const CatalogManagement: React.FC = () => {
   const { filteredCatalogs, filters, setFilters, clearFilters } = useMentoringFilters();
   const { searchTerm, debouncedSearchTerm, setSearchTerm } = useDebouncedSearch();
   const { createCatalog, loading: catalogLoading } = useMentoringCatalog();
-  const { mentors } = useMentorsForEnrollment();
+  const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -42,6 +42,12 @@ export const CatalogManagement: React.FC = () => {
   useEffect(() => {
     setFilters({ search: debouncedSearchTerm });
   }, [debouncedSearchTerm, setFilters]);
+
+  // Debug logs
+  useEffect(() => {
+    console.log('Mentors carregados:', mentors);
+    console.log('Catalogs disponíveis:', state.catalogs);
+  }, [mentors, state.catalogs]);
 
   const stats = {
     total: state.catalogs.length,
@@ -76,8 +82,13 @@ export const CatalogManagement: React.FC = () => {
     setFilters({ status: value || undefined });
   };
 
-  // Função para obter o nome do mentor pelo ID ou retornar o nome se já for string
+  // Função melhorada para obter o nome do mentor
   const getMentorName = (instructor: string) => {
+    console.log('Buscando mentor para instructor:', instructor);
+    console.log('Mentors disponíveis:', mentors);
+    
+    if (!instructor) return 'Sem mentor';
+    
     // Se já é um nome (não é um UUID), retorna como está
     if (!instructor.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       return instructor;
@@ -85,15 +96,30 @@ export const CatalogManagement: React.FC = () => {
     
     // Se é um UUID, procura o mentor na lista
     const mentor = mentors.find(m => m.id === instructor);
-    return mentor ? mentor.name : instructor;
+    const result = mentor ? mentor.name : instructor;
+    console.log('Resultado da busca do mentor:', result);
+    return result;
   };
 
-  // Função para remover tags HTML e renderizar texto limpo
-  const getCleanDescription = (htmlDescription: string) => {
-    // Remove tags HTML e retorna apenas o texto
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlDescription;
-    return tempDiv.textContent || tempDiv.innerText || htmlDescription;
+  // Função para renderizar descrição HTML formatada
+  const renderFormattedDescription = (htmlDescription: string) => {
+    if (!htmlDescription) return '';
+    
+    // Sanitizar e renderizar HTML básico
+    const cleanHtml = htmlDescription
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ''); // Remove iframes
+    
+    return (
+      <div 
+        className="text-gray-700 text-xs leading-relaxed max-h-80 overflow-y-auto prose prose-xs"
+        dangerouslySetInnerHTML={{ __html: cleanHtml }}
+        style={{
+          maxHeight: '20rem', // Aproximadamente 20 linhas
+          lineHeight: '1.4'
+        }}
+      />
+    );
   };
 
   const breadcrumbItems = [
@@ -335,7 +361,9 @@ export const CatalogManagement: React.FC = () => {
                       <h3 className="font-bold text-base text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
                         {catalog.name}
                       </h3>
-                      <p className="text-gray-600 text-xs mt-1">por {getMentorName(catalog.instructor)}</p>
+                      <p className="text-gray-600 text-xs mt-1">
+                        por {mentorsLoading ? 'Carregando...' : getMentorName(catalog.instructor)}
+                      </p>
                     </div>
                   </div>
                   <Badge 
@@ -381,7 +409,7 @@ export const CatalogManagement: React.FC = () => {
                   </div>
                   
                   <div className="pt-2 border-t border-gray-100">
-                    <p className="text-gray-700 text-xs line-clamp-2">{getCleanDescription(catalog.description)}</p>
+                    {renderFormattedDescription(catalog.description)}
                   </div>
                 </div>
               </CardContent>

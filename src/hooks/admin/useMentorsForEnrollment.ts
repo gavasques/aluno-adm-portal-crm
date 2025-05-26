@@ -15,6 +15,8 @@ export const useMentorsForEnrollment = () => {
   const fetchMentors = async () => {
     setLoading(true);
     try {
+      console.log('Buscando mentores...');
+      
       // Buscar usuários que têm is_mentor = true
       const { data, error } = await supabase
         .from('profiles')
@@ -29,6 +31,8 @@ export const useMentorsForEnrollment = () => {
         return;
       }
 
+      console.log('Dados brutos dos mentores:', data);
+
       // Mapear dados para o formato esperado
       const mentorsData = (data || []).map(profile => ({
         id: profile.id,
@@ -36,6 +40,7 @@ export const useMentorsForEnrollment = () => {
         email: profile.email
       }));
 
+      console.log('Mentores formatados:', mentorsData);
       setMentors(mentorsData);
     } catch (error) {
       console.error('Erro ao buscar mentores:', error);
@@ -51,6 +56,7 @@ export const useMentorsForEnrollment = () => {
 
   return {
     mentors,
-    loading
+    loading,
+    refetch: fetchMentors
   };
 };
