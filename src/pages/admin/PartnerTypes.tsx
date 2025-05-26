@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { usePartnerTypes } from "@/hooks/admin/usePartnerTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -33,33 +33,52 @@ const PartnerTypes = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-6">
-        <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastro de Tipos de Parceiros</h1>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-48 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-32" />
         </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-96" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Cadastro de Tipos de Parceiros</h1>
-      
-      <div className="flex justify-between items-center mb-6">
-        <p className="text-gray-500">Total: {partnerTypes.length} tipos</p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tipos de Parceiros</h1>
+          <p className="text-gray-600 mt-1">
+            Gerencie os tipos de parceiros disponíveis no sistema
+          </p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
               Novo Tipo de Parceiro
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Adicionar Novo Tipo de Parceiro</DialogTitle>
+              <DialogDescription>
+                Preencha as informações para adicionar um novo tipo de parceiro ao sistema.
+              </DialogDescription>
             </DialogHeader>
             <AddItemForm 
               onSubmit={handleAddPartnerType} 
@@ -70,14 +89,23 @@ const PartnerTypes = () => {
         </Dialog>
       </div>
       
-      <Card>
+      <Card className="border-0 shadow-lg">
         <CardHeader>
-          <CardTitle>Lista de Tipos de Parceiros</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Lista de Tipos de Parceiros</span>
+            <span className="text-sm font-normal text-gray-500">
+              {partnerTypes.length} tipos cadastrados
+            </span>
+          </CardTitle>
+          <CardDescription>
+            Aqui você pode visualizar e gerenciar todos os tipos de parceiros cadastrados.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ListTable 
             items={listItems} 
-            onDelete={handleDeletePartnerType} 
+            onDelete={handleDeletePartnerType}
+            showDescription={true}
           />
         </CardContent>
       </Card>
