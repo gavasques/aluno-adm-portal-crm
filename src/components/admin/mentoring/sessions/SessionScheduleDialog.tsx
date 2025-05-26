@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar, Clock, Link2, Video, ExternalLink } from 'lucide-react';
 import { MentoringSession } from '@/types/mentoring.types';
+import { isValid } from 'date-fns';
 
 const scheduleSchema = z.object({
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
@@ -37,8 +38,22 @@ export const SessionScheduleDialog: React.FC<SessionScheduleDialogProps> = ({
   const form = useForm<ScheduleFormData>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
-      scheduledDate: session?.scheduledDate ? new Date(session.scheduledDate).toISOString().split('T')[0] : '',
-      scheduledTime: session?.scheduledDate ? new Date(session.scheduledDate).toISOString().split('T')[1].slice(0, 5) : '',
+      scheduledDate: session?.scheduledDate ? (() => {
+        try {
+          const date = new Date(session.scheduledDate);
+          return isValid(date) ? date.toISOString().split('T')[0] : '';
+        } catch {
+          return '';
+        }
+      })() : '',
+      scheduledTime: session?.scheduledDate ? (() => {
+        try {
+          const date = new Date(session.scheduledDate);
+          return isValid(date) ? date.toISOString().split('T')[1].slice(0, 5) : '';
+        } catch {
+          return '';
+        }
+      })() : '',
       meetingLink: session?.meetingLink || '',
       calendlyLink: session?.calendlyLink || '',
       mentorNotes: session?.mentorNotes || ''
@@ -48,17 +63,21 @@ export const SessionScheduleDialog: React.FC<SessionScheduleDialogProps> = ({
   const handleSubmit = (data: ScheduleFormData) => {
     if (!session) return;
 
-    const scheduledDateTime = new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString();
-    
-    onSchedule(session.id, {
-      scheduledDate: scheduledDateTime,
-      meetingLink: data.meetingLink || undefined,
-      calendlyLink: data.calendlyLink || undefined,
-      mentorNotes: data.mentorNotes || undefined,
-      status: 'agendada'
-    });
-    
-    onOpenChange(false);
+    try {
+      const scheduledDateTime = new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString();
+      
+      onSchedule(session.id, {
+        scheduledDate: scheduledDateTime,
+        meetingLink: data.meetingLink || undefined,
+        calendlyLink: data.calendlyLink || undefined,
+        mentorNotes: data.mentorNotes || undefined,
+        status: 'agendada'
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error scheduling session:', error);
+    }
   };
 
   const openCalendly = () => {
@@ -157,15 +176,15 @@ export const SessionScheduleDialog: React.FC<SessionScheduleDialogProps> = ({
                   <FormItem>
                     <FormLabel>Link da Reunião (Opcional)</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="https://meet.google.com/..." 
-                        {...field}
-                        className="pl-10"
-                      />
+                      <div className="relative">
+                        <Input 
+                          placeholder="https://meet.google.com/..." 
+                          {...field}
+                          className="pl-10"
+                        />
+                        <Video className="h-4 w-4 text-gray-400 absolute left-3 top-3" />
+                      </div>
                     </FormControl>
-                    <div className="absolute left-3 top-9">
-                      <Video className="h-4 w-4 text-gray-400" />
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -178,15 +197,15 @@ export const SessionScheduleDialog: React.FC<SessionScheduleDialogProps> = ({
                   <FormItem>
                     <FormLabel>Link do Calendly (Opcional)</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="https://calendly.com/..." 
-                        {...field}
-                        className="pl-10"
-                      />
+                      <div className="relative">
+                        <Input 
+                          placeholder="https://calendly.com/..." 
+                          {...field}
+                          className="pl-10"
+                        />
+                        <Link2 className="h-4 w-4 text-gray-400 absolute left-3 top-3" />
+                      </div>
                     </FormControl>
-                    <div className="absolute left-3 top-9">
-                      <Link2 className="h-4 w-4 text-gray-400" />
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

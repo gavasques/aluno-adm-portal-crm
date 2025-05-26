@@ -127,7 +127,7 @@ export interface CreateSessionData {
   title: string;
   scheduledDate?: string;
   durationMinutes: number;
-  accessLink?: string;
+  meetingLink?: string;
 }
 
 export interface UpdateSessionData extends Partial<CreateSessionData> {
