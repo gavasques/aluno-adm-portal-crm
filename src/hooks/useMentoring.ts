@@ -19,35 +19,48 @@ import {
 } from '@/data/expandedMentoringData';
 
 export const useMentoring = () => {
-  // Inicializar com dados mock
+  console.log('=== useMentoring HOOK INITIALIZATION ===');
+  console.log('Available data from expandedMentoringData:');
+  console.log('- expandedMentoringCatalog:', expandedMentoringCatalog?.length || 0);
+  console.log('- expandedStudentEnrollments:', expandedStudentEnrollments?.length || 0);
+  console.log('- expandedMentoringSessions:', expandedMentoringSessions?.length || 0);
+  console.log('- expandedMentoringMaterials:', expandedMentoringMaterials?.length || 0);
+
+  // Inicializar com dados mock garantindo que existem
   const [catalogs, setCatalogs] = useState<MentoringCatalog[]>(() => {
-    console.log('Initializing catalogs with mock data:', expandedMentoringCatalog.length);
-    return expandedMentoringCatalog;
+    const data = expandedMentoringCatalog || [];
+    console.log('Initializing catalogs with:', data.length, 'items');
+    return data;
   });
   
   const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>(() => {
-    console.log('Initializing enrollments with mock data:', expandedStudentEnrollments.length);
-    return expandedStudentEnrollments;
+    const data = expandedStudentEnrollments || [];
+    console.log('Initializing enrollments with:', data.length, 'items');
+    return data;
   });
   
   const [sessions, setSessions] = useState<MentoringSession[]>(() => {
-    console.log('Initializing sessions with mock data:', expandedMentoringSessions.length);
-    return expandedMentoringSessions;
+    const data = expandedMentoringSessions || [];
+    console.log('Initializing sessions with:', data.length, 'items');
+    return data;
   });
   
   const [materials] = useState<MentoringMaterial[]>(() => {
-    console.log('Initializing materials with mock data:', expandedMentoringMaterials.length);
-    return expandedMentoringMaterials;
+    const data = expandedMentoringMaterials || [];
+    console.log('Initializing materials with:', data.length, 'items');
+    return data;
   });
 
-  console.log('useMentoring hook - Current state:');
-  console.log('- catalogs:', catalogs.length);
-  console.log('- enrollments:', enrollments.length);
-  console.log('- sessions:', sessions.length);
-  console.log('- materials:', materials.length);
+  console.log('=== useMentoring CURRENT STATE ===');
+  console.log('- catalogs count:', catalogs.length);
+  console.log('- enrollments count:', enrollments.length);
+  console.log('- sessions count:', sessions.length);
+  console.log('- materials count:', materials.length);
 
   // Admin functions
   const createMentoringCatalog = async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
+    console.log('Creating mentoring catalog with data:', data);
+    
     const newCatalog: MentoringCatalog = {
       id: `catalog-${Date.now()}`,
       ...data,
@@ -60,7 +73,7 @@ export const useMentoring = () => {
     
     setCatalogs(prev => {
       const updated = [...prev, newCatalog];
-      console.log('Created new catalog, total catalogs:', updated.length);
+      console.log('Created new catalog, total catalogs now:', updated.length);
       return updated;
     });
     return newCatalog;
@@ -99,6 +112,8 @@ export const useMentoring = () => {
   };
 
   const createSession = async (data: CreateSessionData): Promise<MentoringSession> => {
+    console.log('Creating session with data:', data);
+    
     const newSession: MentoringSession = {
       id: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...data,
@@ -109,7 +124,7 @@ export const useMentoring = () => {
     
     setSessions(prev => {
       const updated = [...prev, newSession];
-      console.log('Created new session, total sessions:', updated.length);
+      console.log('Created new session, total sessions now:', updated.length);
       return updated;
     });
     return newSession;
@@ -117,7 +132,10 @@ export const useMentoring = () => {
 
   const updateSession = async (id: string, data: UpdateSessionData): Promise<MentoringSession | null> => {
     const session = sessions.find(s => s.id === id);
-    if (!session) return null;
+    if (!session) {
+      console.log('Session not found for update:', id);
+      return null;
+    }
     
     const updated = {
       ...session,
@@ -133,7 +151,10 @@ export const useMentoring = () => {
   const addExtension = async (data: CreateExtensionData): Promise<boolean> => {
     try {
       const enrollment = enrollments.find(e => e.id === data.enrollmentId);
-      if (!enrollment) return false;
+      if (!enrollment) {
+        console.log('Enrollment not found for extension:', data.enrollmentId);
+        return false;
+      }
 
       const extension: MentoringExtension = {
         id: `ext-${Date.now()}`,
@@ -172,32 +193,43 @@ export const useMentoring = () => {
 
   // Student functions
   const getMyEnrollments = (studentId: string): StudentMentoringEnrollment[] => {
-    return enrollments.filter(e => e.studentId === studentId);
+    const result = enrollments.filter(e => e.studentId === studentId);
+    console.log(`Getting enrollments for student ${studentId}:`, result.length);
+    return result;
   };
 
   const getEnrollmentSessions = (enrollmentId: string): MentoringSession[] => {
-    return sessions.filter(s => s.enrollmentId === enrollmentId);
+    const result = sessions.filter(s => s.enrollmentId === enrollmentId);
+    console.log(`Getting sessions for enrollment ${enrollmentId}:`, result.length);
+    return result;
   };
 
   const getEnrollmentMaterials = (enrollmentId: string): MentoringMaterial[] => {
-    return materials.filter(m => m.enrollmentId === enrollmentId);
+    const result = materials.filter(m => m.enrollmentId === enrollmentId);
+    console.log(`Getting materials for enrollment ${enrollmentId}:`, result.length);
+    return result;
   };
 
   const getMyUpcomingSessions = (studentId: string): MentoringSession[] => {
     const studentEnrollments = getMyEnrollments(studentId);
     const enrollmentIds = studentEnrollments.map(e => e.id);
     
-    return sessions
+    const result = sessions
       .filter(s => 
         enrollmentIds.includes(s.enrollmentId) && 
         s.status === 'agendada' &&
         new Date(s.scheduledDate) > new Date()
       )
       .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
+    
+    console.log(`Getting upcoming sessions for student ${studentId}:`, result.length);
+    return result;
   };
 
   const getSessionDetails = (sessionId: string): MentoringSession | undefined => {
-    return sessions.find(s => s.id === sessionId);
+    const result = sessions.find(s => s.id === sessionId);
+    console.log(`Getting session details for ${sessionId}:`, result ? 'found' : 'not found');
+    return result;
   };
 
   // Statistics
@@ -214,6 +246,9 @@ export const useMentoring = () => {
       isCompleted: enrollment.sessionsUsed >= enrollment.totalSessions
     };
   };
+
+  console.log('=== useMentoring HOOK RETURNING DATA ===');
+  console.log('Final counts - catalogs:', catalogs.length, 'enrollments:', enrollments.length, 'sessions:', sessions.length, 'materials:', materials.length);
 
   return {
     // Data
