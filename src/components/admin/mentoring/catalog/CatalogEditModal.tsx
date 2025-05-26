@@ -3,25 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Link, Zap } from 'lucide-react';
-import { MentoringExtensionOption } from '@/types/mentoring.types';
+import { MentoringCatalog, MentoringExtensionOption } from '@/types/mentoring.types';
 import EditModalHeader from './edit-modal/EditModalHeader';
 import BasicInfoTab from './edit-modal/BasicInfoTab';
 import CheckoutTab from './edit-modal/CheckoutTab';
 import ExtensionsTab from './edit-modal/ExtensionsTab';
 import EditModalFooter from './edit-modal/EditModalFooter';
-
-interface MentoringCatalog {
-  id: string;
-  name: string;
-  instructor: string;
-  durationMonths: number;
-  numberOfSessions: number;
-  active: boolean;
-  type: "Individual" | "Grupo";
-  price: number;
-  description: string;
-  extensions?: MentoringExtensionOption[];
-}
 
 interface CatalogEditModalProps {
   catalog: MentoringCatalog | null;
@@ -47,11 +34,18 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
   useEffect(() => {
     console.log('🔄 CatalogEditModal - Effect triggered:', { isOpen, catalog });
     if (catalog) {
-      setFormData({ 
+      // Garantir que todas as propriedades obrigatórias estejam presentes
+      const completeFormData: MentoringCatalog = {
         ...catalog,
-        extensions: catalog.extensions || []
-      });
-      console.log('✅ CatalogEditModal - FormData setado:', catalog);
+        extensions: catalog.extensions || [],
+        totalSessions: catalog.totalSessions || catalog.numberOfSessions,
+        tags: catalog.tags || [],
+        status: catalog.status || 'Ativa',
+        createdAt: catalog.createdAt || new Date().toISOString(),
+        updatedAt: catalog.updatedAt || new Date().toISOString()
+      };
+      setFormData(completeFormData);
+      console.log('✅ CatalogEditModal - FormData setado:', completeFormData);
     }
   }, [catalog]);
 
@@ -59,7 +53,8 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
     if (formData) {
       setFormData({
         ...formData,
-        [field]: value
+        [field]: value,
+        updatedAt: new Date().toISOString()
       });
     }
   };
@@ -68,7 +63,8 @@ const CatalogEditModal: React.FC<CatalogEditModalProps> = ({
     if (formData) {
       setFormData({
         ...formData,
-        extensions
+        extensions,
+        updatedAt: new Date().toISOString()
       });
     }
   };
