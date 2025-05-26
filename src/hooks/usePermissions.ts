@@ -20,9 +20,6 @@ export const usePermissions = (useOptimization: boolean = true) => {
   // Hook otimizado
   const optimizedResult = useOptimizedPermissions();
 
-  const validationService = PermissionServiceFactory.getPermissionValidationService();
-  const menuService = PermissionServiceFactory.getSystemMenuService();
-
   useEffect(() => {
     // Se está usando otimização, usar o resultado otimizado
     if (useOptimization) {
@@ -34,59 +31,40 @@ export const usePermissions = (useOptimization: boolean = true) => {
       return;
     }
 
-    // Fallback para implementação original
+    // Fallback para implementação original apenas se necessário
     const fetchPermissions = async () => {
-      if (!user) {
-        console.log("=== PERMISSIONS: No user ===");
-        setPermissions({
-          hasAdminAccess: false,
-          allowedMenus: []
-        });
-        setLoading(false);
+      if (!user || authLoading) {
+        if (!authLoading) {
+          setPermissions({ hasAdminAccess: false, allowedMenus: [] });
+          setLoading(false);
+        }
         return;
       }
 
       try {
-        console.log("=== FETCHING PERMISSIONS (SERVICE LAYER) ===");
-        console.log("For user:", {
-          id: user.id,
-          email: user.email
-        });
-
-        // Verificar se é admin usando o serviço
-        const hasAdminAccess = await validationService.hasAdminAccess();
+        setLoading(true);
         
-        // Buscar menus permitidos usando o serviço
-        const allowedMenus = await menuService.getAllowedMenusForUser();
+        const validationService = PermissionServiceFactory.getPermissionValidationService();
+        const menuService = PermissionServiceFactory.getSystemMenuService();
 
-        const newPermissions = {
-          hasAdminAccess,
-          allowedMenus
-        };
+        const [hasAdminAccess, allowedMenus] = await Promise.all([
+          validationService.hasAdminAccess(),
+          menuService.getAllowedMenusForUser()
+        ]);
 
-        console.log("Final permissions (via services):", newPermissions);
-        console.log("=== PERMISSIONS COMPLETE ===");
-
-        setPermissions(newPermissions);
+        setPermissions({ hasAdminAccess, allowedMenus });
       } catch (error) {
-        console.error("Erro geral ao buscar permissões:", error);
-        setPermissions({
-          hasAdminAccess: false,
-          allowedMenus: []
-        });
+        console.error('Erro ao buscar permissões:', error);
+        setPermissions({ hasAdminAccess: false, allowedMenus: [] });
       } finally {
         setLoading(false);
       }
     };
 
-    if (!authLoading) {
+    if (!useOptimization) {
       fetchPermissions();
     }
-  }, [user?.id, authLoading, useOptimization, optimizedResult, validationService, menuService]);
+  }, [user?.id, authLoading, useOptimization, optimizedResult.permissions, optimizedResult.loading]);
 
-  return { 
-    permissions, 
-    loading,
-    refreshPermissions: useOptimization ? optimizedResult.refreshPermissions : undefined 
-  };
+  return { permissions, loading };
 };

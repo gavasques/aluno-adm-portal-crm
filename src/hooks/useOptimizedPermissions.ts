@@ -1,134 +1,78 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { usePermissionCache } from "./usePermissionCache";
+import { useState, useEffect, useRef } from "react";
+import { PermissionServiceFactory } from "@/services/permissions";
 import { useAuth } from "@/hooks/auth";
-import { debounce } from 'lodash';
 
 interface OptimizedPermissions {
   hasAdminAccess: boolean;
   allowedMenus: string[];
-  canAccessMenu: (menuKey: string) => Promise<boolean>;
 }
 
 export const useOptimizedPermissions = () => {
   const { user, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<OptimizedPermissions>({
     hasAdminAccess: false,
-    allowedMenus: [],
-    canAccessMenu: async () => false,
+    allowedMenus: []
   });
   const [loading, setLoading] = useState(true);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Refs para evitar loops infinitos
+  const isUnmountedRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
-  const {
-    getCachedAdminStatus,
-    getCachedAllowedMenus,
-    getCachedMenuAccess,
-    invalidateCache,
-    getCacheStats,
-  } = usePermissionCache();
-
-  // Debounced invalidation para evitar invalidações muito frequentes
-  const debouncedInvalidateCache = useMemo(
-    () => debounce((pattern?: string) => {
-      invalidateCache(pattern);
-    }, 1000),
-    [invalidateCache]
-  );
-
-  const fetchPermissions = useCallback(async () => {
-    if (!user) {
-      console.log("=== OPTIMIZED PERMISSIONS: No user ===");
-      setPermissions({
-        hasAdminAccess: false,
-        allowedMenus: [],
-        canAccessMenu: async () => false,
-      });
-      setLoading(false);
-      return;
-    }
-
-    // Evitar refetch muito frequente
-    const now = Date.now();
-    if (now - lastFetchTime < 2000) { // 2 segundos
-      console.log("⏱️ Fetch muito recente, usando cache");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      console.log("=== FETCHING OPTIMIZED PERMISSIONS ===");
-      console.log("Cache stats:", getCacheStats());
-
-      const startTime = performance.now();
-
-      // Buscar dados em paralelo usando cache
-      const [hasAdminAccess, allowedMenus] = await Promise.all([
-        getCachedAdminStatus(),
-        getCachedAllowedMenus(),
-      ]);
-
-      const endTime = performance.now();
-      console.log(`⚡ Permissions fetched in ${(endTime - startTime).toFixed(2)}ms`);
-
-      const optimizedCanAccessMenu = async (menuKey: string): Promise<boolean> => {
-        // Se é admin, tem acesso a todos os menus
-        if (hasAdminAccess) return true;
-        
-        // Usar cache para verificação de menu específico
-        return getCachedMenuAccess(menuKey);
-      };
-
-      const newPermissions = {
-        hasAdminAccess,
-        allowedMenus,
-        canAccessMenu: optimizedCanAccessMenu,
-      };
-
-      console.log("Final optimized permissions:", {
-        hasAdminAccess,
-        allowedMenusCount: allowedMenus.length,
-      });
-
-      setPermissions(newPermissions);
-      setLastFetchTime(now);
+  useEffect(() => {
+    isUnmountedRef.current = false;
+    
+    const fetchPermissions = async () => {
+      // Evitar refetch desnecessário
+      if (lastUserIdRef.current === user?.id) {
+        return;
+      }
       
-    } catch (error) {
-      console.error("Erro ao buscar permissões otimizadas:", error);
-      setPermissions({
-        hasAdminAccess: false,
-        allowedMenus: [],
-        canAccessMenu: async () => false,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, getCachedAdminStatus, getCachedAllowedMenus, getCachedMenuAccess, getCacheStats, lastFetchTime]);
+      if (!user || authLoading) {
+        if (!authLoading) {
+          setPermissions({ hasAdminAccess: false, allowedMenus: [] });
+          setLoading(false);
+        }
+        return;
+      }
 
-  // Effect para buscar permissões
-  useEffect(() => {
-    if (!authLoading) {
-      fetchPermissions();
-    }
-  }, [authLoading, fetchPermissions]);
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const validationService = PermissionServiceFactory.getPermissionValidationService();
+        const menuService = PermissionServiceFactory.getSystemMenuService();
 
-  // Invalidar cache quando usuário muda
-  useEffect(() => {
-    if (user?.id) {
-      debouncedInvalidateCache();
-    }
-  }, [user?.id, debouncedInvalidateCache]);
+        const [hasAdminAccess, allowedMenus] = await Promise.all([
+          validationService.hasAdminAccess(),
+          menuService.getAllowedMenusForUser()
+        ]);
 
-  const refreshPermissions = useCallback(async () => {
-    console.log("🔄 Refresh manual das permissões - invalidando cache");
-    invalidateCache();
-    await fetchPermissions();
-  }, [invalidateCache, fetchPermissions]);
+        if (!isUnmountedRef.current) {
+          setPermissions({ hasAdminAccess, allowedMenus });
+          lastUserIdRef.current = user.id;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar permissões:', error);
+        if (!isUnmountedRef.current) {
+          setError('Erro ao carregar permissões');
+          setPermissions({ hasAdminAccess: false, allowedMenus: [] });
+        }
+      } finally {
+        if (!isUnmountedRef.current) {
+          setLoading(false);
+        }
+      }
+    };
 
-  return {
-    permissions,
-    loading,
-    refreshPermissions,
-    cacheStats: getCacheStats(),
-  };
+    fetchPermissions();
+
+    return () => {
+      isUnmountedRef.current = true;
+    };
+  }, [user?.id, authLoading]); // Dependências específicas
+
+  return { permissions, loading: loading || authLoading, error };
 };

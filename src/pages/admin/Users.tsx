@@ -7,8 +7,9 @@ import UsersHeader from "@/components/admin/users/UsersHeader";
 import UsersAlert from "@/components/admin/users/UsersAlert";
 import UsersCard from "@/components/admin/users/UsersCard";
 import UsersDialogs from "@/components/admin/users/UsersDialogs";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
-const Users = () => {
+const UsersContent = () => {
   const { users, isLoading, isRefreshing, fetchError, refreshUsersList } = useUsersList();
   const [searchQuery, setSearchQuery] = useState("");
   const dialogsState = useUserDialogs();
@@ -20,7 +21,6 @@ const Users = () => {
 
   return (
     <div className="w-full space-y-6">
-      {/* Breadcrumb Navigation */}
       <BreadcrumbNav 
         items={breadcrumbItems} 
         showBackButton={true}
@@ -70,6 +70,14 @@ const Users = () => {
         onSuccess={refreshUsersList}
       />
     </div>
+  );
+};
+
+const Users = () => {
+  return (
+    <ErrorBoundary>
+      <UsersContent />
+    </ErrorBoundary>
   );
 };
 

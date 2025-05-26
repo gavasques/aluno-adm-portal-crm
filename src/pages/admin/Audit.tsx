@@ -2,8 +2,9 @@
 import React from 'react';
 import { AuditDashboard } from '@/components/admin/audit/AuditDashboard';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-const Audit: React.FC = () => {
+const AuditContent: React.FC = () => {
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
     { label: 'Auditoria' }
@@ -11,7 +12,6 @@ const Audit: React.FC = () => {
 
   return (
     <div className="w-full">
-      {/* Breadcrumb Navigation */}
       <BreadcrumbNav 
         items={breadcrumbItems} 
         showBackButton={true}
@@ -21,6 +21,14 @@ const Audit: React.FC = () => {
       
       <AuditDashboard />
     </div>
+  );
+};
+
+const Audit: React.FC = () => {
+  return (
+    <ErrorBoundary>
+      <AuditContent />
+    </ErrorBoundary>
   );
 };
 

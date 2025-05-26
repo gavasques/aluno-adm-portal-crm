@@ -6,10 +6,11 @@ import PermissionsHeader from "@/components/admin/permissions/PermissionsHeader"
 import PermissionsDialogs from "@/components/admin/permissions/PermissionsDialogs";
 import FixPermissionsButton from "@/components/admin/permissions/FixPermissionsButton";
 import PerformanceOptimizedPermissions from "@/components/admin/permissions/PerformanceOptimizedPermissions";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useState } from "react";
 import { PermissionGroup } from "@/hooks/admin/usePermissionGroups";
 
-const Permissions = () => {
+const PermissionsContent = () => {
   const { 
     refreshPermissionGroups 
   } = usePermissionGroups();
@@ -51,7 +52,6 @@ const Permissions = () => {
 
   return (
     <div className="w-full space-y-6">
-      {/* Breadcrumb Navigation */}
       <BreadcrumbNav 
         items={breadcrumbItems} 
         showBackButton={true}
@@ -80,6 +80,14 @@ const Permissions = () => {
         onSuccess={handleSuccess}
       />
     </div>
+  );
+};
+
+const Permissions = () => {
+  return (
+    <ErrorBoundary>
+      <PermissionsContent />
+    </ErrorBoundary>
   );
 };
 
