@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -162,7 +163,7 @@ const StudentDetail = () => {
                   </TabsTrigger>
                   <TabsTriggerWithBadge 
                     value="courses" 
-                    badgeCount={student.courses?.length || 0}
+                    badgeContent={student.courses?.length || 0}
                     className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-6 py-3"
                   >
                     <BookOpen className="h-4 w-4 mr-2" />
@@ -170,7 +171,7 @@ const StudentDetail = () => {
                   </TabsTriggerWithBadge>
                   <TabsTriggerWithBadge 
                     value="mentorships" 
-                    badgeCount={student.mentorships?.length || 0}
+                    badgeContent={student.mentorships?.length || 0}
                     className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-6 py-3"
                   >
                     <User className="h-4 w-4 mr-2" />
@@ -178,7 +179,7 @@ const StudentDetail = () => {
                   </TabsTriggerWithBadge>
                   <TabsTriggerWithBadge 
                     value="bonuses" 
-                    badgeCount={student.bonuses?.length || 0}
+                    badgeContent={student.bonuses?.length || 0}
                     className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-6 py-3"
                   >
                     <Gift className="h-4 w-4 mr-2" />
@@ -186,7 +187,7 @@ const StudentDetail = () => {
                   </TabsTriggerWithBadge>
                   <TabsTriggerWithBadge 
                     value="communications" 
-                    badgeCount={student.communications?.length || 0}
+                    badgeContent={student.communications?.length || 0}
                     className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 px-6 py-3"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
