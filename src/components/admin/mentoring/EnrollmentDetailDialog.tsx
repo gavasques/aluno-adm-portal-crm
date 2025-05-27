@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
+import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import PendingSessionsCard from './PendingSessionsCard';
 
 interface EnrollmentDetailDialogProps {
@@ -28,6 +28,7 @@ interface EnrollmentDetailDialogProps {
 
 export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: EnrollmentDetailDialogProps) => {
   const { sessions, createSession, refreshSessions } = useSupabaseMentoring();
+  const { students } = useStudentsForEnrollment();
   const [enrollmentSessions, setEnrollmentSessions] = useState<MentoringSession[]>([]);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
@@ -39,6 +40,10 @@ export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: Enrol
   }, [enrollment, sessions]);
 
   if (!enrollment) return null;
+
+  // Buscar informações do estudante
+  const student = students?.find(s => s.id === enrollment.studentId);
+  const studentName = student?.name || student?.email || 'Aluno não encontrado';
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -115,7 +120,7 @@ export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: Enrol
                   <User className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-600">Aluno</p>
-                    <p className="text-gray-900">{enrollment.studentId}</p>
+                    <p className="text-gray-900">{studentName}</p>
                   </div>
                 </div>
 
@@ -228,4 +233,24 @@ export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: Enrol
       </DialogContent>
     </Dialog>
   );
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'ativa': return 'bg-green-100 text-green-800 border-green-200';
+    case 'concluida': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'pausada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
+    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'ativa': return 'Ativa';
+    case 'concluida': return 'Concluída';
+    case 'pausada': return 'Pausada';
+    case 'cancelada': return 'Cancelada';
+    default: return status;
+  }
 };
