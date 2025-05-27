@@ -389,6 +389,82 @@ export class SupabaseMentoringRepository {
     return !error;
   }
 
+  async removeExtension(extensionId: string): Promise<boolean> {
+    console.log('🗑️ Removendo extensão:', extensionId);
+    
+    try {
+      // Buscar a extensão para obter dados antes da remoção
+      const { data: extension, error: fetchError } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .select('enrollment_id, extension_months')
+        .eq('id', extensionId)
+        .single();
+
+      if (fetchError || !extension) {
+        console.error('❌ Erro ao buscar extensão:', fetchError);
+        return false;
+      }
+
+      // Remover a extensão
+      const { error: deleteError } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .delete()
+        .eq('id', extensionId);
+
+      if (deleteError) {
+        console.error('❌ Erro ao remover extensão:', deleteError);
+        return false;
+      }
+
+      // Buscar dados atuais da inscrição
+      const { data: enrollment, error: enrollmentError } = await supabase
+        .from('mentoring_enrollments')
+        .select('end_date, original_end_date')
+        .eq('id', extension.enrollment_id)
+        .single();
+
+      if (enrollmentError || !enrollment) {
+        console.error('❌ Erro ao buscar inscrição:', enrollmentError);
+        return false;
+      }
+
+      // Calcular nova data de término
+      const currentEndDate = new Date(enrollment.end_date);
+      const newEndDate = new Date(currentEndDate);
+      newEndDate.setMonth(newEndDate.getMonth() - extension.extension_months);
+
+      // Verificar se ainda há outras extensões
+      const { data: remainingExtensions } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .select('id')
+        .eq('enrollment_id', extension.enrollment_id);
+
+      const hasExtensions = remainingExtensions && remainingExtensions.length > 0;
+
+      // Atualizar a inscrição
+      const { error: updateError } = await supabase
+        .from('mentoring_enrollments')
+        .update({
+          end_date: newEndDate.toISOString().split('T')[0],
+          has_extension: hasExtensions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', extension.enrollment_id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar inscrição:', updateError);
+        return false;
+      }
+
+      console.log('✅ Extensão removida com sucesso');
+      return true;
+
+    } catch (error) {
+      console.error('❌ Erro geral ao remover extensão:', error);
+      return false;
+    }
+  }
+
   // Session methods
   async getSessions(): Promise<MentoringSession[]> {
     const { data, error } = await supabase
