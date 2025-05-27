@@ -1,21 +1,18 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Plus, 
-  Calendar, 
   Clock,
   User,
   GraduationCap,
-  TrendingUp
+  Calendar
 } from 'lucide-react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { EnrollmentStatus } from './EnrollmentStatus';
+import { EnrollmentProgress } from './EnrollmentProgress';
+import { EnrollmentActions } from './EnrollmentActions';
 
 interface ModernIndividualEnrollmentsListProps {
   enrollments: StudentMentoringEnrollment[];
@@ -36,41 +33,6 @@ export const ModernIndividualEnrollmentsList: React.FC<ModernIndividualEnrollmen
   onToggleSelection,
   selectedEnrollments
 }) => {
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'ativa':
-        return { 
-          color: 'bg-green-100 text-green-800 border-green-200', 
-          icon: <div className="w-2 h-2 bg-green-500 rounded-full"></div>,
-          label: 'Ativa' 
-        };
-      case 'concluida':
-        return { 
-          color: 'bg-blue-100 text-blue-800 border-blue-200', 
-          icon: <div className="w-2 h-2 bg-blue-500 rounded-full"></div>,
-          label: 'Concluída' 
-        };
-      case 'pausada':
-        return { 
-          color: 'bg-orange-100 text-orange-800 border-orange-200', 
-          icon: <div className="w-2 h-2 bg-orange-500 rounded-full"></div>,
-          label: 'Pausada' 
-        };
-      case 'cancelada':
-        return { 
-          color: 'bg-red-100 text-red-800 border-red-200', 
-          icon: <div className="w-2 h-2 bg-red-500 rounded-full"></div>,
-          label: 'Cancelada' 
-        };
-      default:
-        return { 
-          color: 'bg-gray-100 text-gray-800 border-gray-200', 
-          icon: <div className="w-2 h-2 bg-gray-500 rounded-full"></div>,
-          label: status 
-        };
-    }
-  };
-
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
@@ -118,10 +80,6 @@ export const ModernIndividualEnrollmentsList: React.FC<ModernIndividualEnrollmen
       {/* Linhas da Tabela */}
       <div className="divide-y divide-gray-200">
         {enrollments.map((enrollment) => {
-          const statusConfig = getStatusConfig(enrollment.status);
-          const completedSessions = enrollment.sessionsUsed || 0;
-          const totalSessions = enrollment.totalSessions || 0;
-          const progressPercentage = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
           const isSelected = selectedEnrollments.includes(enrollment.id);
 
           return (
@@ -171,31 +129,16 @@ export const ModernIndividualEnrollmentsList: React.FC<ModernIndividualEnrollmen
 
               {/* Status */}
               <div className="col-span-1 flex items-center">
-                <Badge className={`${statusConfig.color} text-xs flex items-center gap-1`}>
-                  {statusConfig.icon}
-                  {statusConfig.label}
-                </Badge>
+                <EnrollmentStatus status={enrollment.status} className="text-xs" />
               </div>
 
               {/* Progresso */}
-              <div className="col-span-2 flex items-center gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                    <span>{completedSessions}/{totalSessions}</span>
-                    <span>{Math.round(progressPercentage)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div 
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        progressPercentage >= 75 ? 'bg-green-500' :
-                        progressPercentage >= 50 ? 'bg-blue-500' :
-                        progressPercentage >= 25 ? 'bg-yellow-500' :
-                        'bg-gray-400'
-                      }`}
-                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
+              <div className="col-span-2 flex items-center">
+                <EnrollmentProgress 
+                  sessionsUsed={enrollment.sessionsUsed || 0}
+                  totalSessions={enrollment.totalSessions || 0}
+                  className="flex-1"
+                />
               </div>
 
               {/* Período */}
@@ -213,42 +156,15 @@ export const ModernIndividualEnrollmentsList: React.FC<ModernIndividualEnrollmen
               </div>
 
               {/* Ações */}
-              <div className="col-span-1 flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-7 w-7 p-0 hover:bg-blue-100 hover:text-blue-700"
-                  onClick={() => onView(enrollment)}
-                >
-                  <Eye className="h-3 w-3" />
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-7 w-7 p-0 hover:bg-gray-100"
-                  onClick={() => onEdit(enrollment)}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-7 w-7 p-0 hover:bg-green-100 hover:text-green-700"
-                  onClick={() => onAddExtension(enrollment)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-700"
-                  onClick={() => onDelete(enrollment.id)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+              <div className="col-span-1 flex items-center">
+                <EnrollmentActions
+                  enrollment={enrollment}
+                  onView={onView}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onAddExtension={onAddExtension}
+                  compact={true}
+                />
               </div>
             </div>
           );

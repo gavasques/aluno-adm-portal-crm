@@ -1,22 +1,19 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   CalendarRange, 
   GraduationCap, 
   User, 
   Clock,
-  Pencil, 
-  Trash2, 
-  Eye, 
-  PlusCircle,
   Calendar
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
+import { EnrollmentStatus } from './EnrollmentStatus';
+import { EnrollmentProgress } from './EnrollmentProgress';
+import { EnrollmentActions } from './EnrollmentActions';
 import { cn } from '@/lib/utils';
 
 interface ModernIndividualEnrollmentCardProps {
@@ -38,26 +35,6 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
   onToggleSelection,
   isSelected
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ativa': return 'bg-green-100 text-green-800';
-      case 'concluida': return 'bg-blue-100 text-blue-800';
-      case 'pausada': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelada': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'ativa': return 'Ativa';
-      case 'concluida': return 'Concluída';
-      case 'pausada': return 'Pausada';
-      case 'cancelada': return 'Cancelada';
-      default: return status;
-    }
-  };
-
   // Calcular dias restantes
   const daysRemaining = differenceInDays(new Date(enrollment.endDate), new Date());
 
@@ -80,9 +57,7 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
             </h3>
           </div>
           
-          <Badge className={getStatusColor(enrollment.status)}>
-            {getStatusLabel(enrollment.status)}
-          </Badge>
+          <EnrollmentStatus status={enrollment.status} />
         </div>
 
         <div className="space-y-2">
@@ -107,7 +82,7 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
 
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-gray-400" />
-            <div className="text-xs">
+            <div className="text-xs flex-1">
               <span className="text-gray-600">
                 {enrollment.sessionsUsed} de {enrollment.totalSessions} sessões realizadas 
                 {enrollment.hasExtension && (
@@ -116,6 +91,11 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
               </span>
             </div>
           </div>
+
+          <EnrollmentProgress 
+            sessionsUsed={enrollment.sessionsUsed}
+            totalSessions={enrollment.totalSessions}
+          />
 
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400" />
@@ -134,57 +114,13 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
           </div>
         </div>
 
-        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-          <div className="flex gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => onView(enrollment)}
-            >
-              <Eye className="h-4 w-4" />
-              <span className="sr-only">Ver</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => onEdit(enrollment)}
-            >
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Editar</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={() => onDelete(enrollment.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Excluir</span>
-            </Button>
-          </div>
-          
-          <div className="flex gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs px-2 text-blue-600 border-blue-200 hover:border-blue-300 hover:text-blue-700"
-              onClick={() => onAddExtension(enrollment)}
-            >
-              <PlusCircle className="h-3 w-3 mr-1" />
-              Extensão
-            </Button>
-            <Button
-              size="sm"
-              className="h-8 text-xs px-2 bg-amber-600 hover:bg-amber-700"
-              onClick={() => onView(enrollment)}
-            >
-              <Calendar className="h-3 w-3 mr-1" />
-              Sessões
-            </Button>
-          </div>
-        </div>
+        <EnrollmentActions
+          enrollment={enrollment}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAddExtension={onAddExtension}
+        />
         
         {onToggleSelection && (
           <div className="absolute top-2 left-2">
