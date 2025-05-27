@@ -475,6 +475,15 @@ export class SupabaseMentoringRepository {
     return !error;
   }
 
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('mentoring_sessions')
+      .delete()
+      .eq('id', sessionId);
+
+    return !error;
+  }
+
   // Material methods
   async getMaterials(): Promise<MentoringMaterial[]> {
     const { data, error } = await supabase

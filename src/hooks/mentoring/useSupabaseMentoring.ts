@@ -49,6 +49,7 @@ export const useSupabaseMentoring = () => {
     getEnrollmentSessions: sessionHook.getEnrollmentSessions,
     createSession: sessionHook.createSession,
     updateSession: sessionHook.updateSession,
+    deleteSession: sessionHook.deleteSession,
     getSessionsByEnrollment: sessionHook.getSessionsByEnrollment,
     refreshSessions: sessionHook.refreshSessions,
     

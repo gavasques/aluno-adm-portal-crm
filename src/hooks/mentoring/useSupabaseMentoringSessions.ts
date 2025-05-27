@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { MentoringSession, CreateSessionData, UpdateSessionData } from '@/types/mentoring.types';
@@ -82,6 +81,30 @@ export const useSupabaseMentoringSessions = () => {
     }
   }, [refreshSessions, toast]);
 
+  const deleteSession = useCallback(async (sessionId: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const success = await repository.deleteSession(sessionId);
+      if (success) {
+        await refreshSessions();
+        toast({
+          title: "Sucesso",
+          description: "Sessão removida com sucesso!",
+        });
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover sessão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshSessions, toast]);
+
   const getSessionsByEnrollment = useCallback((enrollmentId: string): MentoringSession[] => {
     return sessions.filter(session => session.enrollmentId === enrollmentId);
   }, [sessions]);
@@ -92,6 +115,7 @@ export const useSupabaseMentoringSessions = () => {
     getEnrollmentSessions,
     createSession,
     updateSession,
+    deleteSession,
     getSessionsByEnrollment,
     refreshSessions,
     repository
