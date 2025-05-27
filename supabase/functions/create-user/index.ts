@@ -20,7 +20,6 @@ serve(async (req) => {
 
   try {
     console.log(`Recebendo requisição ${req.method} para create-user`);
-    console.log("Headers recebidos:", Object.fromEntries(req.headers.entries()));
 
     if (req.method !== 'POST') {
       return new Response(
@@ -35,13 +34,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Obter token do header de autorização
+    console.log("Cliente Supabase Admin criado");
+
+    // Obter o usuário autenticado via JWT context (automaticamente validado pelo verify_jwt = true)
     const authHeader = req.headers.get('authorization');
     
-    console.log("Auth header presente:", !!authHeader);
-
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error("Token de autorização inválido ou ausente");
+      console.error("Token de autorização ausente");
       return new Response(
         JSON.stringify({ error: 'Token de autorização necessário' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -49,23 +48,22 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    console.log("Token extraído, length:", token.length);
+    console.log("Token presente, decodificando...");
 
-    // Verificar o token usando supabaseAdmin para obter informações do usuário
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    // Usar o token para obter dados do usuário através do admin client
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     
-    if (authError || !user) {
-      console.error("Erro de autenticação:", authError);
+    if (userError || !user) {
+      console.error("Erro ao obter usuário:", userError);
       return new Response(
-        JSON.stringify({ error: 'Token inválido ou usuário não encontrado' }),
+        JSON.stringify({ error: 'Token inválido' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log("Usuário autenticado:", user.email);
-    console.log("Verificando permissões do usuário:", user.id);
+    console.log("Usuário autenticado:", user.email, "ID:", user.id);
 
-    // Verificar se o usuário é admin usando apenas supabaseAdmin
+    // Verificar permissões do usuário usando consulta direta
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, permission_group_id')
@@ -73,18 +71,20 @@ serve(async (req) => {
       .single();
 
     if (profileError) {
-      console.error("Erro ao verificar perfil:", profileError);
+      console.error("Erro ao buscar perfil:", profileError);
       return new Response(
-        JSON.stringify({ error: 'Erro ao verificar permissões do usuário' }),
+        JSON.stringify({ error: 'Erro ao verificar permissões' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     console.log("Profile encontrado:", profile);
 
-    // Verificar permissões do grupo se existir
-    let isGroupAdmin = false;
-    if (profile?.permission_group_id) {
+    // Verificar se é admin
+    let isAdmin = profile?.role === 'Admin';
+
+    // Se não é admin direto, verificar pelo grupo de permissão
+    if (!isAdmin && profile?.permission_group_id) {
       const { data: permissionGroup, error: groupError } = await supabaseAdmin
         .from('permission_groups')
         .select('is_admin, allow_admin_access')
@@ -92,16 +92,12 @@ serve(async (req) => {
         .single();
 
       if (!groupError && permissionGroup) {
-        isGroupAdmin = permissionGroup.is_admin === true || permissionGroup.allow_admin_access === true;
-        console.log("Grupo de permissão:", permissionGroup);
+        isAdmin = permissionGroup.is_admin === true || permissionGroup.allow_admin_access === true;
+        console.log("Verificação de grupo:", permissionGroup);
       }
     }
 
-    const isAdmin = profile?.role === 'Admin' || isGroupAdmin;
-
     console.log("É admin:", isAdmin);
-    console.log("Profile role:", profile?.role);
-    console.log("É admin do grupo:", isGroupAdmin);
 
     if (!isAdmin) {
       console.error("Usuário sem permissões administrativas");
@@ -112,9 +108,23 @@ serve(async (req) => {
     }
 
     // Obter dados do usuário a ser criado
-    const { email, name, role, password, is_mentor } = await req.json();
+    const requestBody = await req.text();
+    console.log("Body da requisição:", requestBody);
+    
+    let userData;
+    try {
+      userData = JSON.parse(requestBody);
+    } catch (parseError) {
+      console.error("Erro ao fazer parse do JSON:", parseError);
+      return new Response(
+        JSON.stringify({ error: 'Dados inválidos no corpo da requisição' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log("Dados recebidos:", { email, name, role, is_mentor });
+    const { email, name, role, password, is_mentor } = userData;
+
+    console.log("Dados recebidos:", { email, name, role, is_mentor, hasPassword: !!password });
 
     // Validações básicas
     if (!email || !name || !role || !password) {
@@ -147,7 +157,7 @@ serve(async (req) => {
     }
 
     if (existingProfile) {
-      console.log("Usuário já existe:", existingProfile);
+      console.log("Usuário já existe:", existingProfile.email);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -174,55 +184,6 @@ serve(async (req) => {
 
     if (createError) {
       console.error("Erro ao criar usuário:", createError);
-      
-      if (createError.message.includes('already registered') || createError.message.includes('User already registered')) {
-        // Usuário já existe no auth, mas não no profiles
-        console.log("Usuário existe no auth, buscando para criar profile");
-        
-        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-        
-        if (listError) {
-          console.error("Erro ao listar usuários:", listError);
-          return new Response(
-            JSON.stringify({ error: 'Erro ao verificar usuários existentes' }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        const existingUser = usersData.users.find((u: any) => u.email === email.toLowerCase());
-        
-        if (existingUser) {
-          // Criar apenas o profile
-          const { error: profileCreateError } = await supabaseAdmin
-            .from('profiles')
-            .insert({
-              id: existingUser.id,
-              email: email.toLowerCase(),
-              name: name,
-              role: role,
-              is_mentor: is_mentor || false,
-              status: 'Ativo'
-            });
-
-          if (profileCreateError) {
-            console.error("Erro ao criar profile:", profileCreateError);
-            return new Response(
-              JSON.stringify({ error: 'Erro ao criar perfil do usuário' }),
-              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-
-          return new Response(
-            JSON.stringify({ 
-              success: true, 
-              existed: true, 
-              profileCreated: true 
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      }
-      
       return new Response(
         JSON.stringify({ error: createError.message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -20,7 +20,7 @@ export const useAdminOperations = () => {
     is_mentor: boolean = false
   ): Promise<CreateUserResult> => {
     try {
-      console.log("[useAdminOperations] Iniciando criação de usuário");
+      console.log("[useAdminOperations] Iniciando criação de usuário:", { email, name, role, is_mentor });
 
       // Validações básicas
       if (!email || !name || !role || !password) {
@@ -43,17 +43,22 @@ export const useAdminOperations = () => {
         throw new Error("Usuário não está autenticado. Faça login novamente.");
       }
 
-      console.log("[useAdminOperations] Chamando edge function create-user");
+      console.log("[useAdminOperations] Sessão válida, token length:", session.access_token.length);
+
+      // Preparar dados para envio
+      const requestData = {
+        email: email.toLowerCase().trim(),
+        name: name.trim(),
+        role: role,
+        password: password,
+        is_mentor: Boolean(is_mentor)
+      };
+
+      console.log("[useAdminOperations] Dados preparados:", { ...requestData, password: "***" });
       
       // Chamar a edge function para criar o usuário
       const { data, error } = await supabase.functions.invoke('create-user', {
-        body: {
-          email,
-          name,
-          role,
-          password,
-          is_mentor
-        },
+        body: requestData,
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
