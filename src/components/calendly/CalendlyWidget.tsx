@@ -14,6 +14,11 @@ interface CalendlyWidgetProps {
   onOpenChange: (open: boolean) => void;
   onEventScheduled?: (eventData: CalendlyEventPayload) => void;
   className?: string;
+  studentName?: string;
+  sessionInfo?: {
+    sessionNumber: number;
+    totalSessions: number;
+  };
 }
 
 declare global {
@@ -30,7 +35,9 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
   open,
   onOpenChange,
   onEventScheduled,
-  className
+  className,
+  studentName,
+  sessionInfo
 }) => {
   const { user } = useAuth();
   const { getCalendlyConfig, buildCalendlyUrl, saveCalendlyEvent } = useCalendly();
@@ -97,11 +104,22 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
       return;
     }
 
+    // Criar mensagem personalizada com informações da sessão
+    let customMessage = '';
+    if (studentName && sessionInfo) {
+      customMessage = `${studentName}\n\nSessão ${sessionInfo.sessionNumber} de ${sessionInfo.totalSessions}`;
+    } else if (studentName) {
+      customMessage = studentName;
+    }
+
     const options: CalendlyWidgetOptions = {
       url: calendlyUrl,
       prefill: {
-        name: user?.email || '',
-        email: user?.email || ''
+        name: studentName || user?.email || '',
+        email: user?.email || '',
+        customAnswers: {
+          a1: customMessage // Campo personalizado para informações da sessão
+        }
       }
     };
 
@@ -115,7 +133,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
       console.error('Error initializing Calendly widget:', err);
       setError('Erro ao inicializar o widget do Calendly');
     }
-  }, [open, calendlyUrl, user, isLoading]);
+  }, [open, calendlyUrl, user, isLoading, studentName, sessionInfo]);
 
   useEffect(() => {
     const handleCalendlyMessage = async (event: MessageEvent) => {
@@ -196,6 +214,11 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Agendar Mentoria
+              {studentName && sessionInfo && (
+                <span className="text-sm text-gray-600 ml-2">
+                  - {studentName} (Sessão {sessionInfo.sessionNumber}/{sessionInfo.totalSessions})
+                </span>
+              )}
             </div>
             <Button
               variant="ghost"

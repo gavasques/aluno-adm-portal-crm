@@ -11,6 +11,11 @@ interface CalendlyButtonProps extends Omit<ButtonProps, 'onClick'> {
   mentorId: string;
   onEventScheduled?: (eventData: CalendlyEventPayload) => void;
   children?: React.ReactNode;
+  studentName?: string;
+  sessionInfo?: {
+    sessionNumber: number;
+    totalSessions: number;
+  };
 }
 
 export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
@@ -21,6 +26,8 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
   disabled = false,
   variant,
   size,
+  studentName,
+  sessionInfo,
   ...buttonProps
 }) => {
   const [showWidget, setShowWidget] = useState(false);
@@ -66,6 +73,8 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
         open={showWidget}
         onOpenChange={setShowWidget}
         onEventScheduled={handleEventScheduled}
+        studentName={studentName}
+        sessionInfo={sessionInfo}
       />
     </>
   );
