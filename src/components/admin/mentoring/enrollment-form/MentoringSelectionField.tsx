@@ -1,205 +1,95 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { GraduationCap, Clock, Calendar, DollarSign, Plus, Users } from 'lucide-react';
-import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
+import { GraduationCap, Users, Calendar, DollarSign } from 'lucide-react';
 import { MentoringCatalog } from '@/types/mentoring.types';
+import { Control } from 'react-hook-form';
 
 interface MentoringSelectionFieldProps {
-  selectedMentoring: MentoringCatalog | null;
-  selectedExtensions: string[];
-  onMentoringSelect: (mentoring: MentoringCatalog) => void;
-  onExtensionToggle: (extensionId: string, checked: boolean) => void;
+  control: Control<any>;
+  mentoringOptions: MentoringCatalog[];
+  loading: boolean;
+  onMentoringChange: (mentoring: MentoringCatalog | null) => void;
 }
 
 export const MentoringSelectionField = ({
-  selectedMentoring,
-  selectedExtensions,
-  onMentoringSelect,
-  onExtensionToggle
+  control,
+  mentoringOptions,
+  loading,
+  onMentoringChange
 }: MentoringSelectionFieldProps) => {
-  const { catalogs } = useSupabaseMentoring();
-  const [isSelectingMentoring, setIsSelectingMentoring] = React.useState(false);
+  // Filtrar apenas mentorias individuais
+  const individualMentorings = mentoringOptions.filter(mentoring => mentoring.type === 'Individual');
 
-  const handleMentoringSelect = (mentoring: MentoringCatalog) => {
-    onMentoringSelect(mentoring);
-    setIsSelectingMentoring(false);
+  const handleMentoringChange = (value: string) => {
+    const selectedMentoring = individualMentorings.find(m => m.id === value);
+    onMentoringChange(selectedMentoring || null);
   };
 
-  if (!selectedMentoring && !isSelectingMentoring) {
-    return (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-700">
-          Mentoria *
-        </Label>
-        <Button
-          variant="outline"
-          onClick={() => setIsSelectingMentoring(true)}
-          className="w-full h-12 border-dashed border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-        >
-          <GraduationCap className="w-5 h-5 mr-2 text-gray-400" />
-          Selecionar Mentoria
-        </Button>
-      </div>
-    );
-  }
-
-  if (isSelectingMentoring) {
-    return (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-700">
-          Selecionar Mentoria *
-        </Label>
-        <div className="grid gap-3 max-h-80 overflow-y-auto">
-          {catalogs.map((mentoring) => (
-            <Card
-              key={mentoring.id}
-              className="cursor-pointer transition-all hover:shadow-md hover:border-blue-300 border"
-              onClick={() => handleMentoringSelect(mentoring)}
-            >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg mb-1">{mentoring.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={mentoring.type === 'Individual' ? 'default' : 'secondary'} className="text-xs">
-                        {mentoring.type}
-                      </Badge>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Users className="w-3 h-3 mr-1" />
-                        {mentoring.instructor}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div className="flex items-center space-x-1 text-gray-600">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-xs">{mentoring.numberOfSessions} sessões</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-gray-600">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-xs">{mentoring.durationMonths} meses</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-gray-600">
-                    <DollarSign className="w-4 h-4 text-gray-400" />
-                    <span className="text-xs font-medium">R$ {mentoring.price}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => setIsSelectingMentoring(false)}
-          className="w-full"
-        >
-          Cancelar
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-700">
-          Mentoria Selecionada
-        </Label>
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1">
-                <h3 className="font-semibold text-blue-900 text-lg">{selectedMentoring.name}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
-                    {selectedMentoring.type}
-                  </Badge>
-                  <div className="flex items-center text-xs text-blue-700">
-                    <Users className="w-3 h-3 mr-1" />
-                    {selectedMentoring.instructor}
-                  </div>
+    <FormField
+      control={control}
+      name="mentoringId"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Mentoria *
+          </FormLabel>
+          <Select 
+            onValueChange={(value) => {
+              field.onChange(value);
+              handleMentoringChange(value);
+            }} 
+            value={field.value}
+            disabled={loading}
+          >
+            <FormControl>
+              <SelectTrigger className="bg-white">
+                <SelectValue 
+                  placeholder={loading ? "Carregando mentorias..." : "Selecione uma mentoria individual"}
+                />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {individualMentorings.length === 0 ? (
+                <div className="p-3 text-center text-gray-500 text-sm">
+                  {loading ? 'Carregando...' : 'Nenhuma mentoria individual encontrada'}
                 </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSelectingMentoring(true)}
-                className="text-blue-700 border-blue-300 hover:bg-blue-100"
-              >
-                Alterar
-              </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-sm text-blue-800 mt-3">
-              <div className="flex items-center space-x-1">
-                <Clock className="w-4 h-4" />
-                <span className="text-xs">{selectedMentoring.numberOfSessions} sessões</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
-                <span className="text-xs">{selectedMentoring.durationMonths} meses</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <DollarSign className="w-4 h-4" />
-                <span className="text-xs font-medium">R$ {selectedMentoring.price}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {selectedMentoring.extensions && selectedMentoring.extensions.length > 0 && (
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Extensões Disponíveis
-          </Label>
-          <div className="space-y-2">
-            {selectedMentoring.extensions.map((extension) => (
-              <Card key={extension.id} className="border-gray-200">
-                <CardContent className="p-3">
-                  <div className="flex items-start space-x-3">
-                    <Checkbox
-                      id={extension.id}
-                      checked={selectedExtensions.includes(extension.id)}
-                      onCheckedChange={(checked) => 
-                        onExtensionToggle(extension.id, checked as boolean)
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <label
-                        htmlFor={extension.id}
-                        className="text-sm font-medium text-gray-900 cursor-pointer"
-                      >
-                        Extensão de {extension.months} meses
-                      </label>
-                      {extension.description && (
-                        <p className="text-xs text-gray-600 mt-1">{extension.description}</p>
-                      )}
-                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                        <div className="flex items-center space-x-1">
-                          <Plus className="w-3 h-3" />
-                          <span>{extension.totalSessions || 0} sessões</span>
+              ) : (
+                individualMentorings.map((mentoring) => (
+                  <SelectItem key={mentoring.id} value={mentoring.id}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                          {mentoring.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <DollarSign className="w-3 h-3" />
-                          <span>R$ {extension.price}</span>
+                        <div>
+                          <span className="font-medium">{mentoring.name}</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">Individual</Badge>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <Calendar className="h-3 w-3" />
+                              {mentoring.durationMonths} meses
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <DollarSign className="h-3 w-3" />
+                              R$ {mentoring.price.toFixed(2)}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
       )}
-    </div>
+    />
   );
 };

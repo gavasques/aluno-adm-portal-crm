@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,12 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, GraduationCap, Users, Calendar, AlertCircle, Plus, Clock, Gift, Calculator } from 'lucide-react';
+import { User, GraduationCap, Users, Calendar, AlertCircle, Plus, Clock, Gift, Calculator, Trash2 } from 'lucide-react';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
-import { StudentMentoringEnrollment, CreateExtensionData } from '@/types/mentoring.types';
+import { StudentMentoringEnrollment, CreateExtensionData, MentoringExtension } from '@/types/mentoring.types';
 import { AddCustomMonthsDialog } from './extensions/AddCustomMonthsDialog';
 import { AddMentoringExtensionDialog } from './extensions/AddMentoringExtensionDialog';
+import { RemoveExtensionDialog } from './extensions/RemoveExtensionDialog';
 
 const editEnrollmentSchema = z.object({
   responsibleMentor: z.string().min(1, 'Mentor responsável é obrigatório'),
@@ -35,6 +35,7 @@ interface EditEnrollmentFormProps {
   onCancel: () => void;
   isLoading?: boolean;
   onAddExtension?: (data: CreateExtensionData) => void;
+  onRemoveExtension?: (extensionId: string) => void;
 }
 
 const EditEnrollmentForm = ({ 
@@ -42,12 +43,15 @@ const EditEnrollmentForm = ({
   onSubmit, 
   onCancel, 
   isLoading,
-  onAddExtension
+  onAddExtension,
+  onRemoveExtension
 }: EditEnrollmentFormProps) => {
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const { students } = useStudentsForEnrollment();
   const [showCustomMonthsDialog, setShowCustomMonthsDialog] = useState(false);
   const [showMentoringExtensionDialog, setShowMentoringExtensionDialog] = useState(false);
+  const [showRemoveExtensionDialog, setShowRemoveExtensionDialog] = useState(false);
+  const [selectedExtensionToRemove, setSelectedExtensionToRemove] = useState<MentoringExtension | null>(null);
 
   // Buscar informações do estudante
   const student = students?.find(s => s.id === enrollment.studentId);
@@ -78,6 +82,19 @@ const EditEnrollmentForm = ({
     if (onAddExtension) {
       onAddExtension(data);
     }
+  };
+
+  const handleRemoveExtension = (extension: MentoringExtension) => {
+    setSelectedExtensionToRemove(extension);
+    setShowRemoveExtensionDialog(true);
+  };
+
+  const handleConfirmRemoveExtension = (extensionId: string) => {
+    if (onRemoveExtension) {
+      onRemoveExtension(extensionId);
+    }
+    setShowRemoveExtensionDialog(false);
+    setSelectedExtensionToRemove(null);
   };
 
   return (
@@ -186,9 +203,20 @@ const EditEnrollmentForm = ({
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-green-600">
-                      {new Date(extension.appliedDate).toLocaleDateString('pt-BR')}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-green-600">
+                        {new Date(extension.appliedDate).toLocaleDateString('pt-BR')}
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRemoveExtension(extension)}
+                        className="h-6 w-6 p-0 border-red-200 text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -406,6 +434,15 @@ const EditEnrollmentForm = ({
         onOpenChange={setShowMentoringExtensionDialog}
         enrollment={enrollment}
         onSubmit={handleExtensionSubmit}
+        isLoading={isLoading}
+      />
+
+      <RemoveExtensionDialog
+        open={showRemoveExtensionDialog}
+        onOpenChange={setShowRemoveExtensionDialog}
+        enrollment={enrollment}
+        extension={selectedExtensionToRemove}
+        onConfirmRemove={handleConfirmRemoveExtension}
         isLoading={isLoading}
       />
     </div>

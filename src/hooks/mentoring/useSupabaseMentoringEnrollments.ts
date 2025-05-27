@@ -86,6 +86,30 @@ export const useSupabaseMentoringEnrollments = () => {
     }
   }, [refreshEnrollments, toast]);
 
+  const removeExtension = useCallback(async (extensionId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const success = await repository.removeExtension(extensionId);
+      if (success) {
+        await refreshEnrollments();
+        toast({
+          title: "Sucesso",
+          description: "Extensão removida com sucesso!",
+        });
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover extensão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments, toast]);
+
   return {
     enrollments,
     loading,
@@ -93,6 +117,7 @@ export const useSupabaseMentoringEnrollments = () => {
     deleteEnrollment,
     getStudentEnrollments,
     addExtension,
+    removeExtension,
     refreshEnrollments,
     repository
   };

@@ -20,6 +20,7 @@ interface IndividualEnrollmentsDialogsProps {
   onCreateSuccess: () => void;
   onEditSubmit: (data: any) => void;
   onExtensionSubmit: (data: CreateExtensionData) => void;
+  onRemoveExtension?: (extensionId: string) => void;
   onSessionUpdated?: () => void;
 }
 
@@ -36,6 +37,7 @@ export const IndividualEnrollmentsDialogs = ({
   onCreateSuccess,
   onEditSubmit,
   onExtensionSubmit,
+  onRemoveExtension,
   onSessionUpdated
 }: IndividualEnrollmentsDialogsProps) => {
 
@@ -68,6 +70,7 @@ export const IndividualEnrollmentsDialogs = ({
               onSubmit={onEditSubmit}
               onCancel={onEditClose}
               onAddExtension={onExtensionSubmit}
+              onRemoveExtension={onRemoveExtension}
             />
           )}
         </DialogContent>

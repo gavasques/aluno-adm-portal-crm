@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useOptimizedIndividualEnrollments } from '@/hooks/admin/useOptimizedIndividualEnrollments';
@@ -14,7 +13,7 @@ import { IndividualEnrollmentsDialogs } from '@/components/admin/mentoring/indiv
 
 const AdminIndividualEnrollments = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { deleteEnrollment, addExtension, refreshEnrollments } = useSupabaseMentoring();
+  const { deleteEnrollment, addExtension, removeExtension, refreshEnrollments } = useSupabaseMentoring();
   const { toast } = useToast();
   
   const {
@@ -137,6 +136,27 @@ const AdminIndividualEnrollments = () => {
     }
   }, [addExtension, refreshEnrollments, refreshData, toast, closeExtension]);
 
+  const handleRemoveExtension = useCallback(async (extensionId: string) => {
+    try {
+      const success = await removeExtension(extensionId);
+      if (success) {
+        toast({
+          title: "Sucesso",
+          description: "Extensão removida com sucesso!",
+        });
+        await refreshEnrollments();
+        await refreshData();
+      }
+    } catch (error) {
+      console.error('Error removing extension:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover extensão. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  }, [removeExtension, refreshEnrollments, refreshData, toast]);
+
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
   }, []);
@@ -213,6 +233,7 @@ const AdminIndividualEnrollments = () => {
         onCreateSuccess={handleCreateSuccess}
         onEditSubmit={handleEditSubmit}
         onExtensionSubmit={handleExtensionSubmit}
+        onRemoveExtension={handleRemoveExtension}
         onSessionUpdated={handleSessionUpdated}
       />
     </div>
