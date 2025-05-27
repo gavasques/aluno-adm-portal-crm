@@ -28,6 +28,8 @@ interface EnrollmentInfoTabProps {
   onSave: (data: any) => void;
 }
 
+type StatusType = 'ativa' | 'concluida' | 'cancelada' | 'pausada';
+
 export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
   enrollment,
   onSave
@@ -36,7 +38,7 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     responsibleMentor: enrollment.responsibleMentor,
-    status: enrollment.status,
+    status: enrollment.status as StatusType,
     startDate: enrollment.startDate,
     observations: enrollment.observations || ''
   });
@@ -94,6 +96,10 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
   // Função para obter o nome do aluno
   const getStudentName = (studentId: string) => {
     return `Aluno ${studentId.slice(-8)}`;
+  };
+
+  const handleStatusChange = (value: string) => {
+    setEditData(prev => ({ ...prev, status: value as StatusType }));
   };
 
   return (
@@ -195,7 +201,7 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
                 </div>
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={editData.status} onValueChange={(value) => setEditData(prev => ({ ...prev, status: value }))}>
+                  <Select value={editData.status} onValueChange={handleStatusChange}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
