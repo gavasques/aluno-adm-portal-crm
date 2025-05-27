@@ -2,12 +2,14 @@
 import React, { useState } from "react";
 import { usePerformanceOptimizedUserContext } from "@/contexts/PerformanceOptimizedUserContext";
 import { useSimplifiedUserOperations } from "@/hooks/users/useSimplifiedUserOperations";
+import { useUserDropdownActions } from "@/hooks/users/useUserDropdownActions";
 import UsersHeader from "./UsersHeader";
 import UsersAlert from "./UsersAlert";
 import { UserFilters } from "./filters/UserFilters";
 import UserActionButtons from "./UserActionButtons";
 import { OptimizedUserTable } from "./table/OptimizedUserTable";
 import { ValidatedUserDialogs } from "./dialogs/ValidatedUserDialogs";
+import { PerformanceOptimizedUserDialogs } from "./dialogs/PerformanceOptimizedUserDialogs";
 import { PerformanceMonitor } from "./performance/PerformanceMonitor";
 import { Badge } from "@/components/ui/badge";
 import { Zap } from "lucide-react";
@@ -38,14 +40,13 @@ export const PerformanceOptimizedUsersPageContent: React.FC = () => {
     handleInviteUser,
   } = useSimplifiedUserOperations();
 
-  // Placeholder handlers for table actions
-  const adaptedHandlers = {
-    onViewDetails: (user: any) => console.log('View details:', user),
-    onResetPassword: (user: any) => console.log('Reset password:', user),
-    onDeleteUser: (user: any) => console.log('Delete user:', user),
-    onToggleUserStatus: (user: any) => console.log('Toggle status:', user),
-    onSetPermissionGroup: (user: any) => console.log('Set permissions:', user),
-  };
+  const {
+    handleViewDetails,
+    handleResetPassword,
+    handleDeleteUser,
+    handleToggleUserStatus,
+    handleSetPermissionGroup
+  } = useUserDropdownActions();
 
   return (
     <div className="space-y-6">
@@ -89,7 +90,11 @@ export const PerformanceOptimizedUsersPageContent: React.FC = () => {
         <OptimizedUserTable
           users={filteredUsers}
           isLoading={isLoading}
-          {...adaptedHandlers}
+          onViewDetails={handleViewDetails}
+          onResetPassword={handleResetPassword}
+          onDeleteUser={handleDeleteUser}
+          onToggleUserStatus={handleToggleUserStatus}
+          onSetPermissionGroup={handleSetPermissionGroup}
         />
       </div>
 
@@ -100,6 +105,8 @@ export const PerformanceOptimizedUsersPageContent: React.FC = () => {
         setShowInviteDialog={setShowInviteDialog}
         onRefresh={refreshUsers}
       />
+
+      <PerformanceOptimizedUserDialogs />
 
       {/* Monitor de Performance */}
       <PerformanceMonitor

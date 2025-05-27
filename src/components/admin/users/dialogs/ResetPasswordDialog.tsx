@@ -9,32 +9,32 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 
 interface ResetPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail: string;
-  onConfirmResetPassword: () => Promise<boolean>;
+  onConfirmReset: () => Promise<boolean>;
 }
 
 export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   open,
   onOpenChange,
   userEmail,
-  onConfirmResetPassword
+  onConfirmReset
 }) => {
-  const [isResetting, setIsResetting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleResetPassword = async () => {
-    setIsResetting(true);
+  const handleReset = async () => {
+    setIsProcessing(true);
     try {
-      const success = await onConfirmResetPassword();
+      const success = await onConfirmReset();
       if (success) {
         onOpenChange(false);
       }
     } finally {
-      setIsResetting(false);
+      setIsProcessing(false);
     }
   };
 
@@ -42,7 +42,10 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Redefinir Senha</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Mail className="w-5 h-5" />
+            Redefinir senha
+          </DialogTitle>
           <DialogDescription>
             Um email será enviado para o usuário com instruções para redefinir a senha.
           </DialogDescription>
@@ -60,21 +63,25 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isResetting}
+            disabled={isProcessing}
           >
             Cancelar
           </Button>
           <Button
             type="button"
-            onClick={handleResetPassword}
-            disabled={isResetting}
+            onClick={handleReset}
+            disabled={isProcessing}
           >
-            {isResetting ? (
+            {isProcessing ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                Enviando...
               </>
             ) : (
-              "Enviar Email"
+              <>
+                <Mail className="mr-2 h-4 w-4" />
+                Enviar email
+              </>
             )}
           </Button>
         </DialogFooter>
