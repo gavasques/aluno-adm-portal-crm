@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface UserStatusDialogProps {
@@ -28,21 +28,31 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
   onConfirmToggleStatus
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const isActive = currentStatus === "Ativo" || currentStatus === "ativo";
 
   const handleToggleStatus = async () => {
     setIsProcessing(true);
+    setIsSuccess(false);
+    
     try {
       console.log('🔄 Iniciando alteração de status para:', userEmail);
       const success = await onConfirmToggleStatus();
       
       if (success) {
         console.log('✅ Status alterado com sucesso para:', userEmail);
+        setIsSuccess(true);
+        
         toast({
           title: "Sucesso",
-          description: `Usuário ${isActive ? 'inativado' : 'ativado'} com sucesso.`,
+          description: `Usuário ${isActive ? 'inativado' : 'ativado'} com sucesso. Atualizando lista...`,
         });
-        onOpenChange(false);
+        
+        // Delay para mostrar o feedback visual antes de fechar
+        setTimeout(() => {
+          onOpenChange(false);
+          setIsSuccess(false);
+        }, 1500);
       } else {
         console.error('❌ Falha ao alterar status para:', userEmail);
         toast({
@@ -89,6 +99,15 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
               <span className="font-medium">Novo status:</span> {isActive ? 'Inativo' : 'Ativo'}
             </p>
           </div>
+          
+          {isSuccess && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-green-700">
+                Status alterado com sucesso! Atualizando interface...
+              </span>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -104,12 +123,17 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
             type="button"
             variant={isActive ? "destructive" : "default"}
             onClick={handleToggleStatus}
-            disabled={isProcessing}
+            disabled={isProcessing || isSuccess}
           >
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                 {isActive ? 'Inativando...' : 'Ativando...'}
+              </>
+            ) : isSuccess ? (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Concluído
               </>
             ) : (
               isActive ? 'Inativar Usuário' : 'Ativar Usuário'

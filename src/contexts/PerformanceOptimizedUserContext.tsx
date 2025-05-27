@@ -16,6 +16,7 @@ interface PerformanceOptimizedUserContextValue {
   setFilters: (filters: Partial<UserFilters>) => void;
   refreshUsers: () => Promise<void>;
   searchUsers: (query: string) => void;
+  forceRefresh: () => Promise<void>; // Nova função
   
   // CRUD Operations
   createUser: (userData: CreateUserData) => Promise<boolean>;

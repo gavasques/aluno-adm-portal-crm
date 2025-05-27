@@ -13,7 +13,8 @@ export const useUserActions = () => {
     isTogglingStatus,
     isResettingPassword,
     isSettingPermissions,
-    refreshUsers
+    refreshUsers,
+    forceRefresh
   } = usePerformanceOptimizedUserContext();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
@@ -25,8 +26,11 @@ export const useUserActions = () => {
           title: "Sucesso",
           description: `Usuário ${userEmail} excluído com sucesso.`,
         });
-        // Força atualização após exclusão
-        setTimeout(() => refreshUsers(), 500);
+        // Force refresh after successful deletion
+        setTimeout(() => {
+          console.log('🔄 Forcing refresh after user deletion...');
+          forceRefresh?.();
+        }, 500);
       } else {
         toast({
           title: "Erro",
@@ -44,7 +48,7 @@ export const useUserActions = () => {
       });
       return false;
     }
-  }, [deleteUser, refreshUsers]);
+  }, [deleteUser, forceRefresh]);
 
   const confirmToggleStatus = useCallback(async (userId: string, userEmail: string, currentStatus: string): Promise<boolean> => {
     try {
@@ -55,9 +59,11 @@ export const useUserActions = () => {
         const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
         console.log('✅ Status alterado para:', newStatus);
         
-        // Não mostra toast aqui pois já é mostrado no diálogo
-        // Força atualização após alteração de status
-        setTimeout(() => refreshUsers(), 500);
+        // Force refresh immediately after status change
+        setTimeout(() => {
+          console.log('🔄 Forcing refresh after status toggle...');
+          forceRefresh?.();
+        }, 200);
       } else {
         console.error('❌ Falha ao alterar status');
       }
@@ -66,7 +72,7 @@ export const useUserActions = () => {
       console.error('Erro ao alterar status:', error);
       return false;
     }
-  }, [toggleUserStatus, refreshUsers]);
+  }, [toggleUserStatus, forceRefresh]);
 
   const confirmResetPassword = useCallback(async (email: string): Promise<boolean> => {
     try {
@@ -105,8 +111,11 @@ export const useUserActions = () => {
           title: "Sucesso",
           description: `Permissões atualizadas para ${userEmail}.`,
         });
-        // Força atualização após alteração de permissões
-        setTimeout(() => refreshUsers(), 500);
+        // Force refresh after permission change
+        setTimeout(() => {
+          console.log('🔄 Forcing refresh after permission change...');
+          forceRefresh?.();
+        }, 500);
       } else {
         toast({
           title: "Erro",
@@ -124,7 +133,7 @@ export const useUserActions = () => {
       });
       return false;
     }
-  }, [setPermissionGroup, refreshUsers]);
+  }, [setPermissionGroup, forceRefresh]);
 
   return {
     confirmDelete,

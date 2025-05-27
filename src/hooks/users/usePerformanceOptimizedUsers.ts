@@ -14,7 +14,6 @@ export const usePerformanceOptimizedUsers = () => {
     group: 'all'
   });
 
-  // Sempre chamar os hooks na mesma ordem
   const {
     cacheFilteredUsers,
     getCachedFilteredUsers,
@@ -28,7 +27,7 @@ export const usePerformanceOptimizedUsers = () => {
   // Set query client on service
   optimizedUserService.setQueryClient(queryClient);
 
-  // Fetch users with optimized caching
+  // Fetch users with optimized caching and more aggressive refresh
   const {
     data: users = [],
     isLoading,
@@ -42,10 +41,11 @@ export const usePerformanceOptimizedUsers = () => {
       console.log('✅ Query retornou:', result?.length, 'usuários');
       return result;
     },
-    staleTime: 2 * 60 * 1000, // Reduzido para 2 minutos para melhor responsividade
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    refetchOnWindowFocus: false,
+    staleTime: 1 * 60 * 1000, // Reduzido para 1 minuto para atualização mais rápida
+    gcTime: 5 * 60 * 1000, // Reduzido para 5 minutos
+    refetchOnWindowFocus: true, // Reativar refetch ao focar na janela
     refetchOnMount: true,
+    refetchInterval: 2 * 60 * 1000, // Polling a cada 2 minutos
     retry: (failureCount, error) => {
       console.log(`🔄 Tentativa ${failureCount + 1} de buscar usuários. Erro:`, error);
       return failureCount < 2;
@@ -53,35 +53,46 @@ export const usePerformanceOptimizedUsers = () => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Ensure users is always an array - SEMPRE executado
+  // Ensure users is always an array
   const usersArray = useMemo(() => {
     const result = Array.isArray(users) ? users : [];
     console.log('📊 usersArray processado:', result.length, 'usuários');
     return result;
   }, [users]);
 
-  // Busca otimizada com debounce mais agressivo
+  // Busca otimizada com debounce mais rápido
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
     console.log('🔍 Aplicando busca otimizada:', searchTerm);
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
-  }, 100); // Otimizado para 100ms
+  }, 50); // Reduzido para 50ms para resposta mais rápida
 
-  // Mutations com invalidação inteligente
+  // Force refresh function for immediate updates
+  const forceRefresh = useCallback(async () => {
+    console.log('🔄 Executando refresh forçado...');
+    // Clear all caches first
+    smartInvalidate();
+    queryClient.removeQueries({ queryKey: ['users'] });
+    // Force refetch
+    await refetch();
+    console.log('✅ Refresh forçado concluído');
+  }, [smartInvalidate, queryClient, refetch]);
+
+  // Mutations com invalidação mais agressiva
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
-    onSuccess: () => {
-      console.log('✅ Usuário criado, invalidando cache...');
-      smartInvalidate();
+    onSuccess: async () => {
+      console.log('✅ Usuário criado, invalidando cache e refreshing...');
+      await forceRefresh();
     },
   });
 
   const deleteUserMutation = useMutation({
     mutationFn: ({ userId, userEmail }: { userId: string; userEmail: string }) =>
       optimizedUserService.deleteUser(userId, userEmail),
-    onSuccess: () => {
-      console.log('✅ Usuário excluído, invalidando cache...');
-      smartInvalidate();
+    onSuccess: async () => {
+      console.log('✅ Usuário excluído, invalidando cache e refreshing...');
+      await forceRefresh();
     },
   });
 
@@ -94,17 +105,18 @@ export const usePerformanceOptimizedUsers = () => {
       console.log('🔄 Mutation: Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
       return optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
     },
-    onSuccess: (result, variables) => {
+    onSuccess: async (result, variables) => {
       console.log('✅ Mutation: Status alterado com sucesso para:', variables.userEmail);
-      // Invalidar cache e forçar refetch
+      
+      // Invalidação mais agressiva e refresh imediato
       queryClient.invalidateQueries({ queryKey: ['users'] });
       smartInvalidate();
       
-      // Forçar refetch após um pequeno delay para garantir que o backend foi atualizado
-      setTimeout(() => {
-        console.log('🔄 Forçando refetch após alteração de status...');
-        refetch();
-      }, 500);
+      // Force refresh immediately
+      setTimeout(async () => {
+        console.log('🔄 Executando refresh imediato após alteração de status...');
+        await forceRefresh();
+      }, 100); // Refresh quase imediato
     },
     onError: (error, variables) => {
       console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
@@ -121,9 +133,9 @@ export const usePerformanceOptimizedUsers = () => {
       userEmail: string; 
       groupId: string | null; 
     }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
-    onSuccess: () => {
-      smartInvalidate();
-      refetch();
+    onSuccess: async () => {
+      console.log('✅ Permissões alteradas, refreshing...');
+      await forceRefresh();
     },
   });
 
@@ -131,7 +143,6 @@ export const usePerformanceOptimizedUsers = () => {
   const filteredUsers = useMemo(() => {
     console.log('🔄 Aplicando filtros otimizados...');
     
-    // Se não há busca, retorna todos os usuários mais rapidamente
     if (!filters.search && filters.status === 'all' && filters.group === 'all') {
       console.log('✅ Sem filtros, retornando todos os usuários:', usersArray.length);
       return usersArray;
@@ -170,11 +181,9 @@ export const usePerformanceOptimizedUsers = () => {
   }, [debouncedSearch]);
 
   const refreshUsers = useCallback(async () => {
-    console.log('🔄 Forçando refresh de usuários...');
-    queryClient.invalidateQueries({ queryKey: ['users'] });
-    smartInvalidate();
-    await refetch();
-  }, [refetch, smartInvalidate, queryClient]);
+    console.log('🔄 Refresh de usuários solicitado...');
+    await forceRefresh();
+  }, [forceRefresh]);
 
   const performanceMetrics = useMemo(() => ({
     ...getMetrics(),
@@ -214,6 +223,7 @@ export const usePerformanceOptimizedUsers = () => {
     setFilters,
     refreshUsers,
     searchUsers,
+    forceRefresh, // Nova função para refresh forçado
     
     // Mutations
     createUser: createUserMutation.mutateAsync,
