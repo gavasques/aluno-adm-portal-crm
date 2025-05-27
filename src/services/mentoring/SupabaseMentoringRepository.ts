@@ -353,33 +353,47 @@ export class SupabaseMentoringRepository {
 
       console.log('✅ Inscrição encontrada:', existingEnrollment);
 
-      // Verificar se há sessões relacionadas
-      console.log('🔍 Verificando sessões relacionadas...');
-      const { data: sessions, error: sessionsError } = await supabase
+      // 1. Deletar materiais relacionados primeiro
+      console.log('🗑️ Deletando materiais relacionados...');
+      const { error: materialsError } = await supabase
+        .from('mentoring_materials')
+        .delete()
+        .eq('enrollment_id', id);
+
+      if (materialsError) {
+        console.error('❌ Erro ao deletar materiais:', materialsError);
+      } else {
+        console.log('✅ Materiais deletados com sucesso');
+      }
+
+      // 2. Deletar sessões relacionadas
+      console.log('🗑️ Deletando sessões relacionadas...');
+      const { error: sessionsError } = await supabase
         .from('mentoring_sessions')
-        .select('id')
+        .delete()
         .eq('enrollment_id', id);
 
       if (sessionsError) {
-        console.error('❌ Erro ao verificar sessões:', sessionsError);
-      } else {
-        console.log('📊 Sessões encontradas:', sessions?.length || 0);
+        console.error('❌ Erro ao deletar sessões:', sessionsError);
+        return false;
       }
 
-      // Verificar se há extensões relacionadas
-      console.log('🔍 Verificando extensões relacionadas...');
-      const { data: extensions, error: extensionsError } = await supabase
+      console.log('✅ Sessões deletadas com sucesso');
+
+      // 3. Deletar extensões relacionadas
+      console.log('🗑️ Deletando extensões relacionadas...');
+      const { error: extensionsError } = await supabase
         .from('mentoring_enrollment_extensions')
-        .select('id')
+        .delete()
         .eq('enrollment_id', id);
 
       if (extensionsError) {
-        console.error('❌ Erro ao verificar extensões:', extensionsError);
+        console.error('❌ Erro ao deletar extensões:', extensionsError);
       } else {
-        console.log('📊 Extensões encontradas:', extensions?.length || 0);
+        console.log('✅ Extensões deletadas com sucesso');
       }
 
-      // Deletar a inscrição
+      // 4. Finalmente, deletar a inscrição
       console.log('🗑️ Executando delete da inscrição...');
       const { error: deleteError } = await supabase
         .from('mentoring_enrollments')
