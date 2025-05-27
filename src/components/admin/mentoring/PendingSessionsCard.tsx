@@ -245,7 +245,7 @@ const PendingSessionsCard = ({
       </Card>
 
       {/* Dialog para criar nova sessão */}
-      <Dialog open={showForm} onOpenChange={setShowCreateForm}>
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Nova Sessão Pendente</DialogTitle>
