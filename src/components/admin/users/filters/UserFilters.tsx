@@ -11,37 +11,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Clock, Users, Filter, AlertCircle } from "lucide-react";
+import { UserFilters as UserFiltersType, UserStats } from "@/types/user.types";
 
-interface UsersFilterProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (status: string) => void;
-  groupFilter: string;
-  onGroupFilterChange: (group: string) => void;
-  pendingCount: number;
-  totalCount: number;
+interface UserFiltersProps {
+  filters: UserFiltersType;
+  stats: UserStats;
+  onFiltersChange: (filters: Partial<UserFiltersType>) => void;
+  onSearch: (query: string) => void;
 }
 
-const UsersFilter: React.FC<UsersFilterProps> = ({
-  searchQuery,
-  onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  groupFilter,
-  onGroupFilterChange,
-  pendingCount,
-  totalCount,
+export const UserFilters: React.FC<UserFiltersProps> = ({
+  filters,
+  stats,
+  onFiltersChange,
+  onSearch,
 }) => {
   const handlePendingFilter = () => {
-    onGroupFilterChange("pending");
-    onStatusFilterChange("all");
+    onFiltersChange({ group: "pending", status: "all" });
   };
 
   const clearAllFilters = () => {
-    onSearchChange("");
-    onStatusFilterChange("all");
-    onGroupFilterChange("all");
+    onSearch("");
+    onFiltersChange({ status: "all", group: "all" });
   };
 
   return (
@@ -51,10 +42,10 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-blue-600" />
           <span className="text-sm text-gray-600">Total: </span>
-          <Badge variant="outline">{totalCount}</Badge>
+          <Badge variant="outline">{stats.total}</Badge>
         </div>
         
-        {pendingCount > 0 && (
+        {stats.pending > 0 && (
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-orange-600" />
             <span className="text-sm text-gray-600">Pendentes: </span>
@@ -63,7 +54,7 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
               className="border-orange-300 text-orange-700 bg-orange-50 cursor-pointer hover:bg-orange-100"
               onClick={handlePendingFilter}
             >
-              {pendingCount}
+              {stats.pending}
             </Badge>
           </div>
         )}
@@ -72,39 +63,33 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
       {/* Filtros rápidos */}
       <div className="flex flex-wrap items-center gap-2">
         <Button
-          variant={groupFilter === "pending" ? "default" : "outline"}
+          variant={filters.group === "pending" ? "default" : "outline"}
           size="sm"
           onClick={handlePendingFilter}
           className="h-8"
         >
           <AlertCircle className="h-3 w-3 mr-1" />
           Pendentes
-          {pendingCount > 0 && (
+          {stats.pending > 0 && (
             <Badge variant="secondary" className="ml-1 text-xs">
-              {pendingCount}
+              {stats.pending}
             </Badge>
           )}
         </Button>
 
         <Button
-          variant={groupFilter === "assigned" ? "default" : "outline"}
+          variant={filters.group === "assigned" ? "default" : "outline"}
           size="sm"
-          onClick={() => {
-            onGroupFilterChange("assigned");
-            onStatusFilterChange("all");
-          }}
+          onClick={() => onFiltersChange({ group: "assigned", status: "all" })}
           className="h-8"
         >
           Validados
         </Button>
 
         <Button
-          variant={statusFilter === "ativo" ? "default" : "outline"}
+          variant={filters.status === "ativo" ? "default" : "outline"}
           size="sm"
-          onClick={() => {
-            onStatusFilterChange("ativo");
-            onGroupFilterChange("all");
-          }}
+          onClick={() => onFiltersChange({ status: "ativo", group: "all" })}
           className="h-8"
         >
           Ativos
@@ -118,14 +103,14 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Buscar por nome ou email..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={filters.search}
+              onChange={(e) => onSearch(e.target.value)}
               className="pl-10"
             />
           </div>
         </div>
 
-        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+        <Select value={filters.status} onValueChange={(value: any) => onFiltersChange({ status: value })}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
@@ -136,7 +121,7 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
           </SelectContent>
         </Select>
 
-        <Select value={groupFilter} onValueChange={onGroupFilterChange}>
+        <Select value={filters.group} onValueChange={(value: any) => onFiltersChange({ group: value })}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filtrar por grupo" />
           </SelectTrigger>
@@ -147,7 +132,7 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
           </SelectContent>
         </Select>
 
-        {(statusFilter !== "all" || groupFilter !== "all" || searchQuery) && (
+        {(filters.status !== "all" || filters.group !== "all" || filters.search) && (
           <Button
             variant="outline"
             size="sm"
@@ -161,5 +146,3 @@ const UsersFilter: React.FC<UsersFilterProps> = ({
     </div>
   );
 };
-
-export default UsersFilter;

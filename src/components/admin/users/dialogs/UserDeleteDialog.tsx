@@ -10,76 +10,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 
 interface UserDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userId: string;
   userEmail: string;
-  onSuccess: () => void;
+  onConfirmDelete: () => Promise<boolean>;
 }
 
-const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
+export const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
   open,
   onOpenChange,
-  userId,
   userEmail,
-  onSuccess,
+  onConfirmDelete,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!userId) return;
-
+    setIsDeleting(true);
     try {
-      setIsDeleting(true);
-
-      // Chamar a edge function para excluir ou inativar o usuário
-      const { data, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
-        body: {
-          action: 'deleteUser',
-          userId,
-          email: userEmail
-        }
-      });
-
-      if (error) {
-        console.error("Erro ao excluir usuário:", error);
-        throw new Error(error.message || "Erro ao processar a exclusão do usuário");
+      const success = await onConfirmDelete();
+      if (success) {
+        onOpenChange(false);
       }
-
-      if (data.error) {
-        console.error("Erro retornado pela função:", data.error);
-        throw new Error(data.error);
-      }
-
-      // Mostrar mensagem de acordo com o resultado
-      if (data.inactivated) {
-        toast({
-          title: "Usuário inativado",
-          description: `O usuário não pôde ser excluído porque possui dados associados. Foi inativado no lugar.`,
-        });
-      } else {
-        toast({
-          title: "Usuário excluído",
-          description: `O usuário ${userEmail} foi excluído com sucesso.`,
-        });
-      }
-
-      onOpenChange(false);
-      onSuccess(); // Atualizar a lista de usuários
-    } catch (error) {
-      console.error("Falha ao excluir usuário:", error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível processar sua solicitação.",
-        variant: "destructive",
-      });
     } finally {
       setIsDeleting(false);
     }
@@ -121,5 +75,3 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
     </AlertDialog>
   );
 };
-
-export default UserDeleteDialog;

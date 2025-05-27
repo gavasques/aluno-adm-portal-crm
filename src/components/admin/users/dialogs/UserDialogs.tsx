@@ -1,13 +1,15 @@
 
 import React from "react";
-import UserAddDialog from "./UserAddDialog";
-import UserInviteDialog from "./UserInviteDialog";
-import UserDeleteDialog from "./UserDeleteDialog";
-import UserStatusDialog from "./UserStatusDialog";
-import ResetPasswordDialog from "./ResetPasswordDialog";
-import UserPermissionGroupDialog from "./UserPermissionGroupDialog";
+import { UserAddDialog } from "./UserAddDialog";
+import { UserInviteDialog } from "./UserInviteDialog";
+import { UserDeleteDialog } from "./UserDeleteDialog";
+import { UserStatusDialog } from "./UserStatusDialog";
+import { ResetPasswordDialog } from "./ResetPasswordDialog";
+import { UserPermissionGroupDialog } from "./UserPermissionGroupDialog";
+import { UserDetailsDialog } from "./UserDetailsDialog";
 
-interface UsersDialogsProps {
+interface UserDialogsProps {
+  // Dialog states
   showAddDialog: boolean;
   setShowAddDialog: (show: boolean) => void;
   showInviteDialog: boolean;
@@ -20,14 +22,26 @@ interface UsersDialogsProps {
   setShowResetDialog: (show: boolean) => void;
   showPermissionDialog?: boolean;
   setShowPermissionDialog?: (show: boolean) => void;
+  showDetailsDialog: boolean;
+  setShowDetailsDialog: (show: boolean) => void;
+
+  // Selected user data
   selectedUserEmail: string;
   selectedUserId: string;
   selectedUserStatus: boolean;
   selectedUserPermissionGroupId?: string | null;
-  onSuccess: () => void;
+  selectedUser: any;
+
+  // Operations
+  onCreateUser: (userData: any) => Promise<boolean>;
+  onConfirmDelete: () => Promise<boolean>;
+  onConfirmToggleStatus: () => Promise<boolean>;
+  onConfirmResetPassword: () => Promise<boolean>;
+  onConfirmSetPermissionGroup: (groupId: string | null) => Promise<boolean>;
+  onRefresh: () => void;
 }
 
-const UsersDialogs: React.FC<UsersDialogsProps> = ({
+export const UserDialogs: React.FC<UserDialogsProps> = ({
   showAddDialog,
   setShowAddDialog,
   showInviteDialog,
@@ -40,11 +54,19 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
   setShowResetDialog,
   showPermissionDialog = false,
   setShowPermissionDialog,
+  showDetailsDialog,
+  setShowDetailsDialog,
   selectedUserEmail,
   selectedUserId,
   selectedUserStatus,
   selectedUserPermissionGroupId,
-  onSuccess
+  selectedUser,
+  onCreateUser,
+  onConfirmDelete,
+  onConfirmToggleStatus,
+  onConfirmResetPassword,
+  onConfirmSetPermissionGroup,
+  onRefresh
 }) => {
   return (
     <>
@@ -52,14 +74,14 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
       <UserAddDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
-        onSuccess={onSuccess}
+        onCreateUser={onCreateUser}
       />
 
       {/* Diálogo para convidar usuário */}
       <UserInviteDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
-        onSuccess={onSuccess}
+        onSuccess={onRefresh}
       />
 
       {/* Diálogo para excluir usuário */}
@@ -67,8 +89,7 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         userEmail={selectedUserEmail}
-        userId={selectedUserId}
-        onSuccess={onSuccess}
+        onConfirmDelete={onConfirmDelete}
       />
 
       {/* Diálogo para alternar status do usuário */}
@@ -76,9 +97,8 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
         open={showStatusDialog}
         onOpenChange={setShowStatusDialog}
         userEmail={selectedUserEmail}
-        userId={selectedUserId}
         currentStatus={selectedUserStatus ? "Ativo" : "Inativo"}
-        onSuccess={onSuccess}
+        onConfirmToggleStatus={onConfirmToggleStatus}
       />
 
       {/* Diálogo para redefinir senha */}
@@ -86,7 +106,7 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
         userEmail={selectedUserEmail}
-        onSuccess={onSuccess}
+        onConfirmResetPassword={onConfirmResetPassword}
       />
       
       {/* Diálogo para definir grupo de permissão */}
@@ -97,11 +117,17 @@ const UsersDialogs: React.FC<UsersDialogsProps> = ({
           userId={selectedUserId}
           userEmail={selectedUserEmail}
           currentGroupId={selectedUserPermissionGroupId || null}
-          onSuccess={onSuccess}
+          onConfirmSetPermissionGroup={onConfirmSetPermissionGroup}
         />
       )}
+
+      {/* Dialog de detalhes do usuário */}
+      <UserDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        user={selectedUser}
+        onRefresh={onRefresh}
+      />
     </>
   );
 };
-
-export default UsersDialogs;

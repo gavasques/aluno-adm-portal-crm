@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import UserInviteForm from "./UserInviteForm";
+import UserInviteForm from "../UserInviteForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
@@ -17,7 +17,7 @@ interface UserInviteDialogProps {
   onSuccess: () => void;
 }
 
-const UserInviteDialog: React.FC<UserInviteDialogProps> = ({ 
+export const UserInviteDialog: React.FC<UserInviteDialogProps> = ({ 
   open, 
   onOpenChange, 
   onSuccess 
@@ -52,5 +52,3 @@ const UserInviteDialog: React.FC<UserInviteDialogProps> = ({
     </Dialog>
   );
 };
-
-export default UserInviteDialog;

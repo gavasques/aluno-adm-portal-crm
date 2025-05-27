@@ -10,60 +10,32 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 
-export interface UserStatusDialogProps {
+interface UserStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail: string;
-  userId: string;
   currentStatus: string;
-  onSuccess: () => void;
+  onConfirmToggleStatus: () => Promise<boolean>;
 }
 
-const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
+export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
   open,
   onOpenChange,
   userEmail,
-  userId,
   currentStatus,
-  onSuccess
+  onConfirmToggleStatus
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const isActive = currentStatus === "Ativo";
 
   const handleToggleStatus = async () => {
+    setIsProcessing(true);
     try {
-      setIsProcessing(true);
-
-      const newStatus = isActive ? "Inativo" : "Ativo";
-
-      // Agora utilizamos o campo status diretamente
-      const { error } = await supabase
-        .from("profiles")
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString() // Atualizar o timestamp também
-        })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: `Usuário ${newStatus === "Ativo" ? 'ativado' : 'inativado'}`,
-        description: `O usuário ${userEmail} foi ${newStatus === "Ativo" ? 'ativado' : 'inativado'} com sucesso.`,
-      });
-
-      onOpenChange(false);
-      onSuccess();
-    } catch (error) {
-      console.error("Erro ao alterar status do usuário:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível alterar o status do usuário.",
-        variant: "destructive",
-      });
+      const success = await onConfirmToggleStatus();
+      if (success) {
+        onOpenChange(false);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -116,5 +88,3 @@ const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
     </Dialog>
   );
 };
-
-export default UserStatusDialog;

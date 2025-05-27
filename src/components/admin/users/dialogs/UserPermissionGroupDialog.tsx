@@ -16,8 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle } from "lucide-react";
 
 interface UserPermissionGroupDialogProps {
@@ -26,16 +24,16 @@ interface UserPermissionGroupDialogProps {
   userId: string;
   userEmail: string;
   currentGroupId: string | null;
-  onSuccess: () => void;
+  onConfirmSetPermissionGroup: (groupId: string | null) => Promise<boolean>;
 }
 
-const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
+export const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
   open,
   onOpenChange,
   userId,
   userEmail,
   currentGroupId,
-  onSuccess,
+  onConfirmSetPermissionGroup,
 }) => {
   const { permissionGroups, isLoading } = usePermissionGroups();
   const [selectedGroupId, setSelectedGroupId] = useState<string>(currentGroupId || "none");
@@ -51,56 +49,19 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
   }, [currentGroupId, open]);
 
   const handleSubmit = async () => {
+    setSubmitting(true);
+    
     try {
-      setSubmitting(true);
-      
-      // Converter "none" para null
       const groupIdToUpdate = selectedGroupId === "none" ? null : selectedGroupId;
+      const success = await onConfirmSetPermissionGroup(groupIdToUpdate);
       
-      console.log("Atualizando grupo de permissão:", {
-        userId,
-        userEmail,
-        selectedGroupId: groupIdToUpdate,
-        currentGroupId
-      });
-      
-      const { error } = await supabase
-        .from("profiles")
-        .update({ permission_group_id: groupIdToUpdate })
-        .eq("id", userId);
-        
-      if (error) {
-        console.error("Erro ao atualizar grupo de permissão:", error);
-        throw error;
+      if (success) {
+        setSuccess(true);
+        setTimeout(() => {
+          onOpenChange(false);
+          setSuccess(false);
+        }, 1500);
       }
-      
-      console.log("Grupo de permissão atualizado com sucesso");
-      
-      // Mostrar feedback de sucesso
-      setSuccess(true);
-      
-      const selectedGroup = permissionGroups.find(g => g.id === groupIdToUpdate);
-      const groupName = selectedGroup ? selectedGroup.name : "Nenhum grupo";
-      
-      toast({
-        title: "Grupo de permissão atualizado",
-        description: `${userEmail} foi vinculado ao grupo "${groupName}" com sucesso`,
-      });
-      
-      // Aguardar um momento para mostrar o feedback e então atualizar a lista
-      setTimeout(() => {
-        onSuccess();
-        onOpenChange(false);
-        setSuccess(false);
-      }, 1500);
-      
-    } catch (error: any) {
-      console.error("Erro ao atualizar grupo de permissão do usuário:", error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível atualizar o grupo de permissão",
-        variant: "destructive",
-      });
     } finally {
       setSubmitting(false);
     }
@@ -191,5 +152,3 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
     </Dialog>
   );
 };
-
-export default UserPermissionGroupDialog;

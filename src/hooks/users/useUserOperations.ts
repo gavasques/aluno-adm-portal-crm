@@ -1,17 +1,32 @@
 
-import { useState } from "react";
+import { useState } from 'react';
+import { useUsers } from './useUsers';
 
-export const useUserDialogs = () => {
+export const useUserOperations = () => {
+  const {
+    createUser,
+    updateUser,
+    deleteUser,
+    toggleUserStatus,
+    resetPassword,
+    setPermissionGroup
+  } = useUsers();
+
+  // Dialog states
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
-  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+
+  // Selected user states
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
   const [selectedUserStatus, setSelectedUserStatus] = useState(false);
   const [selectedUserPermissionGroupId, setSelectedUserPermissionGroupId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const handleAddUser = () => {
     setShowAddDialog(true);
@@ -40,14 +55,64 @@ export const useUserDialogs = () => {
   };
 
   const handleSetPermissionGroup = (userId: string, email: string, permissionGroupId: string | null) => {
-    console.log("handleSetPermissionGroup called:", { userId, email, permissionGroupId });
     setSelectedUserId(userId);
     setSelectedUserEmail(email);
     setSelectedUserPermissionGroupId(permissionGroupId);
     setShowPermissionDialog(true);
   };
 
+  const handleViewDetails = (user: any) => {
+    setSelectedUser(user);
+    setShowDetailsDialog(true);
+  };
+
+  const closeAllDialogs = () => {
+    setShowAddDialog(false);
+    setShowInviteDialog(false);
+    setShowDeleteDialog(false);
+    setShowStatusDialog(false);
+    setShowResetDialog(false);
+    setShowPermissionDialog(false);
+    setShowDetailsDialog(false);
+    setSelectedUserId("");
+    setSelectedUserEmail("");
+    setSelectedUser(null);
+  };
+
+  const confirmDelete = async () => {
+    const success = await deleteUser(selectedUserId);
+    if (success) {
+      closeAllDialogs();
+    }
+    return success;
+  };
+
+  const confirmToggleStatus = async () => {
+    const success = await toggleUserStatus(selectedUserId);
+    if (success) {
+      closeAllDialogs();
+    }
+    return success;
+  };
+
+  const confirmResetPassword = async () => {
+    const success = await resetPassword(selectedUserEmail);
+    if (success) {
+      closeAllDialogs();
+    }
+    return success;
+  };
+
+  const confirmSetPermissionGroup = async (groupId: string | null) => {
+    const success = await setPermissionGroup(selectedUserId, groupId);
+    if (success) {
+      closeAllDialogs();
+    }
+    return success;
+  };
+
   return {
+    // Dialog states
     showAddDialog,
     setShowAddDialog,
     showInviteDialog,
@@ -60,15 +125,34 @@ export const useUserDialogs = () => {
     setShowResetDialog,
     showPermissionDialog,
     setShowPermissionDialog,
-    selectedUserEmail,
+    showDetailsDialog,
+    setShowDetailsDialog,
+
+    // Selected user data
     selectedUserId,
+    selectedUserEmail,
     selectedUserStatus,
     selectedUserPermissionGroupId,
+    selectedUser,
+
+    // Handlers
     handleAddUser,
     handleInviteUser,
     handleDeleteUser,
     handleToggleUserStatus,
     handleResetPassword,
     handleSetPermissionGroup,
+    handleViewDetails,
+    closeAllDialogs,
+
+    // Confirmation actions
+    confirmDelete,
+    confirmToggleStatus,
+    confirmResetPassword,
+    confirmSetPermissionGroup,
+
+    // Operations
+    createUser,
+    updateUser,
   };
 };

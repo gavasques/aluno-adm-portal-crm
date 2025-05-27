@@ -7,29 +7,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import UserForm from "./UserForm";
+import { UserForm } from "../forms/UserForm";
+import { CreateUserData } from "@/types/user.types";
 
 interface UserAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onCreateUser: (userData: CreateUserData) => Promise<boolean>;
 }
 
-const UserAddDialog: React.FC<UserAddDialogProps> = ({ 
+export const UserAddDialog: React.FC<UserAddDialogProps> = ({ 
   open, 
   onOpenChange, 
-  onSuccess 
+  onCreateUser 
 }) => {
   const handleSuccess = () => {
-    // O UserForm já gerencia o delay e feedback visual
-    // Aqui apenas fechamos o diálogo e atualizamos a lista
     onOpenChange(false);
-    
-    // Atualizar a lista após um pequeno delay para garantir
-    // que o diálogo seja fechado primeiro
-    setTimeout(() => {
-      onSuccess();
-    }, 300);
   };
 
   return (
@@ -43,6 +36,7 @@ const UserAddDialog: React.FC<UserAddDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <UserForm 
+          onCreateUser={onCreateUser}
           onSuccess={handleSuccess}
           onCancel={() => onOpenChange(false)}
         />
@@ -50,5 +44,3 @@ const UserAddDialog: React.FC<UserAddDialogProps> = ({
     </Dialog>
   );
 };
-
-export default UserAddDialog;

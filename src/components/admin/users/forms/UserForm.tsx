@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,22 +20,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useAdminOperations } from "@/hooks/auth/useBasicAuth/useAdminOperations";
 import { userFormSchema } from "@/utils/validation-schemas";
 import { validatePassword } from "@/utils/security";
-import { toast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
+import { CreateUserData } from "@/types/user.types";
 
 interface UserFormProps {
+  onCreateUser: (userData: CreateUserData) => Promise<boolean>;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
+export const UserForm: React.FC<UserFormProps> = ({ onCreateUser, onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-  const { createAdminUser } = useAdminOperations();
 
   const form = useForm({
     resolver: zodResolver(userFormSchema),
@@ -54,7 +54,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
     return password;
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: CreateUserData) => {
     try {
       setIsSubmitting(true);
       
@@ -65,52 +65,20 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         return;
       }
 
-      console.log("Enviando dados do formulário:", {
-        ...data,
-        password: "***"
-      });
-
-      // Criar usuário com todos os dados incluindo is_mentor
-      const result = await createAdminUser(
-        data.email, 
-        data.name, 
-        data.role, 
-        data.password,
-        data.is_mentor
-      );
+      const success = await onCreateUser(data);
       
-      console.log("Resultado da criação:", result);
-      
-      // Se a operação foi bem-sucedida
-      if (result && result.success) {
-        console.log("Usuário criado com sucesso:", result);
-        
-        // Mostrar estado de sucesso
+      if (success) {
         setIsSuccess(true);
-        
-        // Reset do formulário
         form.reset();
         setPasswordErrors([]);
         
         // Delay para mostrar o feedback antes de fechar
         setTimeout(() => {
           onSuccess();
-        }, 2000); // 2 segundos para ver o feedback
-      } else if (result && result.existed) {
-        // Usuário já existe, mas vamos resetar o form mesmo assim
-        form.reset();
-        setPasswordErrors([]);
-        
-        setTimeout(() => {
-          onSuccess();
         }, 2000);
-      } else {
-        // Erro na criação
-        console.error("Erro na criação do usuário:", result?.error);
       }
     } catch (error) {
       console.error("Erro no formulário:", error);
-      // O erro já foi sanitizado e exibido no hook
     } finally {
       setIsSubmitting(false);
     }
@@ -265,5 +233,3 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
     </Form>
   );
 };
-
-export default UserForm;
