@@ -20,6 +20,7 @@ interface PendingSessionsCardProps {
   onCreateSession: (data: any) => void;
   onSessionScheduled: (sessionId: string) => void;
   isLoading?: boolean;
+  allSessions?: MentoringSession[]; // Adicionar todas as sessões para calcular corretamente
 }
 
 const PendingSessionsCard = ({ 
@@ -27,7 +28,8 @@ const PendingSessionsCard = ({
   pendingSessions, 
   onCreateSession, 
   onSessionScheduled,
-  isLoading 
+  isLoading,
+  allSessions = []
 }: PendingSessionsCardProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showCalendly, setShowCalendly] = useState(false);
@@ -41,8 +43,24 @@ const PendingSessionsCard = ({
   const student = students?.find(s => s.id === enrollment.studentId);
   const studentName = student?.name || student?.email || 'Aluno';
 
+  // Calcular o total de sessões já criadas (todas as sessões da inscrição)
+  const totalSessionsCreated = allSessions.filter(session => session.enrollmentId === enrollment.id).length;
+  
+  // Verificar se pode criar mais sessões
+  const canCreateMoreSessions = totalSessionsCreated < enrollment.totalSessions;
+  
+  // Calcular o próximo número de sessão
+  const nextSessionNumber = totalSessionsCreated + 1;
+
   const handleCreateSession = (data: any) => {
-    onCreateSession(data);
+    // Adicionar o número da sessão correto aos dados
+    const sessionData = {
+      ...data,
+      sessionNumber: nextSessionNumber,
+      title: `Sessão ${nextSessionNumber} - ${enrollment.mentoring.name}`
+    };
+    
+    onCreateSession(sessionData);
     setShowCreateForm(false);
   };
 
@@ -90,8 +108,6 @@ const PendingSessionsCard = ({
     setSelectedSession(null);
   };
 
-  const canCreateMoreSessions = enrollment.sessionsUsed + pendingSessions.length < enrollment.totalSessions;
-
   return (
     <>
       <Card>
@@ -114,6 +130,25 @@ const PendingSessionsCard = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Info sobre limite de sessões */}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-blue-800">
+                Sessões criadas: {totalSessionsCreated} de {enrollment.totalSessions}
+              </span>
+              {!canCreateMoreSessions && (
+                <Badge variant="outline" className="text-blue-700 border-blue-300">
+                  Limite atingido
+                </Badge>
+              )}
+            </div>
+            {canCreateMoreSessions && (
+              <p className="text-xs text-blue-600 mt-1">
+                Próxima sessão será: Sessão {nextSessionNumber}
+              </p>
+            )}
+          </div>
+
           {pendingSessions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Clock className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -201,7 +236,7 @@ const PendingSessionsCard = ({
                   className="w-full mt-3"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Mais Sessões
+                  Adicionar Mais Sessões ({totalSessionsCreated}/{enrollment.totalSessions})
                 </Button>
               )}
             </div>
@@ -210,16 +245,20 @@ const PendingSessionsCard = ({
       </Card>
 
       {/* Dialog para criar nova sessão */}
-      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+      <Dialog open={showForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Nova Sessão Pendente</DialogTitle>
+            <p className="text-sm text-gray-600">
+              Sessão {nextSessionNumber} de {enrollment.totalSessions}
+            </p>
           </DialogHeader>
           <CreatePendingSessionForm
             enrollment={enrollment}
             onSubmit={handleCreateSession}
             onCancel={() => setShowCreateForm(false)}
             isLoading={isLoading}
+            sessionNumber={nextSessionNumber}
           />
         </DialogContent>
       </Dialog>

@@ -224,6 +224,7 @@ export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: Enrol
             <PendingSessionsCard
               enrollment={enrollment}
               pendingSessions={pendingSessions}
+              allSessions={enrollmentSessions}
               onCreateSession={handleCreateSession}
               onSessionScheduled={handleSessionScheduled}
               isLoading={isCreatingSession}

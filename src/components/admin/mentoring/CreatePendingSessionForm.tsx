@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 interface CreatePendingSessionFormProps {
@@ -12,88 +12,97 @@ interface CreatePendingSessionFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  sessionNumber: number;
 }
 
-const CreatePendingSessionForm = ({ enrollment, onSubmit, onCancel, isLoading }: CreatePendingSessionFormProps) => {
-  const [formData, setFormData] = useState({
-    title: `Sessão ${enrollment.sessionsUsed + 1} - ${enrollment.mentoring.name}`,
-    durationMinutes: 60,
-    observations: ''
+const CreatePendingSessionForm = ({ 
+  enrollment, 
+  onSubmit, 
+  onCancel, 
+  isLoading,
+  sessionNumber 
+}: CreatePendingSessionFormProps) => {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      title: `Sessão ${sessionNumber} - ${enrollment.mentoring.name}`,
+      durationMinutes: 60,
+      observations: ''
+    }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const submitData = {
+  const handleFormSubmit = (data: any) => {
+    onSubmit({
+      ...data,
       enrollmentId: enrollment.id,
-      type: 'individual' as const,
-      title: formData.title,
-      durationMinutes: formData.durationMinutes,
-      observations: formData.observations,
-      status: 'aguardando_agendamento'
-    };
-    
-    onSubmit(submitData);
+      type: 'individual',
+      status: 'aguardando_agendamento',
+      sessionNumber
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="enrollment">Inscrição</Label>
-        <Input
-          value={`${enrollment.mentoring.name} - ${enrollment.studentId}`}
-          disabled
-          className="bg-gray-50"
-        />
-      </div>
-
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div>
         <Label htmlFor="title">Título da Sessão</Label>
         <Input
           id="title"
-          value={formData.title}
-          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          placeholder="Digite o título da sessão"
-          required
+          {...register('title', { required: 'Título é obrigatório' })}
+          placeholder="Ex: Sessão 1 - Mentoria Titan"
         />
+        {errors.title && (
+          <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
+        )}
       </div>
 
       <div>
         <Label htmlFor="durationMinutes">Duração (minutos)</Label>
-        <Select
-          value={formData.durationMinutes.toString()}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, durationMinutes: parseInt(value) }))}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="30">30 minutos</SelectItem>
-            <SelectItem value="45">45 minutos</SelectItem>
-            <SelectItem value="60">60 minutos</SelectItem>
-            <SelectItem value="90">90 minutos</SelectItem>
-            <SelectItem value="120">120 minutos</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          id="durationMinutes"
+          type="number"
+          {...register('durationMinutes', { 
+            required: 'Duração é obrigatória',
+            min: { value: 15, message: 'Duração mínima de 15 minutos' },
+            max: { value: 180, message: 'Duração máxima de 180 minutos' }
+          })}
+          placeholder="60"
+        />
+        {errors.durationMinutes && (
+          <p className="text-sm text-red-600 mt-1">{errors.durationMinutes.message}</p>
+        )}
       </div>
 
       <div>
         <Label htmlFor="observations">Observações (opcional)</Label>
         <Textarea
           id="observations"
-          value={formData.observations}
-          onChange={(e) => setFormData(prev => ({ ...prev, observations: e.target.value }))}
-          placeholder="Observações sobre a sessão..."
+          {...register('observations')}
+          placeholder="Informações adicionais sobre a sessão..."
           rows={3}
         />
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="text-sm text-gray-600 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <p><strong>Sessão:</strong> {sessionNumber} de {enrollment.totalSessions}</p>
+        <p><strong>Aluno:</strong> {enrollment.studentId}</p>
+        <p><strong>Mentor:</strong> {enrollment.responsibleMentor}</p>
+      </div>
+
+      <div className="flex gap-2 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isLoading}
+          className="flex-1"
+        >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Criando...' : 'Criar Sessão Pendente'}
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="flex-1"
+        >
+          {isLoading ? 'Criando...' : 'Criar Sessão'}
         </Button>
       </div>
     </form>
