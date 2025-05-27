@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarIcon, Clock, Calendar as CalendarLucide } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CalendarIcon, Clock, Calendar as CalendarLucide, AlertTriangle, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,7 @@ export const SessionScheduleDialog = ({ open, onOpenChange, session, onSchedule 
   const [meetingLink, setMeetingLink] = useState('');
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [calendlyError, setCalendlyError] = useState(false);
 
   const handleSchedule = () => {
     if (!selectedDate || !selectedTime) return;
@@ -180,6 +183,14 @@ export const SessionScheduleDialog = ({ open, onOpenChange, session, onSchedule 
 
             <TabsContent value="calendly" className="space-y-4 mt-4">
               <div className="text-center space-y-4">
+                <Alert className="text-left">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Para usar o Calendly, é necessário que o mentor tenha uma configuração ativa. 
+                    Configure o Calendly em: <strong>Menu → Configurações Calendly</strong>
+                  </AlertDescription>
+                </Alert>
+
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <CalendarLucide className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                   <h3 className="font-medium text-gray-900 mb-1">Agendar via Calendly</h3>
@@ -188,13 +199,25 @@ export const SessionScheduleDialog = ({ open, onOpenChange, session, onSchedule 
                   </p>
                 </div>
 
-                <CalendlyButton
-                  mentorId={mentorId}
-                  onEventScheduled={handleCalendlyEventScheduled}
-                  className="w-full"
-                >
-                  Abrir Calendly
-                </CalendlyButton>
+                <div className="space-y-2">
+                  <CalendlyButton
+                    mentorId={mentorId}
+                    onEventScheduled={handleCalendlyEventScheduled}
+                    className="w-full"
+                  >
+                    Abrir Calendly
+                  </CalendlyButton>
+                  
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open('/admin/calendly-config', '_blank')}
+                    className="w-full"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurar Calendly
+                  </Button>
+                </div>
 
                 <Button 
                   type="button" 
