@@ -123,21 +123,24 @@ export class OptimizedUserService {
 
       console.log('✅ Sessão encontrada, fazendo chamada para list-users edge function...');
 
+      const requestBody = {
+        action: 'createUser',
+        email: userData.email.toLowerCase().trim(),
+        name: userData.name.trim(),
+        role: userData.role,
+        password: userData.password,
+        is_mentor: userData.is_mentor || false
+      };
+
+      console.log('📤 Enviando dados:', requestBody);
+
       // Chamada correta para a edge function list-users com action createUser
       const { data, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        body: {
-          action: 'createUser',
-          email: userData.email.toLowerCase().trim(),
-          name: userData.name.trim(),
-          role: userData.role,
-          password: userData.password,
-          is_mentor: userData.is_mentor || false
-        }
+        body: JSON.stringify(requestBody)
       });
 
       console.log('📊 Resposta da edge function:', { data, error });
@@ -179,15 +182,14 @@ export class OptimizedUserService {
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
     try {
       const { data, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: {
+        body: JSON.stringify({
           action: 'deleteUser',
           userId,
           email: userEmail
-        }
+        })
       });
 
       if (error) throw new Error(error.message);

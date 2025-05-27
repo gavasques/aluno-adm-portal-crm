@@ -119,7 +119,35 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
   try {
     console.log("[handlePostRequest] Processando requisição POST");
     
-    const requestBody = await req.json();
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log("[handlePostRequest] Body recebido como texto:", bodyText);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.error("[handlePostRequest] Body vazio recebido");
+        return new Response(
+          JSON.stringify({ error: "Body da requisição está vazio" }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400 
+          }
+        );
+      }
+      
+      requestBody = JSON.parse(bodyText);
+      console.log("[handlePostRequest] Body parseado com sucesso:", requestBody);
+    } catch (parseError) {
+      console.error("[handlePostRequest] Erro ao fazer parse do JSON:", parseError);
+      return new Response(
+        JSON.stringify({ error: "JSON inválido no body da requisição" }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
+    }
+    
     console.log("[handlePostRequest] Dados recebidos:", { 
       action: requestBody.action,
       email: requestBody.email,
