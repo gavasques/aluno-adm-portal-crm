@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Mentor {
@@ -10,46 +10,34 @@ interface Mentor {
 
 export const useMentorsForEnrollment = () => {
   const [mentors, setMentors] = useState<Mentor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchMentors = async () => {
     setLoading(true);
     try {
-      console.log('🔍 Buscando mentores...');
-      
-      // Buscar usuários que têm is_mentor = true
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email, is_mentor')
+        .select('id, name, email')
         .eq('is_mentor', true)
         .eq('status', 'Ativo')
         .order('name');
 
       if (error) {
-        console.error('❌ Erro ao buscar mentores:', error);
-        setMentors([]);
+        console.error('Erro ao buscar mentores:', error);
         return;
       }
 
-      console.log('📊 Dados brutos dos mentores:', data);
+      // Mapear dados para o formato esperado
+      const mentorsData = (data || []).map(profile => ({
+        id: profile.id,
+        name: profile.name || profile.email,
+        email: profile.email
+      }));
 
-      // Mapear dados para o formato esperado, garantindo que sempre temos um nome
-      const mentorsData = (data || []).map(profile => {
-        const mentorName = profile.name || profile.email || 'Mentor sem nome';
-        console.log(`👤 Mentor processado: ID=${profile.id}, Nome="${mentorName}"`);
-        
-        return {
-          id: profile.id,
-          name: mentorName,
-          email: profile.email
-        };
-      });
-
-      console.log('✅ Mentores formatados:', mentorsData);
       setMentors(mentorsData);
     } catch (error) {
-      console.error('💥 Erro ao buscar mentores:', error);
-      setMentors([]);
+      console.error('Erro ao buscar mentores:', error);
     } finally {
       setLoading(false);
     }
@@ -59,9 +47,19 @@ export const useMentorsForEnrollment = () => {
     fetchMentors();
   }, []);
 
+  const filteredMentors = useMemo(() => {
+    if (!searchTerm) return mentors;
+    
+    return mentors.filter(mentor =>
+      mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      mentor.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [mentors, searchTerm]);
+
   return {
-    mentors,
+    mentors: filteredMentors,
     loading,
-    refetch: fetchMentors
+    searchTerm,
+    setSearchTerm
   };
 };

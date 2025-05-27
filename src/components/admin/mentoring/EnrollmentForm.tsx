@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
+import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
+import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { useToast } from '@/hooks/use-toast';
 
 interface EnrollmentFormProps {
@@ -16,6 +18,8 @@ interface EnrollmentFormProps {
 
 const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
   const { catalogs, createEnrollment, loading } = useSupabaseMentoring();
+  const { students, loading: studentsLoading } = useStudentsForEnrollment();
+  const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -127,14 +131,23 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="studentId">ID do Estudante *</Label>
-              <Input
-                id="studentId"
+              <Label htmlFor="studentId">Aluno *</Label>
+              <Select
                 value={formData.studentId}
-                onChange={(e) => handleInputChange('studentId', e.target.value)}
-                placeholder="UUID do estudante"
-                required
-              />
+                onValueChange={(value) => handleInputChange('studentId', value)}
+                disabled={studentsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={studentsLoading ? "Carregando alunos..." : "Selecione um aluno"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((student) => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.name} ({student.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="mentoringId">Mentoria *</Label>
@@ -148,7 +161,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
                 <SelectContent>
                   {catalogs.map((mentoring) => (
                     <SelectItem key={mentoring.id} value={mentoring.id}>
-                      {mentoring.name} ({mentoring.numberOfSessions} sessões)
+                      {mentoring.name} ({mentoring.numberOfSessions} sessões - {mentoring.durationMonths} meses)
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -226,13 +239,22 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
 
           <div>
             <Label htmlFor="responsibleMentor">Mentor Responsável *</Label>
-            <Input
-              id="responsibleMentor"
+            <Select
               value={formData.responsibleMentor}
-              onChange={(e) => handleInputChange('responsibleMentor', e.target.value)}
-              placeholder="Nome do mentor responsável"
-              required
-            />
+              onValueChange={(value) => handleInputChange('responsibleMentor', value)}
+              disabled={mentorsLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"} />
+              </SelectTrigger>
+              <SelectContent>
+                {mentors.map((mentor) => (
+                  <SelectItem key={mentor.id} value={mentor.name}>
+                    {mentor.name} ({mentor.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
