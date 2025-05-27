@@ -170,6 +170,40 @@ export const useSupabaseMentoring = () => {
   }, [refreshCatalogs, toast]);
 
   // Enrollment methods
+  const createEnrollment = useCallback(async (enrollmentData: {
+    studentId: string;
+    mentoringId: string;
+    status: string;
+    enrollmentDate: string;
+    startDate: string;
+    endDate: string;
+    totalSessions: number;
+    responsibleMentor: string;
+    paymentStatus: string;
+    observations?: string;
+  }): Promise<StudentMentoringEnrollment> => {
+    try {
+      setLoading(true);
+      const newEnrollment = await repository.createEnrollment(enrollmentData);
+      await refreshEnrollments();
+      toast({
+        title: "Sucesso",
+        description: "Inscrição criada com sucesso!",
+      });
+      return newEnrollment;
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar inscrição. Tente novamente.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments, toast]);
+
   const getStudentEnrollments = useCallback(async (studentId: string): Promise<StudentMentoringEnrollment[]> => {
     try {
       return await repository.getStudentEnrollments(studentId);
@@ -297,6 +331,7 @@ export const useSupabaseMentoring = () => {
     refreshCatalogs,
     
     // Enrollment methods
+    createEnrollment,
     getStudentEnrollments: repository.getStudentEnrollments.bind(repository),
     addExtension: repository.addExtension.bind(repository),
     refreshEnrollments,

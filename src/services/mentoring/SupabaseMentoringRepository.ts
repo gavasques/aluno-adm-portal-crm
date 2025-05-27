@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MentoringCatalog, 
@@ -238,6 +237,45 @@ export class SupabaseMentoringRepository {
     if (error) throw error;
     
     return (data || []).map(enrollment => this.mapEnrollmentFromDB(enrollment));
+  }
+
+  async createEnrollment(enrollmentData: {
+    studentId: string;
+    mentoringId: string;
+    status: string;
+    enrollmentDate: string;
+    startDate: string;
+    endDate: string;
+    totalSessions: number;
+    responsibleMentor: string;
+    paymentStatus: string;
+    observations?: string;
+  }): Promise<StudentMentoringEnrollment> {
+    const { data, error } = await supabase
+      .from('mentoring_enrollments')
+      .insert({
+        student_id: enrollmentData.studentId,
+        mentoring_id: enrollmentData.mentoringId,
+        status: enrollmentData.status,
+        enrollment_date: enrollmentData.enrollmentDate,
+        start_date: enrollmentData.startDate,
+        end_date: enrollmentData.endDate,
+        sessions_used: 0,
+        total_sessions: enrollmentData.totalSessions,
+        responsible_mentor: enrollmentData.responsibleMentor,
+        payment_status: enrollmentData.paymentStatus,
+        observations: enrollmentData.observations || null,
+        has_extension: false
+      })
+      .select(`
+        *,
+        mentoring:mentoring_catalogs(*),
+        extensions:mentoring_enrollment_extensions(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return this.mapEnrollmentFromDB(data);
   }
 
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {
