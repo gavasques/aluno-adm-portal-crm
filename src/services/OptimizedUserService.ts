@@ -106,22 +106,40 @@ export class OptimizedUserService {
 
   async createUser(userData: CreateUserData): Promise<boolean> {
     try {
-      const { data, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
+      console.log('🔄 Iniciando criação de usuário:', { 
+        email: userData.email, 
+        name: userData.name, 
+        role: userData.role,
+        is_mentor: userData.is_mentor 
+      });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ Usuário não autenticado');
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('✅ Sessão encontrada, fazendo chamada para create-user edge function...');
+
+      const { data, error } = await supabase.functions.invoke('create-user', {
         headers: {
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'createUser',
+        body: {
           email: userData.email.toLowerCase().trim(),
           name: userData.name.trim(),
           role: userData.role,
           password: userData.password,
-          is_mentor: userData.is_mentor
-        })
+          is_mentor: userData.is_mentor || false
+        }
       });
 
+      console.log('📊 Resposta da edge function:', { data, error });
+
       if (error) {
+        console.error('❌ Erro na Edge Function create-user:', error);
         throw new Error(error.message || 'Erro na edge function');
       }
 
@@ -140,10 +158,11 @@ export class OptimizedUserService {
         
         return true;
       } else {
+        console.error('❌ Falha na criação:', data);
         throw new Error(data?.error || "Erro desconhecido ao criar usuário");
       }
     } catch (error: any) {
-      console.error('Erro ao criar usuário:', error);
+      console.error('❌ Erro ao criar usuário:', error);
       toast({
         title: "Erro ao criar usuário",
         description: error.message || "Erro interno do servidor",
