@@ -18,11 +18,15 @@ export const StatusPaymentFields = ({
 }: StatusPaymentFieldsProps) => {
   console.log('StatusPaymentFields - status:', status, 'paymentStatus:', paymentStatus);
   
+  // Garantir que status nunca seja undefined ou vazio
+  const safeStatus = status || "ativa";
+  const safePaymentStatus = paymentStatus || "pendente";
+  
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
         <Label htmlFor="status">Status</Label>
-        <Select value={status || ""} onValueChange={onStatusChange}>
+        <Select value={safeStatus} onValueChange={onStatusChange}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione um status" />
           </SelectTrigger>
@@ -35,7 +39,7 @@ export const StatusPaymentFields = ({
       </div>
       <div>
         <Label htmlFor="paymentStatus">Status do Pagamento</Label>
-        <Select value={paymentStatus || ""} onValueChange={onPaymentStatusChange}>
+        <Select value={safePaymentStatus} onValueChange={onPaymentStatusChange}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o status do pagamento" />
           </SelectTrigger>

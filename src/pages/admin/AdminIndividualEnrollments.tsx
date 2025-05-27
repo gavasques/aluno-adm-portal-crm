@@ -82,8 +82,8 @@ const AdminIndividualEnrollments = () => {
 
       <OptimizedIndividualEnrollmentsHeader
         searchTerm={searchTerm}
-        statusFilter={statusFilter}
-        typeFilter={typeFilter}
+        statusFilter={statusFilter || "all"}
+        typeFilter={typeFilter || "all"}
         viewMode={viewMode}
         statistics={statistics}
         onSearchChange={handleSearchChange}

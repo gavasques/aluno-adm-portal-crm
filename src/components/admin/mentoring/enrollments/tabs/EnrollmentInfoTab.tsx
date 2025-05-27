@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,9 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
     setEditData(prev => ({ ...prev, status: value as StatusType }));
   };
 
+  // Garantir que status nunca seja vazio
+  const safeStatusValue = editData.status || "ativa";
+
   return (
     <div className="space-y-6">
       {/* Header com ações */}
@@ -203,7 +207,7 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
                 </div>
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={editData.status || ""} onValueChange={handleStatusChange}>
+                  <Select value={safeStatusValue} onValueChange={handleStatusChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um status" />
                     </SelectTrigger>
