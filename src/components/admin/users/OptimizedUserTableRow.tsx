@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   TableRow, 
@@ -81,39 +80,50 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🗑️ Iniciando exclusão do usuário:', user.email, 'ID:', user.id);
-    console.log('🗑️ Função onDeleteUser:', typeof onDeleteUser);
+    console.log('🗑️ CLIQUE DETECTADO - Iniciando exclusão do usuário:', user.email, 'ID:', user.id);
+    console.log('🗑️ Função onDeleteUser disponível:', typeof onDeleteUser);
+    console.log('🗑️ Event target:', e.target);
+    console.log('🗑️ Event currentTarget:', e.currentTarget);
     onDeleteUser(user);
   };
 
   const handleToggleStatusClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🔄 Alterando status do usuário:', user.email, 'Status atual:', user.status);
+    console.log('🔄 CLIQUE DETECTADO - Alterando status do usuário:', user.email, 'Status atual:', user.status);
     onToggleUserStatus(user);
   };
 
   const handleResetPasswordClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🔑 Redefinindo senha do usuário:', user.email);
+    console.log('🔑 CLIQUE DETECTADO - Redefinindo senha do usuário:', user.email);
     onResetPassword(user);
   };
 
   const handleViewDetailsClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('👁️ Visualizando detalhes do usuário:', user.email);
+    console.log('👁️ CLIQUE DETECTADO - Visualizando detalhes do usuário:', user.email);
     onViewDetails(user);
   };
 
   const handleSetPermissionGroupClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🔐 Definindo permissões do usuário:', user.email);
+    console.log('🔐 CLIQUE DETECTADO - Definindo permissões do usuário:', user.email);
     if (onSetPermissionGroup) {
       onSetPermissionGroup(user);
     }
+  };
+
+  const handleMenuItemClick = (action: string, handler: () => void) => {
+    return (e: React.MouseEvent) => {
+      console.log(`📱 MENU ITEM CLICKED: ${action} para usuário ${user.email}`);
+      e.preventDefault();
+      e.stopPropagation();
+      handler();
+    };
   };
 
   return (
@@ -154,23 +164,43 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
       <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button 
+              variant="ghost" 
+              className="h-8 w-8 p-0"
+              onClick={(e) => {
+                console.log('🎯 TRIGGER CLICKED:', e.target);
+              }}
+            >
               <span className="sr-only">Abrir menu</span>
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleViewDetailsClick}>
+          <DropdownMenuContent 
+            align="end"
+            className="w-56 bg-white dark:bg-gray-800 border shadow-lg"
+            style={{ zIndex: 10000 }}
+          >
+            <DropdownMenuItem 
+              onClick={handleMenuItemClick('view-details', () => handleViewDetailsClick({ preventDefault: () => {}, stopPropagation: () => {} } as any))}
+              className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
               <Eye className="mr-2 h-4 w-4" />
               <span>Ver detalhes</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleResetPasswordClick}>
+            
+            <DropdownMenuItem 
+              onClick={handleMenuItemClick('reset-password', () => handleResetPasswordClick({ preventDefault: () => {}, stopPropagation: () => {} } as any))}
+              className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
               <KeyRound className="mr-2 h-4 w-4" />
               <span>Redefinir senha</span>
             </DropdownMenuItem>
 
             {onSetPermissionGroup && (
-              <DropdownMenuItem onClick={handleSetPermissionGroupClick}>
+              <DropdownMenuItem 
+                onClick={handleMenuItemClick('set-permissions', () => handleSetPermissionGroupClick({ preventDefault: () => {}, stopPropagation: () => {} } as any))}
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
                 <Lock className="mr-2 h-4 w-4" />
                 <span>
                   {isTemporaryGroup ? "Atribuir grupo definitivo" : "Definir permissões"}
@@ -180,7 +210,10 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={handleToggleStatusClick}>
+            <DropdownMenuItem
+              onClick={handleMenuItemClick('toggle-status', () => handleToggleStatusClick({ preventDefault: () => {}, stopPropagation: () => {} } as any))}
+              className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
               {isActive ? (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
@@ -195,8 +228,8 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             </DropdownMenuItem>
 
             <DropdownMenuItem 
-              className="text-red-600" 
-              onClick={handleDeleteClick}
+              onClick={handleMenuItemClick('delete', () => handleDeleteClick({ preventDefault: () => {}, stopPropagation: () => {} } as any))}
+              className="text-red-600 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               <UserX className="mr-2 h-4 w-4" />
               <span>Excluir usuário</span>
