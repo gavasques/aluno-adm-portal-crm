@@ -308,27 +308,63 @@ export class OptimizedUserService {
       u.role !== "Admin"
     ).length;
 
+    console.log('📊 Estatísticas calculadas:', { total, active, inactive, pending });
     return { total, active, inactive, pending };
   }
 
   filterUsers(users: User[], filters: UserFilters): User[] {
-    return users.filter(user => {
+    console.log('🔍 Filtrando usuários:', { 
+      totalUsers: users.length, 
+      filters,
+      sampleUser: users[0] 
+    });
+
+    const filtered = users.filter(user => {
+      // Busca por nome ou email
       const matchesSearch = !filters.search || 
         user.name?.toLowerCase().includes(filters.search.toLowerCase()) || 
         user.email.toLowerCase().includes(filters.search.toLowerCase());
       
-      const matchesStatus = filters.status === "all" || 
-        user.status?.toLowerCase().includes(filters.status.toLowerCase());
+      // Filtro por status
+      let matchesStatus = true;
+      if (filters.status !== "all") {
+        const userStatus = user.status?.toLowerCase() || 'ativo';
+        const filterStatus = filters.status.toLowerCase();
+        matchesStatus = userStatus.includes(filterStatus);
+      }
       
+      // Filtro por grupo
       let matchesGroup = true;
       if (filters.group === "pending") {
         matchesGroup = user.permission_group_id === PermissionGroup.GERAL && user.role !== "Admin";
       } else if (filters.group === "assigned") {
         matchesGroup = user.permission_group_id !== PermissionGroup.GERAL || user.role === "Admin";
       }
+      // Se filters.group === "all", matchesGroup permanece true
       
-      return matchesSearch && matchesStatus && matchesGroup;
+      const matches = matchesSearch && matchesStatus && matchesGroup;
+      
+      if (!matches) {
+        console.log('🚫 Usuário filtrado:', {
+          email: user.email,
+          matchesSearch,
+          matchesStatus,
+          matchesGroup,
+          userStatus: user.status,
+          filterStatus: filters.status
+        });
+      }
+      
+      return matches;
     });
+
+    console.log('✅ Usuários após filtro:', {
+      original: users.length,
+      filtered: filtered.length,
+      filters
+    });
+    
+    return filtered;
   }
 }
 

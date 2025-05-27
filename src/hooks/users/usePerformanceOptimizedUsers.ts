@@ -108,31 +108,17 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
-  // Filtros memoizados com cache inteligente - SEMPRE executado
+  // Filtros memoizados sem cache para debugging - SEMPRE executado
   const filteredUsers = useMemo(() => {
-    const cached = getCachedFilteredUsers(filters);
-    if (cached) {
-      console.log('🎯 Cache HIT para filtros de usuários');
-      return cached;
-    }
-
-    console.log('🔄 Cache MISS - filtrando usuários...');
+    console.log('🔄 Aplicando filtros diretamente (sem cache)...');
     const filtered = optimizedUserService.filterUsers(usersArray, filters);
-    
-    cacheFilteredUsers(filters, filtered);
-    
+    console.log('✅ Usuários filtrados:', filtered.length);
     return filtered;
-  }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
+  }, [usersArray, filters]);
 
-  // Stats memoizadas com cache - SEMPRE executado
+  // Stats memoizadas sem cache para debugging - SEMPRE executado
   const stats = useMemo((): UserStats => {
-    const cached = getCachedUserStats();
-    if (cached && typeof cached === 'object' && 'total' in cached) {
-      console.log('📊 Cache HIT para estatísticas');
-      return cached as UserStats;
-    }
-
-    console.log('📊 Calculando estatísticas...');
+    console.log('📊 Calculando estatísticas diretamente...');
     const calculatedStats = optimizedUserService.calculateStats(usersArray);
     
     const validStats: UserStats = {
@@ -142,16 +128,18 @@ export const usePerformanceOptimizedUsers = () => {
       pending: calculatedStats?.pending || 0
     };
     
-    cacheUserStats(validStats);
+    console.log('📊 Estatísticas calculadas:', validStats);
     return validStats;
-  }, [usersArray, getCachedUserStats, cacheUserStats]);
+  }, [usersArray]);
 
   // Callbacks - SEMPRE criados na mesma ordem
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
+    console.log('🔧 Atualizando filtros:', newFilters);
     setFiltersState(prev => ({ ...prev, ...newFilters }));
   }, []);
 
   const searchUsers = useCallback((query: string) => {
+    console.log('🔍 Busca ativada:', query);
     debouncedSearch(query);
   }, [debouncedSearch]);
 
@@ -181,9 +169,10 @@ export const usePerformanceOptimizedUsers = () => {
       error: error?.message,
       usersCount: usersArray.length,
       filteredCount: filteredUsers.length,
-      stats
+      stats,
+      filters
     });
-  }, [isLoading, error, usersArray.length, filteredUsers.length, stats]);
+  }, [isLoading, error, usersArray.length, filteredUsers.length, stats, filters]);
 
   return {
     users: usersArray,
