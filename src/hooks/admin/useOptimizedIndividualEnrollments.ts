@@ -28,6 +28,7 @@ interface UseOptimizedIndividualEnrollmentsResult {
   handleClearFilters: () => void;
   setViewMode: (mode: 'cards' | 'list') => void;
   filteredEnrollments: StudentMentoringEnrollment[];
+  refreshData: () => Promise<void>; // Adicionado
 }
 
 export const useOptimizedIndividualEnrollments = (
@@ -107,6 +108,11 @@ export const useOptimizedIndividualEnrollments = (
     setTypeFilter('all');
   }, []);
 
+  // Método refreshData adicionado
+  const refreshData = useCallback(async () => {
+    await refreshEnrollments();
+  }, [refreshEnrollments]);
+
   return {
     paginatedEnrollments,
     pageInfo,
@@ -121,6 +127,7 @@ export const useOptimizedIndividualEnrollments = (
     handleTypeFilterChange,
     handleClearFilters,
     setViewMode,
-    filteredEnrollments
+    filteredEnrollments,
+    refreshData
   };
 };

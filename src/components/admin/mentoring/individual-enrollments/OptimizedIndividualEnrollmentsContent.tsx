@@ -25,6 +25,7 @@ interface OptimizedIndividualEnrollmentsContentProps {
   onAddExtension: (enrollment: StudentMentoringEnrollment) => void;
   onToggleSelection: (id: string) => void;
   onPageChange: (page: number) => void;
+  onSessionUpdated?: () => void; // Prop adicionada
 }
 
 export const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnrollmentsContentProps>(({
@@ -37,7 +38,8 @@ export const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnr
   onDelete,
   onAddExtension,
   onToggleSelection,
-  onPageChange
+  onPageChange,
+  onSessionUpdated
 }) => {
   return (
     <div className="space-y-6">
@@ -54,6 +56,7 @@ export const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnr
               onAddExtension={onAddExtension}
               onToggleSelection={onToggleSelection}
               isSelected={selectedEnrollments.includes(enrollment.id)}
+              onSessionUpdated={onSessionUpdated}
             />
           ))}
         </div>

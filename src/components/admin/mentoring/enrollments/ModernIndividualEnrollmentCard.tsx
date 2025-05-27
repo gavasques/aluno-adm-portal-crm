@@ -1,21 +1,15 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  CalendarRange, 
-  GraduationCap, 
-  User, 
-  Clock,
-  Calendar
-} from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Eye, Edit, Trash2, Plus, Calendar, User, Clock, Target, ChevronRight } from 'lucide-react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
-import { EnrollmentStatus } from './EnrollmentStatus';
 import { EnrollmentProgress } from './EnrollmentProgress';
-import { EnrollmentActions } from './EnrollmentActions';
-import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
-import { cn } from '@/lib/utils';
+import { EnrollmentStatus } from './EnrollmentStatus';
+import { useSupabaseMentoringSessions } from '@/hooks/mentoring/useSupabaseMentoringSessions';
+import PendingSessionsCard from '../PendingSessionsCard';
 
 interface ModernIndividualEnrollmentCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -23,123 +17,196 @@ interface ModernIndividualEnrollmentCardProps {
   onEdit: (enrollment: StudentMentoringEnrollment) => void;
   onDelete: (id: string) => void;
   onAddExtension: (enrollment: StudentMentoringEnrollment) => void;
-  onToggleSelection?: (id: string) => void;
-  isSelected?: boolean;
+  onToggleSelection: (id: string) => void;
+  isSelected: boolean;
+  onSessionUpdated?: () => void; // Prop adicionada
 }
 
-export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollmentCardProps> = ({
+export const ModernIndividualEnrollmentCard = ({
   enrollment,
   onView,
   onEdit,
   onDelete,
   onAddExtension,
   onToggleSelection,
-  isSelected
-}) => {
-  const { students } = useStudentsForEnrollment();
-  
-  // Calcular dias restantes
-  const daysRemaining = differenceInDays(new Date(enrollment.endDate), new Date());
+  isSelected,
+  onSessionUpdated
+}: ModernIndividualEnrollmentCardProps) => {
+  const [showSessionsDialog, setShowSessionsDialog] = useState(false);
+  const { 
+    sessions, 
+    createSession, 
+    deleteSession, 
+    loading 
+  } = useSupabaseMentoringSessions(enrollment.id);
 
-  // Buscar informações do estudante
-  const student = students?.find(s => s.id === enrollment.studentId);
-  const studentName = student?.name || student?.email || `Aluno ${enrollment.studentId.slice(-8)}`;
+  const pendingSessions = sessions.filter(s => s.status === 'aguardando_agendamento');
+
+  const handleCreateSession = async (data: any) => {
+    await createSession(data);
+    if (onSessionUpdated) {
+      onSessionUpdated();
+    }
+  };
+
+  const handleSessionScheduled = (sessionId: string) => {
+    console.log('Sessão agendada:', sessionId);
+    if (onSessionUpdated) {
+      onSessionUpdated();
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    await deleteSession(sessionId);
+    if (onSessionUpdated) {
+      onSessionUpdated();
+    }
+  };
 
   return (
-    <Card 
-      className={cn(
-        "transition-all hover:shadow-md border border-gray-200 hover:border-gray-300",
-        isSelected && "border-blue-500 ring-1 ring-blue-500"
-      )}
-      data-selected={isSelected}
-    >
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <User className="h-4 w-4 text-blue-600" />
+    <>
+      <Card className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${
+        isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+      } ${
+        enrollment.status === 'ativa' 
+          ? 'border-l-green-500 hover:border-l-green-600' 
+          : enrollment.status === 'pausada'
+          ? 'border-l-yellow-500 hover:border-l-yellow-600'
+          : enrollment.status === 'concluida'
+          ? 'border-l-blue-500 hover:border-l-blue-600'
+          : 'border-l-red-500 hover:border-l-red-600'
+      }`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                {enrollment.mentoring.name}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">
+                  {enrollment.mentoring.type}
+                </Badge>
+                <EnrollmentStatus status={enrollment.status} />
+              </div>
             </div>
-            <h3 className="font-medium line-clamp-1">
-              {studentName}
-            </h3>
-          </div>
-          
-          <EnrollmentStatus status={enrollment.status} />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-700 line-clamp-1">{enrollment.mentoring.name}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-700 line-clamp-1">{enrollment.responsibleMentor}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <CalendarRange className="h-4 w-4 text-gray-400" />
-            <div className="text-xs text-gray-600">
-              <span>{format(new Date(enrollment.startDate), 'dd/MM/yyyy', { locale: ptBR })}</span>
-              <span className="mx-1">a</span>
-              <span>{format(new Date(enrollment.endDate), 'dd/MM/yyyy', { locale: ptBR })}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-gray-400" />
-            <div className="text-xs flex-1">
-              <span className="text-gray-600">
-                {enrollment.sessionsUsed} de {enrollment.totalSessions} sessões realizadas 
-                {enrollment.hasExtension && (
-                  <span className="ml-1 text-blue-600 font-medium">(com extensão)</span>
-                )}
-              </span>
-            </div>
-          </div>
-
-          <EnrollmentProgress 
-            sessionsUsed={enrollment.sessionsUsed}
-            totalSessions={enrollment.totalSessions}
-          />
-
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <div className="text-xs">
-              <span className={cn(
-                "font-medium",
-                daysRemaining < 0 ? "text-red-600" : 
-                daysRemaining < 30 ? "text-amber-600" : "text-green-600"
-              )}>
-                {daysRemaining < 0 
-                  ? `Expirou há ${Math.abs(daysRemaining)} dias`
-                  : `${daysRemaining} dias restantes`
-                }
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <EnrollmentActions
-          enrollment={enrollment}
-          onView={onView}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onAddExtension={onAddExtension}
-        />
-        
-        {onToggleSelection && (
-          <div className="absolute top-2 left-2">
-            <input 
-              type="checkbox" 
-              checked={isSelected} 
+            <input
+              type="checkbox"
+              checked={isSelected}
               onChange={() => onToggleSelection(enrollment.id)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Informações básicas */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600 truncate">{enrollment.responsibleMentor}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">
+                {new Date(enrollment.startDate).toLocaleDateString('pt-BR')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">{enrollment.mentoring.durationMonths} meses</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">
+                {enrollment.sessionsUsed}/{enrollment.totalSessions} sessões
+              </span>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <EnrollmentProgress enrollment={enrollment} />
+
+          {/* Sessões pendentes */}
+          {pendingSessions.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium text-amber-800">
+                    {pendingSessions.length} sessão(ões) pendente(s)
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowSessionsDialog(true)}
+                  className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                >
+                  Gerenciar
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 pt-2 border-t">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onView(enrollment)}
+              className="flex-1"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Ver
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onEdit(enrollment)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onAddExtension(enrollment)}
+              className="text-green-600 border-green-200 hover:bg-green-50"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDelete(enrollment.id)}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dialog para gerenciar sessões */}
+      <Dialog open={showSessionsDialog} onOpenChange={setShowSessionsDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Sessões Pendentes - {enrollment.mentoring.name}
+            </DialogTitle>
+          </DialogHeader>
+          <PendingSessionsCard
+            enrollment={enrollment}
+            pendingSessions={pendingSessions}
+            onCreateSession={handleCreateSession}
+            onSessionScheduled={handleSessionScheduled}
+            onDeleteSession={handleDeleteSession}
+            isLoading={loading}
+            allSessions={sessions}
+            onSessionUpdated={onSessionUpdated}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

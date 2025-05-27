@@ -20,6 +20,7 @@ interface IndividualEnrollmentsDialogsProps {
   onCreateSuccess: () => void;
   onEditSubmit: (data: any) => void;
   onExtensionSubmit: (data: CreateExtensionData) => void;
+  onSessionUpdated?: () => void; // Prop adicionada
 }
 
 export const IndividualEnrollmentsDialogs = ({
@@ -34,7 +35,8 @@ export const IndividualEnrollmentsDialogs = ({
   onExtensionClose,
   onCreateSuccess,
   onEditSubmit,
-  onExtensionSubmit
+  onExtensionSubmit,
+  onSessionUpdated
 }: IndividualEnrollmentsDialogsProps) => {
   return (
     <>
@@ -75,6 +77,7 @@ export const IndividualEnrollmentsDialogs = ({
           if (!open) onViewClose();
         }}
         enrollment={viewingEnrollment}
+        onSessionUpdated={onSessionUpdated}
       />
 
       <ExtensionDialog
