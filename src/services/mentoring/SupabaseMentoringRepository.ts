@@ -330,12 +330,78 @@ export class SupabaseMentoringRepository {
   }
 
   async deleteEnrollment(id: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('mentoring_enrollments')
-      .delete()
-      .eq('id', id);
+    console.log('🗑️ SupabaseMentoringRepository.deleteEnrollment - ID:', id);
+    
+    try {
+      // Verificar se a inscrição existe antes de deletar
+      console.log('🔍 Verificando se a inscrição existe...');
+      const { data: existingEnrollment, error: checkError } = await supabase
+        .from('mentoring_enrollments')
+        .select('id, student_id, mentoring_id')
+        .eq('id', id)
+        .single();
 
-    return !error;
+      if (checkError) {
+        console.error('❌ Erro ao verificar inscrição:', checkError);
+        return false;
+      }
+
+      if (!existingEnrollment) {
+        console.error('❌ Inscrição não encontrada:', id);
+        return false;
+      }
+
+      console.log('✅ Inscrição encontrada:', existingEnrollment);
+
+      // Verificar se há sessões relacionadas
+      console.log('🔍 Verificando sessões relacionadas...');
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('mentoring_sessions')
+        .select('id')
+        .eq('enrollment_id', id);
+
+      if (sessionsError) {
+        console.error('❌ Erro ao verificar sessões:', sessionsError);
+      } else {
+        console.log('📊 Sessões encontradas:', sessions?.length || 0);
+      }
+
+      // Verificar se há extensões relacionadas
+      console.log('🔍 Verificando extensões relacionadas...');
+      const { data: extensions, error: extensionsError } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .select('id')
+        .eq('enrollment_id', id);
+
+      if (extensionsError) {
+        console.error('❌ Erro ao verificar extensões:', extensionsError);
+      } else {
+        console.log('📊 Extensões encontradas:', extensions?.length || 0);
+      }
+
+      // Deletar a inscrição
+      console.log('🗑️ Executando delete da inscrição...');
+      const { error: deleteError } = await supabase
+        .from('mentoring_enrollments')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error('❌ Erro ao deletar inscrição:', deleteError);
+        console.error('❌ Código do erro:', deleteError.code);
+        console.error('❌ Mensagem do erro:', deleteError.message);
+        console.error('❌ Detalhes do erro:', deleteError.details);
+        return false;
+      }
+
+      console.log('✅ Inscrição deletada com sucesso');
+      return true;
+
+    } catch (error) {
+      console.error('❌ Erro geral no deleteEnrollment:', error);
+      console.error('❌ Stack trace:', error?.stack);
+      return false;
+    }
   }
 
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {

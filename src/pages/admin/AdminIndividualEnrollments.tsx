@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useOptimizedIndividualEnrollments } from '@/hooks/admin/useOptimizedIndividualEnrollments';
@@ -62,20 +63,29 @@ const AdminIndividualEnrollments = () => {
   ];
 
   const handleDeleteEnrollment = useCallback(async (id: string) => {
+    console.log('🗑️ Iniciando exclusão da inscrição:', id);
+    
     if (!confirm('Tem certeza que deseja excluir esta inscrição? Esta ação não pode ser desfeita.')) {
+      console.log('❌ Exclusão cancelada pelo usuário');
       return;
     }
 
     try {
+      console.log('🔄 Chamando deleteEnrollment...');
       const success = await deleteEnrollment(id);
+      console.log('✅ Resultado da exclusão:', success);
+      
       if (success) {
         toast({
           title: "Sucesso",
           description: "Inscrição excluída com sucesso!",
         });
+        console.log('🔄 Atualizando dados após exclusão...');
         await refreshEnrollments();
-        await refreshData(); // Refresh local também
+        await refreshData();
+        console.log('✅ Dados atualizados com sucesso');
       } else {
+        console.error('❌ Falha na exclusão - success = false');
         toast({
           title: "Erro",
           description: "Erro ao excluir inscrição. Tente novamente.",
@@ -83,10 +93,11 @@ const AdminIndividualEnrollments = () => {
         });
       }
     } catch (error) {
-      console.error('Error deleting enrollment:', error);
+      console.error('❌ Erro capturado durante exclusão:', error);
+      console.error('❌ Stack trace:', error?.stack);
       toast({
         title: "Erro",
-        description: "Erro ao excluir inscrição. Tente novamente.",
+        description: `Erro ao excluir inscrição: ${error?.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }

@@ -134,15 +134,26 @@ export const useSupabaseMentoring = () => {
   }, [refreshEnrollments]);
 
   const deleteEnrollment = useCallback(async (id: string) => {
+    console.log('🗑️ useSupabaseMentoring.deleteEnrollment - ID:', id);
     setLoading(true);
+    
     try {
+      console.log('🔄 Chamando repository.deleteEnrollment...');
       const success = await repository.deleteEnrollment(id);
+      console.log('📊 Resultado do repository:', success);
+      
       if (success) {
+        console.log('✅ Exclusão bem-sucedida, atualizando lista...');
         await refreshEnrollments();
+        console.log('✅ Lista atualizada');
+      } else {
+        console.error('❌ Falha na exclusão no repository');
       }
+      
       return success;
     } catch (error) {
-      console.error('Error deleting enrollment:', error);
+      console.error('❌ Erro no hook deleteEnrollment:', error);
+      console.error('❌ Stack trace:', error?.stack);
       return false;
     } finally {
       setLoading(false);
