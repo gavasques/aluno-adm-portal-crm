@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { UserStatus, PermissionGroup } from '@/types/user.enums';
@@ -134,13 +133,9 @@ export class OptimizedUserService {
 
       console.log('📤 Enviando dados:', requestBody);
 
-      // Chamada correta para a edge function list-users com action createUser
+      // Chamada correta para a edge function list-users - NÃO usar JSON.stringify!
       const { data, error } = await supabase.functions.invoke('list-users', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
+        body: requestBody
       });
 
       console.log('📊 Resposta da edge function:', { data, error });
@@ -182,14 +177,11 @@ export class OptimizedUserService {
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
     try {
       const { data, error } = await supabase.functions.invoke('list-users', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+        body: {
           action: 'deleteUser',
           userId,
           email: userEmail
-        })
+        }
       });
 
       if (error) throw new Error(error.message);
