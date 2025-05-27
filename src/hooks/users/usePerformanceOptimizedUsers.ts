@@ -14,6 +14,7 @@ export const usePerformanceOptimizedUsers = () => {
     group: 'all'
   });
 
+  // Sempre chamar os hooks na mesma ordem
   const {
     cacheFilteredUsers,
     getCachedFilteredUsers,
@@ -44,72 +45,27 @@ export const usePerformanceOptimizedUsers = () => {
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Forçar refetch na montagem
+    refetchOnMount: true,
     retry: (failureCount, error) => {
       console.log(`🔄 Tentativa ${failureCount + 1} de buscar usuários. Erro:`, error);
-      return failureCount < 2; // Tentar até 3 vezes
+      return failureCount < 2;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Ensure users is always an array
+  // Ensure users is always an array - SEMPRE executado
   const usersArray = useMemo(() => {
     const result = Array.isArray(users) ? users : [];
     console.log('📊 usersArray processado:', result.length, 'usuários');
     return result;
   }, [users]);
 
-  // Preload quando users carregam
-  useEffect(() => {
-    if (usersArray.length > 0) {
-      preloadCommonFilters(usersArray);
-    }
-  }, [usersArray, preloadCommonFilters]);
-
-  // Debounced search otimizado
+  // Debounced search otimizado - SEMPRE criado
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 300);
 
-  // Filtros memoizados com cache inteligente
-  const filteredUsers = useMemo(() => {
-    const cached = getCachedFilteredUsers(filters);
-    if (cached) {
-      console.log('🎯 Cache HIT para filtros de usuários');
-      return cached;
-    }
-
-    console.log('🔄 Cache MISS - filtrando usuários...');
-    const filtered = optimizedUserService.filterUsers(usersArray, filters);
-    
-    cacheFilteredUsers(filters, filtered);
-    
-    return filtered;
-  }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
-
-  // Stats memoizadas com cache - garantindo sempre um UserStats válido
-  const stats = useMemo((): UserStats => {
-    const cached = getCachedUserStats();
-    if (cached && typeof cached === 'object' && 'total' in cached) {
-      console.log('📊 Cache HIT para estatísticas');
-      return cached as UserStats;
-    }
-
-    console.log('📊 Calculando estatísticas...');
-    const calculatedStats = optimizedUserService.calculateStats(usersArray);
-    
-    const validStats: UserStats = {
-      total: calculatedStats?.total || 0,
-      active: calculatedStats?.active || 0,
-      inactive: calculatedStats?.inactive || 0,
-      pending: calculatedStats?.pending || 0
-    };
-    
-    cacheUserStats(validStats);
-    return validStats;
-  }, [usersArray, getCachedUserStats, cacheUserStats]);
-
-  // Mutations otimizadas com invalidação inteligente
+  // Mutations - SEMPRE criadas na mesma ordem
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
@@ -152,6 +108,45 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
+  // Filtros memoizados com cache inteligente - SEMPRE executado
+  const filteredUsers = useMemo(() => {
+    const cached = getCachedFilteredUsers(filters);
+    if (cached) {
+      console.log('🎯 Cache HIT para filtros de usuários');
+      return cached;
+    }
+
+    console.log('🔄 Cache MISS - filtrando usuários...');
+    const filtered = optimizedUserService.filterUsers(usersArray, filters);
+    
+    cacheFilteredUsers(filters, filtered);
+    
+    return filtered;
+  }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
+
+  // Stats memoizadas com cache - SEMPRE executado
+  const stats = useMemo((): UserStats => {
+    const cached = getCachedUserStats();
+    if (cached && typeof cached === 'object' && 'total' in cached) {
+      console.log('📊 Cache HIT para estatísticas');
+      return cached as UserStats;
+    }
+
+    console.log('📊 Calculando estatísticas...');
+    const calculatedStats = optimizedUserService.calculateStats(usersArray);
+    
+    const validStats: UserStats = {
+      total: calculatedStats?.total || 0,
+      active: calculatedStats?.active || 0,
+      inactive: calculatedStats?.inactive || 0,
+      pending: calculatedStats?.pending || 0
+    };
+    
+    cacheUserStats(validStats);
+    return validStats;
+  }, [usersArray, getCachedUserStats, cacheUserStats]);
+
+  // Callbacks - SEMPRE criados na mesma ordem
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
     setFiltersState(prev => ({ ...prev, ...newFilters }));
   }, []);
@@ -173,7 +168,13 @@ export const usePerformanceOptimizedUsers = () => {
     isOptimized: true
   }), [getMetrics, usersArray.length, filteredUsers.length]);
 
-  // Log para debug
+  // Effects - SEMPRE na mesma ordem e sem condicionais
+  useEffect(() => {
+    if (usersArray.length > 0) {
+      preloadCommonFilters(usersArray);
+    }
+  }, [usersArray, preloadCommonFilters]);
+
   useEffect(() => {
     console.log('🔍 Estado atual do hook:', {
       isLoading,
