@@ -238,9 +238,7 @@ export const useSupabaseMentoring = () => {
   const updateSession = useCallback(async (sessionId: string, data: UpdateSessionData): Promise<boolean> => {
     try {
       setLoading(true);
-      // Implementação do método updateSession no repositório
-      // const success = await repository.updateSession(sessionId, data);
-      const success = true; // Temporário até implementarmos no repositório
+      const success = await repository.updateSession(sessionId, data);
       if (success) {
         await refreshSessions();
         toast({
@@ -306,7 +304,7 @@ export const useSupabaseMentoring = () => {
     // Session methods
     getEnrollmentSessions: repository.getEnrollmentSessions.bind(repository),
     createSession: repository.createSession.bind(repository),
-    updateSession: repository.updateSession.bind(repository),
+    updateSession,
     getSessionsByEnrollment,
     refreshSessions,
     

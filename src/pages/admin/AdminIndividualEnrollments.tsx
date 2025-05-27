@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -6,7 +7,7 @@ import { usePagination } from '@/hooks/usePagination';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
-import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetailDialog';
+import { EnrollmentDetailDialog } from '@/components/admin/mentoring/EnrollmentDetailDialog';
 import { ModernIndividualEnrollmentsHeader } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsHeader';
 import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
 import { ModernIndividualEnrollmentsList } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsList';

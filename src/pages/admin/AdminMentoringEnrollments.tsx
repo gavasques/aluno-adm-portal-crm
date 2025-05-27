@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,7 +7,7 @@ import { useMentoring } from '@/hooks/useMentoring';
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
-import EnrollmentDetailDialog from '@/components/admin/mentoring/EnrollmentDetailDialog';
+import { EnrollmentDetailDialog } from '@/components/admin/mentoring/EnrollmentDetailDialog';
 import { EnrollmentsHeader } from '@/components/admin/mentoring/enrollments/EnrollmentsHeader';
 import { BulkActions } from '@/components/admin/mentoring/enrollments/BulkActions';
 import { IndividualEnrollmentSection } from '@/components/admin/mentoring/enrollments/IndividualEnrollmentSection';
