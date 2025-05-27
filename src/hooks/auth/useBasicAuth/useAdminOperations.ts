@@ -42,9 +42,17 @@ export const useAdminOperations = () => {
         throw new Error(errorMsg);
       }
 
-      // Chamar a edge function para criar o usuário
-      console.log("[useAdminOperations] Chamando edge function create-user");
+      // Verificar se temos uma sessão ativa
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
+      if (sessionError || !session) {
+        console.error("[useAdminOperations] Sessão não encontrada:", sessionError);
+        throw new Error("Usuário não está autenticado. Faça login novamente.");
+      }
+
+      console.log("[useAdminOperations] Sessão ativa encontrada, chamando edge function");
+      
+      // Chamar a edge function para criar o usuário
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email,
@@ -52,6 +60,9 @@ export const useAdminOperations = () => {
           role,
           password,
           is_mentor
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         }
       });
 
