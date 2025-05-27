@@ -1,6 +1,11 @@
 
 import React from "react";
-import { TableRow, TableCell } from "@/components/ui/table";
+import { 
+  TableRow, 
+  TableCell 
+} from "@/components/ui/table";
+import { User } from "@/types/user.types";
+import UserStatusBadge from "./UserStatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,9 +27,6 @@ import {
   Shield,
   GraduationCap
 } from "lucide-react";
-import { User } from "@/types/user.types";
-import { useUserStatusLogic } from "@/hooks/users/useUserStatusLogic";
-import UserStatusBadge from "./UserStatusBadge";
 
 interface OptimizedUserTableRowProps {
   user: User;
@@ -35,6 +37,9 @@ interface OptimizedUserTableRowProps {
   onSetPermissionGroup?: (user: User) => void;
 }
 
+// ID do grupo "Geral" (temporário) baseado nos logs
+const GERAL_GROUP_ID = "564c55dc-0ab8-481e-a0bc-97ea7e484b88";
+
 export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({ 
   user,
   onViewDetails,
@@ -43,34 +48,81 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
   onToggleUserStatus,
   onSetPermissionGroup
 }) => {
-  const { 
-    isActive, 
-    isTemporaryGroup, 
-    isAdminUser, 
-    getUserRowClass 
-  } = useUserStatusLogic();
+  // Determinar se o usuário está ativo com base no status
+  const normalizedStatus = typeof user.status === 'string' ? user.status.toLowerCase() : '';
+  const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
+  
+  // Determinar se o usuário está no grupo temporário "Geral"
+  const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
 
-  const isUserActive = isActive(user.status);
-  const isTemporary = isTemporaryGroup(user.permission_group_id, user.role);
-  const isAdmin = isAdminUser(user.role);
+  // Determinar se é um usuário admin
+  const isAdminUser = user.role === "Admin";
 
   const getUserIcon = () => {
-    if (isAdmin) return <Shield className="h-4 w-4 text-blue-600" />;
-    if (isTemporary) return <Clock className="h-4 w-4 text-orange-600" />;
+    if (isAdminUser) {
+      return <Shield className="h-4 w-4 text-blue-600" />;
+    }
+    if (isTemporaryGroup) {
+      return <Clock className="h-4 w-4 text-orange-600" />;
+    }
     return <UserIcon className="h-4 w-4 text-gray-600" />;
   };
 
-  const getIconBgClass = () => {
-    if (isAdmin) return "bg-blue-100";
-    if (isTemporary) return "bg-orange-100";
-    return "bg-gray-100";
+  const getRowClass = () => {
+    if (isAdminUser) {
+      return "bg-blue-50/30 border-l-4 border-l-blue-300";
+    }
+    if (isTemporaryGroup) {
+      return "bg-orange-50/30 border-l-4 border-l-orange-300";
+    }
+    return "";
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🗑️ Iniciando exclusão do usuário:', user.email);
+    onDeleteUser(user);
+  };
+
+  const handleToggleStatusClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🔄 Alterando status do usuário:', user.email);
+    onToggleUserStatus(user);
+  };
+
+  const handleResetPasswordClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🔑 Redefinindo senha do usuário:', user.email);
+    onResetPassword(user);
+  };
+
+  const handleViewDetailsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('👁️ Visualizando detalhes do usuário:', user.email);
+    onViewDetails(user);
+  };
+
+  const handleSetPermissionGroupClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🔐 Definindo permissões do usuário:', user.email);
+    if (onSetPermissionGroup) {
+      onSetPermissionGroup(user);
+    }
   };
 
   return (
-    <TableRow className={getUserRowClass(user.role, isTemporary)}>
+    <TableRow className={getRowClass()}>
       <TableCell>
         <div className="flex items-center">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${getIconBgClass()}`}>
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
+            isAdminUser ? "bg-blue-100" : 
+            isTemporaryGroup ? "bg-orange-100" : "bg-gray-100"
+          }`}>
             {getUserIcon()}
           </div>
           <div>
@@ -83,7 +135,7 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
         <UserStatusBadge 
           status={user.status} 
           permissionGroupId={user.permission_group_id}
-          isTemporaryGroup={isTemporary}
+          isTemporaryGroup={isTemporaryGroup}
         />
       </TableCell>
       <TableCell>
@@ -107,28 +159,28 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewDetails(user)}>
+            <DropdownMenuItem onClick={handleViewDetailsClick}>
               <Eye className="mr-2 h-4 w-4" />
               <span>Ver detalhes</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onResetPassword(user)}>
+            <DropdownMenuItem onClick={handleResetPasswordClick}>
               <KeyRound className="mr-2 h-4 w-4" />
               <span>Redefinir senha</span>
             </DropdownMenuItem>
 
             {onSetPermissionGroup && (
-              <DropdownMenuItem onClick={() => onSetPermissionGroup(user)}>
+              <DropdownMenuItem onClick={handleSetPermissionGroupClick}>
                 <Lock className="mr-2 h-4 w-4" />
                 <span>
-                  {isTemporary ? "Atribuir grupo definitivo" : "Definir permissões"}
+                  {isTemporaryGroup ? "Atribuir grupo definitivo" : "Definir permissões"}
                 </span>
               </DropdownMenuItem>
             )}
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={() => onToggleUserStatus(user)}>
-              {isUserActive ? (
+            <DropdownMenuItem onClick={handleToggleStatusClick}>
+              {isActive ? (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
                   <span>Desativar usuário</span>
@@ -143,7 +195,7 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
 
             <DropdownMenuItem 
               className="text-red-600" 
-              onClick={() => onDeleteUser(user)}
+              onClick={handleDeleteClick}
             >
               <UserX className="mr-2 h-4 w-4" />
               <span>Excluir usuário</span>
