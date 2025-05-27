@@ -1,14 +1,13 @@
-
 import React from "react";
 import { useUsers } from "@/hooks/users/useUsers";
-import { useUserOperations } from "@/hooks/users/useUserOperations";
+import { useSimplifiedUserOperations } from "@/hooks/users/useSimplifiedUserOperations";
 import { useUserDropdownActions } from "@/hooks/users/useUserDropdownActions";
 import UsersHeader from "./UsersHeader";
 import UsersAlert from "./UsersAlert";
 import { UserFilters } from "./filters/UserFilters";
 import UserActionButtons from "./UserActionButtons";
 import { OptimizedUserTable } from "./table/OptimizedUserTable";
-import { UserDialogs } from "./dialogs/UserDialogs";
+import { ValidatedUserDialogs } from "./dialogs/ValidatedUserDialogs";
 
 export const OptimizedUsersPageContent: React.FC = () => {
   const {
@@ -24,63 +23,21 @@ export const OptimizedUsersPageContent: React.FC = () => {
   } = useUsers();
 
   const {
-    // Dialog states
     showAddDialog,
     setShowAddDialog,
     showInviteDialog,
     setShowInviteDialog,
-    showDeleteDialog,
-    setShowDeleteDialog,
-    showStatusDialog,
-    setShowStatusDialog,
-    showResetDialog,
-    setShowResetDialog,
-    showPermissionDialog,
-    setShowPermissionDialog,
-    showDetailsDialog,
-    setShowDetailsDialog,
-
-    // Selected user data
-    selectedUserId,
-    selectedUserEmail,
-    selectedUserStatus,
-    selectedUserPermissionGroupId,
-    selectedUser,
-
-    // Handlers
     handleAddUser,
     handleInviteUser,
-    handleDeleteUser,
-    handleToggleUserStatus,
-    handleResetPassword,
-    handleSetPermissionGroup,
-    handleViewDetails,
+  } = useSimplifiedUserOperations();
 
-    // Confirmation actions
-    confirmDelete,
-    confirmToggleStatus,
-    confirmResetPassword,
-    confirmSetPermissionGroup,
-
-    // Operations
-    createUser,
-  } = useUserOperations();
-
-  const {
-    handleViewDetails: handleUserView,
-    handleResetPassword: handleUserReset,
-    handleDeleteUser: handleUserDelete,
-    handleToggleStatus: handleUserToggle,
-    handleSetPermissions: handleUserPermissions,
-  } = useUserDropdownActions();
-
-  // Adapter functions to bridge the gap between different handler signatures
+  // Placeholder handlers for table actions (will be implemented in future phases)
   const adaptedHandlers = {
-    onViewDetails: handleViewDetails,
-    onResetPassword: (user: any) => handleResetPassword(user.email),
-    onDeleteUser: (user: any) => handleDeleteUser(user.id, user.email),
-    onToggleUserStatus: (user: any) => handleToggleUserStatus(user.id, user.email, user.status === 'Ativo'),
-    onSetPermissionGroup: (user: any) => handleSetPermissionGroup?.(user.id, user.email, user.permission_group_id),
+    onViewDetails: (user: any) => console.log('View details:', user),
+    onResetPassword: (user: any) => console.log('Reset password:', user),
+    onDeleteUser: (user: any) => console.log('Delete user:', user),
+    onToggleUserStatus: (user: any) => console.log('Toggle status:', user),
+    onSetPermissionGroup: (user: any) => console.log('Set permissions:', user),
   };
 
   return (
@@ -112,31 +69,11 @@ export const OptimizedUsersPageContent: React.FC = () => {
         />
       </div>
 
-      <UserDialogs
+      <ValidatedUserDialogs
         showAddDialog={showAddDialog}
         setShowAddDialog={setShowAddDialog}
         showInviteDialog={showInviteDialog}
         setShowInviteDialog={setShowInviteDialog}
-        showDeleteDialog={showDeleteDialog}
-        setShowDeleteDialog={setShowDeleteDialog}
-        showStatusDialog={showStatusDialog}
-        setShowStatusDialog={setShowStatusDialog}
-        showResetDialog={showResetDialog}
-        setShowResetDialog={setShowResetDialog}
-        showPermissionDialog={showPermissionDialog}
-        setShowPermissionDialog={setShowPermissionDialog}
-        showDetailsDialog={showDetailsDialog}
-        setShowDetailsDialog={setShowDetailsDialog}
-        selectedUserEmail={selectedUserEmail}
-        selectedUserId={selectedUserId}
-        selectedUserStatus={selectedUserStatus}
-        selectedUserPermissionGroupId={selectedUserPermissionGroupId}
-        selectedUser={selectedUser}
-        onCreateUser={createUser}
-        onConfirmDelete={confirmDelete}
-        onConfirmToggleStatus={confirmToggleStatus}
-        onConfirmResetPassword={confirmResetPassword}
-        onConfirmSetPermissionGroup={confirmSetPermissionGroup}
         onRefresh={refreshUsers}
       />
     </div>

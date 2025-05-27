@@ -1,24 +1,33 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus } from "lucide-react";
+import { UserPlus, Mail } from "lucide-react";
 
 interface UserActionButtonsProps {
   onAddUser: () => void;
   onInviteUser: () => void;
 }
 
-export const UserActionButtons: React.FC<UserActionButtonsProps> = ({
+const UserActionButtons: React.FC<UserActionButtonsProps> = ({
   onAddUser,
   onInviteUser,
 }) => {
   return (
     <div className="flex gap-2">
-      <Button onClick={onInviteUser} variant="outline" className="gap-2">
-        <Mail className="h-4 w-4" /> Convidar Usuário
+      <Button 
+        onClick={onInviteUser} 
+        variant="outline"
+        className="flex items-center gap-2"
+      >
+        <Mail className="w-4 h-4" />
+        Convidar Usuário
       </Button>
-      <Button onClick={onAddUser} className="gap-2">
-        <UserPlus className="h-4 w-4" /> Adicionar Usuário
+      <Button 
+        onClick={onAddUser}
+        className="flex items-center gap-2"
+      >
+        <UserPlus className="w-4 h-4" />
+        Adicionar Usuário
       </Button>
     </div>
   );
