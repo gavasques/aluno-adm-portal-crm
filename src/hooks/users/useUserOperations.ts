@@ -5,7 +5,6 @@ import { useUsers } from './useUsers';
 export const useUserOperations = () => {
   const {
     createUser,
-    updateUser,
     deleteUser,
     toggleUserStatus,
     resetPassword,
@@ -80,7 +79,7 @@ export const useUserOperations = () => {
   };
 
   const confirmDelete = async () => {
-    const success = await deleteUser(selectedUserId);
+    const success = await deleteUser(selectedUserId, selectedUserEmail);
     if (success) {
       closeAllDialogs();
     }
@@ -88,7 +87,7 @@ export const useUserOperations = () => {
   };
 
   const confirmToggleStatus = async () => {
-    const success = await toggleUserStatus(selectedUserId);
+    const success = await toggleUserStatus(selectedUserId, selectedUserEmail, selectedUserStatus ? 'Ativo' : 'Inativo');
     if (success) {
       closeAllDialogs();
     }
@@ -104,7 +103,7 @@ export const useUserOperations = () => {
   };
 
   const confirmSetPermissionGroup = async (groupId: string | null) => {
-    const success = await setPermissionGroup(selectedUserId, groupId);
+    const success = await setPermissionGroup(selectedUserId, selectedUserEmail, groupId);
     if (success) {
       closeAllDialogs();
     }
@@ -153,6 +152,5 @@ export const useUserOperations = () => {
 
     // Operations
     createUser,
-    updateUser,
   };
 };
