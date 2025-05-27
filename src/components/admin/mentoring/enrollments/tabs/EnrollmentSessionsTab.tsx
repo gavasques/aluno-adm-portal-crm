@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface EnrollmentSessionsTabProps {
   enrollment: StudentMentoringEnrollment;
+  onSessionUpdated?: () => void;
 }
 
 interface SessionData {
@@ -22,7 +22,8 @@ interface SessionData {
 }
 
 export const EnrollmentSessionsTab: React.FC<EnrollmentSessionsTabProps> = ({
-  enrollment
+  enrollment,
+  onSessionUpdated
 }) => {
   const { toast } = useToast();
   const [showCalendly, setShowCalendly] = useState(false);
@@ -106,6 +107,11 @@ export const EnrollmentSessionsTab: React.FC<EnrollmentSessionsTabProps> = ({
     });
     setShowCalendly(false);
     setSelectedSession(null);
+    
+    // Call the callback to refresh data if provided
+    if (onSessionUpdated) {
+      onSessionUpdated();
+    }
   };
 
   const pendingSessions = sessions.filter(s => s.status === 'pendente');
