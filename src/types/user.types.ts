@@ -1,10 +1,12 @@
 
+import { UserRole, UserStatus } from './user.enums';
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
-  status: string;
+  role: UserRole | string;
+  status: UserStatus | string;
   lastLogin: string;
   permission_group_id?: string | null;
   storage_used_mb?: number;
@@ -40,15 +42,15 @@ export interface UserOperation {
 export interface CreateUserData {
   name: string;
   email: string;
-  role: string;
+  role: UserRole | string;
   password: string;
   is_mentor: boolean;
 }
 
 export interface UpdateUserData {
   name?: string;
-  role?: string;
-  status?: string;
+  role?: UserRole | string;
+  status?: UserStatus | string;
   is_mentor?: boolean;
   permission_group_id?: string | null;
 }
