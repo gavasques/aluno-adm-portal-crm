@@ -61,7 +61,9 @@ export const PerformanceOptimizedUserDialogs: React.FC = () => {
           <UserPermissionGroupDialog
             open={showPermissionDialog}
             onOpenChange={setShowPermissionDialog}
-            user={selectedUser}
+            userId={selectedUser.id}
+            userEmail={selectedUser.email}
+            currentGroupId={selectedUser.permission_group_id || null}
             onConfirmSetPermissionGroup={confirmSetPermissionGroup}
           />
         </>

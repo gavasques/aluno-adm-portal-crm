@@ -78,7 +78,7 @@ export const usePerformanceOptimizedUsers = () => {
   }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
 
   // Stats memoizadas com cache
-  const stats = useMemo(() => {
+  const stats = useMemo((): UserStats => {
     const cached = getCachedUserStats();
     if (cached) {
       console.log('📊 Cache HIT para estatísticas');
