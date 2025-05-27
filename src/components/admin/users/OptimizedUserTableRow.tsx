@@ -78,34 +78,6 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
     return "";
   };
 
-  // Handlers simplificados
-  const handleViewDetails = () => {
-    console.log('👁️ EXECUTANDO VIEW DETAILS para:', user.email);
-    onViewDetails(user);
-  };
-
-  const handleResetPassword = () => {
-    console.log('🔑 EXECUTANDO RESET PASSWORD para:', user.email);
-    onResetPassword(user);
-  };
-
-  const handleDeleteUser = () => {
-    console.log('🗑️ EXECUTANDO DELETE USER para:', user.email);
-    onDeleteUser(user);
-  };
-
-  const handleToggleStatus = () => {
-    console.log('🔄 EXECUTANDO TOGGLE STATUS para:', user.email);
-    onToggleUserStatus(user);
-  };
-
-  const handleSetPermissionGroup = () => {
-    console.log('🔐 EXECUTANDO SET PERMISSION GROUP para:', user.email);
-    if (onSetPermissionGroup) {
-      onSetPermissionGroup(user);
-    }
-  };
-
   return (
     <TableRow className={getRowClass()}>
       <TableCell>
@@ -147,32 +119,39 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             <Button 
               variant="ghost" 
               className="h-8 w-8 p-0"
-              onClick={(e) => {
-                console.log('🎯 TRIGGER CLICKED para usuário:', user.email);
-                e.stopPropagation();
-              }}
             >
               <span className="sr-only">Abrir menu</span>
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end"
-            className="w-56"
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
-            <DropdownMenuItem onClick={handleViewDetails}>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem 
+              onClick={() => {
+                console.log('🎯 VIEW DETAILS CLICKED para:', user.email);
+                onViewDetails(user);
+              }}
+            >
               <Eye className="mr-2 h-4 w-4" />
               <span>Ver detalhes</span>
             </DropdownMenuItem>
             
-            <DropdownMenuItem onClick={handleResetPassword}>
+            <DropdownMenuItem 
+              onClick={() => {
+                console.log('🔑 RESET PASSWORD CLICKED para:', user.email);
+                onResetPassword(user);
+              }}
+            >
               <KeyRound className="mr-2 h-4 w-4" />
               <span>Redefinir senha</span>
             </DropdownMenuItem>
 
             {onSetPermissionGroup && (
-              <DropdownMenuItem onClick={handleSetPermissionGroup}>
+              <DropdownMenuItem 
+                onClick={() => {
+                  console.log('🔐 SET PERMISSION GROUP CLICKED para:', user.email);
+                  onSetPermissionGroup(user);
+                }}
+              >
                 <Lock className="mr-2 h-4 w-4" />
                 <span>
                   {isTemporaryGroup ? "Atribuir grupo definitivo" : "Definir permissões"}
@@ -182,7 +161,12 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={handleToggleStatus}>
+            <DropdownMenuItem 
+              onClick={() => {
+                console.log('🔄 TOGGLE STATUS CLICKED para:', user.email);
+                onToggleUserStatus(user);
+              }}
+            >
               {isActive ? (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
@@ -197,7 +181,10 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             </DropdownMenuItem>
 
             <DropdownMenuItem 
-              onClick={handleDeleteUser}
+              onClick={() => {
+                console.log('🗑️ DELETE USER CLICKED para:', user.email);
+                onDeleteUser(user);
+              }}
               className="text-red-600 focus:text-red-600 hover:text-red-600"
             >
               <UserX className="mr-2 h-4 w-4" />

@@ -29,6 +29,14 @@ export const OptimizedUserTable: React.FC<OptimizedUserTableProps> = ({
   onToggleUserStatus,
   onSetPermissionGroup,
 }) => {
+  console.log('🔧 OptimizedUserTable handlers:', {
+    onViewDetails: !!onViewDetails,
+    onResetPassword: !!onResetPassword,
+    onDeleteUser: !!onDeleteUser,
+    onToggleUserStatus: !!onToggleUserStatus,
+    onSetPermissionGroup: !!onSetPermissionGroup
+  });
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -41,11 +49,26 @@ export const OptimizedUserTable: React.FC<OptimizedUserTableProps> = ({
               <OptimizedUserTableRow 
                 key={user.id}
                 user={user}
-                onViewDetails={onViewDetails}
-                onResetPassword={onResetPassword}
-                onDeleteUser={onDeleteUser}
-                onToggleUserStatus={onToggleUserStatus}
-                onSetPermissionGroup={onSetPermissionGroup}
+                onViewDetails={(user) => {
+                  console.log('🔧 Table onViewDetails called for:', user.email);
+                  onViewDetails(user);
+                }}
+                onResetPassword={(user) => {
+                  console.log('🔧 Table onResetPassword called for:', user.email);
+                  onResetPassword(user);
+                }}
+                onDeleteUser={(user) => {
+                  console.log('🔧 Table onDeleteUser called for:', user.email);
+                  onDeleteUser(user);
+                }}
+                onToggleUserStatus={(user) => {
+                  console.log('🔧 Table onToggleUserStatus called for:', user.email);
+                  onToggleUserStatus(user);
+                }}
+                onSetPermissionGroup={onSetPermissionGroup ? (user) => {
+                  console.log('🔧 Table onSetPermissionGroup called for:', user.email);
+                  onSetPermissionGroup(user);
+                } : undefined}
               />
             ))
           ) : (

@@ -24,26 +24,31 @@ export const useUserDropdownActions = () => {
   } = usePerformanceOptimizedUserContext();
 
   const handleViewDetails = useCallback((user: User) => {
+    console.log('🔧 handleViewDetails executado para:', user.email);
     setSelectedUser(user);
     setShowDetailsDialog(true);
   }, []);
 
   const handleResetPassword = useCallback((user: User) => {
+    console.log('🔧 handleResetPassword executado para:', user.email);
     setSelectedUser(user);
     setShowResetDialog(true);
   }, []);
 
   const handleDeleteUser = useCallback((user: User) => {
+    console.log('🔧 handleDeleteUser executado para:', user.email);
     setSelectedUser(user);
     setShowDeleteDialog(true);
   }, []);
 
   const handleToggleUserStatus = useCallback((user: User) => {
+    console.log('🔧 handleToggleUserStatus executado para:', user.email);
     setSelectedUser(user);
     setShowStatusDialog(true);
   }, []);
 
   const handleSetPermissionGroup = useCallback((user: User) => {
+    console.log('🔧 handleSetPermissionGroup executado para:', user.email);
     setSelectedUser(user);
     setShowPermissionDialog(true);
   }, []);
