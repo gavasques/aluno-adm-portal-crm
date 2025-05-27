@@ -33,7 +33,7 @@ export const OptimizedUsersPageContent: React.FC = () => {
     handleInviteUser,
   } = useSimplifiedUserOperations();
 
-  // Usar os handlers reais em vez dos placeholders
+  // Usar os handlers do useUserDropdownActions
   const {
     handleViewDetails,
     handleResetPassword,
@@ -41,6 +41,14 @@ export const OptimizedUsersPageContent: React.FC = () => {
     handleToggleUserStatus,
     handleSetPermissionGroup
   } = useUserDropdownActions();
+
+  console.log('🔧 OptimizedUsersPageContent - Handlers criados:', {
+    handleViewDetails: !!handleViewDetails,
+    handleResetPassword: !!handleResetPassword,
+    handleDeleteUser: !!handleDeleteUser,
+    handleToggleUserStatus: !!handleToggleUserStatus,
+    handleSetPermissionGroup: !!handleSetPermissionGroup
+  });
 
   return (
     <div className="space-y-6">

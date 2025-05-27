@@ -2,7 +2,7 @@
 import React from "react";
 import { PerformanceOptimizedUserProvider } from "@/contexts/PerformanceOptimizedUserContext";
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
-import { PerformanceOptimizedUsersPageContent } from "@/components/admin/users/PerformanceOptimizedUsersPageContent";
+import { OptimizedUsersPageContent } from "@/components/admin/users/OptimizedUsersPageContent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const UsersContent = () => {
@@ -20,7 +20,7 @@ const UsersContent = () => {
           backHref="/admin"
           className="mb-6"
         />
-        <PerformanceOptimizedUsersPageContent />
+        <OptimizedUsersPageContent />
       </div>
     </PerformanceOptimizedUserProvider>
   );
