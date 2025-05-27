@@ -7,12 +7,14 @@ interface EnrollmentDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   enrollment: StudentMentoringEnrollment | null;
+  onSessionUpdated?: () => void;
 }
 
 export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
   open,
   onOpenChange,
-  enrollment
+  enrollment,
+  onSessionUpdated
 }) => {
   const handleSave = (data: any) => {
     console.log('Salvando dados da inscrição:', data);
@@ -25,6 +27,7 @@ export const EnrollmentDetailDialog: React.FC<EnrollmentDetailDialogProps> = ({
       onOpenChange={onOpenChange}
       enrollment={enrollment}
       onSave={handleSave}
+      onSessionUpdated={onSessionUpdated}
     />
   );
 };

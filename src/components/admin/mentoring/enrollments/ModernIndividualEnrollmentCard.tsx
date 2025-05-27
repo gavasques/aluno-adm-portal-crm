@@ -19,7 +19,7 @@ interface ModernIndividualEnrollmentCardProps {
   onAddExtension: (enrollment: StudentMentoringEnrollment) => void;
   onToggleSelection: (id: string) => void;
   isSelected: boolean;
-  onSessionUpdated?: () => void; // Prop adicionada
+  onSessionUpdated?: () => void;
 }
 
 export const ModernIndividualEnrollmentCard = ({
@@ -38,9 +38,11 @@ export const ModernIndividualEnrollmentCard = ({
     createSession, 
     deleteSession, 
     loading 
-  } = useSupabaseMentoringSessions(enrollment.id);
+  } = useSupabaseMentoringSessions();
 
-  const pendingSessions = sessions.filter(s => s.status === 'aguardando_agendamento');
+  // Filtrar sessões desta inscrição
+  const enrollmentSessions = sessions.filter(s => s.enrollmentId === enrollment.id);
+  const pendingSessions = enrollmentSessions.filter(s => s.status === 'aguardando_agendamento');
 
   const handleCreateSession = async (data: any) => {
     await createSession(data);
@@ -124,7 +126,10 @@ export const ModernIndividualEnrollmentCard = ({
           </div>
 
           {/* Progress */}
-          <EnrollmentProgress enrollment={enrollment} />
+          <EnrollmentProgress 
+            sessionsUsed={enrollment.sessionsUsed} 
+            totalSessions={enrollment.totalSessions} 
+          />
 
           {/* Sessões pendentes */}
           {pendingSessions.length > 0 && (
@@ -202,7 +207,7 @@ export const ModernIndividualEnrollmentCard = ({
             onSessionScheduled={handleSessionScheduled}
             onDeleteSession={handleDeleteSession}
             isLoading={loading}
-            allSessions={sessions}
+            allSessions={enrollmentSessions}
             onSessionUpdated={onSessionUpdated}
           />
         </DialogContent>

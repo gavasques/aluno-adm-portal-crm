@@ -5,7 +5,7 @@ import { StudentMentoringEnrollment, CreateExtensionData } from '@/types/mentori
 import EnrollmentForm from '@/components/admin/mentoring/EnrollmentForm';
 import EditEnrollmentForm from '@/components/admin/mentoring/EditEnrollmentForm';
 import ExtensionDialog from '@/components/admin/mentoring/ExtensionDialog';
-import { EnrollmentDetailDialog } from '@/components/admin/mentoring/EnrollmentDetailDialog';
+import { EnrollmentDetailDialog } from '@/components/admin/mentoring/enrollments/EnrollmentDetailDialog';
 
 interface IndividualEnrollmentsDialogsProps {
   showForm: boolean;
@@ -20,7 +20,7 @@ interface IndividualEnrollmentsDialogsProps {
   onCreateSuccess: () => void;
   onEditSubmit: (data: any) => void;
   onExtensionSubmit: (data: CreateExtensionData) => void;
-  onSessionUpdated?: () => void; // Prop adicionada
+  onSessionUpdated?: () => void;
 }
 
 export const IndividualEnrollmentsDialogs = ({
