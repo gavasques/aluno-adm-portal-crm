@@ -123,23 +123,40 @@ export class SupabaseMentoringRepository {
 
   // Catalog methods
   async getCatalogs(): Promise<MentoringCatalog[]> {
-    const { data, error } = await supabase
+    console.log('🔄 Iniciando busca de catálogos...');
+    
+    // Buscar catálogos primeiro
+    const { data: catalogsData, error: catalogsError } = await supabase
       .from('mentoring_catalogs')
-      .select(`
-        *,
-        extensions:mentoring_extensions(
-          id,
-          months,
-          price,
-          description
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    
-    return (data || []).map(catalog => {
-      const extensions = (catalog.extensions || []).map((ext: any) => ({
+    if (catalogsError) {
+      console.error('❌ Erro ao buscar catálogos:', catalogsError);
+      throw catalogsError;
+    }
+
+    console.log('📚 Catálogos encontrados:', catalogsData?.length || 0);
+
+    if (!catalogsData || catalogsData.length === 0) {
+      return [];
+    }
+
+    // Para cada catálogo, buscar suas extensões separadamente
+    const catalogsWithExtensions: MentoringCatalog[] = [];
+
+    for (const catalog of catalogsData) {
+      const { data: extensionsData, error: extensionsError } = await supabase
+        .from('mentoring_extensions')
+        .select('*')
+        .eq('catalog_id', catalog.id)
+        .order('months', { ascending: true });
+
+      if (extensionsError) {
+        console.error('❌ Erro ao buscar extensões para catálogo', catalog.id, ':', extensionsError);
+      }
+
+      const extensions = (extensionsData || []).map((ext: any) => ({
         id: ext.id,
         months: ext.months,
         price: ext.price,
@@ -147,11 +164,16 @@ export class SupabaseMentoringRepository {
         description: ext.description || ''
       }));
 
-      return {
+      const catalogWithExtensions = {
         ...this.mapCatalogFromDB(catalog),
         extensions
       };
-    });
+
+      catalogsWithExtensions.push(catalogWithExtensions);
+    }
+
+    console.log('✅ Catálogos com extensões mapeados:', catalogsWithExtensions.length);
+    return catalogsWithExtensions;
   }
 
   async createCatalog(catalogData: CreateMentoringCatalogData): Promise<MentoringCatalog> {
@@ -248,6 +270,8 @@ export class SupabaseMentoringRepository {
 
   // Enrollment methods
   async getEnrollments(): Promise<StudentMentoringEnrollment[]> {
+    console.log('🔄 Iniciando busca de inscrições...');
+    
     const { data, error } = await supabase
       .from('mentoring_enrollments')
       .select(`
@@ -257,8 +281,12 @@ export class SupabaseMentoringRepository {
       `)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erro ao buscar inscrições:', error);
+      throw error;
+    }
     
+    console.log('📊 Inscrições encontradas:', data?.length || 0);
     return (data || []).map(enrollment => this.mapEnrollmentFromDB(enrollment));
   }
 

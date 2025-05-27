@@ -1,9 +1,9 @@
 
 import React, { memo } from 'react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
-import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
-import { ModernIndividualEnrollmentsList } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsList';
-import { EnrollmentsPagination } from '@/components/admin/mentoring/enrollments/EnrollmentsPagination';
+import { ModernIndividualEnrollmentCard } from '../enrollments/ModernIndividualEnrollmentCard';
+import { EnrollmentsList } from '../enrollments/EnrollmentsList';
+import { Pagination } from '@/components/ui/pagination';
 
 interface OptimizedIndividualEnrollmentsContentProps {
   paginatedEnrollments: StudentMentoringEnrollment[];
@@ -13,8 +13,11 @@ interface OptimizedIndividualEnrollmentsContentProps {
     currentPage: number;
     totalPages: number;
     totalItems: number;
-    startIndex: number;
-    endIndex: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    itemsPerPage: number;
+    startItem: number;
+    endItem: number;
   };
   onView: (enrollment: StudentMentoringEnrollment) => void;
   onEdit: (enrollment: StudentMentoringEnrollment) => void;
@@ -24,7 +27,7 @@ interface OptimizedIndividualEnrollmentsContentProps {
   onPageChange: (page: number) => void;
 }
 
-const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnrollmentsContentProps>(({
+export const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnrollmentsContentProps>(({
   paginatedEnrollments,
   viewMode,
   selectedEnrollments,
@@ -37,10 +40,10 @@ const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnrollment
   onPageChange
 }) => {
   return (
-    <div className="space-y-4">
-      {/* Cards ou Lista */}
+    <div className="space-y-6">
+      {/* Conteúdo */}
       {viewMode === 'cards' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {paginatedEnrollments.map((enrollment) => (
             <ModernIndividualEnrollmentCard
               key={enrollment.id}
@@ -55,7 +58,7 @@ const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnrollment
           ))}
         </div>
       ) : (
-        <ModernIndividualEnrollmentsList
+        <EnrollmentsList
           enrollments={paginatedEnrollments}
           onView={onView}
           onEdit={onEdit}
@@ -63,19 +66,26 @@ const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnrollment
           onAddExtension={onAddExtension}
           onToggleSelection={onToggleSelection}
           selectedEnrollments={selectedEnrollments}
+          onSelectAll={() => {
+            // Implementar select all se necessário
+          }}
         />
       )}
 
-      {/* Paginação otimizada */}
+      {/* Paginação */}
       {pageInfo.totalPages > 1 && (
-        <EnrollmentsPagination
-          currentPage={pageInfo.currentPage}
-          totalPages={pageInfo.totalPages}
-          onPageChange={onPageChange}
-          totalItems={pageInfo.totalItems}
-          startIndex={pageInfo.startIndex}
-          endIndex={pageInfo.endIndex}
-        />
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-700">
+            Mostrando {pageInfo.startItem} a {pageInfo.endItem} de {pageInfo.totalItems} inscrições
+          </div>
+          <Pagination
+            currentPage={pageInfo.currentPage}
+            totalPages={pageInfo.totalPages}
+            onPageChange={onPageChange}
+            hasNextPage={pageInfo.hasNextPage}
+            hasPreviousPage={pageInfo.hasPreviousPage}
+          />
+        </div>
       )}
     </div>
   );

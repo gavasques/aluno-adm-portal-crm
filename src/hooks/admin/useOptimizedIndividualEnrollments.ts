@@ -3,46 +3,24 @@ import { useState, useMemo, useCallback } from 'react';
 import { useMentoringReadQueries } from '@/features/mentoring/hooks/useMentoringReadQueries';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
-interface EnrollmentFilters {
-  searchTerm: string;
-  statusFilter: string;
-  typeFilter: string;
-}
-
-interface EnrollmentStats {
-  total: number;
-  filtered: number;
-  active: number;
-  completed: number;
-  cancelled: number;
-  paused: number;
-}
-
-export const useOptimizedIndividualEnrollments = (
-  currentPage: number = 1,
-  itemsPerPage: number = 12
-) => {
+export const useOptimizedIndividualEnrollments = (currentPage: number = 1, pageSize: number = 12) => {
   const { useEnrollments } = useMentoringReadQueries();
-  const { data: allEnrollments = [], isLoading, error, refetch } = useEnrollments();
-
-  // Filter state
+  const { data: allEnrollments = [], isLoading, error } = useEnrollments();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
-  // Filter individual enrollments and optimize with memoization
-  const individualEnrollments = useMemo(() => {
-    return allEnrollments.filter(enrollment => 
-      enrollment.mentoring?.type === 'Individual'
-    );
-  }, [allEnrollments]);
-
-  // Apply filters with memoization
+  // Filter enrollments (Individual only)
   const filteredEnrollments = useMemo(() => {
-    return individualEnrollments.filter(enrollment => {
+    return allEnrollments.filter((enrollment: StudentMentoringEnrollment) => {
+      // Only individual enrollments (no group_id)
+      if (enrollment.groupId) return false;
+      
       const matchesSearch = !searchTerm || 
-        enrollment.mentoring?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enrollment.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enrollment.mentoring?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = !statusFilter || enrollment.status === statusFilter;
@@ -50,44 +28,58 @@ export const useOptimizedIndividualEnrollments = (
       
       return matchesSearch && matchesStatus && matchesType;
     });
-  }, [individualEnrollments, searchTerm, statusFilter, typeFilter]);
+  }, [allEnrollments, searchTerm, statusFilter, typeFilter]);
 
-  // Pagination with memoization
-  const paginationData = useMemo(() => {
+  // Pagination
+  const paginatedEnrollments = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredEnrollments.slice(start, end);
+  }, [filteredEnrollments, currentPage, pageSize]);
+
+  // Page info
+  const pageInfo = useMemo(() => {
     const totalItems = filteredEnrollments.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-    const paginatedItems = filteredEnrollments.slice(startIndex, startIndex + itemsPerPage);
-
+    const totalPages = Math.ceil(totalItems / pageSize);
+    
     return {
-      paginatedEnrollments: paginatedItems,
-      pageInfo: {
-        currentPage,
-        totalPages,
-        totalItems,
-        startIndex: startIndex + 1,
-        endIndex
-      }
+      currentPage,
+      totalPages,
+      totalItems,
+      hasNextPage: currentPage < totalPages,
+      hasPreviousPage: currentPage > 1,
+      itemsPerPage: pageSize,
+      startItem: Math.min((currentPage - 1) * pageSize + 1, totalItems),
+      endItem: Math.min(currentPage * pageSize, totalItems)
     };
-  }, [filteredEnrollments, currentPage, itemsPerPage]);
+  }, [filteredEnrollments.length, currentPage, pageSize]);
 
-  // Statistics with memoization
-  const statistics = useMemo((): EnrollmentStats => {
-    const total = individualEnrollments.length;
-    const filtered = filteredEnrollments.length;
+  // Statistics
+  const statistics = useMemo(() => {
+    const total = filteredEnrollments.length;
+    const active = filteredEnrollments.filter(e => e.status === 'ativa').length;
+    const completed = filteredEnrollments.filter(e => e.status === 'concluida').length;
+    const paused = filteredEnrollments.filter(e => e.status === 'pausada').length;
+    const cancelled = filteredEnrollments.filter(e => e.status === 'cancelada').length;
     
     return {
       total,
-      filtered,
-      active: individualEnrollments.filter(e => e.status === 'ativa').length,
-      completed: individualEnrollments.filter(e => e.status === 'concluida').length,
-      cancelled: individualEnrollments.filter(e => e.status === 'cancelada').length,
-      paused: individualEnrollments.filter(e => e.status === 'pausada').length
+      active,
+      completed,
+      paused,
+      cancelled,
+      withExtensions: filteredEnrollments.filter(e => e.hasExtension).length,
+      expiringSoon: filteredEnrollments.filter(e => {
+        if (e.status !== 'ativa') return false;
+        const endDate = new Date(e.endDate);
+        const today = new Date();
+        const diffDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays <= 30 && diffDays > 0;
+      }).length
     };
-  }, [individualEnrollments, filteredEnrollments.length]);
+  }, [filteredEnrollments]);
 
-  // Optimized filter handlers
+  // Handlers
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
   }, []);
@@ -108,27 +100,31 @@ export const useOptimizedIndividualEnrollments = (
 
   return {
     // Data
-    individualEnrollments,
+    paginatedEnrollments,
     filteredEnrollments,
-    ...paginationData,
+    allEnrollments,
+    
+    // Pagination
+    pageInfo,
+    
+    // Statistics
     statistics,
+    
+    // Loading states
     isLoading,
     error,
-
-    // Filter state
+    
+    // Filters
     searchTerm,
     statusFilter,
     typeFilter,
     viewMode,
-
-    // Filter handlers
+    
+    // Handlers
     handleSearchChange,
     handleStatusFilterChange,
     handleTypeFilterChange,
     handleClearFilters,
-    setViewMode,
-
-    // Utilities
-    refetch
+    setViewMode
   };
 };
