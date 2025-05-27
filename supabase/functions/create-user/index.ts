@@ -17,11 +17,12 @@ serve(async (req) => {
   }
 
   try {
-    console.log("=== INÍCIO DO DEBUG DETALHADO DA EDGE FUNCTION ===");
-    console.log(`Recebendo requisição ${req.method} para create-user`);
+    console.log("=== INÍCIO CRIAÇÃO DE USUÁRIO ===");
+    console.log(`Método: ${req.method}`);
+    console.log(`URL: ${req.url}`);
 
     if (req.method !== 'POST') {
-      console.error("Método não permitido:", req.method);
+      console.error("❌ Método não permitido:", req.method);
       return new Response(
         JSON.stringify({ error: 'Método não permitido' }),
         { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -34,19 +35,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log("Cliente Supabase Admin criado");
+    console.log("✅ Cliente Supabase Admin criado");
 
     // Validar token de autorização
     const user = await validateAuthToken(req.headers.get('authorization'), supabaseAdmin);
+    console.log("✅ Token validado para usuário:", user.email);
 
     // Verificar permissões administrativas
     await checkAdminPermissions(user, supabaseAdmin);
+    console.log("✅ Permissões administrativas confirmadas");
 
     // Processar dados da requisição
     const userData = await parseRequestBody(req);
+    console.log("✅ Dados da requisição processados");
 
     // Criar o usuário
     const result = await handleUserCreation(userData, supabaseAdmin);
+    
+    console.log("✅ Resultado da criação:", result);
+    console.log("=== FIM CRIAÇÃO DE USUÁRIO ===");
     
     return new Response(
       JSON.stringify(result),
@@ -54,12 +61,11 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error("=== ERRO GERAL NA EDGE FUNCTION ===");
+    console.error("=== ERRO NA CRIAÇÃO DE USUÁRIO ===");
     console.error("Erro:", error);
-    console.error("Tipo:", typeof error);
     console.error("Message:", error.message);
     console.error("Stack:", error.stack);
-    console.error("=== FIM DO ERRO ===");
+    console.error("===================================");
     
     return new Response(
       JSON.stringify({ 
