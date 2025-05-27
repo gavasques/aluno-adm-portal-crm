@@ -5,13 +5,12 @@ import { CalendlyWidget } from './CalendlyWidget';
 import { CalendlyEventPayload } from '@/types/calendly.types';
 import { Calendar } from 'lucide-react';
 import { useCalendly } from '@/hooks/useCalendly';
+import { ButtonProps } from '@/components/ui/button';
 
-interface CalendlyButtonProps {
+interface CalendlyButtonProps extends Omit<ButtonProps, 'onClick'> {
   mentorId: string;
   onEventScheduled?: (eventData: CalendlyEventPayload) => void;
   children?: React.ReactNode;
-  className?: string;
-  disabled?: boolean;
 }
 
 export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
@@ -19,7 +18,10 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
   onEventScheduled,
   children,
   className = '',
-  disabled = false
+  disabled = false,
+  variant,
+  size,
+  ...buttonProps
 }) => {
   const [showWidget, setShowWidget] = useState(false);
   const { getCalendlyConfig } = useCalendly();
@@ -51,6 +53,9 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
         onClick={handleClick}
         className={className}
         disabled={disabled}
+        variant={variant}
+        size={size}
+        {...buttonProps}
       >
         <Calendar className="h-4 w-4 mr-2" />
         {children || 'Agendar via Calendly'}
