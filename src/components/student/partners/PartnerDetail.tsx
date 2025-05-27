@@ -183,7 +183,7 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
             
             <TabsTriggerWithBadge
               value="contacts"
-              badgeCount={partner.contacts ? partner.contacts.length : 0}
+              badgeContent={partner.contacts ? partner.contacts.length : 0}
               className={`flex-1 rounded-md data-[state=active]:bg-gradient-to-r ${tabStyles.contacts.gradient} data-[state=active]:text-white transition-all duration-300 data-[state=inactive]:hover:bg-emerald-100`}
             >
               {tabStyles.contacts.icon} Contatos
@@ -191,7 +191,7 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
             
             <TabsTriggerWithBadge
               value="comments"
-              badgeCount={partner.comments ? partner.comments.length : 0}
+              badgeContent={partner.comments ? partner.comments.length : 0}
               className={`flex-1 rounded-md data-[state=active]:bg-gradient-to-r ${tabStyles.comments.gradient} data-[state=active]:text-white transition-all duration-300 data-[state=inactive]:hover:bg-amber-100`}
             >
               {tabStyles.comments.icon} Comentários
@@ -199,7 +199,7 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
             
             <TabsTriggerWithBadge
               value="ratings"
-              badgeCount={partner.ratings ? partner.ratings.length : 0}
+              badgeContent={partner.ratings ? partner.ratings.length : 0}
               className={`flex-1 rounded-md data-[state=active]:bg-gradient-to-r ${tabStyles.ratings.gradient} data-[state=active]:text-white transition-all duration-300 data-[state=inactive]:hover:bg-yellow-100`}
             >
               {tabStyles.ratings.icon} Avaliações
@@ -207,7 +207,7 @@ const PartnerDetail: React.FC<PartnerDetailProps> = ({
             
             <TabsTriggerWithBadge
               value="files"
-              badgeCount={partner.files ? partner.files.length : 0}
+              badgeContent={partner.files ? partner.files.length : 0}
               className={`flex-1 rounded-md data-[state=active]:bg-gradient-to-r ${tabStyles.files.gradient} data-[state=active]:text-white transition-all duration-300 data-[state=inactive]:hover:bg-purple-100`}
             >
               {tabStyles.files.icon} Arquivos

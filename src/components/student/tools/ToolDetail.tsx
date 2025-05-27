@@ -151,7 +151,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
                 </TabsTrigger>
                 <TabsTriggerWithBadge 
                   value="ratings"
-                  badgeCount={tool.ratings_list?.length || 0}
+                  badgeContent={tool.ratings_list?.length || 0}
                   className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700 transition-all duration-200"
                 >
                   <Star className="h-4 w-4 mr-1" />
@@ -159,7 +159,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
                 </TabsTriggerWithBadge>
                 <TabsTriggerWithBadge 
                   value="comments"
-                  badgeCount={tool.comments_list?.length || 0}
+                  badgeContent={tool.comments_list?.length || 0}
                   className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700 transition-all duration-200"
                 >
                   <MessageSquare className="h-4 w-4 mr-1" />
@@ -167,7 +167,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
                 </TabsTriggerWithBadge>
                 <TabsTriggerWithBadge 
                   value="contacts"
-                  badgeCount={tool.contacts?.length || 0}
+                  badgeContent={tool.contacts?.length || 0}
                   className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 transition-all duration-200"
                 >
                   <UserCircle className="h-4 w-4 mr-1" />
@@ -175,7 +175,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
                 </TabsTriggerWithBadge>
                 <TabsTriggerWithBadge 
                   value="files"
-                  badgeCount={tool.files?.length || 0}
+                  badgeContent={tool.files?.length || 0}
                   className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 transition-all duration-200"
                 >
                   <FileText className="h-4 w-4 mr-1" />
@@ -183,7 +183,7 @@ const ToolDetail: React.FC<ToolDetailProps> = ({
                 </TabsTriggerWithBadge>
                 <TabsTriggerWithBadge 
                   value="images"
-                  badgeCount={tool.images?.length || 0}
+                  badgeContent={tool.images?.length || 0}
                   className="data-[state=active]:bg-pink-50 data-[state=active]:text-pink-700 transition-all duration-200"
                 >
                   <FileImage className="h-4 w-4 mr-1" />

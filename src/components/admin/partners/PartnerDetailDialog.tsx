@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,16 +40,16 @@ export const PartnerDetailDialog: React.FC<PartnerDetailDialogProps> = ({
             <TabsTriggerWithBadge value="details" badgeContent="">
               Dados
             </TabsTriggerWithBadge>
-            <TabsTriggerWithBadge value="ratings" badgeContent={partner.ratingsCount || 0}>
+            <TabsTriggerWithBadge value="ratings" badgeContent={partner.ratings?.length || 0}>
               Avaliações
             </TabsTriggerWithBadge>
-            <TabsTriggerWithBadge value="comments" badgeContent={partner.commentsCount || 0}>
+            <TabsTriggerWithBadge value="comments" badgeContent={partner.comments?.length || 0}>
               Comentários
             </TabsTriggerWithBadge>
-            <TabsTriggerWithBadge value="files" badgeContent={partner.filesCount || 0}>
+            <TabsTriggerWithBadge value="files" badgeContent={partner.files?.length || 0}>
               Arquivos
             </TabsTriggerWithBadge>
-            <TabsTriggerWithBadge value="history" badgeContent={partner.historyCount || 0}>
+            <TabsTriggerWithBadge value="history" badgeContent={partner.history?.length || 0}>
               Histórico
             </TabsTriggerWithBadge>
           </TabsList>
