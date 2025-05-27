@@ -28,14 +28,7 @@ export const useMentorsForEnrollment = () => {
         return;
       }
 
-      // Mapear dados para o formato esperado
-      const mentorsData = (data || []).map(profile => ({
-        id: profile.id,
-        name: profile.name || profile.email,
-        email: profile.email
-      }));
-
-      setMentors(mentorsData);
+      setMentors(data || []);
     } catch (error) {
       console.error('Erro ao buscar mentores:', error);
     } finally {
