@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Student {
@@ -12,7 +12,6 @@ interface Student {
 export const useStudentsForEnrollment = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -29,7 +28,14 @@ export const useStudentsForEnrollment = () => {
         return;
       }
 
-      setStudents(data || []);
+      const studentsData = data?.map(profile => ({
+        id: profile.id,
+        name: profile.name || profile.email.split('@')[0],
+        email: profile.email,
+        status: profile.status
+      })) || [];
+
+      setStudents(studentsData);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
     } finally {
@@ -41,19 +47,9 @@ export const useStudentsForEnrollment = () => {
     fetchStudents();
   }, []);
 
-  const filteredStudents = useMemo(() => {
-    if (!searchTerm) return students;
-    
-    return students.filter(student =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [students, searchTerm]);
-
   return {
-    students: filteredStudents,
+    students,
     loading,
-    searchTerm,
-    setSearchTerm
+    refetch: fetchStudents
   };
 };
