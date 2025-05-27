@@ -38,6 +38,13 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
   // Calcular dias restantes
   const daysRemaining = differenceInDays(new Date(enrollment.endDate), new Date());
 
+  // Função para obter o nome do aluno - temporariamente usando um nome fixo
+  // TODO: Implementar busca real do nome do aluno via API
+  const getStudentName = (studentId: string) => {
+    // Por enquanto, vamos usar um nome genérico baseado no ID
+    return `Aluno ${studentId.slice(-8)}`;
+  };
+
   return (
     <Card 
       className={cn(
@@ -53,7 +60,7 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
               <User className="h-4 w-4 text-blue-600" />
             </div>
             <h3 className="font-medium line-clamp-1">
-              {enrollment.studentId}
+              {getStudentName(enrollment.studentId)}
             </h3>
           </div>
           

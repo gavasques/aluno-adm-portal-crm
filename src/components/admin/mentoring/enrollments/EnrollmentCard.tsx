@@ -42,6 +42,12 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     }
   };
 
+  // Função para obter o nome do aluno - temporariamente usando um nome fixo
+  // TODO: Implementar busca real do nome do aluno via API
+  const getStudentName = (studentId: string) => {
+    return `Aluno ${studentId.slice(-8)}`;
+  };
+
   const progressPercentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -82,7 +88,7 @@ export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-gray-400" />
                 <div className="flex flex-col">
-                  <span className="font-medium text-sm">Bianca Mentora</span>
+                  <span className="font-medium text-sm">{getStudentName(enrollment.studentId)}</span>
                   <span className="text-xs text-gray-500">{enrollment.responsibleMentor}</span>
                 </div>
               </div>
