@@ -1,24 +1,23 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
+import { useState, useCallback } from 'react';
 import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
+import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 import { useToast } from '@/hooks/use-toast';
-
-const repository = new SupabaseMentoringRepository();
 
 export const useSupabaseMentoringCatalog = () => {
   const [catalogs, setCatalogs] = useState<MentoringCatalog[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const repository = new SupabaseMentoringRepository();
 
-  const fetchCatalogs = useCallback(async () => {
-    setLoading(true);
+  const refreshCatalogs = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await repository.getCatalogs();
-      console.log('📚 Catálogos carregados com extensões:', data);
+      console.log('📚 Catálogos carregados:', data.length);
       setCatalogs(data);
     } catch (error) {
-      console.error('Error fetching catalogs:', error);
+      console.error('❌ Erro ao carregar catálogos:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar catálogo de mentorias",
@@ -30,75 +29,57 @@ export const useSupabaseMentoringCatalog = () => {
   }, [toast]);
 
   const createCatalog = useCallback(async (data: CreateMentoringCatalogData): Promise<MentoringCatalog> => {
-    setLoading(true);
     try {
-      console.log('🔄 Iniciando criação de catálogo:', data);
-      console.log('📦 Extensões a serem criadas:', data.extensions);
-      
+      setLoading(true);
       const newCatalog = await repository.createCatalog(data);
-      
-      console.log('✅ Catálogo criado com sucesso:', newCatalog);
-      console.log('📦 Extensões do catálogo criado:', newCatalog.extensions);
-      
-      setCatalogs(prev => [newCatalog, ...prev]);
-      
+      await refreshCatalogs();
       toast({
         title: "Sucesso",
-        description: `Mentoria criada com sucesso${newCatalog.extensions && newCatalog.extensions.length > 0 ? ` com ${newCatalog.extensions.length} extensão(ões)` : ''}!`,
+        description: "Mentoria criada com sucesso!",
       });
-      
       return newCatalog;
     } catch (error) {
-      console.error('❌ Erro ao criar mentoria:', error);
       toast({
         title: "Erro",
-        description: "Erro ao criar mentoria. Verifique os dados e tente novamente.",
+        description: "Erro ao criar mentoria. Tente novamente.",
         variant: "destructive",
       });
       throw error;
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [refreshCatalogs, toast]);
 
   const updateCatalog = useCallback(async (id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> => {
-    setLoading(true);
     try {
-      console.log('🔄 Iniciando atualização do catálogo:', id, data);
-      console.log('📦 Extensões a serem atualizadas:', data.extensions);
-      
+      setLoading(true);
       const success = await repository.updateCatalog(id, data);
-      
       if (success) {
-        console.log('✅ Catálogo atualizado, recarregando dados...');
-        await fetchCatalogs(); // Reload data
-        
+        await refreshCatalogs();
         toast({
           title: "Sucesso",
           description: "Mentoria atualizada com sucesso!",
         });
       }
-      
       return success;
     } catch (error) {
-      console.error('❌ Erro ao atualizar mentoria:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar mentoria. Verifique os dados e tente novamente.",
+        description: "Erro ao atualizar mentoria. Tente novamente.",
         variant: "destructive",
       });
       return false;
     } finally {
       setLoading(false);
     }
-  }, [fetchCatalogs, toast]);
+  }, [refreshCatalogs, toast]);
 
   const deleteCatalog = useCallback(async (id: string): Promise<boolean> => {
-    setLoading(true);
     try {
+      setLoading(true);
       const success = await repository.deleteCatalog(id);
       if (success) {
-        setCatalogs(prev => prev.filter(c => c.id !== id));
+        await refreshCatalogs();
         toast({
           title: "Sucesso",
           description: "Mentoria excluída com sucesso!",
@@ -106,7 +87,6 @@ export const useSupabaseMentoringCatalog = () => {
       }
       return success;
     } catch (error) {
-      console.error('Error deleting catalog:', error);
       toast({
         title: "Erro",
         description: "Erro ao excluir mentoria. Tente novamente.",
@@ -116,11 +96,7 @@ export const useSupabaseMentoringCatalog = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchCatalogs();
-  }, [fetchCatalogs]);
+  }, [refreshCatalogs, toast]);
 
   return {
     catalogs,
@@ -128,6 +104,7 @@ export const useSupabaseMentoringCatalog = () => {
     createCatalog,
     updateCatalog,
     deleteCatalog,
-    refreshCatalogs: fetchCatalogs
+    refreshCatalogs,
+    repository
   };
 };
