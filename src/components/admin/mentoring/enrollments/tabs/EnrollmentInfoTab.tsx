@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -98,6 +99,7 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
   };
 
   const handleStatusChange = (value: string) => {
+    console.log('Status change:', value);
     setEditData(prev => ({ ...prev, status: value as StatusType }));
   };
 
@@ -202,7 +204,7 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
                   <Label htmlFor="status">Status</Label>
                   <Select value={editData.status} onValueChange={handleStatusChange}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione um status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ativa">Ativa</SelectItem>
