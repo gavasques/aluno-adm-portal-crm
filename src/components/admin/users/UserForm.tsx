@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,22 +79,15 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         data.is_mentor
       );
       
-      // Se a operação foi bem-sucedida ou o usuário foi sincronizado
-      if (result && (result.success || result.existed)) {
-        console.log("Usuário criado/sincronizado com sucesso:", result);
+      console.log("Resultado da criação:", result);
+      
+      // Se a operação foi bem-sucedida
+      if (result && result.success) {
+        console.log("Usuário criado com sucesso:", result);
         
         // Mostrar estado de sucesso
         setIsSuccess(true);
         
-        // Toast de sucesso personalizado com duração estendida
-        toast({
-          title: "✅ Operação Concluída",
-          description: result.existed && result.profileCreated 
-            ? "Usuário já existia, mas foi sincronizado com sucesso!"
-            : "Usuário criado com sucesso!",
-          duration: 4000, // 4 segundos
-        });
-
         // Reset do formulário
         form.reset();
         setPasswordErrors([]);
@@ -103,7 +95,18 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         // Delay para mostrar o feedback antes de fechar
         setTimeout(() => {
           onSuccess();
-        }, 4000); // 4 segundos para ver o feedback completo
+        }, 2000); // 2 segundos para ver o feedback
+      } else if (result && result.existed) {
+        // Usuário já existe, mas vamos resetar o form mesmo assim
+        form.reset();
+        setPasswordErrors([]);
+        
+        setTimeout(() => {
+          onSuccess();
+        }, 2000);
+      } else {
+        // Erro na criação
+        console.error("Erro na criação do usuário:", result?.error);
       }
     } catch (error) {
       console.error("Erro no formulário:", error);

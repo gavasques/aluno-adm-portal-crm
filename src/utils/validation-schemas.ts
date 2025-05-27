@@ -1,4 +1,3 @@
-
 import * as z from "zod";
 import { validatePassword } from "./security";
 
@@ -36,6 +35,7 @@ export const userFormSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   role: z.string({ required_error: "Selecione um papel" }),
   password: passwordSchema, // Agora obrigatória e com validação robusta
+  is_mentor: z.boolean().optional().default(false),
 });
 
 // Schema para redefinição de senha
