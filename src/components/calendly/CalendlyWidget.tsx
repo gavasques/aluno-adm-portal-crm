@@ -1,10 +1,15 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { CalendlyWidgetOptions, CalendlyEventPayload } from '@/types/calendly.types';
 import { useCalendly } from '@/hooks/useCalendly';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
+import { useCalendlyScript } from '@/hooks/calendly/useCalendlyScript';
+import { useCalendlyEvents } from '@/hooks/calendly/useCalendlyEvents';
+import { CalendlyErrorDialog } from './CalendlyErrorDialog';
+import { CalendlyLoadingDialog } from './CalendlyLoadingDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, X, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CalendlyWidgetProps {
@@ -19,16 +24,7 @@ interface CalendlyWidgetProps {
     totalSessions: number;
   };
   sessionId?: string;
-  onSessionUpdated?: () => void; // Nova prop para refresh
-}
-
-declare global {
-  interface Window {
-    Calendly?: {
-      initInlineWidget: (options: any) => void;
-      closePopupWidget: () => void;
-    };
-  }
+  onSessionUpdated?: () => void;
 }
 
 export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
@@ -43,56 +39,24 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
   onSessionUpdated
 }) => {
   const { user } = useAuth();
-  const { getCalendlyConfig, buildCalendlyUrl, saveCalendlyEvent } = useCalendly();
+  const { getCalendlyConfig, buildCalendlyUrl } = useCalendly();
   const containerRef = useRef<HTMLDivElement>(null);
   const [calendlyUrl, setCalendlyUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [scriptLoaded, setScriptLoaded] = useState(false);
   const [configLoaded, setConfigLoaded] = useState(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Carregar script do Calendly com timeout
-  useEffect(() => {
-    const loadCalendlyScript = () => {
-      return new Promise<void>((resolve, reject) => {
-        if (window.Calendly) {
-          setScriptLoaded(true);
-          resolve();
-          return;
-        }
+  const { scriptLoaded, error: scriptError } = useCalendlyScript();
 
-        console.log('📦 Carregando script do Calendly...');
-        const script = document.createElement('script');
-        script.src = 'https://assets.calendly.com/assets/external/widget.js';
-        script.async = true;
-        
-        const timeout = setTimeout(() => {
-          reject(new Error('Timeout ao carregar script do Calendly'));
-        }, 10000);
-
-        script.onload = () => {
-          clearTimeout(timeout);
-          console.log('✅ Script do Calendly carregado com sucesso');
-          setScriptLoaded(true);
-          resolve();
-        };
-        
-        script.onerror = () => {
-          clearTimeout(timeout);
-          reject(new Error('Falha ao carregar script do Calendly'));
-        };
-        
-        document.head.appendChild(script);
-      });
-    };
-
-    loadCalendlyScript().catch((err) => {
-      console.error('❌ Erro ao carregar script do Calendly:', err);
-      setError('Erro ao carregar o Calendly. Verifique sua conexão com a internet.');
-      setIsLoading(false);
-    });
-  }, []);
+  useCalendlyEvents({
+    open,
+    mentorId,
+    sessionId,
+    onEventScheduled,
+    onOpenChange,
+    onSessionUpdated
+  });
 
   // Carregar configuração do Calendly
   useEffect(() => {
@@ -188,108 +152,6 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     }
   }, [open, calendlyUrl, user, configLoaded, studentName, sessionInfo]);
 
-  // Listener para eventos do Calendly com refresh automático
-  useEffect(() => {
-    const handleCalendlyMessage = async (event: MessageEvent) => {
-      if (event.origin !== 'https://calendly.com') return;
-
-      const { data } = event;
-      console.log('📅 Evento recebido do Calendly:', data);
-      
-      if (data.event === 'calendly.event_scheduled') {
-        console.log('🎯 Evento de agendamento detectado:', data);
-        const payload = data as CalendlyEventPayload;
-        
-        try {
-          setIsLoading(true);
-          
-          const eventDetails = {
-            calendly_event_uri: payload.payload.uri || '',
-            student_id: user?.id || '',
-            mentor_id: mentorId,
-            event_name: payload.payload.event?.name || 'Sessão de Mentoria',
-            start_time: payload.payload.event?.start_time || new Date().toISOString(),
-            end_time: payload.payload.event?.end_time || new Date().toISOString(),
-            duration_minutes: payload.payload.event?.duration || 60,
-            status: 'scheduled' as const,
-            session_id: sessionId
-          };
-
-          console.log('💾 Salvando evento no banco de dados:', eventDetails);
-          
-          await saveCalendlyEvent(eventDetails);
-          
-          if (sessionId) {
-            console.log('🔄 Atualizando sessão:', sessionId);
-            await updateSessionFromCalendly(sessionId, payload);
-          }
-          
-          if (onEventScheduled) {
-            onEventScheduled(payload);
-          }
-
-          console.log('✅ Agendamento processado com sucesso!');
-          
-          // Chamar refresh automático
-          if (onSessionUpdated) {
-            onSessionUpdated();
-          }
-          
-          setTimeout(() => {
-            onOpenChange(false);
-            setIsLoading(false);
-          }, 1000);
-
-        } catch (err) {
-          console.error('❌ Erro ao processar evento do Calendly:', err);
-          setError('Erro ao salvar agendamento. Por favor, tente novamente.');
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (open) {
-      window.addEventListener('message', handleCalendlyMessage);
-    }
-
-    return () => {
-      window.removeEventListener('message', handleCalendlyMessage);
-    };
-  }, [open, user, mentorId, sessionId, saveCalendlyEvent, onEventScheduled, onOpenChange, onSessionUpdated]);
-
-  // Função para atualizar a sessão com dados do Calendly
-  const updateSessionFromCalendly = async (sessionId: string, payload: CalendlyEventPayload) => {
-    try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      const sessionUpdateData = {
-        status: 'agendada',
-        scheduled_date: payload.payload.event?.start_time || new Date().toISOString(),
-        duration_minutes: payload.payload.event?.duration || 60,
-        calendly_link: payload.payload.uri || '',
-        observations: `Agendado via Calendly: ${payload.payload.event?.name || 'Sessão de Mentoria'}`,
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('📝 Atualizando sessão com dados:', sessionUpdateData);
-
-      const { error } = await supabase
-        .from('mentoring_sessions')
-        .update(sessionUpdateData)
-        .eq('id', sessionId);
-
-      if (error) {
-        console.error('❌ Erro ao atualizar sessão:', error);
-        throw error;
-      }
-
-      console.log('✅ Sessão atualizada com sucesso!');
-    } catch (error) {
-      console.error('❌ Erro ao atualizar sessão:', error);
-      throw error;
-    }
-  };
-
   const handleRetry = () => {
     setError('');
     setIsLoading(true);
@@ -303,29 +165,29 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     onOpenChange(false);
   };
 
-  if (error) {
+  const currentError = error || scriptError;
+
+  if (currentError) {
     return (
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              Erro no Calendly
-            </DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={handleRetry} variant="outline">
-                Tentar Novamente
-              </Button>
-              <Button onClick={handleClose}>
-                Fechar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CalendlyErrorDialog
+        open={open}
+        onOpenChange={handleClose}
+        error={currentError}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <CalendlyLoadingDialog
+        open={open}
+        onOpenChange={handleClose}
+        studentName={studentName}
+        sessionInfo={sessionInfo}
+        scriptLoaded={scriptLoaded}
+        configLoaded={configLoaded}
+      />
     );
   }
 
@@ -355,26 +217,10 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-[500px]">
-              <div className="text-center">
-                <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">
-                  {!scriptLoaded ? 'Carregando Calendly...' : 
-                   !configLoaded ? 'Configurando agendamento...' : 
-                   'Processando agendamento...'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Isso pode levar alguns segundos
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div 
-              ref={containerRef}
-              className={cn("calendly-inline-widget w-full h-[calc(95vh-120px)] min-h-[500px]", className)}
-            />
-          )}
+          <div 
+            ref={containerRef}
+            className={cn("calendly-inline-widget w-full h-[calc(95vh-120px)] min-h-[500px]", className)}
+          />
         </div>
       </DialogContent>
     </Dialog>
