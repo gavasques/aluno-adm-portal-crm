@@ -7,7 +7,7 @@ interface UsersAlertProps {
   fetchError: string | null;
 }
 
-const UsersAlert: React.FC<UsersAlertProps> = ({ fetchError }) => {
+export const UsersAlert: React.FC<UsersAlertProps> = ({ fetchError }) => {
   if (!fetchError) return null;
   
   return (

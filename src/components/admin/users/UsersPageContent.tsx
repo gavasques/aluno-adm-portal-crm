@@ -2,10 +2,10 @@
 import React from "react";
 import { useUsers } from "@/hooks/users/useUsers";
 import { useUserOperations } from "@/hooks/users/useUserOperations";
-import { UsersHeader } from "./UsersHeader";
-import { UsersAlert } from "./UsersAlert";
+import UsersHeader from "./UsersHeader";
+import UsersAlert from "./UsersAlert";
 import { UserFilters } from "./filters/UserFilters";
-import { UserActionButtons } from "./UserActionButtons";
+import UserActionButtons from "./UserActionButtons";
 import { UserTable } from "./table/UserTable";
 import { UserDialogs } from "./dialogs/UserDialogs";
 

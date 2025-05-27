@@ -8,7 +8,7 @@ interface UserActionButtonsProps {
   onInviteUser: () => void;
 }
 
-const UserActionButtons: React.FC<UserActionButtonsProps> = ({
+export const UserActionButtons: React.FC<UserActionButtonsProps> = ({
   onAddUser,
   onInviteUser,
 }) => {

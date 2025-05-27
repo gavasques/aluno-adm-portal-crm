@@ -3,7 +3,7 @@ import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
 
-const LoadingUsersList: React.FC = () => {
+export const LoadingUsersList: React.FC = () => {
   return (
     <TableRow>
       <TableCell colSpan={6} className="text-center py-8">

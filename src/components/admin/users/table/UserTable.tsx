@@ -6,9 +6,9 @@ import {
 } from "@/components/ui/table";
 import { User } from "@/types/user.types";
 import { UserTableHeader } from "./UserTableHeader";
-import { UserTableRow } from "./UserTableRow";
-import { EmptyUsersList } from "../EmptyUsersList";
-import { LoadingUsersList } from "../LoadingUsersList";
+import UserTableRow from "../UserTableRow";
+import EmptyUsersList from "../EmptyUsersList";
+import LoadingUsersList from "../LoadingUsersList";
 
 interface UserTableProps {
   users: User[];

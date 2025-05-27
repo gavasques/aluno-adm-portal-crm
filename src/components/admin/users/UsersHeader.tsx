@@ -8,7 +8,7 @@ interface UsersHeaderProps {
   isRefreshing: boolean;
 }
 
-const UsersHeader: React.FC<UsersHeaderProps> = ({ 
+export const UsersHeader: React.FC<UsersHeaderProps> = ({ 
   refreshUsersList, 
   isRefreshing 
 }) => {

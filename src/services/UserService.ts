@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { User, CreateUserData, UpdateUserData, UserStats } from '@/types/user.types';
+import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { toast } from '@/hooks/use-toast';
 
 export class UserService {
