@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, X } from 'lucide-react';
+import { Filter, Grid3X3, List } from 'lucide-react';
 
 interface CatalogFiltersProps {
   searchTerm: string;
@@ -14,6 +13,8 @@ interface CatalogFiltersProps {
   onTypeFilterChange: (value: string) => void;
   onStatusFilterChange: (value: string) => void;
   onClearFilters: () => void;
+  totalCatalogs: number;
+  filteredCount: number;
 }
 
 const CatalogFilters: React.FC<CatalogFiltersProps> = ({
@@ -23,57 +24,59 @@ const CatalogFilters: React.FC<CatalogFiltersProps> = ({
   onSearchChange,
   onTypeFilterChange,
   onStatusFilterChange,
-  onClearFilters
+  onClearFilters,
+  totalCatalogs,
+  filteredCount
 }) => {
-  const hasActiveFilters = searchTerm || typeFilter || statusFilter;
-
   return (
-    <Card className="shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar por nome, instrutor ou descrição..."
-              className="pl-10 bg-white"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between text-base">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+              <Filter className="h-3 w-3" />
+            </div>
+            Filtros
           </div>
-          
-          <div className="flex gap-3 items-center">
-            <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-              <SelectTrigger className="w-48 bg-white">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filtrar por tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
-                <SelectItem value="Individual">Individual</SelectItem>
-                <SelectItem value="Grupo">Grupo</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="w-48 bg-white">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {hasActiveFilters && (
+          <Badge variant="secondary" className="text-xs">
+            {filteredCount} de {totalCatalogs} mentorias
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="col-span-2 md:col-span-1">
+            <select
+              value={typeFilter}
+              onChange={(e) => onTypeFilterChange(e.target.value)}
+              className="w-full h-8 px-2 text-xs border border-gray-200 rounded-lg focus:border-blue-500"
+            >
+              <option value="">Todos os tipos</option>
+              <option value="Individual">Individual</option>
+              <option value="Grupo">Grupo</option>
+            </select>
+          </div>
+
+          <div className="col-span-2 md:col-span-1">
+            <select
+              value={statusFilter}
+              onChange={(e) => onStatusFilterChange(e.target.value)}
+              className="w-full h-8 px-2 text-xs border border-gray-200 rounded-lg focus:border-blue-500"
+            >
+              <option value="">Todos status</option>
+              <option value="active">Ativas</option>
+              <option value="inactive">Inativas</option>
+            </select>
+          </div>
+
+          <div className="col-span-2 md:col-span-2">
+            {(typeFilter || statusFilter || searchTerm) && (
               <Button 
                 variant="outline" 
-                size="sm"
                 onClick={onClearFilters}
-                className="flex items-center gap-2"
+                className="w-full h-8 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg text-xs"
               >
-                <X className="h-4 w-4" />
-                Limpar
+                Limpar Filtros
               </Button>
             )}
           </div>
