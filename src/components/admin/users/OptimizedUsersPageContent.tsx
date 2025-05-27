@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useUsers } from "@/hooks/users/useUsers";
 import { useSimplifiedUserOperations } from "@/hooks/users/useSimplifiedUserOperations";
@@ -8,6 +9,7 @@ import { UserFilters } from "./filters/UserFilters";
 import UserActionButtons from "./UserActionButtons";
 import { OptimizedUserTable } from "./table/OptimizedUserTable";
 import { ValidatedUserDialogs } from "./dialogs/ValidatedUserDialogs";
+import { PerformanceOptimizedUserDialogs } from "./dialogs/PerformanceOptimizedUserDialogs";
 
 export const OptimizedUsersPageContent: React.FC = () => {
   const {
@@ -31,14 +33,14 @@ export const OptimizedUsersPageContent: React.FC = () => {
     handleInviteUser,
   } = useSimplifiedUserOperations();
 
-  // Placeholder handlers for table actions (will be implemented in future phases)
-  const adaptedHandlers = {
-    onViewDetails: (user: any) => console.log('View details:', user),
-    onResetPassword: (user: any) => console.log('Reset password:', user),
-    onDeleteUser: (user: any) => console.log('Delete user:', user),
-    onToggleUserStatus: (user: any) => console.log('Toggle status:', user),
-    onSetPermissionGroup: (user: any) => console.log('Set permissions:', user),
-  };
+  // Usar os handlers reais em vez dos placeholders
+  const {
+    handleViewDetails,
+    handleResetPassword,
+    handleDeleteUser,
+    handleToggleUserStatus,
+    handleSetPermissionGroup
+  } = useUserDropdownActions();
 
   return (
     <div className="space-y-6">
@@ -65,7 +67,11 @@ export const OptimizedUsersPageContent: React.FC = () => {
         <OptimizedUserTable
           users={filteredUsers}
           isLoading={isLoading}
-          {...adaptedHandlers}
+          onViewDetails={handleViewDetails}
+          onResetPassword={handleResetPassword}
+          onDeleteUser={handleDeleteUser}
+          onToggleUserStatus={handleToggleUserStatus}
+          onSetPermissionGroup={handleSetPermissionGroup}
         />
       </div>
 
@@ -76,6 +82,8 @@ export const OptimizedUsersPageContent: React.FC = () => {
         setShowInviteDialog={setShowInviteDialog}
         onRefresh={refreshUsers}
       />
+
+      <PerformanceOptimizedUserDialogs />
     </div>
   );
 };

@@ -81,14 +81,15 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🗑️ Iniciando exclusão do usuário:', user.email);
+    console.log('🗑️ Iniciando exclusão do usuário:', user.email, 'ID:', user.id);
+    console.log('🗑️ Função onDeleteUser:', typeof onDeleteUser);
     onDeleteUser(user);
   };
 
   const handleToggleStatusClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🔄 Alterando status do usuário:', user.email);
+    console.log('🔄 Alterando status do usuário:', user.email, 'Status atual:', user.status);
     onToggleUserStatus(user);
   };
 
