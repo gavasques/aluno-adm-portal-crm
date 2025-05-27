@@ -46,14 +46,9 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
     }
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ativa': return 'bg-green-100 text-green-800 border-green-200';
-      case 'concluida': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pausada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const handleSubmit = (data: EditEnrollmentFormData) => {
+    console.log('Form submit data:', data);
+    onSubmit(data);
   };
 
   return (
@@ -98,7 +93,7 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
 
       {/* Formulário editável */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900 flex items-center gap-2">
               <Calendar className="h-4 w-4" />

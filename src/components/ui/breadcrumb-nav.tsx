@@ -1,16 +1,9 @@
 
 import React from 'react';
-import { ChevronRight, Home } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface BreadcrumbItem {
   label: string;
@@ -24,12 +17,12 @@ interface BreadcrumbNavProps {
   className?: string;
 }
 
-export function BreadcrumbNav({ 
-  items, 
-  showBackButton = false, 
-  backHref, 
-  className = "" 
-}: BreadcrumbNavProps) {
+export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
+  items,
+  showBackButton = false,
+  backHref,
+  className
+}) => {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -40,38 +33,49 @@ export function BreadcrumbNav({
     }
   };
 
+  const handleItemClick = (href: string) => {
+    navigate(href);
+  };
+
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <nav className={cn("flex items-center space-x-2 text-sm text-gray-600", className)}>
       {showBackButton && (
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleBack}
-          className="flex items-center gap-2"
+          className="h-8 px-2 hover:bg-gray-100"
         >
-          <ChevronRight className="h-4 w-4 rotate-180" />
-          Voltar
+          <ChevronLeft className="h-4 w-4" />
         </Button>
       )}
-      
-      <Breadcrumb>
-        <BreadcrumbList>
-          {items.map((item, index) => (
-            <React.Fragment key={index}>
-              <BreadcrumbItem>
-                {item.href && index < items.length - 1 ? (
-                  <BreadcrumbLink asChild>
-                    <Link to={item.href}>{item.label}</Link>
-                  </BreadcrumbLink>
-                ) : (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                )}
-              </BreadcrumbItem>
-              {index < items.length - 1 && <BreadcrumbSeparator />}
-            </React.Fragment>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
-    </div>
+
+      <div className="flex items-center space-x-2">
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            {index === 0 && (
+              <Home className="h-4 w-4 text-gray-400" />
+            )}
+            
+            {item.href ? (
+              <button
+                onClick={() => handleItemClick(item.href!)}
+                className="hover:text-blue-600 transition-colors cursor-pointer"
+              >
+                {item.label}
+              </button>
+            ) : (
+              <span className="text-gray-900 font-medium">
+                {item.label}
+              </span>
+            )}
+            
+            {index < items.length - 1 && (
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            )}
+          </div>
+        ))}
+      </div>
+    </nav>
   );
-}
+};
