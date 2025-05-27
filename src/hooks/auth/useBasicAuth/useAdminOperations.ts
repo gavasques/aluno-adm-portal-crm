@@ -21,13 +21,6 @@ export const useAdminOperations = () => {
   ): Promise<CreateUserResult> => {
     try {
       console.log("[useAdminOperations] Iniciando criação de usuário");
-      console.log("[useAdminOperations] Dados:", {
-        email,
-        name,
-        role,
-        password: "***",
-        is_mentor
-      });
 
       // Validações básicas
       if (!email || !name || !role || !password) {
@@ -50,10 +43,7 @@ export const useAdminOperations = () => {
         throw new Error("Usuário não está autenticado. Faça login novamente.");
       }
 
-      console.log("[useAdminOperations] Sessão ativa encontrada. Token disponível:", !!session.access_token);
-      console.log("[useAdminOperations] User ID:", session.user?.id);
-      console.log("[useAdminOperations] User email:", session.user?.email);
-      console.log("[useAdminOperations] Chamando edge function com headers de autenticação");
+      console.log("[useAdminOperations] Chamando edge function create-user");
       
       // Chamar a edge function para criar o usuário
       const { data, error } = await supabase.functions.invoke('create-user', {
@@ -74,16 +64,13 @@ export const useAdminOperations = () => {
 
       if (error) {
         console.error("[useAdminOperations] Erro na edge function:", error);
-        // Tentar extrair mais informações do erro
         const errorMessage = error.message || error.toString() || "Erro desconhecido na edge function";
         throw new Error(errorMessage);
       }
 
-      console.log("[useAdminOperations] Dados retornados:", data);
-
       // Processar a resposta
       if (data && data.success) {
-        console.log("[useAdminOperations] Usuário criado com sucesso:", data);
+        console.log("[useAdminOperations] Usuário criado com sucesso");
         
         logUserCreation(email, true, 'admin');
         
@@ -105,7 +92,7 @@ export const useAdminOperations = () => {
           profileCreated: data.profileCreated 
         };
       } else if (data && data.existed) {
-        console.log("[useAdminOperations] Usuário já existe:", data);
+        console.log("[useAdminOperations] Usuário já existe");
         
         toast({
           title: "Usuário já existe",
@@ -119,7 +106,6 @@ export const useAdminOperations = () => {
           error: data.error || "Usuário já cadastrado" 
         };
       } else {
-        // Erro na criação
         const errorMsg = data?.error || "Erro desconhecido ao criar usuário";
         console.error("[useAdminOperations] Erro na criação:", errorMsg);
         throw new Error(errorMsg);

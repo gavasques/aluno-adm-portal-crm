@@ -35,42 +35,29 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verificar autenticação
+    // Obter token do header de autorização
     const authHeader = req.headers.get('authorization');
-    const apiKey = req.headers.get('apikey');
     
     console.log("Auth header presente:", !!authHeader);
-    console.log("API key presente:", !!apiKey);
 
-    if (!authHeader && !apiKey) {
-      console.error("Nenhum token de autorização encontrado");
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error("Token de autorização inválido ou ausente");
       return new Response(
         JSON.stringify({ error: 'Token de autorização necessário' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Criar cliente normal para verificar o usuário atual
-    const token = authHeader?.replace('Bearer ', '') || apiKey;
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { 
-            authorization: `Bearer ${token}`
-          }
-        }
-      }
-    );
+    const token = authHeader.replace('Bearer ', '');
+    console.log("Token extraído, length:", token.length);
 
-    // Verificar se o usuário está autenticado e é admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Verificar o token usando supabaseAdmin para obter informações do usuário
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
       console.error("Erro de autenticação:", authError);
       return new Response(
-        JSON.stringify({ error: 'Usuário não autenticado' }),
+        JSON.stringify({ error: 'Token inválido ou usuário não encontrado' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -78,8 +65,8 @@ serve(async (req) => {
     console.log("Usuário autenticado:", user.email);
     console.log("Verificando permissões do usuário:", user.id);
 
-    // Verificar se o usuário é admin - simplificando a consulta
-    const { data: profile, error: profileError } = await supabase
+    // Verificar se o usuário é admin usando apenas supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, permission_group_id')
       .eq('id', user.id)
@@ -98,7 +85,7 @@ serve(async (req) => {
     // Verificar permissões do grupo se existir
     let isGroupAdmin = false;
     if (profile?.permission_group_id) {
-      const { data: permissionGroup, error: groupError } = await supabase
+      const { data: permissionGroup, error: groupError } = await supabaseAdmin
         .from('permission_groups')
         .select('is_admin, allow_admin_access')
         .eq('id', profile.permission_group_id)
