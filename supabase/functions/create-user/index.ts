@@ -107,17 +107,35 @@ serve(async (req) => {
       );
     }
 
-    // Obter dados do usuário a ser criado
-    const requestBody = await req.text();
-    console.log("Body da requisição:", requestBody);
+    // Obter dados do usuário a ser criado - MELHOR TRATAMENTO DE ERRORS
+    let requestBody;
+    try {
+      requestBody = await req.text();
+      console.log("Body da requisição recebido:", requestBody);
+    } catch (error) {
+      console.error("Erro ao ler o body da requisição:", error);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao ler dados da requisição' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!requestBody || requestBody.trim() === '') {
+      console.error("Body da requisição está vazio");
+      return new Response(
+        JSON.stringify({ error: 'Body da requisição está vazio' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     let userData;
     try {
       userData = JSON.parse(requestBody);
+      console.log("Dados parseados:", { ...userData, password: userData.password ? "***" : "não definida" });
     } catch (parseError) {
       console.error("Erro ao fazer parse do JSON:", parseError);
       return new Response(
-        JSON.stringify({ error: 'Dados inválidos no corpo da requisição' }),
+        JSON.stringify({ error: 'JSON inválido no corpo da requisição' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -128,8 +146,14 @@ serve(async (req) => {
 
     // Validações básicas
     if (!email || !name || !role || !password) {
+      const missing = [];
+      if (!email) missing.push('email');
+      if (!name) missing.push('name');
+      if (!role) missing.push('role');
+      if (!password) missing.push('password');
+      
       return new Response(
-        JSON.stringify({ error: 'Todos os campos obrigatórios devem ser preenchidos' }),
+        JSON.stringify({ error: `Campos obrigatórios faltando: ${missing.join(', ')}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

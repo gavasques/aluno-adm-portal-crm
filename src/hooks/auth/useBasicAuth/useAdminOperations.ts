@@ -35,16 +35,6 @@ export const useAdminOperations = () => {
         throw new Error(errorMsg);
       }
 
-      // Verificar se temos uma sessão ativa
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error("[useAdminOperations] Sessão não encontrada:", sessionError);
-        throw new Error("Usuário não está autenticado. Faça login novamente.");
-      }
-
-      console.log("[useAdminOperations] Sessão válida, token length:", session.access_token.length);
-
       // Preparar dados para envio
       const requestData = {
         email: email.toLowerCase().trim(),
@@ -56,13 +46,9 @@ export const useAdminOperations = () => {
 
       console.log("[useAdminOperations] Dados preparados:", { ...requestData, password: "***" });
       
-      // Chamar a edge function para criar o usuário
+      // Chamar a edge function para criar o usuário - USANDO BODY CORRETAMENTE
       const { data, error } = await supabase.functions.invoke('create-user', {
-        body: requestData,
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
+        body: requestData
       });
 
       console.log("[useAdminOperations] Resposta da edge function:", { data, error });
