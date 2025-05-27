@@ -41,7 +41,7 @@ export const MentorSelectionField = ({ selectedMentor, onMentorSelect }: MentorS
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative">
       <Label className="text-sm font-medium text-gray-700">
         Mentor Responsável *
       </Label>
@@ -93,8 +93,8 @@ export const MentorSelectionField = ({ selectedMentor, onMentorSelect }: MentorS
           </div>
           
           {isOpen && (
-            <Card className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto border shadow-lg bg-white">
-              <CardContent className="p-2">
+            <Card className="absolute z-[100] w-full mt-1 border shadow-lg bg-white">
+              <CardContent className="p-2 max-h-80 overflow-y-auto">
                 {loading ? (
                   <div className="p-4 text-center text-gray-500 flex items-center justify-center space-x-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
