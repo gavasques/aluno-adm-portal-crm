@@ -1,190 +1,160 @@
-import React from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
-import { Plus, Search, Settings } from "lucide-react";
 
-// Import our components
-import SortableColumn from "@/components/admin/crm/SortableColumn";
-import SortableLeadCard from "@/components/admin/crm/SortableLeadCard";
-import NewLeadForm from "@/components/admin/crm/NewLeadForm";
-import EditLeadForm from "@/components/admin/crm/EditLeadForm";
-import LeadDetailDialog from "@/components/admin/crm/LeadDetailDialog";
-import ColumnManager from "@/components/admin/crm/ColumnManager";
-import KanbanView from "@/components/admin/crm/KanbanView";
-import ListView from "@/components/admin/crm/ListView";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, TrendingUp, DollarSign, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Import our custom hook
-import { useCRMState } from "@/hooks/useCRMState";
-
-const CRM = () => {
-  // Use our custom hook
-  const {
-    columns,
-    filteredLeads,
-    activeView,
-    searchQuery,
-    isEditingColumns,
-    selectedLead,
-    isEditingLead,
-    leadToEdit,
-    columnsModified,
-    administrators,
-    
-    setActiveView,
-    setSearchQuery,
-    setIsEditingColumns, // Added this from useCRMState
-    setIsEditingLead, // Added this from useCRMState
-    
-    openLeadDetails,
-    openLeadEditForm,
-    handleAddNewLead,
-    handleSaveLeadEdit,
-    addColumn,
-    removeColumn,
-    handleDragEnd,
-    handleColumnReorder,
-    startEditingColumns,
-    cancelEditingColumns,
-    saveColumnChanges
-  } = useCRMState();
-
-  const breadcrumbItems = [
-    { label: 'Dashboard', href: '/admin' },
-    { label: 'CRM / Gestão de Leads' }
-  ];
-
+const AdminCRM = () => {
   return (
-    <div className="w-full">
-      {/* Breadcrumb Navigation */}
-      <BreadcrumbNav 
-        items={breadcrumbItems} 
-        showBackButton={true}
-        backHref="/admin"
-        className="mb-6"
-      />
-
-      <div className="flex flex-col mb-4">
-        <h1 className="text-3xl font-bold text-portal-dark mb-4">CRM / Gestão de Leads</h1>
-        <div className="flex gap-2 justify-start">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-neutral-900 hover:bg-neutral-800">
-                <Plus className="mr-2 h-4 w-4" /> Novo Lead
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Adicionar Novo Lead</DialogTitle>
-              </DialogHeader>
-              <NewLeadForm 
-                administrators={administrators}
-                onSubmit={handleAddNewLead}
-              />
-            </DialogContent>
-          </Dialog>
-          
-          <Button variant="outline" onClick={startEditingColumns}>
-            <Settings className="mr-2 h-4 w-4" /> Colunas
-          </Button>
-          
-          <ColumnManager
-            isOpen={isEditingColumns}
-            columns={columns}
-            leads={filteredLeads}
-            onOpenChange={columnsModified ? undefined : setIsEditingColumns}
-            onAddColumn={addColumn}
-            onRemoveColumn={removeColumn}
-            onReorderColumns={handleColumnReorder}
-            onSave={saveColumnChanges}
-            onCancel={cancelEditingColumns}
-          />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">CRM / Gestão de Leads</h1>
+          <p className="text-muted-foreground">
+            Gerencie leads e oportunidades de venda
+          </p>
         </div>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Lead
+        </Button>
       </div>
-      
-      <Card className="mb-6">
-        <CardHeader className="sticky top-0 z-20 bg-white py-2">
-          <div className="flex flex-col space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center w-full">
-              <div className="flex items-center gap-3">
-                <div className="flex space-x-2">
-                  <Button 
-                    variant={activeView === "kanban" ? "default" : "outline"} 
-                    onClick={() => setActiveView("kanban")} 
-                    size="sm"
-                  >
-                    Kanban
-                  </Button>
-                  <Button 
-                    variant={activeView === "list" ? "default" : "outline"} 
-                    onClick={() => setActiveView("list")} 
-                    size="sm"
-                  >
-                    Lista
-                  </Button>
-                </div>
 
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input 
-                    placeholder="Buscar leads..." 
-                    value={searchQuery} 
-                    onChange={e => setSearchQuery(e.target.value)} 
-                    className="pl-8 w-full border rounded-md py-2 px-3" 
-                  />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Total Leads
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">156</div>
+            <p className="text-xs text-muted-foreground">
+              No pipeline
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2" />
+              Conversões
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">23%</div>
+            <p className="text-xs text-muted-foreground">
+              Taxa este mês
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <DollarSign className="h-5 w-5 mr-2" />
+              Receita
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R$ 45.2k</div>
+            <p className="text-xs text-muted-foreground">
+              Este mês
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Novos Leads
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12</div>
+            <p className="text-xs text-muted-foreground">
+              Esta semana
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pipeline de Vendas</CardTitle>
+          <CardDescription>
+            Visualização em Kanban do pipeline de vendas
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-center p-2 bg-gray-100 rounded">Lead In</h3>
+              <div className="space-y-2">
+                <div className="p-3 bg-white border rounded-lg shadow-sm">
+                  <p className="font-medium text-sm">João Silva</p>
+                  <p className="text-xs text-gray-500">Curso E-commerce</p>
+                  <p className="text-xs text-green-600">R$ 1.200</p>
+                </div>
+                <div className="p-3 bg-white border rounded-lg shadow-sm">
+                  <p className="font-medium text-sm">Maria Santos</p>
+                  <p className="text-xs text-gray-500">Mentoria</p>
+                  <p className="text-xs text-green-600">R$ 800</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="font-semibold text-center p-2 bg-blue-100 rounded">Call Apresentação</h3>
+              <div className="space-y-2">
+                <div className="p-3 bg-white border rounded-lg shadow-sm">
+                  <p className="font-medium text-sm">Carlos Oliveira</p>
+                  <p className="text-xs text-gray-500">Consultoria</p>
+                  <p className="text-xs text-green-600">R$ 2.500</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="font-semibold text-center p-2 bg-yellow-100 rounded">Reunião</h3>
+              <div className="space-y-2">
+                <div className="p-3 bg-white border rounded-lg shadow-sm">
+                  <p className="font-medium text-sm">Ana Costa</p>
+                  <p className="text-xs text-gray-500">Curso Completo</p>
+                  <p className="text-xs text-green-600">R$ 3.200</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="font-semibold text-center p-2 bg-orange-100 rounded">Acompanhamento</h3>
+              <div className="space-y-2">
+                <div className="p-3 bg-white border rounded-lg shadow-sm">
+                  <p className="font-medium text-sm">Pedro Lima</p>
+                  <p className="text-xs text-gray-500">Mentoria VIP</p>
+                  <p className="text-xs text-green-600">R$ 1.800</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="font-semibold text-center p-2 bg-green-100 rounded">Fechado</h3>
+              <div className="space-y-2">
+                <div className="p-3 bg-white border rounded-lg shadow-sm">
+                  <p className="font-medium text-sm">Lucia Ferreira</p>
+                  <p className="text-xs text-gray-500">Curso Básico</p>
+                  <p className="text-xs text-green-600">R$ 600</p>
                 </div>
               </div>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {activeView === "kanban" ? (
-            <KanbanView
-              columns={columns}
-              filteredLeads={filteredLeads}
-              onDragEnd={handleDragEnd}
-              openLeadDetails={openLeadDetails}
-            />
-          ) : (
-            <ListView
-              filteredLeads={filteredLeads}
-              columns={columns}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              openLeadDetails={openLeadDetails}
-            />
-          )}
         </CardContent>
       </Card>
-      
-      {/* Lead Detail Dialog */}
-      <LeadDetailDialog 
-        lead={selectedLead}
-        columns={columns}
-        onClose={() => openLeadDetails(null)}
-        onEdit={(lead) => {
-          openLeadEditForm(lead);
-          openLeadDetails(null);
-        }}
-      />
-      
-      {/* Lead Edit Dialog */}
-      <Dialog open={isEditingLead} onOpenChange={open => !open && setIsEditingLead(false)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Editar Lead</DialogTitle>
-          </DialogHeader>
-          <EditLeadForm 
-            lead={leadToEdit}
-            administrators={administrators}
-            onSubmit={handleSaveLeadEdit}
-            onCancel={() => setIsEditingLead(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
 
-export default CRM;
+export default AdminCRM;

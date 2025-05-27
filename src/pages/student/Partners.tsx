@@ -1,89 +1,58 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { PartnerHeader } from "@/components/student/partners/PartnerHeader";
-import { PartnerContent } from "@/components/student/partners/PartnerContent";
-import StudentRouteGuard from "@/components/student/RouteGuard";
-import { usePartners } from "@/hooks/student/usePartners";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
-const Partners = () => {
-  const {
-    searchQuery,
-    setSearchQuery,
-    partnerTypeFilter,
-    setPartnerTypeFilter,
-    recommendedFilter,
-    setRecommendedFilter,
-    filteredPartners,
-    selectedPartner,
-    setSelectedPartner,
-    commentText,
-    setCommentText,
-    ratingText,
-    setRatingText,
-    handleAddComment,
-    handleAddRating,
-    handleLikeComment,
-    handleLikeRating,
-    calculateAverageRating
-  } = usePartners();
-
+const StudentPartners = () => {
   return (
-    <StudentRouteGuard requiredMenuKey="partners">
-      <div className="w-full space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Parceiros</h1>
-              <p className="text-gray-600 mt-2">
-                Conheça nossos parceiros estratégicos para seu sucesso no e-commerce.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <PartnerHeader
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            partnerTypeFilter={partnerTypeFilter}
-            setPartnerTypeFilter={setPartnerTypeFilter}
-            recommendedFilter={recommendedFilter}
-            setRecommendedFilter={setRecommendedFilter}
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <PartnerContent
-            filteredPartners={filteredPartners}
-            selectedPartner={selectedPartner}
-            setSelectedPartner={setSelectedPartner}
-            commentText={commentText}
-            ratingText={ratingText}
-            setCommentText={setCommentText}
-            setRatingText={setRatingText}
-            handleAddComment={handleAddComment}
-            handleAddRating={handleAddRating}
-            handleLikeComment={handleLikeComment}
-            handleLikeRating={handleLikeRating}
-            calculateAverageRating={calculateAverageRating}
-          />
-        </motion.div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Parceiros</h1>
+        <p className="text-muted-foreground">
+          Conheça nossos parceiros estratégicos
+        </p>
       </div>
-    </StudentRouteGuard>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Search className="h-5 w-5 mr-2" />
+            Buscar Parceiros
+          </CardTitle>
+          <CardDescription>
+            Encontre parceiros por nome ou área de atuação
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Input placeholder="Digite o nome do parceiro..." className="flex-1" />
+            <Input placeholder="Área de atuação..." className="w-48" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <BarChart className="h-5 w-5 mr-2" />
+            Lista de Parceiros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <BarChart className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Carregando parceiros...
+            </h3>
+            <p className="text-gray-500">
+              A lista de parceiros será exibida aqui
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
-export default Partners;
+export default StudentPartners;

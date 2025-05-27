@@ -1,53 +1,116 @@
 
 import React from 'react';
-import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Construction } from 'lucide-react';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, GraduationCap, BookOpen, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-const StudentsContent: React.FC = () => {
-  const breadcrumbItems = [
-    { label: 'Dashboard', href: '/admin' },
-    { label: 'Gestão de Alunos' }
-  ];
-
+const AdminStudents = () => {
   return (
-    <div className="w-full space-y-6">
-      <BreadcrumbNav 
-        items={breadcrumbItems} 
-        showBackButton={true}
-        backHref="/admin"
-        className="mb-6"
-      />
-
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
-          <Users className="h-5 w-5" />
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestão de Alunos</h1>
-          <p className="text-gray-600">Gerencie os alunos do sistema</p>
+          <h1 className="text-3xl font-bold tracking-tight">Gestão de Alunos</h1>
+          <p className="text-muted-foreground">
+            Gerencie informações e atividades dos alunos
+          </p>
         </div>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Aluno
+        </Button>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              Total de Alunos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">45</div>
+            <p className="text-xs text-muted-foreground">
+              Cadastrados no sistema
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <GraduationCap className="h-5 w-5 mr-2" />
+              Com Mentorias
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">32</div>
+            <p className="text-xs text-muted-foreground">
+              Participando de mentorias
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BookOpen className="h-5 w-5 mr-2" />
+              Ativos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">38</div>
+            <p className="text-xs text-muted-foreground">
+              Acessaram recentemente
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              Novos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">7</div>
+            <p className="text-xs text-muted-foreground">
+              Este mês
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Construction className="h-5 w-5 text-orange-500" />
-            Em Desenvolvimento
-          </CardTitle>
+          <CardTitle>Buscar Alunos</CardTitle>
+          <CardDescription>
+            Encontre alunos por nome, email ou status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Input placeholder="Nome ou email..." className="flex-1" />
+            <Input placeholder="Status..." className="w-32" />
+            <Button>Buscar</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Alunos</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <Construction className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Área de Gestão de Alunos
+              Carregando alunos...
             </h3>
-            <p className="text-gray-500 mb-4">
-              Esta funcionalidade está sendo desenvolvida e estará disponível em breve.
-            </p>
-            <p className="text-sm text-gray-400">
-              Aqui você poderá gerenciar alunos, matrículas, histórico acadêmico e muito mais.
+            <p className="text-gray-500">
+              A lista de alunos será exibida aqui
             </p>
           </div>
         </CardContent>
@@ -56,12 +119,4 @@ const StudentsContent: React.FC = () => {
   );
 };
 
-const Students: React.FC = () => {
-  return (
-    <ErrorBoundary>
-      <StudentsContent />
-    </ErrorBoundary>
-  );
-};
-
-export default Students;
+export default AdminStudents;

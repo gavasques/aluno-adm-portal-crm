@@ -1,112 +1,68 @@
-import React from "react";
-import SupplierDetail from "@/components/admin/SupplierDetail";
-import SuppliersContent from "@/components/admin/suppliers/SuppliersContent";
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 
-// Importar hooks
-import { useSuppliersList } from "@/hooks/suppliers/useSuppliersList";
-import { useSupplierOperations } from "@/hooks/suppliers/useSupplierOperations";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Plus, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const AdminSuppliers = () => {
-  // Usar nossos hooks personalizados
-  const {
-    suppliers,
-    setSuppliers,
-    searchQuery,
-    setSearchQuery,
-    selectedCategories,
-    selectedTypes,
-    selectedBrands,
-    selectedStatus,
-    pageSize,
-    setPageSize,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    paginatedSuppliers,
-    sortField,
-    sortDirection,
-    allBrands,
-    toggleCategoryFilter,
-    toggleTypeFilter,
-    toggleBrandFilter,
-    toggleStatusFilter,
-    handleSort
-  } = useSuppliersList();
-
-  const {
-    selectedSupplier,
-    setSelectedSupplier,
-    isDialogOpen,
-    setIsDialogOpen,
-    removeSupplierAlert,
-    setRemoveSupplierAlert,
-    handleAddSupplier,
-    handleUpdateSupplier,
-    handleRemoveSupplier,
-    confirmRemoveSupplier,
-    handleImportSuppliers
-  } = useSupplierOperations(suppliers, setSuppliers);
-
-  const breadcrumbItems = [
-    { label: 'Dashboard', href: '/admin' },
-    { label: 'Geral ADM', href: '/admin/geral' },
-    { label: 'Fornecedores' }
-  ];
-
   return (
-    <div className="w-full">
-      {/* Breadcrumb Navigation */}
-      <BreadcrumbNav 
-        items={breadcrumbItems} 
-        showBackButton={true}
-        backHref="/admin/geral"
-        className="mb-6"
-      />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Fornecedores (Admin)</h1>
+          <p className="text-muted-foreground">
+            Gerencie todos os fornecedores do sistema
+          </p>
+        </div>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Fornecedor
+        </Button>
+      </div>
 
-      <h1 className="text-3xl font-bold mb-8 text-portal-dark">Fornecedores</h1>
-      
-      {!selectedSupplier ? (
-        <SuppliersContent
-          suppliers={suppliers}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCategories={selectedCategories}
-          selectedTypes={selectedTypes}
-          selectedBrands={selectedBrands}
-          selectedStatus={selectedStatus}
-          allBrands={allBrands}
-          toggleCategoryFilter={toggleCategoryFilter}
-          toggleTypeFilter={toggleTypeFilter}
-          toggleBrandFilter={toggleBrandFilter}
-          toggleStatusFilter={toggleStatusFilter}
-          paginatedSuppliers={paginatedSuppliers}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalPages={totalPages}
-          sortField={sortField}
-          sortDirection={sortDirection}
-          handleSort={handleSort}
-          setSelectedSupplier={setSelectedSupplier}
-          handleRemoveSupplier={handleRemoveSupplier}
-          isDialogOpen={isDialogOpen}
-          setIsDialogOpen={setIsDialogOpen}
-          handleAddSupplier={handleAddSupplier}
-          handleImportSuppliers={handleImportSuppliers}
-          removeSupplierAlert={removeSupplierAlert}
-          setRemoveSupplierAlert={setRemoveSupplierAlert}
-          confirmRemoveSupplier={confirmRemoveSupplier}
-        />
-      ) : (
-        <SupplierDetail 
-          supplier={selectedSupplier}
-          onBack={() => setSelectedSupplier(null)}
-          onUpdate={handleUpdateSupplier}
-          isAdmin={true}
-        />
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Search className="h-5 w-5 mr-2" />
+            Buscar Fornecedores
+          </CardTitle>
+          <CardDescription>
+            Encontre fornecedores por nome, categoria ou status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Input placeholder="Nome do fornecedor..." className="flex-1" />
+            <Input placeholder="Categoria..." className="w-48" />
+            <Input placeholder="Status..." className="w-32" />
+            <Button>Buscar</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Users className="h-5 w-5 mr-2" />
+            Lista de Fornecedores
+          </CardTitle>
+          <CardDescription>
+            Todos os fornecedores cadastrados no sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Carregando fornecedores...
+            </h3>
+            <p className="text-gray-500">
+              A lista de fornecedores será exibida aqui
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

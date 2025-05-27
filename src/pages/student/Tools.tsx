@@ -1,86 +1,58 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { ToolHeader } from "@/components/student/tools/ToolHeader";
-import { ToolContent } from "@/components/student/tools/ToolContent";
-import StudentRouteGuard from "@/components/student/RouteGuard";
-import { useTools } from "@/hooks/student/useTools";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Wrench, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
-const Tools = () => {
-  const {
-    searchQuery,
-    setSearchQuery,
-    softwareTypeFilter,
-    setSoftwareTypeFilter,
-    recommendationFilter,
-    setRecommendationFilter,
-    canalFilter,
-    setCanalFilter,
-    canals,
-    filteredTools,
-    sortField,
-    sortDirection,
-    handleSort,
-    selectedTool,
-    setSelectedTool,
-    handleUpdateTool
-  } = useTools(false); // Pass false for student mode
-
+const StudentTools = () => {
   return (
-    <StudentRouteGuard requiredMenuKey="tools">
-      <div className="w-full space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Ferramentas</h1>
-              <p className="text-gray-600 mt-2">
-                Descubra as melhores ferramentas para otimizar seu e-commerce.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <ToolHeader
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            softwareTypeFilter={softwareTypeFilter}
-            setSoftwareTypeFilter={setSoftwareTypeFilter}
-            recommendationFilter={recommendationFilter}
-            setRecommendationFilter={setRecommendationFilter}
-            canalFilter={canalFilter}
-            setCanalFilter={setCanalFilter}
-            canals={canals}
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <ToolContent
-            tools={filteredTools}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            selectedTool={selectedTool}
-            setSelectedTool={setSelectedTool}
-            isAdmin={false}
-            onUpdateTool={handleUpdateTool}
-          />
-        </motion.div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Ferramentas</h1>
+        <p className="text-muted-foreground">
+          Descubra ferramentas úteis para seu negócio
+        </p>
       </div>
-    </StudentRouteGuard>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Search className="h-5 w-5 mr-2" />
+            Buscar Ferramentas
+          </CardTitle>
+          <CardDescription>
+            Encontre ferramentas por nome, categoria ou funcionalidade
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Input placeholder="Digite o nome da ferramenta..." className="flex-1" />
+            <Input placeholder="Categoria..." className="w-48" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Wrench className="h-5 w-5 mr-2" />
+            Lista de Ferramentas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Wrench className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Carregando ferramentas...
+            </h3>
+            <p className="text-gray-500">
+              A lista de ferramentas será exibida aqui
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
-export default Tools;
+export default StudentTools;

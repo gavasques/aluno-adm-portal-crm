@@ -1,218 +1,131 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { motion } from "framer-motion";
-import { User, Mail, Lock, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-
-// Schema para validação dos dados do formulário
-const settingsFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Nome deve ter pelo menos 2 caracteres.",
-  }),
-  email: z.string().email({
-    message: "Por favor insira um email válido.",
-  }),
-  password: z.string().optional(),
-});
-
-type SettingsFormValues = z.infer<typeof settingsFormSchema>;
-
-// Dados simulados do usuário atual
-const defaultValues: Partial<SettingsFormValues> = {
-  name: "Administrador",
-  email: "admin@portaledu.com",
-  password: "",
-};
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Settings, User, Shield, Database } from 'lucide-react';
 
 const AdminSettings = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Inicializar o formulário com react-hook-form
-  const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsFormSchema),
-    defaultValues,
-  });
-
-  // Função para lidar com a submissão do formulário
-  function onSubmit(data: SettingsFormValues) {
-    setIsSubmitting(true);
-    
-    // Simulação de API call
-    setTimeout(() => {
-      console.log(data);
-      toast.success("Configurações atualizadas com sucesso!");
-      setIsSubmitting(false);
-    }, 1000);
-  }
-
-  // Função para ir para a área do aluno
-  const goToStudentArea = () => {
-    window.location.href = "/student";
-  };
-
-  const breadcrumbItems = [
-    { label: 'Dashboard', href: '/admin' },
-    { label: 'Configurações' }
-  ];
-
   return (
-    <div className="container mx-auto py-10">
-      {/* Breadcrumb Navigation */}
-      <BreadcrumbNav 
-        items={breadcrumbItems} 
-        showBackButton={true}
-        backHref="/admin"
-        className="mb-6"
-      />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Configurações do Sistema</h1>
+        <p className="text-muted-foreground">
+          Gerencie as configurações gerais do sistema
+        </p>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="max-w-2xl mx-auto border-blue-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            <CardTitle className="text-2xl text-white">Configurações da Conta</CardTitle>
-            <CardDescription className="text-blue-100">
-              Atualize suas informações pessoais e senha
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              Configurações de Usuário
+            </CardTitle>
+            <CardDescription>
+              Configurações relacionadas aos usuários do sistema
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2 text-blue-700">
-                          <User className="h-4 w-4" />
-                          Nome
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Seu nome" 
-                            {...field} 
-                            className="focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2 text-blue-700">
-                          <Mail className="h-4 w-4" />
-                          Email
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="seu.email@exemplo.com" 
-                            type="email" 
-                            {...field} 
-                            className="focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2 text-blue-700">
-                          <Lock className="h-4 w-4" />
-                          Nova Senha (opcional)
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Deixe em branco para manter a senha atual" 
-                            type="password" 
-                            {...field} 
-                            className="focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-
-                <div className="flex justify-between gap-4 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center gap-2 hover:bg-blue-50"
-                    onClick={goToStudentArea}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Ir para Área do Aluno
-                  </Button>
-                  
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                  >
-                    {isSubmitting ? "Salvando..." : "Salvar Alterações"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Registro automático</span>
+                <span className="text-sm text-green-600">Ativo</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Validação de email</span>
+                <span className="text-sm text-green-600">Ativo</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Limite de armazenamento padrão</span>
+                <span className="text-sm">100 MB</span>
+              </div>
+            </div>
           </CardContent>
-          <CardFooter className="bg-gray-50 text-sm text-gray-500 border-t">
-            Suas informações são protegidas de acordo com nossa política de privacidade.
-          </CardFooter>
         </Card>
-      </motion.div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Shield className="h-5 w-5 mr-2" />
+              Segurança
+            </CardTitle>
+            <CardDescription>
+              Configurações de segurança e auditoria
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Log de auditoria</span>
+                <span className="text-sm text-green-600">Ativo</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Autenticação 2FA</span>
+                <span className="text-sm text-yellow-600">Opcional</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Sessão máxima</span>
+                <span className="text-sm">24 horas</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Database className="h-5 w-5 mr-2" />
+              Sistema
+            </CardTitle>
+            <CardDescription>
+              Informações e configurações do sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Versão</span>
+                <span className="text-sm">1.0.0</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Banco de dados</span>
+                <span className="text-sm text-green-600">Conectado</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Backup automático</span>
+                <span className="text-sm text-green-600">Diário</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2" />
+              Manutenção
+            </CardTitle>
+            <CardDescription>
+              Ferramentas de manutenção do sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Limpeza de cache</span>
+                <span className="text-sm text-blue-600">Executar</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Otimizar banco</span>
+                <span className="text-sm text-blue-600">Executar</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Último backup</span>
+                <span className="text-sm">Hoje, 03:00</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
