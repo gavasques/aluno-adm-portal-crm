@@ -78,16 +78,10 @@ serve(async (req) => {
     console.log("Usuário autenticado:", user.email);
     console.log("Verificando permissões do usuário:", user.id);
 
-    // Verificar se o usuário é admin
+    // Verificar se o usuário é admin - simplificando a consulta
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select(`
-        *,
-        permission_groups!inner(
-          is_admin,
-          allow_admin_access
-        )
-      `)
+      .select('role, permission_group_id')
       .eq('id', user.id)
       .single();
 
@@ -99,13 +93,28 @@ serve(async (req) => {
       );
     }
 
-    const isAdmin = profile?.role === 'Admin' || 
-                   profile?.permission_groups?.is_admin === true ||
-                   profile?.permission_groups?.allow_admin_access === true;
+    console.log("Profile encontrado:", profile);
+
+    // Verificar permissões do grupo se existir
+    let isGroupAdmin = false;
+    if (profile?.permission_group_id) {
+      const { data: permissionGroup, error: groupError } = await supabase
+        .from('permission_groups')
+        .select('is_admin, allow_admin_access')
+        .eq('id', profile.permission_group_id)
+        .single();
+
+      if (!groupError && permissionGroup) {
+        isGroupAdmin = permissionGroup.is_admin === true || permissionGroup.allow_admin_access === true;
+        console.log("Grupo de permissão:", permissionGroup);
+      }
+    }
+
+    const isAdmin = profile?.role === 'Admin' || isGroupAdmin;
 
     console.log("É admin:", isAdmin);
     console.log("Profile role:", profile?.role);
-    console.log("Permission group admin:", profile?.permission_groups?.is_admin);
+    console.log("É admin do grupo:", isGroupAdmin);
 
     if (!isAdmin) {
       console.error("Usuário sem permissões administrativas");

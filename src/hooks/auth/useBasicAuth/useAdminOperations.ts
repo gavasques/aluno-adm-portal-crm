@@ -51,6 +51,8 @@ export const useAdminOperations = () => {
       }
 
       console.log("[useAdminOperations] Sessão ativa encontrada. Token disponível:", !!session.access_token);
+      console.log("[useAdminOperations] User ID:", session.user?.id);
+      console.log("[useAdminOperations] User email:", session.user?.email);
       console.log("[useAdminOperations] Chamando edge function com headers de autenticação");
       
       // Chamar a edge function para criar o usuário
@@ -64,17 +66,20 @@ export const useAdminOperations = () => {
         },
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
           'Content-Type': 'application/json'
         }
       });
 
+      console.log("[useAdminOperations] Resposta da edge function:", { data, error });
+
       if (error) {
         console.error("[useAdminOperations] Erro na edge function:", error);
-        throw new Error(error.message || "Erro ao criar usuário");
+        // Tentar extrair mais informações do erro
+        const errorMessage = error.message || error.toString() || "Erro desconhecido na edge function";
+        throw new Error(errorMessage);
       }
 
-      console.log("[useAdminOperations] Resposta da edge function:", data);
+      console.log("[useAdminOperations] Dados retornados:", data);
 
       // Processar a resposta
       if (data && data.success) {
@@ -121,7 +126,7 @@ export const useAdminOperations = () => {
       }
 
     } catch (error: any) {
-      console.error("[useAdminOperations] Erro:", error);
+      console.error("[useAdminOperations] Erro capturado:", error);
       
       const sanitizedMessage = sanitizeError(error);
       logSecureError(error, "Admin User Creation");
