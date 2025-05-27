@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, BookOpen } from 'lucide-react';
 
 interface CatalogHeaderProps {
   onCreateCatalog: () => void;
@@ -15,38 +14,32 @@ const CatalogHeader: React.FC<CatalogHeaderProps> = ({
   totalCatalogs,
   activeCatalogs
 }) => {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/admin/mentorias')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Catálogo de Mentorias</h1>
-          <p className="text-gray-600 mt-1">
-            {totalCatalogs} mentorias cadastradas • {activeCatalogs} ativas
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          Catálogo de Mentorias
+        </h2>
+        <p className="text-gray-600">
+          Gerencie o catálogo de mentorias disponíveis na plataforma
+        </p>
+        {totalCatalogs > 0 && (
+          <p className="text-sm text-blue-600">
+            {totalCatalogs} {totalCatalogs === 1 ? 'mentoria cadastrada' : 'mentorias cadastradas'} • {activeCatalogs} ativas
           </p>
-        </div>
+        )}
       </div>
       
-      <div className="flex items-center gap-3">
-        <Button variant="outline" className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Exportar
-        </Button>
-        
-        <Button onClick={onCreateCatalog} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Mentoria
-        </Button>
-      </div>
+      <Button 
+        onClick={onCreateCatalog}
+        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Nova Mentoria
+      </Button>
     </div>
   );
 };

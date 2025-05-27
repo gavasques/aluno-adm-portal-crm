@@ -1,24 +1,10 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { 
-  Eye, 
-  Edit, 
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
-  ArrowUpDown
-} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Eye, Edit, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { MentoringCatalog } from '@/types/mentoring.types';
 
 interface CatalogTableProps {
@@ -36,135 +22,127 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
   onDelete,
   onToggleStatus
 }) => {
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'Individual': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Grupo': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const getStatusBadge = (active: boolean) => {
+    return active ? (
+      <Badge className="bg-green-100 text-green-800 border-green-200">
+        Ativa
+      </Badge>
+    ) : (
+      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+        Inativa
+      </Badge>
+    );
   };
 
-  const handleRowClick = (catalog: MentoringCatalog, event: React.MouseEvent) => {
-    // Prevenir o clique se for em um botão
-    if ((event.target as HTMLElement).closest('button')) {
-      return;
-    }
-    onView(catalog);
+  const getTypeBadge = (type: string) => {
+    const isIndividual = type === 'Individual';
+    return (
+      <Badge className={isIndividual ? 
+        "bg-purple-100 text-purple-800 border-purple-200" : 
+        "bg-yellow-100 text-yellow-800 border-yellow-200"
+      }>
+        {type}
+      </Badge>
+    );
   };
+
+  console.log('📋 CatalogTable renderizando com:', catalogs.length, 'mentorias');
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Mentorias Cadastradas ({catalogs.length})</span>
-        </CardTitle>
-      </CardHeader>
+    <Card className="shadow-sm">
       <CardContent className="p-0">
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-medium">
-                  <Button variant="ghost" size="sm" className="h-auto p-0 font-medium">
-                    Nome <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="font-medium">Tipo</TableHead>
-                <TableHead className="font-medium text-center">Duração</TableHead>
-                <TableHead className="font-medium text-center">Sessões</TableHead>
-                <TableHead className="font-medium text-center">Status</TableHead>
-                <TableHead className="font-medium text-center">Ações</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="font-semibold text-gray-900">Nome</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tipo</TableHead>
+              <TableHead className="font-semibold text-gray-900">Instrutor</TableHead>
+              <TableHead className="font-semibold text-gray-900">Duração</TableHead>
+              <TableHead className="font-semibold text-gray-900">Sessões</TableHead>
+              <TableHead className="font-semibold text-gray-900">Preço</TableHead>
+              <TableHead className="font-semibold text-gray-900">Status</TableHead>
+              <TableHead className="text-right font-semibold text-gray-900">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {catalogs.map((catalog) => (
+              <TableRow key={catalog.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <div>
+                    <p className="font-medium text-gray-900">{catalog.name}</p>
+                    <p className="text-sm text-gray-500 truncate max-w-xs">
+                      {catalog.description}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {getTypeBadge(catalog.type)}
+                </TableCell>
+                <TableCell className="text-gray-900">
+                  {catalog.instructor}
+                </TableCell>
+                <TableCell className="text-gray-600">
+                  {catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}
+                </TableCell>
+                <TableCell className="text-gray-600">
+                  {catalog.numberOfSessions}
+                </TableCell>
+                <TableCell>
+                  <span className="font-medium text-green-600">
+                    R$ {catalog.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {getStatusBadge(catalog.active)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 hover:bg-blue-50 text-blue-600"
+                      onClick={() => onView(catalog)}
+                      title="Ver detalhes"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 hover:bg-gray-50"
+                      onClick={() => onEdit(catalog)}
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 hover:bg-yellow-50 text-yellow-600"
+                      onClick={() => onToggleStatus(catalog.id, catalog.active)}
+                      title={catalog.active ? 'Desativar' : 'Ativar'}
+                    >
+                      {catalog.active ? (
+                        <ToggleRight className="h-4 w-4" />
+                      ) : (
+                        <ToggleLeft className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 hover:bg-red-50 text-red-600"
+                      onClick={() => onDelete(catalog.id)}
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {catalogs.map((catalog) => (
-                <TableRow 
-                  key={catalog.id} 
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={(e) => handleRowClick(catalog, e)}
-                >
-                  <TableCell className="font-medium max-w-80">
-                    <div>
-                      <p className="font-medium truncate">{catalog.name}</p>
-                      <p className="text-sm text-gray-500 truncate">{catalog.description}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getTypeColor(catalog.type)}>
-                      {catalog.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {catalog.durationMonths} {catalog.durationMonths === 1 ? 'mês' : 'meses'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {catalog.numberOfSessions}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleStatus(catalog.id, catalog.active);
-                        }}
-                        className="p-1"
-                        title={catalog.active ? 'Desativar mentoria' : 'Ativar mentoria'}
-                      >
-                        {catalog.active ? (
-                          <ToggleRight className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <ToggleLeft className="h-5 w-5 text-gray-400" />
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onView(catalog);
-                        }}
-                        title="Visualizar detalhes"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(catalog);
-                        }}
-                        title="Editar mentoria"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(catalog.id);
-                        }}
-                        title="Excluir mentoria"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

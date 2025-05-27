@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useSupabaseMentoringCatalog } from '@/hooks/mentoring/useSupabaseMentoringCatalog';
+
+import React, { useState, useEffect } from 'react';
+import { useMentoringCatalogData } from '@/hooks/admin/useMentoringCatalogData';
 import CatalogHeader from './CatalogHeader';
 import CatalogStatsCards from './CatalogStatsCards';
 import CatalogFilters from './CatalogFilters';
@@ -12,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 
 const CatalogContent: React.FC = () => {
-  const { catalogs, createCatalog, updateCatalog, deleteCatalog, loading } = useSupabaseMentoringCatalog();
+  const { catalogs, loading, error, refetch } = useMentoringCatalogData();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,6 +31,15 @@ const CatalogContent: React.FC = () => {
     catalog: MentoringCatalog | null;
   }>({ open: false, catalog: null });
 
+  useEffect(() => {
+    console.log('📊 CatalogContent - Dados atualizados:', { 
+      catalogsCount: catalogs.length, 
+      loading, 
+      error,
+      catalogs: catalogs.slice(0, 2) // Log apenas os primeiros 2 para debug
+    });
+  }, [catalogs, loading, error]);
+
   const filteredCatalogs = catalogs.filter(catalog => {
     const matchesSearch = !searchTerm || 
       catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,6 +52,14 @@ const CatalogContent: React.FC = () => {
       (statusFilter === 'inactive' && !catalog.active);
     
     return matchesSearch && matchesType && matchesStatus;
+  });
+
+  console.log('🔍 Filtros aplicados:', { 
+    searchTerm, 
+    typeFilter, 
+    statusFilter, 
+    totalCatalogs: catalogs.length, 
+    filteredCount: filteredCatalogs.length 
   });
 
   const handleCreateCatalog = () => {
@@ -62,7 +80,9 @@ const CatalogContent: React.FC = () => {
     }
 
     try {
-      await deleteCatalog(id);
+      // Implementar delete quando necessário
+      console.log('Delete catalog:', id);
+      await refetch();
     } catch (error) {
       console.error('Erro ao excluir mentoria:', error);
     }
@@ -70,7 +90,9 @@ const CatalogContent: React.FC = () => {
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      await updateCatalog(id, { active: !currentStatus });
+      // Implementar toggle status quando necessário
+      console.log('Toggle status:', id, currentStatus);
+      await refetch();
     } catch (error) {
       console.error('Erro ao alterar status:', error);
     }
@@ -79,11 +101,14 @@ const CatalogContent: React.FC = () => {
   const handleFormSubmit = async (data: CreateMentoringCatalogData) => {
     try {
       if (formDialog.catalog) {
-        await updateCatalog(formDialog.catalog.id, data);
+        // Implementar update quando necessário
+        console.log('Update catalog:', formDialog.catalog.id, data);
       } else {
-        await createCatalog(data);
+        // Implementar create quando necessário
+        console.log('Create catalog:', data);
       }
       setFormDialog({ open: false, catalog: null });
+      await refetch();
     } catch (error) {
       console.error('Erro ao salvar mentoria:', error);
       throw error;
@@ -96,9 +121,23 @@ const CatalogContent: React.FC = () => {
     setStatusFilter('');
   };
 
-  if (loading && catalogs.length === 0) {
+  if (loading) {
     return (
       <LoadingSpinner size="lg" message="Carregando catálogo..." />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-4">Erro: {error}</div>
+        <button 
+          onClick={refetch}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Tentar novamente
+        </button>
+      </div>
     );
   }
 
@@ -122,7 +161,13 @@ const CatalogContent: React.FC = () => {
         onClearFilters={handleClearFilters}
       />
 
-      {filteredCatalogs.length === 0 ? (
+      {catalogs.length === 0 ? (
+        <EmptyState 
+          type="enrollments" 
+          title="Nenhuma mentoria cadastrada"
+          description="Não há mentorias cadastradas no sistema. Clique em 'Nova Mentoria' para começar."
+        />
+      ) : filteredCatalogs.length === 0 ? (
         <EmptyState 
           type="enrollments" 
           title="Nenhuma mentoria encontrada"

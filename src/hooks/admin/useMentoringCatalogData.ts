@@ -29,7 +29,7 @@ export const useMentoringCatalogData = () => {
         throw catalogsError;
       }
 
-      console.log('📋 Catálogos encontrados:', catalogsData?.length || 0);
+      console.log('📋 Catálogos encontrados:', catalogsData?.length || 0, catalogsData);
 
       const transformedCatalogs: MentoringCatalog[] = [];
 
@@ -78,7 +78,7 @@ export const useMentoringCatalogData = () => {
         transformedCatalogs.push(transformedCatalog);
       }
 
-      console.log('✅ Catálogos transformados:', transformedCatalogs.length);
+      console.log('✅ Catálogos transformados:', transformedCatalogs.length, transformedCatalogs);
       setCatalogs(transformedCatalogs);
 
     } catch (err: any) {
