@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle, Trash2 } from 'lucide-react';
 import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { CalendlyWidget } from '@/components/calendly/CalendlyWidget';
 import CreatePendingSessionForm from './CreatePendingSessionForm';
@@ -19,8 +19,9 @@ interface PendingSessionsCardProps {
   pendingSessions: MentoringSession[];
   onCreateSession: (data: any) => void;
   onSessionScheduled: (sessionId: string) => void;
+  onDeleteSession?: (sessionId: string) => void;
   isLoading?: boolean;
-  allSessions?: MentoringSession[]; // Adicionar todas as sessões para calcular corretamente
+  allSessions?: MentoringSession[];
 }
 
 const PendingSessionsCard = ({ 
@@ -28,6 +29,7 @@ const PendingSessionsCard = ({
   pendingSessions, 
   onCreateSession, 
   onSessionScheduled,
+  onDeleteSession,
   isLoading,
   allSessions = []
 }: PendingSessionsCardProps) => {
@@ -86,6 +88,16 @@ const PendingSessionsCard = ({
     setShowCalendly(true);
   };
 
+  const handleDeleteSession = (session: MentoringSession) => {
+    if (onDeleteSession) {
+      onDeleteSession(session.id);
+      toast({
+        title: "Sucesso",
+        description: "Sessão removida com sucesso!",
+      });
+    }
+  };
+
   const handleCalendlyScheduled = () => {
     if (selectedSession) {
       onSessionScheduled(selectedSession.id);
@@ -110,145 +122,152 @@ const PendingSessionsCard = ({
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
-              Sessões Aguardando Agendamento
-            </div>
-            {canCreateMoreSessions && (
+      <div className="space-y-4">
+        {/* Info sobre limite de sessões */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-blue-800 font-medium">
+              Sessões criadas: {totalSessionsCreated} de {enrollment.totalSessions}
+            </span>
+            {!canCreateMoreSessions ? (
+              <Badge variant="outline" className="text-blue-700 border-blue-300 bg-blue-50">
+                Limite atingido
+              </Badge>
+            ) : (
               <Button
                 size="sm"
                 onClick={() => setShowCreateForm(true)}
-                className="bg-yellow-600 hover:bg-yellow-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1 text-xs font-medium shadow-sm hover:shadow-md transition-all"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-3 w-3 mr-1" />
                 Nova Sessão
               </Button>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Info sobre limite de sessões */}
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-blue-800">
-                Sessões criadas: {totalSessionsCreated} de {enrollment.totalSessions}
-              </span>
-              {!canCreateMoreSessions && (
-                <Badge variant="outline" className="text-blue-700 border-blue-300">
-                  Limite atingido
-                </Badge>
-              )}
+          </div>
+          {canCreateMoreSessions && (
+            <p className="text-xs text-blue-600 mt-2 font-medium">
+              Próxima sessão será: Sessão {nextSessionNumber}
+            </p>
+          )}
+        </div>
+
+        {/* Indicador do Status do Calendly */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+              </div>
+              <div>
+                <span className="font-medium text-amber-900">Mentor: {enrollment.responsibleMentor}</span>
+                <div className="mt-1">
+                  <CalendlyIndicator 
+                    mentorId={enrollment.responsibleMentor} 
+                    showConfigButton={false}
+                  />
+                </div>
+              </div>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="border-amber-300 text-amber-700 hover:bg-amber-100 rounded-lg"
+              onClick={() => window.open('/admin/calendly-config', '_blank')}
+            >
+              <Settings className="h-3 w-3 mr-1" />
+              Configurar
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+          </div>
+        </div>
+
+        {pendingSessions.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="p-3 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Clock className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-sm text-gray-500 font-medium mb-3">Nenhuma sessão aguardando agendamento</p>
             {canCreateMoreSessions && (
-              <p className="text-xs text-blue-600 mt-1">
-                Próxima sessão será: Sessão {nextSessionNumber}
-              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateForm(true)}
+                className="rounded-lg border-gray-300 hover:bg-gray-100"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeira Sessão
+              </Button>
             )}
           </div>
-
-          {pendingSessions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Clock className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">Nenhuma sessão aguardando agendamento</p>
-              {canCreateMoreSessions && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCreateForm(true)}
-                  className="mt-3"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Primeira Sessão
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Indicador do Status do Calendly */}
-              <Alert>
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    <div>
-                      <span className="font-medium">Mentor: {enrollment.responsibleMentor}</span>
-                      <div className="mt-1">
-                        <CalendlyIndicator 
-                          mentorId={enrollment.responsibleMentor} 
-                          showConfigButton={false}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="link" 
-                    size="sm"
-                    className="p-0 h-auto font-medium text-blue-600"
-                    onClick={() => window.open('/admin/calendly-config', '_blank')}
-                  >
-                    <Settings className="h-3 w-3 mr-1" />
-                    Configurar
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </Button>
-                </div>
-              </Alert>
-
-              {pendingSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50 border-yellow-200"
-                >
+        ) : (
+          <div className="space-y-3">
+            {pendingSessions.map((session) => (
+              <div
+                key={session.id}
+                className="group bg-white border border-amber-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:border-amber-300"
+              >
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <Video className="h-4 w-4 text-yellow-600" />
+                    <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
+                      <Video className="h-4 w-4 text-amber-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900">{session.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <h4 className="font-medium text-gray-900 text-sm">{session.title}</h4>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {session.durationMinutes} min
                         </span>
-                        <Badge variant="outline" className="text-yellow-700 border-yellow-300">
+                        <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50 text-xs px-2 py-0">
                           Aguardando
                         </Badge>
                       </div>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleScheduleSession(session)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Agendar
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleScheduleSession(session)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm hover:shadow-md transition-all"
+                    >
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Agendar
+                    </Button>
+                    {onDeleteSession && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteSession(session)}
+                        className="border-red-200 text-red-600 hover:bg-red-50 rounded-lg px-2 py-1.5"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              ))}
-              
-              {canCreateMoreSessions && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCreateForm(true)}
-                  className="w-full mt-3"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Mais Sessões ({totalSessionsCreated}/{enrollment.totalSessions})
-                </Button>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ))}
+            
+            {canCreateMoreSessions && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateForm(true)}
+                className="w-full mt-4 rounded-lg border-gray-300 hover:bg-gray-50 text-gray-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Mais Sessões ({totalSessionsCreated}/{enrollment.totalSessions})
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Dialog para criar nova sessão */}
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-xl">
           <DialogHeader>
-            <DialogTitle>Nova Sessão Pendente</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Nova Sessão Pendente</DialogTitle>
             <p className="text-sm text-gray-600">
               Sessão {nextSessionNumber} de {enrollment.totalSessions}
             </p>
