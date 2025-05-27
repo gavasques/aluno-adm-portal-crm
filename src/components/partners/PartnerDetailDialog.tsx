@@ -2,128 +2,92 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger,
-  TabsTriggerWithBadge
-} from "@/components/ui/tabs";
-import { Partner } from "@/types/partner.types";
-import DetailsTab from "./tabs/DetailsTab";
-import ContactsTab from "./tabs/ContactsTab";
-import CommentsTab from "./tabs/CommentsTab";
-import RatingsTab from "./tabs/RatingsTab";
-import FilesTab from "./tabs/FilesTab";
+import { Tabs, TabsContent, TabsList, TabsTriggerWithBadge } from "@/components/ui/tabs";
+import { Star, MessageSquare, FileText, Calendar } from "lucide-react";
 
 interface PartnerDetailDialogProps {
-  partner: Partner | null;
-  onClose: () => void;
-  commentText: string;
-  ratingText: string;
-  onCommentTextChange: (text: string) => void;
-  onRatingTextChange: (text: string) => void;
-  onAddComment: () => void;
-  onAddRating: () => void;
-  onLikeComment: (commentId: number) => void;
-  onLikeRating: (ratingId: number) => void;
-  calculateAverageRating: (ratings: any[]) => string;
+  partner: any;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const PartnerDetailDialog: React.FC<PartnerDetailDialogProps> = ({
+export const PartnerDetailDialog: React.FC<PartnerDetailDialogProps> = ({
   partner,
-  onClose,
-  commentText,
-  ratingText,
-  onCommentTextChange,
-  onRatingTextChange,
-  onAddComment,
-  onAddRating,
-  onLikeComment,
-  onLikeRating,
-  calculateAverageRating
+  open,
+  onOpenChange
 }) => {
   if (!partner) return null;
 
   return (
-    <Dialog open={!!partner} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>{partner.name}</span>
-            {partner.recommended && (
-              <Badge className="bg-green-500">Recomendado</Badge>
-            )}
+          <DialogTitle className="flex items-center gap-2">
+            Detalhes do Parceiro: {partner.name}
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="py-4">
-          <Tabs defaultValue="details">
-            <TabsList className="mb-4 flex flex-wrap">
-              <TabsTrigger value="details">Dados</TabsTrigger>
-              <TabsTriggerWithBadge 
-                value="contacts" 
-                badgeCount={partner.contacts ? partner.contacts.length : 0}
-              >
-                Contatos
-              </TabsTriggerWithBadge>
-              <TabsTriggerWithBadge 
-                value="comments" 
-                badgeCount={partner.comments ? partner.comments.length : 0}
-              >
-                Comentários
-              </TabsTriggerWithBadge>
-              <TabsTriggerWithBadge 
-                value="ratings" 
-                badgeCount={partner.ratings ? partner.ratings.length : 0}
-              >
-                Avaliações
-              </TabsTriggerWithBadge>
-              <TabsTriggerWithBadge 
-                value="files" 
-                badgeCount={partner.files ? partner.files.length : 0}
-              >
-                Arquivos
-              </TabsTriggerWithBadge>
-            </TabsList>
-            
-            <TabsContent value="details">
-              <DetailsTab partner={partner} />
-            </TabsContent>
-            
-            <TabsContent value="contacts">
-              <ContactsTab partner={partner} />
-            </TabsContent>
-            
-            <TabsContent value="comments">
-              <CommentsTab
-                partner={partner}
-                commentText={commentText}
-                onCommentTextChange={onCommentTextChange}
-                onAddComment={onAddComment}
-                onLikeComment={onLikeComment}
-              />
-            </TabsContent>
-            
-            <TabsContent value="ratings">
-              <RatingsTab
-                partner={partner}
-                ratingText={ratingText}
-                onRatingTextChange={onRatingTextChange}
-                onAddRating={onAddRating}
-                onLikeRating={onLikeRating}
-                calculateAverageRating={calculateAverageRating}
-              />
-            </TabsContent>
-            
-            <TabsContent value="files">
-              <FilesTab partner={partner} />
-            </TabsContent>
-          </Tabs>
-        </div>
+
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTriggerWithBadge value="details" badgeContent="">
+              Dados
+            </TabsTriggerWithBadge>
+            <TabsTriggerWithBadge value="ratings" badgeContent={partner.ratingsCount || 0}>
+              Avaliações
+            </TabsTriggerWithBadge>
+            <TabsTriggerWithBadge value="comments" badgeContent={partner.commentsCount || 0}>
+              Comentários
+            </TabsTriggerWithBadge>
+            <TabsTriggerWithBadge value="history" badgeContent={partner.historyCount || 0}>
+              Histórico
+            </TabsTriggerWithBadge>
+          </TabsList>
+
+          <TabsContent value="details">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Nome:</label>
+                  <p className="text-sm text-gray-600">{partner.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Tipo:</label>
+                  <p className="text-sm text-gray-600">{partner.type || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Email:</label>
+                  <p className="text-sm text-gray-600">{partner.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Telefone:</label>
+                  <p className="text-sm text-gray-600">{partner.phone || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ratings">
+            <div className="text-center py-8">
+              <Star className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">Nenhuma avaliação disponível</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="comments">
+            <div className="text-center py-8">
+              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">Nenhum comentário disponível</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history">
+            <div className="text-center py-8">
+              <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">Nenhum histórico disponível</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default PartnerDetailDialog;

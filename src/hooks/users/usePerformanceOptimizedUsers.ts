@@ -64,7 +64,7 @@ export const usePerformanceOptimizedUsers = () => {
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
     console.log('🔍 Aplicando busca otimizada:', searchTerm);
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
-  }, 150); // Reduzido para 150ms para melhor responsividade
+  }, 100); // Otimizado para 100ms
 
   // Mutations com invalidação inteligente
   const createUserMutation = useMutation({
@@ -91,17 +91,23 @@ export const usePerformanceOptimizedUsers = () => {
       userEmail: string; 
       currentStatus: string; 
     }) => {
-      console.log('🔄 Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
+      console.log('🔄 Mutation: Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
       return optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
     },
     onSuccess: (result, variables) => {
-      console.log('✅ Status alterado com sucesso para:', variables.userEmail);
-      smartInvalidate('filtered');
-      // Forçar refetch imediato para garantir atualização
-      refetch();
+      console.log('✅ Mutation: Status alterado com sucesso para:', variables.userEmail);
+      // Invalidar cache e forçar refetch
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      smartInvalidate();
+      
+      // Forçar refetch após um pequeno delay para garantir que o backend foi atualizado
+      setTimeout(() => {
+        console.log('🔄 Forçando refetch após alteração de status...');
+        refetch();
+      }, 500);
     },
     onError: (error, variables) => {
-      console.error('❌ Erro ao alterar status:', error, 'Usuário:', variables.userEmail);
+      console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
     }
   });
 
@@ -116,7 +122,7 @@ export const usePerformanceOptimizedUsers = () => {
       groupId: string | null; 
     }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
     onSuccess: () => {
-      smartInvalidate('filtered');
+      smartInvalidate();
       refetch();
     },
   });
@@ -165,9 +171,10 @@ export const usePerformanceOptimizedUsers = () => {
 
   const refreshUsers = useCallback(async () => {
     console.log('🔄 Forçando refresh de usuários...');
+    queryClient.invalidateQueries({ queryKey: ['users'] });
     smartInvalidate();
     await refetch();
-  }, [refetch, smartInvalidate]);
+  }, [refetch, smartInvalidate, queryClient]);
 
   const performanceMetrics = useMemo(() => ({
     ...getMetrics(),
@@ -212,8 +219,10 @@ export const usePerformanceOptimizedUsers = () => {
     createUser: createUserMutation.mutateAsync,
     deleteUser: (userId: string, userEmail: string) => 
       deleteUserMutation.mutateAsync({ userId, userEmail }),
-    toggleUserStatus: (userId: string, userEmail: string, currentStatus: string) =>
-      toggleStatusMutation.mutateAsync({ userId, userEmail, currentStatus }),
+    toggleUserStatus: (userId: string, userEmail: string, currentStatus: string) => {
+      console.log('🔧 Hook: toggleUserStatus chamado para:', userEmail, 'Status:', currentStatus);
+      return toggleStatusMutation.mutateAsync({ userId, userEmail, currentStatus });
+    },
     resetPassword: resetPasswordMutation.mutateAsync,
     setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) =>
       setPermissionGroupMutation.mutateAsync({ userId, userEmail, groupId }),

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { UserStatus, PermissionGroup } from '@/types/user.enums';
@@ -329,34 +330,50 @@ export class OptimizedUserService {
 
   async toggleUserStatus(userId: string, userEmail: string, currentStatus: string): Promise<boolean> {
     try {
-      const isActive = currentStatus?.toLowerCase() === "ativo";
-      const newStatus = isActive ? UserStatus.INACTIVE : UserStatus.ACTIVE;
+      console.log('🔄 Service: Iniciando alteração de status:', {
+        userId,
+        userEmail,
+        currentStatus
+      });
 
-      const { error } = await supabase
+      const isActive = currentStatus?.toLowerCase() === "ativo";
+      const newStatus = isActive ? "Inativo" : "Ativo";
+      
+      console.log('🔄 Service: Status será alterado de', currentStatus, 'para', newStatus);
+
+      // Primeiro tentar atualização direta no banco
+      const { data: updateResult, error: updateError } = await supabase
         .from("profiles")
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
         })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
 
-      if (error) throw error;
+      console.log('📊 Service: Resultado da atualização direta:', { updateResult, updateError });
 
-      this.invalidateQueries();
-      
-      toast({
-        title: `Usuário ${newStatus === UserStatus.ACTIVE ? 'ativado' : 'inativado'}`,
-        description: `O usuário ${userEmail} foi ${newStatus === UserStatus.ACTIVE ? 'ativado' : 'inativado'} com sucesso.`,
-      });
-      
-      return true;
+      if (updateError) {
+        console.error('❌ Service: Erro na atualização direta:', updateError);
+        throw updateError;
+      }
+
+      // Verificar se a atualização foi bem-sucedida
+      if (updateResult && updateResult.length > 0) {
+        console.log('✅ Service: Status alterado com sucesso no banco:', updateResult[0]);
+        
+        // Invalidar cache
+        this.invalidateQueries();
+        
+        // NÃO mostrar toast aqui pois já é mostrado no diálogo
+        
+        return true;
+      } else {
+        console.error('❌ Service: Nenhum registro foi atualizado');
+        return false;
+      }
     } catch (error: any) {
-      console.error('Erro ao alterar status do usuário:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível alterar o status do usuário.",
-        variant: "destructive",
-      });
+      console.error('❌ Service: Erro ao alterar status do usuário:', error);
       return false;
     }
   }
