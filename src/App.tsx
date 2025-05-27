@@ -34,6 +34,7 @@ import AdminPartners from './pages/admin/Partners';
 import AdminTools from './pages/admin/Tools';
 
 // Mentoring Admin Pages
+import AdminMentoringDashboard from './pages/admin/AdminMentoringDashboard';
 import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
 import AdminMentoringEnrollments from './pages/admin/AdminMentoringEnrollments';
 import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
@@ -229,11 +230,11 @@ function App() {
                   </RouteGuard>
                 } />
 
-                {/* Rotas de Mentorias */}
+                {/* Rotas de Mentorias - corrigindo o direcionamento */}
                 <Route path="/admin/mentorias" element={
                   <RouteGuard requireAdminAccess={true}>
                     <AdminLayout>
-                      <AdminMentoringCatalog />
+                      <AdminMentoringDashboard />
                     </AdminLayout>
                   </RouteGuard>
                 } />
