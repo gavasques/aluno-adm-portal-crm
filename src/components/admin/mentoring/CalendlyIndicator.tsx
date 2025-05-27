@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCalendly } from '@/hooks/useCalendly';
 import { CalendlyConfig } from '@/types/calendly.types';
-import { Calendar, Settings, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Calendar, Settings, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 
 interface CalendlyIndicatorProps {
   mentorId: string;
@@ -34,11 +34,11 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
       
       const calendlyConfig = await getCalendlyConfig(mentorId);
       
-      console.log('📋 Configuração encontrada:', calendlyConfig);
+      console.log('📋 Configuração retornada:', calendlyConfig);
       setConfig(calendlyConfig);
       
       if (!calendlyConfig) {
-        setError('Configuração não encontrada');
+        setError(`Calendly não configurado para "${mentorId}"`);
       }
     } catch (error) {
       console.error('❌ Erro ao carregar configuração Calendly:', error);
@@ -51,7 +51,7 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
   if (loading) {
     return (
       <div className="flex items-center gap-2">
-        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+        <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
         <span className="text-xs text-gray-500">Verificando Calendly...</span>
       </div>
     );
@@ -63,7 +63,7 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
         <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
           <CheckCircle className="h-3 w-3 mr-1" />
           Calendly Ativo
-          <span className="ml-1 text-xs">({config.calendly_username})</span>
+          <span className="ml-1 text-xs">(@{config.calendly_username})</span>
         </Badge>
       ) : (
         <Badge variant="outline" className="text-red-700 border-red-300 bg-red-50">

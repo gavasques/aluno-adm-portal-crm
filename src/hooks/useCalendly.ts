@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CalendlyConfig, CalendlyEvent } from '@/types/calendly.types';
@@ -12,85 +11,96 @@ export const useCalendly = () => {
     try {
       console.log('🔍 Buscando configuração Calendly para:', mentorIdentifier);
       
-      // Primeiro, tentar buscar por mentor_id (UUID)
-      let { data, error } = await supabase
-        .from('calendly_configs')
-        .select('*')
-        .eq('mentor_id', mentorIdentifier)
-        .eq('active', true)
-        .maybeSingle();
-
-      // Se não encontrou por ID, tentar buscar por correspondência de nome
-      if (!data && !error) {
-        console.log('🔍 Não encontrou por ID, buscando por similaridade de nome...');
-        
-        // Buscar todas as configurações ativas
-        const { data: allConfigs, error: allConfigsError } = await supabase
+      // Primeiro, tentar buscar por mentor_id (UUID) - caso seja um ID válido
+      if (mentorIdentifier.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log('🔍 Buscando por UUID...');
+        const { data, error } = await supabase
           .from('calendly_configs')
           .select('*')
-          .eq('active', true);
+          .eq('mentor_id', mentorIdentifier)
+          .eq('active', true)
+          .maybeSingle();
 
-        if (allConfigsError) {
-          console.error('Erro ao buscar todas as configurações:', allConfigsError);
-          return null;
-        }
-
-        if (allConfigs && allConfigs.length > 0) {
-          // Normalizar o nome do mentor para busca
-          const normalizedMentor = mentorIdentifier.toLowerCase()
-            .replace(/\s+/g, ' ')
-            .trim();
-          
-          console.log('🔍 Procurando por mentor normalizado:', normalizedMentor);
-          
-          // Tentar encontrar por correspondência parcial
-          data = allConfigs.find(config => {
-            const username = config.calendly_username?.toLowerCase() || '';
-            
-            // Verificações de correspondência
-            const checks = [
-              // Correspondência exata de username
-              username === normalizedMentor,
-              // Username contém o nome do mentor
-              username.includes(normalizedMentor),
-              // Nome do mentor contém o username
-              normalizedMentor.includes(username),
-              // Correspondência específica para "Guilherme"
-              normalizedMentor.includes('guilherme') && username.includes('guilherme'),
-              // Correspondência por palavras-chave
-              normalizedMentor.includes('mentor') && username.includes('guilherme')
-            ];
-            
-            const match = checks.some(check => check);
-            if (match) {
-              console.log('✅ Encontrou correspondência:', config);
-            }
-            return match;
-          }) || null;
-          
-          // Se ainda não encontrou, tentar busca mais flexível
-          if (!data) {
-            console.log('🔍 Tentando busca mais flexível...');
-            data = allConfigs[0] || null; // Usar a primeira configuração ativa como fallback
-            if (data) {
-              console.log('⚠️ Usando configuração padrão como fallback:', data);
-            }
-          }
+        if (!error && data) {
+          console.log('✅ Configuração encontrada por UUID:', data);
+          return data;
         }
       }
 
-      if (error) {
-        console.error('❌ Erro ao buscar configuração Calendly:', error);
+      // Se não encontrou por ID ou não é UUID, buscar por todas as configurações ativas
+      console.log('🔍 Buscando por nome do mentor...');
+      const { data: allConfigs, error: allConfigsError } = await supabase
+        .from('calendly_configs')
+        .select('*')
+        .eq('active', true);
+
+      if (allConfigsError) {
+        console.error('❌ Erro ao buscar todas as configurações:', allConfigsError);
         return null;
       }
 
-      if (data) {
-        console.log('✅ Configuração Calendly encontrada:', data);
-      } else {
-        console.log('❌ Nenhuma configuração Calendly encontrada para:', mentorIdentifier);
+      if (!allConfigs || allConfigs.length === 0) {
+        console.log('❌ Nenhuma configuração ativa encontrada');
+        return null;
       }
 
-      return data;
+      console.log('📋 Configurações ativas encontradas:', allConfigs.length);
+
+      // Normalizar o nome do mentor para busca mais eficiente
+      const normalizedMentor = mentorIdentifier.toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .replace(/\s+/g, ' '); // Normaliza espaços
+      
+      console.log('🔍 Procurando por mentor normalizado:', normalizedMentor);
+      
+      // Buscar configuração por correspondência de nome
+      const matchedConfig = allConfigs.find(config => {
+        if (!config.mentor_id) return false;
+        
+        // Normalizar o mentor_id da configuração da mesma forma
+        const configMentor = (config.mentor_id || '').toLowerCase()
+          .trim()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ');
+        
+        console.log('🔍 Comparando:', normalizedMentor, 'com:', configMentor);
+        
+        // Verificações de correspondência mais precisas
+        const exactMatch = configMentor === normalizedMentor;
+        const containsMatch = configMentor.includes(normalizedMentor) || normalizedMentor.includes(configMentor);
+        
+        // Para "Guilherme Mentore", fazer verificação específica
+        const guilhermeMatch = (
+          normalizedMentor.includes('guilherme') && 
+          configMentor.includes('guilherme')
+        );
+        
+        const isMatch = exactMatch || containsMatch || guilhermeMatch;
+        
+        if (isMatch) {
+          console.log('✅ Encontrou correspondência:', config);
+        }
+        
+        return isMatch;
+      });
+
+      if (matchedConfig) {
+        console.log('✅ Configuração Calendly encontrada por nome:', matchedConfig);
+        return matchedConfig;
+      }
+
+      // Se ainda não encontrou, verificar se há apenas uma configuração ativa (fallback)
+      if (allConfigs.length === 1) {
+        console.log('⚠️ Usando única configuração ativa como fallback:', allConfigs[0]);
+        return allConfigs[0];
+      }
+
+      console.log('❌ Nenhuma configuração Calendly encontrada para:', mentorIdentifier);
+      return null;
+
     } catch (error) {
       console.error('❌ Erro em getCalendlyConfig:', error);
       return null;
