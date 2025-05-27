@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useCalendly } from '@/hooks/useCalendly';
 import { CalendlyIndicator } from './CalendlyIndicator';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
+import { CalendlyButton } from '@/components/calendly/CalendlyButton';
+import { CalendlyEventPayload } from '@/types/calendly.types';
 
 interface PendingSessionsCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -147,16 +148,16 @@ const PendingSessionsCard = ({
     }
   };
 
-  const handleCalendlyScheduled = () => {
-    if (selectedSession) {
-      onSessionScheduled(selectedSession.id);
-      toast({
-        title: "Sucesso",
-        description: "Sessão agendada via Calendly com sucesso!",
-      });
-    }
-    setShowCalendly(false);
-    setSelectedSession(null);
+  const handleCalendlyScheduled = (sessionId: string) => (eventData: CalendlyEventPayload) => {
+    console.log('📅 Sessão agendada via Calendly:', sessionId, eventData);
+    
+    // Marcar a sessão como agendada
+    onSessionScheduled(sessionId);
+    
+    toast({
+      title: "Sucesso",
+      description: "Sessão agendada via Calendly com sucesso!",
+    });
   };
 
   const handleCalendlyError = () => {
@@ -336,8 +337,28 @@ const PendingSessionsCard = ({
                         }`}
                       >
                         <Calendar className="h-3 w-3 mr-1" />
-                        {canSchedule ? 'Agendar' : 'Bloqueada'}
+                        {canSchedule ? 'Agendar Manual' : 'Bloqueada'}
                       </Button>
+                      
+                      {canSchedule && (
+                        <CalendlyButton
+                          mentorId={enrollment.responsibleMentor}
+                          sessionId={session.id}
+                          onEventScheduled={handleCalendlyScheduled(session.id)}
+                          variant="outline"
+                          size="sm"
+                          className="rounded-lg px-3 py-1.5 text-xs font-medium border-blue-200 text-blue-600 hover:bg-blue-50"
+                          studentName={studentName}
+                          sessionInfo={{
+                            sessionNumber: session.sessionNumber,
+                            totalSessions: enrollment.totalSessions
+                          }}
+                        >
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Via Calendly
+                        </CalendlyButton>
+                      )}
+                      
                       {onDeleteSession && (
                         <Button
                           size="sm"

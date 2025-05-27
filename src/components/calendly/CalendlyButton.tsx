@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface CalendlyButtonProps extends Omit<ButtonProps, 'onClick'> {
   mentorId: string;
+  sessionId?: string; // Adicionar sessionId para conectar com a sessão
   onEventScheduled?: (eventData: CalendlyEventPayload) => void;
   children?: React.ReactNode;
   studentName?: string;
@@ -21,6 +22,7 @@ interface CalendlyButtonProps extends Omit<ButtonProps, 'onClick'> {
 
 export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
   mentorId,
+  sessionId,
   onEventScheduled,
   children,
   className = '',
@@ -40,7 +42,7 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
     setIsChecking(true);
     
     try {
-      console.log('🖱️ CalendlyButton clicked for mentor:', mentorId);
+      console.log('🖱️ CalendlyButton clicked for mentor:', mentorId, 'session:', sessionId);
       
       // Verificar se existe configuração antes de abrir o widget
       const config = await getCalendlyConfig(mentorId);
@@ -75,6 +77,12 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
     if (onEventScheduled) {
       onEventScheduled(eventData);
     }
+    
+    toast({
+      title: "Sucesso!",
+      description: "Mentoria agendada com sucesso via Calendly!",
+    });
+    
     setShowWidget(false);
   };
 
@@ -102,6 +110,7 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
 
       <CalendlyWidget
         mentorId={mentorId}
+        sessionId={sessionId}
         open={showWidget}
         onOpenChange={handleWidgetClose}
         onEventScheduled={handleEventScheduled}
