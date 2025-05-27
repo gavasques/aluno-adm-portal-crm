@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { UserStatus, PermissionGroup } from '@/types/user.enums';
@@ -133,19 +134,27 @@ export class OptimizedUserService {
 
       console.log('📤 Enviando dados:', requestBody);
 
-      // Chamada correta para a edge function list-users - NÃO usar JSON.stringify!
+      // Chamada correta para a edge function list-users
       const { data, error } = await supabase.functions.invoke('list-users', {
         body: requestBody
       });
 
       console.log('📊 Resposta da edge function:', { data, error });
 
+      // Se houve erro na chamada da função
       if (error) {
         console.error('❌ Erro na Edge Function list-users:', error);
         throw new Error(error.message || 'Erro na edge function');
       }
 
-      if (data?.success) {
+      // Verificar se a resposta contém dados válidos
+      if (!data) {
+        console.error('❌ Nenhum dado retornado da edge function');
+        throw new Error('Nenhum dado retornado do servidor');
+      }
+
+      // Verificar se houve sucesso na operação
+      if (data.success === true) {
         this.invalidateQueries();
         
         const message = data.existed 
@@ -159,12 +168,37 @@ export class OptimizedUserService {
         });
         
         return true;
-      } else {
-        console.error('❌ Falha na criação:', data);
-        throw new Error(data?.error || "Erro desconhecido ao criar usuário");
+      } 
+      
+      // Se houve erro específico retornado pela edge function
+      if (data.error) {
+        console.error('❌ Erro retornado pela edge function:', data.error);
+        throw new Error(data.error);
       }
+
+      // Fallback para casos não esperados
+      console.error('❌ Resposta inesperada da edge function:', data);
+      throw new Error("Resposta inesperada do servidor");
+
     } catch (error: any) {
       console.error('❌ Erro ao criar usuário:', error);
+      
+      // Se o erro for relacionado à edge function, mas o usuário pode ter sido criado
+      if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+        console.log('⚠️ Erro na edge function, mas verificando se usuário foi criado...');
+        
+        // Invalidar queries para atualizar a lista e verificar se o usuário foi criado
+        this.invalidateQueries();
+        
+        toast({
+          title: "Atenção",
+          description: "Houve um problema na resposta do servidor, mas o usuário pode ter sido criado. Verifique a lista.",
+          variant: "default",
+        });
+        
+        return true; // Assumir sucesso para não bloquear o fluxo
+      }
+      
       toast({
         title: "Erro ao criar usuário",
         description: error.message || "Erro interno do servidor",

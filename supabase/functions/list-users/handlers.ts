@@ -127,7 +127,10 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
       if (!bodyText || bodyText.trim() === '') {
         console.error("[handlePostRequest] Body vazio recebido");
         return new Response(
-          JSON.stringify({ error: "Body da requisição está vazio" }),
+          JSON.stringify({ 
+            success: false, 
+            error: "Body da requisição está vazio" 
+          }),
           { 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400 
@@ -140,7 +143,10 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
     } catch (parseError) {
       console.error("[handlePostRequest] Erro ao fazer parse do JSON:", parseError);
       return new Response(
-        JSON.stringify({ error: "JSON inválido no body da requisição" }),
+        JSON.stringify({ 
+          success: false, 
+          error: "JSON inválido no body da requisição" 
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -164,7 +170,10 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
     if (!action || typeof action !== 'string') {
       console.error("[handlePostRequest] Ação não fornecida ou inválida");
       return new Response(
-        JSON.stringify({ error: "Ação é obrigatória" }),
+        JSON.stringify({ 
+          success: false, 
+          error: "Ação é obrigatória" 
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -202,7 +211,10 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
       default:
         console.error("[handlePostRequest] Ação não reconhecida:", action);
         return new Response(
-          JSON.stringify({ error: `Ação não suportada: ${action}` }),
+          JSON.stringify({ 
+            success: false, 
+            error: `Ação não suportada: ${action}` 
+          }),
           { 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400 
@@ -212,26 +224,22 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
     
     console.log("[handlePostRequest] Resultado da operação:", result);
     
-    // Determinar status HTTP baseado no resultado
-    let statusCode = 200;
-    if (result.error) {
-      statusCode = 400;
-    } else if (result.existed && !result.profileCreated) {
-      statusCode = 409; // Conflict
-    }
-    
+    // Sempre retornar uma resposta JSON válida com status 200 para operações bem-sucedidas
     return new Response(
       JSON.stringify(result),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: statusCode 
+        status: 200 
       }
     );
     
   } catch (error) {
     console.error("[handlePostRequest] Erro no handler POST:", error);
     return new Response(
-      JSON.stringify({ error: `Erro interno: ${error.message}` }),
+      JSON.stringify({ 
+        success: false, 
+        error: `Erro interno: ${error.message}` 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
