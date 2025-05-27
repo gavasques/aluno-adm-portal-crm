@@ -91,12 +91,35 @@ export const useCalendly = () => {
       
       console.log('💾 useCalendly - Salvando evento do Calendly:', eventData);
       
+      // Buscar o UUID do mentor se o valor atual for um nome
+      let mentorUuid = eventData.mentor_id;
+      
+      // Se mentor_id não é um UUID válido, buscar por nome
+      if (!mentorUuid.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+        console.log('🔄 useCalendly - Convertendo nome do mentor para UUID...');
+        
+        const { data: mentorProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_mentor', true)
+          .ilike('name', `%${mentorUuid}%`)
+          .maybeSingle();
+        
+        if (mentorProfile) {
+          mentorUuid = mentorProfile.id;
+          console.log('✅ useCalendly - UUID do mentor encontrado:', mentorUuid);
+        } else {
+          console.error('❌ useCalendly - Mentor não encontrado:', eventData.mentor_id);
+          throw new Error('Mentor não encontrado');
+        }
+      }
+      
       const { error } = await supabase
         .from('calendly_events')
         .insert([{
           calendly_event_uri: eventData.calendly_event_uri,
           student_id: eventData.student_id,
-          mentor_id: eventData.mentor_id,
+          mentor_id: mentorUuid,
           event_name: eventData.event_name,
           start_time: eventData.start_time,
           end_time: eventData.end_time,

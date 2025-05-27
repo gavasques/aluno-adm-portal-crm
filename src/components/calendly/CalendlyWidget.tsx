@@ -18,7 +18,7 @@ interface CalendlyWidgetProps {
     sessionNumber: number;
     totalSessions: number;
   };
-  sessionId?: string; // Adicionar ID da sessão para atualização
+  sessionId?: string;
 }
 
 declare global {
@@ -204,17 +204,17 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
         try {
           setIsLoading(true);
           
-          // Dados do evento agendado
+          // Corrigir a estrutura dos dados do evento agendado
           const eventDetails = {
-            calendly_event_uri: payload.payload.uri,
+            calendly_event_uri: payload.payload.event?.uri || '',
             student_id: user?.id || '',
             mentor_id: mentorId,
-            event_name: payload.payload.event.name,
-            start_time: payload.payload.event.start_time,
-            end_time: payload.payload.event.end_time,
-            duration_minutes: payload.payload.event.duration,
+            event_name: payload.payload.event?.name || 'Sessão de Mentoria',
+            start_time: payload.payload.event?.start_time || new Date().toISOString(),
+            end_time: payload.payload.event?.end_time || new Date().toISOString(),
+            duration_minutes: payload.payload.event?.duration || 60,
             status: 'scheduled' as const,
-            session_id: sessionId // Incluir ID da sessão se disponível
+            session_id: sessionId
           };
 
           console.log('💾 Salvando evento no banco de dados:', eventDetails);
@@ -265,10 +265,10 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
       
       const sessionUpdateData = {
         status: 'agendada',
-        scheduled_date: payload.payload.event.start_time,
-        duration_minutes: payload.payload.event.duration,
-        calendly_link: payload.payload.uri,
-        observations: `Agendado via Calendly: ${payload.payload.event.name}`,
+        scheduled_date: payload.payload.event?.start_time || new Date().toISOString(),
+        duration_minutes: payload.payload.event?.duration || 60,
+        calendly_link: payload.payload.event?.uri || '',
+        observations: `Agendado via Calendly: ${payload.payload.event?.name || 'Sessão de Mentoria'}`,
         updated_at: new Date().toISOString()
       };
 
