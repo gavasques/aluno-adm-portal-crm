@@ -1,18 +1,16 @@
+
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { ReactQueryDevtools } from 'react-query/devtools';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/hooks/useAuth';
 
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminMentors from './pages/admin/AdminMentors';
-import AdminMentees from './pages/admin/AdminMentees';
+import Home from './pages/Index';
+import Login from './pages/AcceptInvite';
+import Profile from './pages/student/Settings';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminUsers from './pages/admin/Users';
 import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
 import AdminMentoringEnrollments from './pages/admin/AdminMentoringEnrollments';
 import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
@@ -38,15 +36,14 @@ function App() {
             <Toaster />
             <Routes>
               <Route path="/" element={
-                <Layout>
+                <Layout isAdmin={false}>
                   <Home />
                 </Layout>
               } />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
               <Route path="/profile" element={
-                <RouteGuard>
-                  <Layout>
+                <RouteGuard requireAdminAccess={false}>
+                  <Layout isAdmin={false}>
                     <Profile />
                   </Layout>
                 </RouteGuard>
@@ -54,70 +51,56 @@ function App() {
 
               {/* Rotas de Admin */}
               <Route path="/admin" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminDashboard />
                   </AdminLayout>
                 </RouteGuard>
               } />
               <Route path="/admin/usuarios" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminUsers />
                   </AdminLayout>
                 </RouteGuard>
               } />
-              <Route path="/admin/mentores" element={
-                <RouteGuard requiredRole="Admin">
-                  <AdminLayout>
-                    <AdminMentors />
-                  </AdminLayout>
-                </RouteGuard>
-              } />
-              <Route path="/admin/mentees" element={
-                <RouteGuard requiredRole="Admin">
-                  <AdminLayout>
-                    <AdminMentees />
-                  </AdminLayout>
-                </RouteGuard>
-              } />
               <Route path="/admin/mentorias" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminMentoringCatalog />
                   </AdminLayout>
                 </RouteGuard>
               } />
               <Route path="/admin/mentorias/inscricoes" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminMentoringEnrollments />
                   </AdminLayout>
                 </RouteGuard>
               } />
               <Route path="/admin/mentorias/inscricoes-individuais" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminIndividualEnrollments />
                   </AdminLayout>
                 </RouteGuard>
               } />
               <Route path="/admin/mentorias/inscricoes-em-grupo" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminGroupEnrollments />
                   </AdminLayout>
                 </RouteGuard>
               } />
               <Route path="/admin/mentorias/sessoes" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminMentoringSessions />
                   </AdminLayout>
                 </RouteGuard>
               } />
               <Route path="/admin/mentorias/materiais" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminMentoringMaterials />
                   </AdminLayout>
@@ -126,7 +109,7 @@ function App() {
               
               {/* Rota para configurações do Calendly */}
               <Route path="/admin/calendly-config" element={
-                <RouteGuard requiredRole="Admin">
+                <RouteGuard requireAdminAccess={true}>
                   <AdminLayout>
                     <AdminCalendlyConfig />
                   </AdminLayout>
@@ -136,6 +119,7 @@ function App() {
           </Router>
         </div>
       </HelmetProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

@@ -1,12 +1,15 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import Layout from './Layout';
 
-const AdminLayout: React.FC = () => {
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <Layout isAdmin={true}>
-      <Outlet />
+      {children}
     </Layout>
   );
 };
