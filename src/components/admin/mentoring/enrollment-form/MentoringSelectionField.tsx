@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { GraduationCap, Clock, Calendar, DollarSign, Plus } from 'lucide-react';
+import { GraduationCap, Clock, Calendar, DollarSign, Plus, Users } from 'lucide-react';
 import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
 import { MentoringCatalog } from '@/types/mentoring.types';
 
@@ -58,33 +58,37 @@ export const MentoringSelectionField = ({
           {catalogs.map((mentoring) => (
             <Card
               key={mentoring.id}
-              className="cursor-pointer transition-all hover:shadow-md hover:border-blue-300"
+              className="cursor-pointer transition-all hover:shadow-md hover:border-blue-300 border"
               onClick={() => handleMentoringSelect(mentoring)}
             >
               <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-900">{mentoring.name}</h3>
-                  <Badge variant={mentoring.type === 'Individual' ? 'default' : 'secondary'}>
-                    {mentoring.type}
-                  </Badge>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-lg mb-1">{mentoring.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={mentoring.type === 'Individual' ? 'default' : 'secondary'} className="text-xs">
+                        {mentoring.type}
+                      </Badge>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <Users className="w-3 h-3 mr-1" />
+                        {mentoring.instructor}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">{mentoring.description}</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
+                
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="flex items-center space-x-1 text-gray-600">
                     <Clock className="w-4 h-4 text-gray-400" />
-                    <span>{mentoring.numberOfSessions} sessões</span>
+                    <span className="text-xs">{mentoring.numberOfSessions} sessões</span>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1 text-gray-600">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span>{mentoring.durationMonths} meses</span>
+                    <span className="text-xs">{mentoring.durationMonths} meses</span>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1 text-gray-600">
                     <DollarSign className="w-4 h-4 text-gray-400" />
-                    <span>R$ {mentoring.price}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <GraduationCap className="w-4 h-4 text-gray-400" />
-                    <span>{mentoring.instructor}</span>
+                    <span className="text-xs font-medium">R$ {mentoring.price}</span>
                   </div>
                 </div>
               </CardContent>
@@ -111,7 +115,18 @@ export const MentoringSelectionField = ({
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-4">
             <div className="flex justify-between items-start mb-2">
-              <h3 className="font-semibold text-blue-900">{selectedMentoring.name}</h3>
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900 text-lg">{selectedMentoring.name}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
+                    {selectedMentoring.type}
+                  </Badge>
+                  <div className="flex items-center text-xs text-blue-700">
+                    <Users className="w-3 h-3 mr-1" />
+                    {selectedMentoring.instructor}
+                  </div>
+                </div>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -121,14 +136,18 @@ export const MentoringSelectionField = ({
                 Alterar
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
-              <div className="flex items-center space-x-2">
+            <div className="grid grid-cols-3 gap-4 text-sm text-blue-800 mt-3">
+              <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
-                <span>{selectedMentoring.numberOfSessions} sessões</span>
+                <span className="text-xs">{selectedMentoring.numberOfSessions} sessões</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
-                <span>{selectedMentoring.durationMonths} meses</span>
+                <span className="text-xs">{selectedMentoring.durationMonths} meses</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-xs font-medium">R$ {selectedMentoring.price}</span>
               </div>
             </div>
           </CardContent>
