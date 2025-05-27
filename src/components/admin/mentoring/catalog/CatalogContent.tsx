@@ -159,6 +159,8 @@ const CatalogContent: React.FC = () => {
         onTypeFilterChange={setTypeFilter}
         onStatusFilterChange={setStatusFilter}
         onClearFilters={handleClearFilters}
+        totalCatalogs={catalogs.length}
+        filteredCount={filteredCatalogs.length}
       />
 
       {catalogs.length === 0 ? (
