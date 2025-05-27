@@ -1,6 +1,6 @@
 
-import { useOptimizedUserContext } from '@/contexts/OptimizedUserContext';
+import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
 
 export const useUsers = () => {
-  return useOptimizedUserContext();
+  return usePerformanceOptimizedUserContext();
 };
