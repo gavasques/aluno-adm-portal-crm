@@ -13,13 +13,15 @@ interface EnhancedEnrollmentDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   enrollment: StudentMentoringEnrollment | null;
   onSave?: (data: any) => void;
+  onSessionUpdated?: () => void;
 }
 
 export const EnhancedEnrollmentDetailDialog: React.FC<EnhancedEnrollmentDetailDialogProps> = ({
   open,
   onOpenChange,
   enrollment,
-  onSave
+  onSave,
+  onSessionUpdated
 }) => {
   const [activeTab, setActiveTab] = useState('info');
 
@@ -67,6 +69,7 @@ export const EnhancedEnrollmentDetailDialog: React.FC<EnhancedEnrollmentDetailDi
             <TabsContent value="sessions" className="mt-6">
               <EnrollmentSessionsTab 
                 enrollment={enrollment}
+                onSessionUpdated={onSessionUpdated}
               />
             </TabsContent>
           </div>
