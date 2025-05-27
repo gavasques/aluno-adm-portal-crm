@@ -1,54 +1,41 @@
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
-import { useIndividualEnrollments } from '@/hooks/admin/useIndividualEnrollments';
-import { ModernIndividualEnrollmentsHeader } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsHeader';
+import { useOptimizedIndividualEnrollments } from '@/hooks/admin/useOptimizedIndividualEnrollments';
+import OptimizedIndividualEnrollmentsHeader from '@/components/admin/mentoring/individual-enrollments/OptimizedIndividualEnrollmentsHeader';
+import OptimizedIndividualEnrollmentsContent from '@/components/admin/mentoring/individual-enrollments/OptimizedIndividualEnrollmentsContent';
 import { IndividualEnrollmentsLoading } from '@/components/admin/mentoring/individual-enrollments/IndividualEnrollmentsLoading';
 import { IndividualEnrollmentsEmpty } from '@/components/admin/mentoring/individual-enrollments/IndividualEnrollmentsEmpty';
-import { IndividualEnrollmentsContent } from '@/components/admin/mentoring/individual-enrollments/IndividualEnrollmentsContent';
 import { IndividualEnrollmentsDialogs } from '@/components/admin/mentoring/individual-enrollments/IndividualEnrollmentsDialogs';
+import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 const AdminIndividualEnrollments = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedEnrollments, setSelectedEnrollments] = useState<string[]>([]);
+  
+  // Dialog states
+  const [showForm, setShowForm] = useState(false);
+  const [editingEnrollment, setEditingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
+  const [viewingEnrollment, setViewingEnrollment] = useState<StudentMentoringEnrollment | null>(null);
+  const [showExtensionDialog, setShowExtensionDialog] = useState(false);
+  const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
+
   const {
-    // Data
-    filteredEnrollments,
     paginatedEnrollments,
     pageInfo,
     statistics,
-    loading,
-    
-    // State
+    isLoading,
     searchTerm,
     statusFilter,
     typeFilter,
     viewMode,
-    showForm,
-    editingEnrollment,
-    viewingEnrollment,
-    selectedEnrollments,
-    showExtensionDialog,
-    selectedEnrollmentForExtension,
-    
-    // Setters
-    setSearchTerm,
-    setStatusFilter,
-    setTypeFilter,
+    handleSearchChange,
+    handleStatusFilterChange,
+    handleTypeFilterChange,
+    handleClearFilters,
     setViewMode,
-    setShowForm,
-    setEditingEnrollment,
-    setViewingEnrollment,
-    setShowExtensionDialog,
-    
-    // Handlers
-    handleCreateEnrollment,
-    handleEditEnrollment,
-    handleViewEnrollment,
-    handleDeleteEnrollment,
-    handleAddExtension,
-    handleExtensionSubmit,
-    toggleEnrollmentSelection,
-    handlePageChange
-  } = useIndividualEnrollments();
+    filteredEnrollments
+  } = useOptimizedIndividualEnrollments(currentPage, 12);
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/admin' },
@@ -56,7 +43,50 @@ const AdminIndividualEnrollments = () => {
     { label: 'Individuais' }
   ];
 
-  if (loading) {
+  // Handlers
+  const handleCreateEnrollment = useCallback(() => {
+    setShowForm(true);
+  }, []);
+
+  const handleEditEnrollment = useCallback((enrollment: StudentMentoringEnrollment) => {
+    setEditingEnrollment(enrollment);
+  }, []);
+
+  const handleViewEnrollment = useCallback((enrollment: StudentMentoringEnrollment) => {
+    setViewingEnrollment(enrollment);
+  }, []);
+
+  const handleDeleteEnrollment = useCallback(async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta inscrição?')) {
+      return;
+    }
+    console.log('Delete enrollment:', id);
+  }, []);
+
+  const handleAddExtension = useCallback((enrollment: StudentMentoringEnrollment) => {
+    setSelectedEnrollmentForExtension(enrollment);
+    setShowExtensionDialog(true);
+  }, []);
+
+  const handleExtensionSubmit = useCallback(async (data: any) => {
+    console.log('Extension submitted:', data);
+    setShowExtensionDialog(false);
+    setSelectedEnrollmentForExtension(null);
+  }, []);
+
+  const toggleEnrollmentSelection = useCallback((id: string) => {
+    setSelectedEnrollments(prev => 
+      prev.includes(id) 
+        ? prev.filter(enrollmentId => enrollmentId !== id)
+        : [...prev, id]
+    );
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  if (isLoading) {
     return <IndividualEnrollmentsLoading />;
   }
 
@@ -70,31 +100,32 @@ const AdminIndividualEnrollments = () => {
         className="mb-4"
       />
 
-      {/* Header Moderno */}
-      <ModernIndividualEnrollmentsHeader
+      {/* Header Otimizado */}
+      <OptimizedIndividualEnrollmentsHeader
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
         typeFilter={typeFilter}
-        setTypeFilter={setTypeFilter}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onAddEnrollment={() => setShowForm(true)}
         statistics={statistics}
+        onSearchChange={handleSearchChange}
+        onStatusFilterChange={handleStatusFilterChange}
+        onTypeFilterChange={handleTypeFilterChange}
+        onViewModeChange={setViewMode}
+        onAddEnrollment={handleCreateEnrollment}
+        onClearFilters={handleClearFilters}
       />
 
       {/* Conteúdo */}
       {filteredEnrollments.length === 0 ? (
-        <IndividualEnrollmentsEmpty onAddEnrollment={() => setShowForm(true)} />
+        <IndividualEnrollmentsEmpty onAddEnrollment={handleCreateEnrollment} />
       ) : (
-        <IndividualEnrollmentsContent
+        <OptimizedIndividualEnrollmentsContent
           paginatedEnrollments={paginatedEnrollments}
           viewMode={viewMode}
           selectedEnrollments={selectedEnrollments}
           pageInfo={pageInfo}
           onView={handleViewEnrollment}
-          onEdit={setEditingEnrollment}
+          onEdit={handleEditEnrollment}
           onDelete={handleDeleteEnrollment}
           onAddExtension={handleAddExtension}
           onToggleSelection={toggleEnrollmentSelection}
