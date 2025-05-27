@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, GraduationCap, Users, Calendar, AlertCircle, Plus, Clock, Gift } from 'lucide-react';
+import { User, GraduationCap, Users, Calendar, AlertCircle, Plus, Clock, Gift, Calculator } from 'lucide-react';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { StudentMentoringEnrollment, CreateExtensionData } from '@/types/mentoring.types';
@@ -52,6 +52,11 @@ const EditEnrollmentForm = ({
   // Buscar informações do estudante
   const student = students?.find(s => s.id === enrollment.studentId);
   const studentName = student?.name || student?.email || `Aluno ${enrollment.studentId.slice(-8)}`;
+
+  // Calcular totais
+  const originalMonths = enrollment.mentoring.durationMonths;
+  const extensionMonths = enrollment.extensions?.reduce((sum, ext) => sum + ext.extensionMonths, 0) || 0;
+  const totalMonths = originalMonths + extensionMonths;
 
   const form = useForm<EditEnrollmentFormData>({
     resolver: zodResolver(editEnrollmentSchema),
@@ -114,6 +119,45 @@ const EditEnrollmentForm = ({
           <Badge variant="outline">Não editável</Badge>
         </div>
       </div>
+
+      {/* Resumo de Meses e Sessões */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Resumo Total
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <Calendar className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+              <div className="text-sm text-gray-600">Meses Originais</div>
+              <div className="text-2xl font-bold text-blue-600">{originalMonths}</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <Plus className="h-6 w-6 text-green-600 mx-auto mb-2" />
+              <div className="text-sm text-gray-600">Meses Extras</div>
+              <div className="text-2xl font-bold text-green-600">+{extensionMonths}</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <Calculator className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+              <div className="text-sm text-gray-600">Total de Meses</div>
+              <div className="text-2xl font-bold text-purple-600">{totalMonths}</div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <Clock className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+              <div className="text-sm text-gray-600">Total de Sessões</div>
+              <div className="text-2xl font-bold text-orange-600">{enrollment.totalSessions}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {enrollment.sessionsUsed} utilizadas • {enrollment.totalSessions - enrollment.sessionsUsed} restantes
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Extensões e Meses Extras */}
       <Card>
@@ -201,7 +245,9 @@ const EditEnrollmentForm = ({
                   >
                     <FormControl>
                       <SelectTrigger className="bg-white">
-                        <SelectValue placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"} />
+                        <SelectValue 
+                          placeholder={mentorsLoading ? "Carregando mentores..." : "Selecione um mentor"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
