@@ -34,8 +34,10 @@ export class OptimizedUserService {
       }
       
       const { data, error } = await supabase.functions.invoke('list-users', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -54,14 +56,18 @@ export class OptimizedUserService {
   async createUser(userData: CreateUserData): Promise<boolean> {
     try {
       const { data, error } = await supabase.functions.invoke('list-users', {
-        body: {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           action: 'createUser',
           email: userData.email.toLowerCase().trim(),
           name: userData.name.trim(),
           role: userData.role,
           password: userData.password,
           is_mentor: userData.is_mentor
-        }
+        })
       });
 
       if (error) {
@@ -99,11 +105,15 @@ export class OptimizedUserService {
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
     try {
       const { data, error } = await supabase.functions.invoke('list-users', {
-        body: {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           action: 'deleteUser',
           userId,
           email: userEmail
-        }
+        })
       });
 
       if (error) throw new Error(error.message);
