@@ -1,64 +1,245 @@
 
-import { useEffect } from 'react';
-import { useSupabaseMentoringCatalog } from './useSupabaseMentoringCatalog';
-import { useSupabaseMentoringEnrollments } from './useSupabaseMentoringEnrollments';
-import { useSupabaseMentoringSessions } from './useSupabaseMentoringSessions';
-import { useSupabaseMentoringMaterials } from './useSupabaseMentoringMaterials';
+import { useState, useCallback } from 'react';
+import { MentoringCatalog, StudentMentoringEnrollment, MentoringSession, MentoringMaterial, CreateExtensionData } from '@/types/mentoring.types';
+import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
+import { useToast } from '@/hooks/use-toast';
+
+const repository = new SupabaseMentoringRepository();
 
 export const useSupabaseMentoring = () => {
-  // Use individual hooks
-  const catalogHook = useSupabaseMentoringCatalog();
-  const enrollmentHook = useSupabaseMentoringEnrollments();
-  const sessionHook = useSupabaseMentoringSessions();
-  const materialHook = useSupabaseMentoringMaterials();
+  const [catalogs, setCatalogs] = useState<MentoringCatalog[]>([]);
+  const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>([]);
+  const [sessions, setSessions] = useState<MentoringSession[]>([]);
+  const [materials, setMaterials] = useState<MentoringMaterial[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Load initial data
-  useEffect(() => {
-    console.log('🔄 Carregando dados iniciais...');
-    catalogHook.refreshCatalogs();
-    enrollmentHook.refreshEnrollments();
-    sessionHook.refreshSessions();
-    materialHook.refreshMaterials();
+  const refreshCatalogs = useCallback(async () => {
+    try {
+      const data = await repository.getCatalogs();
+      setCatalogs(data);
+    } catch (error) {
+      console.error('Error refreshing catalogs:', error);
+    }
   }, []);
 
-  // Combine loading states
-  const loading = catalogHook.loading || enrollmentHook.loading || sessionHook.loading || materialHook.loading;
+  const refreshEnrollments = useCallback(async () => {
+    try {
+      const data = await repository.getEnrollments();
+      setEnrollments(data);
+    } catch (error) {
+      console.error('Error refreshing enrollments:', error);
+    }
+  }, []);
+
+  const refreshSessions = useCallback(async () => {
+    try {
+      const data = await repository.getSessions();
+      setSessions(data);
+    } catch (error) {
+      console.error('Error refreshing sessions:', error);
+    }
+  }, []);
+
+  const refreshMaterials = useCallback(async () => {
+    try {
+      const data = await repository.getMaterials();
+      setMaterials(data);
+    } catch (error) {
+      console.error('Error refreshing materials:', error);
+    }
+  }, []);
+
+  const createCatalog = useCallback(async (catalogData: any) => {
+    setLoading(true);
+    try {
+      const newCatalog = await repository.createCatalog(catalogData);
+      await refreshCatalogs();
+      return newCatalog;
+    } catch (error) {
+      console.error('Error creating catalog:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshCatalogs]);
+
+  const updateCatalog = useCallback(async (id: string, catalogData: any) => {
+    setLoading(true);
+    try {
+      const success = await repository.updateCatalog(id, catalogData);
+      if (success) {
+        await refreshCatalogs();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error updating catalog:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshCatalogs]);
+
+  const deleteCatalog = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const success = await repository.deleteCatalog(id);
+      if (success) {
+        await refreshCatalogs();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error deleting catalog:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshCatalogs]);
+
+  const createEnrollment = useCallback(async (enrollmentData: any) => {
+    setLoading(true);
+    try {
+      const newEnrollment = await repository.createEnrollment(enrollmentData);
+      await refreshEnrollments();
+      return newEnrollment;
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments]);
+
+  const deleteEnrollment = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const success = await repository.deleteEnrollment(id);
+      if (success) {
+        await refreshEnrollments();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error deleting enrollment:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments]);
+
+  const addExtension = useCallback(async (data: CreateExtensionData): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const success = await repository.addExtension(data);
+      if (success) {
+        await refreshEnrollments();
+        toast({
+          title: "Sucesso",
+          description: "Extensão aplicada com sucesso!",
+        });
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao aplicar extensão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments, toast]);
+
+  const removeExtension = useCallback(async (extensionId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const success = await repository.removeExtension(extensionId);
+      if (success) {
+        await refreshEnrollments();
+        toast({
+          title: "Sucesso",
+          description: "Extensão removida com sucesso!",
+        });
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover extensão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments, toast]);
+
+  const createSession = useCallback(async (sessionData: any) => {
+    setLoading(true);
+    try {
+      const newSession = await repository.createSession(sessionData);
+      await refreshSessions();
+      return newSession;
+    } catch (error) {
+      console.error('Error creating session:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshSessions]);
+
+  const updateSession = useCallback(async (sessionId: string, sessionData: any) => {
+    setLoading(true);
+    try {
+      const success = await repository.updateSession(sessionId, sessionData);
+      if (success) {
+        await refreshSessions();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error updating session:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshSessions]);
+
+  const deleteSession = useCallback(async (sessionId: string) => {
+    setLoading(true);
+    try {
+      const success = await repository.deleteSession(sessionId);
+      if (success) {
+        await refreshSessions();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshSessions]);
 
   return {
-    // Data
-    catalogs: catalogHook.catalogs,
-    enrollments: enrollmentHook.enrollments,
-    sessions: sessionHook.sessions,
-    materials: materialHook.materials,
+    catalogs,
+    enrollments,
+    sessions,
+    materials,
     loading,
-    
-    // Catalog methods
-    createCatalog: catalogHook.createCatalog,
-    updateCatalog: catalogHook.updateCatalog,
-    deleteCatalog: catalogHook.deleteCatalog,
-    refreshCatalogs: catalogHook.refreshCatalogs,
-    
-    // Enrollment methods
-    createEnrollment: enrollmentHook.createEnrollment,
-    getStudentEnrollments: enrollmentHook.getStudentEnrollments,
-    addExtension: enrollmentHook.addExtension,
-    deleteEnrollment: enrollmentHook.deleteEnrollment,
-    refreshEnrollments: enrollmentHook.refreshEnrollments,
-    
-    // Session methods
-    getEnrollmentSessions: sessionHook.getEnrollmentSessions,
-    createSession: sessionHook.createSession,
-    updateSession: sessionHook.updateSession,
-    deleteSession: sessionHook.deleteSession,
-    getSessionsByEnrollment: sessionHook.getSessionsByEnrollment,
-    refreshSessions: sessionHook.refreshSessions,
-    
-    // Material methods
-    getEnrollmentMaterials: materialHook.getEnrollmentMaterials,
-    getSessionMaterials: materialHook.getSessionMaterials,
-    refreshMaterials: materialHook.refreshMaterials,
-    
-    // Repository access (using catalog repository as they're all the same instance)
-    repository: catalogHook.repository
+    refreshCatalogs,
+    refreshEnrollments,
+    refreshSessions,
+    refreshMaterials,
+    createCatalog,
+    updateCatalog,
+    deleteCatalog,
+    createEnrollment,
+    deleteEnrollment,
+    addExtension,
+    removeExtension,
+    createSession,
+    updateSession,
+    deleteSession,
+    repository
   };
 };
