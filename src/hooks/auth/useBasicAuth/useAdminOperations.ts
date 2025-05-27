@@ -20,6 +20,7 @@ export const useAdminOperations = () => {
     is_mentor: boolean = false
   ): Promise<CreateUserResult> => {
     try {
+      console.log("[useAdminOperations] === INÍCIO DO DEBUG DETALHADO ===");
       console.log("[useAdminOperations] Iniciando criação de usuário:", { email, name, role, is_mentor });
 
       // Validações básicas
@@ -35,6 +36,15 @@ export const useAdminOperations = () => {
         throw new Error(errorMsg);
       }
 
+      // Verificar sessão atual para debug
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log("[useAdminOperations] Estado da sessão:", {
+        hasSession: !!session,
+        sessionError: sessionError?.message,
+        userId: session?.user?.id,
+        userEmail: session?.user?.email
+      });
+
       // Preparar dados para envio
       const requestData = {
         email: email.toLowerCase().trim(),
@@ -44,24 +54,48 @@ export const useAdminOperations = () => {
         is_mentor: Boolean(is_mentor)
       };
 
-      console.log("[useAdminOperations] Dados preparados:", { ...requestData, password: "***" });
+      console.log("[useAdminOperations] Dados preparados:", { 
+        ...requestData, 
+        password: "***",
+        dataSize: JSON.stringify(requestData).length 
+      });
       
-      // Chamar a edge function para criar o usuário - USANDO BODY CORRETAMENTE
+      console.log("[useAdminOperations] Chamando edge function create-user...");
+      
+      // Chamar a edge function para criar o usuário
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: requestData
       });
 
-      console.log("[useAdminOperations] Resposta da edge function:", { data, error });
+      console.log("[useAdminOperations] Resposta da edge function:");
+      console.log("- data:", data);
+      console.log("- error:", error);
+      console.log("- error type:", typeof error);
+      console.log("- error details:", error ? JSON.stringify(error, null, 2) : 'null');
 
       if (error) {
         console.error("[useAdminOperations] Erro na edge function:", error);
-        const errorMessage = error.message || error.toString() || "Erro desconhecido na edge function";
+        
+        // Melhor tratamento de diferentes tipos de erro
+        let errorMessage = "Erro desconhecido na edge function";
+        
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        } else if (error.toString && typeof error.toString === 'function') {
+          errorMessage = error.toString();
+        }
+        
+        console.error("[useAdminOperations] Mensagem de erro processada:", errorMessage);
         throw new Error(errorMessage);
       }
 
       // Processar a resposta
+      console.log("[useAdminOperations] Processando resposta...");
+      
       if (data && data.success) {
-        console.log("[useAdminOperations] Usuário criado com sucesso");
+        console.log("[useAdminOperations] ✅ Usuário criado com sucesso");
         
         logUserCreation(email, true, 'admin');
         
@@ -83,7 +117,7 @@ export const useAdminOperations = () => {
           profileCreated: data.profileCreated 
         };
       } else if (data && data.existed) {
-        console.log("[useAdminOperations] Usuário já existe");
+        console.log("[useAdminOperations] ⚠️ Usuário já existe");
         
         toast({
           title: "Usuário já existe",
@@ -98,12 +132,18 @@ export const useAdminOperations = () => {
         };
       } else {
         const errorMsg = data?.error || "Erro desconhecido ao criar usuário";
-        console.error("[useAdminOperations] Erro na criação:", errorMsg);
+        console.error("[useAdminOperations] ❌ Falha na criação:", errorMsg);
+        console.log("[useAdminOperations] Dados recebidos:", data);
         throw new Error(errorMsg);
       }
 
     } catch (error: any) {
-      console.error("[useAdminOperations] Erro capturado:", error);
+      console.error("[useAdminOperations] === ERRO CAPTURADO ===");
+      console.error("Erro completo:", error);
+      console.error("Tipo do erro:", typeof error);
+      console.error("Stack trace:", error.stack);
+      console.error("Message:", error.message);
+      console.error("=== FIM DO DEBUG ===");
       
       const sanitizedMessage = sanitizeError(error);
       logSecureError(error, "Admin User Creation");
