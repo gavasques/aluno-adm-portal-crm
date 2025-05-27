@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { UserStatus, PermissionGroup } from '@/types/user.enums';
@@ -120,14 +121,17 @@ export class OptimizedUserService {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('✅ Sessão encontrada, fazendo chamada para create-user edge function...');
+      console.log('✅ Sessão encontrada, fazendo chamada para list-users edge function...');
 
-      const { data, error } = await supabase.functions.invoke('create-user', {
+      // Chamada correta para a edge function list-users com action createUser
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
         body: {
+          action: 'createUser',
           email: userData.email.toLowerCase().trim(),
           name: userData.name.trim(),
           role: userData.role,
@@ -139,7 +143,7 @@ export class OptimizedUserService {
       console.log('📊 Resposta da edge function:', { data, error });
 
       if (error) {
-        console.error('❌ Erro na Edge Function create-user:', error);
+        console.error('❌ Erro na Edge Function list-users:', error);
         throw new Error(error.message || 'Erro na edge function');
       }
 
@@ -179,11 +183,11 @@ export class OptimizedUserService {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+        body: {
           action: 'deleteUser',
           userId,
           email: userEmail
-        })
+        }
       });
 
       if (error) throw new Error(error.message);
