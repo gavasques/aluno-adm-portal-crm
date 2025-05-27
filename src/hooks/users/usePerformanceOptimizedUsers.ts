@@ -42,12 +42,17 @@ export const usePerformanceOptimizedUsers = () => {
     refetchOnMount: false, // Usar cache quando possível
   });
 
+  // Ensure users is always an array
+  const usersArray = useMemo(() => {
+    return Array.isArray(users) ? users : [];
+  }, [users]);
+
   // Preload quando users carregam
   useEffect(() => {
-    if (users.length > 0) {
-      preloadCommonFilters(users);
+    if (usersArray.length > 0) {
+      preloadCommonFilters(usersArray);
     }
-  }, [users, preloadCommonFilters]);
+  }, [usersArray, preloadCommonFilters]);
 
   // Debounced search otimizado
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
@@ -64,14 +69,13 @@ export const usePerformanceOptimizedUsers = () => {
     }
 
     console.log('🔄 Cache MISS - filtrando usuários...');
-    const usersArray = Array.isArray(users) ? users : [];
     const filtered = optimizedUserService.filterUsers(usersArray, filters);
     
     // Cachear resultado
     cacheFilteredUsers(filters, filtered);
     
     return filtered;
-  }, [users, filters, getCachedFilteredUsers, cacheFilteredUsers]);
+  }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
 
   // Stats memoizadas com cache
   const stats = useMemo(() => {
@@ -82,12 +86,11 @@ export const usePerformanceOptimizedUsers = () => {
     }
 
     console.log('📊 Calculando estatísticas...');
-    const usersArray = Array.isArray(users) ? users : [];
     const calculatedStats = optimizedUserService.calculateStats(usersArray);
     
     cacheUserStats(calculatedStats);
     return calculatedStats;
-  }, [users, getCachedUserStats, cacheUserStats]);
+  }, [usersArray, getCachedUserStats, cacheUserStats]);
 
   // Mutations otimizadas com invalidação inteligente
   const createUserMutation = useMutation({
@@ -150,13 +153,13 @@ export const usePerformanceOptimizedUsers = () => {
   // Performance metrics
   const performanceMetrics = useMemo(() => ({
     ...getMetrics(),
-    totalUsers: users.length,
+    totalUsers: usersArray.length,
     filteredUsers: filteredUsers.length,
     isOptimized: true
-  }), [getMetrics, users.length, filteredUsers.length]);
+  }), [getMetrics, usersArray.length, filteredUsers.length]);
 
   return {
-    users: Array.isArray(users) ? users : [],
+    users: usersArray,
     filteredUsers,
     stats,
     filters,
