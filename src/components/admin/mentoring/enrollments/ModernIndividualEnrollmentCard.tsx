@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Edit, Trash2, Plus, Calendar, User, Clock, Target, ChevronRight } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus, Calendar, User, Clock, Target, ChevronRight, GraduationCap } from 'lucide-react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { EnrollmentProgress } from './EnrollmentProgress';
 import { EnrollmentStatus } from './EnrollmentStatus';
 import { useSupabaseMentoringSessions } from '@/hooks/mentoring/useSupabaseMentoringSessions';
+import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import PendingSessionsCard from '../PendingSessionsCard';
 
 interface ModernIndividualEnrollmentCardProps {
@@ -33,12 +34,17 @@ export const ModernIndividualEnrollmentCard = ({
   onSessionUpdated
 }: ModernIndividualEnrollmentCardProps) => {
   const [showSessionsDialog, setShowSessionsDialog] = useState(false);
+  const { students } = useStudentsForEnrollment();
   const { 
     sessions, 
     createSession, 
     deleteSession, 
     loading 
   } = useSupabaseMentoringSessions();
+
+  // Buscar informações do estudante
+  const student = students?.find(s => s.id === enrollment.studentId);
+  const studentName = student?.name || student?.email || `Aluno ${enrollment.studentId.slice(-8)}`;
 
   // Filtrar sessões desta inscrição
   const enrollmentSessions = sessions.filter(s => s.enrollmentId === enrollment.id);
@@ -81,9 +87,18 @@ export const ModernIndividualEnrollmentCard = ({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+              {/* Nome do Aluno */}
+              <div className="flex items-center gap-2 mb-2">
+                <User className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-900">{studentName}</span>
+              </div>
+              
+              {/* Nome da Mentoria */}
+              <h3 className="font-semibold text-lg text-gray-900 truncate group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-gray-400" />
                 {enrollment.mentoring.name}
               </h3>
+              
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline" className="text-xs">
                   {enrollment.mentoring.type}
