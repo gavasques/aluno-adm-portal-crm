@@ -12,7 +12,7 @@ import CreatePendingSessionForm from './CreatePendingSessionForm';
 import { useToast } from '@/hooks/use-toast';
 import { useCalendly } from '@/hooks/useCalendly';
 import { CalendlyIndicator } from './CalendlyIndicator';
-import { useStudents } from '@/hooks/admin/useStudents';
+import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 
 interface PendingSessionsCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -35,7 +35,7 @@ const PendingSessionsCard = ({
   const [calendlyConfigExists, setCalendlyConfigExists] = useState<boolean | null>(null);
   const { toast } = useToast();
   const { getCalendlyConfig } = useCalendly();
-  const { students } = useStudents();
+  const { students } = useStudentsForEnrollment();
 
   // Buscar informações do estudante
   const student = students?.find(s => s.id === enrollment.studentId);

@@ -32,6 +32,9 @@ export interface CalendlyWidgetOptions {
   prefill?: {
     name?: string;
     email?: string;
+    customAnswers?: {
+      [key: string]: string;
+    };
   };
   utm?: {
     utmCampaign?: string;
