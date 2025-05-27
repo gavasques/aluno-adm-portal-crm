@@ -36,11 +36,8 @@ const PendingSessionsCard = ({
   allSessions = []
 }: PendingSessionsCardProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showCalendly, setShowCalendly] = useState(false);
   const [selectedSession, setSelectedSession] = useState<MentoringSession | null>(null);
-  const [calendlyConfigExists, setCalendlyConfigExists] = useState<boolean | null>(null);
   const { toast } = useToast();
-  const { getCalendlyConfig } = useCalendly();
   const { students } = useStudentsForEnrollment();
 
   // Buscar informações do estudante
@@ -106,39 +103,6 @@ const PendingSessionsCard = ({
     setShowCreateForm(false);
   };
 
-  const handleScheduleSession = async (session: MentoringSession) => {
-    // Verificar se pode agendar esta sessão
-    if (!canScheduleSession(session.sessionNumber)) {
-      const unscheduledSessionNumber = session.sessionNumber - 1;
-      toast({
-        title: "Agendamento bloqueado",
-        description: `Para agendar a Sessão ${session.sessionNumber}, você deve primeiro agendar a Sessão ${unscheduledSessionNumber}.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log('🔄 Tentando agendar sessão para mentor:', enrollment.responsibleMentor);
-    
-    // Verificar se existe configuração do Calendly
-    const config = await getCalendlyConfig(enrollment.responsibleMentor);
-    
-    if (!config) {
-      setCalendlyConfigExists(false);
-      toast({
-        title: "Calendly não configurado",
-        description: `Configure o Calendly para o mentor "${enrollment.responsibleMentor}" antes de agendar.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setCalendlyConfigExists(true);
-    console.log('✅ Configuração Calendly encontrada, abrindo widget...');
-    setSelectedSession(session);
-    setShowCalendly(true);
-  };
-
   const handleDeleteSession = (session: MentoringSession) => {
     if (onDeleteSession) {
       onDeleteSession(session.id);
@@ -161,16 +125,6 @@ const PendingSessionsCard = ({
       title: "Sucesso",
       description: "Sessão agendada via Calendly com sucesso!",
     });
-  };
-
-  const handleCalendlyError = () => {
-    toast({
-      title: "Erro no Calendly",
-      description: `Erro ao carregar Calendly para o mentor "${enrollment.responsibleMentor}". Verifique a configuração.`,
-      variant: "destructive",
-    });
-    setShowCalendly(false);
-    setSelectedSession(null);
   };
 
   // Ordenar sessões pendentes por número
@@ -329,28 +283,14 @@ const PendingSessionsCard = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleScheduleSession(session)}
-                        disabled={!canSchedule}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm transition-all ${
-                          canSchedule
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
-                      >
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {canSchedule ? 'Agendar Manual' : 'Bloqueada'}
-                      </Button>
-                      
                       {canSchedule && (
                         <CalendlyButton
                           mentorId={enrollment.responsibleMentor}
                           sessionId={session.id}
                           onEventScheduled={handleCalendlyScheduled}
-                          variant="outline"
+                          variant="default"
                           size="sm"
-                          className="rounded-lg px-3 py-1.5 text-xs font-medium border-blue-200 text-blue-600 hover:bg-blue-50"
+                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm hover:shadow-md"
                           studentName={studentName}
                           sessionInfo={{
                             sessionNumber: session.sessionNumber,
@@ -358,8 +298,19 @@ const PendingSessionsCard = ({
                           }}
                         >
                           <Calendar className="h-3 w-3 mr-1" />
-                          Via Calendly
+                          Agendar Sessão
                         </CalendlyButton>
+                      )}
+                      
+                      {!canSchedule && (
+                        <Button
+                          size="sm"
+                          disabled
+                          className="bg-gray-300 text-gray-500 cursor-not-allowed rounded-lg px-3 py-1.5 text-xs font-medium"
+                        >
+                          <Lock className="h-3 w-3 mr-1" />
+                          Bloqueada
+                        </Button>
                       )}
                       
                       {onDeleteSession && (
@@ -411,22 +362,6 @@ const PendingSessionsCard = ({
           />
         </DialogContent>
       </Dialog>
-
-      {/* Widget do Calendly para agendamento */}
-      {selectedSession && (
-        <CalendlyWidget
-          mentorId={enrollment.responsibleMentor}
-          sessionId={selectedSession.id}
-          open={showCalendly}
-          onOpenChange={setShowCalendly}
-          onEventScheduled={handleCalendlyScheduled}
-          studentName={studentName}
-          sessionInfo={{
-            sessionNumber: selectedSession.sessionNumber,
-            totalSessions: enrollment.totalSessions
-          }}
-        />
-      )}
     </>
   );
 };

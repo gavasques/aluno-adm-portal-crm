@@ -12,9 +12,11 @@ export const useCalendly = () => {
       setLoading(true);
       const { supabase } = await import('@/integrations/supabase/client');
       
-      console.log('🔍 Buscando configuração Calendly para mentor:', mentorId);
+      console.log('🔍 useCalendly - Buscando configuração Calendly para mentor:', mentorId);
+      console.log('📋 useCalendly - Tipo do mentorId:', typeof mentorId, 'Comprimento:', mentorId.length);
       
-      const { data, error } = await supabase
+      // Buscar configuração exata primeiro
+      let { data, error } = await supabase
         .from('calendly_configs')
         .select('*')
         .eq('mentor_id', mentorId)
@@ -22,14 +24,51 @@ export const useCalendly = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Erro ao buscar configuração:', error);
+        console.error('❌ useCalendly - Erro na primeira busca:', error);
         throw error;
       }
 
-      console.log('📋 Configuração encontrada:', data);
+      // Se não encontrou, tentar busca case-insensitive
+      if (!data) {
+        console.log('🔄 useCalendly - Tentando busca case-insensitive...');
+        const { data: allConfigs, error: allError } = await supabase
+          .from('calendly_configs')
+          .select('*')
+          .eq('active', true);
+
+        if (allError) {
+          console.error('❌ useCalendly - Erro na busca geral:', allError);
+          throw allError;
+        }
+
+        console.log('📋 useCalendly - Todas as configurações encontradas:', allConfigs);
+        
+        // Buscar por correspondência case-insensitive
+        data = allConfigs?.find(config => 
+          config.mentor_id?.toLowerCase().trim() === mentorId.toLowerCase().trim()
+        ) || null;
+
+        if (data) {
+          console.log('✅ useCalendly - Configuração encontrada com busca case-insensitive:', data);
+        }
+      }
+
+      if (!data) {
+        console.warn('❌ useCalendly - Nenhuma configuração ativa encontrada para mentor:', mentorId);
+        
+        // Mostrar todas as configurações disponíveis para debug
+        const { data: debugConfigs } = await supabase
+          .from('calendly_configs')
+          .select('mentor_id, active');
+        
+        console.log('🔍 useCalendly - Configurações disponíveis no banco:', debugConfigs);
+        return null;
+      }
+
+      console.log('✅ useCalendly - Configuração encontrada:', data);
       return data;
     } catch (error) {
-      console.error('❌ Erro ao obter configuração do Calendly:', error);
+      console.error('❌ useCalendly - Erro ao obter configuração do Calendly:', error);
       return null;
     } finally {
       setLoading(false);
@@ -38,7 +77,7 @@ export const useCalendly = () => {
 
   const buildCalendlyUrl = useCallback((config: CalendlyConfig): string => {
     const baseUrl = `https://calendly.com/${config.calendly_username}/${config.event_type_slug}`;
-    console.log('🔗 URL do Calendly construída:', baseUrl);
+    console.log('🔗 useCalendly - URL do Calendly construída:', baseUrl);
     return baseUrl;
   }, []);
 
@@ -47,7 +86,7 @@ export const useCalendly = () => {
       setLoading(true);
       const { supabase } = await import('@/integrations/supabase/client');
       
-      console.log('💾 Salvando evento do Calendly:', eventData);
+      console.log('💾 useCalendly - Salvando evento do Calendly:', eventData);
       
       const { error } = await supabase
         .from('calendly_events')
@@ -63,13 +102,13 @@ export const useCalendly = () => {
         }]);
 
       if (error) {
-        console.error('❌ Erro ao salvar evento:', error);
+        console.error('❌ useCalendly - Erro ao salvar evento:', error);
         throw error;
       }
 
-      console.log('✅ Evento salvo com sucesso!');
+      console.log('✅ useCalendly - Evento salvo com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao salvar evento do Calendly:', error);
+      console.error('❌ useCalendly - Erro ao salvar evento do Calendly:', error);
       toast({
         title: "Erro",
         description: "Erro ao salvar dados do agendamento. Verifique o console.",

@@ -29,19 +29,36 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
   const loadConfig = async () => {
     setLoading(true);
     setError('');
+    
     try {
       console.log('🔍 CalendlyIndicator - Buscando config para mentor:', mentorId);
+      console.log('📋 CalendlyIndicator - Tipo do mentorId:', typeof mentorId);
+      
+      if (!mentorId || mentorId.trim() === '') {
+        console.warn('⚠️ CalendlyIndicator - MentorId vazio ou nulo');
+        setError('ID do mentor não informado');
+        setLoading(false);
+        return;
+      }
       
       const calendlyConfig = await getCalendlyConfig(mentorId);
       
-      console.log('📋 Configuração retornada:', calendlyConfig);
+      console.log('📋 CalendlyIndicator - Configuração retornada:', calendlyConfig);
+      console.log('✅ CalendlyIndicator - Config ativa?', calendlyConfig?.active);
+      
       setConfig(calendlyConfig);
       
       if (!calendlyConfig) {
+        console.warn(`❌ CalendlyIndicator - Nenhuma configuração encontrada para mentor: "${mentorId}"`);
         setError(`Calendly não configurado para "${mentorId}"`);
+      } else if (!calendlyConfig.active) {
+        console.warn(`⚠️ CalendlyIndicator - Configuração encontrada mas inativa para mentor: "${mentorId}"`);
+        setError(`Calendly inativo para "${mentorId}"`);
+      } else {
+        console.log(`✅ CalendlyIndicator - Configuração ativa encontrada para mentor: "${mentorId}"`);
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar configuração Calendly:', error);
+      console.error('❌ CalendlyIndicator - Erro ao carregar configuração:', error);
       setError('Erro ao carregar configuração');
     } finally {
       setLoading(false);
