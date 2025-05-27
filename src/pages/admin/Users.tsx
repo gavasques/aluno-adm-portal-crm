@@ -1,8 +1,8 @@
 
 import React from "react";
-import { UserProvider } from "@/contexts/UserContext";
+import { OptimizedUserProvider } from "@/contexts/OptimizedUserContext";
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
-import { UsersPageContent } from "@/components/admin/users/UsersPageContent";
+import { OptimizedUsersPageContent } from "@/components/admin/users/OptimizedUsersPageContent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const UsersContent = () => {
@@ -12,7 +12,7 @@ const UsersContent = () => {
   ];
 
   return (
-    <UserProvider>
+    <OptimizedUserProvider>
       <div className="w-full space-y-6">
         <BreadcrumbNav 
           items={breadcrumbItems} 
@@ -20,9 +20,9 @@ const UsersContent = () => {
           backHref="/admin"
           className="mb-6"
         />
-        <UsersPageContent />
+        <OptimizedUsersPageContent />
       </div>
-    </UserProvider>
+    </OptimizedUserProvider>
   );
 };
 
