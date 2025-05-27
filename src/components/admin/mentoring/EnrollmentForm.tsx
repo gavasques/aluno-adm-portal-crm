@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface EnrollmentFormProps {
   onSuccess?: () => void;
@@ -82,6 +84,8 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
   };
 
   const handleInputChange = (field: string, value: string | string[]) => {
+    console.log(`🔄 Campo alterado: ${field} =`, value);
+    
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
       
@@ -93,11 +97,13 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
           field === 'selectedExtensions' ? value as string[] : updated.selectedExtensions
         );
         updated.endDate = endDate;
+        console.log(`📅 Data final calculada: ${endDate}`);
       }
       
       // Reset extensions when mentoring changes
       if (field === 'mentoringId') {
         updated.selectedExtensions = [];
+        console.log(`🔄 Extensões resetadas para nova mentoria`);
       }
       
       return updated;
@@ -105,6 +111,8 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
   };
 
   const handleExtensionToggle = (extensionId: string, checked: boolean) => {
+    console.log(`✅ Extensão ${extensionId} ${checked ? 'selecionada' : 'desmarcada'}`);
+    
     const newExtensions = checked 
       ? [...formData.selectedExtensions, extensionId]
       : formData.selectedExtensions.filter(id => id !== extensionId);
@@ -115,7 +123,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🚀 Iniciando submissão do formulário...');
+    console.log('🚀 Iniciando submissão do formulário de inscrição...');
     console.log('📊 Dados do formulário:', formData);
     
     // Validação básica
@@ -123,7 +131,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
       console.log('❌ Validação falhou - campos obrigatórios faltando');
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios (Aluno, Mentoria, Data de Início e Mentor Responsável)",
         variant: "destructive",
       });
       return;
@@ -145,6 +153,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
       
       console.log('📈 Sessões calculadas:', totalSessions);
       console.log('📅 Data de término calculada:', formData.endDate);
+      console.log('🎯 Extensões selecionadas:', formData.selectedExtensions);
 
       const enrollmentPayload = {
         studentId: formData.studentId,
@@ -159,7 +168,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         observations: formData.observations || undefined
       };
 
-      console.log('📦 Payload final:', enrollmentPayload);
+      console.log('📦 Payload final da inscrição:', enrollmentPayload);
 
       const newEnrollment = await createEnrollment(enrollmentPayload);
       
@@ -179,7 +188,8 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         selectedExtensions: []
       });
 
-      console.log('🎉 Chamando onSuccess callback...');
+      console.log('🔄 Formulário resetado');
+      console.log('🎉 Chamando callback de sucesso...');
       onSuccess?.();
       
     } catch (error) {
@@ -188,8 +198,11 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
     }
   };
 
+  console.log('🎯 Mentoria selecionada:', selectedMentoring);
+  console.log('🔗 Extensões disponíveis:', selectedMentoring?.extensions);
+
   return (
-    <Card>
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Nova Inscrição Individual</CardTitle>
         <CardDescription>
@@ -197,7 +210,8 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Seleção de Aluno e Mentoria */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="studentId">Aluno *</Label>
@@ -238,13 +252,22 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
             </div>
           </div>
 
-          {/* Extensões disponíveis */}
-          {selectedMentoring?.extensions && selectedMentoring.extensions.length > 0 && (
-            <div className="space-y-3">
-              <Label>Extensões Disponíveis</Label>
-              <div className="grid grid-cols-1 gap-3 p-4 border rounded-lg bg-gray-50">
+          {/* Box de Extensões - Aparece apenas quando uma mentoria é selecionada */}
+          {selectedMentoring && selectedMentoring.extensions && selectedMentoring.extensions.length > 0 && (
+            <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Label className="text-lg font-semibold text-blue-800">Extensões Disponíveis</Label>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {selectedMentoring.extensions.length} opção(ões)
+                </Badge>
+              </div>
+              <p className="text-sm text-blue-600 mb-4">
+                Selecione as extensões que deseja incluir nesta inscrição:
+              </p>
+              
+              <div className="space-y-3">
                 {selectedMentoring.extensions.map((extension) => (
-                  <div key={extension.id} className="flex items-start space-x-3">
+                  <div key={extension.id} className="flex items-start space-x-3 p-3 bg-white rounded-lg border border-blue-200">
                     <Checkbox
                       id={`extension-${extension.id}`}
                       checked={formData.selectedExtensions.includes(extension.id)}
@@ -255,9 +278,9 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
                     <div className="flex-1 min-w-0">
                       <label 
                         htmlFor={`extension-${extension.id}`}
-                        className="text-sm font-medium text-gray-900 cursor-pointer"
+                        className="text-sm font-medium text-gray-900 cursor-pointer block"
                       >
-                        +{extension.months} meses (+{extension.totalSessions || 0} sessões)
+                        +{extension.months} meses ({extension.totalSessions || 0} sessões adicionais)
                       </label>
                       {extension.description && (
                         <p className="text-xs text-gray-600 mt-1">{extension.description}</p>
@@ -269,14 +292,24 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
                   </div>
                 ))}
               </div>
+              
               {formData.selectedExtensions.length > 0 && (
-                <div className="text-sm text-blue-600 font-medium">
-                  Total de sessões: {calculateTotalSessions(formData.mentoringId, formData.selectedExtensions)}
+                <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm font-medium text-green-800">
+                    Total de sessões: {calculateTotalSessions(formData.mentoringId, formData.selectedExtensions)}
+                  </p>
+                  <p className="text-sm text-green-600">
+                    Duração total: {selectedMentoring.durationMonths + formData.selectedExtensions.reduce((acc, extId) => {
+                      const ext = selectedMentoring.extensions?.find(e => e.id === extId);
+                      return acc + (ext?.months || 0);
+                    }, 0)} meses
+                  </p>
                 </div>
               )}
             </div>
           )}
 
+          {/* Status e Pagamento */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="status">Status</Label>
@@ -312,6 +345,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
             </div>
           </div>
 
+          {/* Datas */}
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="enrollmentDate">Data de Inscrição</Label>
@@ -345,6 +379,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
             </div>
           </div>
 
+          {/* Mentor Responsável */}
           <div>
             <Label htmlFor="responsibleMentor">Mentor Responsável *</Label>
             <Select
@@ -365,6 +400,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
             </Select>
           </div>
 
+          {/* Observações */}
           <div>
             <Label htmlFor="observations">Observações</Label>
             <Textarea
@@ -376,6 +412,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
             />
           </div>
 
+          {/* Botões de Ação */}
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={loading}>
               {loading ? 'Criando...' : 'Criar Inscrição'}

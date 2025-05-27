@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { 
@@ -27,9 +26,10 @@ export const useSupabaseMentoring = () => {
     try {
       setLoading(true);
       const data = await repository.getCatalogs();
+      console.log('📚 Catálogos carregados:', data.length);
       setCatalogs(data);
     } catch (error) {
-      console.error('Error refreshing catalogs:', error);
+      console.error('❌ Erro ao carregar catálogos:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar catálogo de mentorias",
@@ -45,7 +45,7 @@ export const useSupabaseMentoring = () => {
       setLoading(true);
       console.log('🔄 Iniciando refresh das inscrições...');
       const data = await repository.getEnrollments();
-      console.log('📊 Inscrições carregadas:', data.length);
+      console.log('📊 Inscrições carregadas:', data.length, data);
       setEnrollments(data);
     } catch (error) {
       console.error('❌ Error refreshing enrollments:', error);
@@ -95,6 +95,7 @@ export const useSupabaseMentoring = () => {
 
   // Load initial data
   useEffect(() => {
+    console.log('🔄 Carregando dados iniciais...');
     refreshCatalogs();
     refreshEnrollments();
     refreshSessions();
@@ -172,7 +173,7 @@ export const useSupabaseMentoring = () => {
     }
   }, [refreshCatalogs, toast]);
 
-  // Enrollment methods - CORRIGIDO
+  // Enrollment methods - CORRIGIDO E MELHORADO
   const createEnrollment = useCallback(async (enrollmentData: {
     studentId: string;
     mentoringId: string;
@@ -188,19 +189,28 @@ export const useSupabaseMentoring = () => {
     try {
       setLoading(true);
       
-      console.log('🏗️ Iniciando criação de inscrição...');
+      console.log('🏗️ Iniciando criação de inscrição no useSupabaseMentoring...');
       console.log('📝 Dados da inscrição:', enrollmentData);
       
       // Validar dados obrigatórios
       if (!enrollmentData.studentId || !enrollmentData.mentoringId || !enrollmentData.startDate || !enrollmentData.responsibleMentor) {
-        throw new Error('Dados obrigatórios não fornecidos');
+        const missingFields = [];
+        if (!enrollmentData.studentId) missingFields.push('studentId');
+        if (!enrollmentData.mentoringId) missingFields.push('mentoringId');
+        if (!enrollmentData.startDate) missingFields.push('startDate');
+        if (!enrollmentData.responsibleMentor) missingFields.push('responsibleMentor');
+        
+        console.error('❌ Dados obrigatórios não fornecidos:', missingFields);
+        throw new Error(`Campos obrigatórios não fornecidos: ${missingFields.join(', ')}`);
       }
       
+      console.log('✅ Validação passou, enviando para o repository...');
       const newEnrollment = await repository.createEnrollment(enrollmentData);
       console.log('✅ Inscrição criada no repositório:', newEnrollment);
       
       // Refresh das inscrições para atualizar a lista
       await refreshEnrollments();
+      console.log('🔄 Lista de inscrições atualizada após criação');
       
       toast({
         title: "Sucesso",
