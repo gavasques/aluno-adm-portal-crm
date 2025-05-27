@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -148,11 +149,13 @@ const PendingSessionsCard = ({
     }
   };
 
-  const handleCalendlyScheduled = (sessionId: string) => (eventData: CalendlyEventPayload) => {
-    console.log('📅 Sessão agendada via Calendly:', sessionId, eventData);
+  const handleCalendlyScheduled = (eventData: CalendlyEventPayload) => {
+    console.log('📅 Sessão agendada via Calendly:', eventData);
     
-    // Marcar a sessão como agendada
-    onSessionScheduled(sessionId);
+    // Encontrar qual sessão foi agendada através do selectedSession
+    if (selectedSession) {
+      onSessionScheduled(selectedSession.id);
+    }
     
     toast({
       title: "Sucesso",
@@ -344,7 +347,7 @@ const PendingSessionsCard = ({
                         <CalendlyButton
                           mentorId={enrollment.responsibleMentor}
                           sessionId={session.id}
-                          onEventScheduled={handleCalendlyScheduled(session.id)}
+                          onEventScheduled={handleCalendlyScheduled}
                           variant="outline"
                           size="sm"
                           className="rounded-lg px-3 py-1.5 text-xs font-medium border-blue-200 text-blue-600 hover:bg-blue-50"
@@ -413,6 +416,7 @@ const PendingSessionsCard = ({
       {selectedSession && (
         <CalendlyWidget
           mentorId={enrollment.responsibleMentor}
+          sessionId={selectedSession.id}
           open={showCalendly}
           onOpenChange={setShowCalendly}
           onEventScheduled={handleCalendlyScheduled}
