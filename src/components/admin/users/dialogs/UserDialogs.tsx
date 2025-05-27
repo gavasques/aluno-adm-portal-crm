@@ -101,12 +101,12 @@ export const UserDialogs: React.FC<UserDialogsProps> = ({
         onConfirmToggleStatus={onConfirmToggleStatus}
       />
 
-      {/* Diálogo para redefinir senha */}
+      {/* Diálogo para redefinir senha - corrigindo a prop */}
       <ResetPasswordDialog
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
         userEmail={selectedUserEmail}
-        onConfirmResetPassword={onConfirmResetPassword}
+        onConfirmReset={onConfirmResetPassword}
       />
       
       {/* Diálogo para definir grupo de permissão */}

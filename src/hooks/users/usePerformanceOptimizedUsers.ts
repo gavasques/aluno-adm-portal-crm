@@ -77,7 +77,7 @@ export const usePerformanceOptimizedUsers = () => {
     return filtered;
   }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
 
-  // Stats memoizadas com cache
+  // Stats memoizadas com cache - corrigindo o tipo de retorno
   const stats = useMemo((): UserStats => {
     const cached = getCachedUserStats();
     if (cached) {
