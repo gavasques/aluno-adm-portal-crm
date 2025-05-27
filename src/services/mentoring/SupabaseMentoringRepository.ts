@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   MentoringCatalog, 
   StudentMentoringEnrollment, 
@@ -78,7 +78,7 @@ export class SupabaseMentoringRepository {
     return !error;
   }
 
-  private async getCatalogById(id: string): Promise<MentoringCatalog | null> {
+  async getCatalogById(id: string): Promise<MentoringCatalog | null> {
     const { data, error } = await supabase
       .from('mentoring_catalogs')
       .select('*')
