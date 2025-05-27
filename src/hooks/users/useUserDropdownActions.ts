@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { User } from '@/types/user.types';
 import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
@@ -25,33 +24,43 @@ export const useUserDropdownActions = () => {
 
   const handleViewDetails = useCallback((user: User) => {
     console.log('🔧 handleViewDetails executado para:', user.email);
+    console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showDetailsDialog });
     setSelectedUser(user);
     setShowDetailsDialog(true);
-  }, []);
+    console.log('🔧 Estado depois será:', { selectedUser: user.email, showDetailsDialog: true });
+  }, [selectedUser, showDetailsDialog]);
 
   const handleResetPassword = useCallback((user: User) => {
     console.log('🔧 handleResetPassword executado para:', user.email);
+    console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showResetDialog });
     setSelectedUser(user);
     setShowResetDialog(true);
-  }, []);
+    console.log('🔧 Estado depois será:', { selectedUser: user.email, showResetDialog: true });
+  }, [selectedUser, showResetDialog]);
 
   const handleDeleteUser = useCallback((user: User) => {
     console.log('🔧 handleDeleteUser executado para:', user.email);
+    console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showDeleteDialog });
     setSelectedUser(user);
     setShowDeleteDialog(true);
-  }, []);
+    console.log('🔧 Estado depois será:', { selectedUser: user.email, showDeleteDialog: true });
+  }, [selectedUser, showDeleteDialog]);
 
   const handleToggleUserStatus = useCallback((user: User) => {
     console.log('🔧 handleToggleUserStatus executado para:', user.email);
+    console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showStatusDialog });
     setSelectedUser(user);
     setShowStatusDialog(true);
-  }, []);
+    console.log('🔧 Estado depois será:', { selectedUser: user.email, showStatusDialog: true });
+  }, [selectedUser, showStatusDialog]);
 
   const handleSetPermissionGroup = useCallback((user: User) => {
     console.log('🔧 handleSetPermissionGroup executado para:', user.email);
+    console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showPermissionDialog });
     setSelectedUser(user);
     setShowPermissionDialog(true);
-  }, []);
+    console.log('🔧 Estado depois será:', { selectedUser: user.email, showPermissionDialog: true });
+  }, [selectedUser, showPermissionDialog]);
 
   const confirmDelete = useCallback(async () => {
     if (!selectedUser) return false;

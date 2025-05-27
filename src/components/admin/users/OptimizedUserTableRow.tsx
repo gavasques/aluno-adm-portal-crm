@@ -78,6 +78,33 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
     return "";
   };
 
+  const handleViewDetailsClick = () => {
+    console.log('🎯 VIEW DETAILS CLICKED - Executando handler para:', user.email);
+    onViewDetails(user);
+  };
+
+  const handleResetPasswordClick = () => {
+    console.log('🔑 RESET PASSWORD CLICKED - Executando handler para:', user.email);
+    onResetPassword(user);
+  };
+
+  const handleDeleteClick = () => {
+    console.log('🗑️ DELETE USER CLICKED - Executando handler para:', user.email);
+    onDeleteUser(user);
+  };
+
+  const handleToggleStatusClick = () => {
+    console.log('🔄 TOGGLE STATUS CLICKED - Executando handler para:', user.email);
+    onToggleUserStatus(user);
+  };
+
+  const handleSetPermissionGroupClick = () => {
+    console.log('🔐 SET PERMISSION GROUP CLICKED - Executando handler para:', user.email);
+    if (onSetPermissionGroup) {
+      onSetPermissionGroup(user);
+    }
+  };
+
   return (
     <TableRow className={getRowClass()}>
       <TableCell>
@@ -119,39 +146,25 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             <Button 
               variant="ghost" 
               className="h-8 w-8 p-0"
+              onClick={() => console.log('🔽 Dropdown trigger clicked for:', user.email)}
             >
               <span className="sr-only">Abrir menu</span>
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem 
-              onClick={() => {
-                console.log('🎯 VIEW DETAILS CLICKED para:', user.email);
-                onViewDetails(user);
-              }}
-            >
+            <DropdownMenuItem onClick={handleViewDetailsClick}>
               <Eye className="mr-2 h-4 w-4" />
               <span>Ver detalhes</span>
             </DropdownMenuItem>
             
-            <DropdownMenuItem 
-              onClick={() => {
-                console.log('🔑 RESET PASSWORD CLICKED para:', user.email);
-                onResetPassword(user);
-              }}
-            >
+            <DropdownMenuItem onClick={handleResetPasswordClick}>
               <KeyRound className="mr-2 h-4 w-4" />
               <span>Redefinir senha</span>
             </DropdownMenuItem>
 
             {onSetPermissionGroup && (
-              <DropdownMenuItem 
-                onClick={() => {
-                  console.log('🔐 SET PERMISSION GROUP CLICKED para:', user.email);
-                  onSetPermissionGroup(user);
-                }}
-              >
+              <DropdownMenuItem onClick={handleSetPermissionGroupClick}>
                 <Lock className="mr-2 h-4 w-4" />
                 <span>
                   {isTemporaryGroup ? "Atribuir grupo definitivo" : "Definir permissões"}
@@ -161,12 +174,7 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem 
-              onClick={() => {
-                console.log('🔄 TOGGLE STATUS CLICKED para:', user.email);
-                onToggleUserStatus(user);
-              }}
-            >
+            <DropdownMenuItem onClick={handleToggleStatusClick}>
               {isActive ? (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
@@ -180,13 +188,7 @@ export const OptimizedUserTableRow: React.FC<OptimizedUserTableRowProps> = ({
               )}
             </DropdownMenuItem>
 
-            <DropdownMenuItem 
-              onClick={() => {
-                console.log('🗑️ DELETE USER CLICKED para:', user.email);
-                onDeleteUser(user);
-              }}
-              className="text-red-600 focus:text-red-600 hover:text-red-600"
-            >
+            <DropdownMenuItem onClick={handleDeleteClick} className="text-red-600 focus:text-red-600 hover:text-red-600">
               <UserX className="mr-2 h-4 w-4" />
               <span>Excluir usuário</span>
             </DropdownMenuItem>

@@ -9,7 +9,11 @@ import { UserFilters } from "./filters/UserFilters";
 import UserActionButtons from "./UserActionButtons";
 import { OptimizedUserTable } from "./table/OptimizedUserTable";
 import { ValidatedUserDialogs } from "./dialogs/ValidatedUserDialogs";
-import { PerformanceOptimizedUserDialogs } from "./dialogs/PerformanceOptimizedUserDialogs";
+import UserDetailsDialog from "./UserDetailsDialog";
+import { UserDeleteDialog } from "./dialogs/UserDeleteDialog";
+import { UserStatusDialog } from "./dialogs/UserStatusDialog";
+import { ResetPasswordDialog } from "./dialogs/ResetPasswordDialog";
+import { UserPermissionGroupDialog } from "./dialogs/UserPermissionGroupDialog";
 
 export const OptimizedUsersPageContent: React.FC = () => {
   const {
@@ -35,19 +39,35 @@ export const OptimizedUsersPageContent: React.FC = () => {
 
   // Usar os handlers do useUserDropdownActions
   const {
+    selectedUser,
+    showDetailsDialog,
+    showDeleteDialog,
+    showStatusDialog,
+    showResetDialog,
+    showPermissionDialog,
+    setShowDetailsDialog,
+    setShowDeleteDialog,
+    setShowStatusDialog,
+    setShowResetDialog,
+    setShowPermissionDialog,
     handleViewDetails,
     handleResetPassword,
     handleDeleteUser,
     handleToggleUserStatus,
-    handleSetPermissionGroup
+    handleSetPermissionGroup,
+    confirmDelete,
+    confirmToggleStatus,
+    confirmResetPassword,
+    confirmSetPermissionGroup
   } = useUserDropdownActions();
 
-  console.log('🔧 OptimizedUsersPageContent - Handlers criados:', {
-    handleViewDetails: !!handleViewDetails,
-    handleResetPassword: !!handleResetPassword,
-    handleDeleteUser: !!handleDeleteUser,
-    handleToggleUserStatus: !!handleToggleUserStatus,
-    handleSetPermissionGroup: !!handleSetPermissionGroup
+  console.log('🔧 OptimizedUsersPageContent - Estados dos diálogos:', {
+    selectedUser: selectedUser?.email,
+    showDetailsDialog,
+    showDeleteDialog,
+    showStatusDialog,
+    showResetDialog,
+    showPermissionDialog
   });
 
   return (
@@ -91,7 +111,47 @@ export const OptimizedUsersPageContent: React.FC = () => {
         onRefresh={refreshUsers}
       />
 
-      <PerformanceOptimizedUserDialogs />
+      {/* Diálogos controlados diretamente pelos estados do useUserDropdownActions */}
+      {selectedUser && (
+        <>
+          <UserDetailsDialog
+            open={showDetailsDialog}
+            onOpenChange={setShowDetailsDialog}
+            user={selectedUser}
+          />
+
+          <UserDeleteDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            userEmail={selectedUser.email}
+            onConfirmDelete={confirmDelete}
+          />
+
+          <UserStatusDialog
+            open={showStatusDialog}
+            onOpenChange={setShowStatusDialog}
+            userEmail={selectedUser.email}
+            currentStatus={selectedUser.status}
+            onConfirmToggleStatus={confirmToggleStatus}
+          />
+
+          <ResetPasswordDialog
+            open={showResetDialog}
+            onOpenChange={setShowResetDialog}
+            userEmail={selectedUser.email}
+            onConfirmReset={confirmResetPassword}
+          />
+
+          <UserPermissionGroupDialog
+            open={showPermissionDialog}
+            onOpenChange={setShowPermissionDialog}
+            userId={selectedUser.id}
+            userEmail={selectedUser.email}
+            currentGroupId={selectedUser.permission_group_id || null}
+            onConfirmSetPermissionGroup={confirmSetPermissionGroup}
+          />
+        </>
+      )}
     </div>
   );
 };
