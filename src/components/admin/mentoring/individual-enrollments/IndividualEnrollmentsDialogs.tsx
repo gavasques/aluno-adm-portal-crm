@@ -38,6 +38,23 @@ export const IndividualEnrollmentsDialogs = ({
   onExtensionSubmit,
   onSessionUpdated
 }: IndividualEnrollmentsDialogsProps) => {
+  
+  const handleAddExtension = (enrollment: StudentMentoringEnrollment) => {
+    // Simular a adição de extensão da mentoria (baseada nas extensões do catálogo)
+    console.log('Adicionar extensão da mentoria para:', enrollment.id);
+    // Aqui você pode abrir um dialog específico para extensões da mentoria
+  };
+
+  const handleAddCustomMonths = (enrollment: StudentMentoringEnrollment) => {
+    // Simular a adição de meses avulsos
+    const customExtension: CreateExtensionData = {
+      enrollmentId: enrollment.id,
+      extensionMonths: 1,
+      notes: 'Mês avulso adicionado'
+    };
+    onExtensionSubmit(customExtension);
+  };
+
   return (
     <>
       <Dialog open={showForm} onOpenChange={(open) => {
@@ -66,6 +83,8 @@ export const IndividualEnrollmentsDialogs = ({
               enrollment={editingEnrollment}
               onSubmit={onEditSubmit}
               onCancel={onEditClose}
+              onAddExtension={handleAddExtension}
+              onAddCustomMonths={handleAddCustomMonths}
             />
           )}
         </DialogContent>

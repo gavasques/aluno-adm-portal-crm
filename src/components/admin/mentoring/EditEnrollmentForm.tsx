@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { User, GraduationCap, Users, Calendar, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, GraduationCap, Users, Calendar, AlertCircle, Plus, Clock, Gift } from 'lucide-react';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
+import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 
 const editEnrollmentSchema = z.object({
@@ -30,10 +32,24 @@ interface EditEnrollmentFormProps {
   onSubmit: (data: EditEnrollmentFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  onAddExtension?: (enrollment: StudentMentoringEnrollment) => void;
+  onAddCustomMonths?: (enrollment: StudentMentoringEnrollment) => void;
 }
 
-const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditEnrollmentFormProps) => {
+const EditEnrollmentForm = ({ 
+  enrollment, 
+  onSubmit, 
+  onCancel, 
+  isLoading,
+  onAddExtension,
+  onAddCustomMonths 
+}: EditEnrollmentFormProps) => {
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
+  const { students } = useStudentsForEnrollment();
+
+  // Buscar informações do estudante
+  const student = students?.find(s => s.id === enrollment.studentId);
+  const studentName = student?.name || student?.email || `Aluno ${enrollment.studentId.slice(-8)}`;
 
   const form = useForm<EditEnrollmentFormData>({
     resolver: zodResolver(editEnrollmentSchema),
@@ -51,6 +67,18 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
     onSubmit(data);
   };
 
+  const handleAddExtension = () => {
+    if (onAddExtension) {
+      onAddExtension(enrollment);
+    }
+  };
+
+  const handleAddCustomMonths = () => {
+    if (onAddCustomMonths) {
+      onAddCustomMonths(enrollment);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Informações não editáveis */}
@@ -60,14 +88,14 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
         {/* Aluno */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-            B
+            {studentName.charAt(0).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-gray-400" />
-              <span className="font-medium text-sm">Bianca Mentora</span>
+              <span className="font-medium text-sm">{studentName}</span>
             </div>
-            <p className="text-xs text-gray-500">bianca.c.arantes@gmail.com</p>
+            <p className="text-xs text-gray-500">{student?.email || enrollment.studentId}</p>
           </div>
           <Badge variant="outline" className="ml-auto">Não editável</Badge>
         </div>
@@ -91,6 +119,61 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
         </div>
       </div>
 
+      {/* Extensões e Meses Extras */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Gift className="h-5 w-5" />
+            Extensões e Meses Extras
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Extensões existentes */}
+          {enrollment.extensions && enrollment.extensions.length > 0 && (
+            <div>
+              <h4 className="font-medium text-sm text-gray-700 mb-2">Extensões Aplicadas:</h4>
+              <div className="space-y-2">
+                {enrollment.extensions.map((extension, index) => (
+                  <div key={index} className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-800">
+                        +{extension.extensionMonths} {extension.extensionMonths === 1 ? 'mês' : 'meses'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-green-600">
+                      {new Date(extension.appliedDate).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Botões para adicionar extensões */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddExtension}
+              className="flex items-center gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar Extensão da Mentoria
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddCustomMonths}
+              className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar Meses Avulsos
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Formulário editável */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -112,7 +195,7 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
                   </FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value}
                     disabled={mentorsLoading}
                   >
                     <FormControl>
@@ -157,7 +240,7 @@ const EditEnrollmentForm = ({ enrollment, onSubmit, onCancel, isLoading }: EditE
                     <AlertCircle className="h-4 w-4" />
                     Status *
                   </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Selecione o status" />
