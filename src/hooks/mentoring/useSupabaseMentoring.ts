@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MentoringCatalog, StudentMentoringEnrollment, MentoringSession, MentoringMaterial, CreateExtensionData } from '@/types/mentoring.types';
 import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { useToast } from '@/hooks/use-toast';
@@ -14,39 +14,62 @@ export const useSupabaseMentoring = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Carregar dados automaticamente na inicialização
+  useEffect(() => {
+    console.log('🚀 useSupabaseMentoring - Inicializando e carregando dados...');
+    refreshEnrollments();
+    refreshCatalogs();
+  }, []);
+
   const refreshCatalogs = useCallback(async () => {
     try {
+      setLoading(true);
+      console.log('🔄 Buscando catálogos...');
       const data = await repository.getCatalogs();
+      console.log('✅ Catálogos carregados:', data.length);
       setCatalogs(data);
     } catch (error) {
-      console.error('Error refreshing catalogs:', error);
+      console.error('❌ Erro ao buscar catálogos:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const refreshEnrollments = useCallback(async () => {
     try {
+      setLoading(true);
+      console.log('🔄 Buscando inscrições...');
       const data = await repository.getEnrollments();
+      console.log('✅ Inscrições carregadas:', data.length);
       setEnrollments(data);
     } catch (error) {
-      console.error('Error refreshing enrollments:', error);
+      console.error('❌ Erro ao buscar inscrições:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const refreshSessions = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await repository.getSessions();
       setSessions(data);
     } catch (error) {
       console.error('Error refreshing sessions:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const refreshMaterials = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await repository.getMaterials();
       setMaterials(data);
     } catch (error) {
       console.error('Error refreshing materials:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 

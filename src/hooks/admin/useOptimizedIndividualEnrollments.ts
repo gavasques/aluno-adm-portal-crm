@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
 import { usePagination } from '@/hooks/usePagination';
 import { CreateExtensionData, StudentMentoringEnrollment } from '@/types/mentoring.types';
@@ -28,7 +28,7 @@ interface UseOptimizedIndividualEnrollmentsResult {
   handleClearFilters: () => void;
   setViewMode: (mode: 'cards' | 'list') => void;
   filteredEnrollments: StudentMentoringEnrollment[];
-  refreshData: () => Promise<void>; // Adicionado
+  refreshData: () => Promise<void>;
 }
 
 export const useOptimizedIndividualEnrollments = (
@@ -42,14 +42,28 @@ export const useOptimizedIndividualEnrollments = (
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
+  // Carregar dados na inicialização
+  useEffect(() => {
+    console.log('🔄 useOptimizedIndividualEnrollments - Carregando dados iniciais...');
+    refreshEnrollments();
+  }, [refreshEnrollments]);
+
+  // Debug log para ver os dados carregados
+  useEffect(() => {
+    console.log('📊 useOptimizedIndividualEnrollments - enrollments:', enrollments?.length || 0);
+    console.log('📊 useOptimizedIndividualEnrollments - loading:', loading);
+  }, [enrollments, loading]);
+
   // Filtrar apenas inscrições individuais (sem groupId)
   const individualEnrollments = useMemo(() => {
-    return enrollments.filter(e => !e.groupId);
+    const filtered = enrollments.filter(e => !e.groupId);
+    console.log('🔍 Inscrições individuais filtradas:', filtered.length);
+    return filtered;
   }, [enrollments]);
 
   // Aplicar filtros
   const filteredEnrollments = useMemo(() => {
-    return individualEnrollments.filter(enrollment => {
+    const filtered = individualEnrollments.filter(enrollment => {
       const matchesSearch = !searchTerm || 
         enrollment.mentoring.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,6 +74,9 @@ export const useOptimizedIndividualEnrollments = (
       
       return matchesSearch && matchesStatus && matchesType;
     });
+    
+    console.log('🎯 Inscrições após filtros:', filtered.length);
+    return filtered;
   }, [individualEnrollments, searchTerm, statusFilter, typeFilter]);
 
   // Aplicar paginação
@@ -110,6 +127,7 @@ export const useOptimizedIndividualEnrollments = (
 
   // Método refreshData adicionado
   const refreshData = useCallback(async () => {
+    console.log('🔄 useOptimizedIndividualEnrollments - refreshData chamado');
     await refreshEnrollments();
   }, [refreshEnrollments]);
 
