@@ -190,8 +190,8 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full p-0 gap-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
@@ -208,9 +208,9 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="p-6 pt-0">
+        <div className="flex-1 overflow-hidden">
           {isLoading ? (
-            <div className="flex items-center justify-center h-96">
+            <div className="flex items-center justify-center h-[500px]">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600">Carregando calendário...</p>
@@ -219,7 +219,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
           ) : (
             <div 
               ref={containerRef}
-              className={cn("calendly-inline-widget", "min-h-[600px] w-full", className)}
+              className={cn("calendly-inline-widget w-full h-[calc(95vh-120px)] min-h-[500px]", className)}
             />
           )}
         </div>
