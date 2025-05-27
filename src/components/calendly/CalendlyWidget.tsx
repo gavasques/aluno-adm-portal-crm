@@ -19,6 +19,7 @@ interface CalendlyWidgetProps {
     totalSessions: number;
   };
   sessionId?: string;
+  onSessionUpdated?: () => void; // Nova prop para refresh
 }
 
 declare global {
@@ -38,7 +39,8 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
   className,
   studentName,
   sessionInfo,
-  sessionId
+  sessionId,
+  onSessionUpdated
 }) => {
   const { user } = useAuth();
   const { getCalendlyConfig, buildCalendlyUrl, saveCalendlyEvent } = useCalendly();
@@ -186,7 +188,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     }
   }, [open, calendlyUrl, user, configLoaded, studentName, sessionInfo]);
 
-  // Corrigir listener para eventos do Calendly
+  // Listener para eventos do Calendly com refresh automático
   useEffect(() => {
     const handleCalendlyMessage = async (event: MessageEvent) => {
       if (event.origin !== 'https://calendly.com') return;
@@ -201,7 +203,6 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
         try {
           setIsLoading(true);
           
-          // Corrigir a estrutura dos dados do evento agendado
           const eventDetails = {
             calendly_event_uri: payload.payload.uri || '',
             student_id: user?.id || '',
@@ -229,10 +230,15 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
 
           console.log('✅ Agendamento processado com sucesso!');
           
+          // Chamar refresh automático
+          if (onSessionUpdated) {
+            onSessionUpdated();
+          }
+          
           setTimeout(() => {
             onOpenChange(false);
             setIsLoading(false);
-          }, 2000);
+          }, 1000);
 
         } catch (err) {
           console.error('❌ Erro ao processar evento do Calendly:', err);
@@ -249,9 +255,9 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     return () => {
       window.removeEventListener('message', handleCalendlyMessage);
     };
-  }, [open, user, mentorId, sessionId, saveCalendlyEvent, onEventScheduled, onOpenChange]);
+  }, [open, user, mentorId, sessionId, saveCalendlyEvent, onEventScheduled, onOpenChange, onSessionUpdated]);
 
-  // Corrigir função para atualizar a sessão com dados do Calendly
+  // Função para atualizar a sessão com dados do Calendly
   const updateSessionFromCalendly = async (sessionId: string, payload: CalendlyEventPayload) => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');

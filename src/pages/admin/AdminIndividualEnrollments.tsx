@@ -31,7 +31,8 @@ const AdminIndividualEnrollments = () => {
     handleTypeFilterChange,
     handleClearFilters,
     setViewMode,
-    filteredEnrollments
+    filteredEnrollments,
+    refreshData
   } = useOptimizedIndividualEnrollments(currentPage, 12);
 
   const {
@@ -74,6 +75,7 @@ const AdminIndividualEnrollments = () => {
           description: "Inscrição excluída com sucesso!",
         });
         await refreshEnrollments();
+        await refreshData(); // Refresh local também
       } else {
         toast({
           title: "Erro",
@@ -89,13 +91,12 @@ const AdminIndividualEnrollments = () => {
         variant: "destructive",
       });
     }
-  }, [deleteEnrollment, refreshEnrollments, toast]);
+  }, [deleteEnrollment, refreshEnrollments, refreshData, toast]);
 
   const handleEditSubmit = useCallback(async (data: any) => {
     try {
       console.log('Editando inscrição com dados:', data);
       
-      // Simular sucesso da edição - aqui você implementaria a lógica real
       toast({
         title: "Sucesso",
         description: "Inscrição editada com sucesso!",
@@ -103,6 +104,7 @@ const AdminIndividualEnrollments = () => {
       
       closeEdit();
       await refreshEnrollments();
+      await refreshData();
     } catch (error) {
       console.error('Error editing enrollment:', error);
       toast({
@@ -111,7 +113,7 @@ const AdminIndividualEnrollments = () => {
         variant: "destructive",
       });
     }
-  }, [closeEdit, refreshEnrollments, toast]);
+  }, [closeEdit, refreshEnrollments, refreshData, toast]);
 
   const handleExtensionSubmit = useCallback(async (data: any) => {
     try {
@@ -122,6 +124,7 @@ const AdminIndividualEnrollments = () => {
           description: "Extensão adicionada com sucesso!",
         });
         await refreshEnrollments();
+        await refreshData();
         closeExtension();
       }
     } catch (error) {
@@ -132,7 +135,7 @@ const AdminIndividualEnrollments = () => {
         variant: "destructive",
       });
     }
-  }, [addExtension, refreshEnrollments, toast, closeExtension]);
+  }, [addExtension, refreshEnrollments, refreshData, toast, closeExtension]);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -142,7 +145,15 @@ const AdminIndividualEnrollments = () => {
     console.log('Enrollment created successfully');
     closeForm();
     await refreshEnrollments();
-  }, [closeForm, refreshEnrollments]);
+    await refreshData();
+  }, [closeForm, refreshEnrollments, refreshData]);
+
+  // Handler para refresh automático após agendamento
+  const handleSessionUpdated = useCallback(async () => {
+    console.log('🔄 Atualizando dados após agendamento...');
+    await refreshEnrollments();
+    await refreshData();
+  }, [refreshEnrollments, refreshData]);
 
   if (isLoading) {
     return <IndividualEnrollmentsLoading />;
@@ -185,6 +196,7 @@ const AdminIndividualEnrollments = () => {
           onAddExtension={handleAddExtension}
           onToggleSelection={toggleEnrollmentSelection}
           onPageChange={handlePageChange}
+          onSessionUpdated={handleSessionUpdated}
         />
       )}
 
@@ -201,6 +213,7 @@ const AdminIndividualEnrollments = () => {
         onCreateSuccess={handleCreateSuccess}
         onEditSubmit={handleEditSubmit}
         onExtensionSubmit={handleExtensionSubmit}
+        onSessionUpdated={handleSessionUpdated}
       />
     </div>
   );

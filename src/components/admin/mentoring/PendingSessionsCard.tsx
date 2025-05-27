@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle, Trash2, Lock } from 'lucide-react';
+import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle, Trash2, Lock, Play } from 'lucide-react';
 import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { CalendlyWidget } from '@/components/calendly/CalendlyWidget';
 import CreatePendingSessionForm from './CreatePendingSessionForm';
@@ -15,6 +16,8 @@ import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment
 import { CalendlyButton } from '@/components/calendly/CalendlyButton';
 import { CalendlyEventPayload } from '@/types/calendly.types';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface PendingSessionsCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -24,6 +27,7 @@ interface PendingSessionsCardProps {
   onDeleteSession?: (sessionId: string) => void;
   isLoading?: boolean;
   allSessions?: MentoringSession[];
+  onSessionUpdated?: () => void; // Nova prop para refresh
 }
 
 const PendingSessionsCard = ({ 
@@ -33,7 +37,8 @@ const PendingSessionsCard = ({
   onSessionScheduled,
   onDeleteSession,
   isLoading,
-  allSessions = []
+  allSessions = [],
+  onSessionUpdated
 }: PendingSessionsCardProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { toast } = useToast();
@@ -44,11 +49,9 @@ const PendingSessionsCard = ({
   const student = students?.find(s => s.id === enrollment.studentId);
   const studentName = student?.name || student?.email || 'Aluno';
 
-  // Buscar informações do mentor pelo responsibleMentor ID
   const mentor = mentors?.find(m => m.id === enrollment.responsibleMentor);
   const mentorName = mentor?.name || 'Mentor não encontrado';
   
-  // Usar o UUID do mentor se encontrado, senão usar o campo responsibleMentor como fallback
   const mentorId = mentor?.id || enrollment.responsibleMentor;
 
   console.log('🔍 PendingSessionsCard - Debug mentor:', {
@@ -61,19 +64,12 @@ const PendingSessionsCard = ({
 
   // Calcular o total de sessões já criadas (todas as sessões da inscrição)
   const totalSessionsCreated = allSessions.filter(session => session.enrollmentId === enrollment.id).length;
-  
-  // Verificar se pode criar mais sessões
   const canCreateMoreSessions = totalSessionsCreated < enrollment.totalSessions;
-  
-  // Calcular o próximo número de sessão
   const nextSessionNumber = totalSessionsCreated + 1;
 
-  // Verificar se uma sessão pode ser agendada (lógica sequencial)
   const canScheduleSession = (sessionNumber: number): boolean => {
-    // Sempre pode agendar a primeira sessão
     if (sessionNumber === 1) return true;
     
-    // Para outras sessões, verificar se todas as anteriores estão agendadas ou concluídas
     for (let i = 1; i < sessionNumber; i++) {
       const previousSession = allSessions.find(s => 
         s.enrollmentId === enrollment.id && 
@@ -91,7 +87,6 @@ const PendingSessionsCard = ({
     return true;
   };
 
-  // Verificar se existe uma sessão não agendada anterior
   const hasUnscheduledPreviousSession = (sessionNumber: number): boolean => {
     for (let i = 1; i < sessionNumber; i++) {
       const previousSession = allSessions.find(s => 
@@ -107,7 +102,6 @@ const PendingSessionsCard = ({
   };
 
   const handleCreateSession = (data: any) => {
-    // Adicionar o número da sessão correto aos dados
     const sessionData = {
       ...data,
       sessionNumber: nextSessionNumber,
@@ -136,7 +130,47 @@ const PendingSessionsCard = ({
     });
   };
 
-  // Ordenar sessões pendentes por número
+  // Novo handler para concluir sessão
+  const handleCompleteSession = async (session: MentoringSession) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { error } = await supabase
+        .from('mentoring_sessions')
+        .update({ 
+          status: 'concluida',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', session.id);
+
+      if (error) {
+        console.error('❌ Erro ao concluir sessão:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao concluir sessão. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Sessão marcada como concluída!",
+      });
+      
+      if (onSessionUpdated) {
+        onSessionUpdated();
+      }
+    } catch (error) {
+      console.error('❌ Erro ao concluir sessão:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao concluir sessão. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const sortedPendingSessions = [...pendingSessions].sort((a, b) => a.sessionNumber - b.sessionNumber);
 
   return (
@@ -170,7 +204,6 @@ const PendingSessionsCard = ({
           )}
         </div>
 
-        {/* Indicador do Status do Calendly */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
@@ -200,7 +233,6 @@ const PendingSessionsCard = ({
           </div>
         </div>
 
-        {/* Aviso sobre agendamento sequencial */}
         {sortedPendingSessions.length > 1 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm">
             <div className="flex items-start gap-3">
@@ -217,6 +249,7 @@ const PendingSessionsCard = ({
           </div>
         )}
 
+        {/* Sessões aguardando agendamento */}
         {sortedPendingSessions.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
             <div className="p-3 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -240,12 +273,15 @@ const PendingSessionsCard = ({
             {sortedPendingSessions.map((session) => {
               const canSchedule = canScheduleSession(session.sessionNumber);
               const hasUnscheduledPrevious = hasUnscheduledPreviousSession(session.sessionNumber);
+              const isScheduled = session.status === 'agendada';
               
               return (
                 <div
                   key={session.id}
                   className={`group bg-white border rounded-xl p-4 hover:shadow-md transition-all duration-200 ${
-                    canSchedule 
+                    isScheduled
+                      ? 'border-green-200 hover:border-green-300 bg-green-50'
+                      : canSchedule 
                       ? 'border-amber-200 hover:border-amber-300' 
                       : 'border-gray-200 bg-gray-50'
                   }`}
@@ -253,11 +289,15 @@ const PendingSessionsCard = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg transition-colors ${
-                        canSchedule 
+                        isScheduled
+                          ? 'bg-green-100 group-hover:bg-green-200'
+                          : canSchedule 
                           ? 'bg-amber-100 group-hover:bg-amber-200' 
                           : 'bg-gray-100'
                       }`}>
-                        {canSchedule ? (
+                        {isScheduled ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : canSchedule ? (
                           <Video className="h-4 w-4 text-amber-600" />
                         ) : (
                           <Lock className="h-4 w-4 text-gray-500" />
@@ -265,25 +305,38 @@ const PendingSessionsCard = ({
                       </div>
                       <div>
                         <h4 className={`font-medium text-sm ${
+                          isScheduled ? 'text-green-900' :
                           canSchedule ? 'text-gray-900' : 'text-gray-500'
                         }`}>
                           {session.title}
                         </h4>
                         <div className="flex items-center gap-3 text-xs mt-1">
                           <span className={`flex items-center gap-1 ${
+                            isScheduled ? 'text-green-600' :
                             canSchedule ? 'text-gray-500' : 'text-gray-400'
                           }`}>
                             <Clock className="h-3 w-3" />
                             {session.durationMinutes} min
                           </span>
+                          
+                          {/* Mostrar data/hora se agendada */}
+                          {isScheduled && session.scheduledDate && (
+                            <span className="flex items-center gap-1 text-green-600 font-medium">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(session.scheduledDate), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                            </span>
+                          )}
+                          
                           <Badge variant="outline" className={`text-xs px-2 py-0 ${
-                            canSchedule 
+                            isScheduled
+                              ? 'text-green-700 border-green-300 bg-green-100'
+                              : canSchedule 
                               ? 'text-amber-700 border-amber-300 bg-amber-50' 
                               : 'text-gray-500 border-gray-300 bg-gray-50'
                           }`}>
-                            {canSchedule ? 'Aguardando' : 'Bloqueada'}
+                            {isScheduled ? 'Agendada' : canSchedule ? 'Aguardando' : 'Bloqueada'}
                           </Badge>
-                          {hasUnscheduledPrevious && (
+                          {hasUnscheduledPrevious && !isScheduled && (
                             <span className="text-xs text-red-600 font-medium">
                               Aguarde sessão anterior
                             </span>
@@ -292,26 +345,37 @@ const PendingSessionsCard = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {canSchedule && (
-                        <CalendlyButton
-                          mentorId={mentorId}
-                          sessionId={session.id}
-                          onEventScheduled={handleCalendlyScheduled}
-                          variant="default"
+                      {/* Botão para sessões agendadas */}
+                      {isScheduled && (
+                        <Button
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm hover:shadow-md"
+                          onClick={() => handleCompleteSession(session)}
+                          className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm hover:shadow-md"
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          Concluir
+                        </Button>
+                      )}
+                      
+                      {/* Botão para agendar */}
+                      {canSchedule && !isScheduled && (
+                        <CalendlyWidget
+                          mentorId={mentorId}
+                          open={false}
+                          onOpenChange={() => {}}
+                          onEventScheduled={handleCalendlyScheduled}
+                          sessionId={session.id}
                           studentName={studentName}
                           sessionInfo={{
                             sessionNumber: session.sessionNumber,
                             totalSessions: enrollment.totalSessions
                           }}
-                        >
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Agendar Sessão
-                        </CalendlyButton>
+                          onSessionUpdated={onSessionUpdated}
+                        />
                       )}
                       
-                      {!canSchedule && (
+                      {/* Botão bloqueado */}
+                      {!canSchedule && !isScheduled && (
                         <Button
                           size="sm"
                           disabled
@@ -322,6 +386,7 @@ const PendingSessionsCard = ({
                         </Button>
                       )}
                       
+                      {/* Botão deletar */}
                       {onDeleteSession && (
                         <Button
                           size="sm"
