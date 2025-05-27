@@ -14,6 +14,7 @@ import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { EnrollmentStatus } from './EnrollmentStatus';
 import { EnrollmentProgress } from './EnrollmentProgress';
 import { EnrollmentActions } from './EnrollmentActions';
+import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { cn } from '@/lib/utils';
 
 interface ModernIndividualEnrollmentCardProps {
@@ -35,15 +36,14 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
   onToggleSelection,
   isSelected
 }) => {
+  const { students } = useStudentsForEnrollment();
+  
   // Calcular dias restantes
   const daysRemaining = differenceInDays(new Date(enrollment.endDate), new Date());
 
-  // Função para obter o nome do aluno - temporariamente usando um nome fixo
-  // TODO: Implementar busca real do nome do aluno via API
-  const getStudentName = (studentId: string) => {
-    // Por enquanto, vamos usar um nome genérico baseado no ID
-    return `Aluno ${studentId.slice(-8)}`;
-  };
+  // Buscar informações do estudante
+  const student = students?.find(s => s.id === enrollment.studentId);
+  const studentName = student?.name || student?.email || `Aluno ${enrollment.studentId.slice(-8)}`;
 
   return (
     <Card 
@@ -60,7 +60,7 @@ export const ModernIndividualEnrollmentCard: React.FC<ModernIndividualEnrollment
               <User className="h-4 w-4 text-blue-600" />
             </div>
             <h3 className="font-medium line-clamp-1">
-              {getStudentName(enrollment.studentId)}
+              {studentName}
             </h3>
           </div>
           
