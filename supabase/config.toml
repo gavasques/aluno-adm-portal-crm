@@ -35,6 +35,9 @@ enable_signup = true
 [functions.list-users]
 verify_jwt = true
 
+[functions.create-user]
+verify_jwt = true
+
 [functions.fix-permission-groups-policy]
 verify_jwt = true
 
