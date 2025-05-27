@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
 import { ModernIndividualEnrollmentCard } from '../enrollments/ModernIndividualEnrollmentCard';
 import { EnrollmentsList } from '../enrollments/EnrollmentsList';
-import { Pagination } from '@/components/ui/pagination';
+import { EnrollmentsPagination } from '../enrollments/EnrollmentsPagination';
 
 interface OptimizedIndividualEnrollmentsContentProps {
   paginatedEnrollments: StudentMentoringEnrollment[];
@@ -74,18 +74,14 @@ export const OptimizedIndividualEnrollmentsContent = memo<OptimizedIndividualEnr
 
       {/* Paginação */}
       {pageInfo.totalPages > 1 && (
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-700">
-            Mostrando {pageInfo.startItem} a {pageInfo.endItem} de {pageInfo.totalItems} inscrições
-          </div>
-          <Pagination
-            currentPage={pageInfo.currentPage}
-            totalPages={pageInfo.totalPages}
-            onPageChange={onPageChange}
-            hasNextPage={pageInfo.hasNextPage}
-            hasPreviousPage={pageInfo.hasPreviousPage}
-          />
-        </div>
+        <EnrollmentsPagination
+          currentPage={pageInfo.currentPage}
+          totalPages={pageInfo.totalPages}
+          onPageChange={onPageChange}
+          totalItems={pageInfo.totalItems}
+          startIndex={pageInfo.startItem}
+          endIndex={pageInfo.endItem}
+        />
       )}
     </div>
   );
