@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
@@ -31,10 +32,13 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
     endDate: '',
     responsibleMentor: '',
     paymentStatus: 'pendente',
-    observations: ''
+    observations: '',
+    selectedExtensions: [] as string[]
   });
 
-  const calculateEndDate = (startDate: string, mentoringId: string) => {
+  const selectedMentoring = catalogs.find(c => c.id === formData.mentoringId);
+
+  const calculateEndDate = (startDate: string, mentoringId: string, extensions: string[] = []) => {
     if (!startDate || !mentoringId) return '';
     
     const mentoring = catalogs.find(c => c.id === mentoringId);
@@ -42,26 +46,71 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
     
     const start = new Date(startDate);
     const end = new Date(start);
-    end.setMonth(end.getMonth() + mentoring.durationMonths);
     
+    // Duração base da mentoria
+    let totalMonths = mentoring.durationMonths;
+    
+    // Adicionar meses das extensões selecionadas
+    if (mentoring.extensions && extensions.length > 0) {
+      extensions.forEach(extId => {
+        const extension = mentoring.extensions?.find(ext => ext.id === extId);
+        if (extension) {
+          totalMonths += extension.months;
+        }
+      });
+    }
+    
+    end.setMonth(end.getMonth() + totalMonths);
     return end.toISOString().split('T')[0];
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const calculateTotalSessions = (mentoringId: string, extensions: string[] = []) => {
+    const mentoring = catalogs.find(c => c.id === mentoringId);
+    if (!mentoring) return 0;
+    
+    let totalSessions = mentoring.numberOfSessions;
+    
+    if (mentoring.extensions && extensions.length > 0) {
+      extensions.forEach(extId => {
+        const extension = mentoring.extensions?.find(ext => ext.id === extId);
+        if (extension) {
+          totalSessions += extension.totalSessions || 0;
+        }
+      });
+    }
+    
+    return totalSessions;
+  };
+
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
       
-      // Auto-calculate end date when start date or mentoring changes
-      if (field === 'startDate' || field === 'mentoringId') {
+      // Auto-calculate end date when start date, mentoring or extensions change
+      if (field === 'startDate' || field === 'mentoringId' || field === 'selectedExtensions') {
         const endDate = calculateEndDate(
-          field === 'startDate' ? value : updated.startDate,
-          field === 'mentoringId' ? value : updated.mentoringId
+          field === 'startDate' ? value as string : updated.startDate,
+          field === 'mentoringId' ? value as string : updated.mentoringId,
+          field === 'selectedExtensions' ? value as string[] : updated.selectedExtensions
         );
         updated.endDate = endDate;
       }
       
+      // Reset extensions when mentoring changes
+      if (field === 'mentoringId') {
+        updated.selectedExtensions = [];
+      }
+      
       return updated;
     });
+  };
+
+  const handleExtensionToggle = (extensionId: string, checked: boolean) => {
+    const newExtensions = checked 
+      ? [...formData.selectedExtensions, extensionId]
+      : formData.selectedExtensions.filter(id => id !== extensionId);
+    
+    handleInputChange('selectedExtensions', newExtensions);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,6 +136,8 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         return;
       }
 
+      const totalSessions = calculateTotalSessions(formData.mentoringId, formData.selectedExtensions);
+
       await createEnrollment({
         studentId: formData.studentId,
         mentoringId: formData.mentoringId,
@@ -94,7 +145,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         enrollmentDate: formData.enrollmentDate,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        totalSessions: selectedMentoring.numberOfSessions,
+        totalSessions: totalSessions,
         responsibleMentor: formData.responsibleMentor,
         paymentStatus: formData.paymentStatus,
         observations: formData.observations || undefined
@@ -110,7 +161,8 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         endDate: '',
         responsibleMentor: '',
         paymentStatus: 'pendente',
-        observations: ''
+        observations: '',
+        selectedExtensions: []
       });
 
       onSuccess?.();
@@ -168,6 +220,45 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
               </Select>
             </div>
           </div>
+
+          {/* Extensões disponíveis */}
+          {selectedMentoring?.extensions && selectedMentoring.extensions.length > 0 && (
+            <div className="space-y-3">
+              <Label>Extensões Disponíveis</Label>
+              <div className="grid grid-cols-1 gap-3 p-4 border rounded-lg bg-gray-50">
+                {selectedMentoring.extensions.map((extension) => (
+                  <div key={extension.id} className="flex items-start space-x-3">
+                    <Checkbox
+                      id={`extension-${extension.id}`}
+                      checked={formData.selectedExtensions.includes(extension.id)}
+                      onCheckedChange={(checked) => 
+                        handleExtensionToggle(extension.id, checked as boolean)
+                      }
+                    />
+                    <div className="flex-1 min-w-0">
+                      <label 
+                        htmlFor={`extension-${extension.id}`}
+                        className="text-sm font-medium text-gray-900 cursor-pointer"
+                      >
+                        +{extension.months} meses (+{extension.totalSessions || 0} sessões)
+                      </label>
+                      {extension.description && (
+                        <p className="text-xs text-gray-600 mt-1">{extension.description}</p>
+                      )}
+                      <p className="text-sm font-medium text-green-600 mt-1">
+                        R$ {extension.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {formData.selectedExtensions.length > 0 && (
+                <div className="text-sm text-blue-600 font-medium">
+                  Total de sessões: {calculateTotalSessions(formData.mentoringId, formData.selectedExtensions)}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
