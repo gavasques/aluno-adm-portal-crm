@@ -35,14 +35,23 @@ function App() {
             <AuthProvider>
               <Toaster />
               <Routes>
-                <Route path="/" element={
-                  <Layout isAdmin={false}>
-                    <Home />
-                  </Layout>
-                } />
+                <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/complete-registration" element={<CompleteRegistration />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Rotas protegidas para alunos */}
+                <Route path="/aluno" element={
+                  <RouteGuard requireAdminAccess={false}>
+                    <Layout isAdmin={false}>
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold">Dashboard do Aluno</h1>
+                        <p>Bem-vindo ao portal do aluno!</p>
+                      </div>
+                    </Layout>
+                  </RouteGuard>
+                } />
+                
                 <Route path="/profile" element={
                   <RouteGuard requireAdminAccess={false}>
                     <Layout isAdmin={false}>
