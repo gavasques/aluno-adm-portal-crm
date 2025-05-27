@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,7 +115,12 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🚀 Iniciando submissão do formulário...');
+    console.log('📊 Dados do formulário:', formData);
+    
+    // Validação básica
     if (!formData.studentId || !formData.mentoringId || !formData.startDate || !formData.responsibleMentor) {
+      console.log('❌ Validação falhou - campos obrigatórios faltando');
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -128,6 +132,7 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
     try {
       const selectedMentoring = catalogs.find(c => c.id === formData.mentoringId);
       if (!selectedMentoring) {
+        console.log('❌ Mentoria não encontrada no catálogo');
         toast({
           title: "Erro",
           description: "Mentoria selecionada não encontrada",
@@ -137,8 +142,11 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
       }
 
       const totalSessions = calculateTotalSessions(formData.mentoringId, formData.selectedExtensions);
+      
+      console.log('📈 Sessões calculadas:', totalSessions);
+      console.log('📅 Data de término calculada:', formData.endDate);
 
-      await createEnrollment({
+      const enrollmentPayload = {
         studentId: formData.studentId,
         mentoringId: formData.mentoringId,
         status: formData.status,
@@ -149,7 +157,13 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         responsibleMentor: formData.responsibleMentor,
         paymentStatus: formData.paymentStatus,
         observations: formData.observations || undefined
-      });
+      };
+
+      console.log('📦 Payload final:', enrollmentPayload);
+
+      const newEnrollment = await createEnrollment(enrollmentPayload);
+      
+      console.log('✅ Inscrição criada com sucesso:', newEnrollment);
 
       // Reset form
       setFormData({
@@ -165,9 +179,12 @@ const EnrollmentForm = ({ onSuccess, onCancel }: EnrollmentFormProps) => {
         selectedExtensions: []
       });
 
+      console.log('🎉 Chamando onSuccess callback...');
       onSuccess?.();
+      
     } catch (error) {
-      console.error('Error creating enrollment:', error);
+      console.error('💥 Erro na submissão do formulário:', error);
+      // O erro já é tratado no hook useSupabaseMentoring
     }
   };
 

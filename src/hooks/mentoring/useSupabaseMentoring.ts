@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { 
@@ -42,10 +43,12 @@ export const useSupabaseMentoring = () => {
   const refreshEnrollments = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🔄 Iniciando refresh das inscrições...');
       const data = await repository.getEnrollments();
+      console.log('📊 Inscrições carregadas:', data.length);
       setEnrollments(data);
     } catch (error) {
-      console.error('Error refreshing enrollments:', error);
+      console.error('❌ Error refreshing enrollments:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar inscrições",
@@ -169,7 +172,7 @@ export const useSupabaseMentoring = () => {
     }
   }, [refreshCatalogs, toast]);
 
-  // Enrollment methods
+  // Enrollment methods - CORRIGIDO
   const createEnrollment = useCallback(async (enrollmentData: {
     studentId: string;
     mentoringId: string;
@@ -184,18 +187,32 @@ export const useSupabaseMentoring = () => {
   }): Promise<StudentMentoringEnrollment> => {
     try {
       setLoading(true);
+      
+      console.log('🏗️ Iniciando criação de inscrição...');
+      console.log('📝 Dados da inscrição:', enrollmentData);
+      
+      // Validar dados obrigatórios
+      if (!enrollmentData.studentId || !enrollmentData.mentoringId || !enrollmentData.startDate || !enrollmentData.responsibleMentor) {
+        throw new Error('Dados obrigatórios não fornecidos');
+      }
+      
       const newEnrollment = await repository.createEnrollment(enrollmentData);
+      console.log('✅ Inscrição criada no repositório:', newEnrollment);
+      
+      // Refresh das inscrições para atualizar a lista
       await refreshEnrollments();
+      
       toast({
         title: "Sucesso",
         description: "Inscrição criada com sucesso!",
       });
+      
       return newEnrollment;
     } catch (error) {
-      console.error('Error creating enrollment:', error);
+      console.error('❌ Erro ao criar inscrição:', error);
       toast({
         title: "Erro",
-        description: "Erro ao criar inscrição. Tente novamente.",
+        description: error instanceof Error ? error.message : "Erro ao criar inscrição. Tente novamente.",
         variant: "destructive",
       });
       throw error;
@@ -325,27 +342,27 @@ export const useSupabaseMentoring = () => {
     loading,
     
     // Catalog methods
-    createCatalog: repository.createCatalog.bind(repository),
-    updateCatalog: repository.updateCatalog.bind(repository),
-    deleteCatalog: repository.deleteCatalog.bind(repository),
+    createCatalog,
+    updateCatalog,
+    deleteCatalog,
     refreshCatalogs,
     
     // Enrollment methods
     createEnrollment,
-    getStudentEnrollments: repository.getStudentEnrollments.bind(repository),
-    addExtension: repository.addExtension.bind(repository),
+    getStudentEnrollments,
+    addExtension,
     refreshEnrollments,
     
     // Session methods
-    getEnrollmentSessions: repository.getEnrollmentSessions.bind(repository),
-    createSession: repository.createSession.bind(repository),
+    getEnrollmentSessions,
+    createSession,
     updateSession,
     getSessionsByEnrollment,
     refreshSessions,
     
     // Material methods
-    getEnrollmentMaterials: repository.getEnrollmentMaterials.bind(repository),
-    getSessionMaterials: repository.getSessionMaterials.bind(repository),
+    getEnrollmentMaterials,
+    getSessionMaterials,
     refreshMaterials,
     
     // Repository access
