@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -79,8 +78,8 @@ const AdminIndividualEnrollments = () => {
   }, [individualEnrollments]);
 
   // Handlers
-  const handleCreateEnrollment = (data: any) => {
-    console.log('Creating individual enrollment:', data);
+  const handleCreateEnrollment = () => {
+    console.log('Enrollment created successfully');
     setShowForm(false);
     refreshEnrollments();
   };
@@ -240,7 +239,7 @@ const AdminIndividualEnrollments = () => {
             <DialogTitle>Nova Inscrição Individual</DialogTitle>
           </DialogHeader>
           <EnrollmentForm
-            onSubmit={handleCreateEnrollment}
+            onSuccess={handleCreateEnrollment}
             onCancel={() => setShowForm(false)}
           />
         </DialogContent>

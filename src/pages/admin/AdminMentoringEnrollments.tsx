@@ -99,8 +99,8 @@ const AdminMentoringEnrollments = () => {
   const hasFilters = Boolean(searchTerm || statusFilter || typeFilter);
 
   // Handlers existentes
-  const handleCreateEnrollment = (data: any) => {
-    console.log('Creating enrollment:', data);
+  const handleCreateEnrollment = () => {
+    console.log('Enrollment created successfully');
     setShowForm(false);
   };
 
@@ -290,7 +290,7 @@ const AdminMentoringEnrollments = () => {
             <DialogTitle>Nova Inscrição</DialogTitle>
           </DialogHeader>
           <EnrollmentForm
-            onSubmit={handleCreateEnrollment}
+            onSuccess={handleCreateEnrollment}
             onCancel={() => setShowForm(false)}
           />
         </DialogContent>
