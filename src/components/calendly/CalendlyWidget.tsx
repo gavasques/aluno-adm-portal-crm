@@ -67,7 +67,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
         
         const timeout = setTimeout(() => {
           reject(new Error('Timeout ao carregar script do Calendly'));
-        }, 10000); // 10 segundos timeout
+        }, 10000);
 
         script.onload = () => {
           clearTimeout(timeout);
@@ -101,11 +101,10 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
       setError('');
       setConfigLoaded(false);
 
-      // Timeout para carregamento da configuração
       loadingTimeoutRef.current = setTimeout(() => {
         setError('Timeout ao carregar configuração. Tente novamente.');
         setIsLoading(false);
-      }, 15000); // 15 segundos timeout
+      }, 15000);
 
       try {
         console.log('🔍 Carregando configuração do Calendly para:', mentorId);
@@ -154,10 +153,8 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
 
     console.log('🚀 Inicializando widget do Calendly...');
 
-    // Limpar container
     containerRef.current.innerHTML = '';
 
-    // Criar mensagem personalizada
     let customMessage = '';
     if (studentName && sessionInfo) {
       customMessage = `${studentName}\n\nSessão ${sessionInfo.sessionNumber} de ${sessionInfo.totalSessions}`;
@@ -171,7 +168,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
         name: studentName || user?.email || '',
         email: user?.email || '',
         customAnswers: {
-          a1: customMessage // Campo personalizado para informações da sessão
+          a1: customMessage
         }
       }
     };
@@ -189,7 +186,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     }
   }, [open, calendlyUrl, user, configLoaded, studentName, sessionInfo]);
 
-  // Listener para eventos do Calendly
+  // Corrigir listener para eventos do Calendly
   useEffect(() => {
     const handleCalendlyMessage = async (event: MessageEvent) => {
       if (event.origin !== 'https://calendly.com') return;
@@ -206,7 +203,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
           
           // Corrigir a estrutura dos dados do evento agendado
           const eventDetails = {
-            calendly_event_uri: payload.payload.event?.uri || '',
+            calendly_event_uri: payload.payload.uri || '',
             student_id: user?.id || '',
             mentor_id: mentorId,
             event_name: payload.payload.event?.name || 'Sessão de Mentoria',
@@ -219,23 +216,19 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
 
           console.log('💾 Salvando evento no banco de dados:', eventDetails);
           
-          // Salvar evento no banco de dados
           await saveCalendlyEvent(eventDetails);
           
-          // Se temos sessionId, atualizar a sessão específica
           if (sessionId) {
             console.log('🔄 Atualizando sessão:', sessionId);
             await updateSessionFromCalendly(sessionId, payload);
           }
           
-          // Callback para componente pai
           if (onEventScheduled) {
             onEventScheduled(payload);
           }
 
           console.log('✅ Agendamento processado com sucesso!');
           
-          // Fechar o dialog após agendamento bem-sucedido
           setTimeout(() => {
             onOpenChange(false);
             setIsLoading(false);
@@ -258,7 +251,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     };
   }, [open, user, mentorId, sessionId, saveCalendlyEvent, onEventScheduled, onOpenChange]);
 
-  // Função para atualizar a sessão com dados do Calendly
+  // Corrigir função para atualizar a sessão com dados do Calendly
   const updateSessionFromCalendly = async (sessionId: string, payload: CalendlyEventPayload) => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
@@ -267,7 +260,7 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
         status: 'agendada',
         scheduled_date: payload.payload.event?.start_time || new Date().toISOString(),
         duration_minutes: payload.payload.event?.duration || 60,
-        calendly_link: payload.payload.event?.uri || '',
+        calendly_link: payload.payload.uri || '',
         observations: `Agendado via Calendly: ${payload.payload.event?.name || 'Sessão de Mentoria'}`,
         updated_at: new Date().toISOString()
       };
@@ -295,10 +288,6 @@ export const CalendlyWidget: React.FC<CalendlyWidgetProps> = ({
     setError('');
     setIsLoading(true);
     setConfigLoaded(false);
-    // Re-trigger da configuração
-    if (mentorId && scriptLoaded) {
-      // O useEffect vai detectar a mudança e recarregar
-    }
   };
 
   const handleClose = () => {
