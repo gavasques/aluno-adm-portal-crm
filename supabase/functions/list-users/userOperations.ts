@@ -1,4 +1,3 @@
-
 import { corsHeaders } from './utils.ts';
 
 // Função para limpar usuário órfão (existe no Auth mas não no profiles)
@@ -389,111 +388,216 @@ export const deleteUser = async (supabaseAdmin: any, data: any) => {
 
     if (!userId) {
       console.error("ID do usuário não fornecido para exclusão");
-      return { error: "ID do usuário é obrigatório para esta operação" };
+      return { 
+        success: false,
+        error: "ID do usuário é obrigatório para esta operação" 
+      };
     }
 
-    console.log(`Tentando excluir usuário ${userId} (${email || 'email não fornecido'})`);
+    console.log(`[deleteUser] Tentando excluir usuário ${userId} (${email || 'email não fornecido'})`);
     
-    // Primeiro, verificar se o usuário tem dados associados em outras tabelas que podem impedir a exclusão
-    const { count: profilesCount, error: profilesError } = await supabaseAdmin
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('id', userId);
-      
-    if (profilesError) {
-      console.error("Erro ao verificar perfil do usuário:", profilesError);
+    // Verificar se o usuário existe no auth
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error("[deleteUser] Erro ao buscar usuários do auth:", authError);
+      return { 
+        success: false,
+        error: `Erro ao verificar usuário: ${authError.message}` 
+      };
     }
+
+    const userExists = authUsers?.users?.find(user => user.id === userId);
     
-    console.log(`Usuário tem ${profilesCount || 0} perfis associados`);
-    
-    // Tentar primeiro remover o perfil associado
-    if (profilesCount && profilesCount > 0) {
-      const { error: deleteProfileError } = await supabaseAdmin
+    if (!userExists) {
+      console.log(`[deleteUser] Usuário ${userId} não encontrado no auth`);
+      // Se não existe no auth, tentar remover apenas do profiles
+      const { error: profileDeleteError } = await supabaseAdmin
         .from('profiles')
         .delete()
         .eq('id', userId);
         
-      if (deleteProfileError) {
-        console.error("Não foi possível excluir o perfil do usuário:", deleteProfileError);
-        console.log("O usuário possui dados associados em outras tabelas. Procedendo com inativação em vez de exclusão.");
-        
-        // Usar updateUserById com ban_duration para inativar o usuário por um longo período (10 anos)
-        const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-          userId,
-          { ban_duration: '87600h' }  // 10 anos
-        );
-        
-        if (updateError) {
-          console.error("Erro ao inativar o usuário:", updateError);
-          return { error: updateError.message };
-        }
-        
-        return { 
-          success: true, 
-          inactivated: true, 
-          message: "Usuário foi inativado porque tem dados associados que não podem ser excluídos" 
-        };
-      }
-    }
-
-    // Se conseguiu excluir o perfil ou não havia perfil, tenta excluir o usuário
-    try {
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-
-      if (deleteError) {
-        console.error("Erro ao excluir usuário:", deleteError);
-        
-        // Se falhar ao excluir, tenta inativar o usuário como último recurso
-        console.log("Tentando inativar o usuário como alternativa à exclusão...");
-        const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-          userId,
-          { ban_duration: '87600h' }  // 10 anos
-        );
-        
-        if (updateError) {
-          console.error("Erro ao inativar o usuário:", updateError);
-          return { error: "Não foi possível excluir ou inativar o usuário: " + deleteError.message };
-        }
-        
-        return { 
-          success: true, 
-          inactivated: true, 
-          message: "Usuário foi inativado porque não pôde ser excluído completamente" 
-        };
-      }
-
-      console.log("Usuário excluído com sucesso:", userId);
-      return { success: true, message: "Usuário excluído com sucesso" };
-    } catch (deleteError: any) {
-      console.error("Exceção ao tentar excluir usuário:", deleteError);
-      
-      // Verificar se o erro é relacionado a foreign key constraints
-      if (deleteError.message && deleteError.message.includes("violates foreign key constraint")) {
-        console.log("Detectada violação de foreign key. Tentando inativar o usuário...");
-        
-        // Inativar o usuário em vez de excluir
-        const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-          userId,
-          { ban_duration: '87600h' }  // 10 anos
-        );
-        
-        if (updateError) {
-          console.error("Erro ao inativar o usuário:", updateError);
-          return { error: "Não foi possível inativar o usuário: " + updateError.message };
-        }
-        
-        return { 
-          success: true, 
-          inactivated: true, 
-          message: "Usuário foi inativado porque tem dados associados que não podem ser excluídos" 
+      if (profileDeleteError) {
+        console.error("[deleteUser] Erro ao remover perfil:", profileDeleteError);
+        return {
+          success: false,
+          error: `Erro ao remover perfil: ${profileDeleteError.message}`
         };
       }
       
-      return { error: deleteError.message };
+      return { 
+        success: true, 
+        message: "Perfil removido com sucesso (usuário não estava no auth)" 
+      };
     }
+    
+    // Verificar se o usuário tem dados associados em outras tabelas
+    console.log(`[deleteUser] Verificando dados associados para usuário ${userId}`);
+    
+    // Verificar my_suppliers
+    const { count: suppliersCount } = await supabaseAdmin
+      .from('my_suppliers')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+      
+    // Verificar user_files
+    const { count: filesCount } = await supabaseAdmin
+      .from('user_files')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+      
+    // Verificar mentoring_enrollments como student
+    const { count: enrollmentsCount } = await supabaseAdmin
+      .from('mentoring_enrollments')
+      .select('*', { count: 'exact', head: true })
+      .eq('student_id', userId);
+    
+    const totalAssociatedData = (suppliersCount || 0) + (filesCount || 0) + (enrollmentsCount || 0);
+    
+    console.log(`[deleteUser] Dados associados encontrados: ${totalAssociatedData} (fornecedores: ${suppliersCount}, arquivos: ${filesCount}, matrículas: ${enrollmentsCount})`);
+    
+    if (totalAssociatedData > 0) {
+      console.log(`[deleteUser] Usuário tem dados associados, inativando em vez de excluir`);
+      
+      // Inativar usuário usando ban_duration
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { ban_duration: '87600h' }  // 10 anos
+      );
+      
+      if (banError) {
+        console.error("[deleteUser] Erro ao inativar usuário:", banError);
+        return {
+          success: false,
+          error: `Erro ao inativar usuário: ${banError.message}`
+        };
+      }
+      
+      // Atualizar status no perfil também
+      const { error: profileUpdateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ status: 'Inativo' })
+        .eq('id', userId);
+        
+      if (profileUpdateError) {
+        console.log("[deleteUser] Aviso: não foi possível atualizar status no perfil:", profileUpdateError);
+      }
+      
+      return { 
+        success: true, 
+        inactivated: true, 
+        message: `Usuário foi inativado porque possui ${totalAssociatedData} registro(s) associado(s)` 
+      };
+    }
+    
+    // Se não tem dados associados, tentar exclusão completa
+    console.log(`[deleteUser] Usuário não tem dados associados, procedendo com exclusão completa`);
+    
+    // Primeiro remover o perfil
+    const { error: profileDeleteError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+      
+    if (profileDeleteError) {
+      console.error("[deleteUser] Erro ao remover perfil:", profileDeleteError);
+      // Se não conseguiu remover o perfil, inativar o usuário
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { ban_duration: '87600h' }
+      );
+      
+      if (banError) {
+        return {
+          success: false,
+          error: `Erro ao remover perfil e inativar usuário: ${profileDeleteError.message}`
+        };
+      }
+      
+      return { 
+        success: true, 
+        inactivated: true, 
+        message: "Usuário foi inativado porque não foi possível remover o perfil" 
+      };
+    }
+    
+    // Agora tentar remover do auth
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    
+    if (authDeleteError) {
+      console.error("[deleteUser] Erro ao excluir usuário do auth:", authDeleteError);
+      
+      // Se falhou ao excluir do auth mas removeu o perfil, 
+      // tentar recriar o perfil e inativar o usuário
+      console.log("[deleteUser] Recriando perfil e inativando usuário...");
+      
+      const { error: recreateError } = await supabaseAdmin
+        .from('profiles')
+        .insert([{
+          id: userId,
+          email: email || userExists.email,
+          name: userExists.user_metadata?.name || email || userExists.email,
+          status: 'Inativo',
+          role: 'Student'
+        }]);
+        
+      if (recreateError) {
+        console.error("[deleteUser] Erro ao recriar perfil:", recreateError);
+      }
+      
+      // Inativar usuário
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { ban_duration: '87600h' }
+      );
+      
+      if (banError) {
+        return {
+          success: false,
+          error: `Erro na exclusão: ${authDeleteError.message}`
+        };
+      }
+      
+      return { 
+        success: true, 
+        inactivated: true, 
+        message: "Usuário foi inativado porque não pôde ser excluído completamente do sistema de autenticação" 
+      };
+    }
+
+    console.log(`[deleteUser] Usuário ${userId} excluído com sucesso do auth e profiles`);
+    return { 
+      success: true, 
+      message: "Usuário excluído com sucesso" 
+    };
+
   } catch (error: any) {
-    console.error("Erro ao processar exclusão/inativação do usuário:", error);
-    return { error: error.message };
+    console.error("[deleteUser] Erro não tratado na exclusão:", error);
+    
+    // Em caso de erro, tentar inativar como última tentativa
+    if (data.userId) {
+      try {
+        const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(
+          data.userId,
+          { ban_duration: '87600h' }
+        );
+        
+        if (!banError) {
+          return { 
+            success: true, 
+            inactivated: true, 
+            message: "Usuário foi inativado devido a erro na exclusão" 
+          };
+        }
+      } catch (banError) {
+        console.error("[deleteUser] Erro ao tentar inativar como fallback:", banError);
+      }
+    }
+    
+    return { 
+      success: false,
+      error: `Erro interno na exclusão: ${error.message}` 
+    };
   }
 };
 

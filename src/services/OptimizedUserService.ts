@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { UserStatus, PermissionGroup } from '@/types/user.enums';
@@ -251,6 +250,17 @@ export class OptimizedUserService {
 
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
     try {
+      console.log('🔄 Iniciando exclusão de usuário:', { userId, userEmail });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ Usuário não autenticado');
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('✅ Sessão encontrada, fazendo chamada para exclusão...');
+
       const { data, error } = await supabase.functions.invoke('list-users', {
         body: {
           action: 'deleteUser',
@@ -259,28 +269,60 @@ export class OptimizedUserService {
         }
       });
 
-      if (error) throw new Error(error.message);
-      if (data.error) throw new Error(data.error);
+      console.log('📊 Resposta da exclusão:', { data, error });
 
-      this.invalidateQueries();
-      
-      const message = data.inactivated
-        ? "O usuário foi inativado pois possui dados associados."
-        : `O usuário ${userEmail} foi excluído com sucesso.`;
+      if (error) {
+        console.error('❌ Erro na Edge Function:', error);
+        throw new Error(error.message || 'Erro na exclusão');
+      }
 
-      toast({
-        title: data.inactivated ? "Usuário inativado" : "Usuário excluído",
-        description: message,
-      });
+      if (!data) {
+        console.error('❌ Nenhum dado retornado da edge function');
+        throw new Error('Nenhum dado retornado do servidor');
+      }
+
+      // Verificar se houve sucesso na operação
+      if (data.success === true) {
+        this.invalidateQueries();
+        
+        let toastTitle, toastDescription;
+        
+        if (data.inactivated) {
+          toastTitle = "Usuário inativado";
+          toastDescription = data.message || `O usuário ${userEmail} foi inativado pois possui dados associados.`;
+        } else {
+          toastTitle = "Usuário excluído";
+          toastDescription = data.message || `O usuário ${userEmail} foi excluído com sucesso.`;
+        }
+
+        toast({
+          title: toastTitle,
+          description: toastDescription,
+          variant: "default",
+        });
+        
+        return true;
+      }
       
-      return true;
+      // Se houve erro específico retornado pela edge function
+      if (data.error) {
+        console.error('❌ Erro retornado pela edge function:', data.error);
+        throw new Error(data.error);
+      }
+
+      // Fallback para casos não esperados
+      console.error('❌ Resposta inesperada da edge function:', data);
+      throw new Error("Resposta inesperada do servidor");
+
     } catch (error: any) {
-      console.error('Erro ao excluir usuário:', error);
+      console.error('❌ Erro ao excluir usuário:', error);
+      
       toast({
-        title: "Erro",
-        description: error.message || "Não foi possível processar sua solicitação.",
+        title: "Erro na exclusão",
+        description: error.message || "Não foi possível excluir o usuário.",
         variant: "destructive",
       });
+      
       return false;
     }
   }
