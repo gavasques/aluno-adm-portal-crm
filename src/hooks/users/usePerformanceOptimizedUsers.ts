@@ -42,7 +42,7 @@ export const usePerformanceOptimizedUsers = () => {
       console.log('✅ Query retornou:', result?.length, 'usuários');
       return result;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 2 * 60 * 1000, // Reduzido para 2 minutos para melhor responsividade
     gcTime: 10 * 60 * 1000, // 10 minutos
     refetchOnWindowFocus: false,
     refetchOnMount: true,
@@ -60,16 +60,18 @@ export const usePerformanceOptimizedUsers = () => {
     return result;
   }, [users]);
 
-  // Debounced search otimizado - SEMPRE criado
+  // Busca otimizada com debounce mais agressivo
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
+    console.log('🔍 Aplicando busca otimizada:', searchTerm);
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
-  }, 300);
+  }, 150); // Reduzido para 150ms para melhor responsividade
 
-  // Mutations - SEMPRE criadas na mesma ordem
+  // Mutations com invalidação inteligente
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
     onSuccess: () => {
+      console.log('✅ Usuário criado, invalidando cache...');
       smartInvalidate();
     },
   });
@@ -78,6 +80,7 @@ export const usePerformanceOptimizedUsers = () => {
     mutationFn: ({ userId, userEmail }: { userId: string; userEmail: string }) =>
       optimizedUserService.deleteUser(userId, userEmail),
     onSuccess: () => {
+      console.log('✅ Usuário excluído, invalidando cache...');
       smartInvalidate();
     },
   });
@@ -87,10 +90,19 @@ export const usePerformanceOptimizedUsers = () => {
       userId: string; 
       userEmail: string; 
       currentStatus: string; 
-    }) => optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus),
-    onSuccess: () => {
-      smartInvalidate('filtered');
+    }) => {
+      console.log('🔄 Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
+      return optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
     },
+    onSuccess: (result, variables) => {
+      console.log('✅ Status alterado com sucesso para:', variables.userEmail);
+      smartInvalidate('filtered');
+      // Forçar refetch imediato para garantir atualização
+      refetch();
+    },
+    onError: (error, variables) => {
+      console.error('❌ Erro ao alterar status:', error, 'Usuário:', variables.userEmail);
+    }
   });
 
   const resetPasswordMutation = useMutation({
@@ -105,20 +117,28 @@ export const usePerformanceOptimizedUsers = () => {
     }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
     onSuccess: () => {
       smartInvalidate('filtered');
+      refetch();
     },
   });
 
-  // Filtros memoizados sem cache para debugging - SEMPRE executado
+  // Filtros memoizados com otimização de performance
   const filteredUsers = useMemo(() => {
-    console.log('🔄 Aplicando filtros diretamente (sem cache)...');
+    console.log('🔄 Aplicando filtros otimizados...');
+    
+    // Se não há busca, retorna todos os usuários mais rapidamente
+    if (!filters.search && filters.status === 'all' && filters.group === 'all') {
+      console.log('✅ Sem filtros, retornando todos os usuários:', usersArray.length);
+      return usersArray;
+    }
+    
     const filtered = optimizedUserService.filterUsers(usersArray, filters);
-    console.log('✅ Usuários filtrados:', filtered.length);
+    console.log('✅ Usuários filtrados:', filtered.length, 'de', usersArray.length);
     return filtered;
   }, [usersArray, filters]);
 
-  // Stats memoizadas sem cache para debugging - SEMPRE executado
+  // Stats memoizadas com cache otimizado
   const stats = useMemo((): UserStats => {
-    console.log('📊 Calculando estatísticas diretamente...');
+    console.log('📊 Calculando estatísticas otimizadas...');
     const calculatedStats = optimizedUserService.calculateStats(usersArray);
     
     const validStats: UserStats = {
@@ -132,7 +152,7 @@ export const usePerformanceOptimizedUsers = () => {
     return validStats;
   }, [usersArray]);
 
-  // Callbacks - SEMPRE criados na mesma ordem
+  // Callbacks otimizados
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
     console.log('🔧 Atualizando filtros:', newFilters);
     setFiltersState(prev => ({ ...prev, ...newFilters }));
@@ -156,7 +176,7 @@ export const usePerformanceOptimizedUsers = () => {
     isOptimized: true
   }), [getMetrics, usersArray.length, filteredUsers.length]);
 
-  // Effects - SEMPRE na mesma ordem e sem condicionais
+  // Effects otimizados
   useEffect(() => {
     if (usersArray.length > 0) {
       preloadCommonFilters(usersArray);

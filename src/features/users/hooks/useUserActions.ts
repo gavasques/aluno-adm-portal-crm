@@ -12,14 +12,22 @@ export const useUserActions = () => {
     isDeleting,
     isTogglingStatus,
     isResettingPassword,
-    isSettingPermissions
+    isSettingPermissions,
+    refreshUsers
   } = usePerformanceOptimizedUserContext();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
     try {
       console.log('🔧 UserActions: Executing delete for:', userEmail);
       const success = await deleteUser(userId, userEmail);
-      if (!success) {
+      if (success) {
+        toast({
+          title: "Sucesso",
+          description: `Usuário ${userEmail} excluído com sucesso.`,
+        });
+        // Força atualização após exclusão
+        setTimeout(() => refreshUsers(), 500);
+      } else {
         toast({
           title: "Erro",
           description: "Não foi possível excluir o usuário.",
@@ -36,36 +44,40 @@ export const useUserActions = () => {
       });
       return false;
     }
-  }, [deleteUser]);
+  }, [deleteUser, refreshUsers]);
 
   const confirmToggleStatus = useCallback(async (userId: string, userEmail: string, currentStatus: string): Promise<boolean> => {
     try {
-      console.log('🔧 UserActions: Toggling status for:', userEmail);
+      console.log('🔧 UserActions: Toggling status for:', userEmail, 'Current:', currentStatus);
       const success = await toggleUserStatus(userId, userEmail, currentStatus);
-      if (!success) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível alterar o status do usuário.",
-          variant: "destructive",
-        });
+      
+      if (success) {
+        const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+        console.log('✅ Status alterado para:', newStatus);
+        
+        // Não mostra toast aqui pois já é mostrado no diálogo
+        // Força atualização após alteração de status
+        setTimeout(() => refreshUsers(), 500);
+      } else {
+        console.error('❌ Falha ao alterar status');
       }
       return success;
     } catch (error) {
       console.error('Erro ao alterar status:', error);
-      toast({
-        title: "Erro",
-        description: "Erro interno ao alterar status.",
-        variant: "destructive",
-      });
       return false;
     }
-  }, [toggleUserStatus]);
+  }, [toggleUserStatus, refreshUsers]);
 
   const confirmResetPassword = useCallback(async (email: string): Promise<boolean> => {
     try {
       console.log('🔧 UserActions: Resetting password for:', email);
       const success = await resetPassword(email);
-      if (!success) {
+      if (success) {
+        toast({
+          title: "Sucesso",
+          description: `Email de redefinição de senha enviado para ${email}.`,
+        });
+      } else {
         toast({
           title: "Erro",
           description: "Não foi possível redefinir a senha.",
@@ -88,7 +100,14 @@ export const useUserActions = () => {
     try {
       console.log('🔧 UserActions: Setting permission group for:', userEmail);
       const success = await setPermissionGroup(userId, userEmail, groupId);
-      if (!success) {
+      if (success) {
+        toast({
+          title: "Sucesso",
+          description: `Permissões atualizadas para ${userEmail}.`,
+        });
+        // Força atualização após alteração de permissões
+        setTimeout(() => refreshUsers(), 500);
+      } else {
         toast({
           title: "Erro",
           description: "Não foi possível definir o grupo de permissão.",
@@ -105,7 +124,7 @@ export const useUserActions = () => {
       });
       return false;
     }
-  }, [setPermissionGroup]);
+  }, [setPermissionGroup, refreshUsers]);
 
   return {
     confirmDelete,
