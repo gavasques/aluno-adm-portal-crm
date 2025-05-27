@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Sheet,
@@ -106,11 +107,11 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         <div className="flex flex-col gap-1 py-4">
           <div className="px-6">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user?.avatar_url} />
-              <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="mt-2">
-              <p className="font-semibold">{user?.name}</p>
+              <p className="font-semibold">{user?.user_metadata?.full_name || user?.email}</p>
               <p className="text-sm text-gray-500">{user?.email}</p>
             </div>
           </div>
@@ -141,7 +142,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             </AccordionItem>
           </Accordion>
 
-          {user?.role === 'Admin' && (
+          {user?.user_metadata?.role === 'Admin' && (
             <Accordion type="single" collapsible className="w-full border-b pb-2">
               <AccordionItem value="admin">
                 <AccordionTrigger className="hover:bg-gray-100 px-6 py-2 font-medium">
