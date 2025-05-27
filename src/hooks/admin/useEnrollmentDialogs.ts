@@ -10,48 +10,73 @@ export const useEnrollmentDialogs = () => {
   const [selectedEnrollmentForExtension, setSelectedEnrollmentForExtension] = useState<StudentMentoringEnrollment | null>(null);
 
   const handleCreateEnrollment = useCallback(() => {
+    console.log('🎯 handleCreateEnrollment chamado - abrindo formulário');
     setShowForm(true);
   }, []);
 
   const handleEditEnrollment = useCallback((enrollment: StudentMentoringEnrollment) => {
+    console.log('✏️ handleEditEnrollment chamado para:', enrollment.id);
     setEditingEnrollment(enrollment);
   }, []);
 
   const handleViewEnrollment = useCallback((enrollment: StudentMentoringEnrollment) => {
+    console.log('👁️ handleViewEnrollment chamado para:', enrollment.id);
     setViewingEnrollment(enrollment);
   }, []);
 
+  const handleDeleteEnrollment = useCallback((id: string) => {
+    console.log('🗑️ handleDeleteEnrollment chamado para:', id);
+    if (confirm('Tem certeza que deseja excluir esta inscrição?')) {
+      console.log('✅ Exclusão confirmada para:', id);
+      // TODO: Implementar exclusão real
+    }
+  }, []);
+
   const handleAddExtension = useCallback((enrollment: StudentMentoringEnrollment) => {
+    console.log('➕ handleAddExtension chamado para:', enrollment.id);
     setSelectedEnrollmentForExtension(enrollment);
     setShowExtensionDialog(true);
   }, []);
 
-  const handleDeleteEnrollment = useCallback(async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta inscrição?')) {
-      return;
-    }
-    console.log('Delete enrollment:', id);
+  const closeForm = useCallback(() => {
+    console.log('❌ closeForm chamado - fechando formulário e recarregando dados');
+    setShowForm(false);
+    // Force page reload to refresh data
+    window.location.reload();
   }, []);
 
-  const closeForm = useCallback(() => setShowForm(false), []);
-  const closeEdit = useCallback(() => setEditingEnrollment(null), []);
-  const closeView = useCallback(() => setViewingEnrollment(null), []);
+  const closeEdit = useCallback(() => {
+    console.log('❌ closeEdit chamado');
+    setEditingEnrollment(null);
+  }, []);
+
+  const closeView = useCallback(() => {
+    console.log('❌ closeView chamado');
+    setViewingEnrollment(null);
+  }, []);
+
   const closeExtension = useCallback(() => {
+    console.log('❌ closeExtension chamado');
     setShowExtensionDialog(false);
     setSelectedEnrollmentForExtension(null);
   }, []);
 
   return {
+    // State
     showForm,
     editingEnrollment,
     viewingEnrollment,
     showExtensionDialog,
     selectedEnrollmentForExtension,
+    
+    // Handlers
     handleCreateEnrollment,
     handleEditEnrollment,
     handleViewEnrollment,
-    handleAddExtension,
     handleDeleteEnrollment,
+    handleAddExtension,
+    
+    // Close functions
     closeForm,
     closeEdit,
     closeView,

@@ -148,6 +148,8 @@ export const SteppedEnrollmentForm = ({ onSuccess, onCancel }: SteppedEnrollment
     }
 
     try {
+      console.log('🚀 Iniciando criação de inscrição...');
+      
       const enrollmentData = {
         studentId: selectedStudent.id,
         mentoringId: selectedMentoring.id,
@@ -161,11 +163,20 @@ export const SteppedEnrollmentForm = ({ onSuccess, onCancel }: SteppedEnrollment
         observations: observations || undefined
       };
 
+      console.log('📊 Dados da inscrição:', enrollmentData);
+      
       await createEnrollment(enrollmentData);
-      onSuccess?.();
+      
+      console.log('✅ Inscrição criada com sucesso, chamando callback...');
+      
+      // Chama o callback de sucesso para fechar o formulário e atualizar a lista
+      if (onSuccess) {
+        console.log('🔄 Executando callback onSuccess...');
+        onSuccess();
+      }
       
     } catch (error) {
-      console.error('Erro ao criar inscrição:', error);
+      console.error('❌ Erro ao criar inscrição:', error);
     }
   };
 
@@ -242,7 +253,7 @@ export const SteppedEnrollmentForm = ({ onSuccess, onCancel }: SteppedEnrollment
               )}
             </TabsContent>
 
-            <TabsContent value="mentoring" className="space-y-6 mt-0">
+            <TabsContent value="mentoring" className="space-y-6 mt-0 overflow-visible">
               <div className="text-center mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Selecione a Mentoria</h3>
                 <p className="text-sm text-gray-600">Escolha a mentoria e extensões se necessário</p>
@@ -262,7 +273,7 @@ export const SteppedEnrollmentForm = ({ onSuccess, onCancel }: SteppedEnrollment
               )}
             </TabsContent>
 
-            <TabsContent value="mentor" className="space-y-6 mt-0">
+            <TabsContent value="mentor" className="space-y-6 mt-0 overflow-visible">
               <div className="text-center mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Selecione o Mentor</h3>
                 <p className="text-sm text-gray-600">Escolha o mentor responsável por esta mentoria</p>
