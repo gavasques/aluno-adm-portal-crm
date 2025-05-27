@@ -42,16 +42,21 @@ export const useAdminOperations = () => {
         throw new Error(errorMsg);
       }
 
-      console.log("[useAdminOperations] Validação passou, chamando Edge Function");
+      console.log("[useAdminOperations] Validação passou, verificando usuário existente");
 
       // Primeiro, verificar se o usuário já existe na tabela profiles
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email.toLowerCase())
-        .single();
+        .maybeSingle();
 
-      if (existingProfile && !profileError) {
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error("[useAdminOperations] Erro ao verificar profile:", profileError);
+        throw new Error("Erro ao verificar usuário existente");
+      }
+
+      if (existingProfile) {
         console.log("[useAdminOperations] Usuário já existe:", existingProfile);
         
         toast({
@@ -82,19 +87,19 @@ export const useAdminOperations = () => {
       if (createError) {
         console.error("[useAdminOperations] Erro ao criar usuário:", createError);
         
-        if (createError.message.includes('already registered')) {
+        if (createError.message.includes('already registered') || createError.message.includes('User already registered')) {
           // Usuário já existe no auth, mas não no profiles
-          // Vamos criar apenas o profile
-          console.log("[useAdminOperations] Usuário existe no auth, criando profile");
+          console.log("[useAdminOperations] Usuário existe no auth, buscando para criar profile");
           
           // Buscar o usuário no auth
-          const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+          const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
           
           if (listError) {
+            console.error("[useAdminOperations] Erro ao listar usuários:", listError);
             throw new Error("Erro ao verificar usuários existentes");
           }
           
-          const existingUser = users.users.find(u => u.email === email.toLowerCase());
+          const existingUser = usersData.users.find((u: any) => u.email === email.toLowerCase());
           
           if (existingUser) {
             // Criar apenas o profile
