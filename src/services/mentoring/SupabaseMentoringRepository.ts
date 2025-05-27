@@ -5,6 +5,7 @@ import {
   StudentMentoringEnrollment, 
   MentoringSession, 
   MentoringMaterial,
+  MentoringExtension,
   CreateMentoringCatalogData,
   CreateSessionData,
   CreateExtensionData,
@@ -34,6 +35,19 @@ export class SupabaseMentoringRepository {
     };
   }
 
+  // Helper method to map extension from database
+  private mapExtensionFromDB(dbExtension: any): MentoringExtension {
+    return {
+      id: dbExtension.id,
+      enrollmentId: dbExtension.enrollment_id,
+      extensionMonths: dbExtension.extension_months,
+      appliedDate: dbExtension.applied_date,
+      notes: dbExtension.notes,
+      adminId: dbExtension.admin_id,
+      createdAt: dbExtension.created_at
+    };
+  }
+
   // Helper method to map enrollment from database
   private mapEnrollmentFromDB(dbEnrollment: any): StudentMentoringEnrollment {
     return {
@@ -51,7 +65,7 @@ export class SupabaseMentoringRepository {
       responsibleMentor: dbEnrollment.responsible_mentor,
       paymentStatus: dbEnrollment.payment_status,
       observations: dbEnrollment.observations,
-      extensions: dbEnrollment.extensions || [],
+      extensions: dbEnrollment.extensions ? dbEnrollment.extensions.map((ext: any) => this.mapExtensionFromDB(ext)) : [],
       hasExtension: dbEnrollment.has_extension || false,
       createdAt: dbEnrollment.created_at,
       updatedAt: dbEnrollment.updated_at,
@@ -223,11 +237,7 @@ export class SupabaseMentoringRepository {
 
     if (error) throw error;
     
-    return (data || []).map(enrollment => ({
-      ...this.mapEnrollmentFromDB(enrollment),
-      extensions: enrollment.extensions || [],
-      hasExtension: (enrollment.extensions?.length || 0) > 0
-    }));
+    return (data || []).map(enrollment => this.mapEnrollmentFromDB(enrollment));
   }
 
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {
@@ -243,11 +253,7 @@ export class SupabaseMentoringRepository {
 
     if (error) throw error;
     
-    return (data || []).map(enrollment => ({
-      ...this.mapEnrollmentFromDB(enrollment),
-      extensions: enrollment.extensions || [],
-      hasExtension: (enrollment.extensions?.length || 0) > 0
-    }));
+    return (data || []).map(enrollment => this.mapEnrollmentFromDB(enrollment));
   }
 
   async addExtension(extensionData: CreateExtensionData): Promise<boolean> {
