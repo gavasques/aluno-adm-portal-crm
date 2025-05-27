@@ -16,13 +16,15 @@ export const StatusPaymentFields = ({
   onStatusChange,
   onPaymentStatusChange
 }: StatusPaymentFieldsProps) => {
+  console.log('StatusPaymentFields - status:', status, 'paymentStatus:', paymentStatus);
+  
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
         <Label htmlFor="status">Status</Label>
-        <Select value={status} onValueChange={onStatusChange}>
+        <Select value={status || ""} onValueChange={onStatusChange}>
           <SelectTrigger>
-            <SelectValue />
+            <SelectValue placeholder="Selecione um status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ativa">Ativa</SelectItem>
@@ -33,9 +35,9 @@ export const StatusPaymentFields = ({
       </div>
       <div>
         <Label htmlFor="paymentStatus">Status do Pagamento</Label>
-        <Select value={paymentStatus} onValueChange={onPaymentStatusChange}>
+        <Select value={paymentStatus || ""} onValueChange={onPaymentStatusChange}>
           <SelectTrigger>
-            <SelectValue />
+            <SelectValue placeholder="Selecione o status do pagamento" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="pendente">Pendente</SelectItem>

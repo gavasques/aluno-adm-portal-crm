@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +41,8 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
     startDate: enrollment.startDate,
     observations: enrollment.observations || ''
   });
+
+  console.log('EnrollmentInfoTab - enrollment status:', enrollment.status, 'editData status:', editData.status);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -202,7 +203,7 @@ export const EnrollmentInfoTab: React.FC<EnrollmentInfoTabProps> = ({
                 </div>
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={editData.status} onValueChange={handleStatusChange}>
+                  <Select value={editData.status || ""} onValueChange={handleStatusChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um status" />
                     </SelectTrigger>
