@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle, Trash2, Lock } from 'lucide-react';
 import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { CalendlyWidget } from '@/components/calendly/CalendlyWidget';
 import CreatePendingSessionForm from './CreatePendingSessionForm';
@@ -54,6 +54,44 @@ const PendingSessionsCard = ({
   // Calcular o próximo número de sessão
   const nextSessionNumber = totalSessionsCreated + 1;
 
+  // Verificar se uma sessão pode ser agendada (lógica sequencial)
+  const canScheduleSession = (sessionNumber: number): boolean => {
+    // Sempre pode agendar a primeira sessão
+    if (sessionNumber === 1) return true;
+    
+    // Para outras sessões, verificar se todas as anteriores estão agendadas ou concluídas
+    for (let i = 1; i < sessionNumber; i++) {
+      const previousSession = allSessions.find(s => 
+        s.enrollmentId === enrollment.id && 
+        s.sessionNumber === i
+      );
+      
+      if (!previousSession || 
+          (previousSession.status !== 'agendada' && 
+           previousSession.status !== 'concluida' && 
+           previousSession.status !== 'reagendada')) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  // Verificar se existe uma sessão não agendada anterior
+  const hasUnscheduledPreviousSession = (sessionNumber: number): boolean => {
+    for (let i = 1; i < sessionNumber; i++) {
+      const previousSession = allSessions.find(s => 
+        s.enrollmentId === enrollment.id && 
+        s.sessionNumber === i
+      );
+      
+      if (!previousSession || previousSession.status === 'aguardando_agendamento') {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleCreateSession = (data: any) => {
     // Adicionar o número da sessão correto aos dados
     const sessionData = {
@@ -67,6 +105,17 @@ const PendingSessionsCard = ({
   };
 
   const handleScheduleSession = async (session: MentoringSession) => {
+    // Verificar se pode agendar esta sessão
+    if (!canScheduleSession(session.sessionNumber)) {
+      const unscheduledSessionNumber = session.sessionNumber - 1;
+      toast({
+        title: "Agendamento bloqueado",
+        description: `Para agendar a Sessão ${session.sessionNumber}, você deve primeiro agendar a Sessão ${unscheduledSessionNumber}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log('🔄 Tentando agendar sessão para mentor:', enrollment.responsibleMentor);
     
     // Verificar se existe configuração do Calendly
@@ -119,6 +168,9 @@ const PendingSessionsCard = ({
     setShowCalendly(false);
     setSelectedSession(null);
   };
+
+  // Ordenar sessões pendentes por número
+  const sortedPendingSessions = [...pendingSessions].sort((a, b) => a.sessionNumber - b.sessionNumber);
 
   return (
     <>
@@ -181,7 +233,24 @@ const PendingSessionsCard = ({
           </div>
         </div>
 
-        {pendingSessions.length === 0 ? (
+        {/* Aviso sobre agendamento sequencial */}
+        {sortedPendingSessions.length > 1 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Lock className="h-4 w-4 text-yellow-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-yellow-900 text-sm">Agendamento Sequencial</h4>
+                <p className="text-xs text-yellow-700 mt-1">
+                  As sessões devem ser agendadas em ordem. Você só pode agendar uma sessão se todas as anteriores já estiverem agendadas.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {sortedPendingSessions.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
             <div className="p-3 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
               <Clock className="h-8 w-8 text-gray-400" />
@@ -201,52 +270,89 @@ const PendingSessionsCard = ({
           </div>
         ) : (
           <div className="space-y-3">
-            {pendingSessions.map((session) => (
-              <div
-                key={session.id}
-                className="group bg-white border border-amber-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:border-amber-300"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
-                      <Video className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 text-sm">{session.title}</h4>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {session.durationMinutes} min
-                        </span>
-                        <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50 text-xs px-2 py-0">
-                          Aguardando
-                        </Badge>
+            {sortedPendingSessions.map((session) => {
+              const canSchedule = canScheduleSession(session.sessionNumber);
+              const hasUnscheduledPrevious = hasUnscheduledPreviousSession(session.sessionNumber);
+              
+              return (
+                <div
+                  key={session.id}
+                  className={`group bg-white border rounded-xl p-4 hover:shadow-md transition-all duration-200 ${
+                    canSchedule 
+                      ? 'border-amber-200 hover:border-amber-300' 
+                      : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg transition-colors ${
+                        canSchedule 
+                          ? 'bg-amber-100 group-hover:bg-amber-200' 
+                          : 'bg-gray-100'
+                      }`}>
+                        {canSchedule ? (
+                          <Video className="h-4 w-4 text-amber-600" />
+                        ) : (
+                          <Lock className="h-4 w-4 text-gray-500" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className={`font-medium text-sm ${
+                          canSchedule ? 'text-gray-900' : 'text-gray-500'
+                        }`}>
+                          {session.title}
+                        </h4>
+                        <div className="flex items-center gap-3 text-xs mt-1">
+                          <span className={`flex items-center gap-1 ${
+                            canSchedule ? 'text-gray-500' : 'text-gray-400'
+                          }`}>
+                            <Clock className="h-3 w-3" />
+                            {session.durationMinutes} min
+                          </span>
+                          <Badge variant="outline" className={`text-xs px-2 py-0 ${
+                            canSchedule 
+                              ? 'text-amber-700 border-amber-300 bg-amber-50' 
+                              : 'text-gray-500 border-gray-300 bg-gray-50'
+                          }`}>
+                            {canSchedule ? 'Aguardando' : 'Bloqueada'}
+                          </Badge>
+                          {hasUnscheduledPrevious && (
+                            <span className="text-xs text-red-600 font-medium">
+                              Aguarde sessão anterior
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleScheduleSession(session)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm hover:shadow-md transition-all"
-                    >
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Agendar
-                    </Button>
-                    {onDeleteSession && (
+                    <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteSession(session)}
-                        className="border-red-200 text-red-600 hover:bg-red-50 rounded-lg px-2 py-1.5"
+                        onClick={() => handleScheduleSession(session)}
+                        disabled={!canSchedule}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm transition-all ${
+                          canSchedule
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {canSchedule ? 'Agendar' : 'Bloqueada'}
                       </Button>
-                    )}
+                      {onDeleteSession && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteSession(session)}
+                          className="border-red-200 text-red-600 hover:bg-red-50 rounded-lg px-2 py-1.5"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             
             {canCreateMoreSessions && (
               <Button
