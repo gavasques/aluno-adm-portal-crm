@@ -36,7 +36,6 @@ const PendingSessionsCard = ({
   allSessions = []
 }: PendingSessionsCardProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<MentoringSession | null>(null);
   const { toast } = useToast();
   const { students } = useStudentsForEnrollment();
 
@@ -115,12 +114,6 @@ const PendingSessionsCard = ({
 
   const handleCalendlyScheduled = (eventData: CalendlyEventPayload) => {
     console.log('📅 Sessão agendada via Calendly:', eventData);
-    
-    // Encontrar qual sessão foi agendada através do selectedSession
-    if (selectedSession) {
-      onSessionScheduled(selectedSession.id);
-    }
-    
     toast({
       title: "Sucesso",
       description: "Sessão agendada via Calendly com sucesso!",

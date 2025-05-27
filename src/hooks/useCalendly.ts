@@ -12,14 +12,28 @@ export const useCalendly = () => {
       setLoading(true);
       const { supabase } = await import('@/integrations/supabase/client');
       
-      console.log('🔍 useCalendly - Buscando configuração Calendly para mentor:', mentorId);
-      console.log('📋 useCalendly - Tipo do mentorId:', typeof mentorId, 'Comprimento:', mentorId.length);
+      const cleanMentorId = mentorId.trim();
+      console.log('🔍 useCalendly - Buscando configuração Calendly para mentor:', `"${cleanMentorId}"`);
+      console.log('📋 useCalendly - Tipo do mentorId:', typeof cleanMentorId, 'Comprimento:', cleanMentorId.length);
       
-      // Buscar configuração exata primeiro
+      // Primeiro, vamos ver todas as configurações disponíveis
+      const { data: allConfigs, error: allError } = await supabase
+        .from('calendly_configs')
+        .select('*');
+
+      if (allError) {
+        console.error('❌ useCalendly - Erro ao buscar todas as configurações:', allError);
+        throw allError;
+      }
+
+      console.log('📋 useCalendly - Todas as configurações no banco:', allConfigs);
+      console.log('📋 useCalendly - Configurações ativas:', allConfigs?.filter(c => c.active));
+
+      // Buscar configuração exata primeiro (case-sensitive)
       let { data, error } = await supabase
         .from('calendly_configs')
         .select('*')
-        .eq('mentor_id', mentorId)
+        .eq('mentor_id', cleanMentorId)
         .eq('active', true)
         .maybeSingle();
 
@@ -28,40 +42,56 @@ export const useCalendly = () => {
         throw error;
       }
 
-      // Se não encontrou, tentar busca case-insensitive
-      if (!data) {
+      console.log('📋 useCalendly - Resultado da busca exata:', data);
+
+      // Se não encontrou, tentar busca case-insensitive em todas as configurações
+      if (!data && allConfigs) {
         console.log('🔄 useCalendly - Tentando busca case-insensitive...');
-        const { data: allConfigs, error: allError } = await supabase
-          .from('calendly_configs')
-          .select('*')
-          .eq('active', true);
-
-        if (allError) {
-          console.error('❌ useCalendly - Erro na busca geral:', allError);
-          throw allError;
-        }
-
-        console.log('📋 useCalendly - Todas as configurações encontradas:', allConfigs);
         
-        // Buscar por correspondência case-insensitive
-        data = allConfigs?.find(config => 
-          config.mentor_id?.toLowerCase().trim() === mentorId.toLowerCase().trim()
-        ) || null;
+        // Buscar por correspondência case-insensitive e trim
+        data = allConfigs.find(config => {
+          const configMentorId = config.mentor_id?.toString().trim() || '';
+          const searchMentorId = cleanMentorId.toLowerCase();
+          const configMentorIdLower = configMentorId.toLowerCase();
+          
+          console.log(`🔍 Comparando: "${configMentorIdLower}" com "${searchMentorId}"`);
+          
+          return configMentorIdLower === searchMentorId && config.active;
+        }) || null;
 
         if (data) {
           console.log('✅ useCalendly - Configuração encontrada com busca case-insensitive:', data);
         }
       }
 
+      // Se ainda não encontrou, tentar busca por substring (inclui)
+      if (!data && allConfigs) {
+        console.log('🔄 useCalendly - Tentando busca por substring...');
+        
+        data = allConfigs.find(config => {
+          const configMentorId = config.mentor_id?.toString().trim() || '';
+          const searchMentorId = cleanMentorId.toLowerCase();
+          const configMentorIdLower = configMentorId.toLowerCase();
+          
+          const includesMatch = configMentorIdLower.includes(searchMentorId) || 
+                               searchMentorId.includes(configMentorIdLower);
+          
+          console.log(`🔍 Verificando substring: "${configMentorIdLower}" <-> "${searchMentorId}" = ${includesMatch}`);
+          
+          return includesMatch && config.active;
+        }) || null;
+
+        if (data) {
+          console.log('✅ useCalendly - Configuração encontrada com busca por substring:', data);
+        }
+      }
+
       if (!data) {
-        console.warn('❌ useCalendly - Nenhuma configuração ativa encontrada para mentor:', mentorId);
+        console.warn('❌ useCalendly - Nenhuma configuração ativa encontrada para mentor:', `"${cleanMentorId}"`);
         
-        // Mostrar todas as configurações disponíveis para debug
-        const { data: debugConfigs } = await supabase
-          .from('calendly_configs')
-          .select('mentor_id, active');
-        
-        console.log('🔍 useCalendly - Configurações disponíveis no banco:', debugConfigs);
+        // Log detalhado para debug
+        console.log('🔍 useCalendly - IDs dos mentores disponíveis:', 
+          allConfigs?.map(c => `"${c.mentor_id}"`) || []);
         return null;
       }
 

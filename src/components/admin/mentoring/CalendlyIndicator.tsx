@@ -33,6 +33,7 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
     try {
       console.log('🔍 CalendlyIndicator - Buscando config para mentor:', mentorId);
       console.log('📋 CalendlyIndicator - Tipo do mentorId:', typeof mentorId);
+      console.log('📋 CalendlyIndicator - MentorId limpo:', `"${mentorId.trim()}"`);
       
       if (!mentorId || mentorId.trim() === '') {
         console.warn('⚠️ CalendlyIndicator - MentorId vazio ou nulo');
@@ -41,7 +42,7 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
         return;
       }
       
-      const calendlyConfig = await getCalendlyConfig(mentorId);
+      const calendlyConfig = await getCalendlyConfig(mentorId.trim());
       
       console.log('📋 CalendlyIndicator - Configuração retornada:', calendlyConfig);
       console.log('✅ CalendlyIndicator - Config ativa?', calendlyConfig?.active);
@@ -50,10 +51,10 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
       
       if (!calendlyConfig) {
         console.warn(`❌ CalendlyIndicator - Nenhuma configuração encontrada para mentor: "${mentorId}"`);
-        setError(`Calendly não configurado para "${mentorId}"`);
+        setError(`Calendly não configurado`);
       } else if (!calendlyConfig.active) {
         console.warn(`⚠️ CalendlyIndicator - Configuração encontrada mas inativa para mentor: "${mentorId}"`);
-        setError(`Calendly inativo para "${mentorId}"`);
+        setError(`Calendly inativo`);
       } else {
         console.log(`✅ CalendlyIndicator - Configuração ativa encontrada para mentor: "${mentorId}"`);
       }
