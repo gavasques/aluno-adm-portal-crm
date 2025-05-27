@@ -10,6 +10,8 @@ import UserActionButtons from "@/components/admin/users/UserActionButtons";
 import { UserTable } from "./UserTable/UserTable";
 import { ValidatedUserDialogs } from "@/components/admin/users/dialogs/ValidatedUserDialogs";
 import { UserDialogManager } from "./UserDialogs/UserDialogManager";
+import { FunctionalityChecklist } from "@/components/admin/users/FunctionalityChecklist";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const UnifiedUserPage: React.FC = () => {
   const {
@@ -48,51 +50,62 @@ export const UnifiedUserPage: React.FC = () => {
   console.log('🔧 UnifiedUserPage: Rendering with dialog state:', { type, isOpen, userEmail: user?.email });
 
   return (
-    <div className="space-y-6">
-      <UsersHeader 
-        refreshUsersList={refreshUsers} 
-        isRefreshing={isRefreshing} 
-      />
+    <Tabs defaultValue="users" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="users">Gestão de Usuários</TabsTrigger>
+        <TabsTrigger value="checklist">Checklist de Testes</TabsTrigger>
+      </TabsList>
 
-      <UsersAlert fetchError={error} />
+      <TabsContent value="users" className="space-y-6">
+        <UsersHeader 
+          refreshUsersList={refreshUsers} 
+          isRefreshing={isRefreshing} 
+        />
 
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex-1">
-            <UserFilters
-              filters={filters}
-              stats={stats}
-              onFiltersChange={setFilters}
-              onSearch={searchUsers}
-            />
+        <UsersAlert fetchError={error} />
+
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex-1">
+              <UserFilters
+                filters={filters}
+                stats={stats}
+                onFiltersChange={setFilters}
+                onSearch={searchUsers}
+              />
+            </div>
+            <UserActionButtons onAddUser={handleAddUser} onInviteUser={handleInviteUser} />
           </div>
-          <UserActionButtons onAddUser={handleAddUser} onInviteUser={handleInviteUser} />
+
+          <UserTable
+            users={filteredUsers}
+            isLoading={isLoading}
+            onViewDetails={handleViewDetails}
+            onResetPassword={handleResetPassword}
+            onDeleteUser={handleDeleteUser}
+            onToggleUserStatus={handleToggleUserStatus}
+            onSetPermissionGroup={handleSetPermissionGroup}
+          />
         </div>
 
-        <UserTable
-          users={filteredUsers}
-          isLoading={isLoading}
-          onViewDetails={handleViewDetails}
-          onResetPassword={handleResetPassword}
-          onDeleteUser={handleDeleteUser}
-          onToggleUserStatus={handleToggleUserStatus}
-          onSetPermissionGroup={handleSetPermissionGroup}
+        <ValidatedUserDialogs
+          showAddDialog={showAddDialog}
+          setShowAddDialog={setShowAddDialog}
+          showInviteDialog={showInviteDialog}
+          setShowInviteDialog={setShowInviteDialog}
+          onRefresh={refreshUsers}
         />
-      </div>
 
-      <ValidatedUserDialogs
-        showAddDialog={showAddDialog}
-        setShowAddDialog={setShowAddDialog}
-        showInviteDialog={showInviteDialog}
-        setShowInviteDialog={setShowInviteDialog}
-        onRefresh={refreshUsers}
-      />
+        <UserDialogManager
+          dialogState={{ type, user, isOpen }}
+          onCloseDialog={closeDialog}
+          onRefresh={refreshUsers}
+        />
+      </TabsContent>
 
-      <UserDialogManager
-        dialogState={{ type, user, isOpen }}
-        onCloseDialog={closeDialog}
-        onRefresh={refreshUsers}
-      />
-    </div>
+      <TabsContent value="checklist">
+        <FunctionalityChecklist />
+      </TabsContent>
+    </Tabs>
   );
 };

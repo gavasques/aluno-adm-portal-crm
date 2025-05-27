@@ -3,6 +3,7 @@ import React from "react";
 import { PerformanceOptimizedUserProvider } from "@/contexts/PerformanceOptimizedUserContext";
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
 import { UnifiedUserPage } from "@/features/users/components/UnifiedUserPage";
+import { ComparisonToggle } from "@/components/admin/users/ComparisonToggle";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const UnifiedUsersContent = () => {
@@ -20,6 +21,9 @@ const UnifiedUsersContent = () => {
           backHref="/admin"
           className="mb-6"
         />
+        
+        <ComparisonToggle />
+        
         <UnifiedUserPage />
       </div>
     </PerformanceOptimizedUserProvider>
