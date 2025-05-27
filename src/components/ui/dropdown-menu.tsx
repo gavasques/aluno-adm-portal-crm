@@ -63,13 +63,15 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-[9999] min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "z-[99999] min-w-[12rem] overflow-hidden rounded-md border-2 border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-600 p-1 text-popover-foreground shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
       style={{ 
         pointerEvents: 'auto',
         position: 'relative',
-        zIndex: 9999
+        zIndex: 99999,
+        backgroundColor: 'white',
+        border: '2px solid #e5e7eb'
       }}
       {...props}
     />
@@ -82,15 +84,36 @@ const DropdownMenuItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, onClick, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none transition-colors focus:bg-gray-100 hover:bg-gray-100 dark:focus:bg-gray-700 dark:hover:bg-gray-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 min-h-[2.5rem]",
       inset && "pl-8",
       className
     )}
-    style={{ pointerEvents: 'auto' }}
+    style={{ 
+      pointerEvents: 'auto',
+      cursor: 'pointer',
+      backgroundColor: 'transparent',
+      userSelect: 'none'
+    }}
+    onClick={(e) => {
+      console.log('🎯 DROPDOWN ITEM CLICKED:', e.target);
+      console.log('🎯 Event details:', { 
+        type: e.type, 
+        target: e.target, 
+        currentTarget: e.currentTarget,
+        bubbles: e.bubbles,
+        defaultPrevented: e.defaultPrevented
+      });
+      if (onClick) {
+        onClick(e);
+      }
+    }}
+    onMouseDown={(e) => {
+      console.log('🎯 DROPDOWN ITEM MOUSE DOWN:', e.target);
+    }}
     {...props}
   />
 ))
