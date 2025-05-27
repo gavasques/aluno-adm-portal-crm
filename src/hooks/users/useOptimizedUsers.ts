@@ -81,13 +81,17 @@ export const useOptimizedUsers = () => {
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 300);
 
-  // Memoized filtered users and stats
+  // Memoized filtered users and stats - Fix the type issues here
   const filteredUsers = useMemo(() => {
-    return optimizedUserService.filterUsers(users, filters);
+    // Ensure users is always an array
+    const usersArray = Array.isArray(users) ? users : [];
+    return optimizedUserService.filterUsers(usersArray, filters);
   }, [users, filters]);
 
   const stats = useMemo(() => {
-    return optimizedUserService.calculateStats(users);
+    // Ensure users is always an array
+    const usersArray = Array.isArray(users) ? users : [];
+    return optimizedUserService.calculateStats(usersArray);
   }, [users]);
 
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
@@ -103,7 +107,7 @@ export const useOptimizedUsers = () => {
   }, [refetch]);
 
   return {
-    users,
+    users: Array.isArray(users) ? users : [],
     filteredUsers,
     stats,
     filters,
