@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CalendlyButton } from '@/components/calendly/CalendlyButton';
 import { CalendlyEventPayload } from '@/types/calendly.types';
+import { CalendlyIndicator } from '../CalendlyIndicator';
 
 interface SessionScheduleDialogProps {
   open: boolean;
@@ -75,6 +75,14 @@ export const SessionScheduleDialog = ({ open, onOpenChange, session, onSchedule 
           <div>
             <h4 className="font-medium text-sm text-gray-700 mb-2">Sessão</h4>
             <p className="text-sm text-gray-900">{session.title}</p>
+          </div>
+
+          {/* Indicador do Calendly */}
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <CalendlyIndicator 
+              mentorId={mentorId} 
+              showConfigButton={false}
+            />
           </div>
 
           <Tabs defaultValue="manual" className="w-full">

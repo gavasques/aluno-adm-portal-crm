@@ -1,80 +1,142 @@
-
-import React from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
+import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/hooks/useAuth';
-import Index from '@/pages/Index';
-import ResetPassword from '@/pages/ResetPassword';
-import StudentDashboard from '@/pages/student/Dashboard';
-import StudentMentoring from '@/pages/student/Mentoring';
-import StudentMentoringDetails from '@/pages/student/MentoringDetail';
-import AdminDashboard from '@/pages/admin/Dashboard';
-import AdminMentoringDashboard from '@/pages/admin/AdminMentoringDashboard';
-import AdminMentoringCatalog from '@/pages/admin/AdminMentoringCatalog';
-import AdminMentoringDetails from '@/pages/admin/MentoringDetail';
-import AdminMentoringEnrollments from '@/pages/admin/AdminMentoringEnrollments';
-import AdminIndividualEnrollments from '@/pages/admin/AdminIndividualEnrollments';
-import AdminUsers from '@/pages/admin/Users';
-import AdminGroups from '@/pages/admin/AdminGroups';
-import AdminIndividualSessions from '@/pages/admin/AdminIndividualSessions';
-import AdminGroupSessions from '@/pages/admin/AdminGroupSessions';
-import RouteGuard from '@/components/RouteGuard';
-import StudentLayout from '@/layout/StudentLayout';
-import AdminLayout from '@/layout/AdminLayout';
+
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminMentors from './pages/admin/AdminMentors';
+import AdminMentees from './pages/admin/AdminMentees';
+import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
+import AdminMentoringEnrollments from './pages/admin/AdminMentoringEnrollments';
+import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
+import AdminGroupEnrollments from './pages/admin/AdminGroupEnrollments';
+import AdminMentoringSessions from './pages/admin/AdminMentoringSessions';
+import AdminMentoringMaterials from './pages/admin/AdminMentoringMaterials';
+import AdminLayout from './layout/AdminLayout';
+import Layout from './layout/Layout';
+import RouteGuard from './components/RouteGuard';
+import { HelmetProvider } from 'react-helmet-async';
+import AdminCalendlyConfig from '@/pages/admin/AdminCalendlyConfig';
 
 function App() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  const queryClient = new QueryClient();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
-    <Routes>
-      {/* Public Routes - No protection needed */}
-      <Route path="/login" element={<Index />} />
-      <Route path="/register" element={<Index />} />
-      <Route path="/forgot-password" element={<Index />} />
-      <Route path="/reset-password/:token" element={<ResetPassword />} />
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Router>
+            <Toaster />
+            <Routes>
+              <Route path="/" element={
+                <Layout>
+                  <Home />
+                </Layout>
+              } />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/profile" element={
+                <RouteGuard>
+                  <Layout>
+                    <Profile />
+                  </Layout>
+                </RouteGuard>
+              } />
 
-      {/* Student Routes with Layout and Protection */}
-      <Route path="/aluno" element={
-        <RouteGuard requiredMenuKey="dashboard">
-          <StudentLayout />
-        </RouteGuard>
-      }>
-        <Route index element={<StudentDashboard />} />
-        <Route path="mentorias" element={<StudentMentoring />} />
-        <Route path="mentorias/:id" element={<StudentMentoringDetails />} />
-      </Route>
-      
-      {/* Admin Routes with Layout and Protection */}
-      <Route path="/admin" element={
-        <RouteGuard requireAdminAccess>
-          <AdminLayout />
-        </RouteGuard>
-      }>
-        <Route index element={<AdminDashboard />} />
-        <Route path="mentorias" element={<AdminMentoringDashboard />} />
-        <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
-        <Route path="mentorias/:id" element={<AdminMentoringDetails />} />
-        <Route path="inscricoes" element={<AdminMentoringEnrollments />} />
-        <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
-        <Route path="inscricoes-grupo" element={<AdminMentoringEnrollments />} />
-        <Route path="usuarios" element={<AdminUsers />} />
-        <Route path="grupos" element={<AdminGroups />} />
-        <Route path="mentorias/sessoes-individuais" element={<AdminIndividualSessions />} />
-        <Route path="mentorias/sessoes-grupo" element={<AdminGroupSessions />} />
-      </Route>
-      
-      {/* Default Route - Redirect based on authentication */}
-      <Route path="/" element={
-        user ? <Navigate to="/aluno" replace /> : <Navigate to="/login" replace />
-      } />
-    </Routes>
+              {/* Rotas de Admin */}
+              <Route path="/admin" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminDashboard />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/usuarios" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminUsers />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentores" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminMentors />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentees" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminMentees />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentorias" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminMentoringCatalog />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentorias/inscricoes" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminMentoringEnrollments />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentorias/inscricoes-individuais" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminIndividualEnrollments />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentorias/inscricoes-em-grupo" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminGroupEnrollments />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentorias/sessoes" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminMentoringSessions />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              <Route path="/admin/mentorias/materiais" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminMentoringMaterials />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+              
+              {/* Rota para configurações do Calendly */}
+              <Route path="/admin/calendly-config" element={
+                <RouteGuard requiredRole="Admin">
+                  <AdminLayout>
+                    <AdminCalendlyConfig />
+                  </AdminLayout>
+                </RouteGuard>
+              } />
+            </Routes>
+          </Router>
+        </div>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 
