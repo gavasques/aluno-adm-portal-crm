@@ -50,7 +50,8 @@ export const useAdminOperations = () => {
         throw new Error("Usuário não está autenticado. Faça login novamente.");
       }
 
-      console.log("[useAdminOperations] Sessão ativa encontrada, chamando edge function");
+      console.log("[useAdminOperations] Sessão ativa encontrada. Token disponível:", !!session.access_token);
+      console.log("[useAdminOperations] Chamando edge function com headers de autenticação");
       
       // Chamar a edge function para criar o usuário
       const { data, error } = await supabase.functions.invoke('create-user', {
@@ -62,7 +63,9 @@ export const useAdminOperations = () => {
           is_mentor
         },
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
+          'Content-Type': 'application/json'
         }
       });
 

@@ -20,6 +20,7 @@ serve(async (req) => {
 
   try {
     console.log(`Recebendo requisição ${req.method} para create-user`);
+    console.log("Headers recebidos:", Object.fromEntries(req.headers.entries()));
 
     if (req.method !== 'POST') {
       return new Response(
@@ -34,21 +35,31 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Criar cliente normal para verificar o usuário atual
+    // Verificar autenticação
     const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
+    const apiKey = req.headers.get('apikey');
+    
+    console.log("Auth header presente:", !!authHeader);
+    console.log("API key presente:", !!apiKey);
+
+    if (!authHeader && !apiKey) {
+      console.error("Nenhum token de autorização encontrado");
       return new Response(
         JSON.stringify({ error: 'Token de autorização necessário' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Criar cliente normal para verificar o usuário atual
+    const token = authHeader?.replace('Bearer ', '') || apiKey;
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { authorization: authHeader }
+          headers: { 
+            authorization: `Bearer ${token}`
+          }
         }
       }
     );
@@ -64,6 +75,7 @@ serve(async (req) => {
       );
     }
 
+    console.log("Usuário autenticado:", user.email);
     console.log("Verificando permissões do usuário:", user.id);
 
     // Verificar se o usuário é admin
@@ -90,6 +102,10 @@ serve(async (req) => {
     const isAdmin = profile?.role === 'Admin' || 
                    profile?.permission_groups?.is_admin === true ||
                    profile?.permission_groups?.allow_admin_access === true;
+
+    console.log("É admin:", isAdmin);
+    console.log("Profile role:", profile?.role);
+    console.log("Permission group admin:", profile?.permission_groups?.is_admin);
 
     if (!isAdmin) {
       console.error("Usuário sem permissões administrativas");
