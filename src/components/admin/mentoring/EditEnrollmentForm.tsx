@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +13,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, GraduationCap, Users, Calendar, AlertCircle, Plus, Clock, Gift } from 'lucide-react';
 import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
-import { StudentMentoringEnrollment } from '@/types/mentoring.types';
+import { StudentMentoringEnrollment, CreateExtensionData } from '@/types/mentoring.types';
+import { AddCustomMonthsDialog } from './extensions/AddCustomMonthsDialog';
+import { AddMentoringExtensionDialog } from './extensions/AddMentoringExtensionDialog';
 
 const editEnrollmentSchema = z.object({
   responsibleMentor: z.string().min(1, 'Mentor responsável é obrigatório'),
@@ -32,8 +34,7 @@ interface EditEnrollmentFormProps {
   onSubmit: (data: EditEnrollmentFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
-  onAddExtension?: (enrollment: StudentMentoringEnrollment) => void;
-  onAddCustomMonths?: (enrollment: StudentMentoringEnrollment) => void;
+  onAddExtension?: (data: CreateExtensionData) => void;
 }
 
 const EditEnrollmentForm = ({ 
@@ -41,11 +42,12 @@ const EditEnrollmentForm = ({
   onSubmit, 
   onCancel, 
   isLoading,
-  onAddExtension,
-  onAddCustomMonths 
+  onAddExtension
 }: EditEnrollmentFormProps) => {
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const { students } = useStudentsForEnrollment();
+  const [showCustomMonthsDialog, setShowCustomMonthsDialog] = useState(false);
+  const [showMentoringExtensionDialog, setShowMentoringExtensionDialog] = useState(false);
 
   // Buscar informações do estudante
   const student = students?.find(s => s.id === enrollment.studentId);
@@ -67,15 +69,9 @@ const EditEnrollmentForm = ({
     onSubmit(data);
   };
 
-  const handleAddExtension = () => {
+  const handleExtensionSubmit = (data: CreateExtensionData) => {
     if (onAddExtension) {
-      onAddExtension(enrollment);
-    }
-  };
-
-  const handleAddCustomMonths = () => {
-    if (onAddCustomMonths) {
-      onAddCustomMonths(enrollment);
+      onAddExtension(data);
     }
   };
 
@@ -140,6 +136,11 @@ const EditEnrollmentForm = ({
                       <span className="text-sm font-medium text-green-800">
                         +{extension.extensionMonths} {extension.extensionMonths === 1 ? 'mês' : 'meses'}
                       </span>
+                      {extension.notes && (
+                        <span className="text-xs text-green-600 ml-2">
+                          ({extension.notes})
+                        </span>
+                      )}
                     </div>
                     <span className="text-xs text-green-600">
                       {new Date(extension.appliedDate).toLocaleDateString('pt-BR')}
@@ -155,7 +156,7 @@ const EditEnrollmentForm = ({
             <Button
               type="button"
               variant="outline"
-              onClick={handleAddExtension}
+              onClick={() => setShowMentoringExtensionDialog(true)}
               className="flex items-center gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
             >
               <Plus className="h-4 w-4" />
@@ -164,7 +165,7 @@ const EditEnrollmentForm = ({
             <Button
               type="button"
               variant="outline"
-              onClick={handleAddCustomMonths}
+              onClick={() => setShowCustomMonthsDialog(true)}
               className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
             >
               <Plus className="h-4 w-4" />
@@ -344,6 +345,23 @@ const EditEnrollmentForm = ({
           </div>
         </form>
       </Form>
+
+      {/* Dialogs para extensões */}
+      <AddCustomMonthsDialog
+        open={showCustomMonthsDialog}
+        onOpenChange={setShowCustomMonthsDialog}
+        enrollment={enrollment}
+        onSubmit={handleExtensionSubmit}
+        isLoading={isLoading}
+      />
+
+      <AddMentoringExtensionDialog
+        open={showMentoringExtensionDialog}
+        onOpenChange={setShowMentoringExtensionDialog}
+        enrollment={enrollment}
+        onSubmit={handleExtensionSubmit}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
