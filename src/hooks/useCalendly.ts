@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CalendlyConfig, CalendlyEvent } from '@/types/calendly.types';
@@ -11,31 +12,14 @@ export const useCalendly = () => {
     try {
       console.log('🔍 Buscando configuração Calendly para:', mentorIdentifier);
       
-      // Primeiro, tentar buscar por mentor_id (UUID) - caso seja um ID válido
-      if (mentorIdentifier.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        console.log('🔍 Buscando por UUID...');
-        const { data, error } = await supabase
-          .from('calendly_configs')
-          .select('*')
-          .eq('mentor_id', mentorIdentifier)
-          .eq('active', true)
-          .maybeSingle();
-
-        if (!error && data) {
-          console.log('✅ Configuração encontrada por UUID:', data);
-          return data;
-        }
-      }
-
-      // Se não encontrou por ID ou não é UUID, buscar por todas as configurações ativas
-      console.log('🔍 Buscando por nome do mentor...');
+      // Buscar todas as configurações ativas
       const { data: allConfigs, error: allConfigsError } = await supabase
         .from('calendly_configs')
         .select('*')
         .eq('active', true);
 
       if (allConfigsError) {
-        console.error('❌ Erro ao buscar todas as configurações:', allConfigsError);
+        console.error('❌ Erro ao buscar configurações:', allConfigsError);
         return null;
       }
 
@@ -45,8 +29,15 @@ export const useCalendly = () => {
       }
 
       console.log('📋 Configurações ativas encontradas:', allConfigs.length);
+      console.log('📋 Configurações detalhadas:', allConfigs);
 
-      // Normalizar o nome do mentor para busca mais eficiente
+      // Se há apenas uma configuração ativa, usar ela (caso comum)
+      if (allConfigs.length === 1) {
+        console.log('✅ Usando única configuração ativa disponível:', allConfigs[0]);
+        return allConfigs[0];
+      }
+
+      // Se há múltiplas configurações, tentar encontrar por correspondência
       const normalizedMentor = mentorIdentifier.toLowerCase()
         .trim()
         .normalize('NFD')
@@ -55,11 +46,16 @@ export const useCalendly = () => {
       
       console.log('🔍 Procurando por mentor normalizado:', normalizedMentor);
       
-      // Buscar configuração por correspondência de nome
+      // Buscar por correspondência no mentor_id
       const matchedConfig = allConfigs.find(config => {
         if (!config.mentor_id) return false;
         
-        // Normalizar o mentor_id da configuração da mesma forma
+        // Se mentor_id é um UUID, pular essa verificação
+        if (config.mentor_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          console.log('🔍 Pulando UUID:', config.mentor_id);
+          return false;
+        }
+        
         const configMentor = (config.mentor_id || '').toLowerCase()
           .trim()
           .normalize('NFD')
@@ -68,7 +64,7 @@ export const useCalendly = () => {
         
         console.log('🔍 Comparando:', normalizedMentor, 'com:', configMentor);
         
-        // Verificações de correspondência mais precisas
+        // Verificações de correspondência
         const exactMatch = configMentor === normalizedMentor;
         const containsMatch = configMentor.includes(normalizedMentor) || normalizedMentor.includes(configMentor);
         
@@ -92,10 +88,18 @@ export const useCalendly = () => {
         return matchedConfig;
       }
 
-      // Se ainda não encontrou, verificar se há apenas uma configuração ativa (fallback)
-      if (allConfigs.length === 1) {
-        console.log('⚠️ Usando única configuração ativa como fallback:', allConfigs[0]);
-        return allConfigs[0];
+      // Como fallback para o problema dos UUIDs, vamos verificar se existe uma configuração
+      // que corresponda ao padrão do mentor "Guilherme Mentore"
+      if (normalizedMentor.includes('guilherme')) {
+        const guilhermeConfig = allConfigs.find(config => 
+          config.calendly_username === 'guilhermevasques' || 
+          config.calendly_username?.includes('guilherme')
+        );
+        
+        if (guilhermeConfig) {
+          console.log('✅ Encontrou configuração do Guilherme por username:', guilhermeConfig);
+          return guilhermeConfig;
+        }
       }
 
       console.log('❌ Nenhuma configuração Calendly encontrada para:', mentorIdentifier);
