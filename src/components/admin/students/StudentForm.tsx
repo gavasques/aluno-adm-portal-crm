@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,10 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { DialogFooter } from "@/components/ui/dialog";
-import { USERS } from "@/data/users";
+import { supabase } from "@/integrations/supabase/client";
 
 // Brazilian states array
 const brazilianStates = [
@@ -56,6 +56,7 @@ interface StudentFormProps {
   setUserSearchError: (error: string) => void;
   userFound: any;
   setUserFound: (user: any) => void;
+  isSubmitting?: boolean;
 }
 
 const StudentForm: React.FC<StudentFormProps> = ({
@@ -64,8 +65,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
   userSearchError,
   setUserSearchError,
   userFound,
-  setUserFound
+  setUserFound,
+  isSubmitting = false
 }) => {
+  const [isSearching, setIsSearching] = useState(false);
+
   // Create form
   const form = useForm({
     resolver: zodResolver(studentFormSchema),
@@ -83,25 +87,47 @@ const StudentForm: React.FC<StudentFormProps> = ({
   });
 
   // Handle search for user by email
-  const handleUserSearch = (email) => {
+  const handleUserSearch = async (email) => {
     if (!email) {
       setUserSearchError("Por favor, insira um email");
       setUserFound(null);
       return;
     }
 
-    const foundUser = USERS.find(user => user.email.toLowerCase() === email.toLowerCase());
-    
-    if (foundUser) {
-      setUserFound(foundUser);
+    try {
+      setIsSearching(true);
       setUserSearchError("");
-      toast({
-        title: "Usuário encontrado",
-        description: `${foundUser.name} (${foundUser.email})`
-      });
-    } else {
-      setUserFound(null);
-      setUserSearchError("Usuário não encontrado com este email");
+      
+      // Buscar o usuário pelo email
+      const { data: profilesData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .limit(1);
+      
+      if (error) throw error;
+      
+      if (profilesData && profilesData.length > 0) {
+        const foundUser = profilesData[0];
+        setUserFound(foundUser);
+        
+        // Preencher campos do formulário com dados do usuário
+        form.setValue("name", foundUser.name || "");
+        form.setValue("email", foundUser.email || "");
+        
+        toast({
+          title: "Usuário encontrado",
+          description: `${foundUser.name} (${foundUser.email})`
+        });
+      } else {
+        setUserFound(null);
+        setUserSearchError("Usuário não encontrado com este email");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar usuário:", error);
+      setUserSearchError("Erro ao buscar usuário");
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -280,7 +306,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
                     <Button 
                       type="button" 
                       onClick={() => handleUserSearch(field.value)}
+                      disabled={isSearching}
                     >
+                      {isSearching ? <Loader className="h-4 w-4 animate-spin mr-2" /> : null}
                       Buscar
                     </Button>
                   </div>
@@ -313,10 +341,23 @@ const StudentForm: React.FC<StudentFormProps> = ({
             variant="outline" 
             type="button"
             onClick={onCancel}
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
-          <Button type="submit">Adicionar Aluno</Button>
+          <Button 
+            type="submit"
+            disabled={isSubmitting || isSearching || !userFound}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader className="h-4 w-4 animate-spin mr-2" />
+                Adicionando...
+              </>
+            ) : (
+              "Adicionar Aluno"
+            )}
+          </Button>
         </DialogFooter>
       </form>
     </Form>

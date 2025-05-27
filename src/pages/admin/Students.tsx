@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useStudentsData } from '@/hooks/admin/useStudentsData';
 import StudentsStatistics from '@/components/admin/students/StudentsStatistics';
 import StudentsFilter from '@/components/admin/students/StudentsFilter';
 import StudentsTable from '@/components/admin/students/StudentsTable';
+import StudentAddDialog from '@/components/admin/students/StudentAddDialog';
 
 const AdminStudents = () => {
   const {
@@ -15,12 +16,14 @@ const AdminStudents = () => {
     searchTerm,
     statusFilter,
     setSearchTerm,
-    setStatusFilter
+    setStatusFilter,
+    refreshStudents
   } = useStudentsData();
 
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
   const handleAddStudent = () => {
-    // TODO: Implementar modal para adicionar estudante
-    console.log('Adicionar novo estudante');
+    setIsAddDialogOpen(true);
   };
 
   return (
@@ -53,6 +56,11 @@ const AdminStudents = () => {
       <StudentsTable 
         students={students}
         isLoading={isLoading}
+      />
+
+      <StudentAddDialog 
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
       />
     </div>
   );

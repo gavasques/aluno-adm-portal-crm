@@ -4,14 +4,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import StudentForm from "./StudentForm";
-import { STUDENTS } from "@/data/students";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudentAddDialogProps {
   open: boolean;
@@ -24,6 +22,7 @@ const StudentAddDialog: React.FC<StudentAddDialogProps> = ({
 }) => {
   const [userSearchError, setUserSearchError] = useState("");
   const [userFound, setUserFound] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCloseDialog = () => {
     setUserFound(null);
@@ -31,40 +30,50 @@ const StudentAddDialog: React.FC<StudentAddDialogProps> = ({
     onOpenChange(false);
   };
 
-  const handleFormSubmit = (data, userFound) => {
+  const handleFormSubmit = async (data, userFound) => {
     if (!userFound) {
       setUserSearchError("Você precisa relacionar um usuário válido");
       return;
     }
-    
-    // Create new student with user relation
-    const newStudent = {
-      id: STUDENTS.length + 1,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      company: data.company || "",
-      amazonStoreLink: data.amazonStoreLink || "",
-      studentState: data.studentState || "",
-      companyState: data.companyState || "",
-      usesFBA: data.usesFBA || "Não",
-      status: "Ativo",
-      lastLogin: "Hoje",
-      registrationDate: new Date().toLocaleDateString(),
-      user: {
-        id: userFound.id,
-        name: userFound.name,
-        email: userFound.email
-      }
-    };
 
-    // In a real app, save to database
-    toast({
-      title: "Aluno adicionado",
-      description: `${data.name} foi adicionado com sucesso.`
-    });
-    
-    handleCloseDialog();
+    try {
+      setIsSubmitting(true);
+      
+      // Atualizar o profile do usuário com os dados do aluno
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          role: 'Student',
+          status: 'Ativo',
+          // Adicionar outros campos conforme necessário
+        })
+        .eq('id', userFound.id);
+
+      if (error) throw error;
+
+      // Criar registro de aluno com informações adicionais
+      // (se necessário, em uma tabela separada)
+      
+      toast({
+        title: "Aluno adicionado",
+        description: `${data.name} foi adicionado com sucesso.`
+      });
+      
+      handleCloseDialog();
+      
+      // Atualizar a lista de alunos após adicionar um novo
+      window.location.reload();
+    } catch (error) {
+      console.error("Erro ao adicionar aluno:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar o aluno.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,6 +93,7 @@ const StudentAddDialog: React.FC<StudentAddDialogProps> = ({
           setUserSearchError={setUserSearchError}
           userFound={userFound}
           setUserFound={setUserFound}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>
