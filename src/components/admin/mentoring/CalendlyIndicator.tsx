@@ -27,7 +27,19 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const calendlyConfig = await CalendlyService.getCalendlyConfigByMentor(mentorId);
+      console.log('🔍 CalendlyIndicator - Buscando config para mentor:', mentorId);
+      
+      // Primeiro tentar buscar por mentor_id
+      let calendlyConfig = await CalendlyService.getCalendlyConfigByMentor(mentorId);
+      
+      // Se não encontrou por ID, buscar por nome similar
+      if (!calendlyConfig) {
+        console.log('🔍 Não encontrou por ID, tentando busca alternativa...');
+        // Aqui você pode implementar uma busca alternativa se necessário
+        // Por exemplo, se o mentorId for um nome como "Guilherme Mentore"
+      }
+      
+      console.log('📋 Configuração encontrada:', calendlyConfig);
       setConfig(calendlyConfig);
     } catch (error) {
       console.error('Error loading Calendly config:', error);
@@ -50,7 +62,7 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
       {config && config.active ? (
         <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
           <Calendar className="h-3 w-3 mr-1" />
-          Calendly Ativo
+          Calendly Ativo ({config.calendly_username})
         </Badge>
       ) : (
         <Badge variant="outline" className="text-amber-700 border-amber-300">

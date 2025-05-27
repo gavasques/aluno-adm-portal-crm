@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, Plus, Video, Settings, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink } from 'lucide-react';
 import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { CalendlyWidget } from '@/components/calendly/CalendlyWidget';
 import CreatePendingSessionForm from './CreatePendingSessionForm';
 import { useToast } from '@/hooks/use-toast';
+import { useCalendly } from '@/hooks/useCalendly';
 
 interface PendingSessionsCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -30,13 +31,29 @@ const PendingSessionsCard = ({
   const [showCalendly, setShowCalendly] = useState(false);
   const [selectedSession, setSelectedSession] = useState<MentoringSession | null>(null);
   const { toast } = useToast();
+  const { getCalendlyConfig } = useCalendly();
 
   const handleCreateSession = (data: any) => {
     onCreateSession(data);
     setShowCreateForm(false);
   };
 
-  const handleScheduleSession = (session: MentoringSession) => {
+  const handleScheduleSession = async (session: MentoringSession) => {
+    console.log('🔄 Tentando agendar sessão para mentor:', enrollment.responsibleMentor);
+    
+    // Verificar se existe configuração do Calendly
+    const config = await getCalendlyConfig(enrollment.responsibleMentor);
+    
+    if (!config) {
+      toast({
+        title: "Calendly não configurado",
+        description: `Configure o Calendly para o mentor "${enrollment.responsibleMentor}" antes de agendar.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('✅ Configuração Calendly encontrada, abrindo widget...');
     setSelectedSession(session);
     setShowCalendly(true);
   };
@@ -55,8 +72,8 @@ const PendingSessionsCard = ({
 
   const handleCalendlyError = () => {
     toast({
-      title: "Calendly não configurado",
-      description: "Configure o Calendly para este mentor antes de agendar.",
+      title: "Erro no Calendly",
+      description: `Erro ao carregar Calendly para o mentor "${enrollment.responsibleMentor}". Verifique a configuração.`,
       variant: "destructive",
     });
     setShowCalendly(false);
@@ -108,14 +125,21 @@ const PendingSessionsCard = ({
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  Para agendar via Calendly, certifique-se de que o mentor tem uma configuração ativa em{' '}
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto font-medium"
-                    onClick={() => window.open('/admin/calendly-config', '_blank')}
-                  >
-                    Configurações Calendly
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <span>
+                      Mentor: <strong>{enrollment.responsibleMentor}</strong>
+                    </span>
+                    <Button 
+                      variant="link" 
+                      size="sm"
+                      className="p-0 h-auto font-medium"
+                      onClick={() => window.open('/admin/calendly-config', '_blank')}
+                    >
+                      <Settings className="h-3 w-3 mr-1" />
+                      Configurar Calendly
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
 

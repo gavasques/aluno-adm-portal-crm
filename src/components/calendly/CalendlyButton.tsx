@@ -1,42 +1,56 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
 import { CalendlyWidget } from './CalendlyWidget';
 import { CalendlyEventPayload } from '@/types/calendly.types';
+import { Calendar } from 'lucide-react';
+import { useCalendly } from '@/hooks/useCalendly';
 
 interface CalendlyButtonProps {
   mentorId: string;
   onEventScheduled?: (eventData: CalendlyEventPayload) => void;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost';
-  size?: 'sm' | 'default' | 'lg';
-  className?: string;
   children?: React.ReactNode;
+  className?: string;
+  disabled?: boolean;
 }
 
 export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
   mentorId,
   onEventScheduled,
-  variant = 'default',
-  size = 'default',
-  className,
-  children
+  children,
+  className = '',
+  disabled = false
 }) => {
-  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
+  const [showWidget, setShowWidget] = useState(false);
+  const { getCalendlyConfig } = useCalendly();
+
+  const handleClick = async () => {
+    console.log('🖱️ CalendlyButton clicked for mentor:', mentorId);
+    
+    // Verificar se existe configuração antes de abrir o widget
+    const config = await getCalendlyConfig(mentorId);
+    if (!config) {
+      console.error('❌ Configuração Calendly não encontrada para:', mentorId);
+      // O widget vai mostrar o erro apropriado
+    }
+    
+    setShowWidget(true);
+  };
 
   const handleEventScheduled = (eventData: CalendlyEventPayload) => {
+    console.log('📅 Evento agendado via CalendlyButton:', eventData);
     if (onEventScheduled) {
       onEventScheduled(eventData);
     }
+    setShowWidget(false);
   };
 
   return (
     <>
       <Button
-        variant={variant}
-        size={size}
+        onClick={handleClick}
         className={className}
-        onClick={() => setIsCalendlyOpen(true)}
+        disabled={disabled}
       >
         <Calendar className="h-4 w-4 mr-2" />
         {children || 'Agendar via Calendly'}
@@ -44,8 +58,8 @@ export const CalendlyButton: React.FC<CalendlyButtonProps> = ({
 
       <CalendlyWidget
         mentorId={mentorId}
-        open={isCalendlyOpen}
-        onOpenChange={setIsCalendlyOpen}
+        open={showWidget}
+        onOpenChange={setShowWidget}
         onEventScheduled={handleEventScheduled}
       />
     </>

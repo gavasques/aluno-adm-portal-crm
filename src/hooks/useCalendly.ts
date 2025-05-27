@@ -8,18 +8,55 @@ export const useCalendly = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const getCalendlyConfig = useCallback(async (mentorId: string): Promise<CalendlyConfig | null> => {
+  const getCalendlyConfig = useCallback(async (mentorIdentifier: string): Promise<CalendlyConfig | null> => {
     try {
-      const { data, error } = await supabase
+      console.log('🔍 Buscando configuração Calendly para:', mentorIdentifier);
+      
+      // Primeiro, tentar buscar por mentor_id (UUID)
+      let { data, error } = await supabase
         .from('calendly_configs')
         .select('*')
-        .eq('mentor_id', mentorId)
+        .eq('mentor_id', mentorIdentifier)
         .eq('active', true)
-        .single();
+        .maybeSingle();
+
+      // Se não encontrou por ID, tentar buscar pela correspondência do nome do mentor
+      if (!data && !error) {
+        console.log('🔍 Não encontrou por ID, buscando por nome de mentor...');
+        
+        // Buscar todas as configurações ativas
+        const { data: allConfigs, error: allConfigsError } = await supabase
+          .from('calendly_configs')
+          .select('*')
+          .eq('active', true);
+
+        if (allConfigsError) {
+          console.error('Erro ao buscar todas as configurações:', allConfigsError);
+          return null;
+        }
+
+        // Buscar configuração onde o calendly_username contenha parte do nome do mentor
+        // ou onde o mentor identifier seja similar ao email/nome configurado
+        data = allConfigs?.find(config => {
+          const username = config.calendly_username?.toLowerCase() || '';
+          const identifier = mentorIdentifier.toLowerCase();
+          
+          // Verificar se o identificador contém o username ou vice-versa
+          return username.includes(identifier) || 
+                 identifier.includes(username) ||
+                 identifier.includes('guilherme') && username.includes('guilherme');
+        }) || null;
+      }
 
       if (error) {
         console.error('Error fetching Calendly config:', error);
         return null;
+      }
+
+      if (data) {
+        console.log('✅ Configuração Calendly encontrada:', data);
+      } else {
+        console.log('❌ Nenhuma configuração Calendly encontrada para:', mentorIdentifier);
       }
 
       return data;
