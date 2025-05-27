@@ -6,7 +6,9 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/auth';
 
 import Home from './pages/Index';
-import Login from './pages/AcceptInvite';
+import Login from './pages/Login';
+import CompleteRegistration from './pages/CompleteRegistration';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/student/Settings';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
@@ -39,6 +41,8 @@ function App() {
                   </Layout>
                 } />
                 <Route path="/login" element={<Login />} />
+                <Route path="/complete-registration" element={<CompleteRegistration />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={
                   <RouteGuard requireAdminAccess={false}>
                     <Layout isAdmin={false}>
@@ -93,7 +97,7 @@ function App() {
                 <Route path="/admin/mentorias/sessoes" element={
                   <RouteGuard requireAdminAccess={true}>
                     <AdminLayout>
-                      <AdminMentoringSessions />
+                      <AdminMentoringMaterials />
                     </AdminLayout>
                   </RouteGuard>
                 } />

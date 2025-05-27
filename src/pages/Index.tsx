@@ -1,8 +1,9 @@
 
 import { AuthTabs } from "@/components/ui/auth-tabs";
 import { useAuth } from "@/hooks/auth";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { ConnectionTest } from "@/components/debug/ConnectionTest";
+import { Button } from "@/components/ui/button";
 
 const RECOVERY_MODE_KEY = "supabase_recovery_mode";
 
@@ -37,14 +38,49 @@ const Index = () => {
     return <Navigate to="/aluno" replace />;
   }
 
-  // Mostrar a página de login/registro
+  // Página de boas-vindas para usuários não logados
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-800 to-black flex items-center justify-center p-4">
+      <div className="max-w-md w-full text-center space-y-8">
+        {/* Logo */}
         <div className="mb-8">
+          <img 
+            src="/lovable-uploads/ac3223f2-8f29-482c-a887-ed1bcabecec0.png" 
+            alt="Guilherme Vasques Logo" 
+            className="h-20 md:h-24 mx-auto object-cover" 
+          />
+        </div>
+
+        {/* Título e descrição */}
+        <div className="text-white space-y-4">
+          <h1 className="text-3xl md:text-4xl font-bold">
+            Portal do Aluno
+          </h1>
+          <p className="text-blue-200 text-lg">
+            Sua jornada de aprendizado começa aqui
+          </p>
+        </div>
+
+        {/* Botões de ação */}
+        <div className="space-y-4">
+          <Link to="/login" className="block">
+            <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 text-lg">
+              Acessar Portal
+            </Button>
+          </Link>
+          
+          <p className="text-blue-300 text-sm">
+            Não tem uma conta? 
+            <Link to="/login" className="text-white hover:underline ml-1">
+              Cadastre-se aqui
+            </Link>
+          </p>
+        </div>
+
+        {/* Debug info (apenas em desenvolvimento) */}
+        <div className="mt-8">
           <ConnectionTest />
         </div>
-        <AuthTabs />
       </div>
     </div>
   );
