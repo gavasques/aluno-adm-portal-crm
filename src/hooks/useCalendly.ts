@@ -14,10 +14,9 @@ export const useCalendly = () => {
       
       const cleanMentorId = mentorId.trim();
       console.log('🔍 useCalendly - Buscando configuração Calendly para mentor ID:', `"${cleanMentorId}"`);
-      console.log('📋 useCalendly - Tipo do mentorId:', typeof cleanMentorId, 'Comprimento:', cleanMentorId.length);
       
-      // Buscar configuração ativa pelo mentor_id exato
-      const { data, error } = await supabase
+      // Primeiro tentar buscar por UUID (novo formato)
+      let { data, error } = await supabase
         .from('calendly_configs')
         .select('*')
         .eq('mentor_id', cleanMentorId)
@@ -25,29 +24,51 @@ export const useCalendly = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ useCalendly - Erro na busca por mentor_id:', error);
-        throw error;
+        console.error('❌ useCalendly - Erro na busca por mentor_id UUID:', error);
+        
+        // Se falhou, tentar buscar o mentor por nome na tabela profiles
+        console.log('🔄 useCalendly - Tentando buscar mentor por nome...');
+        
+        const { data: mentorProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .eq('is_mentor', true)
+          .ilike('name', `%${cleanMentorId}%`)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('❌ useCalendly - Erro ao buscar mentor por nome:', profileError);
+          return null;
+        }
+
+        if (mentorProfile) {
+          console.log('✅ useCalendly - Mentor encontrado por nome:', mentorProfile);
+          
+          // Buscar configuração com o UUID correto
+          const { data: configData, error: configError } = await supabase
+            .from('calendly_configs')
+            .select('*')
+            .eq('mentor_id', mentorProfile.id)
+            .eq('active', true)
+            .maybeSingle();
+
+          if (configError) {
+            console.error('❌ useCalendly - Erro ao buscar config por UUID do mentor:', configError);
+            return null;
+          }
+
+          data = configData;
+        }
       }
 
-      console.log('📋 useCalendly - Resultado da busca por mentor_id:', data);
+      console.log('📋 useCalendly - Resultado da busca:', data);
 
       if (data) {
-        console.log('✅ useCalendly - Configuração ativa encontrada para mentor ID:', `"${cleanMentorId}"`);
+        console.log('✅ useCalendly - Configuração ativa encontrada');
         return data;
       }
 
-      console.warn('❌ useCalendly - Nenhuma configuração ativa encontrada para mentor ID:', `"${cleanMentorId}"`);
-      
-      // Log das configurações disponíveis para debug
-      const { data: allConfigs } = await supabase
-        .from('calendly_configs')
-        .select('*');
-
-      console.log('📋 useCalendly - Todas as configurações disponíveis:', allConfigs);
-      console.log('📋 useCalendly - Configurações ativas:', allConfigs?.filter(c => c.active));
-      console.log('🔍 useCalendly - IDs dos mentores disponíveis:', 
-        allConfigs?.map(c => `"${c.mentor_id}"`) || []);
-
+      console.warn('❌ useCalendly - Nenhuma configuração ativa encontrada');
       return null;
     } catch (error) {
       console.error('❌ useCalendly - Erro ao obter configuração do Calendly:', error);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,14 +46,17 @@ const PendingSessionsCard = ({
 
   // Buscar informações do mentor pelo responsibleMentor ID
   const mentor = mentors?.find(m => m.id === enrollment.responsibleMentor);
-  const mentorName = mentor?.name || enrollment.responsibleMentor;
-  const mentorId = enrollment.responsibleMentor; // Este é o ID correto do mentor
+  const mentorName = mentor?.name || 'Mentor não encontrado';
+  
+  // Usar o UUID do mentor se encontrado, senão usar o campo responsibleMentor como fallback
+  const mentorId = mentor?.id || enrollment.responsibleMentor;
 
-  console.log('🔍 PendingSessionsCard - Mentor responsável:', {
+  console.log('🔍 PendingSessionsCard - Debug mentor:', {
     responsibleMentor: enrollment.responsibleMentor,
     mentorFound: mentor,
     mentorName,
-    mentorId
+    mentorId,
+    mentorsList: mentors?.map(m => ({ id: m.id, name: m.name }))
   });
 
   // Calcular o total de sessões já criadas (todas as sessões da inscrição)
