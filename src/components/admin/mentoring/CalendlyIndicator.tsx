@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendlyService } from '@/services/calendly/CalendlyService';
+import { useCalendly } from '@/hooks/useCalendly';
 import { CalendlyConfig } from '@/types/calendly.types';
-import { Calendar, Settings } from 'lucide-react';
+import { Calendar, Settings, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface CalendlyIndicatorProps {
   mentorId: string;
@@ -15,10 +15,12 @@ interface CalendlyIndicatorProps {
 export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
   mentorId,
   onConfigureClick,
-  showConfigButton = false
+  showConfigButton = true
 }) => {
   const [config, setConfig] = useState<CalendlyConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const { getCalendlyConfig } = useCalendly();
 
   useEffect(() => {
     loadConfig();
@@ -26,23 +28,21 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
 
   const loadConfig = async () => {
     setLoading(true);
+    setError('');
     try {
       console.log('🔍 CalendlyIndicator - Buscando config para mentor:', mentorId);
       
-      // Primeiro tentar buscar por mentor_id
-      let calendlyConfig = await CalendlyService.getCalendlyConfigByMentor(mentorId);
-      
-      // Se não encontrou por ID, buscar por nome similar
-      if (!calendlyConfig) {
-        console.log('🔍 Não encontrou por ID, tentando busca alternativa...');
-        // Aqui você pode implementar uma busca alternativa se necessário
-        // Por exemplo, se o mentorId for um nome como "Guilherme Mentore"
-      }
+      const calendlyConfig = await getCalendlyConfig(mentorId);
       
       console.log('📋 Configuração encontrada:', calendlyConfig);
       setConfig(calendlyConfig);
+      
+      if (!calendlyConfig) {
+        setError('Configuração não encontrada');
+      }
     } catch (error) {
-      console.error('Error loading Calendly config:', error);
+      console.error('❌ Erro ao carregar configuração Calendly:', error);
+      setError('Erro ao carregar configuração');
     } finally {
       setLoading(false);
     }
@@ -61,13 +61,14 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
     <div className="flex items-center gap-2">
       {config && config.active ? (
         <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-          <Calendar className="h-3 w-3 mr-1" />
-          Calendly Ativo ({config.calendly_username})
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Calendly Ativo
+          <span className="ml-1 text-xs">({config.calendly_username})</span>
         </Badge>
       ) : (
-        <Badge variant="outline" className="text-amber-700 border-amber-300">
-          <Settings className="h-3 w-3 mr-1" />
-          Calendly não configurado
+        <Badge variant="outline" className="text-red-700 border-red-300 bg-red-50">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          {error || 'Calendly não configurado'}
         </Badge>
       )}
       
@@ -78,6 +79,7 @@ export const CalendlyIndicator: React.FC<CalendlyIndicatorProps> = ({
           onClick={onConfigureClick}
           className="h-6 px-2 text-xs"
         >
+          <Settings className="h-3 w-3 mr-1" />
           {config ? 'Editar' : 'Configurar'}
         </Button>
       )}

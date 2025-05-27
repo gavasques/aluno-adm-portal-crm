@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, Plus, Video, Settings, AlertTriangle, ExternalLink, CheckCircle } from 'lucide-react';
 import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.types';
 import { CalendlyWidget } from '@/components/calendly/CalendlyWidget';
 import CreatePendingSessionForm from './CreatePendingSessionForm';
 import { useToast } from '@/hooks/use-toast';
 import { useCalendly } from '@/hooks/useCalendly';
+import { CalendlyIndicator } from './CalendlyIndicator';
 
 interface PendingSessionsCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -30,6 +31,7 @@ const PendingSessionsCard = ({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showCalendly, setShowCalendly] = useState(false);
   const [selectedSession, setSelectedSession] = useState<MentoringSession | null>(null);
+  const [calendlyConfigExists, setCalendlyConfigExists] = useState<boolean | null>(null);
   const { toast } = useToast();
   const { getCalendlyConfig } = useCalendly();
 
@@ -45,6 +47,7 @@ const PendingSessionsCard = ({
     const config = await getCalendlyConfig(enrollment.responsibleMentor);
     
     if (!config) {
+      setCalendlyConfigExists(false);
       toast({
         title: "Calendly não configurado",
         description: `Configure o Calendly para o mentor "${enrollment.responsibleMentor}" antes de agendar.`,
@@ -53,6 +56,7 @@ const PendingSessionsCard = ({
       return;
     }
 
+    setCalendlyConfigExists(true);
     console.log('✅ Configuração Calendly encontrada, abrindo widget...');
     setSelectedSession(session);
     setShowCalendly(true);
@@ -121,32 +125,39 @@ const PendingSessionsCard = ({
               )}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Indicador do Status do Calendly */}
               <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="flex items-center justify-between">
-                    <span>
-                      Mentor: <strong>{enrollment.responsibleMentor}</strong>
-                    </span>
-                    <Button 
-                      variant="link" 
-                      size="sm"
-                      className="p-0 h-auto font-medium"
-                      onClick={() => window.open('/admin/calendly-config', '_blank')}
-                    >
-                      <Settings className="h-3 w-3 mr-1" />
-                      Configurar Calendly
-                      <ExternalLink className="h-3 w-3 ml-1" />
-                    </Button>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <div>
+                      <span className="font-medium">Mentor: {enrollment.responsibleMentor}</span>
+                      <div className="mt-1">
+                        <CalendlyIndicator 
+                          mentorId={enrollment.responsibleMentor} 
+                          showConfigButton={false}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </AlertDescription>
+                  <Button 
+                    variant="link" 
+                    size="sm"
+                    className="p-0 h-auto font-medium text-blue-600"
+                    onClick={() => window.open('/admin/calendly-config', '_blank')}
+                  >
+                    <Settings className="h-3 w-3 mr-1" />
+                    Configurar
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
               </Alert>
 
               {pendingSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="flex items-center justify-between p-3 border rounded-lg bg-yellow-50 border-yellow-200"
+                  className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50 border-yellow-200"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-yellow-100 rounded-lg">

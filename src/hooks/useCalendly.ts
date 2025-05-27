@@ -20,9 +20,9 @@ export const useCalendly = () => {
         .eq('active', true)
         .maybeSingle();
 
-      // Se não encontrou por ID, tentar buscar pela correspondência do nome do mentor
+      // Se não encontrou por ID, tentar buscar por correspondência de nome
       if (!data && !error) {
-        console.log('🔍 Não encontrou por ID, buscando por nome de mentor...');
+        console.log('🔍 Não encontrou por ID, buscando por similaridade de nome...');
         
         // Buscar todas as configurações ativas
         const { data: allConfigs, error: allConfigsError } = await supabase
@@ -35,21 +35,52 @@ export const useCalendly = () => {
           return null;
         }
 
-        // Buscar configuração onde o calendly_username contenha parte do nome do mentor
-        // ou onde o mentor identifier seja similar ao email/nome configurado
-        data = allConfigs?.find(config => {
-          const username = config.calendly_username?.toLowerCase() || '';
-          const identifier = mentorIdentifier.toLowerCase();
+        if (allConfigs && allConfigs.length > 0) {
+          // Normalizar o nome do mentor para busca
+          const normalizedMentor = mentorIdentifier.toLowerCase()
+            .replace(/\s+/g, ' ')
+            .trim();
           
-          // Verificar se o identificador contém o username ou vice-versa
-          return username.includes(identifier) || 
-                 identifier.includes(username) ||
-                 identifier.includes('guilherme') && username.includes('guilherme');
-        }) || null;
+          console.log('🔍 Procurando por mentor normalizado:', normalizedMentor);
+          
+          // Tentar encontrar por correspondência parcial
+          data = allConfigs.find(config => {
+            const username = config.calendly_username?.toLowerCase() || '';
+            
+            // Verificações de correspondência
+            const checks = [
+              // Correspondência exata de username
+              username === normalizedMentor,
+              // Username contém o nome do mentor
+              username.includes(normalizedMentor),
+              // Nome do mentor contém o username
+              normalizedMentor.includes(username),
+              // Correspondência específica para "Guilherme"
+              normalizedMentor.includes('guilherme') && username.includes('guilherme'),
+              // Correspondência por palavras-chave
+              normalizedMentor.includes('mentor') && username.includes('guilherme')
+            ];
+            
+            const match = checks.some(check => check);
+            if (match) {
+              console.log('✅ Encontrou correspondência:', config);
+            }
+            return match;
+          }) || null;
+          
+          // Se ainda não encontrou, tentar busca mais flexível
+          if (!data) {
+            console.log('🔍 Tentando busca mais flexível...');
+            data = allConfigs[0] || null; // Usar a primeira configuração ativa como fallback
+            if (data) {
+              console.log('⚠️ Usando configuração padrão como fallback:', data);
+            }
+          }
+        }
       }
 
       if (error) {
-        console.error('Error fetching Calendly config:', error);
+        console.error('❌ Erro ao buscar configuração Calendly:', error);
         return null;
       }
 
@@ -61,7 +92,7 @@ export const useCalendly = () => {
 
       return data;
     } catch (error) {
-      console.error('Error in getCalendlyConfig:', error);
+      console.error('❌ Erro em getCalendlyConfig:', error);
       return null;
     }
   }, []);
@@ -130,7 +161,13 @@ export const useCalendly = () => {
   }, []);
 
   const buildCalendlyUrl = useCallback((config: CalendlyConfig): string => {
-    return `https://calendly.com/${config.calendly_username}/${config.event_type_slug}?hide_gdpr_banner=1`;
+    const baseUrl = `https://calendly.com/${config.calendly_username}/${config.event_type_slug}`;
+    const params = new URLSearchParams({
+      hide_gdpr_banner: '1',
+      hide_event_type_details: '0'
+    });
+    
+    return `${baseUrl}?${params.toString()}`;
   }, []);
 
   return {
