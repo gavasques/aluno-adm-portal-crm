@@ -15,6 +15,7 @@ import { CalendlyIndicator } from './CalendlyIndicator';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { CalendlyButton } from '@/components/calendly/CalendlyButton';
 import { CalendlyEventPayload } from '@/types/calendly.types';
+import { useMentorsForEnrollment } from '@/hooks/admin/useMentorsForEnrollment';
 
 interface PendingSessionsCardProps {
   enrollment: StudentMentoringEnrollment;
@@ -38,10 +39,23 @@ const PendingSessionsCard = ({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { toast } = useToast();
   const { students } = useStudentsForEnrollment();
+  const { mentors } = useMentorsForEnrollment();
 
   // Buscar informações do estudante
   const student = students?.find(s => s.id === enrollment.studentId);
   const studentName = student?.name || student?.email || 'Aluno';
+
+  // Buscar informações do mentor pelo responsibleMentor ID
+  const mentor = mentors?.find(m => m.id === enrollment.responsibleMentor);
+  const mentorName = mentor?.name || enrollment.responsibleMentor;
+  const mentorId = enrollment.responsibleMentor; // Este é o ID correto do mentor
+
+  console.log('🔍 PendingSessionsCard - Mentor responsável:', {
+    responsibleMentor: enrollment.responsibleMentor,
+    mentorFound: mentor,
+    mentorName,
+    mentorId
+  });
 
   // Calcular o total de sessões já criadas (todas as sessões da inscrição)
   const totalSessionsCreated = allSessions.filter(session => session.enrollmentId === enrollment.id).length;
@@ -162,10 +176,10 @@ const PendingSessionsCard = ({
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
               </div>
               <div>
-                <span className="font-medium text-amber-900">Mentor: {enrollment.responsibleMentor}</span>
+                <span className="font-medium text-amber-900">Mentor: {mentorName}</span>
                 <div className="mt-1">
                   <CalendlyIndicator 
-                    mentorId={enrollment.responsibleMentor} 
+                    mentorId={mentorId}
                     showConfigButton={false}
                   />
                 </div>
@@ -278,7 +292,7 @@ const PendingSessionsCard = ({
                     <div className="flex items-center gap-2">
                       {canSchedule && (
                         <CalendlyButton
-                          mentorId={enrollment.responsibleMentor}
+                          mentorId={mentorId}
                           sessionId={session.id}
                           onEventScheduled={handleCalendlyScheduled}
                           variant="default"
