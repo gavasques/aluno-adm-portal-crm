@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { UserStatus, PermissionGroup } from '@/types/user.enums';
@@ -27,11 +26,16 @@ export class OptimizedUserService {
 
   async fetchUsers(): Promise<User[]> {
     try {
+      console.log('🔄 Iniciando busca de usuários...');
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.access_token) {
+        console.error('❌ Usuário não autenticado');
         throw new Error('Usuário não autenticado');
       }
+      
+      console.log('✅ Sessão encontrada, fazendo chamada para edge function...');
       
       const { data, error } = await supabase.functions.invoke('list-users', {
         method: 'GET',
@@ -42,14 +46,61 @@ export class OptimizedUserService {
       });
 
       if (error) {
-        console.error('Erro na Edge Function:', error);
+        console.error('❌ Erro na Edge Function:', error);
         throw new Error(error.message || 'Erro ao buscar usuários');
       }
 
-      return data?.users || [];
-    } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-      throw error;
+      if (!data) {
+        console.error('❌ Nenhum dado retornado da edge function');
+        throw new Error('Nenhum dado retornado do servidor');
+      }
+
+      const users = data?.users || [];
+      console.log(`✅ ${users.length} usuários carregados com sucesso:`, users);
+      
+      return users;
+    } catch (error: any) {
+      console.error('❌ Erro completo ao buscar usuários:', error);
+      console.error('Stack trace:', error.stack);
+      
+      // Tentar fallback direto da tabela profiles
+      console.log('🔄 Tentando fallback direto da tabela profiles...');
+      try {
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            permission_groups(name)
+          `);
+          
+        if (profileError) {
+          console.error('❌ Erro no fallback:', profileError);
+          throw profileError;
+        }
+        
+        console.log(`✅ Fallback bem-sucedido: ${profiles?.length || 0} perfis encontrados`);
+        
+        // Transformar perfis em formato de usuário
+        const transformedUsers = (profiles || []).map(profile => ({
+          id: profile.id,
+          name: profile.name || profile.email,
+          email: profile.email,
+          role: profile.role || 'Student',
+          status: profile.status || 'Ativo',
+          lastLogin: 'Nunca',
+          permission_group_id: profile.permission_group_id,
+          storage_used_mb: profile.storage_used_mb || 0,
+          storage_limit_mb: profile.storage_limit_mb || 100,
+          is_mentor: profile.is_mentor || false,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        }));
+        
+        return transformedUsers;
+      } catch (fallbackError) {
+        console.error('❌ Fallback também falhou:', fallbackError);
+        throw error; // Retornar erro original
+      }
     }
   }
 

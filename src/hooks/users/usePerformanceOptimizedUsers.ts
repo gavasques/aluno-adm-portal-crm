@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
@@ -34,16 +35,28 @@ export const usePerformanceOptimizedUsers = () => {
     refetch
   } = useQuery({
     queryKey: ['users'],
-    queryFn: optimizedUserService.fetchUsers.bind(optimizedUserService),
+    queryFn: async () => {
+      console.log('🔄 Query executando fetchUsers...');
+      const result = await optimizedUserService.fetchUsers();
+      console.log('✅ Query retornou:', result?.length, 'usuários');
+      return result;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
-    refetchOnWindowFocus: false, // Reduzir refetches desnecessários
-    refetchOnMount: false, // Usar cache quando possível
+    refetchOnWindowFocus: false,
+    refetchOnMount: true, // Forçar refetch na montagem
+    retry: (failureCount, error) => {
+      console.log(`🔄 Tentativa ${failureCount + 1} de buscar usuários. Erro:`, error);
+      return failureCount < 2; // Tentar até 3 vezes
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Ensure users is always an array
   const usersArray = useMemo(() => {
-    return Array.isArray(users) ? users : [];
+    const result = Array.isArray(users) ? users : [];
+    console.log('📊 usersArray processado:', result.length, 'usuários');
+    return result;
   }, [users]);
 
   // Preload quando users carregam
@@ -60,7 +73,6 @@ export const usePerformanceOptimizedUsers = () => {
 
   // Filtros memoizados com cache inteligente
   const filteredUsers = useMemo(() => {
-    // Primeiro, tentar buscar do cache
     const cached = getCachedFilteredUsers(filters);
     if (cached) {
       console.log('🎯 Cache HIT para filtros de usuários');
@@ -70,7 +82,6 @@ export const usePerformanceOptimizedUsers = () => {
     console.log('🔄 Cache MISS - filtrando usuários...');
     const filtered = optimizedUserService.filterUsers(usersArray, filters);
     
-    // Cachear resultado
     cacheFilteredUsers(filters, filtered);
     
     return filtered;
@@ -87,7 +98,6 @@ export const usePerformanceOptimizedUsers = () => {
     console.log('📊 Calculando estatísticas...');
     const calculatedStats = optimizedUserService.calculateStats(usersArray);
     
-    // Garantir que sempre temos um objeto UserStats válido
     const validStats: UserStats = {
       total: calculatedStats?.total || 0,
       active: calculatedStats?.active || 0,
@@ -104,7 +114,7 @@ export const usePerformanceOptimizedUsers = () => {
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
     onSuccess: () => {
-      smartInvalidate(); // Invalidar todo cache de usuários
+      smartInvalidate();
     },
   });
 
@@ -123,13 +133,12 @@ export const usePerformanceOptimizedUsers = () => {
       currentStatus: string; 
     }) => optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus),
     onSuccess: () => {
-      smartInvalidate('filtered'); // Invalidar apenas filtros
+      smartInvalidate('filtered');
     },
   });
 
   const resetPasswordMutation = useMutation({
     mutationFn: (email: string) => optimizedUserService.resetPassword(email),
-    // Não invalida cache - não afeta listagem
   });
 
   const setPermissionGroupMutation = useMutation({
@@ -139,11 +148,10 @@ export const usePerformanceOptimizedUsers = () => {
       groupId: string | null; 
     }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
     onSuccess: () => {
-      smartInvalidate('filtered'); // Invalidar filtros de grupo
+      smartInvalidate('filtered');
     },
   });
 
-  // Actions otimizadas
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
     setFiltersState(prev => ({ ...prev, ...newFilters }));
   }, []);
@@ -153,17 +161,28 @@ export const usePerformanceOptimizedUsers = () => {
   }, [debouncedSearch]);
 
   const refreshUsers = useCallback(async () => {
-    smartInvalidate(); // Limpar cache
+    console.log('🔄 Forçando refresh de usuários...');
+    smartInvalidate();
     await refetch();
   }, [refetch, smartInvalidate]);
 
-  // Performance metrics
   const performanceMetrics = useMemo(() => ({
     ...getMetrics(),
     totalUsers: usersArray.length,
     filteredUsers: filteredUsers.length,
     isOptimized: true
   }), [getMetrics, usersArray.length, filteredUsers.length]);
+
+  // Log para debug
+  useEffect(() => {
+    console.log('🔍 Estado atual do hook:', {
+      isLoading,
+      error: error?.message,
+      usersCount: usersArray.length,
+      filteredCount: filteredUsers.length,
+      stats
+    });
+  }, [isLoading, error, usersArray.length, filteredUsers.length, stats]);
 
   return {
     users: usersArray,
