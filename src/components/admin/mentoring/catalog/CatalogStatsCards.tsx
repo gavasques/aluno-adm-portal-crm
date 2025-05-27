@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, Zap, User, Users } from 'lucide-react';
 import { MentoringCatalog } from '@/types/mentoring.types';
@@ -8,13 +8,13 @@ interface CatalogStatsCardsProps {
   catalogs: MentoringCatalog[];
 }
 
-const CatalogStatsCards: React.FC<CatalogStatsCardsProps> = ({ catalogs }) => {
-  const stats = {
+const CatalogStatsCards: React.FC<CatalogStatsCardsProps> = memo(({ catalogs }) => {
+  const stats = useMemo(() => ({
     total: catalogs.length,
     active: catalogs.filter(c => c.active).length,
     individual: catalogs.filter(c => c.type === 'Individual').length,
     group: catalogs.filter(c => c.type === 'Grupo').length
-  };
+  }), [catalogs]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -79,6 +79,8 @@ const CatalogStatsCards: React.FC<CatalogStatsCardsProps> = ({ catalogs }) => {
       </Card>
     </div>
   );
-};
+});
+
+CatalogStatsCards.displayName = 'CatalogStatsCards';
 
 export default CatalogStatsCards;

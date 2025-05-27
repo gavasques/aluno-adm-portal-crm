@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { useMentoringCatalogData } from '@/hooks/admin/useMentoringCatalogData';
+import React, { useState, useCallback } from 'react';
+import { useMentoringReadQueries } from '@/features/mentoring/hooks/useMentoringReadQueries';
+import { useMentoringCatalogFilters } from '@/hooks/admin/useMentoringCatalogFilters';
 import CatalogHeader from './CatalogHeader';
 import CatalogStatsCards from './CatalogStatsCards';
 import CatalogFilters from './CatalogFilters';
@@ -13,12 +14,20 @@ import { useToast } from '@/hooks/use-toast';
 import { MentoringCatalog, CreateMentoringCatalogData } from '@/types/mentoring.types';
 
 const CatalogContent: React.FC = () => {
-  const { catalogs, loading, error, refetch } = useMentoringCatalogData();
+  const { useCatalogs } = useMentoringReadQueries();
+  const { data: catalogs = [], isLoading: loading, error, refetch } = useCatalogs();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Use optimized filtering hook
+  const { filteredCatalogs, stats } = useMentoringCatalogFilters(catalogs, {
+    searchTerm,
+    typeFilter,
+    statusFilter
+  });
 
   // Dialog states
   const [detailDialog, setDetailDialog] = useState<{
@@ -31,80 +40,45 @@ const CatalogContent: React.FC = () => {
     catalog: MentoringCatalog | null;
   }>({ open: false, catalog: null });
 
-  useEffect(() => {
-    console.log('📊 CatalogContent - Dados atualizados:', { 
-      catalogsCount: catalogs.length, 
-      loading, 
-      error,
-      catalogs: catalogs.slice(0, 2) // Log apenas os primeiros 2 para debug
-    });
-  }, [catalogs, loading, error]);
-
-  const filteredCatalogs = catalogs.filter(catalog => {
-    const matchesSearch = !searchTerm || 
-      catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = !typeFilter || catalog.type === typeFilter;
-    const matchesStatus = !statusFilter || 
-      (statusFilter === 'active' && catalog.active) ||
-      (statusFilter === 'inactive' && !catalog.active);
-    
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
-  console.log('🔍 Filtros aplicados:', { 
-    searchTerm, 
-    typeFilter, 
-    statusFilter, 
-    totalCatalogs: catalogs.length, 
-    filteredCount: filteredCatalogs.length 
-  });
-
-  const handleCreateCatalog = () => {
+  const handleCreateCatalog = useCallback(() => {
     setFormDialog({ open: true, catalog: null });
-  };
+  }, []);
 
-  const handleViewCatalog = (catalog: MentoringCatalog) => {
+  const handleViewCatalog = useCallback((catalog: MentoringCatalog) => {
     setDetailDialog({ open: true, catalog });
-  };
+  }, []);
 
-  const handleEditCatalog = (catalog: MentoringCatalog) => {
+  const handleEditCatalog = useCallback((catalog: MentoringCatalog) => {
     setFormDialog({ open: true, catalog });
-  };
+  }, []);
 
-  const handleDeleteCatalog = async (id: string) => {
+  const handleDeleteCatalog = useCallback(async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta mentoria?')) {
       return;
     }
 
     try {
-      // Implementar delete quando necessário
       console.log('Delete catalog:', id);
       await refetch();
     } catch (error) {
       console.error('Erro ao excluir mentoria:', error);
     }
-  };
+  }, [refetch]);
 
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+  const handleToggleStatus = useCallback(async (id: string, currentStatus: boolean) => {
     try {
-      // Implementar toggle status quando necessário
       console.log('Toggle status:', id, currentStatus);
       await refetch();
     } catch (error) {
       console.error('Erro ao alterar status:', error);
     }
-  };
+  }, [refetch]);
 
-  const handleFormSubmit = async (data: CreateMentoringCatalogData) => {
+  const handleFormSubmit = useCallback(async (data: CreateMentoringCatalogData) => {
     try {
       if (formDialog.catalog) {
-        // Implementar update quando necessário
         console.log('Update catalog:', formDialog.catalog.id, data);
       } else {
-        // Implementar create quando necessário
         console.log('Create catalog:', data);
       }
       setFormDialog({ open: false, catalog: null });
@@ -113,13 +87,13 @@ const CatalogContent: React.FC = () => {
       console.error('Erro ao salvar mentoria:', error);
       throw error;
     }
-  };
+  }, [formDialog.catalog, refetch]);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setSearchTerm('');
     setTypeFilter('');
     setStatusFilter('');
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -130,9 +104,9 @@ const CatalogContent: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-4">Erro: {error}</div>
+        <div className="text-red-600 mb-4">Erro: {error.message}</div>
         <button 
-          onClick={refetch}
+          onClick={() => refetch()}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Tentar novamente
@@ -145,8 +119,8 @@ const CatalogContent: React.FC = () => {
     <>
       <CatalogHeader
         onCreateCatalog={handleCreateCatalog}
-        totalCatalogs={catalogs.length}
-        activeCatalogs={catalogs.filter(c => c.active).length}
+        totalCatalogs={stats.total}
+        activeCatalogs={stats.active}
       />
 
       <CatalogStatsCards catalogs={catalogs} />
@@ -159,17 +133,17 @@ const CatalogContent: React.FC = () => {
         onTypeFilterChange={setTypeFilter}
         onStatusFilterChange={setStatusFilter}
         onClearFilters={handleClearFilters}
-        totalCatalogs={catalogs.length}
-        filteredCount={filteredCatalogs.length}
+        totalCatalogs={stats.total}
+        filteredCount={stats.filtered}
       />
 
-      {catalogs.length === 0 ? (
+      {stats.total === 0 ? (
         <EmptyState 
           type="enrollments" 
           title="Nenhuma mentoria cadastrada"
           description="Não há mentorias cadastradas no sistema. Clique em 'Nova Mentoria' para começar."
         />
-      ) : filteredCatalogs.length === 0 ? (
+      ) : stats.filtered === 0 ? (
         <EmptyState 
           type="enrollments" 
           title="Nenhuma mentoria encontrada"

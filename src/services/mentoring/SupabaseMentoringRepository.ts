@@ -30,7 +30,8 @@ export class SupabaseMentoringRepository {
       active: dbCatalog.active,
       status: dbCatalog.status,
       createdAt: dbCatalog.created_at,
-      updatedAt: dbCatalog.updated_at
+      updatedAt: dbCatalog.updated_at,
+      extensions: dbCatalog.extensions || []
     };
   }
 
@@ -124,11 +125,33 @@ export class SupabaseMentoringRepository {
   async getCatalogs(): Promise<MentoringCatalog[]> {
     const { data, error } = await supabase
       .from('mentoring_catalogs')
-      .select('*')
+      .select(`
+        *,
+        extensions:mentoring_extensions(
+          id,
+          months,
+          price,
+          description
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(catalog => this.mapCatalogFromDB(catalog));
+    
+    return (data || []).map(catalog => {
+      const extensions = (catalog.extensions || []).map((ext: any) => ({
+        id: ext.id,
+        months: ext.months,
+        price: ext.price,
+        totalSessions: this.calculateTotalSessions(ext.months, 'Semanal'),
+        description: ext.description || ''
+      }));
+
+      return {
+        ...this.mapCatalogFromDB(catalog),
+        extensions
+      };
+    });
   }
 
   async createCatalog(catalogData: CreateMentoringCatalogData): Promise<MentoringCatalog> {
