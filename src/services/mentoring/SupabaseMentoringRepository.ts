@@ -329,6 +329,15 @@ export class SupabaseMentoringRepository {
     return this.mapEnrollmentFromDB(data);
   }
 
+  async deleteEnrollment(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('mentoring_enrollments')
+      .delete()
+      .eq('id', id);
+
+    return !error;
+  }
+
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {
     const { data, error } = await supabase
       .from('mentoring_enrollments')

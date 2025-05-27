@@ -1,90 +1,57 @@
 
 import { useState, useCallback } from 'react';
-import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { StudentMentoringEnrollment, CreateExtensionData } from '@/types/mentoring.types';
+import { SupabaseMentoringRepository } from '@/services/mentoring/SupabaseMentoringRepository';
 import { useToast } from '@/hooks/use-toast';
+
+const repository = new SupabaseMentoringRepository();
 
 export const useSupabaseMentoringEnrollments = () => {
   const [enrollments, setEnrollments] = useState<StudentMentoringEnrollment[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const repository = new SupabaseMentoringRepository();
 
   const refreshEnrollments = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log('🔄 Iniciando refresh das inscrições...');
       const data = await repository.getEnrollments();
-      console.log('📊 Inscrições carregadas:', data.length, data);
       setEnrollments(data);
     } catch (error) {
-      console.error('❌ Error refreshing enrollments:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar inscrições",
-        variant: "destructive",
-      });
+      console.error('Error refreshing enrollments:', error);
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
-  const createEnrollment = useCallback(async (enrollmentData: {
-    studentId: string;
-    mentoringId: string;
-    status: string;
-    enrollmentDate: string;
-    startDate: string;
-    endDate: string;
-    totalSessions: number;
-    responsibleMentor: string;
-    paymentStatus: string;
-    observations?: string;
-  }): Promise<StudentMentoringEnrollment> => {
+  const createEnrollment = useCallback(async (enrollmentData: any): Promise<StudentMentoringEnrollment> => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      console.log('🏗️ Iniciando criação de inscrição no useSupabaseMentoring...');
-      console.log('📝 Dados da inscrição:', enrollmentData);
-      
-      // Validar dados obrigatórios
-      if (!enrollmentData.studentId || !enrollmentData.mentoringId || !enrollmentData.startDate || !enrollmentData.responsibleMentor) {
-        const missingFields = [];
-        if (!enrollmentData.studentId) missingFields.push('studentId');
-        if (!enrollmentData.mentoringId) missingFields.push('mentoringId');
-        if (!enrollmentData.startDate) missingFields.push('startDate');
-        if (!enrollmentData.responsibleMentor) missingFields.push('responsibleMentor');
-        
-        console.error('❌ Dados obrigatórios não fornecidos:', missingFields);
-        throw new Error(`Campos obrigatórios não fornecidos: ${missingFields.join(', ')}`);
-      }
-      
-      console.log('✅ Validação passou, enviando para o repository...');
       const newEnrollment = await repository.createEnrollment(enrollmentData);
-      console.log('✅ Inscrição criada no repositório:', newEnrollment);
-      
-      // Refresh das inscrições para atualizar a lista
       await refreshEnrollments();
-      console.log('🔄 Lista de inscrições atualizada após criação');
-      
-      toast({
-        title: "Sucesso",
-        description: "Inscrição criada com sucesso!",
-      });
-      
       return newEnrollment;
     } catch (error) {
-      console.error('❌ Erro ao criar inscrição:', error);
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao criar inscrição. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error('Error creating enrollment:', error);
       throw error;
     } finally {
       setLoading(false);
     }
-  }, [refreshEnrollments, toast]);
+  }, [refreshEnrollments]);
+
+  const deleteEnrollment = useCallback(async (id: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const success = await repository.deleteEnrollment(id);
+      if (success) {
+        await refreshEnrollments();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error deleting enrollment:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshEnrollments]);
 
   const getStudentEnrollments = useCallback(async (studentId: string): Promise<StudentMentoringEnrollment[]> => {
     try {
@@ -96,8 +63,8 @@ export const useSupabaseMentoringEnrollments = () => {
   }, []);
 
   const addExtension = useCallback(async (data: CreateExtensionData): Promise<boolean> => {
+    setLoading(true);
     try {
-      setLoading(true);
       const success = await repository.addExtension(data);
       if (success) {
         await refreshEnrollments();
@@ -123,6 +90,7 @@ export const useSupabaseMentoringEnrollments = () => {
     enrollments,
     loading,
     createEnrollment,
+    deleteEnrollment,
     getStudentEnrollments,
     addExtension,
     refreshEnrollments,
