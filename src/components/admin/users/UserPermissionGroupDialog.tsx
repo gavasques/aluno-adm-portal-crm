@@ -38,14 +38,14 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
   onSuccess,
 }) => {
   const { permissionGroups, isLoading } = usePermissionGroups();
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(currentGroupId);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(currentGroupId || "none");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
   // Atualizar o grupo selecionado quando o currentGroupId mudar
   useEffect(() => {
     if (open) {
-      setSelectedGroupId(currentGroupId);
+      setSelectedGroupId(currentGroupId || "none");
       setSuccess(false);
     }
   }, [currentGroupId, open]);
@@ -54,16 +54,19 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
     try {
       setSubmitting(true);
       
+      // Converter "none" para null
+      const groupIdToUpdate = selectedGroupId === "none" ? null : selectedGroupId;
+      
       console.log("Atualizando grupo de permissão:", {
         userId,
         userEmail,
-        selectedGroupId,
+        selectedGroupId: groupIdToUpdate,
         currentGroupId
       });
       
       const { error } = await supabase
         .from("profiles")
-        .update({ permission_group_id: selectedGroupId })
+        .update({ permission_group_id: groupIdToUpdate })
         .eq("id", userId);
         
       if (error) {
@@ -76,7 +79,7 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
       // Mostrar feedback de sucesso
       setSuccess(true);
       
-      const selectedGroup = permissionGroups.find(g => g.id === selectedGroupId);
+      const selectedGroup = permissionGroups.find(g => g.id === groupIdToUpdate);
       const groupName = selectedGroup ? selectedGroup.name : "Nenhum grupo";
       
       toast({
@@ -104,7 +107,7 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
   };
 
   const selectedGroup = permissionGroups.find(g => g.id === selectedGroupId);
-  const hasChanges = selectedGroupId !== currentGroupId;
+  const hasChanges = selectedGroupId !== (currentGroupId || "none");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,7 +127,7 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="permissionGroup">Grupo de Permissão</Label>
               <Select
-                value={selectedGroupId || ""}
+                value={selectedGroupId}
                 onValueChange={setSelectedGroupId}
                 disabled={isLoading || submitting}
               >
@@ -132,7 +135,7 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
                   <SelectValue placeholder="Selecione um grupo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum grupo</SelectItem>
+                  <SelectItem value="none">Nenhum grupo</SelectItem>
                   {permissionGroups.map((group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.name} {group.is_admin && "(Admin)"}
@@ -152,7 +155,7 @@ const UserPermissionGroupDialog: React.FC<UserPermissionGroupDialogProps> = ({
                 )}
                 
                 <p className="text-sm text-muted-foreground">
-                  {selectedGroupId
+                  {selectedGroupId !== "none"
                     ? "O usuário terá acesso aos recursos definidos pelo grupo selecionado."
                     : "Sem grupo de permissão, o usuário terá acesso limitado ao sistema."}
                 </p>
