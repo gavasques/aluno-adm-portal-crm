@@ -1,4 +1,3 @@
-
 import { corsHeaders } from "./_shared/cors.ts";
 import { createUser, inviteUser, deleteUser, toggleUserStatus } from "./userOperations.ts";
 
@@ -133,7 +132,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
           }),
           { 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400 
+            status: 200 
           }
         );
       }
@@ -149,7 +148,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
+          status: 200 
         }
       );
     }
@@ -176,7 +175,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
+          status: 200 
         }
       );
     }
@@ -217,14 +216,14 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
           }),
           { 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400 
+            status: 200 
           }
         );
     }
     
     console.log("[handlePostRequest] Resultado da operação:", result);
     
-    // Sempre retornar uma resposta JSON válida com status 200 para operações bem-sucedidas
+    // Sempre retornar uma resposta JSON válida com status 200
     return new Response(
       JSON.stringify(result),
       { 
@@ -235,6 +234,22 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
     
   } catch (error) {
     console.error("[handlePostRequest] Erro no handler POST:", error);
+    
+    // Verificar se é erro de constraint duplicada
+    if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          existed: true,
+          message: "Usuário já existe no sistema" 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -242,7 +257,7 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: 200 
       }
     );
   }

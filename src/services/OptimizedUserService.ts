@@ -144,6 +144,20 @@ export class OptimizedUserService {
       // Se houve erro na chamada da função
       if (error) {
         console.error('❌ Erro na Edge Function list-users:', error);
+        
+        // Verificar se é erro de constraint de chave duplicada
+        if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+          this.invalidateQueries();
+          
+          toast({
+            title: "Usuário já existe",
+            description: `O usuário ${userData.email} já está cadastrado no sistema.`,
+            variant: "default",
+          });
+          
+          return true; // Retornar sucesso para não bloquear o fluxo
+        }
+        
         throw new Error(error.message || 'Erro na edge function');
       }
 
@@ -164,7 +178,7 @@ export class OptimizedUserService {
         toast({
           title: data.existed ? "Usuário já existe" : "Usuário criado",
           description: message,
-          variant: data.existed ? "default" : "default",
+          variant: "default",
         });
         
         return true;
@@ -173,6 +187,20 @@ export class OptimizedUserService {
       // Se houve erro específico retornado pela edge function
       if (data.error) {
         console.error('❌ Erro retornado pela edge function:', data.error);
+        
+        // Verificar se é erro de perfil duplicado
+        if (data.error.includes('duplicate key value violates unique constraint')) {
+          this.invalidateQueries();
+          
+          toast({
+            title: "Usuário já existe",
+            description: `O usuário ${userData.email} já está cadastrado no sistema.`,
+            variant: "default",
+          });
+          
+          return true; // Retornar sucesso para não bloquear o fluxo
+        }
+        
         throw new Error(data.error);
       }
 
@@ -182,6 +210,19 @@ export class OptimizedUserService {
 
     } catch (error: any) {
       console.error('❌ Erro ao criar usuário:', error);
+      
+      // Verificar se é erro de chave duplicada no catch geral
+      if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+        this.invalidateQueries();
+        
+        toast({
+          title: "Usuário já existe",
+          description: `O usuário ${userData.email} já está cadastrado no sistema.`,
+          variant: "default",
+        });
+        
+        return true; // Retornar sucesso para não bloquear o fluxo
+      }
       
       // Se o erro for relacionado à edge function, mas o usuário pode ter sido criado
       if (error.message?.includes('Edge Function returned a non-2xx status code')) {
