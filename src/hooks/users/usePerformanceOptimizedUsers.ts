@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
@@ -77,19 +76,27 @@ export const usePerformanceOptimizedUsers = () => {
     return filtered;
   }, [usersArray, filters, getCachedFilteredUsers, cacheFilteredUsers]);
 
-  // Stats memoizadas com cache - corrigindo o tipo de retorno
+  // Stats memoizadas com cache - garantindo sempre um UserStats válido
   const stats = useMemo((): UserStats => {
     const cached = getCachedUserStats();
-    if (cached) {
+    if (cached && typeof cached === 'object' && 'total' in cached) {
       console.log('📊 Cache HIT para estatísticas');
-      return cached;
+      return cached as UserStats;
     }
 
     console.log('📊 Calculando estatísticas...');
     const calculatedStats = optimizedUserService.calculateStats(usersArray);
     
-    cacheUserStats(calculatedStats);
-    return calculatedStats;
+    // Garantir que sempre temos um objeto UserStats válido
+    const validStats: UserStats = {
+      total: calculatedStats?.total || 0,
+      active: calculatedStats?.active || 0,
+      inactive: calculatedStats?.inactive || 0,
+      pending: calculatedStats?.pending || 0
+    };
+    
+    cacheUserStats(validStats);
+    return validStats;
   }, [usersArray, getCachedUserStats, cacheUserStats]);
 
   // Mutations otimizadas com invalidação inteligente
