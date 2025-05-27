@@ -42,17 +42,52 @@ export const useAdminOperations = () => {
         throw new Error(errorMsg);
       }
 
-      console.log("[useAdminOperations] Validação passou, verificando usuário existente");
+      // Verificar se o usuário atual tem permissões administrativas
+      console.log("[useAdminOperations] Verificando permissões administrativas");
+      
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error("Usuário não autenticado");
+      }
 
-      // Primeiro, verificar se o usuário já existe na tabela profiles
-      const { data: existingProfile, error: profileError } = await supabase
+      // Verificar se o usuário é admin através do profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          permission_groups!inner(
+            is_admin,
+            allow_admin_access
+          )
+        `)
+        .eq('id', currentUser.user.id)
+        .single();
+
+      if (profileError) {
+        console.error("[useAdminOperations] Erro ao verificar perfil:", profileError);
+        throw new Error("Erro ao verificar permissões do usuário");
+      }
+
+      const isAdmin = profile?.role === 'Admin' || 
+                     profile?.permission_groups?.is_admin === true ||
+                     profile?.permission_groups?.allow_admin_access === true;
+
+      if (!isAdmin) {
+        console.error("[useAdminOperations] Usuário sem permissões administrativas");
+        throw new Error("Você não tem permissões para criar usuários");
+      }
+
+      console.log("[useAdminOperations] Permissões verificadas, verificando usuário existente");
+
+      // Verificar se o usuário já existe na tabela profiles
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email.toLowerCase())
         .maybeSingle();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error("[useAdminOperations] Erro ao verificar profile:", profileError);
+      if (checkError) {
+        console.error("[useAdminOperations] Erro ao verificar profile:", checkError);
         throw new Error("Erro ao verificar usuário existente");
       }
 
@@ -73,6 +108,8 @@ export const useAdminOperations = () => {
       }
 
       // Tentar criar o usuário via API Admin do Supabase
+      console.log("[useAdminOperations] Criando usuário via Admin API");
+      
       const { data: authUser, error: createError } = await supabase.auth.admin.createUser({
         email: email.toLowerCase(),
         password: password,
