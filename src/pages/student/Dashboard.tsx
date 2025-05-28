@@ -1,12 +1,8 @@
 
 import React from 'react';
 import { Users, Package, GraduationCap, BarChart, Wrench, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { ModernStatsCard } from '@/components/dashboard/ModernStatsCard';
-import { ModernQuickActions } from '@/components/dashboard/ModernQuickActions';
-import { ModernCard, ModernCardContent, ModernCardDescription, ModernCardHeader, ModernCardTitle } from '@/components/ui/modern-card';
+import { DesignStatsCard, DesignQuickActions, DesignActivityFeed } from '@/design-system/components/DesignDashboard';
 import { PageTransition, PageChild } from '@/components/animations/PageTransition';
-import { HoverCard } from '@/components/animations/HoverCard';
 
 const StudentDashboard = () => {
   const statsCards = [
@@ -15,7 +11,7 @@ const StudentDashboard = () => {
       value: "12",
       description: "fornecedores cadastrados",
       icon: Package,
-      gradient: "from-blue-500 to-blue-600",
+      gradient: "primary" as const,
       trend: { value: "+3 este mês", isPositive: true },
       onClick: () => window.location.href = "/aluno/meus-fornecedores"
     },
@@ -24,7 +20,7 @@ const StudentDashboard = () => {
       value: "3",
       description: "em andamento",
       icon: GraduationCap,
-      gradient: "from-purple-500 to-purple-600",
+      gradient: "secondary" as const,
       trend: { value: "2 agendadas", isPositive: true },
       onClick: () => window.location.href = "/aluno/mentorias"
     },
@@ -33,7 +29,7 @@ const StudentDashboard = () => {
       value: "125",
       description: "fornecedores disponíveis",
       icon: Users,
-      gradient: "from-green-500 to-green-600",
+      gradient: "accent" as const,
       trend: { value: "+8 novos", isPositive: true },
       onClick: () => window.location.href = "/aluno/fornecedores"
     },
@@ -42,7 +38,7 @@ const StudentDashboard = () => {
       value: "18",
       description: "disponíveis para você",
       icon: Wrench,
-      gradient: "from-orange-500 to-orange-600",
+      gradient: "warning" as const,
       trend: { value: "+2 adicionadas", isPositive: true },
       onClick: () => window.location.href = "/aluno/ferramentas"
     }
@@ -53,45 +49,54 @@ const StudentDashboard = () => {
       id: "fornecedores",
       title: "Fornecedores",
       description: "Explore nossa rede de fornecedores",
-      href: "/aluno/fornecedores",
       icon: Users,
-      gradient: "from-blue-500 to-blue-600"
+      gradient: "primary" as const,
+      onClick: () => window.location.href = "/aluno/fornecedores"
     },
     {
       id: "parceiros",
       title: "Parceiros",
       description: "Conecte-se com parceiros estratégicos",
-      href: "/aluno/parceiros",
       icon: BarChart,
-      gradient: "from-green-500 to-green-600"
+      gradient: "accent" as const,
+      onClick: () => window.location.href = "/aluno/parceiros"
     },
     {
       id: "ferramentas",
       title: "Ferramentas",
       description: "Acesse ferramentas exclusivas",
-      href: "/aluno/ferramentas",
       icon: Wrench,
-      gradient: "from-purple-500 to-purple-600"
+      gradient: "secondary" as const,
+      onClick: () => window.location.href = "/aluno/ferramentas"
     }
   ];
 
   const recentActivities = [
     {
+      id: "1",
       title: "Novo fornecedor adicionado",
       time: "2 horas atrás",
       color: "bg-blue-500",
       icon: Package
     },
     {
+      id: "2",
       title: "Mentoria agendada",
       time: "1 dia atrás",
       color: "bg-green-500",
       icon: GraduationCap
+    },
+    {
+      id: "3",
+      title: "Ferramenta avaliada",
+      time: "2 dias atrás",
+      color: "bg-purple-500",
+      icon: Wrench
     }
   ];
 
   return (
-    <PageTransition className="space-y-8">
+    <PageTransition className="space-y-8 p-6">
       {/* Header */}
       <PageChild>
         <div className="space-y-2">
@@ -108,23 +113,17 @@ const StudentDashboard = () => {
       <PageChild>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statsCards.map((card, index) => (
-            <HoverCard
+            <DesignStatsCard
               key={card.title}
-              variant="lift"
+              title={card.title}
+              value={card.value}
+              description={card.description}
+              icon={card.icon}
+              gradient={card.gradient}
+              trend={card.trend}
               onClick={card.onClick}
-              className="p-0 overflow-hidden"
-            >
-              <ModernStatsCard
-                title={card.title}
-                value={card.value}
-                description={card.description}
-                icon={card.icon}
-                gradient={card.gradient}
-                trend={card.trend}
-                onClick={card.onClick}
-                delay={index * 0.1}
-              />
-            </HoverCard>
+              variant="glass"
+            />
           ))}
         </div>
       </PageChild>
@@ -133,51 +132,12 @@ const StudentDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <PageChild className="lg:col-span-2">
-          <ModernQuickActions actions={quickActions} />
+          <DesignQuickActions actions={quickActions} variant="glass" />
         </PageChild>
 
         {/* Recent Activity */}
         <PageChild className="lg:col-span-1">
-          <HoverCard variant="glow" className="h-full">
-            <ModernCard variant="glass" className="h-full">
-              <ModernCardHeader>
-                <ModernCardTitle className="flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
-                    <Clock className="h-5 w-5 text-white" />
-                  </div>
-                  Atividade Recente
-                </ModernCardTitle>
-                <ModernCardDescription>
-                  Suas últimas ações no sistema
-                </ModernCardDescription>
-              </ModernCardHeader>
-              <ModernCardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center space-x-3 p-3 rounded-lg bg-white/20 dark:bg-white/5 border border-white/10 hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200"
-                    >
-                      <div className={`w-8 h-8 ${activity.color} rounded-full flex items-center justify-center`}>
-                        <activity.icon className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
-                          {activity.title}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {activity.time}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </ModernCardContent>
-            </ModernCard>
-          </HoverCard>
+          <DesignActivityFeed activities={recentActivities} variant="glass" />
         </PageChild>
       </div>
     </PageTransition>
