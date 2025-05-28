@@ -34,6 +34,12 @@ import AdminCRM from "@/pages/admin/CRM";
 import AdminSuppliers from "@/pages/admin/Suppliers";
 import AdminPartners from "@/pages/admin/Partners";
 import AdminTools from "@/pages/admin/Tools";
+import AdminPermissions from "@/pages/admin/Permissions";
+import AdminRegisters from "@/pages/admin/Registers";
+import AdminAudit from "@/pages/admin/Audit";
+import AdminSettings from "@/pages/admin/Settings";
+import AdminMentoringDashboard from "@/pages/admin/AdminMentoringDashboard";
+import AdminIndividualEnrollments from "@/pages/admin/AdminIndividualEnrollments";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -77,18 +83,18 @@ function App() {
                         <Route path="fornecedores" element={<AdminSuppliers />} />
                         <Route path="parceiros" element={<AdminPartners />} />
                         <Route path="ferramentas" element={<AdminTools />} />
-                        <Route path="mentorias" element={<div>Dashboard Mentorias - Em breve</div>} />
+                        <Route path="mentorias" element={<AdminMentoringDashboard />} />
                         <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
-                        <Route path="inscricoes-individuais" element={<div>Inscrições Individuais - Em breve</div>} />
+                        <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
                         <Route path="inscricoes-grupo" element={<AdminGroups />} />
                         <Route path="mentorias/sessoes-individuais" element={<div>Sessões Individuais - Em breve</div>} />
                         <Route path="mentorias/sessoes-grupo" element={<div>Sessões em Grupo - Em breve</div>} />
                         <Route path="mentorias/materiais" element={<div>Materiais - Em breve</div>} />
-                        <Route path="permissoes" element={<div>Permissões - Em breve</div>} />
-                        <Route path="cadastros" element={<div>Cadastros - Em breve</div>} />
-                        <Route path="auditoria" element={<div>Auditoria - Em breve</div>} />
+                        <Route path="permissoes" element={<AdminPermissions />} />
+                        <Route path="cadastros" element={<AdminRegisters />} />
+                        <Route path="auditoria" element={<AdminAudit />} />
                         <Route path="calendly-config" element={<AdminCalendlyConfig />} />
-                        <Route path="configuracoes" element={<div>Configurações - Em breve</div>} />
+                        <Route path="configuracoes" element={<AdminSettings />} />
                         <Route path="*" element={<div>Página não encontrada</div>} />
                       </Routes>
                     </AdminLayout>
