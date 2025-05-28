@@ -33,7 +33,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 
 const sidebarItems = [
@@ -169,13 +168,6 @@ export default function AdminSidebar() {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  const getUserInitials = () => {
-    if (user?.email) {
-      return user.email.charAt(0).toUpperCase();
-    }
-    return "A";
-  };
-
   const getUserName = () => {
     return user?.user_metadata?.name || user?.email || "Administrador";
   };
@@ -277,14 +269,9 @@ export default function AdminSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start h-auto p-2 text-white hover:bg-gray-700">
-                <Avatar className="h-7 w-7 mr-2">
-                  <AvatarFallback className="bg-blue-600 text-white text-xs">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start text-xs">
-                  <span className="font-medium">{getUserName()}</span>
-                  <span className="text-gray-300 text-xs truncate">{user?.email}</span>
+                <div className="flex flex-col items-start text-left w-full">
+                  <span className="font-medium text-xs">{getUserName()}</span>
+                  <span className="text-gray-300 text-xs truncate w-full">{user?.email}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
