@@ -68,295 +68,295 @@ function AppContent() {
   }
 
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/complete-registration" element={<CompleteRegistration />} />
+    <QueryClientProvider client={queryClient}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/complete-registration" element={<CompleteRegistration />} />
 
-          {/* Admin routes */}
-          <Route path="/admin/dashboard" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Dashboard />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/creditos" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Credits />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/tarefas" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Tasks />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/tarefas/:taskId" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <TaskDetail />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/crm" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <CRM />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/fornecedores" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminSuppliers />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/parceiros" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminPartners />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/ferramentas" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminTools />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/mentorias" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminMentoringDashboard />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/mentorias/catalogo" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminMentoringCatalog />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/inscricoes-individuais" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminIndividualEnrollments />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/inscricoes-grupo" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminGroupEnrollments />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/mentorias/materiais" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminMentoringMaterials />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/usuarios" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <OptimizedUsers />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/permissoes" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Permissions />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/auditoria" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Audit />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/calendly-config" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <AdminCalendlyConfig />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/categorias" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Categories />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/tipos-softwares" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <SoftwareTypes />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/tipos-parceiros" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <PartnerTypes />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/admin/configuracoes" element={
-            <RouteGuard requireAdminAccess={true}>
-              <Layout isAdmin={true}>
-                <Settings />
-              </Layout>
-            </RouteGuard>
-          } />
+        {/* Admin routes */}
+        <Route path="/admin/dashboard" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Dashboard />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/creditos" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Credits />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/tarefas" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Tasks />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/tarefas/:taskId" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <TaskDetail />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/crm" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <CRM />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/fornecedores" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminSuppliers />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/parceiros" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminPartners />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/ferramentas" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminTools />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/mentorias" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminMentoringDashboard />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/mentorias/catalogo" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminMentoringCatalog />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/inscricoes-individuais" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminIndividualEnrollments />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/inscricoes-grupo" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminGroupEnrollments />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/mentorias/materiais" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminMentoringMaterials />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/usuarios" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <OptimizedUsers />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/permissoes" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Permissions />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/auditoria" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Audit />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/calendly-config" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminCalendlyConfig />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/categorias" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Categories />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/tipos-softwares" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <SoftwareTypes />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/tipos-parceiros" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <PartnerTypes />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/configuracoes" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Settings />
+            </Layout>
+          </RouteGuard>
+        } />
 
-          {/* Student routes */}
-          <Route path="/aluno" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentDashboard />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/fornecedores" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentSuppliers />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/fornecedores/:id" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentSupplierDetail />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/meus-fornecedores" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <MySuppliers />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/meus-fornecedores/:id" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <MySupplierDetail />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/parceiros" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentPartners />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/ferramentas" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentTools />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/mentorias" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentMentoring />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/mentorias/:id" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentMentoringDetail />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/mentorias/:id/sessao" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <MentoringSession />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/creditos" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentCredits />
-              </Layout>
-            </RouteGuard>
-          } />
-          
-          <Route path="/aluno/configuracoes" element={
-            <RouteGuard requireAdminAccess={false}>
-              <Layout isAdmin={false}>
-                <StudentSettings />
-              </Layout>
-            </RouteGuard>
-          } />
+        {/* Student routes */}
+        <Route path="/aluno" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentDashboard />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/fornecedores" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentSuppliers />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/fornecedores/:id" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentSupplierDetail />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/meus-fornecedores" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <MySuppliers />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/meus-fornecedores/:id" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <MySupplierDetail />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/parceiros" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentPartners />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/ferramentas" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentTools />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/mentorias" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentMentoring />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/mentorias/:id" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentMentoringDetail />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/mentorias/:id/sessao" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <MentoringSession />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/creditos" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentCredits />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/aluno/configuracoes" element={
+          <RouteGuard requireAdminAccess={false}>
+            <Layout isAdmin={false}>
+              <StudentSettings />
+            </Layout>
+          </RouteGuard>
+        } />
 
-          {/* 404 route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </QueryClientProvider>
-    </Router>
+        {/* 404 route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </QueryClientProvider>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 
