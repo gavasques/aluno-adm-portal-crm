@@ -11,6 +11,7 @@ import Dashboard from "@/pages/student/Dashboard";
 import Suppliers from "@/pages/student/Suppliers";
 import SupplierDetail from "@/pages/student/SupplierDetail";
 import MySuppliers from "@/pages/student/MySuppliers";
+import MySupplierDetail from "@/pages/student/MySupplierDetail";
 import Partners from "@/pages/student/Partners";
 import Tools from "@/pages/student/Tools";
 import Mentoring from "@/pages/student/Mentoring";
@@ -20,7 +21,6 @@ import Settings from "@/pages/student/Settings";
 import NotFound from "@/pages/NotFound";
 import RouteGuard from "@/components/RouteGuard";
 import { AuthProvider } from "@/hooks/useAuth";
-import { MySupplierDetailView } from "@/components/student/my-suppliers/MySupplierDetailView";
 import Credits from "@/pages/student/Credits";
 import Users from "@/pages/admin/Users";
 
@@ -74,7 +74,7 @@ function App() {
               <Route path="fornecedores" element={<Suppliers />} />
               <Route path="fornecedores/:id" element={<SupplierDetail />} />
               <Route path="meus-fornecedores" element={<MySuppliers />} />
-              <Route path="meus-fornecedores/:id" element={<MySupplierDetailView />} />
+              <Route path="meus-fornecedores/:id" element={<MySupplierDetail />} />
               <Route path="parceiros" element={<Partners />} />
               <Route path="ferramentas" element={<Tools />} />
               <Route path="mentoria" element={<Mentoring />} />
