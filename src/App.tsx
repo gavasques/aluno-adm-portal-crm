@@ -1,7 +1,8 @@
 
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createOptimizedQueryClient } from "@/config/queryClient";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
@@ -20,7 +21,7 @@ import MentoringDetail from "@/pages/student/MentoringDetail";
 import MentoringSession from "@/pages/student/MentoringSession";
 import Settings from "@/pages/student/Settings";
 import NotFound from "@/pages/NotFound";
-import RouteGuard from "@/components/RouteGuard";
+import OptimizedRouteGuard from "@/components/OptimizedRouteGuard";
 import { AuthProvider } from "@/hooks/useAuth";
 import Credits from "@/pages/student/Credits";
 import Users from "@/pages/admin/Users";
@@ -42,17 +43,8 @@ import AdminMentoringDashboard from "@/pages/admin/AdminMentoringDashboard";
 import AdminIndividualEnrollments from "@/pages/admin/AdminIndividualEnrollments";
 import AdminMentoringMaterials from "@/pages/admin/AdminMentoringMaterials";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+// Create optimized query client instance
+const queryClient = createOptimizedQueryClient();
 
 function App() {
   return (
@@ -71,7 +63,7 @@ function App() {
               <Route
                 path="/admin/*"
                 element={
-                  <RouteGuard requireAdminAccess>
+                  <OptimizedRouteGuard requireAdminAccess>
                     <AdminLayout>
                       <Routes>
                         {/* Redirect /admin to /admin/dashboard */}
@@ -97,7 +89,7 @@ function App() {
                         <Route path="*" element={<div>Página não encontrada</div>} />
                       </Routes>
                     </AdminLayout>
-                  </RouteGuard>
+                  </OptimizedRouteGuard>
                 }
               />
 
@@ -105,9 +97,9 @@ function App() {
               <Route
                 path="/aluno/*"
                 element={
-                  <RouteGuard>
+                  <OptimizedRouteGuard>
                     <StudentLayout />
-                  </RouteGuard>
+                  </OptimizedRouteGuard>
                 }
               >
                 {/* Redirect /aluno to /aluno/dashboard */}

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,8 +25,8 @@ import { format } from 'date-fns';
 const AdminMentoringMaterials = () => {
   const { materials } = useMentoring();
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [uploaderFilter, setUploaderFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [uploaderFilter, setUploaderFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
 
@@ -36,41 +36,59 @@ const AdminMentoringMaterials = () => {
     { label: 'Central de Materiais' }
   ];
 
-  const filteredMaterials = materials.filter(material => {
-    const matchesSearch = !searchTerm || 
-      material.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (material.description && material.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = !typeFilter || (material.fileType && material.fileType.includes(typeFilter));
-    const matchesUploader = !uploaderFilter || material.uploaderType === uploaderFilter;
-    
-    return matchesSearch && matchesType && matchesUploader;
-  });
+  // Memoized filtered materials for better performance
+  const filteredMaterials = useMemo(() => {
+    return materials.filter(material => {
+      const matchesSearch = !searchTerm || 
+        material.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (material.description && material.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesType = typeFilter === 'all' || (material.fileType && material.fileType.includes(typeFilter));
+      const matchesUploader = uploaderFilter === 'all' || material.uploaderType === uploaderFilter;
+      
+      return matchesSearch && matchesType && matchesUploader;
+    });
+  }, [materials, searchTerm, typeFilter, uploaderFilter]);
 
-  const handleUploadMaterial = (data: any) => {
+  // Memoized stats calculations
+  const stats = useMemo(() => {
+    const totalSize = materials.reduce((acc, m) => acc + (m.sizeMB || 0), 0);
+    const mentorMaterials = materials.filter(m => m.uploaderType === 'mentor').length;
+    const studentMaterials = materials.filter(m => m.uploaderType === 'aluno').length;
+    
+    return {
+      total: materials.length,
+      totalSize: totalSize.toFixed(1),
+      mentorMaterials,
+      studentMaterials
+    };
+  }, [materials]);
+
+  // Optimized event handlers
+  const handleUploadMaterial = useCallback((data: any) => {
     console.log('Uploading material:', data);
     setShowForm(false);
-  };
+  }, []);
 
-  const handleDeleteMaterial = (id: string) => {
+  const handleDeleteMaterial = useCallback((id: string) => {
     if (confirm('Tem certeza que deseja excluir este material?')) {
       console.log('Deleting material:', id);
     }
-  };
+  }, []);
 
-  const handleBulkDownload = () => {
+  const handleBulkDownload = useCallback(() => {
     console.log('Bulk downloading materials:', selectedMaterials);
-  };
+  }, [selectedMaterials]);
 
-  const toggleSelection = (id: string) => {
+  const toggleSelection = useCallback((id: string) => {
     setSelectedMaterials(prev => 
       prev.includes(id) 
         ? prev.filter(item => item !== id)
         : [...prev, id]
     );
-  };
+  }, []);
 
-  const getFileTypeIcon = (fileType?: string) => {
+  const getFileTypeIcon = useCallback((fileType?: string) => {
     if (!fileType) return '📎';
     
     const type = fileType.toLowerCase();
@@ -80,7 +98,7 @@ const AdminMentoringMaterials = () => {
     if (type.includes('spreadsheet') || type.includes('excel')) return '📊';
     if (type.includes('presentation') || type.includes('powerpoint')) return '📽️';
     return '📎';
-  };
+  }, []);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -114,7 +132,7 @@ const AdminMentoringMaterials = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Materiais</p>
-                <p className="text-2xl font-bold text-gray-900">{materials.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <FileText className="h-6 w-6 text-blue-600" />
@@ -128,9 +146,7 @@ const AdminMentoringMaterials = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Tamanho Total</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {materials.reduce((acc, m) => acc + (m.sizeMB || 0), 0).toFixed(1)} MB
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalSize} MB</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <FolderOpen className="h-6 w-6 text-green-600" />
@@ -144,9 +160,7 @@ const AdminMentoringMaterials = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Por Mentores</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {materials.filter(m => m.uploaderType === 'mentor').length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{stats.mentorMaterials}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Upload className="h-6 w-6 text-purple-600" />
@@ -160,9 +174,7 @@ const AdminMentoringMaterials = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Por Alunos</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {materials.filter(m => m.uploaderType === 'aluno').length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{stats.studentMaterials}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-lg">
                 <Upload className="h-6 w-6 text-orange-600" />
@@ -297,7 +309,7 @@ const AdminMentoringMaterials = () => {
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum material encontrado</h3>
             <p className="text-gray-500 mb-4">
-              {searchTerm || typeFilter || uploaderFilter 
+              {searchTerm || typeFilter !== 'all' || uploaderFilter !== 'all'
                 ? 'Tente ajustar os filtros para encontrar materiais.'
                 : 'Nenhum material foi enviado ainda.'
               }
