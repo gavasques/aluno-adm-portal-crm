@@ -5,7 +5,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { cn } from '@/lib/utils';
 import { designTokens } from '../tokens';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'glass' | 'neumorphism' | 'gradient' | 'ghost' | 'outline';
+export type ButtonVariant = 'primary' | 'secondary' | 'glass' | 'neumorphism' | 'gradient' | 'ghost' | 'outline' | 'destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface DesignButtonProps extends Omit<HTMLMotionProps<'button'>, 'size'> {
@@ -33,7 +33,8 @@ const variantClasses = {
   neumorphism: 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/50 dark:border-slate-700/50 shadow-[5px_5px_20px_rgba(0,0,0,0.1),-5px_-5px_20px_rgba(255,255,255,0.8)] dark:shadow-[5px_5px_20px_rgba(0,0,0,0.3),-5px_-5px_20px_rgba(255,255,255,0.1)] hover:shadow-[inset_2px_2px_10px_rgba(0,0,0,0.1),inset_-2px_-2px_10px_rgba(255,255,255,0.8)] dark:hover:shadow-[inset_2px_2px_10px_rgba(0,0,0,0.3),inset_-2px_-2px_10px_rgba(255,255,255,0.1)]',
   gradient: 'text-white shadow-lg hover:shadow-xl border border-white/20',
   ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white',
-  outline: 'border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white'
+  outline: 'border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white',
+  destructive: 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl'
 };
 
 export const DesignButton: React.FC<DesignButtonProps> = ({
