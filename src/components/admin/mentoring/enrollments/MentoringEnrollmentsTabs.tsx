@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IndividualEnrollmentSection } from './IndividualEnrollmentSection';
+import IndividualEnrollmentSection from './IndividualEnrollmentSection';
 import { GroupEnrollmentSection } from './GroupEnrollmentSection';
 import { StudentMentoringEnrollment, GroupEnrollment } from '@/types/mentoring.types';
 

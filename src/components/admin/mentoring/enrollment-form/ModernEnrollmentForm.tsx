@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SteppedEnrollmentForm } from './SteppedEnrollmentForm';
+import SteppedEnrollmentForm from './SteppedEnrollmentForm';
 
 interface ModernEnrollmentFormProps {
   onSuccess?: () => void;
@@ -10,8 +10,9 @@ interface ModernEnrollmentFormProps {
 export const ModernEnrollmentForm = ({ onSuccess, onCancel }: ModernEnrollmentFormProps) => {
   return (
     <SteppedEnrollmentForm 
+      open={true}
+      onOpenChange={(open) => !open && onCancel?.()}
       onSuccess={onSuccess} 
-      onCancel={onCancel} 
     />
   );
 };

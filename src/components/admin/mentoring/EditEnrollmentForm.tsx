@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,6 @@ import { CalendarIcon, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
-import { useActiveStudentsForMentoring } from '@/hooks/admin/useActiveStudentsForMentoring';
 
 interface EditEnrollmentFormProps {
   open: boolean;
@@ -20,12 +20,27 @@ interface EditEnrollmentFormProps {
   onEditSubmit: (data: any) => void;
 }
 
-const EditEnrollmentForm: React.FC<EditEnrollmentFormProps> = ({ open, onOpenChange, enrollment, onEditSubmit }) => {
-  const [status, setStatus] = useState(enrollment?.status || 'ativa');
-  const [responsibleMentor, setResponsibleMentor] = useState(enrollment?.responsibleMentor || '');
-  const [startDate, setStartDate] = useState<Date | undefined>(enrollment?.startDate ? new Date(enrollment.startDate) : undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(enrollment?.endDate ? new Date(enrollment.endDate) : undefined);
-  const [observations, setObservations] = useState(enrollment?.observations || '');
+const EditEnrollmentForm: React.FC<EditEnrollmentFormProps> = ({ 
+  open, 
+  onOpenChange, 
+  enrollment, 
+  onEditSubmit 
+}) => {
+  const [status, setStatus] = useState<'ativa' | 'concluida' | 'cancelada' | 'pausada'>('ativa');
+  const [responsibleMentor, setResponsibleMentor] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [observations, setObservations] = useState('');
+
+  useEffect(() => {
+    if (enrollment) {
+      setStatus(enrollment.status);
+      setResponsibleMentor(enrollment.responsibleMentor || '');
+      setStartDate(enrollment.startDate ? new Date(enrollment.startDate) : undefined);
+      setEndDate(enrollment.endDate ? new Date(enrollment.endDate) : undefined);
+      setObservations(enrollment.observations || '');
+    }
+  }, [enrollment]);
 
   const handleSubmit = () => {
     if (!startDate || !endDate) {
@@ -49,6 +64,10 @@ const EditEnrollmentForm: React.FC<EditEnrollmentFormProps> = ({ open, onOpenCha
     onOpenChange(false);
   };
 
+  const handleStatusChange = (value: string) => {
+    setStatus(value as 'ativa' | 'concluida' | 'cancelada' | 'pausada');
+  };
+
   if (!enrollment) return null;
 
   return (
@@ -62,7 +81,7 @@ const EditEnrollmentForm: React.FC<EditEnrollmentFormProps> = ({ open, onOpenCha
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>

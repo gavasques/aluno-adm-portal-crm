@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { StudentMentoringEnrollment } from '@/types/mentoring.types';
-import { ModernIndividualEnrollmentCard } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
+import ModernIndividualEnrollmentCard from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentCard';
 import { ModernIndividualEnrollmentsList } from '@/components/admin/mentoring/enrollments/ModernIndividualEnrollmentsList';
 import { EnrollmentsPagination } from '@/components/admin/mentoring/enrollments/EnrollmentsPagination';
 

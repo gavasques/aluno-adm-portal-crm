@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { StudentMentoringEnrollment, CreateExtensionData } from '@/types/mentoring.types';
@@ -57,24 +56,16 @@ export const IndividualEnrollmentsDialogs = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editingEnrollment} onOpenChange={(open) => {
-        if (!open) onEditClose();
-      }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Inscrição Individual</DialogTitle>
-          </DialogHeader>
-          {editingEnrollment && (
-            <EditEnrollmentForm
-              enrollment={editingEnrollment}
-              onSubmit={onEditSubmit}
-              onCancel={onEditClose}
-              onAddExtension={onExtensionSubmit}
-              onRemoveExtension={onRemoveExtension}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {editingEnrollment && (
+        <EditEnrollmentForm
+          open={!!editingEnrollment}
+          onOpenChange={(open) => {
+            if (!open) onEditClose();
+          }}
+          enrollment={editingEnrollment}
+          onEditSubmit={onEditSubmit}
+        />
+      )}
 
       <EnrollmentDetailDialog
         open={!!viewingEnrollment}

@@ -139,7 +139,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
           toast({
             title: "Inscrição criada com sucesso",
             description: `${selectedStudent?.name} foi inscrito em ${selectedMentoring?.name}`,
-            variant: "success"
+            variant: "default"
           });
           
           onOpenChange(false);
@@ -411,7 +411,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status de Pagamento:</span>
-                        <Badge variant={formData.paymentStatus === 'pago' ? 'success' : 'outline'}>
+                        <Badge variant={formData.paymentStatus === 'pago' ? 'default' : 'outline'}>
                           {formData.paymentStatus}
                         </Badge>
                       </div>
