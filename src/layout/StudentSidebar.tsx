@@ -52,13 +52,13 @@ const NavItem = ({
     <Link
       to={href}
       className={cn(
-        "flex items-center px-4 py-3 text-base font-medium rounded-lg transition-colors",
+        "flex items-center px-3 py-2 text-xs font-medium rounded-md transition-colors",
         isActive
-          ? "bg-gray-800 text-white"
-          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+          ? "bg-blue-100 text-blue-700 border-l-2 border-blue-600"
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
       )}
     >
-      <Icon className="mr-3 h-5 w-5" />
+      <Icon className="mr-2 h-4 w-4" />
       {children}
     </Link>
   );
@@ -129,7 +129,7 @@ const StudentSidebar = () => {
   
   if (loading) {
     return (
-      <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto">
+      <div className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 overflow-y-auto resize-x min-w-[200px] max-w-[400px]">
         <div className="flex items-center justify-center h-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
@@ -138,83 +138,33 @@ const StudentSidebar = () => {
   }
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto flex flex-col">
-      {/* Header da sidebar com logo e menu do usuário */}
-      <div className="p-4 border-b border-gray-700">
+    <div className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 overflow-y-auto flex flex-col resize-x min-w-[200px] max-w-[400px]">
+      {/* Header da sidebar com logo */}
+      <div className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <Link to="/" className="flex items-center">
             <img 
               src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
               alt="Guilherme Vasques Logo" 
-              className="h-8"
+              className="h-7"
             />
           </Link>
           
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative rounded-full h-8 w-8 text-white hover:bg-gray-700">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-blue-600 text-white text-sm">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="bg-blue-600 text-white p-4 -mt-1 -mx-1 rounded-t-md">
-                  <div className="font-medium text-sm">Minha Conta</div>
-                  <div className="text-xs text-blue-100">
-                    {user?.email || "aluno@portaledu.com"}
-                  </div>
-                </div>
-                
-                <DropdownMenuItem asChild>
-                  <Link to="/aluno" className="flex cursor-pointer items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem onClick={handleSettings} className="flex cursor-pointer items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Configurações
-                </DropdownMenuItem>
-                
-                {permissions.hasAdminAccess && (
-                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="flex cursor-pointer items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Ir para Área Administrativa
-                  </DropdownMenuItem>
-                )}
-                
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600 cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <LogOut className="h-4 w-4" />
-                    Sair
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <Button variant="ghost" size="icon" className="relative text-gray-600 hover:bg-gray-100">
+            <Bell className="h-4 w-4" />
+            <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+          </Button>
         </div>
       </div>
 
       {/* Menu de navegação */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-3">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          <div className="mb-5">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
               Principal
             </h3>
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               <motion.div variants={itemAnimation}>
                 <NavItem href="/aluno" icon={Home} showAlways={true}>Dashboard</NavItem>
               </motion.div>
@@ -224,19 +174,19 @@ const StudentSidebar = () => {
             </nav>
           </div>
           
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          <div className="mb-5">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
               Minha Área
             </h3>
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               <motion.div variants={itemAnimation}>
                 <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
               </motion.div>
               <motion.div variants={itemAnimation}>
                 {mentoringLoading ? (
-                  <div className="flex items-center gap-3 rounded-lg px-4 py-3">
-                    <Skeleton className="h-5 w-5" />
-                    <Skeleton className="h-4 w-32" />
+                  <div className="flex items-center gap-2 rounded-md px-3 py-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-3 w-24" />
                   </div>
                 ) : (
                   <NavItem 
@@ -251,11 +201,11 @@ const StudentSidebar = () => {
             </nav>
           </div>
           
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          <div className="mb-5">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
               Geral
             </h3>
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               <motion.div variants={itemAnimation}>
                 <NavItem href="/aluno/fornecedores" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
               </motion.div>
@@ -268,6 +218,61 @@ const StudentSidebar = () => {
             </nav>
           </div>
         </motion.div>
+      </div>
+
+      {/* Menu do usuário na parte inferior */}
+      <div className="p-3 border-t border-gray-100 mt-auto">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="w-full justify-start h-auto p-2 text-gray-700 hover:bg-gray-50">
+              <Avatar className="h-7 w-7 mr-2">
+                <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start text-xs">
+                <span className="font-medium">{getUserName()}</span>
+                <span className="text-gray-500 text-xs truncate">{user?.email}</span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="bg-blue-50 text-blue-700 p-3 -mt-1 -mx-1 rounded-t-md">
+              <div className="font-medium text-sm">Minha Conta</div>
+              <div className="text-xs text-blue-600">
+                {user?.email || "aluno@portaledu.com"}
+              </div>
+            </div>
+            
+            <DropdownMenuItem asChild>
+              <Link to="/aluno" className="flex cursor-pointer items-center gap-2">
+                <User className="h-4 w-4" />
+                Dashboard
+              </Link>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={handleSettings} className="flex cursor-pointer items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Configurações
+            </DropdownMenuItem>
+            
+            {permissions.hasAdminAccess && (
+              <DropdownMenuItem onClick={handleNavigateToAdmin} className="flex cursor-pointer items-center gap-2">
+                <Users className="h-4 w-4" />
+                Ir para Área Administrativa
+              </DropdownMenuItem>
+            )}
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600 cursor-pointer">
+              <div className="flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sair
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
