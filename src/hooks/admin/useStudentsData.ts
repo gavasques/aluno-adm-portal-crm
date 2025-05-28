@@ -57,21 +57,59 @@ export const useStudentsData = () => {
       console.log('Estudantes encontrados:', profilesData?.length || 0);
 
       if (profilesData) {
+        // Buscar dados de último login do audit_logs
+        const { data: loginData } = await supabase
+          .from('audit_logs')
+          .select('user_id, created_at')
+          .eq('event_type', 'auth_login_success')
+          .order('created_at', { ascending: false });
+
+        // Criar um mapa de último login por usuário
+        const lastLoginMap = new Map();
+        if (loginData) {
+          loginData.forEach(log => {
+            if (!lastLoginMap.has(log.user_id)) {
+              lastLoginMap.set(log.user_id, log.created_at);
+            }
+          });
+        }
+
         // Mapear os dados para o formato esperado
-        const mappedStudents: Student[] = profilesData.map(profile => ({
-          id: profile.id,
-          name: profile.name || 'Sem nome',
-          email: profile.email,
-          role: profile.role || 'Student',
-          status: profile.status || 'Ativo',
-          created_at: profile.created_at,
-          permission_group_id: profile.permission_group_id,
-          storage_used_mb: profile.storage_used_mb,
-          storage_limit_mb: profile.storage_limit_mb,
-          is_mentor: profile.is_mentor,
-          lastLogin: 'Dados não disponíveis',
-          company: ''
-        }));
+        const mappedStudents: Student[] = profilesData.map(profile => {
+          const lastLoginDate = lastLoginMap.get(profile.id);
+          let formattedLastLogin = 'Nunca';
+
+          if (lastLoginDate) {
+            try {
+              const loginDate = new Date(lastLoginDate);
+              formattedLastLogin = loginDate.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            } catch (error) {
+              console.error('Erro ao formatar data de login:', error);
+              formattedLastLogin = 'Nunca';
+            }
+          }
+
+          return {
+            id: profile.id,
+            name: profile.name || 'Sem nome',
+            email: profile.email,
+            role: profile.role || 'Student',
+            status: profile.status || 'Ativo',
+            created_at: profile.created_at,
+            permission_group_id: profile.permission_group_id,
+            storage_used_mb: profile.storage_used_mb,
+            storage_limit_mb: profile.storage_limit_mb,
+            is_mentor: profile.is_mentor,
+            lastLogin: formattedLastLogin,
+            company: ''
+          };
+        });
 
         setStudents(mappedStudents);
 
