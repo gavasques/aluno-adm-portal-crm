@@ -1,5 +1,6 @@
 
 import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/auth";
 import AdminSidebar from "./AdminSidebar";
 import StudentSidebar from "./StudentSidebar";
@@ -13,6 +14,7 @@ interface LayoutProps {
 const Layout = ({ isAdmin, children }: LayoutProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [sidebarWidth, setSidebarWidth] = useState(256);
   
   // Se está carregando a autenticação, mostrar loading
   if (loading) {
@@ -35,10 +37,34 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
     );
   }
 
+  // Detectar mudanças na largura da sidebar para admin
+  useEffect(() => {
+    if (isAdmin) {
+      const handleSidebarResize = () => {
+        const sidebar = document.querySelector('[data-sidebar="admin"]');
+        if (sidebar) {
+          setSidebarWidth(sidebar.getBoundingClientRect().width);
+        }
+      };
+
+      const observer = new ResizeObserver(handleSidebarResize);
+      const sidebar = document.querySelector('[data-sidebar="admin"]');
+      if (sidebar) {
+        observer.observe(sidebar);
+      }
+
+      return () => {
+        if (sidebar) {
+          observer.unobserve(sidebar);
+        }
+      };
+    }
+  }, [isAdmin]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar - largura fixa */}
-      <div className="w-64 flex-shrink-0">
+      {/* Sidebar - largura dinâmica */}
+      <div className="flex-shrink-0" style={{ width: isAdmin ? `${sidebarWidth}px` : '256px' }}>
         {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
       </div>
       
