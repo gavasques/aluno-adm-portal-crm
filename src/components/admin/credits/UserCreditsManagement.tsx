@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,7 @@ const UserCreditsManagement = () => {
         .from('profiles')
         .select(`
           *,
-          user_credits (
+          user_credits!inner (
             current_credits,
             monthly_limit,
             used_this_month,
@@ -98,8 +97,11 @@ const UserCreditsManagement = () => {
 
       const { data, error } = await query.order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as SupabaseUserWithCredits[];
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
+      return data;
     }
   });
 
