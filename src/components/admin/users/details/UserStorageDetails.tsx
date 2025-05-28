@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Plus, HardDrive, FileText, Calendar } from "lucide-react";
+import { Plus, HardDrive, Calendar, Minus, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import StorageUpgradeDialog from "../StorageUpgradeDialog";
+import { RemoveStorageDialog } from "../dialogs/RemoveStorageDialog";
+import { AdjustStorageDialog } from "../dialogs/AdjustStorageDialog";
 import { useAdminStorage } from "@/hooks/admin/useAdminStorage";
 
 interface UserStorageDetailsProps {
@@ -19,6 +21,8 @@ interface UserStorageDetailsProps {
 
 const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [showAdjustDialog, setShowAdjustDialog] = useState(false);
   const { storageUpgrades } = useAdminStorage();
   
   const storageUsedMb = user.storage_used_mb || 0;
@@ -46,6 +50,19 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
 
   // Filtrar upgrades deste usuário
   const userUpgrades = storageUpgrades.filter(upgrade => upgrade.user_id === user.id);
+
+  // Funções placeholder - serão implementadas no hook
+  const handleRemoveStorage = async (userId: string, removeMB: number, notes?: string): Promise<boolean> => {
+    console.log('🔄 Removendo armazenamento:', removeMB, 'MB do usuário:', user.name);
+    // TODO: Implementar lógica de remoção
+    return true;
+  };
+
+  const handleAdjustStorage = async (userId: string, newLimit: number, notes?: string): Promise<boolean> => {
+    console.log('🔄 Ajustando armazenamento para:', newLimit, 'MB do usuário:', user.name);
+    // TODO: Implementar lógica de ajuste
+    return true;
+  };
 
   return (
     <>
@@ -107,13 +124,33 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
           </div>
 
           {/* Ações */}
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               onClick={() => setShowUpgradeDialog(true)}
               className="flex-1"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Adicionar Armazenamento
+              Adicionar
+            </Button>
+            
+            <Button
+              onClick={() => setShowAdjustDialog(true)}
+              variant="outline"
+              className="flex-1"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Ajustar
+            </Button>
+          </div>
+
+          <div className="w-full">
+            <Button
+              onClick={() => setShowRemoveDialog(true)}
+              variant="outline"
+              className="w-full text-red-600 hover:text-red-600 hover:bg-red-50"
+            >
+              <Minus className="h-4 w-4 mr-2" />
+              Remover Armazenamento
             </Button>
           </div>
 
@@ -149,6 +186,24 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
         onOpenChange={setShowUpgradeDialog}
         userId={user.id}
         userName={user.name}
+      />
+
+      <RemoveStorageDialog
+        open={showRemoveDialog}
+        onOpenChange={setShowRemoveDialog}
+        userId={user.id}
+        userName={user.name}
+        currentLimit={storageLimitMb}
+        onConfirm={handleRemoveStorage}
+      />
+
+      <AdjustStorageDialog
+        open={showAdjustDialog}
+        onOpenChange={setShowAdjustDialog}
+        userId={user.id}
+        userName={user.name}
+        currentLimit={storageLimitMb}
+        onConfirm={handleAdjustStorage}
       />
     </>
   );

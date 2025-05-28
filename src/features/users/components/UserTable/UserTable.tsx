@@ -15,6 +15,7 @@ interface UserTableProps {
   isLoading: boolean;
   onViewDetails: (user: User) => void;
   onResetPassword: (user: User) => void;
+  onChangePassword: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
   onBanUser?: (user: User) => void;
@@ -26,6 +27,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   isLoading,
   onViewDetails,
   onResetPassword,
+  onChangePassword,
   onDeleteUser,
   onSetPermissionGroup,
   onBanUser,
@@ -45,6 +47,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 user={user}
                 onViewDetails={onViewDetails}
                 onResetPassword={onResetPassword}
+                onChangePassword={onChangePassword}
                 onDeleteUser={onDeleteUser}
                 onSetPermissionGroup={onSetPermissionGroup}
                 onBanUser={onBanUser}

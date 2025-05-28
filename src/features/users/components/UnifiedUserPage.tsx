@@ -31,6 +31,7 @@ export const UnifiedUserPage: React.FC = () => {
     closeDialog,
     handleViewDetails,
     handleResetPassword,
+    handleChangePassword,
     handleDeleteUser,
     handleSetPermissionGroup
   } = useUserDialogs();
@@ -85,6 +86,7 @@ export const UnifiedUserPage: React.FC = () => {
         isLoading={isLoading}
         onViewDetails={handleViewDetails}
         onResetPassword={handleResetPassword}
+        onChangePassword={handleChangePassword}
         onDeleteUser={handleDeleteUser}
         onSetPermissionGroup={handleSetPermissionGroup}
         onBanUser={handleBanUser}

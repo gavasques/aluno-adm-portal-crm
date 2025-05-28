@@ -5,6 +5,7 @@ import { useUserActions } from '../../hooks/useUserActions';
 import UserDetailsDialog from '@/components/admin/users/UserDetailsDialog';
 import { UserDeleteDialog } from '@/components/admin/users/dialogs/UserDeleteDialog';
 import { ResetPasswordDialog } from '@/components/admin/users/dialogs/ResetPasswordDialog';
+import { ChangePasswordDialog } from '@/components/admin/users/dialogs/ChangePasswordDialog';
 import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
 
 interface UserDialogManagerProps {
@@ -21,6 +22,7 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
   const {
     confirmDelete,
     confirmResetPassword,
+    confirmChangePassword,
     confirmSetPermissionGroup
   } = useUserActions();
 
@@ -41,6 +43,14 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
 
   const handleConfirmResetPassword = async (): Promise<boolean> => {
     const success = await confirmResetPassword(user.email);
+    if (success) {
+      onCloseDialog();
+    }
+    return success;
+  };
+
+  const handleConfirmChangePassword = async (newPassword: string): Promise<boolean> => {
+    const success = await confirmChangePassword(user.id, newPassword);
     if (success) {
       onCloseDialog();
     }
@@ -77,6 +87,13 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
         onOpenChange={(open) => !open && onCloseDialog()}
         userEmail={user.email}
         onConfirmReset={handleConfirmResetPassword}
+      />
+
+      <ChangePasswordDialog
+        open={isOpen && type === 'changePassword'}
+        onOpenChange={(open) => !open && onCloseDialog()}
+        userEmail={user.email}
+        onConfirmChange={handleConfirmChangePassword}
       />
 
       <UserPermissionGroupDialog

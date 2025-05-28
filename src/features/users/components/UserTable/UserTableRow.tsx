@@ -24,13 +24,15 @@ import {
   Clock,
   Shield,
   GraduationCap,
-  Ban
+  Ban,
+  Key
 } from "lucide-react";
 
 interface UserTableRowProps {
   user: User;
   onViewDetails: (user: User) => void;
   onResetPassword: (user: User) => void;
+  onChangePassword: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
   onBanUser?: (user: User) => void;
@@ -43,6 +45,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   user,
   onViewDetails,
   onResetPassword,
+  onChangePassword,
   onDeleteUser,
   onSetPermissionGroup,
   onBanUser,
@@ -51,7 +54,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
   const isAdminUser = user.role === "Admin";
   
-  // Encontrar o nome do grupo de permissão
   const permissionGroup = permissionGroups.find(g => g.id === user.permission_group_id);
   const permissionGroupName = permissionGroup?.name;
   const isBanned = permissionGroupName?.toLowerCase() === "banido";
@@ -136,6 +138,11 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             <DropdownMenuItem onClick={() => onResetPassword(user)}>
               <KeyRound className="mr-2 h-4 w-4" />
               <span>Redefinir senha</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => onChangePassword(user)}>
+              <Key className="mr-2 h-4 w-4" />
+              <span>Alterar senha</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => onSetPermissionGroup(user)}>

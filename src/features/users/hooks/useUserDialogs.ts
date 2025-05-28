@@ -1,11 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { User } from '@/types/user.types';
 
-export type DialogType = 'view' | 'reset' | 'delete' | 'permissions' | null;
+export type DialogType = 'view' | 'delete' | 'reset' | 'permissions' | 'changePassword';
 
 export interface DialogState {
-  type: DialogType;
+  type: DialogType | null;
   user: User | null;
   isOpen: boolean;
 }
@@ -17,45 +17,48 @@ export const useUserDialogs = () => {
     isOpen: false
   });
 
-  const openDialog = (type: DialogType, user: User) => {
+  const openDialog = useCallback((type: DialogType, user: User) => {
     setDialogState({
       type,
       user,
       isOpen: true
     });
-  };
+  }, []);
 
-  const closeDialog = () => {
+  const closeDialog = useCallback(() => {
     setDialogState({
       type: null,
       user: null,
       isOpen: false
     });
-  };
+  }, []);
 
-  const handleViewDetails = (user: User) => {
+  const handleViewDetails = useCallback((user: User) => {
     openDialog('view', user);
-  };
+  }, [openDialog]);
 
-  const handleResetPassword = (user: User) => {
+  const handleResetPassword = useCallback((user: User) => {
     openDialog('reset', user);
-  };
+  }, [openDialog]);
 
-  const handleDeleteUser = (user: User) => {
+  const handleChangePassword = useCallback((user: User) => {
+    openDialog('changePassword', user);
+  }, [openDialog]);
+
+  const handleDeleteUser = useCallback((user: User) => {
     openDialog('delete', user);
-  };
+  }, [openDialog]);
 
-  const handleSetPermissionGroup = (user: User) => {
+  const handleSetPermissionGroup = useCallback((user: User) => {
     openDialog('permissions', user);
-  };
+  }, [openDialog]);
 
   return {
-    type: dialogState.type,
-    user: dialogState.user,
-    isOpen: dialogState.isOpen,
+    ...dialogState,
     closeDialog,
     handleViewDetails,
     handleResetPassword,
+    handleChangePassword,
     handleDeleteUser,
     handleSetPermissionGroup
   };

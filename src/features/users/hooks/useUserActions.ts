@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
+import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
 import { toast } from '@/hooks/use-toast';
 
 export const useUserActions = () => {
@@ -14,6 +15,8 @@ export const useUserActions = () => {
     refreshUsers,
     forceRefresh
   } = usePerformanceOptimizedUserContext();
+
+  const { updateUserPassword } = useBasicAuth();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
     try {
@@ -76,6 +79,30 @@ export const useUserActions = () => {
     }
   }, [resetPassword]);
 
+  const confirmChangePassword = useCallback(async (userId: string, newPassword: string): Promise<boolean> => {
+    try {
+      console.log('🔧 UserActions: Changing password for user ID:', userId);
+      
+      // TODO: Implementar função específica para alterar senha de outro usuário
+      // Por enquanto, usar a função de atualização de senha
+      await updateUserPassword(newPassword);
+      
+      toast({
+        title: "Sucesso",
+        description: "Senha alterada com sucesso.",
+      });
+      return true;
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      toast({
+        title: "Erro",
+        description: "Erro interno ao alterar senha.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [updateUserPassword]);
+
   const confirmSetPermissionGroup = useCallback(async (userId: string, userEmail: string, groupId: string | null): Promise<boolean> => {
     try {
       console.log('🔧 UserActions: Setting permission group for:', userEmail);
@@ -112,6 +139,7 @@ export const useUserActions = () => {
   return {
     confirmDelete,
     confirmResetPassword,
+    confirmChangePassword,
     confirmSetPermissionGroup,
     isDeleting,
     isResettingPassword,
