@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import UserTableRow from "../UserTableRow";
 import UserDetailsDialog from "../UserDetailsDialog";
 import { User } from "@/types/user.types";
-import { useUserContext } from "@/contexts/UserContext";
 
 interface UserTableProps {
   users: User[];
@@ -28,7 +27,6 @@ export const UserTable: React.FC<UserTableProps> = ({
   onToggleUserStatus,
   onSetPermissionGroup,
 }) => {
-  const { toggleMentorStatus, filters } = useUserContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -55,12 +53,6 @@ export const UserTable: React.FC<UserTableProps> = ({
         }`}
       />
     );
-  };
-
-  const handleToggleMentor = async (user: User) => {
-    if (toggleMentorStatus) {
-      await toggleMentorStatus(user.id, user.is_mentor || false);
-    }
   };
 
   const handleViewDetails = (user: User) => {
@@ -108,8 +100,6 @@ export const UserTable: React.FC<UserTableProps> = ({
     });
   }, [filteredUsers, sortField, sortDirection]);
 
-  const isStudentView = filters.role === 'student';
-
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -125,7 +115,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder={isStudentView ? "Buscar estudantes..." : "Buscar usuários..."}
+            placeholder="Buscar usuários..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -143,7 +133,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                   onClick={() => handleSort("name")}
                   className="h-auto p-0 font-semibold hover:bg-transparent"
                 >
-                  {isStudentView ? 'Estudante' : 'Usuário'}
+                  Usuário
                   {getSortIcon("name")}
                 </Button>
               </TableHead>
@@ -181,8 +171,6 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onDeleteUser={onDeleteUser}
                 onToggleUserStatus={onToggleUserStatus}
                 onSetPermissionGroup={onSetPermissionGroup}
-                onToggleMentor={isStudentView ? handleToggleMentor : undefined}
-                isStudentView={isStudentView}
               />
             ))}
           </TableBody>
@@ -191,9 +179,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
       {sortedUsers.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">
-            {isStudentView ? 'Nenhum estudante encontrado' : 'Nenhum usuário encontrado'}
-          </p>
+          <p className="text-gray-500">Nenhum usuário encontrado</p>
         </div>
       )}
 
