@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -21,7 +22,6 @@ import StudentTools from './pages/student/Tools';
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
-import UnifiedUsers from './pages/admin/UnifiedUsers';
 import AdminSettings from './pages/admin/Settings';
 import AdminPermissions from './pages/admin/Permissions';
 import AdminStudents from './pages/admin/Students';
@@ -154,14 +154,6 @@ function App() {
                   <RouteGuard requireAdminAccess={true}>
                     <AdminLayout>
                       <AdminUsers />
-                    </AdminLayout>
-                  </RouteGuard>
-                } />
-
-                <Route path="/admin/usuarios-unificado" element={
-                  <RouteGuard requireAdminAccess={true}>
-                    <AdminLayout>
-                      <UnifiedUsers />
                     </AdminLayout>
                   </RouteGuard>
                 } />
