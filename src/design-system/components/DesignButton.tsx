@@ -64,7 +64,7 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
     ? { background: designTokens.gradients[gradient] }
     : {};
 
-  const combinedStyle = { ...gradientStyle, ...style };
+  const combinedStyle = { ...gradientStyle, ...style } as React.CSSProperties;
 
   const buttonContent = (
     <>
@@ -75,7 +75,7 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
       )}
       <span className={cn("flex items-center gap-2", loading && "opacity-0")}>
         {icon && iconPosition === 'left' && icon}
-        {children}
+        {children as React.ReactNode}
         {icon && iconPosition === 'right' && icon}
       </span>
     </>
@@ -83,7 +83,7 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
 
   if (asChild) {
     return (
-      <Comp className={baseClasses} style={combinedStyle} {...props}>
+      <Comp className={baseClasses} style={combinedStyle}>
         {buttonContent}
       </Comp>
     );
