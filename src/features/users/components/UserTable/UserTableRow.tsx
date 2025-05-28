@@ -44,6 +44,34 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
     return `${mb}MB`;
   };
 
+  const formatLastLogin = (lastLogin: string) => {
+    if (!lastLogin || lastLogin === 'Nunca') {
+      return 'Nunca';
+    }
+    
+    try {
+      // Verifica se já está em formato brasileiro
+      if (lastLogin.includes('/')) {
+        return lastLogin;
+      }
+      
+      // Tenta converter de ISO string para formato brasileiro
+      const date = new Date(lastLogin);
+      if (isNaN(date.getTime())) {
+        return 'Data inválida';
+      }
+      
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return 'Data inválida';
+    }
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'ativo':
@@ -103,7 +131,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
       
       <TableCell>
         <div className="text-sm text-gray-600">
-          {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'}
+          {formatLastLogin(user.lastLogin)}
         </div>
       </TableCell>
       
