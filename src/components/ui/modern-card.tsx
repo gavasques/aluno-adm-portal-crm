@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -40,6 +39,18 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
       className
     )
 
+    // Separate props that are safe for motion.div
+    const {
+      onDrag,
+      onDragEnd,
+      onDragStart,
+      onMouseDown,
+      onMouseUp,
+      onTouchStart,
+      onTouchEnd,
+      ...safeProps
+    } = props
+
     if (interactive) {
       return (
         <motion.div
@@ -48,7 +59,7 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
           whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          {...props}
+          {...safeProps}
         >
           {children}
         </motion.div>
