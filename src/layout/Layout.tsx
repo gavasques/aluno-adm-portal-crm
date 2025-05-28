@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import StudentSidebar from './StudentSidebar';
-import AdminSidebar from './AdminSidebar';
+import ModernAdminSidebar from './ModernAdminSidebar';
 import { ResponsiveLayout } from '@/components/ui/responsive-layout';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -24,7 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
       >
         <div className="relative">
           {/* Sidebar móvel será implementado como drawer/sheet */}
-          {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
+          {isAdmin ? <ModernAdminSidebar /> : <StudentSidebar />}
           
           {/* Conteúdo principal móvel */}
           <motion.div 
@@ -50,7 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Sidebar */}
-      {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
+      {isAdmin ? <ModernAdminSidebar /> : <StudentSidebar />}
       
       {/* Main Content */}
       <div className="ml-64 min-h-screen">
