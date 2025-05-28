@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
@@ -30,29 +29,49 @@ export const usePerformanceOptimizedUsers = () => {
   // Set query client on service
   optimizedUserService.setQueryClient(queryClient);
 
-  // Fetch users with more aggressive refresh strategy
+  // Fetch users with cache busting
   const {
     data: users = [],
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', Date.now()], // Cache busting timestamp
     queryFn: async () => {
-      console.log('🔄 Query executando fetchUsers...');
+      console.log('🔄 Query executando fetchUsers com cache busting...');
+      
+      // Força limpeza de cache no browser
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          await caches.delete(cacheName);
+        }
+      }
+      
       const result = await optimizedUserService.fetchUsers();
       console.log('✅ Query retornou:', result?.length, 'usuários');
+      console.log('📋 Dados completos dos usuários:', result);
+      
+      // Verificar especificamente o André Ferreira
+      const andre = result?.find(u => u.email === 'contato@liberdadevirtual.tv');
+      if (andre) {
+        console.log('🔍 Status do André Ferreira:', {
+          email: andre.email,
+          status: andre.status,
+          id: andre.id
+        });
+      }
       
       // Clear optimistic updates after successful fetch
       setOptimisticUpdates(new Map());
       
       return result;
     },
-    staleTime: 30 * 1000, // Reduzido para 30 segundos para sync mais rápido
-    gcTime: 2 * 60 * 1000, // Reduzido para 2 minutos
+    staleTime: 0, // Sempre buscar dados frescos
+    gcTime: 0, // Não manter cache
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: 60 * 1000, // Polling a cada minuto
+    refetchInterval: 10 * 1000, // Polling mais frequente durante debug
     retry: (failureCount, error) => {
       console.log(`🔄 Tentativa ${failureCount + 1} de buscar usuários. Erro:`, error);
       return failureCount < 3;
@@ -71,6 +90,7 @@ export const usePerformanceOptimizedUsers = () => {
     return result.map(user => {
       const optimisticUpdate = optimisticUpdates.get(user.id);
       if (optimisticUpdate) {
+        console.log('🔄 Aplicando atualização otimista para:', user.email, optimisticUpdate);
         return { ...user, ...optimisticUpdate };
       }
       return user;
@@ -85,19 +105,40 @@ export const usePerformanceOptimizedUsers = () => {
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 100);
 
-  // Enhanced force refresh with polling
+  // Ultra aggressive force refresh
   const forceRefresh = useCallback(async () => {
-    console.log('🔄 Executando refresh forçado...');
+    console.log('🔄 Executando refresh ULTRA agressivo...');
     
-    // Clear all caches
+    // 1. Clear ALL caches
     smartInvalidate();
-    queryClient.removeQueries({ queryKey: ['users'] });
+    queryClient.clear(); // Remove tudo do react-query
     setOptimisticUpdates(new Map());
     
-    // Force immediate refetch
+    // 2. Clear browser caches
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          await caches.delete(cacheName);
+          console.log(`🧹 Cache ${cacheName} limpo`);
+        }
+      } catch (error) {
+        console.warn('Erro ao limpar cache do browser:', error);
+      }
+    }
+    
+    // 3. Force multiple refetches with different strategies
+    await queryClient.invalidateQueries({ queryKey: ['users'] });
+    await queryClient.refetchQueries({ queryKey: ['users'] });
     await refetch();
     
-    // Start temporary polling to ensure sync
+    // 4. Wait and refetch again
+    setTimeout(async () => {
+      console.log('🔄 Segunda tentativa de refresh...');
+      await refetch();
+    }, 1000);
+    
+    // 5. Start intensive polling for verification
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
     }
@@ -105,20 +146,20 @@ export const usePerformanceOptimizedUsers = () => {
     let pollCount = 0;
     pollingIntervalRef.current = setInterval(async () => {
       pollCount++;
-      console.log(`🔄 Polling temporário ${pollCount}/5...`);
+      console.log(`🔄 Polling intensivo ${pollCount}/10...`);
       
       await refetch();
       
-      if (pollCount >= 5) {
+      if (pollCount >= 10) {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
-        console.log('✅ Polling temporário finalizado');
+        console.log('✅ Polling intensivo finalizado');
       }
-    }, 2000);
+    }, 1000);
     
-    console.log('✅ Refresh forçado concluído');
+    console.log('✅ Refresh ultra agressivo concluído');
   }, [smartInvalidate, queryClient, refetch]);
 
   // Optimistic update helper
@@ -141,12 +182,12 @@ export const usePerformanceOptimizedUsers = () => {
     });
   }, []);
 
-  // Mutations with optimistic updates
+  // Mutations with ultra aggressive refresh
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
     onSuccess: async () => {
-      console.log('✅ Usuário criado, invalidando cache e refreshing...');
+      console.log('✅ Usuário criado, executando refresh ultra agressivo...');
       await forceRefresh();
     },
   });
@@ -155,7 +196,7 @@ export const usePerformanceOptimizedUsers = () => {
     mutationFn: ({ userId, userEmail }: { userId: string; userEmail: string }) =>
       optimizedUserService.deleteUser(userId, userEmail),
     onSuccess: async () => {
-      console.log('✅ Usuário excluído, invalidando cache e refreshing...');
+      console.log('✅ Usuário excluído, executando refresh ultra agressivo...');
       await forceRefresh();
     },
   });
@@ -181,33 +222,25 @@ export const usePerformanceOptimizedUsers = () => {
       // Clear optimistic update for this user
       clearOptimisticUpdate(variables.userId);
       
-      // Invalidação agressiva
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      smartInvalidate();
+      // Execute ULTRA aggressive refresh
+      await forceRefresh();
       
-      // Force immediate refresh with verification
+      // Additional verification after 2 seconds
       setTimeout(async () => {
-        console.log('🔄 Executando refresh com verificação...');
-        await forceRefresh();
+        console.log('🔍 Verificação final do status...');
+        await refetch();
         
-        // Verify the change was applied
-        setTimeout(async () => {
-          const freshData = await queryClient.fetchQuery({
-            queryKey: ['users'],
-            queryFn: () => optimizedUserService.fetchUsers()
-          });
-          
-          const updatedUser = freshData?.find(u => u.id === variables.userId);
-          const expectedStatus = variables.currentStatus?.toLowerCase() === 'ativo' ? 'Inativo' : 'Ativo';
-          
-          if (updatedUser && updatedUser.status !== expectedStatus) {
-            console.warn('⚠️ Status não foi sincronizado corretamente, forçando novo refresh...');
+        // Check if André is correctly updated
+        const freshUsers = queryClient.getQueryData(['users']) as User[];
+        const andre = freshUsers?.find(u => u.email === 'contato@liberdadevirtual.tv');
+        if (andre) {
+          console.log('🎯 Status final do André após verificação:', andre.status);
+          if (andre.status === 'Ativo' && variables.userEmail === 'contato@liberdadevirtual.tv') {
+            console.error('❌ André ainda está ativo! Forçando novo refresh...');
             await forceRefresh();
-          } else {
-            console.log('✅ Status sincronizado corretamente:', updatedUser?.status);
           }
-        }, 1000);
-      }, 200);
+        }
+      }, 2000);
     },
     onError: (error, variables) => {
       console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
@@ -227,7 +260,7 @@ export const usePerformanceOptimizedUsers = () => {
       groupId: string | null; 
     }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
     onSuccess: async () => {
-      console.log('✅ Permissões alteradas, refreshing...');
+      console.log('✅ Permissões alteradas, executando refresh ultra agressivo...');
       await forceRefresh();
     },
   });

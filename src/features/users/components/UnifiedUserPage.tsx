@@ -11,6 +11,7 @@ import { UserTable } from "./UserTable/UserTable";
 import { ValidatedUserDialogs } from "@/components/admin/users/dialogs/ValidatedUserDialogs";
 import { UserDialogManager } from "./UserDialogs/UserDialogManager";
 import { FunctionalityChecklist } from "@/components/admin/users/FunctionalityChecklist";
+import { DebugUserData } from "./DebugUserData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const UnifiedUserPage: React.FC = () => {
@@ -51,8 +52,9 @@ export const UnifiedUserPage: React.FC = () => {
 
   return (
     <Tabs defaultValue="users" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="users">Gestão de Usuários</TabsTrigger>
+        <TabsTrigger value="debug">Debug Status</TabsTrigger>
         <TabsTrigger value="checklist">Checklist de Testes</TabsTrigger>
       </TabsList>
 
@@ -101,6 +103,10 @@ export const UnifiedUserPage: React.FC = () => {
           onCloseDialog={closeDialog}
           onRefresh={refreshUsers}
         />
+      </TabsContent>
+
+      <TabsContent value="debug">
+        <DebugUserData />
       </TabsContent>
 
       <TabsContent value="checklist">
