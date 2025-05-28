@@ -1,15 +1,14 @@
 
-import React from "react";
-import { useUsers } from "@/hooks/users/useUsers";
-import { useSimplifiedUserOperations } from "@/hooks/users/useSimplifiedUserOperations";
-import { useUserDialogs } from "../hooks/useUserDialogs";
-import UsersHeader from "@/components/admin/users/UsersHeader";
-import UsersAlert from "@/components/admin/users/UsersAlert";
-import { UserFilters } from "@/components/admin/users/filters/UserFilters";
-import UserActionButtons from "@/components/admin/users/UserActionButtons";
-import { UserTable } from "./UserTable/UserTable";
-import { ValidatedUserDialogs } from "@/components/admin/users/dialogs/ValidatedUserDialogs";
-import { UserDialogManager } from "./UserDialogs/UserDialogManager";
+import React from 'react';
+import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
+import { usePermissionGroups } from '@/hooks/admin/usePermissionGroups';
+import { useUserDialogs } from '../hooks/useUserDialogs';
+import { useUserBanning } from '@/hooks/users/useUserBanning';
+import { UsersHeader } from '@/components/admin/users/UsersHeader';
+import { UserFilters } from '@/components/admin/users/filters/UserFilters';
+import { UserTable } from './UserTable/UserTable';
+import { UserDialogManager } from './UserDialogs/UserDialogManager';
+import { UserBanDialog } from '@/components/admin/users/dialogs/UserBanDialog';
 
 export const UnifiedUserPage: React.FC = () => {
   const {
@@ -17,24 +16,17 @@ export const UnifiedUserPage: React.FC = () => {
     stats,
     filters,
     isLoading,
-    error,
     setFilters,
     searchUsers,
-    refreshUsers
-  } = useUsers();
+    forceRefresh
+  } = usePerformanceOptimizedUserContext();
 
-  const {
-    showAddDialog,
-    setShowAddDialog,
-    showInviteDialog,
-    setShowInviteDialog,
-    handleAddUser,
-    handleInviteUser,
-  } = useSimplifiedUserOperations();
+  const { permissionGroups } = usePermissionGroups();
+  const { banUser, isBanning } = useUserBanning();
 
   const {
     type,
-    user,
+    user: selectedUser,
     isOpen,
     closeDialog,
     handleViewDetails,
@@ -43,47 +35,73 @@ export const UnifiedUserPage: React.FC = () => {
     handleSetPermissionGroup
   } = useUserDialogs();
 
+  const [showBanDialog, setShowBanDialog] = React.useState(false);
+  const [userToBan, setUserToBan] = React.useState<any>(null);
+
+  // Calcular estatísticas de usuários banidos
+  const bannedCount = React.useMemo(() => {
+    const bannedGroupId = permissionGroups.find(g => g.name.toLowerCase() === "banido")?.id;
+    return bannedGroupId ? filteredUsers.filter(user => user.permission_group_id === bannedGroupId).length : 0;
+  }, [filteredUsers, permissionGroups]);
+
+  const handleBanUser = (user: any) => {
+    setUserToBan(user);
+    setShowBanDialog(true);
+  };
+
+  const confirmBanUser = async (): Promise<boolean> => {
+    if (!userToBan) return false;
+    return await banUser(userToBan.id, userToBan.email);
+  };
+
+  const handleBanDialogClose = () => {
+    setShowBanDialog(false);
+    setUserToBan(null);
+  };
+
+  // Filtrar usuários baseado no filtro de grupo
+  const displayUsers = React.useMemo(() => {
+    if (filters.group === 'banned') {
+      const bannedGroupId = permissionGroups.find(g => g.name.toLowerCase() === "banido")?.id;
+      return bannedGroupId ? filteredUsers.filter(user => user.permission_group_id === bannedGroupId) : [];
+    }
+    return filteredUsers;
+  }, [filteredUsers, filters.group, permissionGroups]);
+
   return (
     <div className="space-y-6">
       <UsersHeader />
+      
+      <UserFilters
+        filters={filters}
+        stats={stats}
+        onFiltersChange={setFilters}
+        onSearch={searchUsers}
+        bannedCount={bannedCount}
+      />
 
-      <UsersAlert fetchError={error} />
-
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex-1">
-            <UserFilters
-              filters={filters}
-              stats={stats}
-              onFiltersChange={setFilters}
-              onSearch={searchUsers}
-            />
-          </div>
-          <UserActionButtons onAddUser={handleAddUser} onInviteUser={handleInviteUser} />
-        </div>
-
-        <UserTable
-          users={filteredUsers}
-          isLoading={isLoading}
-          onViewDetails={handleViewDetails}
-          onResetPassword={handleResetPassword}
-          onDeleteUser={handleDeleteUser}
-          onSetPermissionGroup={handleSetPermissionGroup}
-        />
-      </div>
-
-      <ValidatedUserDialogs
-        showAddDialog={showAddDialog}
-        setShowAddDialog={setShowAddDialog}
-        showInviteDialog={showInviteDialog}
-        setShowInviteDialog={setShowInviteDialog}
-        onRefresh={refreshUsers}
+      <UserTable
+        users={displayUsers}
+        isLoading={isLoading}
+        onViewDetails={handleViewDetails}
+        onResetPassword={handleResetPassword}
+        onDeleteUser={handleDeleteUser}
+        onSetPermissionGroup={handleSetPermissionGroup}
+        onBanUser={handleBanUser}
+        permissionGroups={permissionGroups}
       />
 
       <UserDialogManager
-        dialogState={{ type, user, isOpen }}
+        dialogState={{ type, user: selectedUser, isOpen }}
         onCloseDialog={closeDialog}
-        onRefresh={refreshUsers}
+        onRefresh={forceRefresh}
+      />
+
+      <UserBanDialog
+        open={showBanDialog}
+        onOpenChange={handleBanDialogClose}
+        userEmail={userToBan?.email || ''}
+        onConfirmBan={confirmBanUser}
       />
     </div>
   );

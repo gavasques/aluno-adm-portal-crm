@@ -1,21 +1,35 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle, XCircle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Ban } from "lucide-react";
 
 interface UserStatusBadgeProps {
   status: string;
   permissionGroupId?: string | null;
   isTemporaryGroup?: boolean;
+  permissionGroupName?: string;
 }
 
 const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({ 
   status, 
   permissionGroupId,
-  isTemporaryGroup 
+  isTemporaryGroup,
+  permissionGroupName
 }) => {
   const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : '';
   const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
+  
+  // Verificar se o usuário está banido
+  const isBanned = permissionGroupName?.toLowerCase() === "banido";
+  
+  if (isBanned) {
+    return (
+      <Badge variant="outline" className="bg-red-100 border-red-300 text-red-800">
+        <Ban className="w-3 h-3 mr-1" />
+        Banido
+      </Badge>
+    );
+  }
   
   // Se o usuário está no grupo temporário "Geral", mostrar badge especial
   if (isTemporaryGroup) {

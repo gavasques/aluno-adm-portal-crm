@@ -17,6 +17,8 @@ interface UserTableProps {
   onResetPassword: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
+  onBanUser?: (user: User) => void;
+  permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
 export const UserTable: React.FC<UserTableProps> = ({
@@ -26,6 +28,8 @@ export const UserTable: React.FC<UserTableProps> = ({
   onResetPassword,
   onDeleteUser,
   onSetPermissionGroup,
+  onBanUser,
+  permissionGroups = [],
 }) => {
   return (
     <div className="rounded-md border">
@@ -43,6 +47,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onResetPassword={onResetPassword}
                 onDeleteUser={onDeleteUser}
                 onSetPermissionGroup={onSetPermissionGroup}
+                onBanUser={onBanUser}
+                permissionGroups={permissionGroups}
               />
             ))
           ) : (

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Clock, Users, Filter, AlertCircle } from "lucide-react";
+import { Search, Clock, Users, Filter, AlertCircle, Ban } from "lucide-react";
 import { UserFilters as UserFiltersType, UserStats } from "@/types/user.types";
 
 interface UserFiltersProps {
@@ -18,6 +18,7 @@ interface UserFiltersProps {
   stats: UserStats;
   onFiltersChange: (filters: Partial<UserFiltersType>) => void;
   onSearch: (query: string) => void;
+  bannedCount?: number;
 }
 
 export const UserFilters: React.FC<UserFiltersProps> = ({
@@ -25,9 +26,14 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
   stats,
   onFiltersChange,
   onSearch,
+  bannedCount = 0,
 }) => {
   const handlePendingFilter = () => {
     onFiltersChange({ group: "pending", status: "all" });
+  };
+
+  const handleBannedFilter = () => {
+    onFiltersChange({ group: "banned", status: "all" });
   };
 
   const clearAllFilters = () => {
@@ -58,6 +64,20 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
             </Badge>
           </div>
         )}
+
+        {bannedCount > 0 && (
+          <div className="flex items-center gap-2">
+            <Ban className="h-4 w-4 text-red-600" />
+            <span className="text-sm text-gray-600">Banidos: </span>
+            <Badge 
+              variant="outline" 
+              className="border-red-300 text-red-700 bg-red-50 cursor-pointer hover:bg-red-100"
+              onClick={handleBannedFilter}
+            >
+              {bannedCount}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Filtros rápidos */}
@@ -73,6 +93,21 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
           {stats.pending > 0 && (
             <Badge variant="secondary" className="ml-1 text-xs">
               {stats.pending}
+            </Badge>
+          )}
+        </Button>
+
+        <Button
+          variant={filters.group === "banned" ? "default" : "outline"}
+          size="sm"
+          onClick={handleBannedFilter}
+          className="h-8"
+        >
+          <Ban className="h-3 w-3 mr-1" />
+          Banidos
+          {bannedCount > 0 && (
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {bannedCount}
             </Badge>
           )}
         </Button>
@@ -129,6 +164,7 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
             <SelectItem value="all">Todos os grupos</SelectItem>
             <SelectItem value="pending">Pendentes (Geral)</SelectItem>
             <SelectItem value="assigned">Com grupo definido</SelectItem>
+            <SelectItem value="banned">Banidos</SelectItem>
           </SelectContent>
         </Select>
 

@@ -23,7 +23,8 @@ import {
   Lock,
   Clock,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Ban
 } from "lucide-react";
 
 interface UserTableRowProps {
@@ -32,6 +33,8 @@ interface UserTableRowProps {
   onResetPassword: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
+  onBanUser?: (user: User) => void;
+  permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
 const GERAL_GROUP_ID = "564c55dc-0ab8-481e-a0bc-97ea7e484b88";
@@ -41,12 +44,22 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onViewDetails,
   onResetPassword,
   onDeleteUser,
-  onSetPermissionGroup
+  onSetPermissionGroup,
+  onBanUser,
+  permissionGroups = []
 }) => {
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
   const isAdminUser = user.role === "Admin";
+  
+  // Encontrar o nome do grupo de permissão
+  const permissionGroup = permissionGroups.find(g => g.id === user.permission_group_id);
+  const permissionGroupName = permissionGroup?.name;
+  const isBanned = permissionGroupName?.toLowerCase() === "banido";
 
   const getUserIcon = () => {
+    if (isBanned) {
+      return <Ban className="h-4 w-4 text-red-600" />;
+    }
     if (isAdminUser) {
       return <Shield className="h-4 w-4 text-blue-600" />;
     }
@@ -57,6 +70,9 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   };
 
   const getRowClass = () => {
+    if (isBanned) {
+      return "bg-red-50/30 border-l-4 border-l-red-300";
+    }
     if (isAdminUser) {
       return "bg-blue-50/30 border-l-4 border-l-blue-300";
     }
@@ -71,6 +87,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
       <TableCell>
         <div className="flex items-center">
           <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
+            isBanned ? "bg-red-100" :
             isAdminUser ? "bg-blue-100" : 
             isTemporaryGroup ? "bg-orange-100" : "bg-gray-100"
           }`}>
@@ -87,6 +104,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
           status={user.status} 
           permissionGroupId={user.permission_group_id}
           isTemporaryGroup={isTemporaryGroup}
+          permissionGroupName={permissionGroupName}
         />
       </TableCell>
       <TableCell>
@@ -128,6 +146,13 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
+
+            {!isBanned && !isAdminUser && onBanUser && (
+              <DropdownMenuItem onClick={() => onBanUser(user)} className="text-orange-600 focus:text-orange-600 hover:text-orange-600">
+                <Ban className="mr-2 h-4 w-4" />
+                <span>Banir usuário</span>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuItem onClick={() => onDeleteUser(user)} className="text-red-600 focus:text-red-600 hover:text-red-600">
               <UserX className="mr-2 h-4 w-4" />

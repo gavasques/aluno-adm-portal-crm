@@ -19,7 +19,7 @@ export interface User {
 export interface UserFilters {
   search: string;
   status: 'all' | 'ativo' | 'inativo';
-  group: 'all' | 'pending' | 'assigned';
+  group: 'all' | 'pending' | 'assigned' | 'banned';
   role?: string;
 }
 
@@ -28,10 +28,11 @@ export interface UserStats {
   active: number;
   inactive: number;
   pending: number;
+  banned?: number;
 }
 
 export interface UserOperation {
-  type: 'create' | 'update' | 'delete' | 'activate' | 'deactivate';
+  type: 'create' | 'update' | 'delete' | 'activate' | 'deactivate' | 'ban';
   userId: string;
   userEmail: string;
   timestamp: Date;
@@ -76,4 +77,5 @@ export interface UserContextValue {
   toggleUserStatus: (userId: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   setPermissionGroup: (userId: string, groupId: string | null) => Promise<boolean>;
+  banUser?: (userId: string, userEmail: string) => Promise<boolean>;
 }
