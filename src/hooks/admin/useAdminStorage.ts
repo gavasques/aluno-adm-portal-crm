@@ -121,6 +121,157 @@ export const useAdminStorage = () => {
     }
   };
 
+  const removeStorageUpgrade = async (
+    targetUserId: string,
+    removeMB: number,
+    notes?: string
+  ): Promise<boolean> => {
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return false;
+    }
+
+    try {
+      // Buscar limite atual
+      const { data: currentData, error: fetchError } = await supabase
+        .from('user_storage')
+        .select('storage_limit_mb')
+        .eq('user_id', targetUserId)
+        .single();
+
+      if (fetchError) {
+        console.error('Erro ao buscar limite atual:', fetchError);
+        toast.error('Erro ao buscar dados do usuário');
+        return false;
+      }
+
+      const currentLimit = currentData.storage_limit_mb || 100;
+      const newLimit = Math.max(0, currentLimit - removeMB);
+
+      // Atualizar limite
+      const { error: updateError } = await supabase
+        .from('user_storage')
+        .update({ 
+          storage_limit_mb: newLimit,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', targetUserId);
+
+      if (updateError) {
+        console.error('Erro ao atualizar limite:', updateError);
+        toast.error('Erro ao remover armazenamento');
+        return false;
+      }
+
+      // Atualizar também na tabela profiles
+      await supabase
+        .from('profiles')
+        .update({ storage_limit_mb: newLimit })
+        .eq('id', targetUserId);
+
+      // Registrar no histórico como upgrade negativo
+      const { error: historyError } = await supabase
+        .from('storage_upgrades')
+        .insert({
+          user_id: targetUserId,
+          admin_id: user.id,
+          previous_limit_mb: currentLimit,
+          new_limit_mb: newLimit,
+          upgrade_amount_mb: -removeMB,
+          notes: notes || `Remoção de ${removeMB}MB de armazenamento`
+        });
+
+      if (historyError) {
+        console.error('Erro ao registrar histórico:', historyError);
+      }
+
+      toast.success(`${removeMB}MB de armazenamento removido com sucesso!`);
+      await fetchUsersStorage();
+      await fetchStorageUpgrades();
+      return true;
+    } catch (error) {
+      console.error('Erro na remoção de armazenamento:', error);
+      toast.error('Erro interno ao remover armazenamento');
+      return false;
+    }
+  };
+
+  const adjustStorageLimit = async (
+    targetUserId: string,
+    newLimit: number,
+    notes?: string
+  ): Promise<boolean> => {
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return false;
+    }
+
+    try {
+      // Buscar limite atual
+      const { data: currentData, error: fetchError } = await supabase
+        .from('user_storage')
+        .select('storage_limit_mb')
+        .eq('user_id', targetUserId)
+        .single();
+
+      if (fetchError) {
+        console.error('Erro ao buscar limite atual:', fetchError);
+        toast.error('Erro ao buscar dados do usuário');
+        return false;
+      }
+
+      const currentLimit = currentData.storage_limit_mb || 100;
+      const difference = newLimit - currentLimit;
+
+      // Atualizar limite
+      const { error: updateError } = await supabase
+        .from('user_storage')
+        .update({ 
+          storage_limit_mb: newLimit,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', targetUserId);
+
+      if (updateError) {
+        console.error('Erro ao ajustar limite:', updateError);
+        toast.error('Erro ao ajustar armazenamento');
+        return false;
+      }
+
+      // Atualizar também na tabela profiles
+      await supabase
+        .from('profiles')
+        .update({ storage_limit_mb: newLimit })
+        .eq('id', targetUserId);
+
+      // Registrar no histórico
+      const { error: historyError } = await supabase
+        .from('storage_upgrades')
+        .insert({
+          user_id: targetUserId,
+          admin_id: user.id,
+          previous_limit_mb: currentLimit,
+          new_limit_mb: newLimit,
+          upgrade_amount_mb: difference,
+          notes: notes || `Ajuste de armazenamento para ${newLimit}MB`
+        });
+
+      if (historyError) {
+        console.error('Erro ao registrar histórico:', historyError);
+      }
+
+      const actionText = difference > 0 ? 'aumentado' : 'reduzido';
+      toast.success(`Armazenamento ${actionText} para ${newLimit}MB com sucesso!`);
+      await fetchUsersStorage();
+      await fetchStorageUpgrades();
+      return true;
+    } catch (error) {
+      console.error('Erro no ajuste de armazenamento:', error);
+      toast.error('Erro interno ao ajustar armazenamento');
+      return false;
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     Promise.all([fetchUsersStorage(), fetchStorageUpgrades()]).finally(() => {
@@ -133,6 +284,8 @@ export const useAdminStorage = () => {
     storageUpgrades,
     isLoading,
     addStorageUpgrade,
+    removeStorageUpgrade,
+    adjustStorageLimit,
     refreshData: () => {
       fetchUsersStorage();
       fetchStorageUpgrades();

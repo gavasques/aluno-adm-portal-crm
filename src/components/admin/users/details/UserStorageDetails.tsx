@@ -23,7 +23,7 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [showAdjustDialog, setShowAdjustDialog] = useState(false);
-  const { storageUpgrades } = useAdminStorage();
+  const { storageUpgrades, removeStorageUpgrade, adjustStorageLimit } = useAdminStorage();
   
   const storageUsedMb = user.storage_used_mb || 0;
   const storageLimitMb = user.storage_limit_mb || 100;
@@ -51,17 +51,14 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
   // Filtrar upgrades deste usuário
   const userUpgrades = storageUpgrades.filter(upgrade => upgrade.user_id === user.id);
 
-  // Funções placeholder - serão implementadas no hook
   const handleRemoveStorage = async (userId: string, removeMB: number, notes?: string): Promise<boolean> => {
     console.log('🔄 Removendo armazenamento:', removeMB, 'MB do usuário:', user.name);
-    // TODO: Implementar lógica de remoção
-    return true;
+    return await removeStorageUpgrade(userId, removeMB, notes);
   };
 
   const handleAdjustStorage = async (userId: string, newLimit: number, notes?: string): Promise<boolean> => {
     console.log('🔄 Ajustando armazenamento para:', newLimit, 'MB do usuário:', user.name);
-    // TODO: Implementar lógica de ajuste
-    return true;
+    return await adjustStorageLimit(userId, newLimit, notes);
   };
 
   return (
@@ -165,7 +162,9 @@ const UserStorageDetails: React.FC<UserStorageDetailsProps> = ({ user }) => {
                 {userUpgrades.slice(0, 5).map((upgrade) => (
                   <div key={upgrade.id} className="flex justify-between items-center text-xs bg-gray-50 p-2 rounded">
                     <div>
-                      <span className="font-medium">+{upgrade.upgrade_amount_mb}MB</span>
+                      <span className={`font-medium ${upgrade.upgrade_amount_mb >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {upgrade.upgrade_amount_mb >= 0 ? '+' : ''}{upgrade.upgrade_amount_mb}MB
+                      </span>
                       {upgrade.notes && (
                         <span className="text-gray-500 ml-2">({upgrade.notes})</span>
                       )}
