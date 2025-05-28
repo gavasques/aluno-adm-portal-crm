@@ -1,5 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -18,8 +19,23 @@ import {
   FolderOpen,
   UserCheck,
   Users as UsersIcon,
-  BookOpenCheck
+  BookOpenCheck,
+  Bell,
+  User,
+  LogOut,
+  ExternalLink,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 const sidebarItems = [
   {
@@ -149,9 +165,81 @@ const groupedItems = sidebarItems.reduce((groups, item) => {
 
 export default function AdminSidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
-    <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-gray-900 text-white overflow-y-auto">
+    <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto">
+      {/* Header da sidebar com logo e menu do usuário */}
+      <div className="p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
+              alt="Guilherme Vasques Logo" 
+              className="h-8"
+            />
+          </Link>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative rounded-full h-8 w-8 text-white hover:bg-gray-700">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-blue-600 text-white">
+                      {user?.email ? user.email.charAt(0).toUpperCase() : "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="bg-blue-600 text-white p-4 -mt-1 -mx-1 rounded-t-md">
+                  <div className="font-medium">Minha Conta</div>
+                  <div className="text-sm text-blue-100">
+                    {user?.email || "admin@portaledu.com"}
+                  </div>
+                </div>
+                
+                <DropdownMenuItem asChild>
+                  <Link to="/admin" className="flex cursor-pointer items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/configuracoes" className="flex cursor-pointer items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Configurações
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild>
+                  <Link to="/aluno" className="flex cursor-pointer items-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Ir para Área do Aluno
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu de navegação */}
       <div className="p-4">
         {Object.entries(groupedItems).map(([groupName, items]) => (
           <div key={groupName} className="mb-6">

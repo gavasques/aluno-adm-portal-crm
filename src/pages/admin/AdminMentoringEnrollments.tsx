@@ -86,8 +86,8 @@ const AdminMentoringEnrollments = () => {
     handleBulkAction(action, selectedEnrollments, selectedGroups);
   };
 
-  // Converter viewMode para compatibilidade com o EnrollmentsHeader que espera "list" | "grid"
-  const convertedViewModeForHeader = viewMode === "cards" ? "grid" : "list";
+  // Converter viewMode para compatibilidade - mapear cards para grid
+  const convertedViewModeForHeader = viewMode === "cards" ? "grid" as const : "list" as const;
   const handleViewModeChangeForHeader = (mode: "list" | "grid") => {
     setViewMode(mode === "grid" ? "cards" : "list");
   };
