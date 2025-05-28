@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
@@ -8,7 +9,6 @@ import AdminLayout from "@/layout/AdminLayout";
 import StudentLayout from "@/layout/StudentLayout";
 import Dashboard from "@/pages/student/Dashboard";
 import Suppliers from "@/pages/student/Suppliers";
-import SupplierDetail from "@/pages/student/SupplierDetail";
 import MySuppliers from "@/pages/student/MySuppliers";
 import Partners from "@/pages/student/Partners";
 import Tools from "@/pages/student/Tools";
@@ -38,19 +38,19 @@ function App() {
             <Route
               path="/admin/*"
               element={
-                <RouteGuard requiredRole="Admin">
-                  <AdminLayout />
+                <RouteGuard requireAdminAccess>
+                  <AdminLayout>
+                    <div>Admin routes placeholder</div>
+                  </AdminLayout>
                 </RouteGuard>
               }
-            >
-              {/* Admin routes */}
-            </Route>
+            />
 
             {/* Student routes */}
             <Route
               path="/aluno/*"
               element={
-                <RouteGuard requiredRole="Student">
+                <RouteGuard>
                   <StudentLayout />
                 </RouteGuard>
               }
@@ -58,9 +58,7 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="creditos" element={<Credits />} />
               <Route path="fornecedores" element={<Suppliers />} />
-              <Route path="fornecedores/:id" element={<SupplierDetail />} />
               <Route path="meus-fornecedores" element={<MySuppliers />} />
-              <Route path="meus-fornecedores/:id" element={<MySupplierDetailView />} />
               <Route path="parceiros" element={<Partners />} />
               <Route path="ferramentas" element={<Tools />} />
               <Route path="mentoria" element={<Mentoring />} />

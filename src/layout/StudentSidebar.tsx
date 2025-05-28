@@ -85,11 +85,11 @@ const StudentSidebar = () => {
 
         <div className="flex items-center space-x-2 p-2 rounded-md">
           <Avatar>
-            <AvatarImage src={user?.avatar_url || ""} alt={user?.name || "Aluno"} />
-            <AvatarFallback>{user?.name?.charAt(0) || "A"}</AvatarFallback>
+            <AvatarImage src="" alt={user?.email || "Aluno"} />
+            <AvatarFallback>{user?.email?.charAt(0)?.toUpperCase() || "A"}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-medium">{user?.name || "Aluno"}</p>
+            <p className="text-sm font-medium">{user?.email || "Aluno"}</p>
             <p className="text-xs text-gray-500">{user?.email}</p>
           </div>
         </div>
