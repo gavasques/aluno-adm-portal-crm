@@ -9,7 +9,6 @@ interface SafeAreaProps {
   bottom?: boolean
   left?: boolean
   right?: boolean
-  inset?: boolean
 }
 
 export const SafeArea: React.FC<SafeAreaProps> = ({
@@ -18,72 +17,72 @@ export const SafeArea: React.FC<SafeAreaProps> = ({
   top = true,
   bottom = true,
   left = true,
-  right = true,
-  inset = false
+  right = true
 }) => {
-  const safeAreaClasses = cn(
-    // Safe area insets
-    top && (inset ? 'pt-[env(safe-area-inset-top)]' : 'mt-[env(safe-area-inset-top)]'),
-    bottom && (inset ? 'pb-[env(safe-area-inset-bottom)]' : 'mb-[env(safe-area-inset-bottom)]'),
-    left && (inset ? 'pl-[env(safe-area-inset-left)]' : 'ml-[env(safe-area-inset-left)]'),
-    right && (inset ? 'pr-[env(safe-area-inset-right)]' : 'mr-[env(safe-area-inset-right)]'),
-    
-    // Fallbacks para dispositivos sem safe areas
-    'supports-[padding:max(0px)]:pt-[max(env(safe-area-inset-top),0px)]',
-    'supports-[padding:max(0px)]:pb-[max(env(safe-area-inset-bottom),0px)]',
-    'supports-[padding:max(0px)]:pl-[max(env(safe-area-inset-left),0px)]',
-    'supports-[padding:max(0px)]:pr-[max(env(safe-area-inset-right),0px)]',
-    
-    className
-  )
-
   return (
-    <div className={safeAreaClasses}>
+    <div
+      className={cn(
+        'w-full h-full',
+        top && 'pt-safe-top',
+        bottom && 'pb-safe-bottom',
+        left && 'pl-safe-left',
+        right && 'pr-safe-right',
+        className
+      )}
+      style={{
+        paddingTop: top ? 'env(safe-area-inset-top)' : undefined,
+        paddingBottom: bottom ? 'env(safe-area-inset-bottom)' : undefined,
+        paddingLeft: left ? 'env(safe-area-inset-left)' : undefined,
+        paddingRight: right ? 'env(safe-area-inset-right)' : undefined,
+      }}
+    >
       {children}
     </div>
   )
 }
 
-// Componente específico para header com safe area
-export const SafeHeader: React.FC<SafeAreaProps> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const SafeHeader: React.FC<{
+  children: React.ReactNode
+  className?: string
+  bottom?: boolean
+}> = ({ children, className, bottom = true }) => {
   return (
-    <SafeArea
-      {...props}
-      bottom={false}
+    <header
       className={cn(
-        'sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b',
-        'min-h-[calc(3.5rem+env(safe-area-inset-top))]',
-        'flex items-center',
+        'w-full',
+        'pt-safe-top',
+        bottom && 'pb-safe-bottom',
         className
       )}
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: bottom ? 'env(safe-area-inset-bottom)' : undefined,
+      }}
     >
       {children}
-    </SafeArea>
+    </header>
   )
 }
 
-// Componente específico para footer com safe area
-export const SafeFooter: React.FC<SafeAreaProps> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const SafeFooter: React.FC<{
+  children: React.ReactNode
+  className?: string
+  top?: boolean
+}> = ({ children, className, top = true }) => {
   return (
-    <SafeArea
-      {...props}
-      top={false}
+    <footer
       className={cn(
-        'sticky bottom-0 z-50 bg-background/80 backdrop-blur-md border-t',
-        'min-h-[calc(3.5rem+env(safe-area-inset-bottom))]',
-        'flex items-center',
+        'w-full',
+        'pb-safe-bottom',
+        top && 'pt-safe-top',
         className
       )}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingTop: top ? 'env(safe-area-inset-top)' : undefined,
+      }}
     >
       {children}
-    </SafeArea>
+    </footer>
   )
 }

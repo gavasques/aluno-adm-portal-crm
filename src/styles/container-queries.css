@@ -1,0 +1,188 @@
+
+/* Container Queries CSS Support */
+
+/* Ensure container query support */
+.container-query {
+  container-type: inline-size;
+}
+
+/* Tablet specific styles (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-layout {
+    --tablet-columns: 2;
+    --tablet-gap: 1.5rem;
+    --tablet-padding: 2rem;
+  }
+  
+  .tablet-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--tablet-columns), 1fr);
+    gap: var(--tablet-gap);
+    padding: var(--tablet-padding);
+  }
+  
+  .tablet-card {
+    padding: 1.5rem;
+    min-height: 200px;
+  }
+  
+  .tablet-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
+
+/* Large Desktop styles (>1440px) */
+@media (min-width: 1440px) {
+  .large-desktop-layout {
+    --desktop-columns: 4;
+    --desktop-gap: 2rem;
+    --desktop-padding: 3rem;
+    --desktop-sidebar-width: 320px;
+  }
+  
+  .large-desktop-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--desktop-columns), 1fr);
+    gap: var(--desktop-gap);
+    padding: var(--desktop-padding);
+  }
+  
+  .large-desktop-sidebar {
+    width: var(--desktop-sidebar-width);
+  }
+  
+  .large-desktop-main {
+    margin-left: var(--desktop-sidebar-width);
+    max-width: calc(100vw - var(--desktop-sidebar-width));
+  }
+  
+  .large-desktop-card {
+    padding: 2rem;
+    min-height: 250px;
+  }
+  
+  .large-desktop-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+}
+
+/* Ultra-wide Desktop styles (>1920px) */
+@media (min-width: 1920px) {
+  .ultrawide-layout {
+    --ultrawide-columns: 5;
+    --ultrawide-max-width: 1800px;
+  }
+  
+  .ultrawide-container {
+    max-width: var(--ultrawide-max-width);
+    margin: 0 auto;
+  }
+  
+  .ultrawide-grid {
+    grid-template-columns: repeat(var(--ultrawide-columns), 1fr);
+  }
+}
+
+/* Container Query based responsive design */
+@container (min-width: 320px) {
+  .cq-card {
+    padding: 1rem;
+  }
+}
+
+@container (min-width: 480px) {
+  .cq-card {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+}
+
+@container (min-width: 768px) {
+  .cq-card {
+    padding: 2rem;
+    grid-template-columns: auto 1fr auto;
+  }
+}
+
+@container (min-width: 1024px) {
+  .cq-card {
+    padding: 2.5rem;
+    grid-template-columns: auto 1fr auto auto;
+  }
+}
+
+/* Responsive typography using container queries */
+@container (min-width: 200px) {
+  .cq-text {
+    font-size: 0.875rem;
+  }
+}
+
+@container (min-width: 400px) {
+  .cq-text {
+    font-size: 1rem;
+  }
+}
+
+@container (min-width: 600px) {
+  .cq-text {
+    font-size: 1.125rem;
+  }
+}
+
+@container (min-width: 800px) {
+  .cq-text {
+    font-size: 1.25rem;
+  }
+}
+
+/* Fluid spacing using clamp() */
+.fluid-spacing {
+  padding: clamp(1rem, 4vw, 3rem);
+  margin: clamp(0.5rem, 2vw, 2rem) 0;
+}
+
+.fluid-text {
+  font-size: clamp(0.875rem, 2.5vw, 1.25rem);
+  line-height: clamp(1.4, 1.8, 1.6);
+}
+
+/* Orientation-aware layouts */
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape-compact {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (orientation: portrait) {
+  .portrait-stacked {
+    flex-direction: column;
+  }
+}
+
+/* Touch-friendly spacing for tablets */
+@media (pointer: coarse) and (min-width: 768px) {
+  .touch-friendly {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+  
+  .touch-friendly button {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* High DPI adjustments */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi {
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+}
