@@ -1,15 +1,6 @@
 
 import React from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import {
   LayoutDashboard,
   Building2,
   Heart,
@@ -19,13 +10,12 @@ import {
   Settings,
   CreditCard,
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const StudentSidebar = () => {
   const { user } = useAuth();
-  const location = useLocation();
   
   const menuItems = [
     {
@@ -71,49 +61,48 @@ const StudentSidebar = () => {
   ];
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Menu className="md:hidden absolute top-4 left-4" />
-      </SheetTrigger>
-      <SheetContent className="w-full sm:w-64 flex flex-col gap-4">
-        <SheetHeader className="text-left">
-          <SheetTitle>Menu do Aluno</SheetTitle>
-          <SheetDescription>
-            Navegue pelas principais áreas do seu painel.
-          </SheetDescription>
-        </SheetHeader>
+    <div className="h-full w-64 bg-white border-r border-gray-200 flex flex-col">
+      {/* Header da Sidebar */}
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-800">Portal do Aluno</h2>
+      </div>
 
-        <div className="flex items-center space-x-2 p-2 rounded-md">
+      {/* Informações do usuário */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
           <Avatar>
             <AvatarImage src="" alt={user?.email || "Aluno"} />
             <AvatarFallback>{user?.email?.charAt(0)?.toUpperCase() || "A"}</AvatarFallback>
           </Avatar>
-          <div>
-            <p className="text-sm font-medium">{user?.email || "Aluno"}</p>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{user?.email || "Aluno"}</p>
+            <p className="text-xs text-gray-500 truncate">Estudante</p>
           </div>
         </div>
+      </div>
 
-        <div className="flex flex-col space-y-1">
+      {/* Menu de navegação */}
+      <nav className="flex-1 p-4">
+        <div className="space-y-1">
           {menuItems.map((item) => (
             <NavLink
               key={item.title}
               to={item.href}
               className={({ isActive }) =>
-                `flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 transition-colors ${
+                `flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-gray-100 font-medium"
-                    : "text-gray-700"
+                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 }`
               }
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-5 w-5" />
               <span>{item.title}</span>
             </NavLink>
           ))}
         </div>
-      </SheetContent>
-    </Sheet>
+      </nav>
+    </div>
   );
 };
 

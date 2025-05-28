@@ -1,7 +1,7 @@
 
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/useAuth";
 import AdminSidebar from "./AdminSidebar";
 import StudentSidebar from "./StudentSidebar";
 import PendingValidationOverlay from "@/components/layout/PendingValidationOverlay";
@@ -63,8 +63,8 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar - largura dinâmica */}
-      <div className="flex-shrink-0" style={{ width: isAdmin ? `${sidebarWidth}px` : '256px' }}>
+      {/* Sidebar - mostrar sempre quando há usuário autenticado */}
+      <div className={`flex-shrink-0 ${isAdmin ? 'w-auto' : 'w-64'}`}>
         {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
       </div>
       
