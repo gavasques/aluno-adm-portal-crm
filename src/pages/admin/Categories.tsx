@@ -6,40 +6,50 @@ import { Plus } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-
-// Mock data para demonstração
-const MOCK_CATEGORIES = [
-  { id: 1, name: "E-commerce", description: "Categoria para produtos de e-commerce" },
-  { id: 2, name: "Tecnologia", description: "Categoria para produtos tecnológicos" },
-  { id: 3, name: "Marketing", description: "Categoria para serviços de marketing" },
-  { id: 4, name: "Vestuário", description: "Categoria para roupas e acessórios" },
-  { id: 5, name: "Casa e Jardim", description: "Categoria para produtos domésticos" }
-];
+import { useCategories } from "@/hooks/useCategories";
+import { Toaster } from "@/components/ui/toaster";
 
 const Categories = () => {
-  const [categories, setCategories] = useState(MOCK_CATEGORIES);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { 
+    categories, 
+    isLoading, 
+    error, 
+    createCategory, 
+    deleteCategory,
+    isCreating 
+  } = useCategories();
 
   const handleAddCategory = (data: { name: string; description?: string }) => {
-    const newCategory = {
-      id: categories.length + 1,
-      name: data.name,
-      description: data.description || "",
-    };
-    setCategories([...categories, newCategory]);
+    createCategory(data);
     setIsDialogOpen(false);
   };
 
   const handleDeleteCategory = (id: string | number) => {
-    setCategories(categories.filter(cat => cat.id !== id));
+    deleteCategory(String(id));
   };
 
   // Convert to ListItem format for the table
   const listItems: ListItem[] = categories.map(category => ({
     id: category.id,
     name: category.name,
-    description: category.description,
+    description: category.description || "",
+    created_at: category.created_at,
+    updated_at: category.updated_at,
   }));
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="text-red-500 text-lg mb-2">Erro ao carregar categorias</div>
+          <div className="text-gray-400 text-sm">
+            {error instanceof Error ? error.message : 'Erro desconhecido'}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -52,9 +62,9 @@ const Categories = () => {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2" disabled={isCreating}>
               <Plus className="h-4 w-4" />
-              Nova Categoria
+              {isCreating ? 'Criando...' : 'Nova Categoria'}
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -78,7 +88,7 @@ const Categories = () => {
           <CardTitle className="flex items-center justify-between">
             <span>Lista de Categorias</span>
             <span className="text-sm font-normal text-gray-500">
-              {categories.length} categorias cadastradas
+              {isLoading ? 'Carregando...' : `${categories.length} categorias cadastradas`}
             </span>
           </CardTitle>
           <CardDescription>
@@ -86,13 +96,22 @@ const Categories = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ListTable 
-            items={listItems} 
-            onDelete={handleDeleteCategory}
-            showDescription={true}
-          />
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando categorias...</p>
+            </div>
+          ) : (
+            <ListTable 
+              items={listItems} 
+              onDelete={handleDeleteCategory}
+              showDescription={true}
+              showDates={true}
+            />
+          )}
         </CardContent>
       </Card>
+      <Toaster />
     </div>
   );
 };
