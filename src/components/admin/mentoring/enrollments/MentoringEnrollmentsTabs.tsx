@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import IndividualEnrollmentSection from './IndividualEnrollmentSection';
-import GroupEnrollmentSection from './GroupEnrollmentSection';
+import { GroupEnrollmentSection } from './GroupEnrollmentSection';
 
 interface MentoringEnrollmentsTabsProps {
   selectedTab: string;
@@ -72,8 +72,8 @@ const MentoringEnrollmentsTabs: React.FC<MentoringEnrollmentsTabsProps> = ({
 
         <TabsContent value="individual" className="space-y-4">
           <IndividualEnrollmentSection
-            viewMode={viewMode === "grid" ? "cards" : "list"}
-            onViewModeChange={(mode) => onViewModeChange(mode === "cards" ? "grid" : "list")}
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
             statusFilter={statusFilter}
@@ -92,22 +92,15 @@ const MentoringEnrollmentsTabs: React.FC<MentoringEnrollmentsTabsProps> = ({
 
         <TabsContent value="group" className="space-y-4">
           <GroupEnrollmentSection
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange}
-            statusFilter={statusFilter}
-            onStatusFilterChange={onStatusFilterChange}
             groups={groups}
             selectedGroups={selectedGroups}
-            onToggleSelection={onToggleGroupSelection}
-            onViewGroup={onViewGroup}
-            onEditGroup={onEditGroup}
-            onDeleteGroup={onDeleteGroup}
+            onView={onViewGroup}
+            onEdit={onEditGroup}
+            onDelete={onDeleteGroup}
             onAddStudent={onAddStudent}
             onRemoveStudent={onRemoveStudent}
+            onToggleSelection={onToggleGroupSelection}
             onAddGroup={onAddGroup}
-            onBulkAction={(action) => onBulkAction(action, [], selectedGroups)}
           />
         </TabsContent>
       </Tabs>

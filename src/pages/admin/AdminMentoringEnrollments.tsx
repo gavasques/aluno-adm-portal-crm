@@ -7,7 +7,7 @@ import { useMentoringEnrollmentActions } from '@/hooks/admin/useMentoringEnrollm
 import { useMentoringEnrollmentSelection } from '@/hooks/admin/useMentoringEnrollmentSelection';
 import { EnrollmentsHeader } from '@/components/admin/mentoring/enrollments/EnrollmentsHeader';
 import { BulkActions } from '@/components/admin/mentoring/enrollments/BulkActions';
-import { MentoringEnrollmentsTabs } from '@/components/admin/mentoring/enrollments/MentoringEnrollmentsTabs';
+import MentoringEnrollmentsTabs from '@/components/admin/mentoring/enrollments/MentoringEnrollmentsTabs';
 import { MentoringEnrollmentsDialogs } from '@/components/admin/mentoring/enrollments/MentoringEnrollmentsDialogs';
 
 const AdminMentoringEnrollments = () => {
@@ -122,27 +122,32 @@ const AdminMentoringEnrollments = () => {
 
       {/* Tabs para separar Individuais e Grupos */}
       <MentoringEnrollmentsTabs
-        activeTab={activeTab}
+        selectedTab={activeTab}
         onTabChange={setActiveTab}
-        filteredIndividualEnrollments={filteredIndividualEnrollments}
-        filteredGroups={filteredGroups}
         viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        enrollments={filteredIndividualEnrollments}
+        groups={filteredGroups}
         selectedEnrollments={selectedEnrollments}
         selectedGroups={selectedGroups}
-        onView={handleViewEnrollment}
-        onEdit={setEditingEnrollment}
-        onDelete={handleDeleteEnrollment}
-        onAddExtension={handleAddExtension}
         onToggleEnrollmentSelection={toggleEnrollmentSelection}
-        onSelectAllIndividual={handleSelectAllIndividual}
-        onAddEnrollment={() => setShowForm(true)}
+        onToggleGroupSelection={toggleGroupSelection}
+        onCreateEnrollment={() => setShowForm(true)}
+        onEditEnrollment={setEditingEnrollment}
+        onViewEnrollment={handleViewEnrollment}
+        onDeleteEnrollment={handleDeleteEnrollment}
+        onAddExtension={handleAddExtension}
         onViewGroup={handleViewGroup}
         onEditGroup={handleEditGroup}
         onDeleteGroup={handleDeleteGroup}
         onAddStudent={handleAddStudent}
         onRemoveStudent={handleRemoveStudent}
-        onToggleGroupSelection={toggleGroupSelection}
         onAddGroup={handleAddGroup}
+        onBulkAction={handleBulkAction}
       />
 
       {/* Diálogos */}

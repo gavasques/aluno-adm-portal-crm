@@ -32,7 +32,7 @@ const OptimizedIndividualEnrollmentsContent: React.FC<OptimizedIndividualEnrollm
         <ModernIndividualEnrollmentCard 
           key={enrollment.id} 
           enrollment={enrollment}
-          isSelected={selectedEnrollments.includes(enrollment.id)}
+          selected={selectedEnrollments.includes(enrollment.id)}
           onToggleSelection={() => onToggleSelection(enrollment.id)}
           onView={() => onView(enrollment)}
           onEdit={() => onEdit(enrollment)}
