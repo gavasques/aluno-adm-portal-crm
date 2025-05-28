@@ -87,8 +87,6 @@ function App() {
                         <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
                         <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
                         <Route path="inscricoes-grupo" element={<AdminGroups />} />
-                        <Route path="mentorias/sessoes-individuais" element={<div>Sessões Individuais - Em breve</div>} />
-                        <Route path="mentorias/sessoes-grupo" element={<div>Sessões em Grupo - Em breve</div>} />
                         <Route path="mentorias/materiais" element={<div>Materiais - Em breve</div>} />
                         <Route path="permissoes" element={<AdminPermissions />} />
                         <Route path="cadastros" element={<AdminRegisters />} />

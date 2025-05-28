@@ -110,18 +110,6 @@ const sidebarItems = [
     group: "Mentorias"
   },
   {
-    title: "Sessões Individuais",
-    url: "/admin/mentorias/sessoes-individuais",
-    icon: Calendar,
-    group: "Mentorias"
-  },
-  {
-    title: "Sessões em Grupo",
-    url: "/admin/mentorias/sessoes-grupo",
-    icon: UsersIcon,
-    group: "Mentorias"
-  },
-  {
     title: "Materiais",
     url: "/admin/mentorias/materiais",
     icon: FolderOpen,
