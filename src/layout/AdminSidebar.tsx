@@ -24,7 +24,8 @@ import {
   User,
   LogOut,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  CreditCard
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,6 +48,12 @@ const sidebarItems = [
     title: "Dashboard",
     url: "/admin",
     icon: LayoutDashboard,
+    group: "Geral"
+  },
+  {
+    title: "Créditos",
+    url: "/admin/creditos",
+    icon: CreditCard,
     group: "Geral"
   },
   {

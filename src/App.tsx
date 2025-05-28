@@ -24,6 +24,7 @@ import RouteGuard from "@/components/RouteGuard";
 import { AuthProvider } from "@/hooks/useAuth";
 import Credits from "@/pages/student/Credits";
 import Users from "@/pages/admin/Users";
+import AdminCredits from "@/pages/admin/Credits";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -58,6 +59,7 @@ function App() {
                     <AdminLayout>
                       <Routes>
                         <Route path="usuarios" element={<Users />} />
+                        <Route path="creditos" element={<AdminCredits />} />
                         <Route path="dashboard" element={<div>Admin Dashboard - Em breve</div>} />
                         <Route path="fornecedores" element={<div>Fornecedores Admin - Em breve</div>} />
                         <Route path="parceiros" element={<div>Parceiros Admin - Em breve</div>} />
