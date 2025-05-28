@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -152,6 +159,9 @@ const sidebarItems = [
   }
 ];
 
+// Ordem dos grupos
+const groupOrder = ["Geral", "Operacional", "Geral ADM", "Mentorias", "Gestão", "Sistema"];
+
 const groupedItems = sidebarItems.reduce((groups, item) => {
   const group = item.group;
   if (!groups[group]) {
@@ -167,6 +177,19 @@ export default function AdminSidebar() {
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Determinar qual grupo contém a rota ativa
+  const getActiveGroup = () => {
+    for (const item of sidebarItems) {
+      if (location.pathname === item.url) {
+        return item.group;
+      }
+    }
+    return "";
+  };
+
+  const activeGroup = getActiveGroup();
+  const [openGroups, setOpenGroups] = useState<string[]>([activeGroup]);
 
   const getUserName = () => {
     return user?.user_metadata?.name || user?.email || "Administrador";
@@ -211,6 +234,13 @@ export default function AdminSidebar() {
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
+  // Garantir que o grupo ativo esteja sempre aberto
+  React.useEffect(() => {
+    if (activeGroup && !openGroups.includes(activeGroup)) {
+      setOpenGroups(prev => [...prev, activeGroup]);
+    }
+  }, [activeGroup, openGroups]);
+
   return (
     <div className="relative">
       <div 
@@ -236,32 +266,50 @@ export default function AdminSidebar() {
           </div>
         </div>
 
-        {/* Menu de navegação */}
+        {/* Menu de navegação com Accordion */}
         <div className="flex-1 p-3">
-          {Object.entries(groupedItems).map(([groupName, items]) => (
-            <div key={groupName} className="mb-5">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
-                {groupName}
-              </h3>
-              <nav className="space-y-1">
-                {items.map((item) => (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    className={cn(
-                      "flex items-center px-3 py-2 text-xs font-medium rounded-md transition-colors",
-                      location.pathname === item.url
-                        ? "bg-gray-800 text-white border-l-2 border-blue-500"
-                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                    )}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.title}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          ))}
+          <Accordion 
+            type="multiple" 
+            value={openGroups} 
+            onValueChange={setOpenGroups}
+            className="space-y-2"
+          >
+            {groupOrder.map((groupName) => {
+              const items = groupedItems[groupName];
+              if (!items) return null;
+
+              return (
+                <AccordionItem 
+                  key={groupName} 
+                  value={groupName}
+                  className="border-none"
+                >
+                  <AccordionTrigger className="text-xs font-semibold text-gray-400 uppercase tracking-wider hover:no-underline hover:text-gray-300 py-2 px-2">
+                    {groupName}
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-2">
+                    <nav className="space-y-1 pl-2">
+                      {items.map((item) => (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          className={cn(
+                            "flex items-center px-3 py-2 text-xs font-medium rounded-md transition-colors",
+                            location.pathname === item.url
+                              ? "bg-gray-800 text-white border-l-2 border-blue-500"
+                              : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                          )}
+                        >
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {item.title}
+                        </Link>
+                      ))}
+                    </nav>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         </div>
 
         {/* Menu do usuário na parte inferior */}
