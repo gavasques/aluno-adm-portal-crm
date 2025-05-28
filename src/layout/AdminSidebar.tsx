@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -46,7 +45,7 @@ import { useAuth } from "@/hooks/useAuth";
 const sidebarItems = [
   {
     title: "Dashboard",
-    url: "/admin",
+    url: "/admin/dashboard",
     icon: LayoutDashboard,
     group: "Geral"
   },
@@ -258,7 +257,7 @@ export default function AdminSidebar() {
         {/* Header da sidebar com logo */}
         <div className="p-4 border-b border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <Link to="/" className="flex items-center">
+            <Link to="/admin/dashboard" className="flex items-center">
               <img 
                 src="/lovable-uploads/fa166a7e-b1af-4959-a15a-12517ab1ed07.png"
                 alt="Logo" 
@@ -339,7 +338,7 @@ export default function AdminSidebar() {
               </div>
               
               <DropdownMenuItem asChild>
-                <Link to="/admin" className="flex cursor-pointer items-center gap-2">
+                <Link to="/admin/dashboard" className="flex cursor-pointer items-center gap-2">
                   <User className="h-4 w-4" />
                   Dashboard
                 </Link>

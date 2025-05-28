@@ -25,6 +25,10 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Credits from "@/pages/student/Credits";
 import Users from "@/pages/admin/Users";
 import AdminCredits from "@/pages/admin/Credits";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminMentoringCatalog from "@/pages/admin/AdminMentoringCatalog";
+import AdminCalendlyConfig from "@/pages/admin/AdminCalendlyConfig";
+import AdminGroups from "@/pages/admin/AdminGroups";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -58,16 +62,27 @@ function App() {
                   <RouteGuard requireAdminAccess>
                     <AdminLayout>
                       <Routes>
+                        {/* Redirect /admin to /admin/dashboard */}
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<AdminDashboard />} />
                         <Route path="usuarios" element={<Users />} />
                         <Route path="creditos" element={<AdminCredits />} />
-                        <Route path="dashboard" element={<div>Admin Dashboard - Em breve</div>} />
+                        <Route path="tarefas" element={<div>Tarefas - Em breve</div>} />
+                        <Route path="crm" element={<div>CRM - Em breve</div>} />
                         <Route path="fornecedores" element={<div>Fornecedores Admin - Em breve</div>} />
                         <Route path="parceiros" element={<div>Parceiros Admin - Em breve</div>} />
                         <Route path="ferramentas" element={<div>Ferramentas Admin - Em breve</div>} />
-                        <Route path="tarefas" element={<div>Tarefas - Em breve</div>} />
-                        <Route path="crm" element={<div>CRM - Em breve</div>} />
-                        <Route path="mentirias" element={<div>Mentorias - Em breve</div>} />
+                        <Route path="mentorias" element={<div>Dashboard Mentorias - Em breve</div>} />
+                        <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
+                        <Route path="inscricoes-individuais" element={<div>Inscrições Individuais - Em breve</div>} />
+                        <Route path="inscricoes-grupo" element={<AdminGroups />} />
+                        <Route path="mentorias/sessoes-individuais" element={<div>Sessões Individuais - Em breve</div>} />
+                        <Route path="mentorias/sessoes-grupo" element={<div>Sessões em Grupo - Em breve</div>} />
+                        <Route path="mentorias/materiais" element={<div>Materiais - Em breve</div>} />
                         <Route path="permissoes" element={<div>Permissões - Em breve</div>} />
+                        <Route path="cadastros" element={<div>Cadastros - Em breve</div>} />
+                        <Route path="auditoria" element={<div>Auditoria - Em breve</div>} />
+                        <Route path="calendly-config" element={<AdminCalendlyConfig />} />
                         <Route path="configuracoes" element={<div>Configurações - Em breve</div>} />
                         <Route path="*" element={<div>Página não encontrada</div>} />
                       </Routes>
