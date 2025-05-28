@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Shield, CheckSquare, Menu } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -18,6 +16,8 @@ import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
 import { useSystemMenus } from "@/hooks/admin/useSystemMenus";
 import { useSystemModules } from "@/hooks/admin/useSystemModules";
 import { useModularPermissions, ModulePermissionData } from "@/hooks/admin/useModularPermissions";
+import { MenuPermissionsSection } from "./form/MenuPermissionsSection";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UnifiedPermissionFormProps {
@@ -353,50 +353,15 @@ const UnifiedPermissionForm: React.FC<UnifiedPermissionFormProps> = ({
           </TabsList>
 
           <TabsContent value="menus" className="space-y-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Menu className="h-5 w-5" />
-                <Label className="text-base font-semibold">Permissões de Menu</Label>
-              </div>
-              
-              {isAdmin && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Administradores completos têm acesso a todos os menus automaticamente.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {!isAdmin && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {systemMenus.map((menu) => (
-                    <div key={menu.id} className="flex items-center space-x-2 p-2 border rounded">
-                      <Checkbox
-                        id={`menu-${menu.id}`}
-                        checked={selectedMenus.includes(menu.menu_key)}
-                        onCheckedChange={() => handleMenuToggle(menu.menu_key)}
-                        disabled={isLoading || isSubmitting}
-                      />
-                      <Label 
-                        htmlFor={`menu-${menu.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        {menu.display_name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedMenus.length > 0 && !isAdmin && (
-                <div className="mt-4">
-                  <Badge variant="outline">
-                    {selectedMenus.length} menu(s) selecionado(s)
-                  </Badge>
-                </div>
-              )}
-            </div>
+            <MenuPermissionsSection
+              isAdmin={isAdmin}
+              allowAdminAccess={allowAdminAccess}
+              selectedMenus={selectedMenus}
+              systemMenus={systemMenus}
+              isLoading={isLoading}
+              isSubmitting={isSubmitting}
+              onMenuToggle={handleMenuToggle}
+            />
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
