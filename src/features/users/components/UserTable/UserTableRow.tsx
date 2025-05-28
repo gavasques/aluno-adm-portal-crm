@@ -10,22 +10,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity, Mail, GraduationCap } from "lucide-react";
-import { User } from "@/types/user.types";
-import StoragePercentageBadge from "@/components/admin/users/StoragePercentageBadge";
+import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity, Mail, GraduationCap, User } from "lucide-react";
+import { User as UserType } from "@/types/user.types";
 
 interface UserTableRowProps {
-  user: User;
-  onViewDetails: (user: User) => void;
-  onResetPassword: (user: User) => void;
-  onChangePassword: (user: User) => void;
-  onDeleteUser: (user: User) => void;
-  onSetPermissionGroup: (user: User) => void;
-  onBanUser?: (user: User) => void;
-  onStorageManagement: (user: User) => void;
-  onActivityLogs: (user: User) => void;
-  onSendMagicLink: (user: User) => void;
-  onToggleMentor: (user: User) => void;
+  user: UserType;
+  onViewDetails: (user: UserType) => void;
+  onResetPassword: (user: UserType) => void;
+  onChangePassword: (user: UserType) => void;
+  onDeleteUser: (user: UserType) => void;
+  onSetPermissionGroup: (user: UserType) => void;
+  onBanUser?: (user: UserType) => void;
+  onStorageManagement: (user: UserType) => void;
+  onActivityLogs: (user: UserType) => void;
+  onSendMagicLink: (user: UserType) => void;
+  onToggleMentor: (user: UserType) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -43,13 +42,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onToggleMentor,
   permissionGroups = [],
 }) => {
-  const formatMB = (mb: number) => {
-    if (mb >= 1024) {
-      return `${(mb / 1024).toFixed(1)}GB`;
-    }
-    return `${mb}MB`;
-  };
-
   const formatLastLogin = (lastLogin: string) => {
     if (!lastLogin || lastLogin === 'Nunca') {
       return 'Nunca';
@@ -108,37 +100,66 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   const isBanned = permissionGroups.find(g => g.id === user.permission_group_id)?.name?.toLowerCase() === "banido";
 
   return (
-    <TableRow className="hover:bg-gray-50">
+    <TableRow className="hover:bg-gray-50/80 transition-colors">
       <TableCell>
-        <div className="space-y-1">
-          <div className="font-medium">{user.name}</div>
-          <div className="text-sm text-gray-500">{user.email}</div>
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <User className="h-5 w-5 text-white" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-gray-900 truncate">{user.name}</div>
+            <div className="text-sm text-gray-500 truncate">{user.email}</div>
+          </div>
         </div>
       </TableCell>
       
       <TableCell>
-        <div className="flex gap-2">
-          <Badge variant={getRoleVariant(user.role)}>
-            {user.role}
+        <div className="flex flex-col gap-1.5">
+          <Badge 
+            variant={getStatusVariant(user.status)}
+            size="sm"
+            className="w-fit"
+          >
+            {user.status}
           </Badge>
-          {user.is_mentor && (
-            <Badge variant="default" className="bg-purple-100 text-purple-800">
-              <GraduationCap className="h-3 w-3 mr-1" />
-              Mentor
+          
+          <div className="flex flex-wrap gap-1">
+            <Badge 
+              variant={getRoleVariant(user.role)}
+              size="sm"
+              className="text-xs"
+            >
+              {user.role}
             </Badge>
-          )}
-          {isBanned && (
-            <Badge variant="destructive">
-              Banido
-            </Badge>
-          )}
+            
+            {user.is_mentor && (
+              <Badge 
+                variant="default" 
+                size="sm"
+                className="bg-purple-100 text-purple-800 hover:bg-purple-200 text-xs"
+              >
+                <GraduationCap className="h-3 w-3 mr-1" />
+                Mentor
+              </Badge>
+            )}
+            
+            {isBanned && (
+              <Badge 
+                variant="destructive"
+                size="sm" 
+                className="text-xs"
+              >
+                Banido
+              </Badge>
+            )}
+          </div>
         </div>
       </TableCell>
       
       <TableCell>
-        <Badge variant={getStatusVariant(user.status)}>
-          {user.status}
-        </Badge>
+        <span className="text-sm font-medium text-gray-900">{user.role}</span>
       </TableCell>
       
       <TableCell>
@@ -148,21 +169,9 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
       </TableCell>
       
       <TableCell>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-mono">
-            {formatMB(user.storage_used_mb || 0)} / {formatMB(user.storage_limit_mb || 100)}
-          </span>
-          <StoragePercentageBadge 
-            storageUsedMb={user.storage_used_mb || 0}
-            storageLimitMb={user.storage_limit_mb || 100}
-          />
-        </div>
-      </TableCell>
-      
-      <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

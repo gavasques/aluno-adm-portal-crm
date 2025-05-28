@@ -2,21 +2,56 @@
 import React from 'react';
 import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
 import { UserTable } from './UserTable/UserTable';
+import { UserFilters } from './UserFilters/UserFilters';
 import { useUserDialogs } from '../hooks/useUserDialogs';
+import { useUserFilters } from '../hooks/useUserFilters';
 import { UserDialogManager } from './UserDialogs/UserDialogManager';
 
 const UnifiedUserPage: React.FC = () => {
   const {
-    filteredUsers,
+    users,
     isLoading,
     refreshUsers,
     permissionGroups
   } = usePerformanceOptimizedUserContext();
 
   const { dialogState, openDialog, closeDialog } = useUserDialogs();
+  
+  const {
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    roleFilter,
+    setRoleFilter,
+    mentorFilter,
+    setMentorFilter,
+    filteredUsers,
+    stats
+  } = useUserFilters(users);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Gestão de Usuários</h1>
+        <p className="text-gray-600 mt-2">Gerencie usuários, permissões e configurações do sistema</p>
+      </div>
+
+      <UserFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
+        mentorFilter={mentorFilter}
+        onMentorFilterChange={setMentorFilter}
+        totalUsers={stats.total}
+        activeUsers={stats.active}
+        inactiveUsers={stats.inactive}
+        pendingUsers={stats.pending}
+      />
+
       <UserTable
         users={filteredUsers}
         isLoading={isLoading}

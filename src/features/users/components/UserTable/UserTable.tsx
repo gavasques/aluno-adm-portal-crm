@@ -6,6 +6,7 @@ import { UserTableRow } from './UserTableRow';
 import { User } from '@/types/user.types';
 import EmptyUsersList from '@/components/admin/users/EmptyUsersList';
 import LoadingUsersList from '@/components/admin/users/LoadingUsersList';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface UserTableProps {
   users: User[];
@@ -38,53 +39,59 @@ export const UserTable: React.FC<UserTableProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="rounded-md border">
-        <Table>
-          <UserTableHeader />
-          <TableBody>
-            <LoadingUsersList />
-          </TableBody>
-        </Table>
-      </div>
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <Table>
+            <UserTableHeader />
+            <TableBody>
+              <LoadingUsersList />
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="rounded-md border">
-        <Table>
-          <UserTableHeader />
-          <TableBody>
-            <EmptyUsersList />
-          </TableBody>
-        </Table>
-      </div>
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <Table>
+            <UserTableHeader />
+            <TableBody>
+              <EmptyUsersList />
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <UserTableHeader />
-        <TableBody>
-          {users.map((user) => (
-            <UserTableRow
-              key={user.id}
-              user={user}
-              onViewDetails={onViewDetails}
-              onResetPassword={onResetPassword}
-              onChangePassword={onChangePassword}
-              onDeleteUser={onDeleteUser}
-              onSetPermissionGroup={onSetPermissionGroup}
-              onStorageManagement={onStorageManagement}
-              onActivityLogs={onActivityLogs}
-              onSendMagicLink={onSendMagicLink}
-              onToggleMentor={onToggleMentor}
-              permissionGroups={permissionGroups}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <Card className="shadow-sm">
+      <CardContent className="p-0">
+        <Table>
+          <UserTableHeader />
+          <TableBody>
+            {users.map((user) => (
+              <UserTableRow
+                key={user.id}
+                user={user}
+                onViewDetails={onViewDetails}
+                onResetPassword={onResetPassword}
+                onChangePassword={onChangePassword}
+                onDeleteUser={onDeleteUser}
+                onSetPermissionGroup={onSetPermissionGroup}
+                onStorageManagement={onStorageManagement}
+                onActivityLogs={onActivityLogs}
+                onSendMagicLink={onSendMagicLink}
+                onToggleMentor={onToggleMentor}
+                permissionGroups={permissionGroups}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 };
