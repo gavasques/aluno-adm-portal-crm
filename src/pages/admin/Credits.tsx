@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreditsDashboard from "@/components/admin/credits/CreditsDashboard";
-import UserCreditsManagement from "@/components/admin/credits/UserCreditsManagement";
 import CreditsReports from "@/components/admin/credits/CreditsReports";
 import CreditsSettings from "@/components/admin/credits/CreditsSettings";
 
@@ -13,24 +12,19 @@ const Credits = () => {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Gestão de Créditos</h1>
         <p className="text-gray-600 mt-1">
-          Controle e monitore o sistema de créditos dos usuários
+          Controle e monitore o sistema de créditos
         </p>
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
         
         <TabsContent value="dashboard" className="space-y-6">
           <CreditsDashboard />
-        </TabsContent>
-        
-        <TabsContent value="users" className="space-y-6">
-          <UserCreditsManagement />
         </TabsContent>
         
         <TabsContent value="reports" className="space-y-6">
