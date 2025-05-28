@@ -86,10 +86,17 @@ const AdminMentoringEnrollments = () => {
     handleBulkAction(action, selectedEnrollments, selectedGroups);
   };
 
-  // Converter viewMode para compatibilidade - mapear cards para grid
-  const convertedViewModeForHeader = viewMode === "cards" ? "grid" as const : "list" as const;
-  const handleViewModeChangeForHeader = (mode: "list" | "grid") => {
-    setViewMode(mode === "grid" ? "cards" : "list");
+  // Converter viewMode para compatibilidade com EnrollmentsHeader
+  const convertViewModeToHeader = (mode: "cards" | "list"): "list" | "grid" => {
+    return mode === "cards" ? "grid" : "list";
+  };
+
+  const convertViewModeFromHeader = (mode: "list" | "grid"): "cards" | "list" => {
+    return mode === "grid" ? "cards" : "list";
+  };
+
+  const handleViewModeChangeFromHeader = (mode: "list" | "grid") => {
+    setViewMode(convertViewModeFromHeader(mode));
   };
 
   return (
@@ -110,8 +117,8 @@ const AdminMentoringEnrollments = () => {
         setStatusFilter={setStatusFilter}
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
-        viewMode={convertedViewModeForHeader}
-        onViewModeChange={handleViewModeChangeForHeader}
+        viewMode={convertViewModeToHeader(viewMode)}
+        onViewModeChange={handleViewModeChangeFromHeader}
         onAddEnrollment={() => setShowForm(true)}
         totalEnrollments={statistics.total}
         activeEnrollments={statistics.active}

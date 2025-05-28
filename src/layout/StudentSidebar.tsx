@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Home, Settings, Users, BarChart, Wrench, Package, Bell, LogOut, User, ChevronDown, GraduationCap } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
@@ -50,14 +49,18 @@ const NavItem = ({
   }
   
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild>
-        <Link to={href} className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200", isActive ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" : "text-portal-dark hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700")}>
-          <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-blue-700 opacity-80")} />
-          <span>{children}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+    <Link
+      to={href}
+      className={cn(
+        "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+        isActive
+          ? "bg-gray-800 text-white"
+          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+      )}
+    >
+      <Icon className="mr-3 h-5 w-5" />
+      {children}
+    </Link>
   );
 };
 
@@ -126,147 +129,147 @@ const StudentSidebar = () => {
   
   if (loading) {
     return (
-      <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
-        <SidebarContent className="pt-4 pb-4">
-          <div className="flex items-center justify-center h-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        </SidebarContent>
-      </Sidebar>
+      <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto">
+        <div className="flex items-center justify-center h-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Sidebar className="border-r border-border w-52 hidden md:block flex-shrink-0 bg-white shadow-lg z-30 pr-0">
-      <SidebarHeader className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <img 
-            src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
-            alt="Logo" 
-            className="h-8"
-          />
+    <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto">
+      {/* Header da sidebar com logo e menu do usuário */}
+      <div className="p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/a9512e96-66c6-47b8-a7c6-5f1820a6c1a3.png"
+              alt="Guilherme Vasques Logo" 
+              className="h-8"
+            />
+          </Link>
           
-          <Button variant="ghost" size="sm" className="relative hover:bg-gray-100 px-2">
-            <Bell className="h-4 w-4 text-gray-600" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">2</span>
-          </Button>
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent className="py-4">
-        <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
-              Principal
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno" icon={Home} showAlways={true}>Dashboard</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno/configuracoes" icon={Settings} menuKey="settings">Configurações</NavItem>
-                </motion.div>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
-              Minha Área
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  {mentoringLoading ? (
-                    <SidebarMenuItem>
-                      <div className="flex items-center gap-2 rounded-md px-3 py-2">
-                        <Skeleton className="h-4 w-4" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                    </SidebarMenuItem>
-                  ) : (
-                    <NavItem 
-                      href="/aluno/mentorias" 
-                      icon={GraduationCap} 
-                      customCondition={shouldShowMentoring()}
-                    >
-                      Minhas Mentorias
-                    </NavItem>
-                  )}
-                </motion.div>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4 py-1.5 text-xs font-medium text-gray-500">
-              Geral
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno/fornecedores" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno/parceiros" icon={BarChart} menuKey="partners">Parceiros</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/aluno/ferramentas" icon={Wrench} menuKey="tools">Ferramentas</NavItem>
-                </motion.div>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </motion.div>
-      </SidebarContent>
-
-      <SidebarFooter className="p-4 border-t border-gray-200">
-        {user && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 px-2 py-2 rounded-md justify-start h-auto"
-              >
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-gray-600 text-white text-xs">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-left flex-1 min-w-0">
-                  <div className="font-medium truncate text-xs">{getUserName()}</div>
-                  <div className="text-[10px] text-gray-500">Aluno</div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative rounded-full h-8 w-8 text-white hover:bg-gray-700">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-blue-600 text-white">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="bg-blue-600 text-white p-4 -mt-1 -mx-1 rounded-t-md">
+                  <div className="font-medium">Minha Conta</div>
+                  <div className="text-sm text-blue-100">
+                    {user?.email || "aluno@portaledu.com"}
+                  </div>
                 </div>
-                <ChevronDown className="h-3 w-3 text-gray-400 flex-shrink-0" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
-              {permissions.hasAdminAccess && (
-                <DropdownMenuItem onClick={handleNavigateToAdmin}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Ir para Área Administrativa
+                
+                <DropdownMenuItem asChild>
+                  <Link to="/aluno" className="flex cursor-pointer items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Link>
                 </DropdownMenuItem>
-              )}
-              
-              <DropdownMenuItem onClick={handleSettings}>
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </SidebarFooter>
-    </Sidebar>
+                
+                <DropdownMenuItem onClick={handleSettings} className="flex cursor-pointer items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Configurações
+                </DropdownMenuItem>
+                
+                {permissions.hasAdminAccess && (
+                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="flex cursor-pointer items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Ir para Área Administrativa
+                  </DropdownMenuItem>
+                )}
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu de navegação */}
+      <div className="p-4">
+        <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Principal
+            </h3>
+            <nav className="space-y-1">
+              <motion.div variants={itemAnimation}>
+                <NavItem href="/aluno" icon={Home} showAlways={true}>Dashboard</NavItem>
+              </motion.div>
+              <motion.div variants={itemAnimation}>
+                <NavItem href="/aluno/configuracoes" icon={Settings} menuKey="settings">Configurações</NavItem>
+              </motion.div>
+            </nav>
+          </div>
+          
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Minha Área
+            </h3>
+            <nav className="space-y-1">
+              <motion.div variants={itemAnimation}>
+                <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
+              </motion.div>
+              <motion.div variants={itemAnimation}>
+                {mentoringLoading ? (
+                  <div className="flex items-center gap-2 rounded-md px-3 py-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                ) : (
+                  <NavItem 
+                    href="/aluno/mentorias" 
+                    icon={GraduationCap} 
+                    customCondition={shouldShowMentoring()}
+                  >
+                    Minhas Mentorias
+                  </NavItem>
+                )}
+              </motion.div>
+            </nav>
+          </div>
+          
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              Geral
+            </h3>
+            <nav className="space-y-1">
+              <motion.div variants={itemAnimation}>
+                <NavItem href="/aluno/fornecedores" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
+              </motion.div>
+              <motion.div variants={itemAnimation}>
+                <NavItem href="/aluno/parceiros" icon={BarChart} menuKey="partners">Parceiros</NavItem>
+              </motion.div>
+              <motion.div variants={itemAnimation}>
+                <NavItem href="/aluno/ferramentas" icon={Wrench} menuKey="tools">Ferramentas</NavItem>
+              </motion.div>
+            </nav>
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 };
 
