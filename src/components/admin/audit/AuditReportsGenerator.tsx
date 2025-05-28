@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,7 @@ import {
   Clock,
   CheckCircle
 } from 'lucide-react';
-import { useAuditLogs } from '@/hooks/admin/useAuditLogs';
+import { useAuditLogs, AuditFilters } from '@/hooks/admin/useAuditLogs';
 import { useAuditAnalytics } from '@/hooks/admin/useAuditAnalytics';
 import { toast } from 'sonner';
 
@@ -28,11 +27,7 @@ interface ReportConfig {
   includeAnalytics: boolean;
   includeLogs: boolean;
   includeAlerts: boolean;
-  filters: {
-    riskLevel?: string;
-    eventCategory?: string;
-    userId?: string;
-  };
+  filters: AuditFilters;
   format: 'json' | 'csv' | 'pdf';
 }
 

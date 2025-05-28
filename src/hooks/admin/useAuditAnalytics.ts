@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -48,7 +47,7 @@ export const useAuditAnalytics = (dateRange: { from: string; to: string }) => {
       // Buscar dados de tendências
       const { data: trendsData, error: trendsError } = await supabase
         .from('audit_logs')
-        .select('created_at, risk_level, success')
+        .select('created_at, risk_level, success, event_type')
         .gte('created_at', dateRange.from)
         .lte('created_at', dateRange.to)
         .order('created_at', { ascending: true });
