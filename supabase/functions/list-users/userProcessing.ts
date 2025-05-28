@@ -53,14 +53,24 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         console.log(`Status do perfil: ${profileData.status}`);
       }
       
-      // Determinar o status do usuário - primariamente do perfil
-      let status = profileData?.status || "Ativo";
+      // CORREÇÃO PRINCIPAL: Priorizar o status da tabela profiles
+      let status = "Ativo"; // Status padrão
       
-      // Se não houver status no perfil, verificar banned_until
-      if (user.banned_until && new Date(user.banned_until) > new Date()) {
-        status = "Inativo";
-      } else if (user.user_metadata?.status === 'Convidado') {
-        status = "Convidado";
+      if (profileData && profileData.status) {
+        // Se existe perfil e tem status definido, usar este status
+        status = profileData.status;
+        console.log(`✅ Usando status do perfil: ${status} para usuário ${user.email}`);
+      } else {
+        // Fallback: usar lógica baseada nos campos de auth apenas se não há perfil ou status
+        console.log(`⚠️ Usando fallback de auth para usuário ${user.email}`);
+        
+        if (user.banned_until && new Date(user.banned_until) > new Date()) {
+          status = "Inativo";
+        } else if (user.user_metadata?.status === 'Convidado') {
+          status = "Convidado";
+        } else if (!user.email_confirmed_at) {
+          status = "Pendente";
+        }
       }
       
       console.log(`Status final do usuário ${user.email}: ${status}`);
@@ -73,7 +83,12 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         status: status,
         lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
         tasks: [], // Placeholder para futuras tarefas
-        permission_group_id: profileData?.permission_group_id || null
+        permission_group_id: profileData?.permission_group_id || null,
+        storage_used_mb: profileData?.storage_used_mb || 0,
+        storage_limit_mb: profileData?.storage_limit_mb || 100,
+        is_mentor: profileData?.is_mentor || false,
+        created_at: profileData?.created_at || user.created_at,
+        updated_at: profileData?.updated_at || user.updated_at
       };
     } catch (err) {
       console.error(`Erro ao processar usuário ${user.id}:`, err);
@@ -85,7 +100,12 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         status: "Ativo", // Status padrão para casos de erro
         lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : "Nunca",
         tasks: [],
-        permission_group_id: null
+        permission_group_id: null,
+        storage_used_mb: 0,
+        storage_limit_mb: 100,
+        is_mentor: false,
+        created_at: user.created_at,
+        updated_at: user.updated_at
       };
     }
   })).then(users => users.filter(Boolean)); // Filtrar nulos
