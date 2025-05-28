@@ -1,6 +1,7 @@
 
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
@@ -24,71 +25,85 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Credits from "@/pages/student/Credits";
 import Users from "@/pages/admin/Users";
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/complete-registration" element={<CompleteRegistration />} />
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/complete-registration" element={<CompleteRegistration />} />
 
-            {/* Admin routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <RouteGuard requireAdminAccess>
-                  <AdminLayout>
-                    <Routes>
-                      <Route path="usuarios" element={<Users />} />
-                      <Route path="dashboard" element={<div>Admin Dashboard - Em breve</div>} />
-                      <Route path="fornecedores" element={<div>Fornecedores Admin - Em breve</div>} />
-                      <Route path="parceiros" element={<div>Parceiros Admin - Em breve</div>} />
-                      <Route path="ferramentas" element={<div>Ferramentas Admin - Em breve</div>} />
-                      <Route path="tarefas" element={<div>Tarefas - Em breve</div>} />
-                      <Route path="crm" element={<div>CRM - Em breve</div>} />
-                      <Route path="mentirias" element={<div>Mentorias - Em breve</div>} />
-                      <Route path="permissoes" element={<div>Permissões - Em breve</div>} />
-                      <Route path="configuracoes" element={<div>Configurações - Em breve</div>} />
-                      <Route path="*" element={<div>Página não encontrada</div>} />
-                    </Routes>
-                  </AdminLayout>
-                </RouteGuard>
-              }
-            />
+              {/* Admin routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <RouteGuard requireAdminAccess>
+                    <AdminLayout>
+                      <Routes>
+                        <Route path="usuarios" element={<Users />} />
+                        <Route path="dashboard" element={<div>Admin Dashboard - Em breve</div>} />
+                        <Route path="fornecedores" element={<div>Fornecedores Admin - Em breve</div>} />
+                        <Route path="parceiros" element={<div>Parceiros Admin - Em breve</div>} />
+                        <Route path="ferramentas" element={<div>Ferramentas Admin - Em breve</div>} />
+                        <Route path="tarefas" element={<div>Tarefas - Em breve</div>} />
+                        <Route path="crm" element={<div>CRM - Em breve</div>} />
+                        <Route path="mentirias" element={<div>Mentorias - Em breve</div>} />
+                        <Route path="permissoes" element={<div>Permissões - Em breve</div>} />
+                        <Route path="configuracoes" element={<div>Configurações - Em breve</div>} />
+                        <Route path="*" element={<div>Página não encontrada</div>} />
+                      </Routes>
+                    </AdminLayout>
+                  </RouteGuard>
+                }
+              />
 
-            {/* Student routes */}
-            <Route
-              path="/aluno/*"
-              element={
-                <RouteGuard>
-                  <StudentLayout />
-                </RouteGuard>
-              }
-            >
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="creditos" element={<Credits />} />
-              <Route path="fornecedores" element={<Suppliers />} />
-              <Route path="fornecedores/:id" element={<SupplierDetail />} />
-              <Route path="meus-fornecedores" element={<MySuppliers />} />
-              <Route path="meus-fornecedores/:id" element={<MySupplierDetail />} />
-              <Route path="parceiros" element={<Partners />} />
-              <Route path="ferramentas" element={<Tools />} />
-              <Route path="mentoria" element={<Mentoring />} />
-              <Route path="mentoria/:id" element={<MentoringDetail />} />
-              <Route path="sessao/:id" element={<MentoringSession />} />
-              <Route path="configuracoes" element={<Settings />} />
-            </Route>
+              {/* Student routes */}
+              <Route
+                path="/aluno/*"
+                element={
+                  <RouteGuard>
+                    <StudentLayout />
+                  </RouteGuard>
+                }
+              >
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="creditos" element={<Credits />} />
+                <Route path="fornecedores" element={<Suppliers />} />
+                <Route path="fornecedores/:id" element={<SupplierDetail />} />
+                <Route path="meus-fornecedores" element={<MySuppliers />} />
+                <Route path="meus-fornecedores/:id" element={<MySupplierDetail />} />
+                <Route path="parceiros" element={<Partners />} />
+                <Route path="ferramentas" element={<Tools />} />
+                <Route path="mentoria" element={<Mentoring />} />
+                <Route path="mentoria/:id" element={<MentoringDetail />} />
+                <Route path="sessao/:id" element={<MentoringSession />} />
+                <Route path="configuracoes" element={<Settings />} />
+              </Route>
 
-            {/* Catch all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </AuthProvider>
-    </BrowserRouter>
+              {/* Catch all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
