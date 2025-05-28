@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import StudentSidebar from './StudentSidebar';
 import ModernAdminSidebar from './ModernAdminSidebar';
+import MobileAdminSidebar from './MobileAdminSidebar';
+import { MobileHeader } from '@/components/layout/MobileHeader';
+import { MobileDrawer } from '@/components/layout/MobileDrawer';
 import { ResponsiveLayout } from '@/components/ui/responsive-layout';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -13,29 +16,51 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
   const isMobile = useIsMobile();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleMenuClose = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   if (isMobile) {
-    // Layout móvel simplificado
     return (
       <ResponsiveLayout
         className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
         useSafeArea={true}
         mobileFirst={true}
       >
-        <div className="relative min-h-screen">
-          {/* Sidebar móvel será implementado como drawer/sheet */}
-          {isAdmin ? <ModernAdminSidebar /> : <StudentSidebar />}
-          
-          {/* Conteúdo principal móvel */}
-          <motion.div 
-            className="p-4 pt-20 pb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
-            {children}
-          </motion.div>
-        </div>
+        {/* Mobile Header */}
+        <MobileHeader
+          title={isAdmin ? "Administração" : "Portal do Aluno"}
+          onMenuToggle={handleMenuToggle}
+          isMenuOpen={isMobileMenuOpen}
+          notificationCount={3}
+        />
+
+        {/* Mobile Drawer */}
+        <MobileDrawer isOpen={isMobileMenuOpen} onClose={handleMenuClose}>
+          {isAdmin ? (
+            <MobileAdminSidebar onItemClick={handleMenuClose} />
+          ) : (
+            <div className="p-4">
+              <p className="text-gray-600">Sidebar do Aluno Mobile em desenvolvimento</p>
+            </div>
+          )}
+        </MobileDrawer>
+
+        {/* Main Content */}
+        <motion.div 
+          className="flex-1 p-4 pt-2 pb-8 overflow-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
         
         {/* Background Elements otimizado para mobile */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

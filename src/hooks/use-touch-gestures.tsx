@@ -29,6 +29,7 @@ interface TouchGestureOptions {
   onDoubleTap?: (point: TouchPoint) => void
   onLongPress?: (point: TouchPoint) => void
   longPressDelay?: number
+  disabled?: boolean
 }
 
 export const useTouchGestures = (options: TouchGestureOptions = {}) => {
@@ -37,6 +38,7 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
     swipeVelocityThreshold = 0.3,
     pinchThreshold = 0.1,
     longPressDelay = 500,
+    disabled = false,
     onSwipe,
     onPinch,
     onTap,
@@ -50,28 +52,28 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
   const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null)
 
-  const getTouchPoint = (touch: Touch): TouchPoint => ({
+  const getTouchPoint = useCallback((touch: Touch): TouchPoint => ({
     x: touch.clientX,
     y: touch.clientY,
     timestamp: Date.now()
-  })
+  }), [])
 
-  const getDistance = (point1: TouchPoint, point2: TouchPoint): number => {
+  const getDistance = useCallback((point1: TouchPoint, point2: TouchPoint): number => {
     const dx = point2.x - point1.x
     const dy = point2.y - point1.y
     return Math.sqrt(dx * dx + dy * dy)
-  }
+  }, [])
 
-  const getPinchDistance = (touches: TouchList): number => {
+  const getPinchDistance = useCallback((touches: TouchList): number => {
     if (touches.length < 2) return 0
     const touch1 = touches[0]
     const touch2 = touches[1]
     const dx = touch2.clientX - touch1.clientX
     const dy = touch2.clientY - touch1.clientY
     return Math.sqrt(dx * dx + dy * dy)
-  }
+  }, [])
 
-  const getPinchCenter = (touches: TouchList): { x: number; y: number } => {
+  const getPinchCenter = useCallback((touches: TouchList): { x: number; y: number } => {
     if (touches.length < 2) return { x: 0, y: 0 }
     const touch1 = touches[0]
     const touch2 = touches[1]
@@ -79,7 +81,7 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
       x: (touch1.clientX + touch2.clientX) / 2,
       y: (touch1.clientY + touch2.clientY) / 2
     }
-  }
+  }, [])
 
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimer) {
@@ -89,6 +91,8 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
   }, [longPressTimer])
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (disabled) return
+    
     const touches = e.touches
     
     if (touches.length === 1) {
@@ -96,19 +100,23 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
       setTouchStart(point)
       
       // Setup long press timer
-      const timer = setTimeout(() => {
-        onLongPress?.(point)
-        clearLongPressTimer()
-      }, longPressDelay)
-      setLongPressTimer(timer)
+      if (onLongPress) {
+        const timer = setTimeout(() => {
+          onLongPress(point)
+          clearLongPressTimer()
+        }, longPressDelay)
+        setLongPressTimer(timer)
+      }
     } else if (touches.length === 2) {
       // Pinch start
       clearLongPressTimer()
       setInitialPinchDistance(getPinchDistance(touches))
     }
-  }, [onLongPress, longPressDelay, clearLongPressTimer])
+  }, [disabled, getTouchPoint, onLongPress, longPressDelay, clearLongPressTimer, getPinchDistance])
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (disabled) return
+    
     const touches = e.touches
     
     if (touches.length === 2 && initialPinchDistance && onPinch) {
@@ -124,9 +132,11 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
       // Clear long press on movement
       clearLongPressTimer()
     }
-  }, [initialPinchDistance, onPinch, pinchThreshold, clearLongPressTimer])
+  }, [disabled, initialPinchDistance, onPinch, getPinchDistance, getPinchCenter, pinchThreshold, clearLongPressTimer])
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (disabled) return
+    
     clearLongPressTimer()
     
     const touches = e.changedTouches
@@ -136,7 +146,7 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
       const duration = touchEnd.timestamp - touchStart.timestamp
       const velocity = distance / duration
 
-      if (distance > swipeThreshold && velocity > swipeVelocityThreshold) {
+      if (distance > swipeThreshold && velocity > swipeVelocityThreshold && onSwipe) {
         // Swipe gesture
         const dx = touchEnd.x - touchStart.x
         const dy = touchEnd.y - touchStart.y
@@ -148,7 +158,7 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
           direction = dy > 0 ? 'down' : 'up'
         }
         
-        onSwipe?.({
+        onSwipe({
           direction,
           distance,
           velocity,
@@ -159,11 +169,15 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
         const now = Date.now()
         if (lastTap && now - lastTap.timestamp < 300 && getDistance(lastTap, touchEnd) < 20) {
           // Double tap
-          onDoubleTap?.(touchEnd)
+          if (onDoubleTap) {
+            onDoubleTap(touchEnd)
+          }
           setLastTap(null)
         } else {
           // Single tap
-          onTap?.(touchEnd)
+          if (onTap) {
+            onTap(touchEnd)
+          }
           setLastTap(touchEnd)
         }
       }
@@ -171,15 +185,17 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
     
     setTouchStart(null)
     setInitialPinchDistance(null)
-  }, [touchStart, lastTap, swipeThreshold, swipeVelocityThreshold, onSwipe, onTap, onDoubleTap, clearLongPressTimer])
+  }, [disabled, touchStart, lastTap, swipeThreshold, swipeVelocityThreshold, onSwipe, onTap, onDoubleTap, clearLongPressTimer, getTouchPoint, getDistance])
 
   useEffect(() => {
     const element = ref.current
-    if (!element) return
+    if (!element || disabled) return
 
-    element.addEventListener('touchstart', handleTouchStart, { passive: false })
-    element.addEventListener('touchmove', handleTouchMove, { passive: false })
-    element.addEventListener('touchend', handleTouchEnd, { passive: false })
+    const options = { passive: false }
+    
+    element.addEventListener('touchstart', handleTouchStart, options)
+    element.addEventListener('touchmove', handleTouchMove, options)
+    element.addEventListener('touchend', handleTouchEnd, options)
 
     return () => {
       element.removeEventListener('touchstart', handleTouchStart)
@@ -187,21 +203,24 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
       element.removeEventListener('touchend', handleTouchEnd)
       clearLongPressTimer()
     }
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd, clearLongPressTimer])
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, clearLongPressTimer, disabled])
 
   return { ref }
 }
 
-// Hook específico para pull-to-refresh
+// Hook otimizado para pull-to-refresh
 export const usePullToRefresh = (onRefresh: () => void | Promise<void>) => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [pullDistance, setPullDistance] = useState(0)
   
   const { ref } = useTouchGestures({
     swipeThreshold: 100,
+    disabled: isRefreshing,
     onSwipe: async (gesture) => {
       if (gesture.direction === 'down' && gesture.distance > 120 && !isRefreshing) {
         setIsRefreshing(true)
+        setPullDistance(gesture.distance)
+        
         try {
           await onRefresh()
         } finally {
