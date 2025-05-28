@@ -93,6 +93,12 @@ export const useBehaviorAnalysis = () => {
 
   // Análise de padrões em logs
   const analyzePatterns = (logs: any[]): UserBehaviorProfile[] => {
+    // Verificar se logs é um array válido
+    if (!Array.isArray(logs)) {
+      console.warn('Logs recebidos não são um array válido:', logs);
+      return [];
+    }
+
     const userGroups = logs.reduce((acc, log) => {
       if (!log.user_id) return acc;
       if (!acc[log.user_id]) {
@@ -120,6 +126,12 @@ export const useBehaviorAnalysis = () => {
 
   // Detectar padrões específicos
   const detectBehaviorPatterns = (userLogs: any[]): BehaviorPattern[] => {
+    // Verificar se userLogs é um array válido
+    if (!Array.isArray(userLogs)) {
+      console.warn('UserLogs não é um array válido:', userLogs);
+      return [];
+    }
+
     const patterns: BehaviorPattern[] = [];
 
     // Padrão 1: Tentativas de login fora do horário
@@ -179,7 +191,9 @@ export const useBehaviorAnalysis = () => {
 
   // Detectar operações muito rápidas
   const detectRapidOperations = (logs: any[]) => {
-    if (logs.length < 2) return { count: 0, rate: 0, lastTime: null };
+    if (!Array.isArray(logs) || logs.length < 2) {
+      return { count: 0, rate: 0, lastTime: null };
+    }
 
     const sortedLogs = logs.sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -317,16 +331,22 @@ export const useBehaviorAnalysis = () => {
   // Gerar alerta de segurança
   const generateSecurityAlert = async (analysis: BehaviorAnalysisResult) => {
     try {
+      // Converter o objeto complexo para um formato compatível com JSON
+      const alertMetadata = {
+        suspicious_users_count: analysis.suspicious_users.length,
+        global_risk_level: analysis.global_risk_level,
+        detected_patterns: analysis.pattern_analysis.detected_patterns,
+        active_threats: analysis.real_time_alerts.active_threats,
+        detection_time: new Date().toISOString(),
+        auto_generated: true
+      };
+
       await supabase.from('security_alerts').insert({
         alert_type: 'behavior_analysis',
         severity: analysis.global_risk_level === 'critical' ? 'critical' : 'high',
         title: 'Análise Comportamental: Atividade Suspeita Detectada',
         description: `Sistema detectou ${analysis.suspicious_users.length} usuário(s) com comportamento suspeito. Nível de risco global: ${analysis.global_risk_level}`,
-        metadata: {
-          analysis_result: analysis,
-          detection_time: new Date().toISOString(),
-          auto_generated: true
-        }
+        metadata: alertMetadata
       });
     } catch (error) {
       console.error('Erro ao gerar alerta:', error);
