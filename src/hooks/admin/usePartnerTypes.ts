@@ -14,6 +14,7 @@ export interface PartnerType {
 export const usePartnerTypes = () => {
   const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   const fetchPartnerTypes = async () => {
     try {
@@ -60,6 +61,32 @@ export const usePartnerTypes = () => {
     }
   };
 
+  const updatePartnerType = async (id: string, data: { name: string; description?: string }) => {
+    try {
+      setUpdating(true);
+      const { error } = await supabase
+        .from('partner_types')
+        .update(data)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating partner type:', error);
+        toast.error('Erro ao atualizar tipo de parceiro');
+        return false;
+      }
+
+      toast.success('Tipo de parceiro atualizado com sucesso!');
+      fetchPartnerTypes();
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Erro ao atualizar tipo de parceiro');
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const deletePartnerType = async (id: string) => {
     try {
       const { error } = await supabase
@@ -90,7 +117,9 @@ export const usePartnerTypes = () => {
   return {
     partnerTypes,
     loading,
+    updating,
     addPartnerType,
+    updatePartnerType,
     deletePartnerType,
     refetch: fetchPartnerTypes
   };
