@@ -1,21 +1,14 @@
 
-import React, { useState } from 'react';
-import { Users, Package, GraduationCap, BarChart, Wrench, Clock, Plus } from 'lucide-react';
+import React from 'react';
+import { Users, Package, GraduationCap, BarChart, Wrench, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ModernStatsCard } from '@/components/dashboard/ModernStatsCard';
 import { ModernQuickActions } from '@/components/dashboard/ModernQuickActions';
 import { ModernCard, ModernCardContent, ModernCardDescription, ModernCardHeader, ModernCardTitle } from '@/components/ui/modern-card';
 import { PageTransition, PageChild } from '@/components/animations/PageTransition';
 import { HoverCard } from '@/components/animations/HoverCard';
-import { StatusAnimation, ModernSpinner } from '@/components/animations/LoadingStates';
-import { FloatingActionButton, SuccessCheckmark, Confetti } from '@/components/animations/SuccessStates';
 
 const StudentDashboard = () => {
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [fabExpanded, setFabExpanded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
   const statsCards = [
     {
       title: "Meus Fornecedores",
@@ -96,19 +89,6 @@ const StudentDashboard = () => {
       icon: GraduationCap
     }
   ];
-
-  const handleQuickAction = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowSuccess(true);
-      setShowConfetti(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        setShowConfetti(false);
-      }, 3000);
-    }, 2000);
-  };
 
   return (
     <PageTransition className="space-y-8">
@@ -200,33 +180,6 @@ const StudentDashboard = () => {
           </HoverCard>
         </PageChild>
       </div>
-
-      {/* Success States */}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-        <SuccessCheckmark isVisible={showSuccess} size="lg" />
-      </div>
-
-      <Confetti isVisible={showConfetti} />
-
-      {/* Loading Demo */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-8">
-            <StatusAnimation 
-              status="loading" 
-              message="Processando sua solicitação..." 
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Floating Action Button */}
-      <FloatingActionButton
-        onClick={() => setFabExpanded(!fabExpanded)}
-        icon={<Plus className="h-5 w-5" />}
-        label="Ação Rápida"
-        isExpanded={fabExpanded}
-      />
     </PageTransition>
   );
 };
