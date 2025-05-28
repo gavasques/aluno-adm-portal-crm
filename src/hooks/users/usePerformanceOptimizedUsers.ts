@@ -1,10 +1,10 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
 import { User, UserFilters, UserStats, CreateUserData } from '@/types/user.types';
 import { useDebouncedCallback } from 'use-debounce';
 import { useOptimizedUserCache } from './useOptimizedUserCache';
+import { usePermissionGroups } from '@/hooks/admin/usePermissionGroups';
 
 export const usePerformanceOptimizedUsers = () => {
   const queryClient = useQueryClient();
@@ -24,6 +24,8 @@ export const usePerformanceOptimizedUsers = () => {
     getMetrics,
     preloadCommonFilters
   } = useOptimizedUserCache();
+
+  const { permissionGroups } = usePermissionGroups();
 
   optimizedUserService.setQueryClient(queryClient);
 
@@ -175,6 +177,7 @@ export const usePerformanceOptimizedUsers = () => {
     isLoading,
     isRefreshing: false,
     error: error?.message || null,
+    permissionGroups: permissionGroups || [],
     
     setFilters,
     refreshUsers,

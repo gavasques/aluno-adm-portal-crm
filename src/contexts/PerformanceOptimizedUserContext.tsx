@@ -11,6 +11,7 @@ interface PerformanceOptimizedUserContextValue {
   isLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
+  permissionGroups: Array<{ id: string; name: string; }>;
   
   // Actions
   setFilters: (filters: Partial<UserFilters>) => void;
