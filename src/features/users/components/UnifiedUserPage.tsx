@@ -28,13 +28,13 @@ const UnifiedUserPage: React.FC = () => {
     setMentorFilter,
     filteredUsers,
     stats
-  } = useUserFilters(users);
+  } = useUserFilters(users, permissionGroups);
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gestão de Usuários</h1>
-        <p className="text-gray-600 mt-2">Gerencie usuários, permissões e configurações do sistema</p>
+    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestão de Usuários</h1>
+        <p className="text-gray-600">Gerencie usuários, permissões e configurações do sistema</p>
       </div>
 
       <UserFilters
@@ -50,6 +50,7 @@ const UnifiedUserPage: React.FC = () => {
         activeUsers={stats.active}
         inactiveUsers={stats.inactive}
         pendingUsers={stats.pending}
+        bannedUsers={stats.banned}
       />
 
       <UserTable
