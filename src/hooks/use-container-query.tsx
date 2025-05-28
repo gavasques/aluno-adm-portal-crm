@@ -28,7 +28,7 @@ const defaultBreakpoints = {
 }
 
 export const useContainerQuery = (options: ContainerQueryOptions = {}) => {
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<ContainerSize>({
     width: 0,
     height: 0,

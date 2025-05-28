@@ -44,7 +44,7 @@ export const useTouchGestures = (options: TouchGestureOptions = {}) => {
     onLongPress
   } = options
 
-  const ref = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const [touchStart, setTouchStart] = useState<TouchPoint | null>(null)
   const [lastTap, setLastTap] = useState<TouchPoint | null>(null)
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
