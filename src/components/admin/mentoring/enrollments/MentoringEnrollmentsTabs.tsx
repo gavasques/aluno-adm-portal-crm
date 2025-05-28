@@ -8,8 +8,8 @@ import { GroupEnrollmentSection } from './GroupEnrollmentSection';
 interface MentoringEnrollmentsTabsProps {
   selectedTab: string;
   onTabChange: (tab: string) => void;
-  viewMode: "list" | "grid";
-  onViewModeChange: (mode: "list" | "grid") => void;
+  viewMode: "cards" | "list";
+  onViewModeChange: (mode: "cards" | "list") => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   statusFilter: string;

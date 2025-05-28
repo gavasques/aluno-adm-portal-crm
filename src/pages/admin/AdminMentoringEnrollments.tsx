@@ -86,10 +86,10 @@ const AdminMentoringEnrollments = () => {
     handleBulkAction(action, selectedEnrollments, selectedGroups);
   };
 
-  // Convert viewMode from "cards" to "grid" for compatibility
-  const convertedViewMode = viewMode === "cards" ? "grid" : viewMode;
+  // Convertir viewMode para compatibilidade com componentes que esperam "list" | "grid"
+  const convertedViewMode = viewMode === "cards" ? "grid" : "list";
   const handleViewModeChange = (mode: "list" | "grid") => {
-    setViewMode(mode === "grid" ? "cards" : mode);
+    setViewMode(mode === "grid" ? "cards" : "list");
   };
 
   return (
@@ -130,8 +130,8 @@ const AdminMentoringEnrollments = () => {
       <MentoringEnrollmentsTabs
         selectedTab={activeTab}
         onTabChange={setActiveTab}
-        viewMode={convertedViewMode}
-        onViewModeChange={handleViewModeChange}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         searchQuery={searchTerm}
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
