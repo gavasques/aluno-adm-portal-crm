@@ -2,31 +2,50 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import ListTable, { ListItem } from "@/components/admin/ListTable";
 import AddItemForm from "@/components/admin/AddItemForm";
+import EditCategoryForm from "@/components/admin/EditCategoryForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, Category } from "@/hooks/useCategories";
 import { Toaster } from "@/components/ui/toaster";
 
 const Categories = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  
   const { 
     categories, 
     isLoading, 
     error, 
     createCategory, 
+    updateCategory,
     deleteCategory,
-    isCreating 
+    isCreating,
+    isUpdating
   } = useCategories();
 
   const handleAddCategory = (data: { name: string; description?: string }) => {
     createCategory(data);
-    setIsDialogOpen(false);
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditCategory = (data: { name: string; description?: string }) => {
+    if (selectedCategory) {
+      updateCategory(selectedCategory.id, data);
+      setIsEditDialogOpen(false);
+      setSelectedCategory(null);
+    }
   };
 
   const handleDeleteCategory = (id: string | number) => {
     deleteCategory(String(id));
+  };
+
+  const openEditDialog = (category: Category) => {
+    setSelectedCategory(category);
+    setIsEditDialogOpen(true);
   };
 
   // Convert to ListItem format for the table
@@ -60,7 +79,7 @@ const Categories = () => {
             Gerencie as categorias disponíveis no sistema
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2" disabled={isCreating}>
               <Plus className="h-4 w-4" />
@@ -105,12 +124,33 @@ const Categories = () => {
             <ListTable 
               items={listItems} 
               onDelete={handleDeleteCategory}
+              onEdit={(item) => openEditDialog(categories.find(c => c.id === item.id)!)}
               showDescription={true}
               showDates={true}
             />
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Category Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Categoria</DialogTitle>
+            <DialogDescription>
+              Atualize as informações da categoria selecionada.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCategory && (
+            <EditCategoryForm 
+              category={selectedCategory}
+              onSubmit={handleEditCategory} 
+              isLoading={isUpdating}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Toaster />
     </div>
   );

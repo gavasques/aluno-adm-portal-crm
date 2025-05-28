@@ -17,6 +17,11 @@ export interface CreateCategoryData {
   description?: string;
 }
 
+export interface UpdateCategoryData {
+  name: string;
+  description?: string;
+}
+
 export const useCategories = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -78,6 +83,41 @@ export const useCategories = () => {
     }
   });
 
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateCategoryData }) => {
+      console.log('✏️ Atualizando categoria:', id, data);
+      const { data: updatedData, error } = await supabase
+        .from('categories')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao atualizar categoria:', error);
+        throw error;
+      }
+
+      console.log('✅ Categoria atualizada:', updatedData);
+      return updatedData as Category;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({
+        title: "Sucesso",
+        description: "Categoria atualizada com sucesso!",
+      });
+    },
+    onError: (error) => {
+      console.error('❌ Erro na mutação de atualização:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar categoria. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
       console.log('🗑️ Deletando categoria:', id);
@@ -114,6 +154,10 @@ export const useCategories = () => {
     createCategoryMutation.mutate(data);
   }, [createCategoryMutation]);
 
+  const updateCategory = useCallback((id: string, data: UpdateCategoryData) => {
+    updateCategoryMutation.mutate({ id, data });
+  }, [updateCategoryMutation]);
+
   const deleteCategory = useCallback((id: string) => {
     deleteCategoryMutation.mutate(id);
   }, [deleteCategoryMutation]);
@@ -123,8 +167,10 @@ export const useCategories = () => {
     isLoading,
     error,
     createCategory,
+    updateCategory,
     deleteCategory,
     isCreating: createCategoryMutation.isPending,
+    isUpdating: updateCategoryMutation.isPending,
     isDeleting: deleteCategoryMutation.isPending
   };
 };
