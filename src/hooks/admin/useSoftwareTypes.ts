@@ -14,6 +14,7 @@ export interface SoftwareType {
 export const useSoftwareTypes = () => {
   const [softwareTypes, setSoftwareTypes] = useState<SoftwareType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   const fetchSoftwareTypes = async () => {
     try {
@@ -60,6 +61,32 @@ export const useSoftwareTypes = () => {
     }
   };
 
+  const updateSoftwareType = async (id: string, data: { name: string; description?: string }) => {
+    try {
+      setUpdating(true);
+      const { error } = await supabase
+        .from('software_types')
+        .update(data)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating software type:', error);
+        toast.error('Erro ao atualizar tipo de ferramenta');
+        return false;
+      }
+
+      toast.success('Tipo de ferramenta atualizado com sucesso!');
+      fetchSoftwareTypes();
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Erro ao atualizar tipo de ferramenta');
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const deleteSoftwareType = async (id: string) => {
     try {
       const { error } = await supabase
@@ -90,7 +117,9 @@ export const useSoftwareTypes = () => {
   return {
     softwareTypes,
     loading,
+    updating,
     addSoftwareType,
+    updateSoftwareType,
     deleteSoftwareType,
     refetch: fetchSoftwareTypes
   };
