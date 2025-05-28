@@ -1,5 +1,6 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
 import { User, UserFilters, UserStats, CreateUserData } from '@/types/user.types';
 import { useDebouncedCallback } from 'use-debounce';
@@ -7,7 +8,6 @@ import { useOptimizedUserCache } from './useOptimizedUserCache';
 
 export const usePerformanceOptimizedUsers = () => {
   const queryClient = useQueryClient();
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, Partial<User>>>(new Map());
   
   const [filters, setFiltersState] = useState<UserFilters>({
@@ -29,28 +29,19 @@ export const usePerformanceOptimizedUsers = () => {
   // Set query client on service
   optimizedUserService.setQueryClient(queryClient);
 
-  // Fetch users with cache busting
+  // Fetch users with normal caching
   const {
     data: users = [],
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['users', Date.now()], // Cache busting timestamp
+    queryKey: ['users'],
     queryFn: async () => {
-      console.log('🔄 Query executando fetchUsers com cache busting...');
-      
-      // Força limpeza de cache no browser
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        for (const cacheName of cacheNames) {
-          await caches.delete(cacheName);
-        }
-      }
+      console.log('🔄 Query executando fetchUsers...');
       
       const result = await optimizedUserService.fetchUsers();
       console.log('✅ Query retornou:', result?.length, 'usuários');
-      console.log('📋 Dados completos dos usuários:', result);
       
       // Verificar especificamente o André Ferreira
       const andre = result?.find(u => u.email === 'contato@liberdadevirtual.tv');
@@ -67,16 +58,12 @@ export const usePerformanceOptimizedUsers = () => {
       
       return result;
     },
-    staleTime: 0, // Sempre buscar dados frescos
-    gcTime: 0, // Não manter cache
-    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
-    refetchInterval: 10 * 1000, // Polling mais frequente durante debug
-    retry: (failureCount, error) => {
-      console.log(`🔄 Tentativa ${failureCount + 1} de buscar usuários. Erro:`, error);
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 
   // Apply optimistic updates to users array
@@ -105,62 +92,19 @@ export const usePerformanceOptimizedUsers = () => {
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 100);
 
-  // Ultra aggressive force refresh
+  // Simple force refresh
   const forceRefresh = useCallback(async () => {
-    console.log('🔄 Executando refresh ULTRA agressivo...');
+    console.log('🔄 Executando refresh...');
     
-    // 1. Clear ALL caches
-    smartInvalidate();
-    queryClient.clear(); // Remove tudo do react-query
+    // Clear optimistic updates
     setOptimisticUpdates(new Map());
     
-    // 2. Clear browser caches
-    if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        for (const cacheName of cacheNames) {
-          await caches.delete(cacheName);
-          console.log(`🧹 Cache ${cacheName} limpo`);
-        }
-      } catch (error) {
-        console.warn('Erro ao limpar cache do browser:', error);
-      }
-    }
-    
-    // 3. Force multiple refetches with different strategies
+    // Invalidate and refetch
     await queryClient.invalidateQueries({ queryKey: ['users'] });
-    await queryClient.refetchQueries({ queryKey: ['users'] });
     await refetch();
     
-    // 4. Wait and refetch again
-    setTimeout(async () => {
-      console.log('🔄 Segunda tentativa de refresh...');
-      await refetch();
-    }, 1000);
-    
-    // 5. Start intensive polling for verification
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-    
-    let pollCount = 0;
-    pollingIntervalRef.current = setInterval(async () => {
-      pollCount++;
-      console.log(`🔄 Polling intensivo ${pollCount}/10...`);
-      
-      await refetch();
-      
-      if (pollCount >= 10) {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-        console.log('✅ Polling intensivo finalizado');
-      }
-    }, 1000);
-    
-    console.log('✅ Refresh ultra agressivo concluído');
-  }, [smartInvalidate, queryClient, refetch]);
+    console.log('✅ Refresh concluído');
+  }, [queryClient, refetch]);
 
   // Optimistic update helper
   const applyOptimisticUpdate = useCallback((userId: string, updates: Partial<User>) => {
@@ -182,12 +126,12 @@ export const usePerformanceOptimizedUsers = () => {
     });
   }, []);
 
-  // Mutations with ultra aggressive refresh
+  // Mutations with simple refresh
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
     onSuccess: async () => {
-      console.log('✅ Usuário criado, executando refresh ultra agressivo...');
+      console.log('✅ Usuário criado, executando refresh...');
       await forceRefresh();
     },
   });
@@ -196,7 +140,7 @@ export const usePerformanceOptimizedUsers = () => {
     mutationFn: ({ userId, userEmail }: { userId: string; userEmail: string }) =>
       optimizedUserService.deleteUser(userId, userEmail),
     onSuccess: async () => {
-      console.log('✅ Usuário excluído, executando refresh ultra agressivo...');
+      console.log('✅ Usuário excluído, executando refresh...');
       await forceRefresh();
     },
   });
@@ -222,25 +166,8 @@ export const usePerformanceOptimizedUsers = () => {
       // Clear optimistic update for this user
       clearOptimisticUpdate(variables.userId);
       
-      // Execute ULTRA aggressive refresh
+      // Execute simple refresh
       await forceRefresh();
-      
-      // Additional verification after 2 seconds
-      setTimeout(async () => {
-        console.log('🔍 Verificação final do status...');
-        await refetch();
-        
-        // Check if André is correctly updated
-        const freshUsers = queryClient.getQueryData(['users']) as User[];
-        const andre = freshUsers?.find(u => u.email === 'contato@liberdadevirtual.tv');
-        if (andre) {
-          console.log('🎯 Status final do André após verificação:', andre.status);
-          if (andre.status === 'Ativo' && variables.userEmail === 'contato@liberdadevirtual.tv') {
-            console.error('❌ André ainda está ativo! Forçando novo refresh...');
-            await forceRefresh();
-          }
-        }
-      }, 2000);
     },
     onError: (error, variables) => {
       console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
@@ -260,7 +187,7 @@ export const usePerformanceOptimizedUsers = () => {
       groupId: string | null; 
     }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
     onSuccess: async () => {
-      console.log('✅ Permissões alteradas, executando refresh ultra agressivo...');
+      console.log('✅ Permissões alteradas, executando refresh...');
       await forceRefresh();
     },
   });
@@ -337,15 +264,6 @@ export const usePerformanceOptimizedUsers = () => {
       filters
     });
   }, [isLoading, error, usersWithOptimisticUpdates.length, filteredUsers.length, optimisticUpdates.size, stats, filters]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, []);
 
   return {
     users: usersWithOptimisticUpdates,
