@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -246,7 +246,9 @@ function AppContent() {
         } />
 
         {/* Student routes */}
-        <Route path="/aluno" element={
+        <Route path="/aluno" element={<Navigate to="/aluno/dashboard" replace />} />
+        
+        <Route path="/aluno/dashboard" element={
           <RouteGuard requireAdminAccess={false}>
             <Layout isAdmin={false}>
               <StudentDashboard />
