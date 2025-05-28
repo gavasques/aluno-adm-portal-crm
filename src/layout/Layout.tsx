@@ -62,10 +62,10 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
   }, [isAdmin]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex w-full">
       {/* Sidebar - fixa para estudantes, dinâmica para admin */}
       {isAdmin ? (
-        <div className="flex-shrink-0 w-auto">
+        <div className="flex-shrink-0">
           <AdminSidebar />
         </div>
       ) : (
@@ -73,9 +73,14 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
       )}
       
       {/* Área principal de conteúdo */}
-      <div className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}>
-        <main className="p-6">
-          {children}
+      <div 
+        className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}
+        style={isAdmin ? { marginLeft: `${sidebarWidth + 4}px` } : {}}
+      >
+        <main className="p-6 w-full">
+          <div className="max-w-full">
+            {children}
+          </div>
         </main>
       </div>
       

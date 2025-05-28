@@ -23,23 +23,32 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Corrigindo a interface para corresponder aos tipos reais do Supabase
+// Interface corrigida para corresponder aos tipos reais do Supabase
 interface UserWithCredits {
   id: string;
   email: string;
   name?: string;
-  user_credits?: {
+  avatar_url?: string;
+  created_at?: string;
+  is_mentor?: boolean;
+  permission_group_id?: string;
+  role?: string;
+  status?: string;
+  storage_limit_mb?: number;
+  storage_used_mb?: number;
+  updated_at?: string;
+  user_credits?: Array<{
     current_credits: number;
     monthly_limit: number;
     used_this_month: number;
     renewal_date: string;
     subscription_type?: string;
-  }[] | null;
-  credit_subscriptions?: {
+  }> | null;
+  credit_subscriptions?: Array<{
     status: string;
     monthly_credits: number;
     next_billing_date: string;
-  }[] | null;
+  }> | null;
 }
 
 interface AdjustCreditsParams {
@@ -193,23 +202,25 @@ const UserCreditsManagement = () => {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Carregando usuários...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="max-w-full overflow-x-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Carregando usuários...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="animate-pulse space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-12 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-auto">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -228,18 +239,18 @@ const UserCreditsManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>Créditos Atuais</TableHead>
-                  <TableHead>Limite Mensal</TableHead>
-                  <TableHead>Consumidos</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Assinatura</TableHead>
-                  <TableHead>Renovação</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead className="min-w-[200px]">Usuário</TableHead>
+                  <TableHead className="min-w-[120px]">Créditos Atuais</TableHead>
+                  <TableHead className="min-w-[120px]">Limite Mensal</TableHead>
+                  <TableHead className="min-w-[120px]">Consumidos</TableHead>
+                  <TableHead className="min-w-[150px]">Status</TableHead>
+                  <TableHead className="min-w-[150px]">Assinatura</TableHead>
+                  <TableHead className="min-w-[120px]">Renovação</TableHead>
+                  <TableHead className="min-w-[150px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -426,47 +437,49 @@ const UserCreditHistory = ({ userId }: UserCreditHistoryProps) => {
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Data</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Quantidade</TableHead>
-            <TableHead>Descrição</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {history?.map((transaction) => (
-            <TableRow key={transaction.id}>
-              <TableCell>
-                {new Date(transaction.created_at).toLocaleString('pt-BR')}
-              </TableCell>
-              <TableCell>
-                <Badge variant={
-                  transaction.type === 'uso' ? 'destructive' :
-                  transaction.type === 'compra' ? 'default' : 'secondary'
-                }>
-                  {transaction.type}
-                </Badge>
-              </TableCell>
-              <TableCell className={`font-mono ${
-                transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-              </TableCell>
-              <TableCell className="text-sm">
-                {transaction.description}
-              </TableCell>
-            </TableRow>
-          )) || (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={4} className="text-center">
-                Nenhum histórico encontrado
-              </TableCell>
+              <TableHead>Data</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Quantidade</TableHead>
+              <TableHead>Descrição</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {history?.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell>
+                  {new Date(transaction.created_at).toLocaleString('pt-BR')}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={
+                    transaction.type === 'uso' ? 'destructive' :
+                    transaction.type === 'compra' ? 'default' : 'secondary'
+                  }>
+                    {transaction.type}
+                  </Badge>
+                </TableCell>
+                <TableCell className={`font-mono ${
+                  transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {transaction.description}
+                </TableCell>
+              </TableRow>
+            )) || (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center">
+                  Nenhum histórico encontrado
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
