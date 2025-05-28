@@ -1,90 +1,40 @@
 
-import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import AdminSidebar from "./AdminSidebar";
-import StudentSidebar from "./StudentSidebar";
-import PendingValidationOverlay from "@/components/layout/PendingValidationOverlay";
+import React from 'react';
+import { motion } from 'framer-motion';
+import StudentSidebar from './StudentSidebar';
+import AdminSidebar from './AdminSidebar';
 
 interface LayoutProps {
-  isAdmin: boolean;
   children: React.ReactNode;
+  isAdmin: boolean;
 }
 
-const Layout = ({ isAdmin, children }: LayoutProps) => {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-  const [sidebarWidth, setSidebarWidth] = useState(256);
-  
-  // Se está carregando a autenticação, mostrar loading
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Se não há usuário autenticado, não renderizar o layout completo
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {children}
-      </div>
-    );
-  }
-
-  // Detectar mudanças na largura da sidebar para admin
-  useEffect(() => {
-    if (isAdmin) {
-      const handleSidebarResize = () => {
-        const sidebar = document.querySelector('[data-sidebar="admin"]');
-        if (sidebar) {
-          setSidebarWidth(sidebar.getBoundingClientRect().width);
-        }
-      };
-
-      const observer = new ResizeObserver(handleSidebarResize);
-      const sidebar = document.querySelector('[data-sidebar="admin"]');
-      if (sidebar) {
-        observer.observe(sidebar);
-      }
-
-      return () => {
-        if (sidebar) {
-          observer.unobserve(sidebar);
-        }
-      };
-    }
-  }, [isAdmin]);
-
+const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
-      {/* Sidebar - fixa para estudantes, dinâmica para admin */}
-      {isAdmin ? (
-        <div className="flex-shrink-0">
-          <AdminSidebar />
-        </div>
-      ) : (
-        <StudentSidebar />
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* Sidebar */}
+      {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
       
-      {/* Área principal de conteúdo */}
-      <div 
-        className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}
-        style={isAdmin ? { marginLeft: `${sidebarWidth + 4}px` } : {}}
-      >
-        <main className="p-6 w-full">
-          <div className="max-w-full">
+      {/* Main Content */}
+      <div className="ml-64 min-h-screen">
+        <motion.main 
+          className="p-6 lg:p-8 safe-top safe-bottom"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
-        </main>
+        </motion.main>
       </div>
       
-      <PendingValidationOverlay />
+      {/* Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-3/4 left-3/4 w-64 h-64 bg-pink-400/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+      </div>
     </div>
   );
 };
