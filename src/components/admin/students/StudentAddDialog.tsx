@@ -14,11 +14,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface StudentAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStudentAdded: () => Promise<void>;
 }
 
 const StudentAddDialog: React.FC<StudentAddDialogProps> = ({
   open,
   onOpenChange,
+  onStudentAdded,
 }) => {
   const [userSearchError, setUserSearchError] = useState("");
   const [userFound, setUserFound] = useState(null);
@@ -62,8 +64,8 @@ const StudentAddDialog: React.FC<StudentAddDialogProps> = ({
       
       handleCloseDialog();
       
-      // Atualizar a lista de alunos após adicionar um novo
-      window.location.reload();
+      // Chamar a função para atualizar a lista de alunos
+      await onStudentAdded();
     } catch (error) {
       console.error("Erro ao adicionar aluno:", error);
       toast({
