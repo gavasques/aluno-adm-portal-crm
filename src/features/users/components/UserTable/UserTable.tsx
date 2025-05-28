@@ -20,6 +20,7 @@ interface UserTableProps {
   onSetPermissionGroup: (user: User) => void;
   onBanUser?: (user: User) => void;
   onStorageManagement: (user: User) => void;
+  onActivityLogs: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -33,6 +34,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   onSetPermissionGroup,
   onBanUser,
   onStorageManagement,
+  onActivityLogs,
   permissionGroups = [],
 }) => {
   const [sortField, setSortField] = useState<string>('');
@@ -112,6 +114,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onSetPermissionGroup={onSetPermissionGroup}
                 onBanUser={onBanUser}
                 onStorageManagement={onStorageManagement}
+                onActivityLogs={onActivityLogs}
                 permissionGroups={permissionGroups}
               />
             ))

@@ -3,6 +3,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserBasicInfo from "./UserBasicInfo";
 import UserStatusInfo from "./UserStatusInfo";
+import UserEditableInfo from "./UserEditableInfo";
 
 interface UserDetailsContentProps {
   user: {
@@ -24,8 +25,8 @@ const UserDetailsContent: React.FC<UserDetailsContentProps> = ({ user, onRefresh
   return (
     <Tabs defaultValue="info" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="info">Informações</TabsTrigger>
-        <TabsTrigger value="activity">Atividade</TabsTrigger>
+        <TabsTrigger value="info">Informações Básicas</TabsTrigger>
+        <TabsTrigger value="edit">Editar Dados</TabsTrigger>
       </TabsList>
       
       <TabsContent value="info" className="space-y-6">
@@ -35,10 +36,8 @@ const UserDetailsContent: React.FC<UserDetailsContentProps> = ({ user, onRefresh
         </div>
       </TabsContent>
       
-      <TabsContent value="activity" className="space-y-6">
-        <div className="text-center py-8 text-gray-500">
-          <p>Histórico de atividades será implementado em breve</p>
-        </div>
+      <TabsContent value="edit" className="space-y-6">
+        <UserEditableInfo user={user} onRefresh={onRefresh} />
       </TabsContent>
     </Tabs>
   );

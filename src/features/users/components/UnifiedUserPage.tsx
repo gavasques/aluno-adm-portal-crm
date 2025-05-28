@@ -34,7 +34,8 @@ export const UnifiedUserPage: React.FC = () => {
     handleChangePassword,
     handleDeleteUser,
     handleSetPermissionGroup,
-    handleStorageManagement
+    handleStorageManagement,
+    handleActivityLogs
   } = useUserDialogs();
 
   const [showBanDialog, setShowBanDialog] = React.useState(false);
@@ -92,6 +93,7 @@ export const UnifiedUserPage: React.FC = () => {
         onSetPermissionGroup={handleSetPermissionGroup}
         onBanUser={handleBanUser}
         onStorageManagement={handleStorageManagement}
+        onActivityLogs={handleActivityLogs}
         permissionGroups={permissionGroups}
       />
 

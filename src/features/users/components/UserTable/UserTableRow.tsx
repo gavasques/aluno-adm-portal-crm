@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive } from "lucide-react";
+import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity } from "lucide-react";
 import { User } from "@/types/user.types";
 import StoragePercentageBadge from "@/components/admin/users/StoragePercentageBadge";
 
@@ -23,6 +23,7 @@ interface UserTableRowProps {
   onSetPermissionGroup: (user: User) => void;
   onBanUser?: (user: User) => void;
   onStorageManagement: (user: User) => void;
+  onActivityLogs: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -35,6 +36,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onSetPermissionGroup,
   onBanUser,
   onStorageManagement,
+  onActivityLogs,
   permissionGroups = [],
 }) => {
   const formatMB = (mb: number) => {
@@ -163,6 +165,11 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             <DropdownMenuItem onClick={() => onStorageManagement(user)}>
               <HardDrive className="mr-2 h-4 w-4" />
               Gerenciar Armazenamento
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => onActivityLogs(user)}>
+              <Activity className="mr-2 h-4 w-4" />
+              Logs de Atividade
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
