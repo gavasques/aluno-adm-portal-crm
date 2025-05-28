@@ -1,7 +1,7 @@
+
 import { useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './auth';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseAuditInterceptor } from './admin/useSupabaseAuditInterceptor';
 
 interface AuditEvent {
   event_type: string;
@@ -23,9 +23,6 @@ export const useComprehensiveAudit = () => {
   const sessionIdRef = useRef<string>(
     `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   );
-
-  // Ativar interceptação automática
-  useSupabaseAuditInterceptor();
 
   // Log de evento de auditoria
   const logEvent = useCallback(async (event: AuditEvent) => {

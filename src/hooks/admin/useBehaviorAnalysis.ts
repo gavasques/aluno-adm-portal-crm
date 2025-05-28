@@ -109,13 +109,15 @@ export const useBehaviorAnalysis = () => {
     }, {} as Record<string, any[]>);
 
     return Object.entries(userGroups).map(([userId, userLogs]) => {
-      const patterns = detectBehaviorPatterns(userLogs);
-      const riskScore = calculateUserRiskScore(patterns, userLogs);
-      const anomalies = detectAnomalies(userLogs, patterns);
+      // Garantir que userLogs seja um array
+      const safeUserLogs = Array.isArray(userLogs) ? userLogs : [];
+      const patterns = detectBehaviorPatterns(safeUserLogs);
+      const riskScore = calculateUserRiskScore(patterns, safeUserLogs);
+      const anomalies = detectAnomalies(safeUserLogs, patterns);
 
       return {
         user_id: userId,
-        user_email: userLogs[0]?.metadata?.user_email || 'Unknown',
+        user_email: safeUserLogs[0]?.metadata?.user_email || 'Unknown',
         risk_score: riskScore,
         behavior_patterns: patterns,
         anomaly_indicators: anomalies,
