@@ -21,7 +21,6 @@ import { StudentMentoringEnrollment, MentoringSession } from '@/types/mentoring.
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSupabaseMentoring } from '@/hooks/mentoring/useSupabaseMentoring';
-import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
 import { useActiveStudentsForMentoring } from '@/hooks/admin/useActiveStudentsForMentoring';
 import PendingSessionsCard from './PendingSessionsCard';
 import { useToast } from '@/hooks/use-toast';
@@ -34,8 +33,7 @@ interface EnrollmentDetailDialogProps {
 
 export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: EnrollmentDetailDialogProps) => {
   const { sessions, createSession, refreshSessions, deleteSession } = useSupabaseMentoring();
-  const { students } = useStudentsForEnrollment();
-  const { activeStudents } = useActiveStudentsForMentoring();
+  const { students } = useActiveStudentsForMentoring();
   const { toast } = useToast();
   const [enrollmentSessions, setEnrollmentSessions] = useState<MentoringSession[]>([]);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -452,13 +450,7 @@ export const EnrollmentDetailDialog = ({ open, onOpenChange, enrollment }: Enrol
 
           <TabsContent value="pending" className="max-h-[60vh] overflow-y-auto mt-6">
             <PendingSessionsCard
-              enrollment={enrollment}
-              pendingSessions={pendingSessions}
-              allSessions={enrollmentSessions}
-              onCreateSession={handleCreateSession}
-              onSessionScheduled={handleSessionScheduled}
-              onDeleteSession={handleDeleteSession}
-              isLoading={isCreatingSession}
+              mentoringSessions={enrollmentSessions}
             />
           </TabsContent>
         </Tabs>

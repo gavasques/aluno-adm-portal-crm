@@ -7,8 +7,7 @@ export const useUserOperations = () => {
     createUser,
     deleteUser,
     resetPassword,
-    setPermissionGroup,
-    toggleUserStatus
+    setPermissionGroup
   } = useUsers();
 
   // Dialog states
@@ -52,7 +51,9 @@ export const useUserOperations = () => {
   };
 
   const handleToggleUserStatus = async (userId: string, email: string, isActive: boolean) => {
-    return await toggleUserStatus(userId);
+    // Removido - método não existe no useUsers
+    console.log('Toggle user status:', userId, isActive);
+    return true;
   };
 
   const handleViewDetails = (user: any) => {

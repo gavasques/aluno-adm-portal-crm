@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { useUserOperations } from '@/hooks/users/useUserOperations';
-import UserAddDialog from '@/components/admin/users/dialogs/UserAddDialog';
-import UserInviteDialog from '@/components/admin/users/dialogs/UserInviteDialog';
-import UserDeleteDialog from '@/components/admin/users/dialogs/UserDeleteDialog';
-import ResetPasswordDialog from '@/components/admin/users/dialogs/ResetPasswordDialog';
-import UserPermissionGroupDialog from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
+import { UserAddDialog } from '@/components/admin/users/dialogs/UserAddDialog';
+import { UserInviteDialog } from '@/components/admin/users/dialogs/UserInviteDialog';
+import { UserDeleteDialog } from '@/components/admin/users/dialogs/UserDeleteDialog';
+import { ResetPasswordDialog } from '@/components/admin/users/dialogs/ResetPasswordDialog';
+import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
 
 interface UserOperationDialogsProps {
   showAddDialog: boolean;

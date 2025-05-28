@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import {
@@ -25,7 +26,7 @@ const PendingSessionsCard: React.FC<PendingSessionsCardProps> = ({ mentoringSess
     return student ? student.name : 'Aluno não encontrado';
   };
 
-  const pendingSessions = mentoringSessions.filter(session => session.status === 'pending');
+  const pendingSessions = mentoringSessions.filter(session => session.status === 'aguardando_agendamento');
 
   return (
     <Card>
@@ -45,16 +46,16 @@ const PendingSessionsCard: React.FC<PendingSessionsCardProps> = ({ mentoringSess
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger className="text-sm font-medium hover:underline cursor-pointer">
-                        {getStudentName(session.student_id)}
+                        {getStudentName(session.student_id || session.enrollmentId)}
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{session.student_email}</p>
+                        <p>{session.student_email || 'Email não disponível'}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {session.date} - {session.time}
+                  {session.date || 'Data pendente'} - {session.time || session.durationMinutes + ' min'}
                 </p>
               </li>
             ))}
