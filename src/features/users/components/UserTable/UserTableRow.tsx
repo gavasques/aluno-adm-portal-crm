@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity, Mail } from "lucide-react";
+import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity, Mail, GraduationCap } from "lucide-react";
 import { User } from "@/types/user.types";
 import StoragePercentageBadge from "@/components/admin/users/StoragePercentageBadge";
 
@@ -25,6 +25,7 @@ interface UserTableRowProps {
   onStorageManagement: (user: User) => void;
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
+  onToggleMentor: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -39,6 +40,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onStorageManagement,
   onActivityLogs,
   onSendMagicLink,
+  onToggleMentor,
   permissionGroups = [],
 }) => {
   const formatMB = (mb: number) => {
@@ -119,6 +121,12 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
           <Badge variant={getRoleVariant(user.role)}>
             {user.role}
           </Badge>
+          {user.is_mentor && (
+            <Badge variant="default" className="bg-purple-100 text-purple-800">
+              <GraduationCap className="h-3 w-3 mr-1" />
+              Mentor
+            </Badge>
+          )}
           {isBanned && (
             <Badge variant="destructive">
               Banido
@@ -195,6 +203,13 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
               <Shield className="mr-2 h-4 w-4" />
               Definir Permissões
             </DropdownMenuItem>
+
+            {user.role === 'Student' && (
+              <DropdownMenuItem onClick={() => onToggleMentor(user)}>
+                <GraduationCap className="mr-2 h-4 w-4" />
+                {user.is_mentor ? 'Remover Mentor' : 'Tornar Mentor'}
+              </DropdownMenuItem>
+            )}
             
             <DropdownMenuSeparator />
             

@@ -28,6 +28,7 @@ const UnifiedUserPage: React.FC = () => {
         onStorageManagement={(user) => openDialog('storage', user)}
         onActivityLogs={(user) => openDialog('activity', user)}
         onSendMagicLink={(user) => openDialog('sendMagicLink', user)}
+        onToggleMentor={(user) => openDialog('mentor', user)}
         permissionGroups={permissionGroups}
       />
 

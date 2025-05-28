@@ -8,8 +8,11 @@ import { ResetPasswordDialog } from '@/components/admin/users/dialogs/ResetPassw
 import { ChangePasswordDialog } from '@/components/admin/users/dialogs/ChangePasswordDialog';
 import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
 import { SendMagicLinkDialog } from '@/components/admin/users/dialogs/SendMagicLinkDialog';
+import { MentorToggleDialog } from '@/components/admin/users/dialogs/MentorToggleDialog';
 import UserStorageManagementDialog from '@/components/admin/users/dialogs/UserStorageManagementDialog';
 import UserActivityLogsDialog from '@/components/admin/users/dialogs/UserActivityLogsDialog';
+import { useMentors } from '@/hooks/useMentors';
+import { toast } from '@/hooks/use-toast';
 
 interface UserDialogManagerProps {
   dialogState: DialogState;
@@ -27,6 +30,8 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
     resetPassword, 
     setPermissionGroup 
   } = usePerformanceOptimizedUserContext();
+
+  const { updateMentorStatus } = useMentors();
 
   const { type, user, isOpen } = dialogState;
 
@@ -121,6 +126,35 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
             return success;
           } catch (error) {
             console.error('Erro ao definir grupo de permissão:', error);
+            return false;
+          }
+        }}
+      />
+
+      <MentorToggleDialog
+        open={isOpen && type === 'mentor'}
+        onOpenChange={onCloseDialog}
+        user={user}
+        onConfirmToggle={async (user) => {
+          try {
+            const success = await updateMentorStatus(user.id, !user.is_mentor);
+            if (success) {
+              toast({
+                title: "Status atualizado",
+                description: `${user.name} ${!user.is_mentor ? 'agora é mentor' : 'não é mais mentor'}.`,
+              });
+              if (onRefresh) {
+                onRefresh();
+              }
+            }
+            return success;
+          } catch (error) {
+            console.error('Erro ao alterar status de mentor:', error);
+            toast({
+              title: "Erro",
+              description: "Não foi possível alterar o status de mentor.",
+              variant: "destructive",
+            });
             return false;
           }
         }}
