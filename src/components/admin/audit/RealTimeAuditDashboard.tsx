@@ -155,14 +155,14 @@ export const RealTimeAuditDashboard: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <Select
-                  value={filters.event_category || ''}
-                  onValueChange={(value) => setFilters({...filters, event_category: value || undefined})}
+                  value={filters.event_category || 'all'}
+                  onValueChange={(value) => setFilters({...filters, event_category: value === 'all' ? undefined : value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="authentication">Autenticação</SelectItem>
                     <SelectItem value="data_management">Gestão de Dados</SelectItem>
                     <SelectItem value="user_activity">Atividade do Usuário</SelectItem>
@@ -172,14 +172,14 @@ export const RealTimeAuditDashboard: React.FC = () => {
                 </Select>
 
                 <Select
-                  value={filters.risk_level || ''}
-                  onValueChange={(value) => setFilters({...filters, risk_level: value || undefined})}
+                  value={filters.risk_level || 'all'}
+                  onValueChange={(value) => setFilters({...filters, risk_level: value === 'all' ? undefined : value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Risco" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="low">Baixo</SelectItem>
                     <SelectItem value="medium">Médio</SelectItem>
                     <SelectItem value="high">Alto</SelectItem>

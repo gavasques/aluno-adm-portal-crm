@@ -12,7 +12,7 @@ export interface AuditLog {
   description?: string;
   entity_type?: string;
   entity_id?: string;
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  risk_level: string; // Mudança: aceitar qualquer string do banco
   success: boolean;
   created_at: string;
   ip_address?: string;
