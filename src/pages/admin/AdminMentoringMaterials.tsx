@@ -190,7 +190,7 @@ const AdminMentoringMaterials = () => {
                 <SelectValue placeholder="Tipo de Arquivo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="all">Todos os tipos</SelectItem>
                 <SelectItem value="pdf">PDF</SelectItem>
                 <SelectItem value="image">Imagens</SelectItem>
                 <SelectItem value="video">Vídeos</SelectItem>
@@ -203,7 +203,7 @@ const AdminMentoringMaterials = () => {
                 <SelectValue placeholder="Enviado por" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="mentor">Mentor</SelectItem>
                 <SelectItem value="aluno">Aluno</SelectItem>
