@@ -6,17 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Settings, 
   CreditCard, 
   AlertTriangle, 
   Save,
-  Zap,
   DollarSign
 } from "lucide-react";
 import { toast } from "sonner";
+import EditableCreditPackages from "./EditableCreditPackages";
 
 const CreditsSettings = () => {
   const [settings, setSettings] = useState({
@@ -48,21 +47,6 @@ const CreditsSettings = () => {
       setIsSaving(false);
     }
   };
-
-  const packageOptions = [
-    { credits: 10, price: 1.00, popular: false },
-    { credits: 20, price: 1.80, popular: false },
-    { credits: 50, price: 4.00, popular: true },
-    { credits: 100, price: 7.50, popular: false },
-    { credits: 200, price: 14.00, popular: false },
-    { credits: 500, price: 30.00, popular: false }
-  ];
-
-  const subscriptionOptions = [
-    { credits: 50, price: 4.90, popular: false },
-    { credits: 100, price: 8.90, popular: true },
-    { credits: 200, price: 15.90, popular: false }
-  ];
 
   return (
     <div className="space-y-6">
@@ -213,70 +197,8 @@ const CreditsSettings = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5" />
-            Pacotes de Créditos Avulsos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {packageOptions.map((pkg, index) => (
-              <Card key={index} className={`relative ${pkg.popular ? 'border-blue-500' : ''}`}>
-                {pkg.popular && (
-                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500">
-                    Popular
-                  </Badge>
-                )}
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold">{pkg.credits}</div>
-                  <div className="text-sm text-gray-500">créditos</div>
-                  <div className="text-lg font-semibold text-green-600 mt-2">
-                    R$ {pkg.price.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    R$ {(pkg.price / pkg.credits).toFixed(3)}/crédito
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5" />
-            Planos de Assinatura Mensal
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {subscriptionOptions.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.popular ? 'border-blue-500' : ''}`}>
-                {plan.popular && (
-                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500">
-                    Recomendado
-                  </Badge>
-                )}
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold">+{plan.credits}</div>
-                  <div className="text-sm text-gray-500">créditos extras/mês</div>
-                  <div className="text-xl font-semibold text-green-600 mt-4">
-                    R$ {plan.price.toFixed(2)}
-                  </div>
-                  <div className="text-sm text-gray-500">/mês</div>
-                  <div className="text-xs text-gray-500 mt-2">
-                    R$ {(plan.price / plan.credits).toFixed(3)}/crédito
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Seção de Edição de Pacotes e Planos */}
+      <EditableCreditPackages />
 
       <Card>
         <CardHeader>
