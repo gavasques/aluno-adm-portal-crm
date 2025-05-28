@@ -1,3 +1,4 @@
+
 interface PerformanceMetric {
   name: string;
   value: number;
@@ -19,9 +20,10 @@ class PerformanceMonitor {
         list.getEntries().forEach((entry) => {
           if (entry.entryType === 'navigation') {
             const navEntry = entry as PerformanceNavigationTiming;
-            this.recordMetric('page_load_time', navEntry.loadEventEnd - navEntry.navigationStart);
-            this.recordMetric('dom_content_loaded', navEntry.domContentLoadedEventEnd - navEntry.navigationStart);
-            this.recordMetric('first_paint', navEntry.responseEnd - navEntry.navigationStart);
+            // Use correct timing properties from PerformanceNavigationTiming
+            this.recordMetric('page_load_time', navEntry.loadEventEnd - navEntry.startTime);
+            this.recordMetric('dom_content_loaded', navEntry.domContentLoadedEventEnd - navEntry.startTime);
+            this.recordMetric('first_paint', navEntry.responseEnd - navEntry.startTime);
           }
         });
       });
