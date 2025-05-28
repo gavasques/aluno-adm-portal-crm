@@ -24,49 +24,44 @@ export const MenuPermissionsSection: React.FC<MenuPermissionsSectionProps> = ({
   isSubmitting,
   onMenuToggle,
 }) => {
-  // Agrupar menus por categoria para melhor organização
-  const organizeMenusByCategory = (menus: any[]) => {
-    const categories = {
+  // Separar menus por área
+  const organizeMenusByArea = (menus: any[]) => {
+    const areas = {
       admin: {
-        name: "Administração",
+        name: "Área Administrativa",
+        description: "Menus exclusivos para administradores",
         menus: [] as any[],
-        color: "bg-red-100 text-red-800"
-      },
-      mentoring: {
-        name: "Mentorias",
-        menus: [] as any[],
-        color: "bg-purple-100 text-purple-800"
+        color: "bg-red-100 text-red-800 border-red-200"
       },
       student: {
-        name: "Área do Estudante",
+        name: "Área do Aluno", 
+        description: "Menus da área do estudante",
         menus: [] as any[],
-        color: "bg-blue-100 text-blue-800"
-      },
-      general: {
-        name: "Geral",
-        menus: [] as any[],
-        color: "bg-green-100 text-green-800"
+        color: "bg-blue-100 text-blue-800 border-blue-200"
       }
     };
 
     menus.forEach(menu => {
       const key = menu.menu_key;
       
-      if (['users', 'permissions', 'students', 'crm', 'credits', 'calendly-config', 'audit', 'tasks'].includes(key)) {
-        categories.admin.menus.push(menu);
-      } else if (key.startsWith('mentoring-') || ['courses', 'bonus'].includes(key)) {
-        categories.mentoring.menus.push(menu);
-      } else if (['my-suppliers', 'settings'].includes(key)) {
-        categories.student.menus.push(menu);
+      // Menus da área administrativa
+      if ([
+        'dashboard', 'users', 'permissions', 'suppliers', 'partners', 'tools', 
+        'students', 'crm', 'courses', 'bonus', 'tasks', 'credits', 
+        'calendly-config', 'audit', 'mentoring-dashboard', 'mentoring-catalog',
+        'individual-enrollments', 'group-enrollments', 'mentoring-materials'
+      ].includes(key)) {
+        areas.admin.menus.push(menu);
       } else {
-        categories.general.menus.push(menu);
+        // Menus da área do aluno
+        areas.student.menus.push(menu);
       }
     });
 
-    return categories;
+    return areas;
   };
 
-  const categorizedMenus = organizeMenusByCategory(systemMenus);
+  const organizedMenus = organizeMenusByArea(systemMenus);
 
   return (
     <div className="space-y-4">
@@ -125,34 +120,44 @@ export const MenuPermissionsSection: React.FC<MenuPermissionsSectionProps> = ({
                 </AlertDescription>
               </Alert>
 
-              {/* Menus organizados por categoria */}
-              <div className="space-y-4">
-                {Object.entries(categorizedMenus).map(([categoryKey, category]) => {
-                  if (category.menus.length === 0) return null;
+              {/* Menus organizados por área */}
+              <div className="space-y-6">
+                {Object.entries(organizedMenus).map(([areaKey, area]) => {
+                  if (area.menus.length === 0) return null;
+                  
+                  const selectedInArea = area.menus.filter(menu => selectedMenus.includes(menu.menu_key)).length;
                   
                   return (
-                    <div key={categoryKey} className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${category.color}`}>
-                          {category.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {category.menus.filter(menu => selectedMenus.includes(menu.menu_key)).length} de {category.menus.length} selecionados
-                        </span>
+                    <div key={areaKey} className={`rounded-lg border p-4 ${area.color.split(' ')[2]}`}>
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className={`font-semibold text-lg ${area.color.split(' ')[1]}`}>
+                              {area.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {area.description}
+                            </p>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${area.color}`}>
+                            {selectedInArea} de {area.menus.length} selecionados
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4">
-                        <CheckboxGroup className="space-y-2">
-                          {category.menus.map((menu: any) => (
-                            <CheckboxItem
-                              key={menu.menu_key}
-                              id={`menu-${menu.menu_key}`}
-                              label={menu.display_name}
-                              description={menu.description || ''}
-                              checked={selectedMenus.includes(menu.menu_key)}
-                              onCheckedChange={() => onMenuToggle(menu.menu_key)}
-                              disabled={isSubmitting || isAdmin}
-                            />
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <CheckboxGroup className="contents">
+                          {area.menus.map((menu: any) => (
+                            <div key={menu.menu_key} className="bg-white rounded border p-3">
+                              <CheckboxItem
+                                id={`menu-${menu.menu_key}`}
+                                label={menu.display_name}
+                                description={menu.description || ''}
+                                checked={selectedMenus.includes(menu.menu_key)}
+                                onCheckedChange={() => onMenuToggle(menu.menu_key)}
+                                disabled={isSubmitting || isAdmin}
+                              />
+                            </div>
                           ))}
                         </CheckboxGroup>
                       </div>
