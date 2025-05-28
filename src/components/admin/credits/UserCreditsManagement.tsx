@@ -22,8 +22,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Interface corrigida para corresponder exatamente aos tipos do Supabase
-interface SupabaseUserWithCredits {
+// Interface simplificada que funciona com os dados retornados
+interface UserCreditsData {
   id: string;
   email: string;
   name?: string | null;
@@ -36,18 +36,8 @@ interface SupabaseUserWithCredits {
   storage_limit_mb?: number | null;
   storage_used_mb?: number | null;
   updated_at?: string | null;
-  user_credits: Array<{
-    current_credits: number;
-    monthly_limit: number;
-    used_this_month: number;
-    renewal_date: string;
-    subscription_type?: string | null;
-  }> | null;
-  credit_subscriptions: Array<{
-    status: string;
-    monthly_credits: number;
-    next_billing_date: string;
-  }> | null;
+  user_credits?: any;
+  credit_subscriptions?: any;
 }
 
 interface AdjustCreditsParams {
@@ -64,7 +54,7 @@ interface AdjustLimitParams {
 
 const UserCreditsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<SupabaseUserWithCredits | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserCreditsData | null>(null);
   const [adjustmentAmount, setAdjustmentAmount] = useState("");
   const [adjustmentType, setAdjustmentType] = useState("add");
   const [adjustmentReason, setAdjustmentReason] = useState("");
@@ -77,7 +67,7 @@ const UserCreditsManagement = () => {
         .from('profiles')
         .select(`
           *,
-          user_credits!inner (
+          user_credits (
             current_credits,
             monthly_limit,
             used_this_month,
@@ -101,7 +91,7 @@ const UserCreditsManagement = () => {
         console.error('Supabase query error:', error);
         throw error;
       }
-      return data;
+      return data || [];
     }
   });
 
@@ -173,8 +163,8 @@ const UserCreditsManagement = () => {
     }
   });
 
-  const getStatusBadge = (user: SupabaseUserWithCredits) => {
-    const credits = user.user_credits?.[0];
+  const getStatusBadge = (user: UserCreditsData) => {
+    const credits = Array.isArray(user.user_credits) ? user.user_credits[0] : null;
     if (!credits) return <Badge variant="secondary">Sem dados</Badge>;
 
     const percentage = (credits.current_credits / credits.monthly_limit) * 100;
@@ -257,8 +247,8 @@ const UserCreditsManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => {
-                  const credits = user.user_credits?.[0];
-                  const subscription = user.credit_subscriptions?.[0];
+                  const credits = Array.isArray(user.user_credits) ? user.user_credits[0] : null;
+                  const subscription = Array.isArray(user.credit_subscriptions) ? user.credit_subscriptions[0] : null;
                   
                   return (
                     <TableRow key={user.id}>
