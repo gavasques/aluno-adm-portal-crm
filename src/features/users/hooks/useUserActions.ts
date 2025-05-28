@@ -55,7 +55,6 @@ export const useUserActions = () => {
     try {
       console.log('🔧 UserActions: Toggling status for:', userEmail, 'Current:', currentStatus);
       
-      // Show immediate feedback
       const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
       console.log(`🎯 UserActions: Alterando ${userEmail} de ${currentStatus} para ${newStatus}`);
       
@@ -64,9 +63,14 @@ export const useUserActions = () => {
       if (success) {
         console.log('✅ UserActions: Status alterado com sucesso para:', newStatus);
         
+        toast({
+          title: "Sucesso",
+          description: `Usuário ${userEmail} ${newStatus.toLowerCase()} com sucesso.`,
+        });
+        
         // Multiple verification attempts
         let verificationAttempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5;
         
         const verifyChange = async () => {
           verificationAttempts++;
@@ -75,7 +79,7 @@ export const useUserActions = () => {
           await forceRefresh?.();
           
           if (verificationAttempts < maxAttempts) {
-            setTimeout(verifyChange, 1000);
+            setTimeout(verifyChange, 800);
           } else {
             console.log('✅ UserActions: Processo de verificação concluído');
           }
@@ -86,10 +90,20 @@ export const useUserActions = () => {
         
       } else {
         console.error('❌ UserActions: Falha ao alterar status');
+        toast({
+          title: "Erro",
+          description: "Não foi possível alterar o status do usuário.",
+          variant: "destructive",
+        });
       }
       return success;
     } catch (error) {
       console.error('Erro ao alterar status:', error);
+      toast({
+        title: "Erro",
+        description: "Erro interno ao alterar status.",
+        variant: "destructive",
+      });
       return false;
     }
   }, [toggleUserStatus, forceRefresh]);

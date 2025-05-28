@@ -8,7 +8,6 @@ import { useOptimizedUserCache } from './useOptimizedUserCache';
 
 export const usePerformanceOptimizedUsers = () => {
   const queryClient = useQueryClient();
-  const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, Partial<User>>>(new Map());
   
   const [filters, setFiltersState] = useState<UserFilters>({
     search: '',
@@ -29,7 +28,7 @@ export const usePerformanceOptimizedUsers = () => {
   // Set query client on service
   optimizedUserService.setQueryClient(queryClient);
 
-  // Fetch users with normal caching
+  // Fetch users with aggressive refresh for status updates
   const {
     data: users = [],
     isLoading,
@@ -43,7 +42,7 @@ export const usePerformanceOptimizedUsers = () => {
       const result = await optimizedUserService.fetchUsers();
       console.log('✅ Query retornou:', result?.length, 'usuários');
       
-      // Verificar especificamente o André Ferreira
+      // Log específico do André Ferreira para debug
       const andre = result?.find(u => u.email === 'contato@liberdadevirtual.tv');
       if (andre) {
         console.log('🔍 Status do André Ferreira:', {
@@ -53,38 +52,17 @@ export const usePerformanceOptimizedUsers = () => {
         });
       }
       
-      // Clear optimistic updates after successful fetch
-      setOptimisticUpdates(new Map());
-      
       return result;
     },
-    staleTime: 0, // Force fresh data every time
-    gcTime: 0, // Don't cache data
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 
-  // Apply optimistic updates to users array
-  const usersWithOptimisticUpdates = useMemo(() => {
-    const result = Array.isArray(users) ? users : [];
-    
-    if (optimisticUpdates.size === 0) {
-      return result;
-    }
-    
-    return result.map(user => {
-      const optimisticUpdate = optimisticUpdates.get(user.id);
-      if (optimisticUpdate) {
-        console.log('🔄 Aplicando atualização otimista para:', user.email, optimisticUpdate);
-        return { ...user, ...optimisticUpdate };
-      }
-      return user;
-    });
-  }, [users, optimisticUpdates]);
-
-  console.log('📊 usersArray processado:', usersWithOptimisticUpdates.length, 'usuários');
+  console.log('📊 usersArray processado:', users.length, 'usuários');
 
   // Enhanced search with immediate response
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
@@ -92,12 +70,9 @@ export const usePerformanceOptimizedUsers = () => {
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 100);
 
-  // Simple force refresh
+  // Force refresh that truly refreshes everything
   const forceRefresh = useCallback(async () => {
     console.log('🔄 Executando refresh forçado...');
-    
-    // Clear optimistic updates
-    setOptimisticUpdates(new Map());
     
     // Invalidate all cache
     await queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -106,27 +81,7 @@ export const usePerformanceOptimizedUsers = () => {
     console.log('✅ Refresh forçado concluído');
   }, [queryClient]);
 
-  // Optimistic update helper
-  const applyOptimisticUpdate = useCallback((userId: string, updates: Partial<User>) => {
-    console.log('🔄 Aplicando atualização otimista para:', userId, updates);
-    setOptimisticUpdates(prev => {
-      const newMap = new Map(prev);
-      newMap.set(userId, updates);
-      return newMap;
-    });
-  }, []);
-
-  // Clear optimistic update
-  const clearOptimisticUpdate = useCallback((userId: string) => {
-    console.log('🧹 Limpando atualização otimista para:', userId);
-    setOptimisticUpdates(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(userId);
-      return newMap;
-    });
-  }, []);
-
-  // Mutations with aggressive refresh
+  // Mutations with immediate data refresh
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
@@ -154,28 +109,24 @@ export const usePerformanceOptimizedUsers = () => {
       console.log('🔄 Mutation: Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
       return optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
     },
-    onMutate: ({ userId, currentStatus }) => {
-      // Apply optimistic update immediately
-      const newStatus = currentStatus?.toLowerCase() === 'ativo' ? 'Inativo' : 'Ativo';
-      console.log('🎯 Aplicando atualização otimista - Status:', currentStatus, '->', newStatus);
-      applyOptimisticUpdate(userId, { status: newStatus });
-    },
     onSuccess: async (result, variables) => {
       console.log('✅ Mutation: Status alterado com sucesso para:', variables.userEmail);
       
-      // Clear optimistic update for this user
-      clearOptimisticUpdate(variables.userId);
-      
-      // Multiple refresh attempts with delays
-      console.log('🔄 Iniciando múltiplas tentativas de refresh...');
+      // Execute multiple refreshes to ensure data is updated
+      console.log('🔄 Iniciando refresh agressivo...');
       
       await forceRefresh();
       
-      // Additional verification refreshes
+      // Additional refreshes with delays
       setTimeout(async () => {
-        console.log('🔄 Refresh adicional (1s)...');
+        console.log('🔄 Refresh adicional (500ms)...');
         await forceRefresh();
-      }, 1000);
+      }, 500);
+      
+      setTimeout(async () => {
+        console.log('🔄 Refresh adicional (1.5s)...');
+        await forceRefresh();
+      }, 1500);
       
       setTimeout(async () => {
         console.log('🔄 Refresh final (3s)...');
@@ -184,8 +135,6 @@ export const usePerformanceOptimizedUsers = () => {
     },
     onError: (error, variables) => {
       console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
-      // Clear optimistic update on error
-      clearOptimisticUpdate(variables.userId);
     }
   });
 
@@ -205,24 +154,24 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
-  // Enhanced filtered users with optimistic updates
+  // Enhanced filtered users
   const filteredUsers = useMemo(() => {
     console.log('🔄 Aplicando filtros otimizados...');
     
     if (!filters.search && filters.status === 'all' && filters.group === 'all') {
-      console.log('✅ Sem filtros, retornando todos os usuários:', usersWithOptimisticUpdates.length);
-      return usersWithOptimisticUpdates;
+      console.log('✅ Sem filtros, retornando todos os usuários:', users.length);
+      return users;
     }
     
-    const filtered = optimizedUserService.filterUsers(usersWithOptimisticUpdates, filters);
-    console.log('✅ Usuários filtrados:', filtered.length, 'de', usersWithOptimisticUpdates.length);
+    const filtered = optimizedUserService.filterUsers(users, filters);
+    console.log('✅ Usuários filtrados:', filtered.length, 'de', users.length);
     return filtered;
-  }, [usersWithOptimisticUpdates, filters]);
+  }, [users, filters]);
 
-  // Enhanced stats with optimistic updates
+  // Enhanced stats
   const stats = useMemo((): UserStats => {
     console.log('📊 Calculando estatísticas otimizadas...');
-    const calculatedStats = optimizedUserService.calculateStats(usersWithOptimisticUpdates);
+    const calculatedStats = optimizedUserService.calculateStats(users);
     
     const validStats: UserStats = {
       total: calculatedStats?.total || 0,
@@ -233,7 +182,7 @@ export const usePerformanceOptimizedUsers = () => {
     
     console.log('📊 Estatísticas calculadas:', validStats);
     return validStats;
-  }, [usersWithOptimisticUpdates]);
+  }, [users]);
 
   // Callbacks otimizados
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
@@ -253,33 +202,31 @@ export const usePerformanceOptimizedUsers = () => {
 
   const performanceMetrics = useMemo(() => ({
     ...getMetrics(),
-    totalUsers: usersWithOptimisticUpdates.length,
+    totalUsers: users.length,
     filteredUsers: filteredUsers.length,
-    optimisticUpdates: optimisticUpdates.size,
     isOptimized: true
-  }), [getMetrics, usersWithOptimisticUpdates.length, filteredUsers.length, optimisticUpdates.size]);
+  }), [getMetrics, users.length, filteredUsers.length]);
 
   // Effects otimizados
   useEffect(() => {
-    if (usersWithOptimisticUpdates.length > 0) {
-      preloadCommonFilters(usersWithOptimisticUpdates);
+    if (users.length > 0) {
+      preloadCommonFilters(users);
     }
-  }, [usersWithOptimisticUpdates, preloadCommonFilters]);
+  }, [users, preloadCommonFilters]);
 
   useEffect(() => {
     console.log('🔍 Estado atual do hook:', {
       isLoading,
       error: error?.message,
-      usersCount: usersWithOptimisticUpdates.length,
+      usersCount: users.length,
       filteredCount: filteredUsers.length,
-      optimisticUpdatesCount: optimisticUpdates.size,
       stats,
       filters
     });
-  }, [isLoading, error, usersWithOptimisticUpdates.length, filteredUsers.length, optimisticUpdates.size, stats, filters]);
+  }, [isLoading, error, users.length, filteredUsers.length, stats, filters]);
 
   return {
-    users: usersWithOptimisticUpdates,
+    users,
     filteredUsers,
     stats,
     filters,

@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface UserStatusDialogProps {
@@ -30,7 +30,6 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [showOptimisticUpdate, setShowOptimisticUpdate] = useState(false);
   
   const isActive = currentStatus === "Ativo" || currentStatus === "ativo";
 
@@ -40,7 +39,6 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
       setIsProcessing(false);
       setIsSuccess(false);
       setIsVerifying(false);
-      setShowOptimisticUpdate(false);
     }
   }, [open]);
 
@@ -52,9 +50,6 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
     try {
       console.log('🔄 Iniciando alteração de status para:', userEmail);
       
-      // Show optimistic update immediately
-      setShowOptimisticUpdate(true);
-      
       const success = await onConfirmToggleStatus();
       
       if (success) {
@@ -64,14 +59,14 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         
         toast({
           title: "Sucesso",
-          description: `Usuário ${isActive ? 'inativado' : 'ativado'} com sucesso. Sincronizando interface...`,
+          description: `Usuário ${isActive ? 'inativado' : 'ativado'} com sucesso. Atualizando interface...`,
         });
         
         // Show verification phase
         setTimeout(() => {
           setIsVerifying(false);
           toast({
-            title: "Sincronizado",
+            title: "Atualizado",
             description: "A interface foi atualizada com as alterações.",
             variant: "default",
           });
@@ -80,12 +75,10 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
           setTimeout(() => {
             onOpenChange(false);
             setIsSuccess(false);
-            setShowOptimisticUpdate(false);
-          }, 1500);
-        }, 2000);
+          }, 1000);
+        }, 2500);
       } else {
         console.error('❌ Falha ao alterar status para:', userEmail);
-        setShowOptimisticUpdate(false);
         toast({
           title: "Erro",
           description: "Não foi possível alterar o status do usuário.",
@@ -94,7 +87,6 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
       }
     } catch (error) {
       console.error('❌ Erro na alteração de status:', error);
-      setShowOptimisticUpdate(false);
       toast({
         title: "Erro",
         description: "Erro interno ao alterar status do usuário.",
@@ -105,17 +97,7 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
     }
   };
 
-  const getStatusDisplay = () => {
-    if (showOptimisticUpdate && !isSuccess) {
-      return isActive ? 'Inativo' : 'Ativo';
-    }
-    return currentStatus;
-  };
-
   const getNewStatusDisplay = () => {
-    if (showOptimisticUpdate && !isSuccess) {
-      return currentStatus; // Show original as "new" during optimistic update
-    }
     return isActive ? 'Inativo' : 'Ativo';
   };
 
@@ -125,7 +107,7 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isActive ? 'Inativar' : 'Ativar'} usuário
-            {showOptimisticUpdate && !isSuccess && (
+            {isVerifying && (
               <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
             )}
           </DialogTitle>
@@ -137,40 +119,19 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
         </DialogHeader>
 
         <div className="py-4">
-          <div className={`p-3 rounded-md transition-colors ${
-            showOptimisticUpdate && !isSuccess 
-              ? 'bg-blue-50 border border-blue-200' 
-              : 'bg-gray-50'
-          }`}>
+          <div className="p-3 rounded-md bg-gray-50">
             <p className="text-sm">
               <span className="font-medium">Usuário:</span> {userEmail}
             </p>
             <p className="text-sm mt-1">
               <span className="font-medium">Status atual:</span> 
-              <span className={showOptimisticUpdate && !isSuccess ? 'line-through text-gray-400 ml-1' : 'ml-1'}>
-                {getStatusDisplay()}
-              </span>
-              {showOptimisticUpdate && !isSuccess && (
-                <span className="ml-2 text-blue-600 font-medium">
-                  → {getNewStatusDisplay()}
-                </span>
-              )}
+              <span className="ml-1">{currentStatus}</span>
             </p>
-            {!showOptimisticUpdate && (
-              <p className="text-sm mt-1">
-                <span className="font-medium">Novo status:</span> {getNewStatusDisplay()}
-              </p>
-            )}
+            <p className="text-sm mt-1">
+              <span className="font-medium">Novo status:</span> 
+              <span className="ml-1 font-medium text-blue-600">{getNewStatusDisplay()}</span>
+            </p>
           </div>
-          
-          {showOptimisticUpdate && !isSuccess && (
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
-              <span className="text-sm text-blue-700">
-                Atualizando interface em tempo real...
-              </span>
-            </div>
-          )}
           
           {isSuccess && !isVerifying && (
             <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
@@ -182,10 +143,10 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
           )}
 
           {isVerifying && (
-            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-amber-600 animate-spin" />
-              <span className="text-sm text-amber-700">
-                Sincronizando dados com o servidor...
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+              <span className="text-sm text-blue-700">
+                Atualizando interface com os novos dados...
               </span>
             </div>
           )}
@@ -214,7 +175,7 @@ export const UserStatusDialog: React.FC<UserStatusDialogProps> = ({
             ) : isSuccess ? (
               <>
                 <CheckCircle className="mr-2 h-4 w-4" />
-                {isVerifying ? 'Sincronizando...' : 'Concluído'}
+                {isVerifying ? 'Atualizando...' : 'Concluído'}
               </>
             ) : (
               isActive ? 'Inativar Usuário' : 'Ativar Usuário'
