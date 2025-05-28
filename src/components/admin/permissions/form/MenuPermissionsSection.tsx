@@ -24,7 +24,7 @@ export const MenuPermissionsSection: React.FC<MenuPermissionsSectionProps> = ({
   isSubmitting,
   onMenuToggle,
 }) => {
-  // Separar menus por área
+  // Separar menus por área - CORRIGIDO
   const organizeMenusByArea = (menus: any[]) => {
     const areas = {
       admin: {
@@ -44,17 +44,14 @@ export const MenuPermissionsSection: React.FC<MenuPermissionsSectionProps> = ({
     menus.forEach(menu => {
       const key = menu.menu_key;
       
-      // Menus da área administrativa
+      // Menus da área do aluno (incluindo versões student-*)
       if ([
-        'dashboard', 'users', 'permissions', 'suppliers', 'partners', 'tools', 
-        'students', 'crm', 'courses', 'bonus', 'tasks', 'credits', 
-        'calendly-config', 'audit', 'mentoring-dashboard', 'mentoring-catalog',
-        'individual-enrollments', 'group-enrollments', 'mentoring-materials'
+        'my-suppliers', 'settings', 'student-suppliers', 'student-partners', 'student-tools'
       ].includes(key)) {
-        areas.admin.menus.push(menu);
-      } else {
-        // Menus da área do aluno
         areas.student.menus.push(menu);
+      } else {
+        // Todos os outros menus vão para área administrativa
+        areas.admin.menus.push(menu);
       }
     });
 
