@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -83,6 +83,8 @@ function App() {
                   </RouteGuard>
                 }
               >
+                {/* Redirect /aluno to /aluno/dashboard */}
+                <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="creditos" element={<Credits />} />
                 <Route path="fornecedores" element={<Suppliers />} />
@@ -98,7 +100,7 @@ function App() {
               </Route>
 
               {/* Redirect /alunos to /aluno for compatibility */}
-              <Route path="/alunos/*" element={<div>Redirecionando...</div>} />
+              <Route path="/alunos/*" element={<Navigate to="/aluno" replace />} />
 
               {/* Catch all route */}
               <Route path="*" element={<NotFound />} />
