@@ -29,6 +29,11 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminMentoringCatalog from "@/pages/admin/AdminMentoringCatalog";
 import AdminCalendlyConfig from "@/pages/admin/AdminCalendlyConfig";
 import AdminGroups from "@/pages/admin/AdminGroups";
+import AdminTasks from "@/pages/admin/Tasks";
+import AdminCRM from "@/pages/admin/CRM";
+import AdminSuppliers from "@/pages/admin/Suppliers";
+import AdminPartners from "@/pages/admin/Partners";
+import AdminTools from "@/pages/admin/Tools";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -67,11 +72,11 @@ function App() {
                         <Route path="dashboard" element={<AdminDashboard />} />
                         <Route path="usuarios" element={<Users />} />
                         <Route path="creditos" element={<AdminCredits />} />
-                        <Route path="tarefas" element={<div>Tarefas - Em breve</div>} />
-                        <Route path="crm" element={<div>CRM - Em breve</div>} />
-                        <Route path="fornecedores" element={<div>Fornecedores Admin - Em breve</div>} />
-                        <Route path="parceiros" element={<div>Parceiros Admin - Em breve</div>} />
-                        <Route path="ferramentas" element={<div>Ferramentas Admin - Em breve</div>} />
+                        <Route path="tarefas" element={<AdminTasks />} />
+                        <Route path="crm" element={<AdminCRM />} />
+                        <Route path="fornecedores" element={<AdminSuppliers />} />
+                        <Route path="parceiros" element={<AdminPartners />} />
+                        <Route path="ferramentas" element={<AdminTools />} />
                         <Route path="mentorias" element={<div>Dashboard Mentorias - Em breve</div>} />
                         <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
                         <Route path="inscricoes-individuais" element={<div>Inscrições Individuais - Em breve</div>} />
