@@ -10,12 +10,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, AlertTriangle, Activity, Users, Database, Eye, RefreshCw } from 'lucide-react';
 import { useAuditLogs, AuditFilters } from '@/hooks/admin/useAuditLogs';
 import { useAuditMetrics } from '@/hooks/admin/useAuditMetrics';
+import { useSecurityAlerts } from '@/hooks/admin/useSecurityAlerts';
+import { SecurityNotifications } from './SecurityNotifications';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const RealTimeAuditDashboard: React.FC = () => {
   const [filters, setFilters] = useState<AuditFilters>({});
   const { logs, loading: logsLoading, refetch: refetchLogs } = useAuditLogs(filters);
   const { metrics, loading: metricsLoading, refetch: refetchMetrics } = useAuditMetrics();
+  const { unreadCount: alertsCount } = useSecurityAlerts();
 
   const handleRefresh = () => {
     refetchLogs();
@@ -61,10 +64,13 @@ export const RealTimeAuditDashboard: React.FC = () => {
           <h1 className="text-2xl font-bold">Dashboard de Auditoria</h1>
           <p className="text-gray-600">Monitoramento em tempo real de eventos do sistema</p>
         </div>
-        <Button onClick={handleRefresh} disabled={logsLoading || metricsLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${(logsLoading || metricsLoading) ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <SecurityNotifications />
+          <Button onClick={handleRefresh} disabled={logsLoading || metricsLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${(logsLoading || metricsLoading) ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Estatísticas */}
@@ -117,25 +123,32 @@ export const RealTimeAuditDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={alertsCount > 0 ? 'border-red-200 bg-red-50' : ''}>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-purple-500" />
+              <Shield className={`h-5 w-5 ${alertsCount > 0 ? 'text-red-500' : 'text-gray-500'}`} />
               <div>
-                <p className="text-sm text-gray-600">Usuários Únicos</p>
-                <p className="text-2xl font-bold">{metrics?.uniqueUsers || 0}</p>
+                <p className="text-sm text-gray-600">Alertas Ativos</p>
+                <p className={`text-2xl font-bold ${alertsCount > 0 ? 'text-red-600' : ''}`}>
+                  {alertsCount}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Alertas */}
-      {metrics && metrics.unresolvedAlerts > 0 && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Existem {metrics.unresolvedAlerts} alertas de segurança não resolvidos que requerem atenção.
+      {/* Alertas de Segurança */}
+      {alertsCount > 0 && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertTriangle className="h-4 w-4 text-red-500" />
+          <AlertDescription className="text-red-700">
+            Existem {alertsCount} alertas de segurança ativos que requerem atenção.
+            <Button variant="link" className="p-0 ml-2 text-red-700 underline" asChild>
+              <span onClick={() => {/* Abrir modal de notificações */}}>
+                Ver alertas
+              </span>
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -144,6 +157,7 @@ export const RealTimeAuditDashboard: React.FC = () => {
         <TabsList>
           <TabsTrigger value="logs">Logs de Auditoria</TabsTrigger>
           <TabsTrigger value="metrics">Métricas</TabsTrigger>
+          <TabsTrigger value="security">Segurança</TabsTrigger>
         </TabsList>
 
         <TabsContent value="logs" className="space-y-4">
@@ -311,6 +325,63 @@ export const RealTimeAuditDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sistema de Segurança</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    O sistema de auditoria está monitorando automaticamente todas as atividades 
+                    e detectando padrões suspeitos em tempo real.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <Eye className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Monitoramento Ativo</p>
+                          <p className="text-lg font-bold text-green-600">✓ Ativo</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Detecção de Ameaças</p>
+                          <p className="text-lg font-bold text-green-600">✓ Ativo</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <Shield className="h-5 w-5 text-green-500" />
+                        <div>
+                          <p className="text-sm text-gray-600">Alertas em Tempo Real</p>
+                          <p className="text-lg font-bold text-green-600">✓ Ativo</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,7 +1,7 @@
-
 import { useCallback, useEffect, useRef } from 'react';
 import { useAuth } from './auth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuditInterceptor } from './admin/useSupabaseAuditInterceptor';
 
 interface AuditEvent {
   event_type: string;
@@ -24,6 +24,9 @@ export const useComprehensiveAudit = () => {
     `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   );
 
+  // Ativar interceptação automática
+  useSupabaseAuditInterceptor();
+
   // Log de evento de auditoria
   const logEvent = useCallback(async (event: AuditEvent) => {
     try {
@@ -36,9 +39,16 @@ export const useComprehensiveAudit = () => {
           ...event.metadata,
           timestamp: Date.now(),
           url: window.location.href,
-          referrer: document.referrer
+          referrer: document.referrer,
+          user_agent: navigator.userAgent,
+          session_info: {
+            session_id: sessionIdRef.current,
+            user_id: user?.id,
+            user_email: user?.email
+          }
         },
-        ...event
+        ...event,
+        success: event.success !== false // Default para true se não especificado
       };
 
       // Chamar Edge Function
@@ -48,11 +58,13 @@ export const useComprehensiveAudit = () => {
 
       if (error) {
         console.error('Erro ao registrar log de auditoria:', error);
+      } else {
+        console.log(`📝 Evento auditado: ${event.action} (${event.event_category})`);
       }
     } catch (error) {
       console.error('Erro na função de auditoria:', error);
     }
-  }, [user?.id]);
+  }, [user?.id, user?.email]);
 
   // Logs específicos para diferentes tipos de eventos
   const logNavigation = useCallback((path: string, previousPath?: string) => {
@@ -78,7 +90,11 @@ export const useComprehensiveAudit = () => {
       description: `Tentativa de ${action}${email ? ` para ${email}` : ''}`,
       metadata: {
         email,
-        login_method: 'email_password'
+        login_method: 'email_password',
+        auth_context: {
+          session_id: sessionIdRef.current,
+          timestamp: new Date().toISOString()
+        }
       },
       risk_level: action === 'login_failed' ? 'high' : 'medium',
       success: action !== 'login_failed',
@@ -93,6 +109,9 @@ export const useComprehensiveAudit = () => {
     oldValues?: any,
     newValues?: any
   ) => {
+    const riskLevel = operation === 'delete' ? 'medium' : 
+                     entityType === 'profiles' || entityType === 'permission_groups' ? 'high' : 'low';
+    
     logEvent({
       event_type: 'data_operation',
       event_category: 'data_management',
@@ -104,9 +123,13 @@ export const useComprehensiveAudit = () => {
       new_values: newValues,
       metadata: {
         operation_type: operation,
-        entity_count: Array.isArray(newValues) ? newValues.length : 1
+        entity_count: Array.isArray(newValues) ? newValues.length : 1,
+        data_context: {
+          table: entityType,
+          operation_timestamp: new Date().toISOString()
+        }
       },
-      risk_level: operation === 'delete' ? 'medium' : 'low'
+      risk_level: riskLevel
     });
   }, [logEvent]);
 
@@ -124,7 +147,12 @@ export const useComprehensiveAudit = () => {
       metadata: {
         ...metadata,
         detection_time: new Date().toISOString(),
-        user_agent: navigator.userAgent
+        user_agent: navigator.userAgent,
+        security_context: {
+          event_type: eventType,
+          risk_assessment: riskLevel,
+          system_state: 'active_monitoring'
+        }
       },
       risk_level: riskLevel
     });
@@ -146,7 +174,8 @@ export const useComprehensiveAudit = () => {
         system_info: {
           browser: navigator.userAgent,
           language: navigator.language,
-          platform: navigator.platform
+          platform: navigator.platform,
+          timestamp: new Date().toISOString()
         }
       },
       risk_level: 'low'
@@ -195,7 +224,12 @@ export const useComprehensiveAudit = () => {
         'Nova sessão de usuário iniciada',
         {
           user_id: user.id,
-          session_id: sessionIdRef.current
+          session_id: sessionIdRef.current,
+          session_context: {
+            login_time: new Date().toISOString(),
+            user_role: user.user_metadata?.role,
+            initial_page: window.location.pathname
+          }
         }
       );
     }
