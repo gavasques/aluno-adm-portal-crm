@@ -40,6 +40,7 @@ import AdminAudit from "@/pages/admin/Audit";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminMentoringDashboard from "@/pages/admin/AdminMentoringDashboard";
 import AdminIndividualEnrollments from "@/pages/admin/AdminIndividualEnrollments";
+import AdminMentoringMaterials from "@/pages/admin/AdminMentoringMaterials";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -87,7 +88,7 @@ function App() {
                         <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
                         <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
                         <Route path="inscricoes-grupo" element={<AdminGroups />} />
-                        <Route path="mentorias/materiais" element={<div>Materiais - Em breve</div>} />
+                        <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
                         <Route path="permissoes" element={<AdminPermissions />} />
                         <Route path="cadastros" element={<AdminRegisters />} />
                         <Route path="auditoria" element={<AdminAudit />} />
