@@ -333,6 +333,69 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_credits: number
+          next_billing_date: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_credits: number
+          next_billing_date: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_credits?: number
+          next_billing_date?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          stripe_session_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          id?: string
+          stripe_session_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          stripe_session_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mentoring_catalogs: {
         Row: {
           active: boolean
@@ -1367,6 +1430,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          created_at: string
+          current_credits: number
+          id: string
+          monthly_limit: number
+          renewal_date: string
+          subscription_type: string | null
+          updated_at: string
+          used_this_month: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_credits?: number
+          id?: string
+          monthly_limit?: number
+          renewal_date?: string
+          subscription_type?: string | null
+          updated_at?: string
+          used_this_month?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_credits?: number
+          id?: string
+          monthly_limit?: number
+          renewal_date?: string
+          subscription_type?: string | null
+          updated_at?: string
+          used_this_month?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_files: {
         Row: {
           created_at: string
@@ -1497,6 +1596,10 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      renew_monthly_credits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_user_storage_counter: {
         Args: { user_uuid: string }

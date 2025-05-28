@@ -1,9 +1,9 @@
-
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/hooks/auth';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 import Home from './pages/Index';
 import Login from './pages/Login';
@@ -11,13 +11,17 @@ import CompleteRegistration from './pages/CompleteRegistration';
 import ResetPassword from './pages/ResetPassword';
 
 // Student Pages
-import StudentDashboard from './pages/student/Dashboard';
-import Profile from './pages/student/Settings';
-import StudentMySuppliers from './pages/student/MySuppliers';
-import StudentMentoring from './pages/student/Mentoring';
-import StudentSuppliers from './pages/student/Suppliers';
-import StudentPartners from './pages/student/Partners';
-import StudentTools from './pages/student/Tools';
+import StudentDashboard from '@/pages/student/Dashboard';
+import StudentCredits from '@/pages/student/Credits';
+import StudentSuppliers from '@/pages/student/Suppliers';
+import MySuppliers from '@/pages/student/MySuppliers';
+import MySupplierDetailView from '@/components/student/my-suppliers/MySupplierDetailView';
+import StudentPartners from '@/pages/student/Partners';
+import StudentTools from '@/pages/student/Tools';
+import StudentMentoring from '@/pages/student/Mentoring';
+import StudentMentoringDetail from '@/pages/student/MentoringDetail';
+import MentoringSession from '@/pages/student/MentoringSession';
+import StudentSettings from '@/pages/student/Settings';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -79,7 +83,7 @@ function App() {
                 <Route path="/aluno/configuracoes" element={
                   <RouteGuard requireAdminAccess={false}>
                     <Layout isAdmin={false}>
-                      <Profile />
+                      <StudentSettings />
                     </Layout>
                   </RouteGuard>
                 } />
@@ -87,7 +91,15 @@ function App() {
                 <Route path="/aluno/meus-fornecedores" element={
                   <RouteGuard requireAdminAccess={false}>
                     <Layout isAdmin={false}>
-                      <StudentMySuppliers />
+                      <MySuppliers />
+                    </Layout>
+                  </RouteGuard>
+                } />
+
+                <Route path="/aluno/meus-fornecedores/:id" element={
+                  <RouteGuard requireAdminAccess={false}>
+                    <Layout isAdmin={false}>
+                      <MySupplierDetailView />
                     </Layout>
                   </RouteGuard>
                 } />
@@ -128,7 +140,7 @@ function App() {
                 <Route path="/profile" element={
                   <RouteGuard requireAdminAccess={false}>
                     <Layout isAdmin={false}>
-                      <Profile />
+                      <StudentSettings />
                     </Layout>
                   </RouteGuard>
                 } />
