@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, AlertTriangle, Activity, Users, Database, Eye, RefreshCw, TrendingUp, BarChart3 } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Users, Database, Eye, RefreshCw, TrendingUp, BarChart3, Brain } from 'lucide-react';
 import { useAuditLogs, AuditFilters } from '@/hooks/admin/useAuditLogs';
 import { useAuditMetrics } from '@/hooks/admin/useAuditMetrics';
 import { useSecurityAlerts } from '@/hooks/admin/useSecurityAlerts';
@@ -73,6 +74,10 @@ export const RealTimeAuditDashboard: React.FC = () => {
           <p className="text-gray-600">Monitoramento em tempo real de eventos do sistema</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/auditoria/behavior')}>
+            <Brain className="h-4 w-4 mr-2" />
+            IA Comportamental
+          </Button>
           <Button variant="outline" onClick={() => navigate('/admin/auditoria/analytics')}>
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
