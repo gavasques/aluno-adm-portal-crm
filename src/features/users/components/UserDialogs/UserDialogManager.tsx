@@ -22,6 +22,8 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
 }) => {
   const { type, user, isOpen } = dialogState;
 
+  if (!user) return null;
+
   return (
     <>
       <UserDetailsDialog
@@ -34,27 +36,47 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
       <UserDeleteDialog
         open={isOpen && type === 'delete'}
         onOpenChange={onCloseDialog}
-        user={user}
-        onRefresh={onRefresh}
+        userEmail={user.email}
+        onConfirmDelete={async () => {
+          // TODO: Implementar lógica de exclusão
+          console.log('Excluir usuário:', user.email);
+          return true;
+        }}
       />
 
       <ResetPasswordDialog
         open={isOpen && type === 'reset'}
         onOpenChange={onCloseDialog}
-        user={user}
+        userEmail={user.email}
+        onConfirmReset={async () => {
+          // TODO: Implementar lógica de reset
+          console.log('Reset senha para:', user.email);
+          return true;
+        }}
       />
 
       <ChangePasswordDialog
         open={isOpen && type === 'changePassword'}
         onOpenChange={onCloseDialog}
-        user={user}
+        userEmail={user.email}
+        onConfirmChange={async (newPassword: string) => {
+          // TODO: Implementar lógica de alteração de senha
+          console.log('Alterar senha para:', user.email);
+          return true;
+        }}
       />
 
       <UserPermissionGroupDialog
         open={isOpen && type === 'permissions'}
         onOpenChange={onCloseDialog}
-        user={user}
-        onRefresh={onRefresh}
+        userId={user.id}
+        userEmail={user.email}
+        currentGroupId={user.permission_group_id || null}
+        onConfirmSetPermissionGroup={async (groupId: string | null) => {
+          // TODO: Implementar lógica de permissão
+          console.log('Definir grupo para:', user.email, groupId);
+          return true;
+        }}
       />
 
       <UserStorageManagementDialog

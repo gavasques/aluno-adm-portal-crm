@@ -46,7 +46,7 @@ const UserEditableInfo: React.FC<UserEditableInfoProps> = ({ user, onRefresh }) 
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: editedName.trim()
+          name: editedName.trim()
         })
         .eq('id', user.id);
 
@@ -60,7 +60,7 @@ const UserEditableInfo: React.FC<UserEditableInfoProps> = ({ user, onRefresh }) 
         {
           email: editedEmail.trim(),
           user_metadata: {
-            full_name: editedName.trim()
+            name: editedName.trim()
           }
         }
       );
