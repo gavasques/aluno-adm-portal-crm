@@ -32,3 +32,19 @@ export {
   DesignQuickActions,
   DesignActivityFeed
 } from './components/DesignDashboard';
+
+// New UX Components
+export { 
+  DesignFormField,
+  type FormFieldStatus
+} from './components/DesignFormField';
+
+export { 
+  DesignLoadingButton
+} from './components/DesignLoadingButton';
+
+// UX Hooks
+export { useUXFeedback } from '../hooks/useUXFeedback';
+
+// Utilities
+export { microcopy, getMicrocopy } from '../utils/microcopy';

@@ -1,8 +1,9 @@
 
 import React from "react";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { DesignLoadingButton } from "@/design-system/components/DesignLoadingButton";
+import { DesignButton } from "@/design-system/components/DesignButton";
 
 interface BonusDetailHeaderProps {
   bonusId: string;
@@ -12,6 +13,7 @@ interface BonusDetailHeaderProps {
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  isLoading?: boolean;
 }
 
 const BonusDetailHeader: React.FC<BonusDetailHeaderProps> = ({
@@ -21,18 +23,19 @@ const BonusDetailHeader: React.FC<BonusDetailHeaderProps> = ({
   onEdit,
   onSave,
   onCancel,
-  onDelete
+  onDelete,
+  isLoading = false
 }) => {
   return (
     <>
       <div className="flex items-center mb-6">
-        <Button 
+        <DesignButton 
           variant="ghost" 
           onClick={onBack} 
           className="mr-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-        </Button>
+        </DesignButton>
         <h1 className="text-3xl font-bold">Detalhes do Bônus</h1>
       </div>
 
@@ -47,34 +50,40 @@ const BonusDetailHeader: React.FC<BonusDetailHeaderProps> = ({
           <div className="flex gap-2">
             {isEditing ? (
               <>
-                <Button
+                <DesignButton
                   variant="outline"
                   onClick={onCancel}
+                  disabled={isLoading}
                 >
                   Cancelar
-                </Button>
-                <Button
+                </DesignButton>
+                <DesignLoadingButton
                   onClick={onSave}
+                  loading={isLoading}
+                  loadingText="Salvando..."
                   className="flex items-center gap-1"
                 >
                   <Save className="h-4 w-4" /> Salvar
-                </Button>
+                </DesignLoadingButton>
               </>
             ) : (
               <>
-                <Button
+                <DesignButton
                   variant="outline"
                   onClick={onEdit}
+                  disabled={isLoading}
                 >
                   Editar
-                </Button>
-                <Button
+                </DesignButton>
+                <DesignLoadingButton
                   variant="destructive"
                   onClick={onDelete}
+                  loading={isLoading}
+                  loadingText="Excluindo..."
                   className="flex items-center gap-1"
                 >
                   <Trash2 className="h-4 w-4" /> Excluir
-                </Button>
+                </DesignLoadingButton>
               </>
             )}
           </div>

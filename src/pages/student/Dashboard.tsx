@@ -3,8 +3,11 @@ import React from 'react';
 import { Users, Package, GraduationCap, BarChart, Wrench, Clock } from 'lucide-react';
 import { DesignStatsCard, DesignQuickActions, DesignActivityFeed } from '@/design-system/components/DesignDashboard';
 import { PageTransition, PageChild } from '@/components/animations/PageTransition';
+import { useUXFeedback } from '@/hooks/useUXFeedback';
 
 const StudentDashboard = () => {
+  const { feedback } = useUXFeedback();
+
   const statsCards = [
     {
       title: "Meus Fornecedores",
@@ -13,7 +16,10 @@ const StudentDashboard = () => {
       icon: Package,
       gradient: "primary" as const,
       trend: { value: "+3 este mês", isPositive: true },
-      onClick: () => window.location.href = "/aluno/meus-fornecedores"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/meus-fornecedores";
+      }
     },
     {
       title: "Mentorias Ativas",
@@ -22,7 +28,10 @@ const StudentDashboard = () => {
       icon: GraduationCap,
       gradient: "secondary" as const,
       trend: { value: "2 agendadas", isPositive: true },
-      onClick: () => window.location.href = "/aluno/mentorias"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/mentorias";
+      }
     },
     {
       title: "Recursos Gerais",
@@ -31,7 +40,10 @@ const StudentDashboard = () => {
       icon: Users,
       gradient: "accent" as const,
       trend: { value: "+8 novos", isPositive: true },
-      onClick: () => window.location.href = "/aluno/fornecedores"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/fornecedores";
+      }
     },
     {
       title: "Ferramentas",
@@ -40,7 +52,10 @@ const StudentDashboard = () => {
       icon: Wrench,
       gradient: "warning" as const,
       trend: { value: "+2 adicionadas", isPositive: true },
-      onClick: () => window.location.href = "/aluno/ferramentas"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/ferramentas";
+      }
     }
   ];
 
@@ -51,7 +66,10 @@ const StudentDashboard = () => {
       description: "Explore nossa rede de fornecedores",
       icon: Users,
       gradient: "primary" as const,
-      onClick: () => window.location.href = "/aluno/fornecedores"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/fornecedores";
+      }
     },
     {
       id: "parceiros",
@@ -59,7 +77,10 @@ const StudentDashboard = () => {
       description: "Conecte-se com parceiros estratégicos",
       icon: BarChart,
       gradient: "accent" as const,
-      onClick: () => window.location.href = "/aluno/parceiros"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/parceiros";
+      }
     },
     {
       id: "ferramentas",
@@ -67,7 +88,10 @@ const StudentDashboard = () => {
       description: "Acesse ferramentas exclusivas",
       icon: Wrench,
       gradient: "secondary" as const,
-      onClick: () => window.location.href = "/aluno/ferramentas"
+      onClick: () => {
+        feedback.dataLoaded();
+        window.location.href = "/aluno/ferramentas";
+      }
     }
   ];
 
@@ -95,6 +119,11 @@ const StudentDashboard = () => {
     }
   ];
 
+  // Show welcome message on dashboard load
+  React.useEffect(() => {
+    feedback.systemReady();
+  }, [feedback]);
+
   return (
     <PageTransition className="space-y-8 p-6">
       {/* Header */}
@@ -104,7 +133,7 @@ const StudentDashboard = () => {
             Dashboard do Aluno
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            Bem-vindo ao seu portal de aprendizado
+            Bem-vindo ao seu portal de aprendizado 🚀
           </p>
         </div>
       </PageChild>

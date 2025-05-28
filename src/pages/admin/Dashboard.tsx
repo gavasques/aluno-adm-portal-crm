@@ -7,10 +7,18 @@ import { QuickActions } from "@/components/admin/dashboard/QuickActions";
 import { SystemHealth } from "@/components/admin/dashboard/SystemHealth";
 import { RecentActivities } from "@/components/admin/dashboard/RecentActivities";
 import { PerformanceMetrics } from "@/components/admin/dashboard/PerformanceMetrics";
+import { useUXFeedback } from "@/hooks/useUXFeedback";
 
 const AdminDashboard = () => {
+  const { feedback } = useUXFeedback();
+
+  // Show welcome message on dashboard load
+  React.useEffect(() => {
+    feedback.systemReady();
+  }, [feedback]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700">
       <div className="container mx-auto p-6 space-y-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
