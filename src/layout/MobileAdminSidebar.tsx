@@ -57,11 +57,11 @@ const MobileAdminSidebar: React.FC<MobileAdminSidebarProps> = ({ onItemClick }) 
               {group.items.map((item) => (
                 <Link
                   key={item.title}
-                  to={item.url}
+                  to={item.href}
                   onClick={onItemClick}
                   className={cn(
                     "flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors",
-                    location.pathname === item.url
+                    location.pathname === item.href
                       ? "bg-blue-50 text-blue-700 border-r-2 border-blue-500"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}

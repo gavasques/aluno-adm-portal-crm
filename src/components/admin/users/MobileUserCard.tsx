@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import { Edit, Trash2, Mail, Shield, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SwipeableTableRow } from '@/components/ui/swipeable-table-row';
-import { UserStatusBadge } from './UserStatusBadge';
-import { StoragePercentageBadge } from './StoragePercentageBadge';
+import UserStatusBadge from './UserStatusBadge';
+import StoragePercentageBadge from './StoragePercentageBadge';
 
 interface User {
   id: string;
@@ -101,8 +101,8 @@ export const MobileUserCard: React.FC<MobileUserCardProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500">Armazenamento</span>
             <StoragePercentageBadge 
-              used={user.storage_used} 
-              limit={user.storage_limit} 
+              storageUsedMb={user.storage_used / (1024 * 1024)} 
+              storageLimitMb={user.storage_limit / (1024 * 1024)} 
             />
           </div>
           
