@@ -44,7 +44,7 @@ import NotFound from './pages/NotFound';
 // Import route guard and layout
 import RouteGuard from './components/RouteGuard';
 import Layout from './layout/Layout';
-import { useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Create a query client
 const queryClient = new QueryClient();
@@ -53,7 +53,7 @@ import Categories from './pages/admin/Categories';
 import SoftwareTypes from './pages/admin/SoftwareTypes';
 import PartnerTypes from './pages/admin/PartnerTypes';
 
-function App() {
+function AppContent() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -79,7 +79,7 @@ function App() {
 
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Dashboard />
               </Layout>
@@ -87,7 +87,7 @@ function App() {
           } />
           
           <Route path="/admin/creditos" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Credits />
               </Layout>
@@ -95,7 +95,7 @@ function App() {
           } />
           
           <Route path="/admin/tarefas" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Tasks />
               </Layout>
@@ -103,7 +103,7 @@ function App() {
           } />
           
           <Route path="/admin/tarefas/:taskId" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <TaskDetail />
               </Layout>
@@ -111,7 +111,7 @@ function App() {
           } />
           
           <Route path="/admin/crm" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <CRM />
               </Layout>
@@ -119,7 +119,7 @@ function App() {
           } />
           
           <Route path="/admin/fornecedores" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminSuppliers />
               </Layout>
@@ -127,7 +127,7 @@ function App() {
           } />
           
           <Route path="/admin/parceiros" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminPartners />
               </Layout>
@@ -135,7 +135,7 @@ function App() {
           } />
           
           <Route path="/admin/ferramentas" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminTools />
               </Layout>
@@ -143,7 +143,7 @@ function App() {
           } />
           
           <Route path="/admin/mentorias" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminMentoringDashboard />
               </Layout>
@@ -151,7 +151,7 @@ function App() {
           } />
           
           <Route path="/admin/mentorias/catalogo" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminMentoringCatalog />
               </Layout>
@@ -159,7 +159,7 @@ function App() {
           } />
           
           <Route path="/admin/inscricoes-individuais" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminIndividualEnrollments />
               </Layout>
@@ -167,7 +167,7 @@ function App() {
           } />
           
           <Route path="/admin/inscricoes-grupo" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminGroupEnrollments />
               </Layout>
@@ -175,7 +175,7 @@ function App() {
           } />
           
           <Route path="/admin/mentorias/materiais" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminMentoringMaterials />
               </Layout>
@@ -183,7 +183,7 @@ function App() {
           } />
           
           <Route path="/admin/usuarios" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <OptimizedUsers />
               </Layout>
@@ -191,7 +191,7 @@ function App() {
           } />
           
           <Route path="/admin/permissoes" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Permissions />
               </Layout>
@@ -199,7 +199,7 @@ function App() {
           } />
           
           <Route path="/admin/auditoria" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Audit />
               </Layout>
@@ -207,7 +207,7 @@ function App() {
           } />
           
           <Route path="/admin/calendly-config" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <AdminCalendlyConfig />
               </Layout>
@@ -215,7 +215,7 @@ function App() {
           } />
           
           <Route path="/admin/categorias" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Categories />
               </Layout>
@@ -223,7 +223,7 @@ function App() {
           } />
           
           <Route path="/admin/tipos-softwares" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <SoftwareTypes />
               </Layout>
@@ -231,7 +231,7 @@ function App() {
           } />
           
           <Route path="/admin/tipos-parceiros" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <PartnerTypes />
               </Layout>
@@ -239,7 +239,7 @@ function App() {
           } />
           
           <Route path="/admin/configuracoes" element={
-            <RouteGuard requiredRole="admin">
+            <RouteGuard requireAdminAccess={true}>
               <Layout isAdmin={true}>
                 <Settings />
               </Layout>
@@ -248,7 +248,7 @@ function App() {
 
           {/* Student routes */}
           <Route path="/aluno" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentDashboard />
               </Layout>
@@ -256,7 +256,7 @@ function App() {
           } />
           
           <Route path="/aluno/fornecedores" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentSuppliers />
               </Layout>
@@ -264,7 +264,7 @@ function App() {
           } />
           
           <Route path="/aluno/fornecedores/:id" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentSupplierDetail />
               </Layout>
@@ -272,7 +272,7 @@ function App() {
           } />
           
           <Route path="/aluno/meus-fornecedores" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <MySuppliers />
               </Layout>
@@ -280,7 +280,7 @@ function App() {
           } />
           
           <Route path="/aluno/meus-fornecedores/:id" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <MySupplierDetail />
               </Layout>
@@ -288,7 +288,7 @@ function App() {
           } />
           
           <Route path="/aluno/parceiros" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentPartners />
               </Layout>
@@ -296,7 +296,7 @@ function App() {
           } />
           
           <Route path="/aluno/ferramentas" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentTools />
               </Layout>
@@ -304,7 +304,7 @@ function App() {
           } />
           
           <Route path="/aluno/mentorias" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentMentoring />
               </Layout>
@@ -312,7 +312,7 @@ function App() {
           } />
           
           <Route path="/aluno/mentorias/:id" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentMentoringDetail />
               </Layout>
@@ -320,7 +320,7 @@ function App() {
           } />
           
           <Route path="/aluno/mentorias/:id/sessao" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <MentoringSession />
               </Layout>
@@ -328,7 +328,7 @@ function App() {
           } />
           
           <Route path="/aluno/creditos" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentCredits />
               </Layout>
@@ -336,7 +336,7 @@ function App() {
           } />
           
           <Route path="/aluno/configuracoes" element={
-            <RouteGuard requiredRole="student">
+            <RouteGuard requireAdminAccess={false}>
               <Layout isAdmin={false}>
                 <StudentSettings />
               </Layout>
@@ -349,6 +349,14 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
