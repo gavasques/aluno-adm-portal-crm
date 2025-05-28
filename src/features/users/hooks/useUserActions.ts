@@ -12,7 +12,6 @@ export const useUserActions = () => {
     isDeleting,
     isResettingPassword,
     isSettingPermissions,
-    refreshUsers,
     forceRefresh
   } = usePerformanceOptimizedUserContext();
 

@@ -3,7 +3,6 @@ import React from 'react';
 import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
 import { UserTable } from './UserTable/UserTable';
 import { useUserDialogs } from '../hooks/useUserDialogs';
-import { useUserActions } from '../hooks/useUserActions';
 import { UserDialogManager } from './UserDialogs/UserDialogManager';
 
 const UnifiedUserPage: React.FC = () => {
@@ -15,13 +14,6 @@ const UnifiedUserPage: React.FC = () => {
   } = usePerformanceOptimizedUserContext();
 
   const { dialogState, openDialog, closeDialog } = useUserDialogs();
-  const {
-    confirmDelete,
-    confirmResetPassword,
-    confirmChangePassword,
-    confirmSendMagicLink,
-    confirmSetPermissionGroup
-  } = useUserActions();
 
   return (
     <div className="space-y-6">
