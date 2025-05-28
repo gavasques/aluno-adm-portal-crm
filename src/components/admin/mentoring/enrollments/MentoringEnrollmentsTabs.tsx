@@ -1,102 +1,118 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
 import IndividualEnrollmentSection from './IndividualEnrollmentSection';
-import { GroupEnrollmentSection } from './GroupEnrollmentSection';
-import { StudentMentoringEnrollment, GroupEnrollment } from '@/types/mentoring.types';
+import GroupEnrollmentSection from './GroupEnrollmentSection';
 
 interface MentoringEnrollmentsTabsProps {
-  activeTab: string;
-  onTabChange: (value: string) => void;
-  filteredIndividualEnrollments: StudentMentoringEnrollment[];
-  filteredGroups: GroupEnrollment[];
-  viewMode: 'cards' | 'list';
+  selectedTab: string;
+  onTabChange: (tab: string) => void;
+  viewMode: "list" | "grid";
+  onViewModeChange: (mode: "list" | "grid") => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  statusFilter: string;
+  onStatusFilterChange: (status: string) => void;
+  enrollments: any[];
+  groups: any[];
   selectedEnrollments: string[];
   selectedGroups: string[];
-  onView: (enrollment: StudentMentoringEnrollment) => void;
-  onEdit: (enrollment: StudentMentoringEnrollment) => void;
-  onDelete: (id: string) => void;
-  onAddExtension: (enrollment: StudentMentoringEnrollment) => void;
   onToggleEnrollmentSelection: (id: string) => void;
-  onSelectAllIndividual: () => void;
-  onAddEnrollment: () => void;
-  onViewGroup: (group: GroupEnrollment) => void;
-  onEditGroup: (group: GroupEnrollment) => void;
-  onDeleteGroup: (id: string) => void;
-  onAddStudent: (group: GroupEnrollment) => void;
-  onRemoveStudent: (groupId: string, studentId: string) => void;
   onToggleGroupSelection: (id: string) => void;
+  onCreateEnrollment: () => void;
+  onEditEnrollment: (enrollment: any) => void;
+  onViewEnrollment: (enrollment: any) => void;
+  onDeleteEnrollment: (id: string) => void;
+  onAddExtension: (enrollment: any) => void;
+  onViewGroup: (group: any) => void;
+  onEditGroup: (group: any) => void;
+  onDeleteGroup: (id: string) => void;
+  onAddStudent: (group: any) => void;
+  onRemoveStudent: (groupId: string, studentId: string) => void;
   onAddGroup: () => void;
+  onBulkAction: (action: string, selectedEnrollments: string[], selectedGroups: string[]) => void;
 }
 
-export const MentoringEnrollmentsTabs: React.FC<MentoringEnrollmentsTabsProps> = ({
-  activeTab,
+const MentoringEnrollmentsTabs: React.FC<MentoringEnrollmentsTabsProps> = ({
+  selectedTab,
   onTabChange,
-  filteredIndividualEnrollments,
-  filteredGroups,
   viewMode,
+  onViewModeChange,
+  searchQuery,
+  onSearchChange,
+  statusFilter,
+  onStatusFilterChange,
+  enrollments,
+  groups,
   selectedEnrollments,
   selectedGroups,
-  onView,
-  onEdit,
-  onDelete,
-  onAddExtension,
   onToggleEnrollmentSelection,
-  onSelectAllIndividual,
-  onAddEnrollment,
+  onToggleGroupSelection,
+  onCreateEnrollment,
+  onEditEnrollment,
+  onViewEnrollment,
+  onDeleteEnrollment,
+  onAddExtension,
   onViewGroup,
   onEditGroup,
   onDeleteGroup,
   onAddStudent,
   onRemoveStudent,
-  onToggleGroupSelection,
-  onAddGroup
+  onAddGroup,
+  onBulkAction
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="individual" className="flex items-center gap-2">
-          Inscrições Individuais
-          <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
-            {filteredIndividualEnrollments.length}
-          </span>
-        </TabsTrigger>
-        <TabsTrigger value="group" className="flex items-center gap-2">
-          Inscrições em Grupo
-          <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">
-            {filteredGroups.length}
-          </span>
-        </TabsTrigger>
-      </TabsList>
+    <Card className="w-full">
+      <Tabs value={selectedTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="individual">Inscrições Individuais</TabsTrigger>
+          <TabsTrigger value="group">Inscrições em Grupo</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="individual" className="mt-6">
-        <IndividualEnrollmentSection
-          enrollments={filteredIndividualEnrollments}
-          viewMode={viewMode}
-          selectedEnrollments={selectedEnrollments}
-          onView={onView}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onAddExtension={onAddExtension}
-          onToggleSelection={onToggleEnrollmentSelection}
-          onSelectAll={onSelectAllIndividual}
-          onAddEnrollment={onAddEnrollment}
-        />
-      </TabsContent>
+        <TabsContent value="individual" className="space-y-4">
+          <IndividualEnrollmentSection
+            viewMode={viewMode === "grid" ? "cards" : "list"}
+            onViewModeChange={(mode) => onViewModeChange(mode === "cards" ? "grid" : "list")}
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            statusFilter={statusFilter}
+            onStatusFilterChange={onStatusFilterChange}
+            enrollments={enrollments}
+            selectedEnrollments={selectedEnrollments}
+            onToggleSelection={onToggleEnrollmentSelection}
+            onCreateEnrollment={onCreateEnrollment}
+            onEditEnrollment={onEditEnrollment}
+            onViewEnrollment={onViewEnrollment}
+            onDeleteEnrollment={onDeleteEnrollment}
+            onAddExtension={onAddExtension}
+            onBulkAction={(action) => onBulkAction(action, selectedEnrollments, [])}
+          />
+        </TabsContent>
 
-      <TabsContent value="group" className="mt-6">
-        <GroupEnrollmentSection
-          groups={filteredGroups}
-          selectedGroups={selectedGroups}
-          onView={onViewGroup}
-          onEdit={onEditGroup}
-          onDelete={onDeleteGroup}
-          onAddStudent={onAddStudent}
-          onRemoveStudent={onRemoveStudent}
-          onToggleSelection={onToggleGroupSelection}
-          onAddGroup={onAddGroup}
-        />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="group" className="space-y-4">
+          <GroupEnrollmentSection
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            statusFilter={statusFilter}
+            onStatusFilterChange={onStatusFilterChange}
+            groups={groups}
+            selectedGroups={selectedGroups}
+            onToggleSelection={onToggleGroupSelection}
+            onViewGroup={onViewGroup}
+            onEditGroup={onEditGroup}
+            onDeleteGroup={onDeleteGroup}
+            onAddStudent={onAddStudent}
+            onRemoveStudent={onRemoveStudent}
+            onAddGroup={onAddGroup}
+            onBulkAction={(action) => onBulkAction(action, [], selectedGroups)}
+          />
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };
+
+export default MentoringEnrollmentsTabs;

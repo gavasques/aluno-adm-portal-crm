@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useUserOperations } from '@/hooks/users/useUserOperations';
 import { UserAddDialog } from '@/components/admin/users/dialogs/UserAddDialog';
 import { UserInviteDialog } from '@/components/admin/users/dialogs/UserInviteDialog';
 import { UserDeleteDialog } from '@/components/admin/users/dialogs/UserDeleteDialog';
@@ -47,21 +46,21 @@ const UserOperationDialogs: React.FC<UserOperationDialogsProps> = (props) => {
         open={props.showDeleteDialog}
         onOpenChange={props.setShowDeleteDialog}
         userEmail={props.selectedUserEmail}
-        onDelete={props.confirmDelete}
+        onConfirm={props.confirmDelete}
       />
 
       <ResetPasswordDialog
         open={props.showResetDialog}
         onOpenChange={props.setShowResetDialog}
         userEmail={props.selectedUserEmail}
-        onReset={props.confirmResetPassword}
+        onConfirm={props.confirmResetPassword}
       />
 
       <UserPermissionGroupDialog
         open={props.showPermissionDialog}
         onOpenChange={props.setShowPermissionDialog}
         userEmail={props.selectedUserEmail}
-        selectedPermissionGroupId={props.selectedUserPermissionGroupId}
+        currentPermissionGroupId={props.selectedUserPermissionGroupId}
         onConfirm={props.confirmSetPermissionGroup}
       />
     </>

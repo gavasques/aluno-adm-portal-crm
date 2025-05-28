@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MentoringCatalog } from '@/types/mentoring.types';
-import { expandedMentoringData } from '@/data/expandedMentoringData';
+import { expandedMentoringCatalog } from '@/data/expandedMentoringData';
 
 interface MentoringSelectorProps {
   onMentoringSelect: (mentoring: MentoringCatalog) => void;
@@ -14,7 +14,7 @@ const MentoringSelector: React.FC<MentoringSelectorProps> = ({
   onMentoringSelect,
   selectedMentoringId
 }) => {
-  const activeMentorings = expandedMentoringData.filter(m => m.active);
+  const activeMentorings = expandedMentoringCatalog.filter(m => m.active);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
