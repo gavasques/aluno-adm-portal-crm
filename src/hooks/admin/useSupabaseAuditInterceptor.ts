@@ -47,7 +47,9 @@ export const useSupabaseAuditInterceptor = () => {
                 return;
             }
 
-            const entityId = newRecord?.id || oldRecord?.id || 'unknown';
+            // Verificar se os registros existem e têm ID antes de acessar
+            const entityId = (newRecord && typeof newRecord === 'object' && 'id' in newRecord ? newRecord.id : 
+                            (oldRecord && typeof oldRecord === 'object' && 'id' in oldRecord ? oldRecord.id : 'unknown')) as string;
             
             auditCRUDOperation(
               operation,
@@ -59,8 +61,14 @@ export const useSupabaseAuditInterceptor = () => {
 
             // Detectar atividades suspeitas específicas
             if (table === 'profiles' && operation === 'update') {
-              const roleChanged = oldRecord?.role !== newRecord?.role;
-              const statusChanged = oldRecord?.status !== newRecord?.status;
+              // Verificar se os objetos existem e têm as propriedades necessárias
+              const oldRole = oldRecord && typeof oldRecord === 'object' && 'role' in oldRecord ? oldRecord.role : null;
+              const newRole = newRecord && typeof newRecord === 'object' && 'role' in newRecord ? newRecord.role : null;
+              const oldStatus = oldRecord && typeof oldRecord === 'object' && 'status' in oldRecord ? oldRecord.status : null;
+              const newStatus = newRecord && typeof newRecord === 'object' && 'status' in newRecord ? newRecord.status : null;
+              
+              const roleChanged = oldRole !== newRole;
+              const statusChanged = oldStatus !== newStatus;
               
               if (roleChanged || statusChanged) {
                 detectSuspiciousActivity('profile_critical_change', {
@@ -68,8 +76,8 @@ export const useSupabaseAuditInterceptor = () => {
                   operation,
                   entityId,
                   changes: {
-                    role: { old: oldRecord?.role, new: newRecord?.role },
-                    status: { old: oldRecord?.status, new: newRecord?.status }
+                    role: { old: oldRole, new: newRole },
+                    status: { old: oldStatus, new: newStatus }
                   }
                 });
               }
