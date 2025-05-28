@@ -1,16 +1,9 @@
 
 import * as React from "react"
-import { motion, HTMLMotionProps } from "framer-motion"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface ModernCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onDrag'> {
-  variant?: "glass" | "neumorphism" | "modern" | "gradient"
-  hover?: boolean
-  interactive?: boolean
-  glow?: boolean
-}
-
-interface MotionModernCardProps extends Omit<HTMLMotionProps<"div">, keyof ModernCardProps> {
+interface ModernCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "glass" | "neumorphism" | "modern" | "gradient"
   hover?: boolean
   interactive?: boolean
@@ -38,26 +31,24 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
     const interactiveClasses = interactive ? "cursor-pointer active:scale-[0.98]" : ""
     const glowClasses = glow ? "shadow-glow-blue" : ""
 
-    if (interactive) {
-      const motionProps: MotionModernCardProps = {
-        whileHover: { scale: 1.02, y: -4 },
-        whileTap: { scale: 0.98 },
-        transition: { type: "spring", stiffness: 300, damping: 30 },
-        className: cn(
-          baseClasses,
-          variantClasses[variant],
-          hoverClasses[variant],
-          interactiveClasses,
-          glowClasses,
-          className
-        ),
-        ...props
-      }
+    const cardClasses = cn(
+      baseClasses,
+      variantClasses[variant],
+      hoverClasses[variant],
+      interactiveClasses,
+      glowClasses,
+      className
+    )
 
+    if (interactive) {
       return (
         <motion.div
           ref={ref}
-          {...motionProps}
+          className={cardClasses}
+          whileHover={{ scale: 1.02, y: -4 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          {...props}
         >
           {children}
         </motion.div>
@@ -67,13 +58,7 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          baseClasses,
-          variantClasses[variant],
-          hoverClasses[variant],
-          glowClasses,
-          className
-        )}
+        className={cardClasses}
         {...props}
       >
         {children}

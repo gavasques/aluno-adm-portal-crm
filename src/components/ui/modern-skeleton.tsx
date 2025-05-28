@@ -3,7 +3,8 @@ import React from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+interface SkeletonProps {
+  className?: string
   variant?: "default" | "shimmer" | "pulse" | "wave"
   lines?: number
   avatar?: boolean
@@ -11,7 +12,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
-  ({ className, variant = "shimmer", lines = 1, avatar = false, card = false, ...props }, ref) => {
+  ({ className, variant = "shimmer", lines = 1, avatar = false, card = false }, ref) => {
     const baseClasses = "bg-slate-200 dark:bg-slate-700 rounded-lg"
     
     const variantClasses = {
@@ -29,7 +30,6 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          {...props}
         >
           {/* Header */}
           <div className="flex items-center space-x-3">
@@ -68,7 +68,7 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
 
     if (avatar) {
       return (
-        <div className={cn("flex items-center space-x-3", className)} {...props}>
+        <div className={cn("flex items-center space-x-3", className)}>
           <div className={cn(baseClasses, variantClasses[variant], "w-10 h-10 rounded-full")} />
           <div className="space-y-2 flex-1">
             <div className={cn(baseClasses, variantClasses[variant], "h-4 w-3/4")} />
@@ -79,7 +79,7 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
     }
 
     return (
-      <div className={cn("space-y-2", className)} {...props}>
+      <div className={cn("space-y-2", className)}>
         {Array.from({ length: lines }).map((_, i) => (
           <div
             key={i}
