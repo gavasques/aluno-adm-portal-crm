@@ -6,6 +6,7 @@ import { UserDeleteDialog } from '@/components/admin/users/dialogs/UserDeleteDia
 import { ResetPasswordDialog } from '@/components/admin/users/dialogs/ResetPasswordDialog';
 import { ChangePasswordDialog } from '@/components/admin/users/dialogs/ChangePasswordDialog';
 import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
+import { SendMagicLinkDialog } from '@/components/admin/users/dialogs/SendMagicLinkDialog';
 import UserStorageManagementDialog from '@/components/admin/users/dialogs/UserStorageManagementDialog';
 import UserActivityLogsDialog from '@/components/admin/users/dialogs/UserActivityLogsDialog';
 
@@ -62,6 +63,17 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
         onConfirmChange={async (newPassword: string) => {
           // TODO: Implementar lógica de alteração de senha
           console.log('Alterar senha para:', user.email);
+          return true;
+        }}
+      />
+
+      <SendMagicLinkDialog
+        open={isOpen && type === 'sendMagicLink'}
+        onOpenChange={onCloseDialog}
+        userEmail={user.email}
+        onConfirmSend={async () => {
+          // TODO: Implementar lógica de envio de magic link
+          console.log('Enviar Magic Link para:', user.email);
           return true;
         }}
       />

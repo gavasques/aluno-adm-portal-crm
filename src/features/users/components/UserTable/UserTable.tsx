@@ -21,6 +21,7 @@ interface UserTableProps {
   onBanUser?: (user: User) => void;
   onStorageManagement: (user: User) => void;
   onActivityLogs: (user: User) => void;
+  onSendMagicLink: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -35,6 +36,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   onBanUser,
   onStorageManagement,
   onActivityLogs,
+  onSendMagicLink,
   permissionGroups = [],
 }) => {
   const [sortField, setSortField] = useState<string>('');
@@ -115,6 +117,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onBanUser={onBanUser}
                 onStorageManagement={onStorageManagement}
                 onActivityLogs={onActivityLogs}
+                onSendMagicLink={onSendMagicLink}
                 permissionGroups={permissionGroups}
               />
             ))

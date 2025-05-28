@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity } from "lucide-react";
+import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive, Activity, Mail } from "lucide-react";
 import { User } from "@/types/user.types";
 import StoragePercentageBadge from "@/components/admin/users/StoragePercentageBadge";
 
@@ -24,6 +24,7 @@ interface UserTableRowProps {
   onBanUser?: (user: User) => void;
   onStorageManagement: (user: User) => void;
   onActivityLogs: (user: User) => void;
+  onSendMagicLink: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -37,6 +38,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onBanUser,
   onStorageManagement,
   onActivityLogs,
+  onSendMagicLink,
   permissionGroups = [],
 }) => {
   const formatMB = (mb: number) => {
@@ -182,6 +184,11 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             <DropdownMenuItem onClick={() => onChangePassword(user)}>
               <Key className="mr-2 h-4 w-4" />
               Alterar Senha
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => onSendMagicLink(user)}>
+              <Mail className="mr-2 h-4 w-4" />
+              Enviar Magic Link
             </DropdownMenuItem>
             
             <DropdownMenuItem onClick={() => onSetPermissionGroup(user)}>

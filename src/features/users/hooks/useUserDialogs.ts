@@ -1,75 +1,41 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { User } from '@/types/user.types';
 
-export type DialogType = 'view' | 'delete' | 'reset' | 'permissions' | 'changePassword' | 'storage' | 'activity';
+export type DialogType = 'view' | 'delete' | 'reset' | 'changePassword' | 'sendMagicLink' | 'permissions' | 'storage' | 'activity';
 
 export interface DialogState {
+  isOpen: boolean;
   type: DialogType | null;
   user: User | null;
-  isOpen: boolean;
 }
 
 export const useUserDialogs = () => {
   const [dialogState, setDialogState] = useState<DialogState>({
+    isOpen: false,
     type: null,
-    user: null,
-    isOpen: false
+    user: null
   });
 
-  const openDialog = useCallback((type: DialogType, user: User) => {
+  const openDialog = (type: DialogType, user: User) => {
     setDialogState({
+      isOpen: true,
       type,
-      user,
-      isOpen: true
+      user
     });
-  }, []);
+  };
 
-  const closeDialog = useCallback(() => {
+  const closeDialog = () => {
     setDialogState({
+      isOpen: false,
       type: null,
-      user: null,
-      isOpen: false
+      user: null
     });
-  }, []);
-
-  const handleViewDetails = useCallback((user: User) => {
-    openDialog('view', user);
-  }, [openDialog]);
-
-  const handleResetPassword = useCallback((user: User) => {
-    openDialog('reset', user);
-  }, [openDialog]);
-
-  const handleChangePassword = useCallback((user: User) => {
-    openDialog('changePassword', user);
-  }, [openDialog]);
-
-  const handleDeleteUser = useCallback((user: User) => {
-    openDialog('delete', user);
-  }, [openDialog]);
-
-  const handleSetPermissionGroup = useCallback((user: User) => {
-    openDialog('permissions', user);
-  }, [openDialog]);
-
-  const handleStorageManagement = useCallback((user: User) => {
-    openDialog('storage', user);
-  }, [openDialog]);
-
-  const handleActivityLogs = useCallback((user: User) => {
-    openDialog('activity', user);
-  }, [openDialog]);
+  };
 
   return {
-    ...dialogState,
-    closeDialog,
-    handleViewDetails,
-    handleResetPassword,
-    handleChangePassword,
-    handleDeleteUser,
-    handleSetPermissionGroup,
-    handleStorageManagement,
-    handleActivityLogs
+    dialogState,
+    openDialog,
+    closeDialog
   };
 };

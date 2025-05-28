@@ -16,7 +16,7 @@ export const useUserActions = () => {
     forceRefresh
   } = usePerformanceOptimizedUserContext();
 
-  const { updateUserPassword } = useBasicAuth();
+  const { updateUserPassword, sendMagicLink } = useBasicAuth();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
     try {
@@ -103,6 +103,34 @@ export const useUserActions = () => {
     }
   }, [updateUserPassword]);
 
+  const confirmSendMagicLink = useCallback(async (email: string): Promise<boolean> => {
+    try {
+      console.log('🔧 UserActions: Sending Magic Link for:', email);
+      const success = await sendMagicLink(email);
+      if (success) {
+        toast({
+          title: "Sucesso",
+          description: `Magic Link enviado para ${email}.`,
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível enviar o Magic Link.",
+          variant: "destructive",
+        });
+      }
+      return success;
+    } catch (error) {
+      console.error('Erro ao enviar Magic Link:', error);
+      toast({
+        title: "Erro",
+        description: "Erro interno ao enviar Magic Link.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [sendMagicLink]);
+
   const confirmSetPermissionGroup = useCallback(async (userId: string, userEmail: string, groupId: string | null): Promise<boolean> => {
     try {
       console.log('🔧 UserActions: Setting permission group for:', userEmail);
@@ -140,6 +168,7 @@ export const useUserActions = () => {
     confirmDelete,
     confirmResetPassword,
     confirmChangePassword,
+    confirmSendMagicLink,
     confirmSetPermissionGroup,
     isDeleting,
     isResettingPassword,
