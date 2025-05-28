@@ -341,7 +341,7 @@ export class OptimizedUserService {
       
       console.log('🔄 Service: Status será alterado de', currentStatus, 'para', newStatus);
 
-      // Primeiro tentar atualização direta no banco
+      // First update directly in database with timestamp
       const { data: updateResult, error: updateError } = await supabase
         .from("profiles")
         .update({ 
@@ -358,14 +358,40 @@ export class OptimizedUserService {
         throw updateError;
       }
 
-      // Verificar se a atualização foi bem-sucedida
+      // Verify the update was successful
       if (updateResult && updateResult.length > 0) {
-        console.log('✅ Service: Status alterado com sucesso no banco:', updateResult[0]);
+        const updatedUser = updateResult[0];
+        console.log('✅ Service: Status alterado com sucesso no banco:', {
+          userId: updatedUser.id,
+          email: updatedUser.email,
+          oldStatus: currentStatus,
+          newStatus: updatedUser.status,
+          updatedAt: updatedUser.updated_at
+        });
         
-        // Invalidar cache
+        // Double-check by reading the record back
+        setTimeout(async () => {
+          try {
+            const { data: verificationResult } = await supabase
+              .from("profiles")
+              .select('id, email, status, updated_at')
+              .eq('id', userId)
+              .single();
+            
+            if (verificationResult) {
+              console.log('🔍 Service: Verificação pós-atualização:', {
+                expected: newStatus,
+                actual: verificationResult.status,
+                match: verificationResult.status === newStatus
+              });
+            }
+          } catch (verError) {
+            console.warn('⚠️ Service: Erro na verificação:', verError);
+          }
+        }, 500);
+        
+        // Invalidate cache more aggressively
         this.invalidateQueries();
-        
-        // NÃO mostrar toast aqui pois já é mostrado no diálogo
         
         return true;
       } else {

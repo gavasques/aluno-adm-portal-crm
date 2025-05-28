@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
 import { User, UserFilters, UserStats, CreateUserData } from '@/types/user.types';
 import { useDebouncedCallback } from 'use-debounce';
@@ -8,6 +8,9 @@ import { useOptimizedUserCache } from './useOptimizedUserCache';
 
 export const usePerformanceOptimizedUsers = () => {
   const queryClient = useQueryClient();
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, Partial<User>>>(new Map());
+  
   const [filters, setFiltersState] = useState<UserFilters>({
     search: '',
     status: 'all',
@@ -27,7 +30,7 @@ export const usePerformanceOptimizedUsers = () => {
   // Set query client on service
   optimizedUserService.setQueryClient(queryClient);
 
-  // Fetch users with optimized caching and more aggressive refresh
+  // Fetch users with more aggressive refresh strategy
   const {
     data: users = [],
     isLoading,
@@ -39,45 +42,106 @@ export const usePerformanceOptimizedUsers = () => {
       console.log('🔄 Query executando fetchUsers...');
       const result = await optimizedUserService.fetchUsers();
       console.log('✅ Query retornou:', result?.length, 'usuários');
+      
+      // Clear optimistic updates after successful fetch
+      setOptimisticUpdates(new Map());
+      
       return result;
     },
-    staleTime: 1 * 60 * 1000, // Reduzido para 1 minuto para atualização mais rápida
-    gcTime: 5 * 60 * 1000, // Reduzido para 5 minutos
-    refetchOnWindowFocus: true, // Reativar refetch ao focar na janela
+    staleTime: 30 * 1000, // Reduzido para 30 segundos para sync mais rápido
+    gcTime: 2 * 60 * 1000, // Reduzido para 2 minutos
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: 2 * 60 * 1000, // Polling a cada 2 minutos
+    refetchInterval: 60 * 1000, // Polling a cada minuto
     retry: (failureCount, error) => {
       console.log(`🔄 Tentativa ${failureCount + 1} de buscar usuários. Erro:`, error);
-      return failureCount < 2;
+      return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000),
   });
 
-  // Ensure users is always an array
-  const usersArray = useMemo(() => {
+  // Apply optimistic updates to users array
+  const usersWithOptimisticUpdates = useMemo(() => {
     const result = Array.isArray(users) ? users : [];
-    console.log('📊 usersArray processado:', result.length, 'usuários');
-    return result;
-  }, [users]);
+    
+    if (optimisticUpdates.size === 0) {
+      return result;
+    }
+    
+    return result.map(user => {
+      const optimisticUpdate = optimisticUpdates.get(user.id);
+      if (optimisticUpdate) {
+        return { ...user, ...optimisticUpdate };
+      }
+      return user;
+    });
+  }, [users, optimisticUpdates]);
 
-  // Busca otimizada com debounce mais rápido
+  console.log('📊 usersArray processado:', usersWithOptimisticUpdates.length, 'usuários');
+
+  // Enhanced search with immediate response
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
     console.log('🔍 Aplicando busca otimizada:', searchTerm);
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
-  }, 50); // Reduzido para 50ms para resposta mais rápida
+  }, 100);
 
-  // Force refresh function for immediate updates
+  // Enhanced force refresh with polling
   const forceRefresh = useCallback(async () => {
     console.log('🔄 Executando refresh forçado...');
-    // Clear all caches first
+    
+    // Clear all caches
     smartInvalidate();
     queryClient.removeQueries({ queryKey: ['users'] });
-    // Force refetch
+    setOptimisticUpdates(new Map());
+    
+    // Force immediate refetch
     await refetch();
+    
+    // Start temporary polling to ensure sync
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+    
+    let pollCount = 0;
+    pollingIntervalRef.current = setInterval(async () => {
+      pollCount++;
+      console.log(`🔄 Polling temporário ${pollCount}/5...`);
+      
+      await refetch();
+      
+      if (pollCount >= 5) {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        console.log('✅ Polling temporário finalizado');
+      }
+    }, 2000);
+    
     console.log('✅ Refresh forçado concluído');
   }, [smartInvalidate, queryClient, refetch]);
 
-  // Mutations com invalidação mais agressiva
+  // Optimistic update helper
+  const applyOptimisticUpdate = useCallback((userId: string, updates: Partial<User>) => {
+    console.log('🔄 Aplicando atualização otimista para:', userId, updates);
+    setOptimisticUpdates(prev => {
+      const newMap = new Map(prev);
+      newMap.set(userId, updates);
+      return newMap;
+    });
+  }, []);
+
+  // Clear optimistic update
+  const clearOptimisticUpdate = useCallback((userId: string) => {
+    console.log('🧹 Limpando atualização otimista para:', userId);
+    setOptimisticUpdates(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(userId);
+      return newMap;
+    });
+  }, []);
+
+  // Mutations with optimistic updates
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
@@ -105,21 +169,50 @@ export const usePerformanceOptimizedUsers = () => {
       console.log('🔄 Mutation: Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
       return optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
     },
+    onMutate: ({ userId, currentStatus }) => {
+      // Apply optimistic update immediately
+      const newStatus = currentStatus?.toLowerCase() === 'ativo' ? 'Inativo' : 'Ativo';
+      console.log('🎯 Aplicando atualização otimista - Status:', currentStatus, '->', newStatus);
+      applyOptimisticUpdate(userId, { status: newStatus });
+    },
     onSuccess: async (result, variables) => {
       console.log('✅ Mutation: Status alterado com sucesso para:', variables.userEmail);
       
-      // Invalidação mais agressiva e refresh imediato
+      // Clear optimistic update for this user
+      clearOptimisticUpdate(variables.userId);
+      
+      // Invalidação agressiva
       queryClient.invalidateQueries({ queryKey: ['users'] });
       smartInvalidate();
       
-      // Force refresh immediately
+      // Force immediate refresh with verification
       setTimeout(async () => {
-        console.log('🔄 Executando refresh imediato após alteração de status...');
+        console.log('🔄 Executando refresh com verificação...');
         await forceRefresh();
-      }, 100); // Refresh quase imediato
+        
+        // Verify the change was applied
+        setTimeout(async () => {
+          const freshData = await queryClient.fetchQuery({
+            queryKey: ['users'],
+            queryFn: () => optimizedUserService.fetchUsers()
+          });
+          
+          const updatedUser = freshData?.find(u => u.id === variables.userId);
+          const expectedStatus = variables.currentStatus?.toLowerCase() === 'ativo' ? 'Inativo' : 'Ativo';
+          
+          if (updatedUser && updatedUser.status !== expectedStatus) {
+            console.warn('⚠️ Status não foi sincronizado corretamente, forçando novo refresh...');
+            await forceRefresh();
+          } else {
+            console.log('✅ Status sincronizado corretamente:', updatedUser?.status);
+          }
+        }, 1000);
+      }, 200);
     },
     onError: (error, variables) => {
       console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
+      // Clear optimistic update on error
+      clearOptimisticUpdate(variables.userId);
     }
   });
 
@@ -139,24 +232,24 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
-  // Filtros memoizados com otimização de performance
+  // Enhanced filtered users with optimistic updates
   const filteredUsers = useMemo(() => {
     console.log('🔄 Aplicando filtros otimizados...');
     
     if (!filters.search && filters.status === 'all' && filters.group === 'all') {
-      console.log('✅ Sem filtros, retornando todos os usuários:', usersArray.length);
-      return usersArray;
+      console.log('✅ Sem filtros, retornando todos os usuários:', usersWithOptimisticUpdates.length);
+      return usersWithOptimisticUpdates;
     }
     
-    const filtered = optimizedUserService.filterUsers(usersArray, filters);
-    console.log('✅ Usuários filtrados:', filtered.length, 'de', usersArray.length);
+    const filtered = optimizedUserService.filterUsers(usersWithOptimisticUpdates, filters);
+    console.log('✅ Usuários filtrados:', filtered.length, 'de', usersWithOptimisticUpdates.length);
     return filtered;
-  }, [usersArray, filters]);
+  }, [usersWithOptimisticUpdates, filters]);
 
-  // Stats memoizadas com cache otimizado
+  // Enhanced stats with optimistic updates
   const stats = useMemo((): UserStats => {
     console.log('📊 Calculando estatísticas otimizadas...');
-    const calculatedStats = optimizedUserService.calculateStats(usersArray);
+    const calculatedStats = optimizedUserService.calculateStats(usersWithOptimisticUpdates);
     
     const validStats: UserStats = {
       total: calculatedStats?.total || 0,
@@ -167,7 +260,7 @@ export const usePerformanceOptimizedUsers = () => {
     
     console.log('📊 Estatísticas calculadas:', validStats);
     return validStats;
-  }, [usersArray]);
+  }, [usersWithOptimisticUpdates]);
 
   // Callbacks otimizados
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
@@ -187,31 +280,42 @@ export const usePerformanceOptimizedUsers = () => {
 
   const performanceMetrics = useMemo(() => ({
     ...getMetrics(),
-    totalUsers: usersArray.length,
+    totalUsers: usersWithOptimisticUpdates.length,
     filteredUsers: filteredUsers.length,
+    optimisticUpdates: optimisticUpdates.size,
     isOptimized: true
-  }), [getMetrics, usersArray.length, filteredUsers.length]);
+  }), [getMetrics, usersWithOptimisticUpdates.length, filteredUsers.length, optimisticUpdates.size]);
 
   // Effects otimizados
   useEffect(() => {
-    if (usersArray.length > 0) {
-      preloadCommonFilters(usersArray);
+    if (usersWithOptimisticUpdates.length > 0) {
+      preloadCommonFilters(usersWithOptimisticUpdates);
     }
-  }, [usersArray, preloadCommonFilters]);
+  }, [usersWithOptimisticUpdates, preloadCommonFilters]);
 
   useEffect(() => {
     console.log('🔍 Estado atual do hook:', {
       isLoading,
       error: error?.message,
-      usersCount: usersArray.length,
+      usersCount: usersWithOptimisticUpdates.length,
       filteredCount: filteredUsers.length,
+      optimisticUpdatesCount: optimisticUpdates.size,
       stats,
       filters
     });
-  }, [isLoading, error, usersArray.length, filteredUsers.length, stats, filters]);
+  }, [isLoading, error, usersWithOptimisticUpdates.length, filteredUsers.length, optimisticUpdates.size, stats, filters]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   return {
-    users: usersArray,
+    users: usersWithOptimisticUpdates,
     filteredUsers,
     stats,
     filters,
@@ -223,7 +327,7 @@ export const usePerformanceOptimizedUsers = () => {
     setFilters,
     refreshUsers,
     searchUsers,
-    forceRefresh, // Nova função para refresh forçado
+    forceRefresh,
     
     // Mutations
     createUser: createUserMutation.mutateAsync,

@@ -26,11 +26,12 @@ export const useUserActions = () => {
           title: "Sucesso",
           description: `Usuário ${userEmail} excluído com sucesso.`,
         });
-        // Force refresh after successful deletion
+        
+        // Force immediate refresh
         setTimeout(() => {
           console.log('🔄 Forcing refresh after user deletion...');
           forceRefresh?.();
-        }, 500);
+        }, 300);
       } else {
         toast({
           title: "Erro",
@@ -53,19 +54,38 @@ export const useUserActions = () => {
   const confirmToggleStatus = useCallback(async (userId: string, userEmail: string, currentStatus: string): Promise<boolean> => {
     try {
       console.log('🔧 UserActions: Toggling status for:', userEmail, 'Current:', currentStatus);
+      
+      // Show immediate feedback
+      const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+      console.log(`🎯 UserActions: Alterando ${userEmail} de ${currentStatus} para ${newStatus}`);
+      
       const success = await toggleUserStatus(userId, userEmail, currentStatus);
       
       if (success) {
-        const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
-        console.log('✅ Status alterado para:', newStatus);
+        console.log('✅ UserActions: Status alterado com sucesso para:', newStatus);
         
-        // Force refresh immediately after status change
-        setTimeout(() => {
-          console.log('🔄 Forcing refresh after status toggle...');
-          forceRefresh?.();
-        }, 200);
+        // Multiple verification attempts
+        let verificationAttempts = 0;
+        const maxAttempts = 3;
+        
+        const verifyChange = async () => {
+          verificationAttempts++;
+          console.log(`🔍 UserActions: Tentativa de verificação ${verificationAttempts}/${maxAttempts}`);
+          
+          await forceRefresh?.();
+          
+          if (verificationAttempts < maxAttempts) {
+            setTimeout(verifyChange, 1000);
+          } else {
+            console.log('✅ UserActions: Processo de verificação concluído');
+          }
+        };
+        
+        // Start verification process
+        setTimeout(verifyChange, 200);
+        
       } else {
-        console.error('❌ Falha ao alterar status');
+        console.error('❌ UserActions: Falha ao alterar status');
       }
       return success;
     } catch (error) {
@@ -111,11 +131,12 @@ export const useUserActions = () => {
           title: "Sucesso",
           description: `Permissões atualizadas para ${userEmail}.`,
         });
+        
         // Force refresh after permission change
         setTimeout(() => {
           console.log('🔄 Forcing refresh after permission change...');
           forceRefresh?.();
-        }, 500);
+        }, 300);
       } else {
         toast({
           title: "Erro",
