@@ -63,13 +63,17 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar - mostrar sempre quando há usuário autenticado */}
-      <div className={`flex-shrink-0 ${isAdmin ? 'w-auto' : 'w-64'}`}>
-        {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
-      </div>
+      {/* Sidebar - fixa para estudantes, dinâmica para admin */}
+      {isAdmin ? (
+        <div className="flex-shrink-0 w-auto">
+          <AdminSidebar />
+        </div>
+      ) : (
+        <StudentSidebar />
+      )}
       
       {/* Área principal de conteúdo */}
-      <div className="flex-1 overflow-auto">
+      <div className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}>
         <main className="p-6">
           {children}
         </main>

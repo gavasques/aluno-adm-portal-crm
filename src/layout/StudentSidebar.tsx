@@ -28,7 +28,7 @@ const StudentSidebar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   
-  const menuItems = [
+  const generalMenuItems = [
     {
       title: "Dashboard",
       href: "/aluno/dashboard",
@@ -39,15 +39,13 @@ const StudentSidebar = () => {
       href: "/aluno/creditos",
       icon: CreditCard,
     },
+  ];
+
+  const resourcesMenuItems = [
     {
       title: "Fornecedores",
       href: "/aluno/fornecedores",
       icon: Building2,
-    },
-    {
-      title: "Meus Fornecedores",
-      href: "/aluno/meus-fornecedores",
-      icon: Heart,
     },
     {
       title: "Parceiros",
@@ -59,11 +57,22 @@ const StudentSidebar = () => {
       href: "/aluno/ferramentas",
       icon: Wrench,
     },
+  ];
+
+  const myAreaMenuItems = [
+    {
+      title: "Meus Fornecedores",
+      href: "/aluno/meus-fornecedores",
+      icon: Heart,
+    },
     {
       title: "Mentoria",
       href: "/aluno/mentoria",
       icon: GraduationCap,
     },
+  ];
+
+  const settingsMenuItems = [
     {
       title: "Configurações",
       href: "/aluno/configuracoes",
@@ -84,57 +93,69 @@ const StudentSidebar = () => {
     navigate("/admin/dashboard");
   };
 
+  const renderMenuGroup = (title: string, items: any[]) => (
+    <div className="mb-4">
+      <h3 className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        {title}
+      </h3>
+      <div className="space-y-1">
+        {items.map((item) => (
+          <NavLink
+            key={item.title}
+            to={item.href}
+            className={({ isActive }) =>
+              `flex items-center space-x-2 px-3 py-2 mx-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-blue-50 text-blue-700 border-l-4 border-blue-700 shadow-sm"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+              }`
+            }
+          >
+            <item.icon className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{item.title}</span>
+          </NavLink>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="h-screen w-64 bg-white shadow-lg flex flex-col">
+    <div className="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg flex flex-col z-50">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-200 flex items-center justify-center">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-center">
         <img 
           src="/lovable-uploads/6b3114e7-0682-4946-bc7b-d7700403a1e8.png" 
           alt="Portal do Aluno" 
-          className="h-12 w-auto"
+          className="h-8 w-auto"
         />
       </div>
 
       {/* Menu de navegação */}
-      <nav className="flex-1 px-4 py-4 overflow-y-auto">
-        <div className="space-y-2">
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.title}
-              to={item.href}
-              className={({ isActive }) =>
-                `flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700 border-l-4 border-blue-700 shadow-sm"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                }`
-              }
-            >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              <span className="truncate">{item.title}</span>
-            </NavLink>
-          ))}
-        </div>
+      <nav className="flex-1 px-2 py-4 overflow-y-auto">
+        {renderMenuGroup("Geral", generalMenuItems)}
+        {renderMenuGroup("Recursos", resourcesMenuItems)}
+        {renderMenuGroup("Minha Área", myAreaMenuItems)}
+        {renderMenuGroup("Sistema", settingsMenuItems)}
       </nav>
 
       {/* Menu do usuário */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-3 border-t border-gray-100">
         <DropdownMenu>
-          <DropdownMenuTrigger className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-8 w-8">
+          <DropdownMenuTrigger className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-6 w-6">
                 <AvatarImage src="" alt={user?.email || "Aluno"} />
                 <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-semibold">
                   {user?.email?.charAt(0)?.toUpperCase() || "A"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-xs font-medium text-gray-900 truncate">
                   {user?.email || "Aluno"}
                 </p>
               </div>
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
+            <ChevronDown className="h-3 w-3 text-gray-500" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={handleGoToAdmin} className="cursor-pointer">
