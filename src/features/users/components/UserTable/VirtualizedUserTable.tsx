@@ -140,6 +140,7 @@ export const VirtualizedUserTable = memo<VirtualizedUserTableProps>(({
         <div className="border-t">
           <List
             height={Math.min(TABLE_HEIGHT, users.length * ROW_HEIGHT)}
+            width="100%"
             itemCount={users.length}
             itemSize={ROW_HEIGHT}
             itemData={itemData}
