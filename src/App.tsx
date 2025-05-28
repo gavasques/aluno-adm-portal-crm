@@ -9,6 +9,7 @@ import AdminLayout from "@/layout/AdminLayout";
 import StudentLayout from "@/layout/StudentLayout";
 import Dashboard from "@/pages/student/Dashboard";
 import Suppliers from "@/pages/student/Suppliers";
+import SupplierDetail from "@/pages/student/SupplierDetail";
 import MySuppliers from "@/pages/student/MySuppliers";
 import Partners from "@/pages/student/Partners";
 import Tools from "@/pages/student/Tools";
@@ -21,6 +22,7 @@ import RouteGuard from "@/components/RouteGuard";
 import { AuthProvider } from "@/hooks/useAuth";
 import { MySupplierDetailView } from "@/components/student/my-suppliers/MySupplierDetailView";
 import Credits from "@/pages/student/Credits";
+import Users from "@/pages/admin/Users";
 
 function App() {
   return (
@@ -40,7 +42,19 @@ function App() {
               element={
                 <RouteGuard requireAdminAccess>
                   <AdminLayout>
-                    <div>Admin routes placeholder</div>
+                    <Routes>
+                      <Route path="usuarios" element={<Users />} />
+                      <Route path="dashboard" element={<div>Admin Dashboard - Em breve</div>} />
+                      <Route path="fornecedores" element={<div>Fornecedores Admin - Em breve</div>} />
+                      <Route path="parceiros" element={<div>Parceiros Admin - Em breve</div>} />
+                      <Route path="ferramentas" element={<div>Ferramentas Admin - Em breve</div>} />
+                      <Route path="tarefas" element={<div>Tarefas - Em breve</div>} />
+                      <Route path="crm" element={<div>CRM - Em breve</div>} />
+                      <Route path="mentirias" element={<div>Mentorias - Em breve</div>} />
+                      <Route path="permissoes" element={<div>Permissões - Em breve</div>} />
+                      <Route path="configuracoes" element={<div>Configurações - Em breve</div>} />
+                      <Route path="*" element={<div>Página não encontrada</div>} />
+                    </Routes>
                   </AdminLayout>
                 </RouteGuard>
               }
@@ -58,7 +72,9 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="creditos" element={<Credits />} />
               <Route path="fornecedores" element={<Suppliers />} />
+              <Route path="fornecedores/:id" element={<SupplierDetail />} />
               <Route path="meus-fornecedores" element={<MySuppliers />} />
+              <Route path="meus-fornecedores/:id" element={<MySupplierDetailView />} />
               <Route path="parceiros" element={<Partners />} />
               <Route path="ferramentas" element={<Tools />} />
               <Route path="mentoria" element={<Mentoring />} />
