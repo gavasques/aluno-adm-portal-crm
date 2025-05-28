@@ -89,28 +89,10 @@ const StudentSidebar = () => {
       {/* Logo */}
       <div className="p-6 border-b border-gray-200 flex items-center justify-center">
         <img 
-          src="/lovable-uploads/fa454cc1-cd9c-4fb3-a498-b5575d14146d.png" 
+          src="/lovable-uploads/6b3114e7-0682-4946-bc7b-d7700403a1e8.png" 
           alt="Portal do Aluno" 
           className="h-12 w-auto"
         />
-      </div>
-
-      {/* Informações do usuário */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src="" alt={user?.email || "Aluno"} />
-            <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-              {user?.email?.charAt(0)?.toUpperCase() || "A"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.email || "Aluno"}
-            </p>
-            <p className="text-xs text-gray-500 truncate">Estudante</p>
-          </div>
-        </div>
       </div>
 
       {/* Menu de navegação */}
