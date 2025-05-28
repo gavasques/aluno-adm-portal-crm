@@ -8,6 +8,7 @@ import { Shield, AlertTriangle, Activity, Users, Database, Eye, RefreshCw, Trend
 import { useAuditLogs, AuditFilters } from '@/hooks/admin/useAuditLogs';
 import { useAuditMetrics } from '@/hooks/admin/useAuditMetrics';
 import { useSecurityAlerts } from '@/hooks/admin/useSecurityAlerts';
+import { useSupabaseAuditInterceptor } from '@/hooks/admin/useSupabaseAuditInterceptor';
 import { SecurityNotifications } from './SecurityNotifications';
 import { EnhancedAuditFilters } from './EnhancedAuditFilters';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +20,9 @@ export const RealTimeAuditDashboard: React.FC = () => {
   const { logs, loading: logsLoading, refetch: refetchLogs } = useAuditLogs(filters);
   const { metrics, loading: metricsLoading, refetch: refetchMetrics } = useAuditMetrics();
   const { unreadCount: alertsCount } = useSecurityAlerts();
+
+  // Ativar interceptação automática de operações CRUD
+  useSupabaseAuditInterceptor();
 
   const handleRefresh = () => {
     refetchLogs();
@@ -84,6 +88,14 @@ export const RealTimeAuditDashboard: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Indicador de Interceptação Ativa */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Shield className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-blue-700">
+          ✅ Sistema de interceptação automática de operações CRUD ativo. Todas as mudanças críticas estão sendo monitoradas em tempo real.
+        </AlertDescription>
+      </Alert>
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
