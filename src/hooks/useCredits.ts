@@ -13,23 +13,52 @@ export const useCredits = () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      console.log('Iniciando fetch de créditos...');
 
       const { data, error } = await supabase.functions.invoke('check-credits');
       
-      if (error) throw error;
+      console.log('Resposta da função check-credits:', data, error);
+      
+      if (error) {
+        console.error('Erro na função check-credits:', error);
+        throw error;
+      }
+      
+      // Se data.error existe, é um erro tratado pela função
+      if (data?.error) {
+        console.error('Erro retornado pela função:', data.error);
+        // Ainda assim usar os dados padrão retornados
+      }
       
       setCreditStatus(data);
 
       // Mostrar alertas se necessário
-      if (data.alerts.noCredits) {
+      if (data?.alerts?.noCredits) {
         toast.error('Seus créditos acabaram! Adquira mais créditos para continuar usando o sistema.');
-      } else if (data.alerts.lowCredits) {
+      } else if (data?.alerts?.lowCredits) {
         toast.warning('Atenção: Você já usou 90% dos seus créditos mensais.');
       }
     } catch (err) {
       console.error('Error fetching credits:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar créditos');
-      toast.error('Erro ao carregar informações de créditos');
+      
+      // Definir dados padrão em caso de erro
+      setCreditStatus({
+        credits: {
+          current: 0,
+          used: 0,
+          limit: 50,
+          renewalDate: new Date().toISOString().split('T')[0],
+          usagePercentage: 0
+        },
+        subscription: null,
+        transactions: [],
+        alerts: {
+          lowCredits: false,
+          noCredits: true
+        }
+      });
     } finally {
       setIsLoading(false);
     }

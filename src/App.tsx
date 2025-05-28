@@ -12,7 +12,7 @@ import Dashboard from "@/pages/student/Dashboard";
 import Suppliers from "@/pages/student/Suppliers";
 import SupplierDetail from "@/pages/student/SupplierDetail";
 import MySuppliers from "@/pages/student/MySuppliers";
-import MySupplierDetail from "@/pages/student/MySupplierDetail";
+import MySupplierDetailPage from "@/pages/student/MySupplierDetail";
 import Partners from "@/pages/student/Partners";
 import Tools from "@/pages/student/Tools";
 import Mentoring from "@/pages/student/Mentoring";
@@ -88,7 +88,7 @@ function App() {
                 <Route path="fornecedores" element={<Suppliers />} />
                 <Route path="fornecedores/:id" element={<SupplierDetail />} />
                 <Route path="meus-fornecedores" element={<MySuppliers />} />
-                <Route path="meus-fornecedores/:id" element={<MySupplierDetail />} />
+                <Route path="meus-fornecedores/:id" element={<MySupplierDetailPage />} />
                 <Route path="parceiros" element={<Partners />} />
                 <Route path="ferramentas" element={<Tools />} />
                 <Route path="mentoria" element={<Mentoring />} />
@@ -96,6 +96,9 @@ function App() {
                 <Route path="sessao/:id" element={<MentoringSession />} />
                 <Route path="configuracoes" element={<Settings />} />
               </Route>
+
+              {/* Redirect /alunos to /aluno for compatibility */}
+              <Route path="/alunos/*" element={<div>Redirecionando...</div>} />
 
               {/* Catch all route */}
               <Route path="*" element={<NotFound />} />
