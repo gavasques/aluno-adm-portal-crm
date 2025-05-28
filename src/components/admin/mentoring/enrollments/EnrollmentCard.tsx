@@ -1,190 +1,73 @@
-
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { CalendarDays, Users } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Timer, 
-  GraduationCap,
-  User
-} from 'lucide-react';
-import { StudentMentoringEnrollment } from '@/types/mentoring.types';
-import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
+import { useActiveStudentsForMentoring } from '@/hooks/admin/useActiveStudentsForMentoring';
 
 interface EnrollmentCardProps {
-  enrollment: StudentMentoringEnrollment;
-  onView: (enrollment: StudentMentoringEnrollment) => void;
-  onEdit: (enrollment: StudentMentoringEnrollment) => void;
-  onDelete: (id: string) => void;
-  onAddExtension: (enrollment: StudentMentoringEnrollment) => void;
-  onToggleSelection: (id: string) => void;
-  isSelected: boolean;
+  enrollment: any;
 }
 
-export const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
-  enrollment,
-  onView,
-  onEdit,
-  onDelete,
-  onAddExtension,
-  onToggleSelection,
-  isSelected
-}) => {
-  const { students } = useStudentsForEnrollment();
+const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ enrollment }) => {
+  const { students, loading } = useActiveStudentsForMentoring();
+  const student = students.find(s => s.id === enrollment.student_id);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ativa': return 'bg-green-100 text-green-800 border-green-200';
-      case 'concluida': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pausada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelada': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  if (loading) {
+    return <p>Carregando...</p>;
+  }
 
-  // Buscar informações do estudante
-  const student = students?.find(s => s.id === enrollment.studentId);
-  const studentName = student?.name || student?.email || `Aluno ${enrollment.studentId.slice(-8)}`;
-
-  const progressPercentage = (enrollment.sessionsUsed / enrollment.totalSessions) * 100;
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Não abrir se clicou no checkbox ou nos botões de ação
-    if (
-      (e.target as HTMLElement).closest('input[type="checkbox"]') ||
-      (e.target as HTMLElement).closest('button')
-    ) {
-      return;
-    }
-    onView(enrollment);
-  };
-
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
+  if (!student) {
+    return <p>Aluno não encontrado.</p>;
+  }
 
   return (
-    <Card 
-      className={`hover:shadow-lg transition-all duration-300 cursor-pointer group ${
-        isSelected ? 'ring-2 ring-blue-500 shadow-md' : ''
-      }`}
-      onClick={handleCardClick}
-    >
-      <CardContent className="p-4">
-        <div className="space-y-4">
-          {/* Header com Checkbox e Status */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div onClick={handleCheckboxClick}>
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => onToggleSelection(enrollment.id)}
-                  className="rounded border-gray-300"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-400" />
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">{studentName}</span>
-                  <span className="text-xs text-gray-500">{enrollment.responsibleMentor}</span>
-                </div>
-              </div>
-            </div>
-            <Badge className={`${getStatusColor(enrollment.status)} text-xs`}>
-              {enrollment.status}
-            </Badge>
+    <Card className="bg-white shadow-md rounded-lg overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+          {enrollment.mentoring_title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center space-x-4">
+          <Avatar>
+            <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${student.name}`} />
+            <AvatarFallback>{student.name?.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-semibold">{student.name}</p>
+            <p className="text-xs text-muted-foreground">{student.email}</p>
           </div>
-
-          {/* Mentoria Info */}
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <GraduationCap className="h-4 w-4 text-gray-400 mt-0.5" />
-              <div className="flex-1">
-                <div className="font-medium text-sm">{enrollment.mentoring.name}</div>
-                <Badge variant="outline" className="text-xs mt-1">{enrollment.mentoring.type}</Badge>
-                {enrollment.hasExtension && (
-                  <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs mt-1 ml-2">
-                    <Timer className="h-3 w-3 mr-1" />
-                    Extensão
-                  </Badge>
-                )}
-              </div>
-            </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Início: {format(new Date(enrollment.start_date), 'PPP', { locale: ptBR })}
           </div>
-
-          {/* Progresso */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600">Progresso</span>
-              <span className="font-medium">{enrollment.sessionsUsed}/{enrollment.totalSessions} sessões</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <div className="text-xs text-gray-500 text-center">
-              {Math.round(progressPercentage)}% concluído
-            </div>
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Users className="h-4 w-4 mr-2" />
+            Vagas: {enrollment.available_slots}
           </div>
-
-          {/* Ações */}
-          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-            <div className="flex gap-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onView(enrollment);
-                }}
-                className="h-8 w-8 p-0 hover:bg-blue-50"
-              >
-                <Eye className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(enrollment);
-                }}
-                className="h-8 w-8 p-0 hover:bg-green-50"
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddExtension(enrollment);
-                }}
-                className="h-8 w-8 p-0 hover:bg-orange-50"
-                title="Adicionar Extensão"
-              >
-                <Timer className="h-3 w-3" />
-              </Button>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(enrollment.id);
-              }}
-              className="h-8 w-8 p-0 hover:bg-red-50 text-red-600"
-            >
-              <Trash2 className="h-3 w-3" />
+        </div>
+        <div className="mt-4">
+          <Badge variant="secondary">
+            {enrollment.status}
+          </Badge>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Link to={`/admin/mentorias/inscricoes?mentoringId=${enrollment.mentoring_id}`}>
+            <Button size="sm">
+              Ver Inscrições
             </Button>
-          </div>
+          </Link>
         </div>
       </CardContent>
     </Card>
   );
 };
+
+export default EnrollmentCard;

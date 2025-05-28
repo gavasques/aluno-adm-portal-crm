@@ -8,7 +8,7 @@ import { useUserContext } from '@/contexts/UserContext';
 import { useUserOperations } from '@/hooks/users/useUserOperations';
 import UsersList from '@/components/admin/users/UsersList';
 import UserActionButtons from '@/components/admin/users/UserActionButtons';
-import UserOperationDialogs from '@/features/users/components/UserOperationDialogs';
+import UserOperationDialogs from './UserOperationDialogs';
 
 const UnifiedUserPage = () => {
   const { 

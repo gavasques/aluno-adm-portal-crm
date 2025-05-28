@@ -7,7 +7,8 @@ export const useUserOperations = () => {
     createUser,
     deleteUser,
     resetPassword,
-    setPermissionGroup
+    setPermissionGroup,
+    toggleUserStatus
   } = useUsers();
 
   // Dialog states
@@ -48,6 +49,10 @@ export const useUserOperations = () => {
     setSelectedUserEmail(email);
     setSelectedUserPermissionGroupId(permissionGroupId);
     setShowPermissionDialog(true);
+  };
+
+  const handleToggleUserStatus = async (userId: string, email: string, isActive: boolean) => {
+    return await toggleUserStatus(userId);
   };
 
   const handleViewDetails = (user: any) => {
@@ -118,6 +123,7 @@ export const useUserOperations = () => {
     handleDeleteUser,
     handleResetPassword,
     handleSetPermissionGroup,
+    handleToggleUserStatus,
     handleViewDetails,
     closeAllDialogs,
 

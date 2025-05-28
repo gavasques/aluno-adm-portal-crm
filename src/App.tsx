@@ -310,7 +310,7 @@ function App() {
                 <Route path="/admin/mentorias/materiais" element={
                   <RouteGuard requireAdminAccess={true}>
                     <AdminLayout>
-                      <AdminMentoringMateriais />
+                      <AdminMentoringMaterials />
                     </AdminLayout>
                   </RouteGuard>
                 } />

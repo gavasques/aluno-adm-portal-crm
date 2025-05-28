@@ -16,6 +16,7 @@ import { StudentMentoringEnrollment, CreateExtensionData, MentoringExtension } f
 import { AddCustomMonthsDialog } from './extensions/AddCustomMonthsDialog';
 import { AddMentoringExtensionDialog } from './extensions/AddMentoringExtensionDialog';
 import { RemoveExtensionDialog } from './extensions/RemoveExtensionDialog';
+import { useActiveStudentsForMentoring } from '@/hooks/admin/useActiveStudentsForMentoring';
 
 const editEnrollmentSchema = z.object({
   responsibleMentor: z.string().min(1, 'Mentor responsável é obrigatório'),
@@ -48,6 +49,7 @@ const EditEnrollmentForm = ({
 }: EditEnrollmentFormProps) => {
   const { mentors, loading: mentorsLoading } = useMentorsForEnrollment();
   const { students } = useStudentsForEnrollment();
+  const { activeStudents } = useActiveStudentsForMentoring();
   const [showCustomMonthsDialog, setShowCustomMonthsDialog] = useState(false);
   const [showMentoringExtensionDialog, setShowMentoringExtensionDialog] = useState(false);
   const [showRemoveExtensionDialog, setShowRemoveExtensionDialog] = useState(false);

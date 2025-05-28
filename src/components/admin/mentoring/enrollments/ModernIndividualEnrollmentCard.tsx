@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { EnrollmentProgress } from './EnrollmentProgress';
 import { EnrollmentStatus } from './EnrollmentStatus';
 import { useSupabaseMentoringSessions } from '@/hooks/mentoring/useSupabaseMentoringSessions';
 import { useStudentsForEnrollment } from '@/hooks/admin/useStudentsForEnrollment';
+import { useActiveStudentsForMentoring } from '@/hooks/admin/useActiveStudentsForMentoring';
 import PendingSessionsCard from '../PendingSessionsCard';
 
 interface ModernIndividualEnrollmentCardProps {
@@ -41,6 +41,7 @@ export const ModernIndividualEnrollmentCard = ({
     deleteSession, 
     loading 
   } = useSupabaseMentoringSessions();
+  const { activeStudents } = useActiveStudentsForMentoring();
 
   // Buscar informações do estudante
   const student = students?.find(s => s.id === enrollment.studentId);

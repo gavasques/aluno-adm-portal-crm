@@ -2,7 +2,7 @@
 import React from "react";
 import { PerformanceOptimizedUserProvider } from "@/contexts/PerformanceOptimizedUserContext";
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
-import { UnifiedUserPage } from "@/features/users/components/UnifiedUserPage";
+import UnifiedUserPage from "@/features/users/components/UnifiedUserPage";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const UsersContent = () => {
