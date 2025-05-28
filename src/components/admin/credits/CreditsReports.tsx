@@ -23,9 +23,10 @@ import { Download, Calendar, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addDays, format, subDays } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 const CreditsReports = () => {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 30),
     to: new Date()
   });
@@ -34,6 +35,8 @@ const CreditsReports = () => {
   const { data: reportData, isLoading } = useQuery({
     queryKey: ['credits-reports', reportType, dateRange],
     queryFn: async () => {
+      if (!dateRange.from || !dateRange.to) return [];
+      
       const startDate = format(dateRange.from, 'yyyy-MM-dd');
       const endDate = format(dateRange.to, 'yyyy-MM-dd');
 
@@ -52,9 +55,9 @@ const CreditsReports = () => {
         // Agrupar por dia
         const dailyUsage = data?.reduce((acc, transaction) => {
           const date = format(new Date(transaction.created_at), 'yyyy-MM-dd');
-          acc[date] = (acc[date] || 0) + Math.abs(transaction.amount);
+          acc[date] = (acc[date] || 0) + Math.abs(Number(transaction.amount) || 0);
           return acc;
-        }, {}) || {};
+        }, {} as Record<string, number>) || {};
 
         return Object.entries(dailyUsage).map(([date, amount]) => ({
           date: format(new Date(date), 'dd/MM'),
@@ -75,9 +78,10 @@ const CreditsReports = () => {
 
         const dailyPurchases = data?.reduce((acc, transaction) => {
           const date = format(new Date(transaction.created_at), 'yyyy-MM-dd');
-          acc[date] = (acc[date] || 0) + transaction.amount;
+          const amount = Number(transaction.amount) || 0;
+          acc[date] = (acc[date] || 0) + amount;
           return acc;
-        }, {}) || {};
+        }, {} as Record<string, number>) || {};
 
         return Object.entries(dailyPurchases).map(([date, amount]) => ({
           date: format(new Date(date), 'dd/MM'),
@@ -102,7 +106,7 @@ const CreditsReports = () => {
         };
 
         data?.forEach(user => {
-          const credits = user.current_credits;
+          const credits = Number(user.current_credits) || 0;
           if (credits === 0) ranges['Sem créditos']++;
           else if (credits <= 10) ranges['1-10 créditos']++;
           else if (credits <= 50) ranges['11-50 créditos']++;
@@ -124,8 +128,11 @@ const CreditsReports = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   const exportReport = () => {
+    if (!reportData || reportData.length === 0) return;
+    
     const csvContent = "data:text/csv;charset=utf-8," + 
-      reportData?.map(row => Object.values(row).join(",")).join("\n");
+      Object.keys(reportData[0]).join(",") + "\n" +
+      reportData.map(row => Object.values(row).join(",")).join("\n");
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -134,6 +141,12 @@ const CreditsReports = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
   };
 
   return (
@@ -171,7 +184,7 @@ const CreditsReports = () => {
                 <label className="text-sm font-medium">Período</label>
                 <DatePickerWithRange
                   date={dateRange}
-                  onDateChange={setDateRange}
+                  onDateChange={handleDateRangeChange}
                 />
               </div>
             )}
@@ -259,7 +272,7 @@ const CreditsReports = () => {
                     <tr key={index} className="border-t">
                       {Object.values(row).map((value, cellIndex) => (
                         <td key={cellIndex} className="px-4 py-2 text-sm">
-                          {value}
+                          {String(value)}
                         </td>
                       ))}
                     </tr>

@@ -23,9 +23,39 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface UserWithCredits {
+  id: string;
+  email: string;
+  name?: string;
+  user_credits?: Array<{
+    current_credits: number;
+    monthly_limit: number;
+    used_this_month: number;
+    renewal_date: string;
+    subscription_type?: string;
+  }>;
+  credit_subscriptions?: Array<{
+    status: string;
+    monthly_credits: number;
+    next_billing_date: string;
+  }>;
+}
+
+interface AdjustCreditsParams {
+  userId: string;
+  amount: string;
+  type: string;
+  reason: string;
+}
+
+interface AdjustLimitParams {
+  userId: string;
+  newLimit: string;
+}
+
 const UserCreditsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithCredits | null>(null);
   const [adjustmentAmount, setAdjustmentAmount] = useState("");
   const [adjustmentType, setAdjustmentType] = useState("add");
   const [adjustmentReason, setAdjustmentReason] = useState("");
@@ -59,12 +89,12 @@ const UserCreditsManagement = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as UserWithCredits[];
     }
   });
 
   const adjustCreditsMutation = useMutation({
-    mutationFn: async ({ userId, amount, type, reason }) => {
+    mutationFn: async ({ userId, amount, type, reason }: AdjustCreditsParams) => {
       const { data: userCredits } = await supabase
         .from('user_credits')
         .select('*')
@@ -114,7 +144,7 @@ const UserCreditsManagement = () => {
   });
 
   const adjustLimitMutation = useMutation({
-    mutationFn: async ({ userId, newLimit }) => {
+    mutationFn: async ({ userId, newLimit }: AdjustLimitParams) => {
       const { error } = await supabase
         .from('user_credits')
         .update({ monthly_limit: parseInt(newLimit) })
@@ -131,7 +161,7 @@ const UserCreditsManagement = () => {
     }
   });
 
-  const getStatusBadge = (user) => {
+  const getStatusBadge = (user: UserWithCredits) => {
     const credits = user.user_credits?.[0];
     if (!credits) return <Badge variant="secondary">Sem dados</Badge>;
 
@@ -369,7 +399,11 @@ const UserCreditsManagement = () => {
   );
 };
 
-const UserCreditHistory = ({ userId }) => {
+interface UserCreditHistoryProps {
+  userId: string;
+}
+
+const UserCreditHistory = ({ userId }: UserCreditHistoryProps) => {
   const { data: history, isLoading } = useQuery({
     queryKey: ['user-credit-history', userId],
     queryFn: async () => {
