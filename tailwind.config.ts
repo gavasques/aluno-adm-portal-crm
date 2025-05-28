@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -143,6 +142,19 @@ export default {
 				'18': '4.5rem',
 				'88': '22rem',
 				'128': '32rem',
+				'xs': '0.25rem',   // 4px
+				'sm': '0.5rem',    // 8px
+				'md': '1rem',      // 16px
+				'lg': '1.5rem',    // 24px
+				'xl': '2rem',      // 32px
+				'2xl': '3rem',     // 48px
+				'3xl': '4rem',     // 64px
+				'4xl': '5rem',     // 80px
+				'5xl': '6rem',     // 96px
+				'safe-top': 'env(safe-area-inset-top)',
+				'safe-bottom': 'env(safe-area-inset-bottom)',
+				'safe-left': 'env(safe-area-inset-left)',
+				'safe-right': 'env(safe-area-inset-right)',
 			},
 			backdropBlur: {
 				'xs': '2px',
@@ -174,6 +186,14 @@ export default {
 				'modern-3': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
 				'glow-blue': '0 0 20px rgba(59, 130, 246, 0.3)',
 				'glow-purple': '0 0 20px rgba(147, 51, 234, 0.3)',
+			},
+			containers: {
+				'xs': '20rem',
+				'sm': '24rem', 
+				'md': '32rem',
+				'lg': '48rem',
+				'xl': '64rem',
+				'2xl': '80rem',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -262,6 +282,23 @@ export default {
 					'0%': { transform: 'translate(0%, 0%)', opacity: '1' },
 					'100%': { transform: 'translate(100%, 0%)', opacity: '0' },
 				},
+				'swipe-left': {
+					'0%': { transform: 'translateX(0)' },
+					'100%': { transform: 'translateX(-100%)' }
+				},
+				'swipe-right': {
+					'0%': { transform: 'translateX(0)' },
+					'100%': { transform: 'translateX(100%)' }
+				},
+				'bounce-gentle': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'pull-refresh': {
+					'0%': { transform: 'scale(1) rotate(0deg)' },
+					'50%': { transform: 'scale(1.1) rotate(180deg)' },
+					'100%': { transform: 'scale(1) rotate(360deg)' }
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -276,8 +313,15 @@ export default {
 				'float': 'float 3s ease-in-out infinite',
 				'star-movement-bottom': 'star-movement-bottom linear infinite alternate',
 				'star-movement-top': 'star-movement-top linear infinite alternate',
+				'swipe-left': 'swipe-left 0.3s ease-out',
+				'swipe-right': 'swipe-right 0.3s ease-out',
+				'bounce-gentle': 'bounce-gentle 2s ease-in-out infinite',
+				'pull-refresh': 'pull-refresh 1s ease-in-out infinite'
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require('@tailwindcss/container-queries')
+	],
 } satisfies Config;

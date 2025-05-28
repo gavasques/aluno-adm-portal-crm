@@ -3,6 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import StudentSidebar from './StudentSidebar';
 import AdminSidebar from './AdminSidebar';
+import { ResponsiveLayout } from '@/components/ui/responsive-layout';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +12,41 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    // Layout móvel simplificado
+    return (
+      <ResponsiveLayout
+        className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
+        useSafeArea={true}
+        mobileFirst={true}
+      >
+        <div className="relative">
+          {/* Sidebar móvel será implementado como drawer/sheet */}
+          {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
+          
+          {/* Conteúdo principal móvel */}
+          <motion.div 
+            className="p-4 safe-top safe-bottom"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        </div>
+        
+        {/* Background Elements otimizado para mobile */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-400/5 rounded-full blur-2xl animate-float" />
+          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-purple-400/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+      </ResponsiveLayout>
+    );
+  }
+
+  // Layout desktop existente
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Sidebar */}
