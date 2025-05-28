@@ -24,8 +24,8 @@ import Credits from "@/pages/student/Credits";
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Public routes */}
@@ -71,8 +71,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
