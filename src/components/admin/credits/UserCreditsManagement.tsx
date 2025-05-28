@@ -23,28 +23,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Interface corrigida para corresponder aos tipos reais do Supabase
-interface UserWithCredits {
+// Interface corrigida para corresponder exatamente aos tipos do Supabase
+interface SupabaseUserWithCredits {
   id: string;
   email: string;
-  name?: string;
-  avatar_url?: string;
-  created_at?: string;
-  is_mentor?: boolean;
-  permission_group_id?: string;
-  role?: string;
-  status?: string;
-  storage_limit_mb?: number;
-  storage_used_mb?: number;
-  updated_at?: string;
-  user_credits?: Array<{
+  name?: string | null;
+  avatar_url?: string | null;
+  created_at?: string | null;
+  is_mentor?: boolean | null;
+  permission_group_id?: string | null;
+  role?: string | null;
+  status?: string | null;
+  storage_limit_mb?: number | null;
+  storage_used_mb?: number | null;
+  updated_at?: string | null;
+  user_credits: Array<{
     current_credits: number;
     monthly_limit: number;
     used_this_month: number;
     renewal_date: string;
-    subscription_type?: string;
+    subscription_type?: string | null;
   }> | null;
-  credit_subscriptions?: Array<{
+  credit_subscriptions: Array<{
     status: string;
     monthly_credits: number;
     next_billing_date: string;
@@ -65,7 +65,7 @@ interface AdjustLimitParams {
 
 const UserCreditsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<UserWithCredits | null>(null);
+  const [selectedUser, setSelectedUser] = useState<SupabaseUserWithCredits | null>(null);
   const [adjustmentAmount, setAdjustmentAmount] = useState("");
   const [adjustmentType, setAdjustmentType] = useState("add");
   const [adjustmentReason, setAdjustmentReason] = useState("");
@@ -99,7 +99,7 @@ const UserCreditsManagement = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as UserWithCredits[];
+      return data as SupabaseUserWithCredits[];
     }
   });
 
@@ -171,7 +171,7 @@ const UserCreditsManagement = () => {
     }
   });
 
-  const getStatusBadge = (user: UserWithCredits) => {
+  const getStatusBadge = (user: SupabaseUserWithCredits) => {
     const credits = user.user_credits?.[0];
     if (!credits) return <Badge variant="secondary">Sem dados</Badge>;
 
