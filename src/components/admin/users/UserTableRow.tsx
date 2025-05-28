@@ -46,6 +46,8 @@ interface UserTableRowProps {
   onDeleteUser: (userId: string, email: string) => void;
   onToggleUserStatus: (userId: string, email: string, isActive: boolean) => void;
   onSetPermissionGroup?: (userId: string, email: string, permissionGroupId: string | null) => void;
+  onToggleMentor?: (user: any) => void;
+  isStudentView?: boolean;
 }
 
 // ID do grupo "Geral" (temporário) baseado nos logs
@@ -57,7 +59,9 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onResetPassword,
   onDeleteUser,
   onToggleUserStatus,
-  onSetPermissionGroup
+  onSetPermissionGroup,
+  onToggleMentor,
+  isStudentView = false
 }) => {
   // Determinar se o usuário está ativo com base no status
   const normalizedStatus = typeof user.status === 'string' ? user.status.toLowerCase() : '';
@@ -142,6 +146,14 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               <span>Redefinir senha</span>
             </DropdownMenuItem>
 
+            {/* Ação específica para estudantes - Toggle Mentor */}
+            {isStudentView && onToggleMentor && user.role === 'Student' && (
+              <DropdownMenuItem onClick={() => onToggleMentor(user)}>
+                <GraduationCap className="mr-2 h-4 w-4" />
+                <span>{user.is_mentor ? 'Remover mentor' : 'Tornar mentor'}</span>
+              </DropdownMenuItem>
+            )}
+
             {onSetPermissionGroup && (
               <DropdownMenuItem onClick={() => onSetPermissionGroup(user.id, user.email, user.permission_group_id)}>
                 <Lock className="mr-2 h-4 w-4" />
@@ -163,12 +175,12 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               {isActive ? (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
-                  <span>Desativar usuário</span>
+                  <span>{isStudentView ? 'Desativar estudante' : 'Desativar usuário'}</span>
                 </>
               ) : (
                 <>
                   <UserCheck className="mr-2 h-4 w-4" />
-                  <span>Ativar usuário</span>
+                  <span>{isStudentView ? 'Ativar estudante' : 'Ativar usuário'}</span>
                 </>
               )}
             </DropdownMenuItem>
@@ -178,7 +190,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               onClick={() => onDeleteUser(user.id, user.email)}
             >
               <UserX className="mr-2 h-4 w-4" />
-              <span>Excluir usuário</span>
+              <span>{isStudentView ? 'Excluir estudante' : 'Excluir usuário'}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

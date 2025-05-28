@@ -31,6 +31,13 @@ export interface UserStats {
   banned?: number;
 }
 
+export interface StudentStats {
+  total: number;
+  active: number;
+  mentors: number;
+  newThisMonth: number;
+}
+
 export interface UserOperation {
   type: 'create' | 'update' | 'delete' | 'activate' | 'deactivate' | 'ban';
   userId: string;
@@ -60,6 +67,7 @@ export interface UserContextValue {
   users: User[];
   filteredUsers: User[];
   stats: UserStats;
+  studentStats?: StudentStats;
   filters: UserFilters;
   isLoading: boolean;
   isRefreshing: boolean;
@@ -75,6 +83,7 @@ export interface UserContextValue {
   updateUser: (userId: string, data: UpdateUserData) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   toggleUserStatus: (userId: string) => Promise<boolean>;
+  toggleMentorStatus: (userId: string, currentMentorStatus: boolean) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   setPermissionGroup: (userId: string, groupId: string | null) => Promise<boolean>;
   banUser?: (userId: string, userEmail: string) => Promise<boolean>;

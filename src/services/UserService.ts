@@ -230,6 +230,38 @@ export class UserService {
     }
   }
 
+  async toggleMentorStatus(userId: string, userEmail: string, currentMentorStatus: boolean): Promise<boolean> {
+    try {
+      const newMentorStatus = !currentMentorStatus;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ 
+          is_mentor: newMentorStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      this.clearCache();
+      toast({
+        title: `Status de mentor ${newMentorStatus ? 'ativado' : 'removido'}`,
+        description: `${userEmail} ${newMentorStatus ? 'agora é mentor' : 'não é mais mentor'}.`,
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao alterar status de mentor:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível alterar o status de mentor.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }
+
   async resetPassword(email: string): Promise<boolean> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -294,6 +326,20 @@ export class UserService {
     return { total, active, inactive, pending };
   }
 
+  calculateStudentStats(users: User[]) {
+    const students = users.filter(u => u.role === 'Student');
+    const total = students.length;
+    const active = students.filter(u => u.status?.toLowerCase() === 'ativo').length;
+    const mentors = students.filter(u => u.is_mentor).length;
+    const thisMonth = new Date();
+    thisMonth.setDate(1);
+    const newThisMonth = students.filter(u => 
+      u.created_at && new Date(u.created_at) >= thisMonth
+    ).length;
+
+    return { total, active, mentors, newThisMonth };
+  }
+
   filterUsers(users: User[], filters: UserFilters): User[] {
     return users.filter(user => {
       // Filtro de busca
@@ -305,6 +351,10 @@ export class UserService {
       const matchesStatus = filters.status === "all" || 
         user.status?.toLowerCase().includes(filters.status.toLowerCase());
       
+      // Filtro de role
+      const matchesRole = !filters.role || filters.role === "all" ||
+        user.role?.toLowerCase() === filters.role.toLowerCase();
+      
       // Filtro de grupo
       let matchesGroup = true;
       if (filters.group === "pending") {
@@ -313,7 +363,7 @@ export class UserService {
         matchesGroup = user.permission_group_id !== "564c55dc-0ab8-481e-a0bc-97ea7e484b88" || user.role === "Admin";
       }
       
-      return matchesSearch && matchesStatus && matchesGroup;
+      return matchesSearch && matchesStatus && matchesGroup && matchesRole;
     });
   }
 }

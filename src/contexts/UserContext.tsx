@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, UserFilters, UserStats, UserContextValue, CreateUserData, UpdateUserData } from '@/types/user.types';
+import { User, UserFilters, UserStats, StudentStats, UserContextValue, CreateUserData, UpdateUserData } from '@/types/user.types';
 import { userService } from '@/services/UserService';
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -14,65 +14,57 @@ export const useUserContext = () => {
   return context;
 };
 
-interface UserProviderProps {
-  children: React.ReactNode;
-}
-
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats>({ total: 0, active: 0, inactive: 0, pending: 0 });
+  const [studentStats, setStudentStats] = useState<StudentStats>({ total: 0, active: 0, mentors: 0, newThisMonth: 0 });
   const [filters, setFiltersState] = useState<UserFilters>({
     search: '',
     status: 'all',
-    group: 'all'
+    group: 'all',
+    role: 'all'
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced search function
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 300);
 
-  // Apply filters whenever users or filters change
-  useEffect(() => {
-    const filtered = userService.filterUsers(users, filters);
-    setFilteredUsers(filtered);
-    setStats(userService.calculateStats(users));
-  }, [users, filters]);
-
-  const fetchUsers = useCallback(async (forceRefresh = false) => {
+  const fetchUsers = useCallback(async (showLoading = true) => {
     try {
-      if (forceRefresh) {
-        setIsRefreshing(true);
-        userService.clearCache();
-      } else {
-        setIsLoading(true);
-      }
-      
+      if (showLoading) setIsLoading(true);
+      setIsRefreshing(true);
       setError(null);
-      const userData = await userService.fetchUsers();
-      setUsers(userData);
+
+      const fetchedUsers = await userService.fetchUsers();
+      setUsers(fetchedUsers);
+      
+      const calculatedStats = userService.calculateStats(fetchedUsers);
+      setStats(calculatedStats);
+      
+      const calculatedStudentStats = userService.calculateStudentStats(fetchedUsers);
+      setStudentStats(calculatedStudentStats);
+      
     } catch (err: any) {
       console.error('Erro ao buscar usuários:', err);
       setError(err.message || 'Erro ao carregar usuários');
-      setUsers([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const refreshUsers = useCallback(async () => {
-    await fetchUsers(true);
-  }, [fetchUsers]);
+  useEffect(() => {
+    const filtered = userService.filterUsers(users, filters);
+    setFilteredUsers(filtered);
+  }, [users, filters]);
 
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
     setFiltersState(prev => ({ ...prev, ...newFilters }));
@@ -81,6 +73,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const searchUsers = useCallback((query: string) => {
     debouncedSearch(query);
   }, [debouncedSearch]);
+
+  const refreshUsers = useCallback(async () => {
+    await fetchUsers(false);
+  }, [fetchUsers]);
 
   const createUser = useCallback(async (userData: CreateUserData): Promise<boolean> => {
     const success = await userService.createUser(userData);
@@ -120,6 +116,17 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return success;
   }, [users, refreshUsers]);
 
+  const toggleMentorStatus = useCallback(async (userId: string, currentMentorStatus: boolean): Promise<boolean> => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return false;
+    
+    const success = await userService.toggleMentorStatus(userId, user.email, currentMentorStatus);
+    if (success) {
+      await refreshUsers();
+    }
+    return success;
+  }, [users, refreshUsers]);
+
   const resetPassword = useCallback(async (email: string): Promise<boolean> => {
     return await userService.resetPassword(email);
   }, []);
@@ -139,6 +146,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     users,
     filteredUsers,
     stats,
+    studentStats,
     filters,
     isLoading,
     isRefreshing,
@@ -150,6 +158,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     updateUser,
     deleteUser,
     toggleUserStatus,
+    toggleMentorStatus,
     resetPassword,
     setPermissionGroup,
   };

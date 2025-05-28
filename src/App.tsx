@@ -24,7 +24,6 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
 import AdminPermissions from './pages/admin/Permissions';
-import AdminStudents from './pages/admin/Students';
 import AdminRegisters from './pages/admin/Registers';
 import AdminAudit from './pages/admin/Audit';
 import AdminTasks from './pages/admin/Tasks';
@@ -50,6 +49,7 @@ import AdminLayout from './layout/AdminLayout';
 import Layout from './layout/Layout';
 import RouteGuard from './components/RouteGuard';
 import { HelmetProvider } from 'react-helmet-async';
+import { Navigate } from 'react-router-dom';
 
 function App() {
   const queryClient = new QueryClient();
@@ -166,13 +166,8 @@ function App() {
                   </RouteGuard>
                 } />
 
-                <Route path="/admin/alunos" element={
-                  <RouteGuard requireAdminAccess={true}>
-                    <AdminLayout>
-                      <AdminStudents />
-                    </AdminLayout>
-                  </RouteGuard>
-                } />
+                {/* Redirecionamento da rota antiga de alunos para usuários */}
+                <Route path="/admin/alunos" element={<Navigate to="/admin/usuarios" replace />} />
 
                 <Route path="/admin/cadastros" element={
                   <RouteGuard requireAdminAccess={true}>
@@ -315,7 +310,7 @@ function App() {
                 <Route path="/admin/mentorias/materiais" element={
                   <RouteGuard requireAdminAccess={true}>
                     <AdminLayout>
-                      <AdminMentoringMaterials />
+                      <AdminMentoringMateriais />
                     </AdminLayout>
                   </RouteGuard>
                 } />

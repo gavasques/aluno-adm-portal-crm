@@ -9,7 +9,7 @@ interface Student {
   status: string;
 }
 
-export const useStudentsForEnrollment = () => {
+export const useActiveStudentsForMentoring = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
 
