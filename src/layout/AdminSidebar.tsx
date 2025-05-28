@@ -43,30 +43,6 @@ const sidebarItems = [
     group: "Geral"
   },
   {
-    title: "Usuários",
-    url: "/admin/usuarios",
-    icon: Users,
-    group: "Gestão"
-  },
-  {
-    title: "Permissões",
-    url: "/admin/permissoes",
-    icon: Shield,
-    group: "Gestão"
-  },
-  {
-    title: "Cadastros",
-    url: "/admin/cadastros",
-    icon: Briefcase,
-    group: "Gestão"
-  },
-  {
-    title: "Auditoria",
-    url: "/admin/auditoria",
-    icon: ClipboardCheck,
-    group: "Gestão"
-  },
-  {
     title: "Tarefas",
     url: "/admin/tarefas",
     icon: ListTodo,
@@ -139,10 +115,34 @@ const sidebarItems = [
     group: "Mentorias"
   },
   {
+    title: "Usuários",
+    url: "/admin/usuarios",
+    icon: Users,
+    group: "Gestão"
+  },
+  {
+    title: "Permissões",
+    url: "/admin/permissoes",
+    icon: Shield,
+    group: "Gestão"
+  },
+  {
+    title: "Cadastros",
+    url: "/admin/cadastros",
+    icon: Briefcase,
+    group: "Gestão"
+  },
+  {
+    title: "Auditoria",
+    url: "/admin/auditoria",
+    icon: ClipboardCheck,
+    group: "Gestão"
+  },
+  {
     title: "Config. Calendly",
     url: "/admin/calendly-config",
     icon: Calendar,
-    group: "Mentorias"
+    group: "Gestão"
   },
   {
     title: "Configurações",
