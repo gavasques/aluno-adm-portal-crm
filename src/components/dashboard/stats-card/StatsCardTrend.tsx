@@ -2,10 +2,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { StatsCardTrend } from './types';
+import { StatsCardTrend as StatsCardTrendType } from './types';
 
 interface StatsCardTrendProps {
-  trend: StatsCardTrend;
+  trend: StatsCardTrendType;
   delay: number;
 }
 

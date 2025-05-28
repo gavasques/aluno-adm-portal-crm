@@ -2,13 +2,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { StatsCardTrend } from './StatsCardTrend';
-import { StatsCardTrend as TrendType } from './types';
+import { StatsCardTrend as StatsCardTrendType } from './types';
 
 interface StatsCardContentProps {
   title: string;
   value: string | number;
   description?: string;
-  trend?: TrendType;
+  trend?: StatsCardTrendType;
   delay: number;
 }
 
