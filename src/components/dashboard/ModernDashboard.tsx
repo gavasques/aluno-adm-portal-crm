@@ -93,8 +93,8 @@ export const ModernDashboard: React.FC<ModernDashboardProps> = ({
 
           {/* Background Elements for mobile */}
           <div className="fixed inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-400/5 rounded-full blur-2xl animate-float" />
-            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-purple-400/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-400/5 rounded-full blur-2xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-purple-400/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
           </div>
         </div>
       </SafeArea>
@@ -118,9 +118,9 @@ export const ModernDashboard: React.FC<ModernDashboardProps> = ({
 
       {/* Background Elements for desktop */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-3/4 left-3/4 w-64 h-64 bg-pink-400/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-3/4 left-3/4 w-64 h-64 bg-pink-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
       </div>
     </div>
   );

@@ -136,7 +136,7 @@ const StudentDashboard = () => {
                   key={index}
                   className="flex items-center space-x-3 p-3 rounded-lg bg-white/20 dark:bg-white/5 border border-white/10"
                 >
-                  <div className={`w-8 h-8 ${activity.color} rounded-full flex items-center justify-center shadow-modern-1`}>
+                  <div className={`w-8 h-8 ${activity.color} rounded-full flex items-center justify-center`}>
                     <activity.icon className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
