@@ -137,7 +137,7 @@ const ModernAdminSidebar = () => {
     navigate("/aluno/dashboard");
   };
 
-  const renderMenuGroup = (title: string, items: any[], icon?: React.ElementType) => (
+  const renderMenuGroup = (title: string, items: any[], IconComponent?: React.ElementType) => (
     <motion.div 
       className="mb-6"
       initial={{ opacity: 0, x: -20 }}
@@ -145,7 +145,7 @@ const ModernAdminSidebar = () => {
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center gap-2 px-4 mb-3">
-        {icon && <icon className="h-3 w-3 text-blue-500" />}
+        {IconComponent && <IconComponent className="h-3 w-3 text-blue-500" />}
         <Sparkles className="h-3 w-3 text-blue-500" />
         <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           {title}
