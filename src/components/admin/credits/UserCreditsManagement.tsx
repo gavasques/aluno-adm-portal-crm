@@ -23,22 +23,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Corrigindo a interface para corresponder aos tipos reais do Supabase
 interface UserWithCredits {
   id: string;
   email: string;
   name?: string;
-  user_credits?: Array<{
+  user_credits?: {
     current_credits: number;
     monthly_limit: number;
     used_this_month: number;
     renewal_date: string;
     subscription_type?: string;
-  }>;
-  credit_subscriptions?: Array<{
+  }[] | null;
+  credit_subscriptions?: {
     status: string;
     monthly_credits: number;
     next_billing_date: string;
-  }>;
+  }[] | null;
 }
 
 interface AdjustCreditsParams {
