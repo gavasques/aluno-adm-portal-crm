@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
@@ -113,7 +114,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
     @apply bg-background text-foreground font-sans;
@@ -178,7 +179,7 @@
   
   .interactive-lift:hover {
     transform: translateY(-4px);
-    @apply shadow-modern-3;
+    @apply shadow-lg;
   }
   
   .interactive-scale {
@@ -290,11 +291,11 @@
 
 /* Modern card hover effects */
 .modern-card {
-  @apply bg-white dark:bg-slate-800 rounded-2xl shadow-modern-1 border border-slate-200 dark:border-slate-700 transition-all duration-300;
+  @apply bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300;
 }
 
 .modern-card:hover {
-  @apply shadow-modern-3 -translate-y-1;
+  @apply shadow-xl -translate-y-1;
 }
 
 /* Glass button styles */
