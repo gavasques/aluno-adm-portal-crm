@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { optimizedUserService } from '@/services/OptimizedUserService';
@@ -165,9 +166,10 @@ export const usePerformanceOptimizedUsers = () => {
       usersCount: users.length,
       filteredCount: filteredUsers.length,
       stats,
-      filters
+      filters,
+      permissionGroupsCount: permissionGroups?.length || 0
     });
-  }, [isLoading, error, users.length, filteredUsers.length, stats, filters]);
+  }, [isLoading, error, users.length, filteredUsers.length, stats, filters, permissionGroups]);
 
   return {
     users,
