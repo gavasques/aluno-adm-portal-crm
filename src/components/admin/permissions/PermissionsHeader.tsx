@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Sync } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MenuSyncManager from "./MenuSyncManager";
 
@@ -27,7 +27,7 @@ const PermissionsHeader: React.FC<PermissionsHeaderProps> = ({ onAdd }) => {
             onClick={() => setShowSyncDialog(true)}
             className="flex items-center gap-2"
           >
-            <Sync className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             Sincronizar Menus
           </Button>
           <Button onClick={onAdd} className="bg-green-600 hover:bg-green-700">

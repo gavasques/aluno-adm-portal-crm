@@ -8,7 +8,7 @@ import {
   RefreshCw, 
   CheckCircle, 
   AlertTriangle, 
-  Sync,
+  RotateCcw,
   Search,
   Shield,
   Database
@@ -78,7 +78,7 @@ const MenuSyncManager = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sync className="w-5 h-5" />
+            <RotateCcw className="w-5 h-5" />
             Sincronização de Menus
           </CardTitle>
           <p className="text-sm text-muted-foreground">
