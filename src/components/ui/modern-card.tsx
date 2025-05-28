@@ -39,7 +39,7 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
       className
     )
 
-    // Separate props that are safe for motion.div
+    // Separate props that are safe for motion.div - filter out HTML event handlers
     const {
       onDrag,
       onDragEnd,
@@ -48,6 +48,25 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
       onMouseUp,
       onTouchStart,
       onTouchEnd,
+      onAnimationStart,
+      onAnimationEnd,
+      onAnimationIteration,
+      onTransitionEnd,
+      onClick,
+      onDoubleClick,
+      onMouseEnter,
+      onMouseLeave,
+      onMouseMove,
+      onMouseOut,
+      onMouseOver,
+      onPointerDown,
+      onPointerUp,
+      onPointerEnter,
+      onPointerLeave,
+      onPointerMove,
+      onPointerOut,
+      onPointerOver,
+      onPointerCancel,
       ...safeProps
     } = props
 
@@ -59,6 +78,7 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
           whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          onClick={onClick}
           {...safeProps}
         >
           {children}
