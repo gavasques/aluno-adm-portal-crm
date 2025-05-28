@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,9 @@ import {
   LogOut,
   ExternalLink,
   ChevronDown,
-  CreditCard
+  CreditCard,
+  Database,
+  Cog
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -128,12 +131,6 @@ const sidebarItems = [
     group: "Gestão"
   },
   {
-    title: "Cadastros",
-    url: "/admin/cadastros",
-    icon: Briefcase,
-    group: "Gestão"
-  },
-  {
     title: "Auditoria",
     url: "/admin/auditoria",
     icon: ClipboardCheck,
@@ -146,6 +143,24 @@ const sidebarItems = [
     group: "Gestão"
   },
   {
+    title: "Categorias",
+    url: "/admin/categorias",
+    icon: Database,
+    group: "Cadastros"
+  },
+  {
+    title: "Tipos de Softwares",
+    url: "/admin/tipos-softwares",
+    icon: Cog,
+    group: "Cadastros"
+  },
+  {
+    title: "Tipos de Parceiros",
+    url: "/admin/tipos-parceiros",
+    icon: Users,
+    group: "Cadastros"
+  },
+  {
     title: "Configurações",
     url: "/admin/configuracoes",
     icon: Settings,
@@ -154,7 +169,7 @@ const sidebarItems = [
 ];
 
 // Ordem dos grupos
-const groupOrder = ["Geral", "Operacional", "Geral ADM", "Mentorias", "Gestão", "Sistema"];
+const groupOrder = ["Geral", "Operacional", "Geral ADM", "Mentorias", "Gestão", "Cadastros", "Sistema"];
 
 const groupedItems = sidebarItems.reduce((groups, item) => {
   const group = item.group;
