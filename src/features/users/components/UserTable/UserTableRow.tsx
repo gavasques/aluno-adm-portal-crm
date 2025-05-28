@@ -20,8 +20,6 @@ import {
   Eye, 
   KeyRound,
   UserX,
-  UserCheck,
-  UserMinus,
   Lock,
   Clock,
   Shield,
@@ -33,7 +31,6 @@ interface UserTableRowProps {
   onViewDetails: (user: User) => void;
   onResetPassword: (user: User) => void;
   onDeleteUser: (user: User) => void;
-  onToggleUserStatus: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
 }
 
@@ -44,11 +41,8 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onViewDetails,
   onResetPassword,
   onDeleteUser,
-  onToggleUserStatus,
   onSetPermissionGroup
 }) => {
-  const normalizedStatus = typeof user.status === 'string' ? user.status.toLowerCase() : '';
-  const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
   const isAdminUser = user.role === "Admin";
 
@@ -134,20 +128,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={() => onToggleUserStatus(user)}>
-              {isActive ? (
-                <>
-                  <UserMinus className="mr-2 h-4 w-4" />
-                  <span>Desativar usuário</span>
-                </>
-              ) : (
-                <>
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  <span>Ativar usuário</span>
-                </>
-              )}
-            </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => onDeleteUser(user)} className="text-red-600 focus:text-red-600 hover:text-red-600">
               <UserX className="mr-2 h-4 w-4" />

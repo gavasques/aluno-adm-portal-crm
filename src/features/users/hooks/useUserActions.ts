@@ -6,11 +6,9 @@ import { toast } from '@/hooks/use-toast';
 export const useUserActions = () => {
   const {
     deleteUser,
-    toggleUserStatus,
     resetPassword,
     setPermissionGroup,
     isDeleting,
-    isTogglingStatus,
     isResettingPassword,
     isSettingPermissions,
     refreshUsers,
@@ -27,7 +25,6 @@ export const useUserActions = () => {
           description: `Usuário ${userEmail} excluído com sucesso.`,
         });
         
-        // Force immediate refresh
         setTimeout(() => {
           console.log('🔄 Forcing refresh after user deletion...');
           forceRefresh?.();
@@ -50,63 +47,6 @@ export const useUserActions = () => {
       return false;
     }
   }, [deleteUser, forceRefresh]);
-
-  const confirmToggleStatus = useCallback(async (userId: string, userEmail: string, currentStatus: string): Promise<boolean> => {
-    try {
-      console.log('🔧 UserActions: Toggling status for:', userEmail, 'Current:', currentStatus);
-      
-      const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
-      console.log(`🎯 UserActions: Alterando ${userEmail} de ${currentStatus} para ${newStatus}`);
-      
-      const success = await toggleUserStatus(userId, userEmail, currentStatus);
-      
-      if (success) {
-        console.log('✅ UserActions: Status alterado com sucesso para:', newStatus);
-        
-        toast({
-          title: "Sucesso",
-          description: `Usuário ${userEmail} ${newStatus.toLowerCase()} com sucesso.`,
-        });
-        
-        // Multiple verification attempts
-        let verificationAttempts = 0;
-        const maxAttempts = 5;
-        
-        const verifyChange = async () => {
-          verificationAttempts++;
-          console.log(`🔍 UserActions: Tentativa de verificação ${verificationAttempts}/${maxAttempts}`);
-          
-          await forceRefresh?.();
-          
-          if (verificationAttempts < maxAttempts) {
-            setTimeout(verifyChange, 800);
-          } else {
-            console.log('✅ UserActions: Processo de verificação concluído');
-          }
-        };
-        
-        // Start verification process
-        setTimeout(verifyChange, 200);
-        
-      } else {
-        console.error('❌ UserActions: Falha ao alterar status');
-        toast({
-          title: "Erro",
-          description: "Não foi possível alterar o status do usuário.",
-          variant: "destructive",
-        });
-      }
-      return success;
-    } catch (error) {
-      console.error('Erro ao alterar status:', error);
-      toast({
-        title: "Erro",
-        description: "Erro interno ao alterar status.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  }, [toggleUserStatus, forceRefresh]);
 
   const confirmResetPassword = useCallback(async (email: string): Promise<boolean> => {
     try {
@@ -146,7 +86,6 @@ export const useUserActions = () => {
           description: `Permissões atualizadas para ${userEmail}.`,
         });
         
-        // Force refresh after permission change
         setTimeout(() => {
           console.log('🔄 Forcing refresh after permission change...');
           forceRefresh?.();
@@ -172,11 +111,9 @@ export const useUserActions = () => {
 
   return {
     confirmDelete,
-    confirmToggleStatus,
     confirmResetPassword,
     confirmSetPermissionGroup,
     isDeleting,
-    isTogglingStatus,
     isResettingPassword,
     isSettingPermissions
   };

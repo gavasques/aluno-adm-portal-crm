@@ -25,10 +25,8 @@ export const usePerformanceOptimizedUsers = () => {
     preloadCommonFilters
   } = useOptimizedUserCache();
 
-  // Set query client on service
   optimizedUserService.setQueryClient(queryClient);
 
-  // Fetch users with aggressive refresh for status updates
   const {
     data: users = [],
     isLoading,
@@ -42,20 +40,10 @@ export const usePerformanceOptimizedUsers = () => {
       const result = await optimizedUserService.fetchUsers();
       console.log('✅ Query retornou:', result?.length, 'usuários');
       
-      // Log específico do André Ferreira para debug
-      const andre = result?.find(u => u.email === 'contato@liberdadevirtual.tv');
-      if (andre) {
-        console.log('🔍 Status do André Ferreira:', {
-          email: andre.email,
-          status: andre.status,
-          id: andre.id
-        });
-      }
-      
       return result;
     },
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache
+    staleTime: 0,
+    gcTime: 0,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     retry: 3,
@@ -64,24 +52,20 @@ export const usePerformanceOptimizedUsers = () => {
 
   console.log('📊 usersArray processado:', users.length, 'usuários');
 
-  // Enhanced search with immediate response
   const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
     console.log('🔍 Aplicando busca otimizada:', searchTerm);
     setFiltersState(prev => ({ ...prev, search: searchTerm }));
   }, 100);
 
-  // Force refresh that truly refreshes everything
   const forceRefresh = useCallback(async () => {
     console.log('🔄 Executando refresh forçado...');
     
-    // Invalidate all cache
     await queryClient.invalidateQueries({ queryKey: ['users'] });
     await queryClient.refetchQueries({ queryKey: ['users'] });
     
     console.log('✅ Refresh forçado concluído');
   }, [queryClient]);
 
-  // Mutations with immediate data refresh
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
@@ -100,44 +84,6 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: ({ userId, userEmail, currentStatus }: { 
-      userId: string; 
-      userEmail: string; 
-      currentStatus: string; 
-    }) => {
-      console.log('🔄 Mutation: Alternando status do usuário:', userEmail, 'Status atual:', currentStatus);
-      return optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
-    },
-    onSuccess: async (result, variables) => {
-      console.log('✅ Mutation: Status alterado com sucesso para:', variables.userEmail);
-      
-      // Execute multiple refreshes to ensure data is updated
-      console.log('🔄 Iniciando refresh agressivo...');
-      
-      await forceRefresh();
-      
-      // Additional refreshes with delays
-      setTimeout(async () => {
-        console.log('🔄 Refresh adicional (500ms)...');
-        await forceRefresh();
-      }, 500);
-      
-      setTimeout(async () => {
-        console.log('🔄 Refresh adicional (1.5s)...');
-        await forceRefresh();
-      }, 1500);
-      
-      setTimeout(async () => {
-        console.log('🔄 Refresh final (3s)...');
-        await forceRefresh();
-      }, 3000);
-    },
-    onError: (error, variables) => {
-      console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
-    }
-  });
-
   const resetPasswordMutation = useMutation({
     mutationFn: (email: string) => optimizedUserService.resetPassword(email),
   });
@@ -154,7 +100,6 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
-  // Enhanced filtered users
   const filteredUsers = useMemo(() => {
     console.log('🔄 Aplicando filtros otimizados...');
     
@@ -168,7 +113,6 @@ export const usePerformanceOptimizedUsers = () => {
     return filtered;
   }, [users, filters]);
 
-  // Enhanced stats
   const stats = useMemo((): UserStats => {
     console.log('📊 Calculando estatísticas otimizadas...');
     const calculatedStats = optimizedUserService.calculateStats(users);
@@ -184,7 +128,6 @@ export const usePerformanceOptimizedUsers = () => {
     return validStats;
   }, [users]);
 
-  // Callbacks otimizados
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
     console.log('🔧 Atualizando filtros:', newFilters);
     setFiltersState(prev => ({ ...prev, ...newFilters }));
@@ -207,7 +150,6 @@ export const usePerformanceOptimizedUsers = () => {
     isOptimized: true
   }), [getMetrics, users.length, filteredUsers.length]);
 
-  // Effects otimizados
   useEffect(() => {
     if (users.length > 0) {
       preloadCommonFilters(users);
@@ -234,32 +176,23 @@ export const usePerformanceOptimizedUsers = () => {
     isRefreshing: false,
     error: error?.message || null,
     
-    // Actions
     setFilters,
     refreshUsers,
     searchUsers,
     forceRefresh,
     
-    // Mutations
     createUser: createUserMutation.mutateAsync,
     deleteUser: (userId: string, userEmail: string) => 
       deleteUserMutation.mutateAsync({ userId, userEmail }),
-    toggleUserStatus: (userId: string, userEmail: string, currentStatus: string) => {
-      console.log('🔧 Hook: toggleUserStatus chamado para:', userEmail, 'Status:', currentStatus);
-      return toggleStatusMutation.mutateAsync({ userId, userEmail, currentStatus });
-    },
     resetPassword: resetPasswordMutation.mutateAsync,
     setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) =>
       setPermissionGroupMutation.mutateAsync({ userId, userEmail, groupId }),
     
-    // Mutation states
     isCreating: createUserMutation.isPending,
     isDeleting: deleteUserMutation.isPending,
-    isTogglingStatus: toggleStatusMutation.isPending,
     isResettingPassword: resetPasswordMutation.isPending,
     isSettingPermissions: setPermissionGroupMutation.isPending,
 
-    // Performance
     performanceMetrics,
     smartInvalidate,
   };

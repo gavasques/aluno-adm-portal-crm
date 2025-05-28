@@ -16,7 +16,6 @@ interface UserTableProps {
   onViewDetails: (user: User) => void;
   onResetPassword: (user: User) => void;
   onDeleteUser: (user: User) => void;
-  onToggleUserStatus: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
 }
 
@@ -26,11 +25,8 @@ export const UserTable: React.FC<UserTableProps> = ({
   onViewDetails,
   onResetPassword,
   onDeleteUser,
-  onToggleUserStatus,
   onSetPermissionGroup,
 }) => {
-  console.log('🔧 UserTable: Rendering with', users.length, 'users');
-
   return (
     <div className="rounded-md border">
       <Table>
@@ -46,7 +42,6 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onViewDetails={onViewDetails}
                 onResetPassword={onResetPassword}
                 onDeleteUser={onDeleteUser}
-                onToggleUserStatus={onToggleUserStatus}
                 onSetPermissionGroup={onSetPermissionGroup}
               />
             ))

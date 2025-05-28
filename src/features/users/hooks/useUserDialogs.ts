@@ -1,84 +1,62 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { User } from '@/types/user.types';
 
-export type UserDialogType = 
-  | 'details' 
-  | 'delete' 
-  | 'status' 
-  | 'reset' 
-  | 'permission'
-  | null;
+export type DialogType = 'view' | 'reset' | 'delete' | 'permissions' | null;
 
-export interface UserDialogState {
-  type: UserDialogType;
+export interface DialogState {
+  type: DialogType;
   user: User | null;
   isOpen: boolean;
 }
 
-export interface UserDialogActions {
-  openDialog: (type: Exclude<UserDialogType, null>, user: User) => void;
-  closeDialog: () => void;
-  handleViewDetails: (user: User) => void;
-  handleResetPassword: (user: User) => void;
-  handleDeleteUser: (user: User) => void;
-  handleToggleUserStatus: (user: User) => void;
-  handleSetPermissionGroup: (user: User) => void;
-}
-
-export const useUserDialogs = (): UserDialogState & UserDialogActions => {
-  const [dialogState, setDialogState] = useState<UserDialogState>({
+export const useUserDialogs = () => {
+  const [dialogState, setDialogState] = useState<DialogState>({
     type: null,
     user: null,
     isOpen: false
   });
 
-  const openDialog = useCallback((type: Exclude<UserDialogType, null>, user: User) => {
-    console.log(`🔧 UserDialogs: Opening ${type} dialog for user:`, user.email);
+  const openDialog = (type: DialogType, user: User) => {
     setDialogState({
       type,
       user,
       isOpen: true
     });
-  }, []);
+  };
 
-  const closeDialog = useCallback(() => {
-    console.log('🔧 UserDialogs: Closing dialog');
+  const closeDialog = () => {
     setDialogState({
       type: null,
       user: null,
       isOpen: false
     });
-  }, []);
+  };
 
-  const handleViewDetails = useCallback((user: User) => {
-    openDialog('details', user);
-  }, [openDialog]);
+  const handleViewDetails = (user: User) => {
+    openDialog('view', user);
+  };
 
-  const handleResetPassword = useCallback((user: User) => {
+  const handleResetPassword = (user: User) => {
     openDialog('reset', user);
-  }, [openDialog]);
+  };
 
-  const handleDeleteUser = useCallback((user: User) => {
+  const handleDeleteUser = (user: User) => {
     openDialog('delete', user);
-  }, [openDialog]);
+  };
 
-  const handleToggleUserStatus = useCallback((user: User) => {
-    openDialog('status', user);
-  }, [openDialog]);
-
-  const handleSetPermissionGroup = useCallback((user: User) => {
-    openDialog('permission', user);
-  }, [openDialog]);
+  const handleSetPermissionGroup = (user: User) => {
+    openDialog('permissions', user);
+  };
 
   return {
-    ...dialogState,
-    openDialog,
+    type: dialogState.type,
+    user: dialogState.user,
+    isOpen: dialogState.isOpen,
     closeDialog,
     handleViewDetails,
     handleResetPassword,
     handleDeleteUser,
-    handleToggleUserStatus,
     handleSetPermissionGroup
   };
 };

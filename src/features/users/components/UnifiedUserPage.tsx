@@ -17,7 +17,6 @@ export const UnifiedUserPage: React.FC = () => {
     stats,
     filters,
     isLoading,
-    isRefreshing,
     error,
     setFilters,
     searchUsers,
@@ -41,18 +40,12 @@ export const UnifiedUserPage: React.FC = () => {
     handleViewDetails,
     handleResetPassword,
     handleDeleteUser,
-    handleToggleUserStatus,
     handleSetPermissionGroup
   } = useUserDialogs();
 
-  console.log('🔧 UnifiedUserPage: Rendering with dialog state:', { type, isOpen, userEmail: user?.email });
-
   return (
     <div className="space-y-6">
-      <UsersHeader 
-        refreshUsersList={refreshUsers} 
-        isRefreshing={isRefreshing} 
-      />
+      <UsersHeader />
 
       <UsersAlert fetchError={error} />
 
@@ -75,7 +68,6 @@ export const UnifiedUserPage: React.FC = () => {
           onViewDetails={handleViewDetails}
           onResetPassword={handleResetPassword}
           onDeleteUser={handleDeleteUser}
-          onToggleUserStatus={handleToggleUserStatus}
           onSetPermissionGroup={handleSetPermissionGroup}
         />
       </div>
