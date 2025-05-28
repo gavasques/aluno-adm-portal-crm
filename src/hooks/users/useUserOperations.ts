@@ -6,7 +6,6 @@ export const useUserOperations = () => {
   const {
     createUser,
     deleteUser,
-    toggleUserStatus,
     resetPassword,
     setPermissionGroup
   } = useUsers();
@@ -15,7 +14,6 @@ export const useUserOperations = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -23,7 +21,6 @@ export const useUserOperations = () => {
   // Selected user states
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
-  const [selectedUserStatus, setSelectedUserStatus] = useState(false);
   const [selectedUserPermissionGroupId, setSelectedUserPermissionGroupId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
@@ -39,13 +36,6 @@ export const useUserOperations = () => {
     setSelectedUserId(userId);
     setSelectedUserEmail(email);
     setShowDeleteDialog(true);
-  };
-
-  const handleToggleUserStatus = (userId: string, email: string, isActive: boolean) => {
-    setSelectedUserId(userId);
-    setSelectedUserEmail(email);
-    setSelectedUserStatus(isActive);
-    setShowStatusDialog(true);
   };
 
   const handleResetPassword = (email: string) => {
@@ -69,7 +59,6 @@ export const useUserOperations = () => {
     setShowAddDialog(false);
     setShowInviteDialog(false);
     setShowDeleteDialog(false);
-    setShowStatusDialog(false);
     setShowResetDialog(false);
     setShowPermissionDialog(false);
     setShowDetailsDialog(false);
@@ -80,14 +69,6 @@ export const useUserOperations = () => {
 
   const confirmDelete = async () => {
     const success = await deleteUser(selectedUserId, selectedUserEmail);
-    if (success) {
-      closeAllDialogs();
-    }
-    return success;
-  };
-
-  const confirmToggleStatus = async () => {
-    const success = await toggleUserStatus(selectedUserId, selectedUserEmail, selectedUserStatus ? 'Ativo' : 'Inativo');
     if (success) {
       closeAllDialogs();
     }
@@ -118,8 +99,6 @@ export const useUserOperations = () => {
     setShowInviteDialog,
     showDeleteDialog,
     setShowDeleteDialog,
-    showStatusDialog,
-    setShowStatusDialog,
     showResetDialog,
     setShowResetDialog,
     showPermissionDialog,
@@ -130,7 +109,6 @@ export const useUserOperations = () => {
     // Selected user data
     selectedUserId,
     selectedUserEmail,
-    selectedUserStatus,
     selectedUserPermissionGroupId,
     selectedUser,
 
@@ -138,7 +116,6 @@ export const useUserOperations = () => {
     handleAddUser,
     handleInviteUser,
     handleDeleteUser,
-    handleToggleUserStatus,
     handleResetPassword,
     handleSetPermissionGroup,
     handleViewDetails,
@@ -146,7 +123,6 @@ export const useUserOperations = () => {
 
     // Confirmation actions
     confirmDelete,
-    confirmToggleStatus,
     confirmResetPassword,
     confirmSetPermissionGroup,
 

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { User } from '@/types/user.types';
 import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
@@ -7,17 +8,14 @@ export const useUserDropdownActions = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
 
   const {
     deleteUser,
-    toggleUserStatus,
     resetPassword,
     setPermissionGroup,
     isDeleting,
-    isTogglingStatus,
     isResettingPassword,
     isSettingPermissions
   } = usePerformanceOptimizedUserContext();
@@ -46,14 +44,6 @@ export const useUserDropdownActions = () => {
     console.log('🔧 Estado depois será:', { selectedUser: user.email, showDeleteDialog: true });
   }, [selectedUser, showDeleteDialog]);
 
-  const handleToggleUserStatus = useCallback((user: User) => {
-    console.log('🔧 handleToggleUserStatus executado para:', user.email);
-    console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showStatusDialog });
-    setSelectedUser(user);
-    setShowStatusDialog(true);
-    console.log('🔧 Estado depois será:', { selectedUser: user.email, showStatusDialog: true });
-  }, [selectedUser, showStatusDialog]);
-
   const handleSetPermissionGroup = useCallback((user: User) => {
     console.log('🔧 handleSetPermissionGroup executado para:', user.email);
     console.log('🔧 Estado antes:', { selectedUser: selectedUser?.email, showPermissionDialog });
@@ -77,22 +67,6 @@ export const useUserDropdownActions = () => {
       return false;
     }
   }, [selectedUser, deleteUser]);
-
-  const confirmToggleStatus = useCallback(async () => {
-    if (!selectedUser) return false;
-    
-    try {
-      const success = await toggleUserStatus(selectedUser.id, selectedUser.email, selectedUser.status);
-      if (success) {
-        setShowStatusDialog(false);
-        setSelectedUser(null);
-      }
-      return success;
-    } catch (error) {
-      console.error('Erro ao alterar status:', error);
-      return false;
-    }
-  }, [selectedUser, toggleUserStatus]);
 
   const confirmResetPassword = useCallback(async () => {
     if (!selectedUser) return false;
@@ -130,7 +104,6 @@ export const useUserDropdownActions = () => {
     setSelectedUser(null);
     setShowDetailsDialog(false);
     setShowDeleteDialog(false);
-    setShowStatusDialog(false);
     setShowResetDialog(false);
     setShowPermissionDialog(false);
   }, []);
@@ -140,14 +113,12 @@ export const useUserDropdownActions = () => {
     selectedUser,
     showDetailsDialog,
     showDeleteDialog,
-    showStatusDialog,
     showResetDialog,
     showPermissionDialog,
 
     // Dialog setters
     setShowDetailsDialog,
     setShowDeleteDialog,
-    setShowStatusDialog,
     setShowResetDialog,
     setShowPermissionDialog,
 
@@ -155,12 +126,10 @@ export const useUserDropdownActions = () => {
     handleViewDetails,
     handleResetPassword,
     handleDeleteUser,
-    handleToggleUserStatus,
     handleSetPermissionGroup,
 
     // Confirmation handlers
     confirmDelete,
-    confirmToggleStatus,
     confirmResetPassword,
     confirmSetPermissionGroup,
 
@@ -169,7 +138,6 @@ export const useUserDropdownActions = () => {
 
     // Loading states
     isDeleting,
-    isTogglingStatus,
     isResettingPassword,
     isSettingPermissions
   };

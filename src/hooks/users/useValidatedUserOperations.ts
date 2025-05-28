@@ -17,7 +17,6 @@ export const useValidatedUserOperations = () => {
   const {
     createUser,
     deleteUser,
-    toggleUserStatus,
     resetPassword,
     setPermissionGroup
   } = useUsers();
@@ -170,7 +169,6 @@ export const useValidatedUserOperations = () => {
     
     // Operações básicas (sem validação adicional)
     deleteUser,
-    toggleUserStatus,
     resetPassword,
     setPermissionGroup,
   };
