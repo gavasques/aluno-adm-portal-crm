@@ -2,8 +2,7 @@
 import React from "react";
 import { PerformanceOptimizedUserProvider } from "@/contexts/PerformanceOptimizedUserContext";
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav";
-import { OptimizedUsersPageContent } from "@/components/admin/users/OptimizedUsersPageContent";
-import { ComparisonToggle } from "@/components/admin/users/ComparisonToggle";
+import { UnifiedUserPage } from "@/features/users/components/UnifiedUserPage";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const UsersContent = () => {
@@ -22,9 +21,7 @@ const UsersContent = () => {
           className="mb-6"
         />
         
-        <ComparisonToggle />
-        
-        <OptimizedUsersPageContent />
+        <UnifiedUserPage />
       </div>
     </PerformanceOptimizedUserProvider>
   );

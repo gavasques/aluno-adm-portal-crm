@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock, GraduationCap, Building, CheckCircle, Shield, Activity, Bell, LogOut, ChevronDown, UserCheck, Users2, Clock, CalendarDays, Zap } from "lucide-react";
+import { Book, Calendar, Home, List, Settings, Users, User, BookOpen, Database, FileText, BarChart, Wrench, Lock, GraduationCap, Building, CheckCircle, Shield, Activity, Bell, LogOut, ChevronDown, UserCheck, Users2, Clock, CalendarDays } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/usePermissions";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -163,14 +163,6 @@ const AdminSidebar = () => {
               <SidebarMenu>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/usuarios" icon={Users} menuKey="users">Usuários</NavItem>
-                </motion.div>
-                <motion.div variants={itemAnimation}>
-                  <NavItem href="/admin/usuarios-unificado" icon={Zap} menuKey="users">
-                    <span className="flex items-center gap-2">
-                      Usuários (Novo)
-                      <span className="text-xs px-1.5 py-0.5 bg-green-500 text-white rounded">BETA</span>
-                    </span>
-                  </NavItem>
                 </motion.div>
                 <motion.div variants={itemAnimation}>
                   <NavItem href="/admin/permissoes" icon={Lock} menuKey="permissions">Permissões</NavItem>

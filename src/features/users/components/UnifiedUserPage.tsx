@@ -10,9 +10,6 @@ import UserActionButtons from "@/components/admin/users/UserActionButtons";
 import { UserTable } from "./UserTable/UserTable";
 import { ValidatedUserDialogs } from "@/components/admin/users/dialogs/ValidatedUserDialogs";
 import { UserDialogManager } from "./UserDialogs/UserDialogManager";
-import { FunctionalityChecklist } from "@/components/admin/users/FunctionalityChecklist";
-import { DebugUserData } from "./DebugUserData";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const UnifiedUserPage: React.FC = () => {
   const {
@@ -51,67 +48,51 @@ export const UnifiedUserPage: React.FC = () => {
   console.log('🔧 UnifiedUserPage: Rendering with dialog state:', { type, isOpen, userEmail: user?.email });
 
   return (
-    <Tabs defaultValue="users" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="users">Gestão de Usuários</TabsTrigger>
-        <TabsTrigger value="debug">Debug Status</TabsTrigger>
-        <TabsTrigger value="checklist">Checklist de Testes</TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      <UsersHeader 
+        refreshUsersList={refreshUsers} 
+        isRefreshing={isRefreshing} 
+      />
 
-      <TabsContent value="users" className="space-y-6">
-        <UsersHeader 
-          refreshUsersList={refreshUsers} 
-          isRefreshing={isRefreshing} 
-        />
+      <UsersAlert fetchError={error} />
 
-        <UsersAlert fetchError={error} />
-
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex-1">
-              <UserFilters
-                filters={filters}
-                stats={stats}
-                onFiltersChange={setFilters}
-                onSearch={searchUsers}
-              />
-            </div>
-            <UserActionButtons onAddUser={handleAddUser} onInviteUser={handleInviteUser} />
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex-1">
+            <UserFilters
+              filters={filters}
+              stats={stats}
+              onFiltersChange={setFilters}
+              onSearch={searchUsers}
+            />
           </div>
-
-          <UserTable
-            users={filteredUsers}
-            isLoading={isLoading}
-            onViewDetails={handleViewDetails}
-            onResetPassword={handleResetPassword}
-            onDeleteUser={handleDeleteUser}
-            onToggleUserStatus={handleToggleUserStatus}
-            onSetPermissionGroup={handleSetPermissionGroup}
-          />
+          <UserActionButtons onAddUser={handleAddUser} onInviteUser={handleInviteUser} />
         </div>
 
-        <ValidatedUserDialogs
-          showAddDialog={showAddDialog}
-          setShowAddDialog={setShowAddDialog}
-          showInviteDialog={showInviteDialog}
-          setShowInviteDialog={setShowInviteDialog}
-          onRefresh={refreshUsers}
+        <UserTable
+          users={filteredUsers}
+          isLoading={isLoading}
+          onViewDetails={handleViewDetails}
+          onResetPassword={handleResetPassword}
+          onDeleteUser={handleDeleteUser}
+          onToggleUserStatus={handleToggleUserStatus}
+          onSetPermissionGroup={handleSetPermissionGroup}
         />
+      </div>
 
-        <UserDialogManager
-          dialogState={{ type, user, isOpen }}
-          onCloseDialog={closeDialog}
-          onRefresh={refreshUsers}
-        />
-      </TabsContent>
+      <ValidatedUserDialogs
+        showAddDialog={showAddDialog}
+        setShowAddDialog={setShowAddDialog}
+        showInviteDialog={showInviteDialog}
+        setShowInviteDialog={setShowInviteDialog}
+        onRefresh={refreshUsers}
+      />
 
-      <TabsContent value="debug">
-        <DebugUserData />
-      </TabsContent>
-
-      <TabsContent value="checklist">
-        <FunctionalityChecklist />
-      </TabsContent>
-    </Tabs>
+      <UserDialogManager
+        dialogState={{ type, user, isOpen }}
+        onCloseDialog={closeDialog}
+        onRefresh={refreshUsers}
+      />
+    </div>
   );
 };
