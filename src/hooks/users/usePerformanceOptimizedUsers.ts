@@ -58,9 +58,9 @@ export const usePerformanceOptimizedUsers = () => {
       
       return result;
     },
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Force fresh data every time
+    gcTime: 0, // Don't cache data
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
@@ -94,17 +94,17 @@ export const usePerformanceOptimizedUsers = () => {
 
   // Simple force refresh
   const forceRefresh = useCallback(async () => {
-    console.log('🔄 Executando refresh...');
+    console.log('🔄 Executando refresh forçado...');
     
     // Clear optimistic updates
     setOptimisticUpdates(new Map());
     
-    // Invalidate and refetch
+    // Invalidate all cache
     await queryClient.invalidateQueries({ queryKey: ['users'] });
-    await refetch();
+    await queryClient.refetchQueries({ queryKey: ['users'] });
     
-    console.log('✅ Refresh concluído');
-  }, [queryClient, refetch]);
+    console.log('✅ Refresh forçado concluído');
+  }, [queryClient]);
 
   // Optimistic update helper
   const applyOptimisticUpdate = useCallback((userId: string, updates: Partial<User>) => {
@@ -126,7 +126,7 @@ export const usePerformanceOptimizedUsers = () => {
     });
   }, []);
 
-  // Mutations with simple refresh
+  // Mutations with aggressive refresh
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserData) => 
       optimizedUserService.createUser(userData),
@@ -166,8 +166,21 @@ export const usePerformanceOptimizedUsers = () => {
       // Clear optimistic update for this user
       clearOptimisticUpdate(variables.userId);
       
-      // Execute simple refresh
+      // Multiple refresh attempts with delays
+      console.log('🔄 Iniciando múltiplas tentativas de refresh...');
+      
       await forceRefresh();
+      
+      // Additional verification refreshes
+      setTimeout(async () => {
+        console.log('🔄 Refresh adicional (1s)...');
+        await forceRefresh();
+      }, 1000);
+      
+      setTimeout(async () => {
+        console.log('🔄 Refresh final (3s)...');
+        await forceRefresh();
+      }, 3000);
     },
     onError: (error, variables) => {
       console.error('❌ Erro na mutation de status:', error, 'Usuário:', variables.userEmail);
