@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import AdminSidebar from "./AdminSidebar";
 import StudentSidebar from "./StudentSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import Header from "./Header";
 import PendingValidationOverlay from "@/components/layout/PendingValidationOverlay";
 
 interface LayoutProps {
@@ -38,21 +38,23 @@ const Layout = ({ isAdmin, children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full overflow-hidden">
-          {/* Sidebar - largura fixa */}
-          <div className="flex-shrink-0 relative" style={{ width: '208px' }}>
-            {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
-          </div>
-          
-          {/* Área principal - ocupa o restante do espaço com espaçamento de 10px */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden mx-2.5">
-            <main className="flex-1 overflow-auto p-2.5 pt-2.5">
-              {children}
-            </main>
-          </div>
+      {/* Header fixo no topo */}
+      <Header />
+      
+      <div className="flex pt-16">
+        {/* Sidebar - largura fixa */}
+        <div className="w-64 flex-shrink-0">
+          {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
         </div>
-      </SidebarProvider>
+        
+        {/* Área principal de conteúdo */}
+        <div className="flex-1 overflow-auto">
+          <main className="p-6">
+            {children}
+          </main>
+        </div>
+      </div>
+      
       <PendingValidationOverlay />
     </div>
   );
