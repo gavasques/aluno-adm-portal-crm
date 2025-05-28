@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Sheet,
@@ -19,7 +20,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const StudentSidebar = () => {

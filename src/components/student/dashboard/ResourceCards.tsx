@@ -1,5 +1,8 @@
+
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { CardStats } from "@/components/ui/card-stats";
-import { Users, Book } from "lucide-react";
+import { Users, Book, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const ResourceCards = () => {
