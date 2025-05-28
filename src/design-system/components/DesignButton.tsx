@@ -50,8 +50,6 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
   style,
   ...props
 }) => {
-  const Comp = asChild ? Slot : motion.button;
-  
   const baseClasses = cn(
     'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none relative overflow-hidden',
     sizeClasses[size],
@@ -83,14 +81,14 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
 
   if (asChild) {
     return (
-      <Comp className={baseClasses} style={combinedStyle}>
+      <Slot className={baseClasses} style={combinedStyle}>
         {buttonContent}
-      </Comp>
+      </Slot>
     );
   }
 
   return (
-    <Comp
+    <motion.button
       className={baseClasses}
       style={combinedStyle}
       whileHover={{ scale: 1.02 }}
@@ -99,6 +97,6 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
       {...props}
     >
       {buttonContent}
-    </Comp>
+    </motion.button>
   );
 };
