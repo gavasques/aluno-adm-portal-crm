@@ -4,6 +4,7 @@ export { PermissionGroupService } from './PermissionGroupService';
 export { SystemMenuService } from './SystemMenuService';
 export { SystemModuleService } from './SystemModuleService';
 export { PermissionValidationService } from './PermissionValidationService';
+export { MenuSyncService } from './MenuSyncService';
 
 // Export service interfaces
 export type {
