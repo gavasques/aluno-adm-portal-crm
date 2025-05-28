@@ -18,7 +18,6 @@ interface Student {
   status: string;
   created_at: string;
   is_mentor?: boolean;
-  lastLogin?: string;
 }
 
 interface StudentsTableProps {
@@ -61,13 +60,6 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
           aValue = new Date(a.created_at || 0);
           bValue = new Date(b.created_at || 0);
           break;
-        case 'lastLogin':
-          if (a.lastLogin === 'Nunca' || !a.lastLogin) aValue = new Date(0);
-          else aValue = new Date(a.lastLogin);
-          
-          if (b.lastLogin === 'Nunca' || !b.lastLogin) bValue = new Date(0);
-          else bValue = new Date(b.lastLogin);
-          break;
         default:
           return 0;
       }
@@ -96,34 +88,6 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return 'Data inválida';
-    }
-  };
-
-  const formatLastLogin = (lastLogin?: string) => {
-    if (!lastLogin || lastLogin === 'Nunca' || lastLogin === 'Dados não disponíveis') {
-      return 'Nunca';
-    }
-    
-    try {
-      // Verifica se já está em formato brasileiro
-      if (lastLogin.includes('/')) {
-        return lastLogin;
-      }
-      
-      // Tenta converter de ISO string para formato brasileiro
-      const date = new Date(lastLogin);
-      if (isNaN(date.getTime())) {
-        return 'Nunca';
-      }
-      
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch (error) {
-      console.error('Erro ao formatar data de último login:', error);
-      return 'Nunca';
     }
   };
 
@@ -218,16 +182,6 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
                       {getSortIcon('created_at')}
                     </Button>
                   </TableHead>
-                  <TableHead>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => handleSort('lastLogin')}
-                      className="h-auto p-0 font-semibold hover:bg-transparent"
-                    >
-                      Último Acesso
-                      {getSortIcon('lastLogin')}
-                    </Button>
-                  </TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -266,9 +220,6 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
                       {formatDate(student.created_at)}
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-600">
-                      {formatLastLogin(student.lastLogin)}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
