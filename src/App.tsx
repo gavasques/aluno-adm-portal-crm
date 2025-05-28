@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 
 // Import pages
 import Index from './pages/Index';
@@ -16,32 +17,33 @@ import CRM from './pages/admin/CRM';
 import AdminSuppliers from './pages/admin/Suppliers';
 import AdminPartners from './pages/admin/Partners';
 import AdminTools from './pages/admin/Tools';
-import AdminMentoringDashboard from './pages/admin/mentoring/AdminMentoringDashboard';
-import AdminMentoringCatalog from './pages/admin/mentoring/AdminMentoringCatalog';
-import AdminIndividualEnrollments from './pages/admin/mentoring/AdminIndividualEnrollments';
-import AdminGroupEnrollments from './pages/admin/mentoring/AdminGroupEnrollments';
-import AdminMentoringMaterials from './pages/admin/mentoring/AdminMentoringMaterials';
+import AdminMentoringDashboard from './pages/admin/AdminMentoringDashboard';
+import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
+import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
+import AdminGroupEnrollments from './pages/admin/AdminGroupEnrollments';
+import AdminMentoringMaterials from './pages/admin/AdminMentoringMaterials';
 import OptimizedUsers from './pages/admin/OptimizedUsers';
 import Permissions from './pages/admin/Permissions';
 import Audit from './pages/admin/Audit';
 import AdminCalendlyConfig from './pages/admin/AdminCalendlyConfig';
 import Settings from './pages/admin/Settings';
-import StudentDashboard from './pages/student/StudentDashboard';
-import StudentSuppliers from './pages/student/StudentSuppliers';
-import StudentSupplierDetail from './pages/student/StudentSupplierDetail';
+import StudentDashboard from './pages/student/Dashboard';
+import StudentSuppliers from './pages/student/Suppliers';
+import StudentSupplierDetail from './pages/student/SupplierDetail';
 import MySuppliers from './pages/student/MySuppliers';
 import MySupplierDetail from './pages/student/MySupplierDetail';
-import StudentPartners from './pages/student/StudentPartners';
-import StudentTools from './pages/student/StudentTools';
-import StudentMentoring from './pages/student/StudentMentoring';
-import StudentMentoringDetail from './pages/student/StudentMentoringDetail';
+import StudentPartners from './pages/student/Partners';
+import StudentTools from './pages/student/Tools';
+import StudentMentoring from './pages/student/Mentoring';
+import StudentMentoringDetail from './pages/student/MentoringDetail';
 import MentoringSession from './pages/student/MentoringSession';
-import StudentCredits from './pages/student/StudentCredits';
-import StudentSettings from './pages/student/StudentSettings';
+import StudentCredits from './pages/student/Credits';
+import StudentSettings from './pages/student/Settings';
 import NotFound from './pages/NotFound';
 
-// Import route guard
-import RouteGuard from './components/auth/RouteGuard';
+// Import route guard and layout
+import RouteGuard from './components/RouteGuard';
+import Layout from './layout/Layout';
 import { useAuth } from './hooks/useAuth';
 
 // Create a query client
