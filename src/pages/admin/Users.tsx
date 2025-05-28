@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { UserProvider } from '@/contexts/UserContext';
+import { PerformanceOptimizedUserProvider } from '@/contexts/PerformanceOptimizedUserContext';
 import UnifiedUserPage from '@/features/users/components/UnifiedUserPage';
 
 const Users = () => {
   return (
-    <UserProvider>
+    <PerformanceOptimizedUserProvider>
       <div className="container mx-auto py-6 space-y-6">
         <UnifiedUserPage />
       </div>
-    </UserProvider>
+    </PerformanceOptimizedUserProvider>
   );
 };
 
