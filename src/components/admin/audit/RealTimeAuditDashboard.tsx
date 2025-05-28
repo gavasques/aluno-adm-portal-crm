@@ -1,20 +1,20 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, AlertTriangle, Activity, Users, Database, Eye, RefreshCw } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Users, Database, Eye, RefreshCw, TrendingUp, BarChart3 } from 'lucide-react';
 import { useAuditLogs, AuditFilters } from '@/hooks/admin/useAuditLogs';
 import { useAuditMetrics } from '@/hooks/admin/useAuditMetrics';
 import { useSecurityAlerts } from '@/hooks/admin/useSecurityAlerts';
 import { SecurityNotifications } from './SecurityNotifications';
+import { EnhancedAuditFilters } from './EnhancedAuditFilters';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 
 export const RealTimeAuditDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<AuditFilters>({});
   const { logs, loading: logsLoading, refetch: refetchLogs } = useAuditLogs(filters);
   const { metrics, loading: metricsLoading, refetch: refetchMetrics } = useAuditMetrics();
@@ -23,6 +23,10 @@ export const RealTimeAuditDashboard: React.FC = () => {
   const handleRefresh = () => {
     refetchLogs();
     refetchMetrics();
+  };
+
+  const handleFiltersReset = () => {
+    setFilters({});
   };
 
   const getRiskBadgeColor = (risk: string) => {
@@ -65,6 +69,14 @@ export const RealTimeAuditDashboard: React.FC = () => {
           <p className="text-gray-600">Monitoramento em tempo real de eventos do sistema</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/auditoria/analytics')}>
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/admin/auditoria/reports')}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Relatórios
+          </Button>
           <SecurityNotifications />
           <Button onClick={handleRefresh} disabled={logsLoading || metricsLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${(logsLoading || metricsLoading) ? 'animate-spin' : ''}`} />
@@ -144,11 +156,6 @@ export const RealTimeAuditDashboard: React.FC = () => {
           <AlertTriangle className="h-4 w-4 text-red-500" />
           <AlertDescription className="text-red-700">
             Existem {alertsCount} alertas de segurança ativos que requerem atenção.
-            <Button variant="link" className="p-0 ml-2 text-red-700 underline" asChild>
-              <span onClick={() => {/* Abrir modal de notificações */}}>
-                Ver alertas
-              </span>
-            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -161,75 +168,12 @@ export const RealTimeAuditDashboard: React.FC = () => {
         </TabsList>
 
         <TabsContent value="logs" className="space-y-4">
-          {/* Filtros */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Filtros</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                <Select
-                  value={filters.event_category || 'all'}
-                  onValueChange={(value) => setFilters({...filters, event_category: value === 'all' ? undefined : value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="authentication">Autenticação</SelectItem>
-                    <SelectItem value="data_management">Gestão de Dados</SelectItem>
-                    <SelectItem value="user_activity">Atividade do Usuário</SelectItem>
-                    <SelectItem value="security">Segurança</SelectItem>
-                    <SelectItem value="system">Sistema</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filters.risk_level || 'all'}
-                  onValueChange={(value) => setFilters({...filters, risk_level: value === 'all' ? undefined : value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Risco" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="low">Baixo</SelectItem>
-                    <SelectItem value="medium">Médio</SelectItem>
-                    <SelectItem value="high">Alto</SelectItem>
-                    <SelectItem value="critical">Crítico</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Input
-                  placeholder="Data início"
-                  type="date"
-                  value={filters.date_from || ''}
-                  onChange={(e) => setFilters({...filters, date_from: e.target.value || undefined})}
-                />
-
-                <Input
-                  placeholder="Data fim"
-                  type="date"
-                  value={filters.date_to || ''}
-                  onChange={(e) => setFilters({...filters, date_to: e.target.value || undefined})}
-                />
-
-                <Input
-                  placeholder="Buscar..."
-                  value={filters.search || ''}
-                  onChange={(e) => setFilters({...filters, search: e.target.value || undefined})}
-                />
-
-                <Button 
-                  variant="outline"
-                  onClick={() => setFilters({})}
-                >
-                  Limpar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Filtros Avançados */}
+          <EnhancedAuditFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onReset={handleFiltersReset}
+          />
 
           {/* Lista de Logs */}
           <Card>
