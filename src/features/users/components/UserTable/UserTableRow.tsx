@@ -1,11 +1,7 @@
 
 import React from "react";
-import { 
-  TableRow, 
-  TableCell 
-} from "@/components/ui/table";
-import { User } from "@/types/user.types";
-import UserStatusBadge from "@/components/admin/users/UserStatusBadge";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,19 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  User as UserIcon, 
-  MoreVertical, 
-  Eye, 
-  KeyRound,
-  UserX,
-  Lock,
-  Clock,
-  Shield,
-  GraduationCap,
-  Ban,
-  Key
-} from "lucide-react";
+import { MoreHorizontal, Eye, RotateCcw, Key, Shield, Trash2, UserX, HardDrive } from "lucide-react";
+import { User } from "@/types/user.types";
+import StoragePercentageBadge from "@/components/admin/users/StoragePercentageBadge";
 
 interface UserTableRowProps {
   user: User;
@@ -36,12 +22,11 @@ interface UserTableRowProps {
   onDeleteUser: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
   onBanUser?: (user: User) => void;
+  onStorageManagement: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
-const GERAL_GROUP_ID = "564c55dc-0ab8-481e-a0bc-97ea7e484b88";
-
-export const UserTableRow: React.FC<UserTableRowProps> = ({ 
+export const UserTableRow: React.FC<UserTableRowProps> = ({
   user,
   onViewDetails,
   onResetPassword,
@@ -49,121 +34,147 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
   onDeleteUser,
   onSetPermissionGroup,
   onBanUser,
-  permissionGroups = []
+  onStorageManagement,
+  permissionGroups = [],
 }) => {
-  const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
-  const isAdminUser = user.role === "Admin";
-  
-  const permissionGroup = permissionGroups.find(g => g.id === user.permission_group_id);
-  const permissionGroupName = permissionGroup?.name;
-  const isBanned = permissionGroupName?.toLowerCase() === "banido";
-
-  const getUserIcon = () => {
-    if (isBanned) {
-      return <Ban className="h-4 w-4 text-red-600" />;
+  const formatMB = (mb: number) => {
+    if (mb >= 1024) {
+      return `${(mb / 1024).toFixed(1)}GB`;
     }
-    if (isAdminUser) {
-      return <Shield className="h-4 w-4 text-blue-600" />;
-    }
-    if (isTemporaryGroup) {
-      return <Clock className="h-4 w-4 text-orange-600" />;
-    }
-    return <UserIcon className="h-4 w-4 text-gray-600" />;
+    return `${mb}MB`;
   };
 
-  const getRowClass = () => {
-    if (isBanned) {
-      return "bg-red-50/30 border-l-4 border-l-red-300";
+  const getStatusVariant = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'ativo':
+        return 'default';
+      case 'inativo':
+        return 'secondary';
+      case 'pendente':
+        return 'outline';
+      default:
+        return 'secondary';
     }
-    if (isAdminUser) {
-      return "bg-blue-50/30 border-l-4 border-l-blue-300";
-    }
-    if (isTemporaryGroup) {
-      return "bg-orange-50/30 border-l-4 border-l-orange-300";
-    }
-    return "";
   };
+
+  const getRoleVariant = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return 'destructive';
+      case 'mentor':
+        return 'default';
+      case 'student':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  // Verificar se o usuário está banido
+  const isBanned = permissionGroups.find(g => g.id === user.permission_group_id)?.name?.toLowerCase() === "banido";
 
   return (
-    <TableRow className={getRowClass()}>
+    <TableRow className="hover:bg-gray-50">
       <TableCell>
-        <div className="flex items-center">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
-            isBanned ? "bg-red-100" :
-            isAdminUser ? "bg-blue-100" : 
-            isTemporaryGroup ? "bg-orange-100" : "bg-gray-100"
-          }`}>
-            {getUserIcon()}
-          </div>
-          <div>
-            <div className="font-medium">{user.name || "Sem nome"}</div>
-            <div className="text-sm text-gray-500">{user.email}</div>
-          </div>
+        <div className="space-y-1">
+          <div className="font-medium">{user.name}</div>
+          <div className="text-sm text-gray-500">{user.email}</div>
         </div>
       </TableCell>
+      
       <TableCell>
-        <UserStatusBadge 
-          status={user.status} 
-          permissionGroupId={user.permission_group_id}
-          isTemporaryGroup={isTemporaryGroup}
-          permissionGroupName={permissionGroupName}
-        />
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <span>{user.role || "Não definido"}</span>
-          {user.is_mentor && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-              <GraduationCap className="h-3 w-3 mr-1" />
-              Mentor
-            </span>
+        <div className="flex gap-2">
+          <Badge variant={getRoleVariant(user.role)}>
+            {user.role}
+          </Badge>
+          {isBanned && (
+            <Badge variant="destructive">
+              Banido
+            </Badge>
           )}
         </div>
       </TableCell>
-      <TableCell>{user.lastLogin || "Nunca"}</TableCell>
-      <TableCell className="text-right">
+      
+      <TableCell>
+        <Badge variant={getStatusVariant(user.status)}>
+          {user.status}
+        </Badge>
+      </TableCell>
+      
+      <TableCell>
+        <div className="text-sm text-gray-600">
+          {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'}
+        </div>
+      </TableCell>
+      
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-mono">
+            {formatMB(user.storage_used_mb || 0)} / {formatMB(user.storage_limit_mb || 100)}
+          </span>
+          <StoragePercentageBadge 
+            storageUsedMb={user.storage_used_mb || 0}
+            storageLimitMb={user.storage_limit_mb || 100}
+          />
+        </div>
+      </TableCell>
+      
+      <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreVertical className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => onViewDetails(user)}>
               <Eye className="mr-2 h-4 w-4" />
-              <span>Ver detalhes</span>
+              Ver Detalhes
             </DropdownMenuItem>
             
-            <DropdownMenuItem onClick={() => onResetPassword(user)}>
-              <KeyRound className="mr-2 h-4 w-4" />
-              <span>Redefinir senha</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onChangePassword(user)}>
-              <Key className="mr-2 h-4 w-4" />
-              <span>Alterar senha</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onSetPermissionGroup(user)}>
-              <Lock className="mr-2 h-4 w-4" />
-              <span>
-                {isTemporaryGroup ? "Atribuir grupo definitivo" : "Definir permissões"}
-              </span>
+            <DropdownMenuItem onClick={() => onStorageManagement(user)}>
+              <HardDrive className="mr-2 h-4 w-4" />
+              Gerenciar Armazenamento
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
-
-            {!isBanned && !isAdminUser && onBanUser && (
-              <DropdownMenuItem onClick={() => onBanUser(user)} className="text-orange-600 focus:text-orange-600 hover:text-orange-600">
-                <Ban className="mr-2 h-4 w-4" />
-                <span>Banir usuário</span>
-              </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={() => onResetPassword(user)}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Resetar Senha
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={() => onChangePassword(user)}>
+              <Key className="mr-2 h-4 w-4" />
+              Alterar Senha
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={() => onSetPermissionGroup(user)}>
+              <Shield className="mr-2 h-4 w-4" />
+              Definir Permissões
+            </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
+            
+            {onBanUser && !isBanned && (
+              <>
+                <DropdownMenuItem 
+                  onClick={() => onBanUser(user)}
+                  className="text-orange-600 focus:text-orange-600"
+                >
+                  <UserX className="mr-2 h-4 w-4" />
+                  Banir Usuário
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
             )}
-
-            <DropdownMenuItem onClick={() => onDeleteUser(user)} className="text-red-600 focus:text-red-600 hover:text-red-600">
-              <UserX className="mr-2 h-4 w-4" />
-              <span>Excluir usuário</span>
+            
+            <DropdownMenuItem 
+              onClick={() => onDeleteUser(user)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Excluir Usuário
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

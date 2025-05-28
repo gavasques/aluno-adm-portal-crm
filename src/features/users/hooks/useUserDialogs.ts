@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { User } from '@/types/user.types';
 
-export type DialogType = 'view' | 'delete' | 'reset' | 'permissions' | 'changePassword';
+export type DialogType = 'view' | 'delete' | 'reset' | 'permissions' | 'changePassword' | 'storage';
 
 export interface DialogState {
   type: DialogType | null;
@@ -53,6 +53,10 @@ export const useUserDialogs = () => {
     openDialog('permissions', user);
   }, [openDialog]);
 
+  const handleStorageManagement = useCallback((user: User) => {
+    openDialog('storage', user);
+  }, [openDialog]);
+
   return {
     ...dialogState,
     closeDialog,
@@ -60,6 +64,7 @@ export const useUserDialogs = () => {
     handleResetPassword,
     handleChangePassword,
     handleDeleteUser,
-    handleSetPermissionGroup
+    handleSetPermissionGroup,
+    handleStorageManagement
   };
 };

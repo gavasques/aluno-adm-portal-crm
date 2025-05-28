@@ -19,6 +19,7 @@ interface UserTableProps {
   onDeleteUser: (user: User) => void;
   onSetPermissionGroup: (user: User) => void;
   onBanUser?: (user: User) => void;
+  onStorageManagement: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -31,6 +32,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   onDeleteUser,
   onSetPermissionGroup,
   onBanUser,
+  onStorageManagement,
   permissionGroups = [],
 }) => {
   return (
@@ -51,6 +53,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onDeleteUser={onDeleteUser}
                 onSetPermissionGroup={onSetPermissionGroup}
                 onBanUser={onBanUser}
+                onStorageManagement={onStorageManagement}
                 permissionGroups={permissionGroups}
               />
             ))

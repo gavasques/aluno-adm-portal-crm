@@ -7,6 +7,7 @@ import { UserDeleteDialog } from '@/components/admin/users/dialogs/UserDeleteDia
 import { ResetPasswordDialog } from '@/components/admin/users/dialogs/ResetPasswordDialog';
 import { ChangePasswordDialog } from '@/components/admin/users/dialogs/ChangePasswordDialog';
 import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
+import UserStorageManagementDialog from '@/components/admin/users/dialogs/UserStorageManagementDialog';
 
 interface UserDialogManagerProps {
   dialogState: DialogState;
@@ -103,6 +104,12 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
         userEmail={user.email}
         currentGroupId={user.permission_group_id || null}
         onConfirmSetPermissionGroup={handleConfirmSetPermissionGroup}
+      />
+
+      <UserStorageManagementDialog
+        open={isOpen && type === 'storage'}
+        onOpenChange={(open) => !open && onCloseDialog()}
+        user={user}
       />
     </>
   );
