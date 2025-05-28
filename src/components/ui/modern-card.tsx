@@ -1,9 +1,16 @@
 
 import * as React from "react"
-import { motion } from "framer-motion"
+import { motion, HTMLMotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface ModernCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ModernCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onDrag'> {
+  variant?: "glass" | "neumorphism" | "modern" | "gradient"
+  hover?: boolean
+  interactive?: boolean
+  glow?: boolean
+}
+
+interface MotionModernCardProps extends Omit<HTMLMotionProps<"div">, keyof ModernCardProps> {
   variant?: "glass" | "neumorphism" | "modern" | "gradient"
   hover?: boolean
   interactive?: boolean
@@ -32,21 +39,25 @@ const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(
     const glowClasses = glow ? "shadow-glow-blue" : ""
 
     if (interactive) {
+      const motionProps: MotionModernCardProps = {
+        whileHover: { scale: 1.02, y: -4 },
+        whileTap: { scale: 0.98 },
+        transition: { type: "spring", stiffness: 300, damping: 30 },
+        className: cn(
+          baseClasses,
+          variantClasses[variant],
+          hoverClasses[variant],
+          interactiveClasses,
+          glowClasses,
+          className
+        ),
+        ...props
+      }
+
       return (
         <motion.div
           ref={ref}
-          whileHover={{ scale: 1.02, y: -4 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={cn(
-            baseClasses,
-            variantClasses[variant],
-            hoverClasses[variant],
-            interactiveClasses,
-            glowClasses,
-            className
-          )}
-          {...props}
+          {...motionProps}
         >
           {children}
         </motion.div>
