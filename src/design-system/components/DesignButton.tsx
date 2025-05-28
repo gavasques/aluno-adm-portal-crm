@@ -47,6 +47,7 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
   gradient,
   children,
   className,
+  style,
   ...props
 }) => {
   const Comp = asChild ? Slot : motion.button;
@@ -61,7 +62,9 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
 
   const gradientStyle = gradient 
     ? { background: designTokens.gradients[gradient] }
-    : undefined;
+    : {};
+
+  const combinedStyle = { ...gradientStyle, ...style };
 
   const buttonContent = (
     <>
@@ -80,7 +83,7 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
 
   if (asChild) {
     return (
-      <Comp className={baseClasses} style={gradientStyle} {...props}>
+      <Comp className={baseClasses} style={combinedStyle} {...props}>
         {buttonContent}
       </Comp>
     );
@@ -89,7 +92,7 @@ export const DesignButton: React.FC<DesignButtonProps> = ({
   return (
     <Comp
       className={baseClasses}
-      style={gradientStyle}
+      style={combinedStyle}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}

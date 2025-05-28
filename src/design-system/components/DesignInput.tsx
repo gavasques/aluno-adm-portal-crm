@@ -71,7 +71,7 @@ export const DesignInput: React.FC<DesignInputProps> = ({
     props.onChange?.(e);
   };
 
-  const statusIcon = status === 'success' ? Check : status === 'error' ? AlertCircle : null;
+  const StatusIcon = status === 'success' ? Check : status === 'error' ? AlertCircle : null;
   const statusMessage = errorMessage || successMessage || helperText;
 
   const inputClasses = cn(
@@ -80,7 +80,7 @@ export const DesignInput: React.FC<DesignInputProps> = ({
     variantClasses[variant],
     statusClasses[status],
     leftIcon && 'pl-10',
-    (rightIcon || showPasswordToggle || statusIcon || loading) && 'pr-10',
+    (rightIcon || showPasswordToggle || StatusIcon || loading) && 'pr-10',
     props.disabled && 'opacity-50 cursor-not-allowed',
     className
   );
@@ -141,13 +141,13 @@ export const DesignInput: React.FC<DesignInputProps> = ({
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           )}
           
-          {statusIcon && (
+          {StatusIcon && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             >
-              <statusIcon className={cn(
+              <StatusIcon className={cn(
                 "w-4 h-4",
                 status === 'error' && "text-red-500",
                 status === 'success' && "text-green-500"
@@ -165,7 +165,7 @@ export const DesignInput: React.FC<DesignInputProps> = ({
             </button>
           )}
           
-          {rightIcon && !statusIcon && !loading && (
+          {rightIcon && !StatusIcon && !loading && (
             <div className="text-slate-500">
               {rightIcon}
             </div>
@@ -190,7 +190,7 @@ export const DesignInput: React.FC<DesignInputProps> = ({
               status === 'warning' && "text-yellow-600 dark:text-yellow-400",
               status === 'default' && "text-slate-500 dark:text-slate-400"
             )}>
-              {statusIcon && <statusIcon className="w-3 h-3" />}
+              {StatusIcon && <StatusIcon className="w-3 h-3" />}
               {statusMessage}
             </p>
           </motion.div>
