@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { User, GraduationCap, BookOpen, UserPlus, Users, UserCheck } from 'lucide-react';
-import { useUserContext } from '@/contexts/UserContext';
+import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
 import { useUserOperations } from '@/hooks/users/useUserOperations';
 import UsersList from '@/components/admin/users/UsersList';
 import UserActionButtons from '@/components/admin/users/UserActionButtons';
@@ -14,12 +14,11 @@ const UnifiedUserPage = () => {
   const { 
     filteredUsers, 
     stats, 
-    studentStats,
     filters, 
     setFilters, 
     isLoading, 
     error 
-  } = useUserContext();
+  } = usePerformanceOptimizedUserContext();
   
   const userOperations = useUserOperations();
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +37,23 @@ const UnifiedUserPage = () => {
   };
 
   const isStudentView = filters.role === 'student';
+
+  // Calculate student stats from the current filtered users
+  const studentStats = React.useMemo(() => {
+    const students = filteredUsers.filter(user => user.role === 'student');
+    return {
+      total: students.length,
+      active: students.filter(user => user.status === 'ativo').length,
+      mentors: students.filter(user => user.is_mentor).length,
+      newThisMonth: students.filter(user => {
+        if (!user.created_at) return false;
+        const createdDate = new Date(user.created_at);
+        const now = new Date();
+        return createdDate.getMonth() === now.getMonth() && 
+               createdDate.getFullYear() === now.getFullYear();
+      }).length
+    };
+  }, [filteredUsers]);
 
   const getStatsCards = () => {
     if (isStudentView && studentStats) {
