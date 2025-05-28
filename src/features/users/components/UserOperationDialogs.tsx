@@ -46,22 +46,22 @@ const UserOperationDialogs: React.FC<UserOperationDialogsProps> = (props) => {
         open={props.showDeleteDialog}
         onOpenChange={props.setShowDeleteDialog}
         userEmail={props.selectedUserEmail}
-        onDelete={props.confirmDelete}
+        onConfirm={props.confirmDelete}
       />
 
       <ResetPasswordDialog
         open={props.showResetDialog}
         onOpenChange={props.setShowResetDialog}
         userEmail={props.selectedUserEmail}
-        onReset={props.confirmResetPassword}
+        onConfirm={props.confirmResetPassword}
       />
 
       <UserPermissionGroupDialog
         open={props.showPermissionDialog}
         onOpenChange={props.setShowPermissionDialog}
         userEmail={props.selectedUserEmail}
-        permissionGroupId={props.selectedUserPermissionGroupId}
-        onUpdate={props.confirmSetPermissionGroup}
+        currentPermissionGroupId={props.selectedUserPermissionGroupId}
+        onConfirm={props.confirmSetPermissionGroup}
       />
     </>
   );

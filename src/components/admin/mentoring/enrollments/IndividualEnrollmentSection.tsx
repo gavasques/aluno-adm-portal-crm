@@ -1,37 +1,56 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { User, Plus, Filter, Grid, List } from 'lucide-react';
-
-// Import com default export
 import EnrollmentCard from './EnrollmentCard';
 
 interface IndividualEnrollmentSectionProps {
+  viewMode?: "cards" | "list";
+  onViewModeChange?: (mode: "cards" | "list") => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (status: string) => void;
   enrollments: any[];
   selectedEnrollments: string[];
-  onView: (enrollment: any) => void;
-  onEdit: (enrollment: any) => void;
-  onDelete: (enrollment: any) => void;
+  onToggleSelection: (id: string) => void;
+  onCreateEnrollment: () => void;
+  onEditEnrollment: (enrollment: any) => void;
+  onViewEnrollment: (enrollment: any) => void;
+  onDeleteEnrollment: (id: string) => void;
   onAddExtension: (enrollment: any) => void;
-  onToggleEnrollmentSelection: (enrollmentId: string) => void;
-  onSelectAll: () => void;
-  viewMode: 'grid' | 'list';
+  onBulkAction: (action: string) => void;
 }
 
 const IndividualEnrollmentSection: React.FC<IndividualEnrollmentSectionProps> = ({
+  viewMode = "cards",
+  onViewModeChange = () => {},
+  searchQuery = "",
+  onSearchChange = () => {},
+  statusFilter = "",
+  onStatusFilterChange = () => {},
   enrollments,
   selectedEnrollments,
-  onView,
-  onEdit,
-  onDelete,
+  onToggleSelection,
+  onCreateEnrollment,
+  onEditEnrollment,
+  onViewEnrollment,
+  onDeleteEnrollment,
   onAddExtension,
-  onToggleEnrollmentSelection,
-  onSelectAll,
-  viewMode
+  onBulkAction
 }) => {
   const handleSelectAll = () => {
-    onSelectAll();
+    if (selectedEnrollments.length === enrollments.length) {
+      enrollments.forEach(e => onToggleSelection(e.id));
+    } else {
+      enrollments.forEach(e => {
+        if (!selectedEnrollments.includes(e.id)) {
+          onToggleSelection(e.id);
+        }
+      });
+    }
   };
 
   return (
@@ -49,7 +68,7 @@ const IndividualEnrollmentSection: React.FC<IndividualEnrollmentSectionProps> = 
         </div>
       </div>
 
-      {viewMode === 'grid' ? (
+      {viewMode === "cards" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {enrollments.map(enrollment => (
             <div key={enrollment.id}>
@@ -58,7 +77,7 @@ const IndividualEnrollmentSection: React.FC<IndividualEnrollmentSectionProps> = 
                   type="checkbox"
                   className="hidden peer"
                   checked={selectedEnrollments.includes(enrollment.id)}
-                  onChange={() => onToggleEnrollmentSelection(enrollment.id)}
+                  onChange={() => onToggleSelection(enrollment.id)}
                 />
                 <EnrollmentCard enrollment={enrollment} />
               </label>
@@ -76,7 +95,7 @@ const IndividualEnrollmentSection: React.FC<IndividualEnrollmentSectionProps> = 
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary">{enrollment.status}</Badge>
-                  <Button size="sm" onClick={() => onView(enrollment)}>
+                  <Button size="sm" onClick={() => onViewEnrollment(enrollment)}>
                     Ver Detalhes
                   </Button>
                 </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { useOptimizedIndividualEnrollments } from '@/hooks/admin/useOptimizedIndividualEnrollments';
@@ -217,7 +216,7 @@ const AdminIndividualEnrollments = () => {
         <IndividualEnrollmentsEmpty onAddEnrollment={handleCreateEnrollment} />
       ) : (
         <OptimizedIndividualEnrollmentsContent
-          paginatedEnrollments={paginatedEnrollments}
+          enrollments={paginatedEnrollments}
           viewMode={viewMode}
           selectedEnrollments={selectedEnrollments}
           pageInfo={pageInfo}
@@ -226,7 +225,6 @@ const AdminIndividualEnrollments = () => {
           onDelete={handleDeleteEnrollment}
           onAddExtension={handleAddExtension}
           onToggleSelection={toggleEnrollmentSelection}
-          onPageChange={handlePageChange}
           onSessionUpdated={handleSessionUpdated}
         />
       )}
