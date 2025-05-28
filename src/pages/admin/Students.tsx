@@ -17,7 +17,11 @@ const AdminStudents = () => {
     statusFilter,
     setSearchTerm,
     setStatusFilter,
-    refreshStudents
+    refreshStudents,
+    updateStudent,
+    deleteStudent,
+    toggleStudentStatus,
+    toggleMentorStatus
   } = useStudentsData();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -56,11 +60,16 @@ const AdminStudents = () => {
       <StudentsTable 
         students={students}
         isLoading={isLoading}
+        onUpdateStudent={updateStudent}
+        onDeleteStudent={deleteStudent}
+        onToggleStatus={toggleStudentStatus}
+        onToggleMentor={toggleMentorStatus}
       />
 
       <StudentAddDialog 
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+        onStudentAdded={refreshStudents}
       />
     </div>
   );

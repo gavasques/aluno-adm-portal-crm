@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,26 +10,32 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
 
 interface StudentDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   student: any;
+  onConfirmDelete: () => Promise<boolean>;
 }
 
 const StudentDeleteDialog: React.FC<StudentDeleteDialogProps> = ({
   open,
   onOpenChange,
   student,
+  onConfirmDelete,
 }) => {
-  const confirmDeleteStudent = () => {
-    toast({
-      title: "Aluno excluído",
-      description: `O aluno ${student?.name} foi excluído com sucesso.`
-    });
-    onOpenChange(false);
-    // In a real app, delete the student from the database
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const success = await onConfirmDelete();
+      if (success) {
+        onOpenChange(false);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -53,11 +59,11 @@ const StudentDeleteDialog: React.FC<StudentDeleteDialogProps> = ({
         )}
         
         <DialogFooter className="gap-2 sm:gap-0 mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isDeleting}>
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={confirmDeleteStudent}>
-            Sim, excluir aluno
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? "Excluindo..." : "Sim, excluir aluno"}
           </Button>
         </DialogFooter>
       </DialogContent>

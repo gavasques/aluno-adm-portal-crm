@@ -40,7 +40,6 @@ export const useStudentsData = () => {
     try {
       setIsLoading(true);
       
-      // Buscar todos os usuários que são estudantes
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -55,7 +54,6 @@ export const useStudentsData = () => {
       console.log('Estudantes encontrados:', profilesData?.length || 0);
 
       if (profilesData) {
-        // Mapear os dados para o formato esperado
         const mappedStudents: Student[] = profilesData.map(profile => ({
           id: profile.id,
           name: profile.name || 'Sem nome',
@@ -71,20 +69,16 @@ export const useStudentsData = () => {
 
         setStudents(mappedStudents);
 
-        // Buscar estatísticas de mentorias
         const { data: enrollmentsData } = await supabase
           .from('mentoring_enrollments')
           .select('student_id, status');
 
-        // Calcular estatísticas
         const total = mappedStudents.length;
         const active = mappedStudents.filter(s => s.status === 'Ativo').length;
         
-        // Estudantes com mentorias ativas
         const activeEnrollments = enrollmentsData?.filter(e => e.status === 'ativa') || [];
         const studentsWithMentorships = new Set(activeEnrollments.map(e => e.student_id)).size;
 
-        // Novos estudantes este mês
         const thisMonth = new Date();
         thisMonth.setDate(1);
         const newThisMonth = mappedStudents.filter(s => 
@@ -111,7 +105,66 @@ export const useStudentsData = () => {
     }
   }, [toast]);
 
-  // Filtrar estudantes
+  const updateStudent = useCallback(async (studentId: string, updates: Partial<Student>) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno atualizado com sucesso",
+      });
+
+      await fetchStudents();
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar aluno:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar aluno",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [fetchStudents, toast]);
+
+  const deleteStudent = useCallback(async (studentId: string) => {
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(studentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno excluído com sucesso",
+      });
+
+      await fetchStudents();
+      return true;
+    } catch (error) {
+      console.error('Erro ao excluir aluno:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir aluno",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [fetchStudents, toast]);
+
+  const toggleStudentStatus = useCallback(async (studentId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+    return await updateStudent(studentId, { status: newStatus });
+  }, [updateStudent]);
+
+  const toggleMentorStatus = useCallback(async (studentId: string, currentMentorStatus: boolean) => {
+    return await updateStudent(studentId, { is_mentor: !currentMentorStatus });
+  }, [updateStudent]);
+
   const filteredStudents = students.filter(student => {
     const matchesSearch = !searchTerm || 
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,6 +188,10 @@ export const useStudentsData = () => {
     statusFilter,
     setSearchTerm,
     setStatusFilter,
-    refreshStudents: fetchStudents
+    refreshStudents: fetchStudents,
+    updateStudent,
+    deleteStudent,
+    toggleStudentStatus,
+    toggleMentorStatus
   };
 };

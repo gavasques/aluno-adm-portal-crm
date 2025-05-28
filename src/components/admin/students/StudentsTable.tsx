@@ -5,10 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { User, MoreVertical, Eye, GraduationCap, ArrowUpDown } from 'lucide-react';
+import { User, MoreVertical, Eye, Edit, Trash2, UserCheck, UserX, GraduationCap, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import StudentDetailsDialog from './StudentDetailsDialog';
+import StudentEditDialog from './StudentEditDialog';
+import StudentDeleteDialog from './StudentDeleteDialog';
 
 interface Student {
   id: string;
@@ -23,11 +25,24 @@ interface Student {
 interface StudentsTableProps {
   students: Student[];
   isLoading: boolean;
+  onUpdateStudent: (studentId: string, updates: Partial<Student>) => Promise<boolean>;
+  onDeleteStudent: (studentId: string) => Promise<boolean>;
+  onToggleStatus: (studentId: string, currentStatus: string) => Promise<boolean>;
+  onToggleMentor: (studentId: string, currentMentorStatus: boolean) => Promise<boolean>;
 }
 
-const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) => {
+const StudentsTable: React.FC<StudentsTableProps> = ({ 
+  students, 
+  isLoading,
+  onUpdateStudent,
+  onDeleteStudent,
+  onToggleStatus,
+  onToggleMentor
+}) => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -94,6 +109,24 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
   const handleViewDetails = (student: Student) => {
     setSelectedStudent(student);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleEdit = (student: Student) => {
+    setSelectedStudent(student);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (student: Student) => {
+    setSelectedStudent(student);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleToggleStatus = async (student: Student) => {
+    await onToggleStatus(student.id, student.status);
+  };
+
+  const handleToggleMentor = async (student: Student) => {
+    await onToggleMentor(student.id, student.is_mentor || false);
   };
 
   const getSortIcon = (field: string) => {
@@ -233,6 +266,34 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
                             <Eye className="mr-2 h-4 w-4" />
                             Ver detalhes
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(student)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(student)}>
+                            {student.status === 'Ativo' ? (
+                              <>
+                                <UserX className="mr-2 h-4 w-4" />
+                                Desativar
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="mr-2 h-4 w-4" />
+                                Ativar
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleMentor(student)}>
+                            <GraduationCap className="mr-2 h-4 w-4" />
+                            {student.is_mentor ? 'Remover mentor' : 'Tornar mentor'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDelete(student)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -245,11 +306,27 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ students, isLoading }) =>
       </Card>
 
       {selectedStudent && (
-        <StudentDetailsDialog
-          open={isDetailsDialogOpen}
-          onOpenChange={setIsDetailsDialogOpen}
-          student={selectedStudent}
-        />
+        <>
+          <StudentDetailsDialog
+            open={isDetailsDialogOpen}
+            onOpenChange={setIsDetailsDialogOpen}
+            student={selectedStudent}
+          />
+
+          <StudentEditDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            student={selectedStudent}
+            onSave={onUpdateStudent}
+          />
+
+          <StudentDeleteDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            student={selectedStudent}
+            onConfirmDelete={() => onDeleteStudent(selectedStudent.id)}
+          />
+        </>
       )}
     </>
   );
