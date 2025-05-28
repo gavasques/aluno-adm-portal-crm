@@ -41,7 +41,7 @@ const AdminMentoringMaterials = () => {
       material.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (material.description && material.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesType = !typeFilter || material.fileType.includes(typeFilter);
+    const matchesType = !typeFilter || (material.fileType && material.fileType.includes(typeFilter));
     const matchesUploader = !uploaderFilter || material.uploaderType === uploaderFilter;
     
     return matchesSearch && matchesType && matchesUploader;
@@ -70,12 +70,15 @@ const AdminMentoringMaterials = () => {
     );
   };
 
-  const getFileTypeIcon = (fileType: string) => {
-    if (fileType.includes('pdf')) return '📄';
-    if (fileType.includes('image')) return '🖼️';
-    if (fileType.includes('video')) return '🎥';
-    if (fileType.includes('spreadsheet') || fileType.includes('excel')) return '📊';
-    if (fileType.includes('presentation') || fileType.includes('powerpoint')) return '📽️';
+  const getFileTypeIcon = (fileType?: string) => {
+    if (!fileType) return '📎';
+    
+    const type = fileType.toLowerCase();
+    if (type.includes('pdf')) return '📄';
+    if (type.includes('image')) return '🖼️';
+    if (type.includes('video')) return '🎥';
+    if (type.includes('spreadsheet') || type.includes('excel')) return '📊';
+    if (type.includes('presentation') || type.includes('powerpoint')) return '📽️';
     return '📎';
   };
 
@@ -126,7 +129,7 @@ const AdminMentoringMaterials = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Tamanho Total</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {materials.reduce((acc, m) => acc + m.sizeMB, 0).toFixed(1)} MB
+                  {materials.reduce((acc, m) => acc + (m.sizeMB || 0), 0).toFixed(1)} MB
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -245,11 +248,11 @@ const AdminMentoringMaterials = () => {
               
               <div className="space-y-2 mb-4">
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{material.sizeMB} MB</span>
+                  <span>{material.sizeMB || 0} MB</span>
                   <span>{format(new Date(material.createdAt), 'dd/MM/yyyy')}</span>
                 </div>
                 
-                {material.tags.length > 0 && (
+                {material.tags && material.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {material.tags.slice(0, 3).map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs">
