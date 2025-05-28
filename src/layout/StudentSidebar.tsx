@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Home, Settings, Users, BarChart, Wrench, Package, Bell, LogOut, User, ChevronDown, GraduationCap } from "lucide-react";
+import { Home, Settings, Users, BarChart, Wrench, Package, Bell, LogOut, User, GraduationCap } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
 import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
@@ -52,7 +52,7 @@ const NavItem = ({
     <Link
       to={href}
       className={cn(
-        "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+        "flex items-center px-4 py-3 text-base font-medium rounded-lg transition-colors",
         isActive
           ? "bg-gray-800 text-white"
           : "text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -138,7 +138,7 @@ const StudentSidebar = () => {
   }
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto">
+    <div className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white overflow-y-auto flex flex-col">
       {/* Header da sidebar com logo e menu do usuário */}
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between mb-4">
@@ -160,7 +160,7 @@ const StudentSidebar = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative rounded-full h-8 w-8 text-white hover:bg-gray-700">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-blue-600 text-white">
+                    <AvatarFallback className="bg-blue-600 text-white text-sm">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -168,8 +168,8 @@ const StudentSidebar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="bg-blue-600 text-white p-4 -mt-1 -mx-1 rounded-t-md">
-                  <div className="font-medium">Minha Conta</div>
-                  <div className="text-sm text-blue-100">
+                  <div className="font-medium text-sm">Minha Conta</div>
+                  <div className="text-xs text-blue-100">
                     {user?.email || "aluno@portaledu.com"}
                   </div>
                 </div>
@@ -208,13 +208,13 @@ const StudentSidebar = () => {
       </div>
 
       {/* Menu de navegação */}
-      <div className="p-4">
+      <div className="flex-1 p-4">
         <motion.div variants={sidebarAnimation} initial="hidden" animate="show">
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Principal
             </h3>
-            <nav className="space-y-1">
+            <nav className="space-y-2">
               <motion.div variants={itemAnimation}>
                 <NavItem href="/aluno" icon={Home} showAlways={true}>Dashboard</NavItem>
               </motion.div>
@@ -225,18 +225,18 @@ const StudentSidebar = () => {
           </div>
           
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Minha Área
             </h3>
-            <nav className="space-y-1">
+            <nav className="space-y-2">
               <motion.div variants={itemAnimation}>
                 <NavItem href="/aluno/meus-fornecedores" icon={Package} menuKey="my-suppliers">Meus Fornecedores</NavItem>
               </motion.div>
               <motion.div variants={itemAnimation}>
                 {mentoringLoading ? (
-                  <div className="flex items-center gap-2 rounded-md px-3 py-2">
-                    <Skeleton className="h-4 w-4" />
-                    <Skeleton className="h-4 w-24" />
+                  <div className="flex items-center gap-3 rounded-lg px-4 py-3">
+                    <Skeleton className="h-5 w-5" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
                 ) : (
                   <NavItem 
@@ -252,10 +252,10 @@ const StudentSidebar = () => {
           </div>
           
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Geral
             </h3>
-            <nav className="space-y-1">
+            <nav className="space-y-2">
               <motion.div variants={itemAnimation}>
                 <NavItem href="/aluno/fornecedores" icon={Users} menuKey="suppliers">Fornecedores</NavItem>
               </motion.div>
