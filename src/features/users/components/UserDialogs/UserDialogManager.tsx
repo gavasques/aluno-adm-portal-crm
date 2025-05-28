@@ -1,15 +1,14 @@
 
 import React from 'react';
-import { UserDialogState } from '../../hooks/useUserDialogs';
+import { DialogState } from '../../hooks/useUserDialogs';
 import { useUserActions } from '../../hooks/useUserActions';
 import UserDetailsDialog from '@/components/admin/users/UserDetailsDialog';
 import { UserDeleteDialog } from '@/components/admin/users/dialogs/UserDeleteDialog';
-import { UserStatusDialog } from '@/components/admin/users/dialogs/UserStatusDialog';
 import { ResetPasswordDialog } from '@/components/admin/users/dialogs/ResetPasswordDialog';
 import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/UserPermissionGroupDialog';
 
 interface UserDialogManagerProps {
-  dialogState: UserDialogState;
+  dialogState: DialogState;
   onCloseDialog: () => void;
   onRefresh?: () => void;
 }
@@ -21,7 +20,6 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
 }) => {
   const {
     confirmDelete,
-    confirmToggleStatus,
     confirmResetPassword,
     confirmSetPermissionGroup
   } = useUserActions();
@@ -34,15 +32,6 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
 
   const handleConfirmDelete = async (): Promise<boolean> => {
     const success = await confirmDelete(user.id, user.email);
-    if (success) {
-      onCloseDialog();
-      onRefresh?.();
-    }
-    return success;
-  };
-
-  const handleConfirmToggleStatus = async (): Promise<boolean> => {
-    const success = await confirmToggleStatus(user.id, user.email, user.status);
     if (success) {
       onCloseDialog();
       onRefresh?.();
@@ -70,7 +59,7 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
   return (
     <>
       <UserDetailsDialog
-        open={isOpen && type === 'details'}
+        open={isOpen && type === 'view'}
         onOpenChange={(open) => !open && onCloseDialog()}
         user={user}
         onRefresh={onRefresh}
@@ -83,14 +72,6 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
         onConfirmDelete={handleConfirmDelete}
       />
 
-      <UserStatusDialog
-        open={isOpen && type === 'status'}
-        onOpenChange={(open) => !open && onCloseDialog()}
-        userEmail={user.email}
-        currentStatus={user.status}
-        onConfirmToggleStatus={handleConfirmToggleStatus}
-      />
-
       <ResetPasswordDialog
         open={isOpen && type === 'reset'}
         onOpenChange={(open) => !open && onCloseDialog()}
@@ -99,7 +80,7 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
       />
 
       <UserPermissionGroupDialog
-        open={isOpen && type === 'permission'}
+        open={isOpen && type === 'permissions'}
         onOpenChange={(open) => !open && onCloseDialog()}
         userId={user.id}
         userEmail={user.email}

@@ -16,19 +16,17 @@ interface PerformanceOptimizedUserContextValue {
   setFilters: (filters: Partial<UserFilters>) => void;
   refreshUsers: () => Promise<void>;
   searchUsers: (query: string) => void;
-  forceRefresh: () => Promise<void>; // Nova função
+  forceRefresh: () => Promise<void>;
   
   // CRUD Operations
   createUser: (userData: CreateUserData) => Promise<boolean>;
   deleteUser: (userId: string, userEmail: string) => Promise<boolean>;
-  toggleUserStatus: (userId: string, userEmail: string, currentStatus: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) => Promise<boolean>;
   
   // Mutation states
   isCreating: boolean;
   isDeleting: boolean;
-  isTogglingStatus: boolean;
   isResettingPassword: boolean;
   isSettingPermissions: boolean;
 
