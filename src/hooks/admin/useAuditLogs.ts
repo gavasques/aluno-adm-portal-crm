@@ -15,7 +15,7 @@ export interface AuditLog {
   risk_level: string; // Mudança: aceitar qualquer string do banco
   success: boolean;
   created_at: string;
-  ip_address?: string;
+  ip_address?: unknown; // Mudança: aceitar unknown do tipo inet do PostgreSQL
   user_agent?: string;
   metadata?: any;
 }
