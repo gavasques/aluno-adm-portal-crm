@@ -25,11 +25,20 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
   onCloseDialog,
   onRefresh
 }) => {
+  // Verificar se o contexto está disponível antes de tentar usar
+  let contextValue;
+  try {
+    contextValue = usePerformanceOptimizedUserContext();
+  } catch (error) {
+    console.error('UserDialogManager: Context not available:', error);
+    return null; // Retorna null se o contexto não estiver disponível
+  }
+
   const { 
     deleteUser, 
     resetPassword, 
     setPermissionGroup 
-  } = usePerformanceOptimizedUserContext();
+  } = contextValue;
 
   const { updateMentorStatus } = useMentors();
 
