@@ -69,75 +69,72 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   };
 
   return (
-    <motion.tr
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50"
-      asChild
-    >
-      <TableRow>
-        {/* User Info */}
-        <TableCell className="py-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border border-white/20">
-              <AvatarImage src={user.avatar_url || ''} alt={user.name || ''} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-medium">
-                {getInitials(user.name || user.email)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <div className="font-medium text-gray-900 dark:text-white truncate">
-                {user.name || 'Nome não informado'}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                {user.email}
-              </div>
+    <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
+      {/* User Info */}
+      <TableCell className="py-4">
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center gap-3"
+        >
+          <Avatar className="h-10 w-10 border border-white/20">
+            <AvatarImage src="" alt={user.name || ''} />
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-medium">
+              {getInitials(user.name || user.email)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <div className="font-medium text-gray-900 dark:text-white truncate">
+              {user.name || 'Nome não informado'}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+              {user.email}
             </div>
           </div>
-        </TableCell>
+        </motion.div>
+      </TableCell>
 
-        {/* Badges */}
-        <TableCell className="py-4">
-          <UserBadges user={user} permissionGroups={permissionGroups} />
-        </TableCell>
+      {/* Badges */}
+      <TableCell className="py-4">
+        <UserBadges user={user} permissionGroups={permissionGroups} />
+      </TableCell>
 
-        {/* Storage */}
-        <TableCell className="py-4 text-center">
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-full max-w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-300 ${getStorageColor()}`}
-                style={{ width: `${Math.min(getStoragePercentage(), 100)}%` }}
-              />
-            </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              {user.storage_used_mb || 0}MB / {user.storage_limit_mb || 100}MB
-            </div>
+      {/* Storage */}
+      <TableCell className="py-4 text-center">
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-full max-w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-300 ${getStorageColor()}`}
+              style={{ width: `${Math.min(getStoragePercentage(), 100)}%` }}
+            />
           </div>
-        </TableCell>
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            {user.storage_used_mb || 0}MB / {user.storage_limit_mb || 100}MB
+          </div>
+        </div>
+      </TableCell>
 
-        {/* Last Login */}
-        <TableCell className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          {formatLastLogin(user.lastLogin)}
-        </TableCell>
+      {/* Last Login */}
+      <TableCell className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        {formatLastLogin(user.lastLogin)}
+      </TableCell>
 
-        {/* Actions */}
-        <TableCell className="py-4 text-center">
-          <ModernUserActions
-            user={user}
-            onViewDetails={onViewDetails}
-            onResetPassword={onResetPassword}
-            onChangePassword={onChangePassword}
-            onDeleteUser={onDeleteUser}
-            onSetPermissionGroup={onSetPermissionGroup}
-            onStorageManagement={onStorageManagement}
-            onActivityLogs={onActivityLogs}
-            onSendMagicLink={onSendMagicLink}
-            onToggleMentor={onToggleMentor}
-          />
-        </TableCell>
-      </TableRow>
-    </motion.tr>
+      {/* Actions */}
+      <TableCell className="py-4 text-center">
+        <ModernUserActions
+          user={user}
+          onViewDetails={onViewDetails}
+          onResetPassword={onResetPassword}
+          onChangePassword={onChangePassword}
+          onDeleteUser={onDeleteUser}
+          onSetPermissionGroup={onSetPermissionGroup}
+          onStorageManagement={onStorageManagement}
+          onActivityLogs={onActivityLogs}
+          onSendMagicLink={onSendMagicLink}
+          onToggleMentor={onToggleMentor}
+        />
+      </TableCell>
+    </TableRow>
   );
 };
