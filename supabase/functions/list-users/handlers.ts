@@ -1,251 +1,95 @@
+
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "./_shared/cors.ts";
-import { createUser, inviteUser, deleteUser, toggleUserStatus } from "./userOperations.ts";
+import { processUsersForResponse } from "./userProcessing.ts";
+import { deleteUserOperation } from "./userOperations.ts";
 
-// Função para processar usuários para resposta
-const processUsersForResponse = async (authUsers: any[], profiles: any[]) => {
-  console.log("[processUsersForResponse] Processando usuários:", authUsers.length, "perfis:", profiles.length);
+export async function handleGetRequest(supabaseAdmin: SupabaseClient): Promise<Response> {
+  console.log("[handleGetRequest] Processando requisição GET para listar usuários");
   
-  const processedUsers = [];
-  
-  for (const user of authUsers) {
-    // Buscar perfil correspondente
-    const profile = profiles.find(p => p.id === user.id || p.email === user.email);
-    
-    // Determinar status do usuário
-    let status = 'Ativo';
-    if (user.banned_until && new Date(user.banned_until) > new Date()) {
-      status = 'Inativo';
-    } else if (!user.email_confirmed_at) {
-      status = 'Pendente';
-    }
-    
-    // Determinar último login
-    let lastLogin = 'Nunca';
-    if (user.last_sign_in_at) {
-      lastLogin = new Date(user.last_sign_in_at).toLocaleDateString('pt-BR');
-    }
-    
-    processedUsers.push({
-      id: user.id,
-      name: profile?.name || user.user_metadata?.name || user.email,
-      email: user.email,
-      role: profile?.role || 'Student',
-      status: status,
-      lastLogin: lastLogin,
-      tasks: [],
-      permission_group_id: profile?.permission_group_id || null,
-      storage_used_mb: profile?.storage_used_mb || 0,
-      storage_limit_mb: profile?.storage_limit_mb || 100,
-      is_mentor: profile?.is_mentor || false
-    });
-  }
-  
-  console.log("[processUsersForResponse] Usuários processados:", processedUsers.length);
-  return processedUsers;
-};
-
-// Handler para requisições GET (listar usuários)
-export const handleGetRequest = async (supabaseAdmin: any) => {
   try {
-    console.log("[handleGetRequest] Processando requisição GET para listar usuários");
-    
-    // Verificar se o cliente admin está funcionando
-    if (!supabaseAdmin) {
-      console.error("[handleGetRequest] Cliente Supabase Admin não disponível");
-      return new Response(
-        JSON.stringify({ error: "Erro interno: cliente admin não disponível" }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500 
-        }
-      );
-    }
-    
     console.log("[handleGetRequest] Cliente admin verificado, buscando usuários...");
     
-    // Buscar usuários do auth
     const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
-    
     if (authError) {
-      console.error("[handleGetRequest] Erro ao buscar usuários do auth:", authError);
-      return new Response(
-        JSON.stringify({ error: authError.message }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500 
-        }
-      );
+      console.error("Erro ao buscar usuários do auth:", authError);
+      throw new Error(`Erro ao buscar usuários: ${authError.message}`);
     }
     
-    console.log(`[handleGetRequest] Obtidos ${authUsers?.users?.length || 0} usuários do auth`);
+    console.log(`[handleGetRequest] Obtidos ${authUsers.users.length} usuários do auth`);
     
-    // Buscar perfis
-    const { data: profiles, error: profilesError } = await supabaseAdmin
-      .from('profiles')
-      .select('*');
-      
-    if (profilesError) {
-      console.error("[handleGetRequest] Erro ao buscar perfis:", profilesError);
-    }
-    
-    // Processar usuários para resposta
-    const processedUsers = await processUsersForResponse(authUsers?.users || [], profiles || []);
+    const processedUsers = await processUsersForResponse(supabaseAdmin, authUsers.users);
     
     console.log(`[handleGetRequest] Retornando ${processedUsers.length} usuários processados com status 200`);
     
     return new Response(
       JSON.stringify({ users: processedUsers }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
         status: 200 
       }
     );
-    
-  } catch (error) {
-    console.error("[handleGetRequest] Erro no handler GET:", error);
+  } catch (error: any) {
+    console.error("Erro no handleGetRequest:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        users: []
+      }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
         status: 500 
       }
     );
   }
-};
+}
 
-// Handler para requisições POST (operações de usuário)
-export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
+export async function handlePostRequest(req: Request, supabaseAdmin: SupabaseClient): Promise<Response> {
+  console.log("[handlePostRequest] Processando requisição POST");
+  
   try {
-    console.log("[handlePostRequest] Processando requisição POST");
+    const body = await req.json();
+    console.log("[handlePostRequest] Body recebido:", body);
     
-    let requestBody;
-    try {
-      const bodyText = await req.text();
-      console.log("[handlePostRequest] Body recebido como texto:", bodyText);
+    const { action, userId, email } = body;
+    
+    if (action === 'deleteUser') {
+      console.log(`[handlePostRequest] Executando exclusão de usuário: ${email} (${userId})`);
       
-      if (!bodyText || bodyText.trim() === '') {
-        console.error("[handlePostRequest] Body vazio recebido");
+      if (!userId || !email) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: "Body da requisição está vazio" 
+            error: 'userId e email são obrigatórios para exclusão' 
           }),
           { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            },
+            status: 400 
           }
         );
       }
       
-      requestBody = JSON.parse(bodyText);
-      console.log("[handlePostRequest] Body parseado com sucesso:", requestBody);
-    } catch (parseError) {
-      console.error("[handlePostRequest] Erro ao fazer parse do JSON:", parseError);
+      const result = await deleteUserOperation(supabaseAdmin, userId, email);
+      
+      console.log(`[handlePostRequest] Resultado da exclusão:`, result);
+      
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "JSON inválido no body da requisição" 
-        }),
+        JSON.stringify(result),
         { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
-    }
-    
-    console.log("[handlePostRequest] Dados recebidos:", { 
-      action: requestBody.action,
-      email: requestBody.email,
-      name: requestBody.name,
-      role: requestBody.role,
-      hasPassword: !!requestBody.password,
-      is_mentor: requestBody.is_mentor
-    });
-    
-    const { action } = requestBody;
-    console.log("[handlePostRequest] Executando ação:", action);
-    
-    // Validação de entrada
-    if (!action || typeof action !== 'string') {
-      console.error("[handlePostRequest] Ação não fornecida ou inválida");
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Ação é obrigatória" 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
-    }
-    
-    let result;
-    
-    switch (action) {
-      case 'create':
-      case 'createUser':
-        console.log("[handlePostRequest] Executando criação de usuário");
-        result = await createUser(supabaseAdmin, requestBody);
-        break;
-        
-      case 'invite':
-      case 'inviteUser':
-        console.log("[handlePostRequest] Executando convite de usuário");
-        result = await inviteUser(supabaseAdmin, requestBody);
-        break;
-        
-      case 'delete':
-      case 'deleteUser':
-        console.log("[handlePostRequest] Executando exclusão de usuário");
-        result = await deleteUser(supabaseAdmin, requestBody);
-        break;
-        
-      case 'toggleStatus':
-      case 'toggleUserStatus':
-        console.log("[handlePostRequest] Executando alteração de status");
-        result = await toggleUserStatus(supabaseAdmin, requestBody);
-        break;
-        
-      default:
-        console.error("[handlePostRequest] Ação não reconhecida:", action);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `Ação não suportada: ${action}` 
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        );
-    }
-    
-    console.log("[handlePostRequest] Resultado da operação:", result);
-    
-    // Sempre retornar uma resposta JSON válida com status 200
-    return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
-    
-  } catch (error) {
-    console.error("[handlePostRequest] Erro no handler POST:", error);
-    
-    // Verificar se é erro de constraint duplicada
-    if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          existed: true,
-          message: "Usuário já existe no sistema" 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: result.success ? 200 : 400 
         }
       );
     }
@@ -253,12 +97,31 @@ export const handlePostRequest = async (req: Request, supabaseAdmin: any) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: `Erro interno: ${error.message}` 
+        error: 'Ação não reconhecida' 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 400 
+      }
+    );
+    
+  } catch (error: any) {
+    console.error("Erro no handlePostRequest:", error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 500 
       }
     );
   }
-};
+}

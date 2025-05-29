@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, CreateUserData, UpdateUserData, UserStats, UserFilters } from '@/types/user.types';
 import { toast } from '@/hooks/use-toast';
@@ -166,30 +165,38 @@ export class UserService {
         throw new Error('ID do usuário e email são obrigatórios');
       }
 
-      console.log('📡 Chamando edge function list-users para exclusão...');
+      console.log('📡 Chamando edge function para exclusão...');
       
-      const { data, error } = await supabase.functions.invoke('list-users', {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
         method: 'POST',
-        body: {
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
+          'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+        },
+        body: JSON.stringify({
           action: 'deleteUser',
           userId,
           email: userEmail
-        }
+        })
       });
 
-      console.log('📡 Resposta da edge function:', { data, error });
-
-      if (error) {
-        console.error('❌ Erro na edge function:', error);
-        throw new Error(error.message || 'Erro na comunicação com o servidor');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      if (data?.error) {
+      const data = await response.json();
+      console.log('📡 Resposta da edge function:', data);
+
+      if (data.error) {
         console.error('❌ Erro retornado pela edge function:', data.error);
         throw new Error(data.error);
       }
 
-      if (!data?.success) {
+      if (!data.success) {
         console.error('❌ Operação não bem-sucedida:', data);
         throw new Error('Falha na exclusão do usuário');
       }

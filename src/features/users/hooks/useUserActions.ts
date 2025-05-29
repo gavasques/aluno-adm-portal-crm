@@ -26,7 +26,7 @@ export const useUserActions = () => {
         }
         
         // Aguardar um pouco antes de forçar refresh para garantir que a operação foi processada
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         console.log('🔄 Forçando refresh após exclusão bem-sucedida...');
         await forceRefresh?.();
