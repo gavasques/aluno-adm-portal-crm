@@ -1,11 +1,11 @@
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { corsHeaders } from "./_shared/cors.ts";
+import { corsHeaders } from "./utils.ts";
 import { processUsersForResponse } from "./userProcessing.ts";
 import { deleteUserOperation } from "./userOperations.ts";
 
 export async function handleGetRequest(supabaseAdmin: SupabaseClient): Promise<Response> {
-  console.log("[handleGetRequest] 📡 Processando requisição GET para listar usuários");
+  console.log("[handleGetRequest] 🚀 ===== INICIANDO GET REQUEST =====");
   console.log("[handleGetRequest] 🕐 Timestamp:", new Date().toISOString());
   
   try {
@@ -18,10 +18,13 @@ export async function handleGetRequest(supabaseAdmin: SupabaseClient): Promise<R
     }
     
     console.log(`[handleGetRequest] ✅ Obtidos ${authUsers.users.length} usuários do auth`);
+    console.log(`[handleGetRequest] 📊 Primeiros usuários:`, authUsers.users.slice(0, 2).map(u => ({ id: u.id, email: u.email })));
     
-    const processedUsers = await processUsersForResponse(supabaseAdmin, authUsers.users);
+    // CORREÇÃO PRINCIPAL: Passar o array de usuários, não o objeto completo
+    const processedUsers = await processUsersForResponse(authUsers.users, supabaseAdmin);
     
     console.log(`[handleGetRequest] 📊 Retornando ${processedUsers.length} usuários processados com status 200`);
+    console.log(`[handleGetRequest] 👥 Usuários processados:`, processedUsers.map(u => ({ email: u.email, status: u.status })));
     
     return new Response(
       JSON.stringify({ users: processedUsers }),
