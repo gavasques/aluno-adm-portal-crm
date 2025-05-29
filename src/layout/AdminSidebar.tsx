@@ -120,7 +120,7 @@ const sidebarItems = [
   },
   {
     title: "Usuários",
-    url: "/admin/usuarios",
+    url: "/admin/usuarios-modernos",
     icon: Users,
     group: "Gestão"
   },
