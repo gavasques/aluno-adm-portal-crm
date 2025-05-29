@@ -86,11 +86,14 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   };
 
   return (
-    <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
+    <TableRow className="group border-b border-gray-200/60 hover:bg-white/5 dark:hover:bg-slate-700/50 relative">
+      {/* Linha separadora sutil */}
+      <div className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+      
       {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
       <TableCell className="py-4">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 border border-white/20 flex-shrink-0">
+          <Avatar className="h-9 w-9 border border-white/20 flex-shrink-0">
             <AvatarImage src="" alt={user.name || ''} />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-medium">
               {getInitials(user.name || user.email)}
@@ -117,7 +120,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
       {/* Coluna 3: Armazenamento */}
       <TableCell className="py-4 text-center">
         <div className="flex flex-col items-center gap-1">
-          <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-14 h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-300 ${getStorageColor()}`}
               style={{ width: `${Math.min(getStoragePercentage(), 100)}%` }}
