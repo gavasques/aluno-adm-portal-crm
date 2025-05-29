@@ -9,7 +9,8 @@ import {
   XCircle, 
   GraduationCap, 
   Ban,
-  UserX 
+  UserX,
+  Users
 } from 'lucide-react';
 
 interface UserBadgesProps {
@@ -110,9 +111,10 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
         </Badge>
       )}
 
-      {/* Badge do Grupo de Permissão (se não for temporário e não estiver banido) */}
-      {!isBanned && !isTemporaryGroup && permissionGroup && permissionGroup.name !== "Geral" && (
-        <Badge variant="outline" className="bg-gray-50 border-gray-200 text-gray-700 text-xs">
+      {/* Badge do Grupo de Permissão - sempre exibir quando disponível */}
+      {permissionGroup && (
+        <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 text-xs">
+          <Users className="w-3 h-3 mr-1" />
           {permissionGroup.name}
         </Badge>
       )}
