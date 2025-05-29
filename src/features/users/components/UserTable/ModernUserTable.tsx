@@ -26,6 +26,7 @@ interface ModernUserTableProps {
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
   onBanUser: (user: User) => void;
+  onUnbanUser: (user: User) => void;
   onCreditsManagement?: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
@@ -43,6 +44,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
   onSendMagicLink,
   onToggleMentor,
   onBanUser,
+  onUnbanUser,
   onCreditsManagement,
   permissionGroups = [],
 }) => {
@@ -111,6 +113,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
                   onSendMagicLink={onSendMagicLink}
                   onToggleMentor={onToggleMentor}
                   onBanUser={onBanUser}
+                  onUnbanUser={onUnbanUser}
                   onCreditsManagement={onCreditsManagement}
                   permissionGroups={permissionGroups}
                 />

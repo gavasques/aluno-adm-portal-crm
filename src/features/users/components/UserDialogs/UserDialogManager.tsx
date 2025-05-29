@@ -11,8 +11,10 @@ import UserStorageManagementDialog from '@/components/admin/users/dialogs/UserSt
 import UserActivityLogsDialog from '@/components/admin/users/dialogs/UserActivityLogsDialog';
 import { MentorToggleDialog } from '@/components/admin/users/dialogs/MentorToggleDialog';
 import { UserBanDialog } from '@/components/admin/users/dialogs/UserBanDialog';
+import { UserUnbanDialog } from '@/components/admin/users/dialogs/UserUnbanDialog';
 import { useUserActions } from '../../hooks/useUserActions';
 import { useUserBanning } from '@/hooks/users/useUserBanning';
+import { useUserUnbanning } from '@/hooks/users/useUserUnbanning';
 
 interface UserDialogManagerProps {
   dialogState: DialogState;
@@ -36,6 +38,7 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
   } = useUserActions();
   
   const { banUser } = useUserBanning();
+  const { unbanUser } = useUserUnbanning();
 
   if (!isOpen || !user) return null;
 
@@ -114,6 +117,16 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
   const handleBanUser = async () => {
     console.log('🔧 UserDialogManager: Ban user:', user.id, user.email);
     const success = await banUser(user.id, user.email);
+    if (success) {
+      onRefresh();
+      return true;
+    }
+    return false;
+  };
+
+  const handleUnbanUser = async (groupId: string | null) => {
+    console.log('🔧 UserDialogManager: Unban user:', user.id, user.email, 'New group:', groupId);
+    const success = await unbanUser(user.id, user.email, groupId);
     if (success) {
       onRefresh();
       return true;
@@ -219,6 +232,16 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
           onOpenChange={onCloseDialog}
           userEmail={user.email}
           onConfirmBan={handleBanUser}
+        />
+      );
+    
+    case 'unban':
+      return (
+        <UserUnbanDialog 
+          open={isOpen}
+          onOpenChange={onCloseDialog}
+          userEmail={user.email}
+          onConfirmUnban={handleUnbanUser}
         />
       );
     

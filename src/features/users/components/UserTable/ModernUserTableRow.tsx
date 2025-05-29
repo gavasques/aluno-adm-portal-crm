@@ -21,6 +21,7 @@ interface ModernUserTableRowProps {
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
   onBanUser: (user: User) => void;
+  onUnbanUser: (user: User) => void;
   onCreditsManagement?: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
@@ -37,6 +38,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   onSendMagicLink,
   onToggleMentor,
   onBanUser,
+  onUnbanUser,
   onCreditsManagement,
   permissionGroups = [],
 }) => {
@@ -84,12 +86,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   };
 
   return (
-    <motion.tr
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50"
-    >
+    <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
       {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
       <TableCell className="py-4">
         <div className="flex items-center gap-3">
@@ -154,10 +151,11 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
             onSendMagicLink={onSendMagicLink}
             onToggleMentor={onToggleMentor}
             onBanUser={onBanUser}
+            onUnbanUser={onUnbanUser}
             onCreditsManagement={onCreditsManagement}
           />
         </div>
       </TableCell>
-    </motion.tr>
+    </TableRow>
   );
 };

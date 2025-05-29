@@ -21,7 +21,8 @@ import {
   Edit,
   GraduationCap,
   CreditCard,
-  Ban
+  Ban,
+  UserCheck
 } from 'lucide-react';
 import { User } from '@/types/user.types';
 
@@ -37,6 +38,7 @@ interface ModernUserActionsProps {
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
   onBanUser: (user: User) => void;
+  onUnbanUser: (user: User) => void;
   onCreditsManagement?: (user: User) => void;
 }
 
@@ -54,9 +56,13 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
   onSendMagicLink,
   onToggleMentor,
   onBanUser,
+  onUnbanUser,
   onCreditsManagement,
 }) => {
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
+  
+  // Verificar se o usuário está banido
+  const isBanned = user.status === 'Banido' || user.status === 'Banned';
 
   return (
     <DropdownMenu>
@@ -131,10 +137,17 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
 
         <DropdownMenuSeparator className="bg-white/20" />
 
-        <DropdownMenuItem onClick={() => onBanUser(user)} className="group text-orange-600 focus:text-orange-600">
-          <Ban className="mr-2 h-4 w-4 group-hover:text-orange-700 transition-colors" />
-          <span>Banir usuário</span>
-        </DropdownMenuItem>
+        {isBanned ? (
+          <DropdownMenuItem onClick={() => onUnbanUser(user)} className="group text-green-600 focus:text-green-600">
+            <UserCheck className="mr-2 h-4 w-4 group-hover:text-green-700 transition-colors" />
+            <span>Desbanir usuário</span>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => onBanUser(user)} className="group text-orange-600 focus:text-orange-600">
+            <Ban className="mr-2 h-4 w-4 group-hover:text-orange-700 transition-colors" />
+            <span>Banir usuário</span>
+          </DropdownMenuItem>
+        )}
         
         <DropdownMenuItem 
           onClick={() => onDeleteUser(user)} 
