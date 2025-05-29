@@ -48,7 +48,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
         <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table className="w-full table-fixed">
+              <Table className="w-full">
                 <ModernUserTableHeader />
                 <TableBody>
                   <LoadingUsersList />
@@ -71,7 +71,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
         <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table className="w-full table-fixed">
+              <Table className="w-full">
                 <ModernUserTableHeader />
                 <TableBody>
                   <EmptyUsersList />
@@ -97,7 +97,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
       <Card className="relative backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table className="w-full table-fixed">
+            <Table className="w-full">
               <ModernUserTableHeader />
               <TableBody>
                 {users.map((user, index) => (

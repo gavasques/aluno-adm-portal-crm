@@ -18,6 +18,7 @@ export const useUserFilters = (users: User[], permissionGroups: Array<{ id: stri
       // Check if user is banned
       const userPermissionGroup = permissionGroups.find(group => group.id === user.permission_group_id);
       const isBanned = userPermissionGroup?.name?.toLowerCase() === "banido";
+      const isAdmin = user.role === 'Admin' || userPermissionGroup?.name?.toLowerCase().includes('admin');
 
       // Status filter (including banned)
       let matchesStatus = true;
@@ -29,14 +30,25 @@ export const useUserFilters = (users: User[], permissionGroups: Array<{ id: stri
         }
       }
 
-      // Role filter
-      const matchesRole = roleFilter === 'all' || 
-        user.role?.toLowerCase() === roleFilter.toLowerCase();
+      // Role filter - agora inclui admin
+      let matchesRole = true;
+      if (roleFilter !== 'all') {
+        if (roleFilter === 'admin') {
+          matchesRole = isAdmin;
+        } else {
+          matchesRole = user.role?.toLowerCase() === roleFilter.toLowerCase() && !isAdmin;
+        }
+      }
 
-      // Mentor filter
-      const matchesMentor = mentorFilter === 'all' ||
-        (mentorFilter === 'mentor' && user.is_mentor) ||
-        (mentorFilter === 'notMentor' && !user.is_mentor);
+      // Mentor filter - corrigido para verificar is_mentor
+      let matchesMentor = true;
+      if (mentorFilter !== 'all') {
+        if (mentorFilter === 'mentor') {
+          matchesMentor = user.is_mentor === true;
+        } else if (mentorFilter === 'notMentor') {
+          matchesMentor = user.is_mentor !== true;
+        }
+      }
 
       return matchesSearch && matchesStatus && matchesRole && matchesMentor;
     });

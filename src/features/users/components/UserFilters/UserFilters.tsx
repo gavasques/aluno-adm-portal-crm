@@ -3,9 +3,22 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Users, UserCheck, UserX, Clock, Ban, Shield } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { 
+  Search, 
+  Filter, 
+  Users, 
+  UserCheck, 
+  UserX, 
+  Clock, 
+  Ban, 
+  Shield,
+  UserPlus,
+  Mail,
+  RefreshCw,
+  Download
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface UserFiltersProps {
   searchTerm: string;
@@ -21,6 +34,11 @@ interface UserFiltersProps {
   inactiveUsers: number;
   pendingUsers: number;
   bannedUsers?: number;
+  onAddUser?: () => void;
+  onInviteUser?: () => void;
+  onRefresh?: () => void;
+  onExport?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const UserFilters: React.FC<UserFiltersProps> = ({
@@ -36,7 +54,12 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
   activeUsers,
   inactiveUsers,
   pendingUsers,
-  bannedUsers = 0
+  bannedUsers = 0,
+  onAddUser,
+  onInviteUser,
+  onRefresh,
+  onExport,
+  isRefreshing = false
 }) => {
   const clearFilters = () => {
     onSearchChange('');
@@ -122,14 +145,14 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
         </Card>
       </div>
 
-      {/* Filters Section */}
+      {/* Filters and Actions Section */}
       <Card className="shadow-sm border-0 bg-gradient-to-r from-gray-50 to-white">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
               <Filter className="h-4 w-4 text-blue-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Filtros</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Filtros e Ações</h3>
             {hasActiveFilters && (
               <Badge variant="secondary" className="ml-auto">
                 Filtros ativos
@@ -138,15 +161,67 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
           </div>
           
           <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar por nome ou email..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-colors"
-              />
+            {/* Search Bar and Action Buttons */}
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar por nome ou email..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="pl-10 h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                {onExport && (
+                  <Button
+                    variant="outline"
+                    onClick={onExport}
+                    className="flex items-center gap-2 hover:bg-gray-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    Exportar
+                  </Button>
+                )}
+                
+                {onRefresh && (
+                  <Button
+                    variant="outline"
+                    onClick={onRefresh}
+                    disabled={isRefreshing}
+                    className="flex items-center gap-2 hover:bg-gray-50"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Atualizar
+                  </Button>
+                )}
+
+                {onInviteUser && (
+                  <Button
+                    variant="outline"
+                    onClick={onInviteUser}
+                    className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Convidar
+                  </Button>
+                )}
+
+                {onAddUser && (
+                  <Button
+                    onClick={onAddUser}
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Novo Usuário
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Filter Grid */}
@@ -195,30 +270,24 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                   <Shield className="h-4 w-4 text-gray-500" />
-                  Função
+                  Tipo
                 </label>
                 <Select value={roleFilter} onValueChange={onRoleFilterChange}>
                   <SelectTrigger className="h-12 border-gray-200 focus:border-blue-500">
-                    <SelectValue placeholder="Todas as funções" />
+                    <SelectValue placeholder="Todos os tipos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as funções</SelectItem>
-                    <SelectItem value="Admin">
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    <SelectItem value="admin">
                       <div className="flex items-center gap-2">
                         <Shield className="h-3 w-3 text-red-500" />
-                        Admin
+                        Administrador
                       </div>
                     </SelectItem>
-                    <SelectItem value="Student">
+                    <SelectItem value="student">
                       <div className="flex items-center gap-2">
                         <Users className="h-3 w-3 text-blue-500" />
                         Estudante
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Mentor">
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="h-3 w-3 text-green-500" />
-                        Mentor
                       </div>
                     </SelectItem>
                   </SelectContent>
