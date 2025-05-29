@@ -12,19 +12,29 @@ export const useUserActions = () => {
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
     return await handleAsyncAction(
       async () => {
-        console.log('🔧 UserActions: Executing delete for:', userEmail);
-        const success = await deleteUserFromDatabase(userId, userEmail);
-        if (success) {
-          setTimeout(() => {
-            console.log('🔄 Forcing refresh after user deletion...');
-            forceRefresh?.();
-          }, 300);
-          return true;
+        console.log('🔧 UserActions: Executando exclusão para:', userEmail, 'ID:', userId);
+        
+        if (!userId || !userEmail) {
+          throw new Error('ID do usuário e email são obrigatórios para exclusão');
         }
-        throw new Error('Falha ao excluir usuário');
+        
+        const success = await deleteUserFromDatabase(userId, userEmail);
+        console.log('🔧 UserActions: Resultado da exclusão:', success);
+        
+        if (!success) {
+          throw new Error('Falha ao excluir usuário - operação retornou false');
+        }
+        
+        // Aguardar um pouco antes de forçar refresh para garantir que a operação foi processada
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('🔄 Forçando refresh após exclusão bem-sucedida...');
+        await forceRefresh?.();
+        
+        return true;
       },
       {
-        successMessage: `✅ Usuário ${userEmail} removido`,
+        successMessage: `✅ Usuário ${userEmail} removido com sucesso`,
         errorMessage: "❌ Erro ao excluir usuário",
         loadingMessage: "🗑️ Removendo usuário..."
       }

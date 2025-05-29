@@ -63,10 +63,16 @@ export const usePerformanceOptimizedUsers = () => {
   const forceRefresh = useCallback(async () => {
     console.log('🔄 Executando refresh forçado...');
     
+    // Invalidar todas as queries relacionadas a usuários
     await queryClient.invalidateQueries({ queryKey: ['users'] });
-    await queryClient.refetchQueries({ queryKey: ['users'] });
     
-    console.log('✅ Refresh forçado concluído');
+    // Forçar um refetch imediato
+    const result = await queryClient.refetchQueries({ 
+      queryKey: ['users'],
+      type: 'active'
+    });
+    
+    console.log('✅ Refresh forçado concluído, resultado:', result);
   }, [queryClient]);
 
   const createUserMutation = useMutation({
@@ -78,11 +84,43 @@ export const usePerformanceOptimizedUsers = () => {
     },
   });
 
+  const deleteUserFromDatabase = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
+    console.log('🗑️ Iniciando exclusão de usuário:', { userId, userEmail });
+    
+    try {
+      if (!userId || !userEmail) {
+        console.error('❌ Parâmetros inválidos para exclusão:', { userId, userEmail });
+        return false;
+      }
+
+      const success = await optimizedUserService.deleteUser(userId, userEmail);
+      console.log('🔧 Resultado da exclusão no service:', success);
+      
+      if (success) {
+        console.log('✅ Usuário excluído com sucesso, invalidando cache...');
+        
+        // Invalidar cache imediatamente
+        await queryClient.invalidateQueries({ queryKey: ['users'] });
+        
+        // Forçar refetch para garantir dados atualizados
+        await queryClient.refetchQueries({ queryKey: ['users'] });
+        
+        return true;
+      }
+      
+      console.error('❌ Falha na exclusão do usuário');
+      return false;
+    } catch (error) {
+      console.error('❌ Erro durante exclusão:', error);
+      return false;
+    }
+  }, [optimizedUserService, queryClient]);
+
   const deleteUserMutation = useMutation({
     mutationFn: ({ userId, userEmail }: { userId: string; userEmail: string }) =>
-      optimizedUserService.deleteUser(userId, userEmail),
+      deleteUserFromDatabase(userId, userEmail),
     onSuccess: async () => {
-      console.log('✅ Usuário excluído, executando refresh...');
+      console.log('✅ Usuário excluído via mutation, executando refresh...');
       await forceRefresh();
     },
   });
@@ -189,6 +227,7 @@ export const usePerformanceOptimizedUsers = () => {
     createUser: createUserMutation.mutateAsync,
     deleteUser: (userId: string, userEmail: string) => 
       deleteUserMutation.mutateAsync({ userId, userEmail }),
+    deleteUserFromDatabase,
     resetPassword: resetPasswordMutation.mutateAsync,
     setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) =>
       setPermissionGroupMutation.mutateAsync({ userId, userEmail, groupId }),

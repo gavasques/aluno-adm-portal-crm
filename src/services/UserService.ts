@@ -158,7 +158,16 @@ export class UserService {
   }
 
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
+    console.log('🗑️ UserService.deleteUser iniciado:', { userId, userEmail });
+    
     try {
+      if (!userId || !userEmail) {
+        console.error('❌ Parâmetros obrigatórios faltando:', { userId, userEmail });
+        throw new Error('ID do usuário e email são obrigatórios');
+      }
+
+      console.log('📡 Chamando edge function list-users para exclusão...');
+      
       const { data, error } = await supabase.functions.invoke('list-users', {
         method: 'POST',
         body: {
@@ -168,15 +177,30 @@ export class UserService {
         }
       });
 
-      if (error) throw new Error(error.message);
-      if (data.error) throw new Error(data.error);
+      console.log('📡 Resposta da edge function:', { data, error });
 
+      if (error) {
+        console.error('❌ Erro na edge function:', error);
+        throw new Error(error.message || 'Erro na comunicação com o servidor');
+      }
+
+      if (data?.error) {
+        console.error('❌ Erro retornado pela edge function:', data.error);
+        throw new Error(data.error);
+      }
+
+      if (!data?.success) {
+        console.error('❌ Operação não bem-sucedida:', data);
+        throw new Error('Falha na exclusão do usuário');
+      }
+
+      console.log('✅ Usuário excluído com sucesso, limpando cache...');
       this.clearCache();
       
       if (data.inactivated) {
         toast({
           title: "Usuário inativado",
-          description: "O usuário não pôde ser excluído porque possui dados associados. Foi inativado no lugar.",
+          description: data.message || "O usuário foi inativado porque possui dados associados.",
         });
       } else {
         toast({
@@ -187,10 +211,10 @@ export class UserService {
       
       return true;
     } catch (error: any) {
-      console.error('Erro ao excluir usuário:', error);
+      console.error('❌ Erro completo ao excluir usuário:', error);
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível processar sua solicitação.",
+        description: error.message || "Não foi possível excluir o usuário.",
         variant: "destructive",
       });
       return false;
