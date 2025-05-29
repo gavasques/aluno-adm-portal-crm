@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -120,7 +119,7 @@ const sidebarItems = [
   },
   {
     title: "Usuários",
-    url: "/admin/usuarios-modernos",
+    url: "/admin/usuarios",
     icon: Users,
     group: "Gestão"
   },
