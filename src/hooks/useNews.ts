@@ -44,7 +44,21 @@ export const useNews = () => {
         throw fetchError;
       }
 
-      setNews(data || []);
+      // Tipagem correta dos dados retornados
+      const typedNews: News[] = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        excerpt: item.excerpt,
+        author_id: item.author_id,
+        author_name: item.author_name,
+        status: item.status as 'draft' | 'published',
+        published_at: item.published_at,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+
+      setNews(typedNews);
     } catch (err) {
       console.error('Erro ao carregar notícias:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ImprovedToaster } from "@/components/ui/improved-toaster";
 import { AuthProvider } from "@/hooks/useAuth";
 import RouteGuard from "@/components/RouteGuard";
 import AdminLayout from "@/layout/AdminLayout";
@@ -59,6 +60,7 @@ function App() {
         <AuthProvider>
           <Toaster />
           <Sonner />
+          <ImprovedToaster />
           <BrowserRouter>
             <Routes>
               {/* Public Routes */}
@@ -71,36 +73,40 @@ function App() {
               <Route 
                 path="/admin/*" 
                 element={
-                  <RouteGuard adminOnly>
-                    <AdminLayout>
-                      <Routes>
-                        <Route path="dashboard" element={<AdminDashboard />} />
-                        <Route path="usuarios" element={<AdminUsers />} />
-                        <Route path="fornecedores" element={<AdminSuppliers />} />
-                        <Route path="parceiros" element={<AdminPartners />} />
-                        <Route path="ferramentas" element={<AdminTools />} />
-                        <Route path="mentoria" element={<AdminMentoring />} />
-                        <Route path="alunos" element={<AdminStudents />} />
-                        <Route path="tarefas" element={<AdminTasks />} />
-                        <Route path="crm" element={<AdminCRM />} />
-                        <Route path="creditos" element={<AdminCredits />} />
-                        <Route path="permissoes" element={<AdminPermissions />} />
-                        <Route path="auditoria" element={<AdminAudit />} />
-                        <Route path="categorias" element={<AdminCategories />} />
-                        <Route path="tipos-softwares" element={<AdminSoftwareTypes />} />
-                        <Route path="tipos-parceiros" element={<AdminPartnerTypes />} />
-                        <Route path="calendly-config" element={<AdminCalendlyConfig />} />
-                        <Route path="configuracoes" element={<AdminSettings />} />
-                        <Route path="bonus" element={<AdminBonus />} />
-                        <Route path="mentorias" element={<AdminMentoringDashboard />} />
-                        <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
-                        <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
-                        <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
-                        <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
-                        <Route path="noticias" element={<AdminNews />} />
-                        <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
-                      </Routes>
-                    </AdminLayout>
+                  <RouteGuard>
+                    {(user) => user?.is_admin ? (
+                      <AdminLayout>
+                        <Routes>
+                          <Route path="dashboard" element={<AdminDashboard />} />
+                          <Route path="usuarios" element={<AdminUsers />} />
+                          <Route path="fornecedores" element={<AdminSuppliers />} />
+                          <Route path="parceiros" element={<AdminPartners />} />
+                          <Route path="ferramentas" element={<AdminTools />} />
+                          <Route path="mentoria" element={<AdminMentoring />} />
+                          <Route path="alunos" element={<AdminStudents />} />
+                          <Route path="tarefas" element={<AdminTasks />} />
+                          <Route path="crm" element={<AdminCRM />} />
+                          <Route path="creditos" element={<AdminCredits />} />
+                          <Route path="permissoes" element={<AdminPermissions />} />
+                          <Route path="auditoria" element={<AdminAudit />} />
+                          <Route path="categorias" element={<AdminCategories />} />
+                          <Route path="tipos-softwares" element={<AdminSoftwareTypes />} />
+                          <Route path="tipos-parceiros" element={<AdminPartnerTypes />} />
+                          <Route path="calendly-config" element={<AdminCalendlyConfig />} />
+                          <Route path="configuracoes" element={<AdminSettings />} />
+                          <Route path="bonus" element={<AdminBonus />} />
+                          <Route path="mentorias" element={<AdminMentoringDashboard />} />
+                          <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
+                          <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
+                          <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
+                          <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
+                          <Route path="noticias" element={<AdminNews />} />
+                          <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+                        </Routes>
+                      </AdminLayout>
+                    ) : (
+                      <Navigate to="/aluno/dashboard" replace />
+                    )}
                   </RouteGuard>
                 } 
               />
@@ -110,7 +116,9 @@ function App() {
                 path="/aluno/*" 
                 element={
                   <RouteGuard>
-                    <StudentLayout />
+                    {() => (
+                      <StudentLayout />
+                    )}
                   </RouteGuard>
                 }
               >
