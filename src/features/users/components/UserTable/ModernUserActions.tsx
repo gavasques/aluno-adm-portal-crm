@@ -159,17 +159,15 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
 
         <DropdownMenuSeparator className="bg-white/20" />
 
-        {isBanned ? (
-          <DropdownMenuItem onClick={() => onUnbanUser(user)} className="group text-green-600 focus:text-green-600">
-            <UserCheck className="mr-2 h-4 w-4 group-hover:text-green-700 transition-colors" />
-            <span>Desbanir usuário</span>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem onClick={() => onBanUser(user)} className="group text-orange-600 focus:text-orange-600">
-            <Ban className="mr-2 h-4 w-4 group-hover:text-orange-700 transition-colors" />
-            <span>Banir usuário</span>
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => onBanUser(user)} className="group text-orange-600 focus:text-orange-600">
+          <Ban className="mr-2 h-4 w-4 group-hover:text-orange-700 transition-colors" />
+          <span>Banir usuário</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => onUnbanUser(user)} className="group text-green-600 focus:text-green-600">
+          <UserCheck className="mr-2 h-4 w-4 group-hover:text-green-700 transition-colors" />
+          <span>Desbanir usuário</span>
+        </DropdownMenuItem>
         
         <DropdownMenuItem 
           onClick={() => onDeleteUser(user)} 
