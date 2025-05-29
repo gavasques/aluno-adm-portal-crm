@@ -9,31 +9,35 @@ export const useUserActions = () => {
   const { handleAsyncAction } = useUXFeedback();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
+    console.log('🔧 [HOOK] ===== UserActions.confirmDelete INICIADO =====');
+    console.log('🔧 [HOOK] Executando exclusão para:', userEmail, 'ID:', userId);
+    console.log('🔧 [HOOK] Timestamp:', new Date().toISOString());
+    console.log('🔧 [HOOK] =======================================');
+    
     return await handleAsyncAction(
       async () => {
-        console.log('🔧 [HOOK] UserActions: Executando exclusão para:', userEmail, 'ID:', userId);
-        console.log('🔧 [HOOK] Timestamp:', new Date().toISOString());
-        
         if (!userId || !userEmail) {
+          console.error('❌ [HOOK] Parâmetros inválidos:', { userId, userEmail });
           throw new Error('ID do usuário e email são obrigatórios para exclusão');
         }
         
         console.log('🚀 [HOOK] Chamando deleteUserFromDatabase...');
         const success = await deleteUserFromDatabase(userId, userEmail);
-        console.log('🔧 [HOOK] UserActions: Resultado da exclusão:', success);
+        console.log('📊 [HOOK] Resultado da exclusão:', success);
         
         if (!success) {
+          console.error('❌ [HOOK] deleteUserFromDatabase retornou false');
           throw new Error('Falha ao excluir usuário - operação retornou false');
         }
         
-        // Aguardar um pouco antes de forçar refresh para garantir que a operação foi processada
+        // Aguardar antes de forçar refresh para garantir que a operação foi processada
         console.log('⏳ [HOOK] Aguardando 2 segundos antes do refresh...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         console.log('🔄 [HOOK] Forçando refresh após exclusão bem-sucedida...');
         await forceRefresh?.();
         
-        console.log('✅ [HOOK] Processo de exclusão completo');
+        console.log('✅ [HOOK] Processo de exclusão completo com sucesso');
         return true;
       },
       {

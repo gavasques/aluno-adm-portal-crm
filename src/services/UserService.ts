@@ -157,12 +157,14 @@ export class UserService {
   }
 
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
-    console.log('🗑️ [FRONTEND] UserService.deleteUser iniciado:', { userId, userEmail });
+    console.log('🗑️ [FRONTEND] ===== UserService.deleteUser INICIADO =====');
+    console.log('🗑️ [FRONTEND] Usuário:', { userId, userEmail });
     console.log('🗑️ [FRONTEND] Timestamp:', new Date().toISOString());
+    console.log('🗑️ [FRONTEND] =======================================');
     
     try {
       if (!userId || !userEmail) {
-        console.error('❌ [FRONTEND] Parâmetros obrigatórios faltando:', { userId, userEmail });
+        console.error('❌ [FRONTEND] VALIDAÇÃO FALHOU: Parâmetros obrigatórios faltando:', { userId, userEmail });
         throw new Error('ID do usuário e email são obrigatórios');
       }
 
@@ -172,6 +174,7 @@ export class UserService {
       const accessToken = session?.access_token;
 
       console.log('🔑 [FRONTEND] Token obtido:', !!accessToken);
+      console.log('🔑 [FRONTEND] Sessão válida:', !!session);
 
       const requestBody = {
         action: 'deleteUser',
@@ -179,7 +182,8 @@ export class UserService {
         email: userEmail
       };
 
-      console.log('📦 [FRONTEND] Body da requisição:', requestBody);
+      console.log('📦 [FRONTEND] Body da requisição:', JSON.stringify(requestBody, null, 2));
+      console.log('📡 [FRONTEND] Enviando requisição POST para edge function...');
 
       const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
         method: 'POST',
@@ -191,17 +195,23 @@ export class UserService {
         body: JSON.stringify(requestBody)
       });
 
-      console.log('📡 [FRONTEND] Resposta HTTP status:', response.status);
-      console.log('📡 [FRONTEND] Resposta OK:', response.ok);
+      console.log('📡 [FRONTEND] Resposta HTTP recebida:');
+      console.log('📡 [FRONTEND] Status:', response.status);
+      console.log('📡 [FRONTEND] Status Text:', response.statusText);
+      console.log('📡 [FRONTEND] OK:', response.ok);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ [FRONTEND] Erro HTTP:', errorText);
+        console.error('❌ [FRONTEND] Erro HTTP:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('📡 [FRONTEND] Resposta da edge function:', data);
+      console.log('📡 [FRONTEND] Dados da resposta:', JSON.stringify(data, null, 2));
 
       if (data.error) {
         console.error('❌ [FRONTEND] Erro retornado pela edge function:', data.error);
@@ -210,27 +220,41 @@ export class UserService {
 
       if (!data.success) {
         console.error('❌ [FRONTEND] Operação não bem-sucedida:', data);
-        throw new Error('Falha na exclusão do usuário');
+        throw new Error(data.error || 'Falha na exclusão do usuário');
       }
 
-      console.log('✅ [FRONTEND] Usuário excluído com sucesso, limpando cache...');
+      console.log('✅ [FRONTEND] Usuário excluído com sucesso!');
+      console.log('🧹 [FRONTEND] Limpando cache...');
       this.clearCache();
       
       if (data.inactivated) {
+        console.log('ℹ️ [FRONTEND] Usuário foi inativado (não excluído)');
         toast({
           title: "Usuário inativado",
           description: data.message || "O usuário foi inativado porque possui dados associados.",
         });
       } else {
+        console.log('✅ [FRONTEND] Usuário foi completamente excluído');
         toast({
           title: "Usuário excluído",
           description: `O usuário ${userEmail} foi excluído com sucesso.`,
         });
       }
       
+      console.log('🎉 [FRONTEND] ===== PROCESSO COMPLETO =====');
       return true;
+      
     } catch (error: any) {
-      console.error('❌ [FRONTEND] Erro completo ao excluir usuário:', error);
+      console.error('💥 [FRONTEND] ===== ERRO CRÍTICO =====');
+      console.error('💥 [FRONTEND] Erro completo:', {
+        message: error.message,
+        stack: error.stack,
+        userId,
+        userEmail,
+        timestamp: new Date().toISOString()
+      });
+      console.error('💥 [FRONTEND] ========================');
+      
       toast({
         title: "Erro",
         description: error.message || "Não foi possível excluir o usuário.",

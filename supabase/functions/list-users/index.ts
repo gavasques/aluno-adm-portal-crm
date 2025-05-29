@@ -1,66 +1,42 @@
 
-import { serve } from "https://deno.land/std@0.202.0/http/server.ts";
-import { corsHeaders } from "./_shared/cors.ts";
+import { createSupabaseAdminClient, corsHeaders } from "./utils.ts";
 import { handleGetRequest, handlePostRequest } from "./handlers.ts";
-import { createSupabaseAdminClient } from "./utils.ts";
 
-console.log("Edge Function list-users inicializada");
+console.log("🚀 [EDGE FUNCTION] list-users iniciada");
+console.log("🚀 [EDGE FUNCTION] Timestamp:", new Date().toISOString());
 
-// Função principal que processa as requisições
-serve(async (req) => {
-  console.log(`Recebendo requisição ${req.method} para list-users na URL: ${req.url}`);
+Deno.serve(async (req) => {
+  const method = req.method;
+  const url = new URL(req.url);
   
-  try {
-    // Lidar com requisições OPTIONS (pre-flight CORS)
-    if (req.method === 'OPTIONS') {
-      console.log("Processando requisição OPTIONS");
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders
-      });
-    }
+  console.log(`📡 [EDGE FUNCTION] Recebida requisição ${method} para ${url.pathname}`);
+  console.log(`📡 [EDGE FUNCTION] Headers:`, Object.fromEntries(req.headers.entries()));
+  
+  // Handle CORS preflight requests
+  if (method === 'OPTIONS') {
+    console.log("⚙️ [EDGE FUNCTION] Processando requisição OPTIONS (CORS)");
+    return new Response(null, { headers: corsHeaders });
+  }
 
-    // Criar cliente Supabase com token service_role
-    console.log("Criando cliente Supabase Admin...");
+  try {
+    // Criar cliente admin do Supabase
+    console.log("🔑 [EDGE FUNCTION] Criando cliente admin...");
     const supabaseAdmin = createSupabaseAdminClient();
-    console.log("Cliente Supabase Admin criado com sucesso");
+    console.log("✅ [EDGE FUNCTION] Cliente admin criado com sucesso");
     
-    // Processar requisições com base no método HTTP
-    if (req.method === 'GET') {
-      console.log("Encaminhando para o handler GET");
-      const response = await handleGetRequest(supabaseAdmin);
-      // Garantir que os headers CORS estejam na resposta GET
-      const responseHeaders = new Headers(response.headers);
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        responseHeaders.set(key, value);
-      });
-      
-      console.log("Headers da resposta GET:", Object.fromEntries(responseHeaders.entries()));
-      
-      return new Response(response.body, {
-        status: response.status,
-        headers: responseHeaders,
-      });
-    } else if (req.method === 'POST') {
-      console.log("Encaminhando para o handler POST");
-      const response = await handlePostRequest(req, supabaseAdmin);
-      // Garantir que os headers CORS estejam na resposta POST
-      const responseHeaders = new Headers(response.headers);
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        responseHeaders.set(key, value);
-      });
-      
-      return new Response(response.body, {
-        status: response.status,
-        headers: responseHeaders,
-      });
-    } else {
-      // Método não suportado
-      console.error(`Método não suportado: ${req.method}`);
+    if (method === 'GET') {
+      console.log("📖 [EDGE FUNCTION] Processando GET request...");
+      return await handleGetRequest(supabaseAdmin);
+    } 
+    else if (method === 'POST') {
+      console.log("📝 [EDGE FUNCTION] Processando POST request...");
+      console.log("🗑️ [EDGE FUNCTION] Esta é provavelmente uma operação de DELETE");
+      return await handlePostRequest(req, supabaseAdmin);
+    } 
+    else {
+      console.error(`❌ [EDGE FUNCTION] Método não suportado: ${method}`);
       return new Response(
-        JSON.stringify({ 
-          error: `Método não suportado: ${req.method}` 
-        }),
+        JSON.stringify({ error: `Método ${method} não suportado` }),
         { 
           headers: { 
             ...corsHeaders,
@@ -70,14 +46,17 @@ serve(async (req) => {
         }
       );
     }
-  } catch (error) {
-    console.error("Erro ao processar requisição:", error);
+  } catch (error: any) {
+    console.error("💥 [EDGE FUNCTION] Erro crítico na função principal:", {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || "Erro ao processar requisição",
-        stack: error.stack,
-        timestamp: new Date().toISOString()
+        error: "Erro interno do servidor",
+        details: error.message 
       }),
       { 
         headers: { 

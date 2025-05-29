@@ -13,7 +13,7 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
     return [];
   }
   
-  console.log(`Processando ${users.length} usuários`);
+  console.log(`[userProcessing] Processando ${users.length} usuários`);
   
   // Buscar todos os perfis em uma única consulta para melhor performance
   const { data: profilesData, error: profilesError } = await supabaseAdmin
@@ -21,7 +21,7 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
     .select('*');
     
   if (profilesError) {
-    console.error("Erro ao buscar perfis:", profilesError);
+    console.error("[userProcessing] Erro ao buscar perfis:", profilesError);
   }
   
   // Criar um mapa de perfis para acesso mais rápido
@@ -34,12 +34,12 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
     });
   }
   
-  console.log(`Mapa de perfis criado com ${profilesMap.size} entradas`);
+  console.log(`[userProcessing] Mapa de perfis criado com ${profilesMap.size} entradas`);
   
   return await Promise.all(users.map(async (user: any) => {
     try {
       if (!user || !user.id) {
-        console.warn("Usuário inválido encontrado:", user);
+        console.warn("[userProcessing] Usuário inválido encontrado:", user);
         return null;
       }
       
@@ -47,10 +47,10 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
       const profileData = profilesMap.get(user.id);
       
       // Log para debug
-      console.log(`Processando usuário: ${user.id}, ${user.email}`);
-      console.log(`Perfil encontrado: ${profileData ? 'Sim' : 'Não'}`);
+      console.log(`[userProcessing] Processando usuário: ${user.id}, ${user.email}`);
+      console.log(`[userProcessing] Perfil encontrado: ${profileData ? 'Sim' : 'Não'}`);
       if (profileData) {
-        console.log(`Status do perfil: ${profileData.status}`);
+        console.log(`[userProcessing] Status do perfil: ${profileData.status}`);
       }
       
       // CORREÇÃO PRINCIPAL: Priorizar o status da tabela profiles
@@ -59,10 +59,10 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
       if (profileData && profileData.status) {
         // Se existe perfil e tem status definido, usar este status
         status = profileData.status;
-        console.log(`✅ Usando status do perfil: ${status} para usuário ${user.email}`);
+        console.log(`[userProcessing] ✅ Usando status do perfil: ${status} para usuário ${user.email}`);
       } else {
         // Fallback: usar lógica baseada nos campos de auth apenas se não há perfil ou status
-        console.log(`⚠️ Usando fallback de auth para usuário ${user.email}`);
+        console.log(`[userProcessing] ⚠️ Usando fallback de auth para usuário ${user.email}`);
         
         if (user.banned_until && new Date(user.banned_until) > new Date()) {
           status = "Inativo";
@@ -73,7 +73,7 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         }
       }
       
-      console.log(`Status final do usuário ${user.email}: ${status}`);
+      console.log(`[userProcessing] Status final do usuário ${user.email}: ${status}`);
 
       return {
         id: user.id,
@@ -91,7 +91,7 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
         updated_at: profileData?.updated_at || user.updated_at
       };
     } catch (err) {
-      console.error(`Erro ao processar usuário ${user.id}:`, err);
+      console.error(`[userProcessing] Erro ao processar usuário ${user.id}:`, err);
       return {
         id: user.id,
         name: user.user_metadata?.name || user.email?.split('@')[0] || "Usuário sem nome",
@@ -116,13 +116,38 @@ export const processUsersForResponse = processUsers;
 
 // Função auxiliar para importar de profileManagement.ts
 export const ensureProfiles = async (users: any[], supabaseAdmin: any, profilesMap: Map<string, any>) => {
-  // Importar de forma dinâmica para evitar problemas de referência circular
-  const { ensureUserProfile } = await import('./profileManagement.ts');
+  console.log("[userProcessing] Garantindo perfis para usuários...");
   
   // Garantir que todos os usuários tenham perfis
   for (const user of users) {
     if (user && user.id) {
-      await ensureUserProfile(supabaseAdmin, user, profilesMap);
+      const profile = profilesMap.get(user.id);
+      if (!profile) {
+        console.log(`[userProcessing] Criando perfil para usuário: ${user.email}`);
+        
+        try {
+          const { error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .insert({
+              id: user.id,
+              name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+              role: user.user_metadata?.role || 'Student',
+              status: 'Ativo',
+              permission_group_id: '564c55dc-0ab8-481e-a0bc-97ea7e484b88',
+              storage_limit_mb: 100,
+              storage_used_mb: 0,
+              is_mentor: false
+            });
+            
+          if (profileError) {
+            console.error(`[userProcessing] Erro ao criar perfil para ${user.email}:`, profileError);
+          } else {
+            console.log(`[userProcessing] ✅ Perfil criado para ${user.email}`);
+          }
+        } catch (error) {
+          console.error(`[userProcessing] Erro inesperado ao criar perfil para ${user.email}:`, error);
+        }
+      }
     }
   }
 };
