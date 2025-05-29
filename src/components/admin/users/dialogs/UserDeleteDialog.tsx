@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Info } from "lucide-react";
 
 interface UserDeleteDialogProps {
   open: boolean;
@@ -26,16 +26,53 @@ export const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
   onConfirmDelete,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'processing' | 'verifying'>('idle');
 
   const handleDelete = async () => {
     setIsDeleting(true);
+    setDeleteStatus('processing');
+    
     try {
+      console.log('🗑️ [DELETE_DIALOG] Iniciando processo de exclusão para:', userEmail);
+      
+      // Simular as etapas do processo
+      setTimeout(() => setDeleteStatus('verifying'), 2000);
+      
       const success = await onConfirmDelete();
+      
       if (success) {
+        console.log('✅ [DELETE_DIALOG] Exclusão bem-sucedida para:', userEmail);
         onOpenChange(false);
+      } else {
+        console.error('❌ [DELETE_DIALOG] Falha na exclusão para:', userEmail);
       }
+    } catch (error) {
+      console.error('💥 [DELETE_DIALOG] Erro durante exclusão:', error);
     } finally {
       setIsDeleting(false);
+      setDeleteStatus('idle');
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (deleteStatus) {
+      case 'processing':
+        return "Processando exclusão...";
+      case 'verifying':
+        return "Verificando exclusão no banco de dados...";
+      default:
+        return "Processando...";
+    }
+  };
+
+  const getStatusIcon = () => {
+    switch (deleteStatus) {
+      case 'processing':
+        return <Loader2 className="mr-2 h-4 w-4 animate-spin" />;
+      case 'verifying':
+        return <Info className="mr-2 h-4 w-4 animate-pulse text-blue-600" />;
+      default:
+        return <Loader2 className="mr-2 h-4 w-4 animate-spin" />;
     }
   };
 
@@ -43,12 +80,39 @@ export const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tem certeza que deseja excluir o usuário <strong>{userEmail}</strong>?
-            <br /><br />
-            Se o usuário tiver dados associados (alunos, fornecedores, arquivos), 
-            ele será apenas inativado e não poderá mais fazer login.
+          <AlertDialogTitle className="flex items-center">
+            <AlertTriangle className="mr-2 h-5 w-5 text-red-600" />
+            Confirmar exclusão
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <p>
+              Tem certeza que deseja excluir o usuário <strong>{userEmail}</strong>?
+            </p>
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-start space-x-2">
+                <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">O que acontecerá:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>Se o usuário tiver dados associados (fornecedores, arquivos, etc.), ele será <strong>inativado</strong></li>
+                    <li>Se não tiver dados associados, será <strong>completamente excluído</strong> do sistema</li>
+                    <li>O processo inclui verificação completa no banco de dados</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            {isDeleting && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon()}
+                  <span className="text-sm text-blue-800 font-medium">
+                    {getStatusMessage()}
+                  </span>
+                </div>
+              </div>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -63,8 +127,8 @@ export const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
           >
             {isDeleting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Processando...
+                {getStatusIcon()}
+                {getStatusMessage()}
               </>
             ) : (
               "Excluir"

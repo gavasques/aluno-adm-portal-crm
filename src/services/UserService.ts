@@ -157,24 +157,25 @@ export class UserService {
   }
 
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
-    console.log('🗑️ [FRONTEND] ===== UserService.deleteUser INICIADO =====');
-    console.log('🗑️ [FRONTEND] Usuário:', { userId, userEmail });
-    console.log('🗑️ [FRONTEND] Timestamp:', new Date().toISOString());
-    console.log('🗑️ [FRONTEND] =======================================');
+    const requestId = crypto.randomUUID();
+    console.log(`🗑️ [FRONTEND-${requestId}] ===== UserService.deleteUser INICIADO =====`);
+    console.log(`🗑️ [FRONTEND-${requestId}] Usuário:`, { userId, userEmail });
+    console.log(`🗑️ [FRONTEND-${requestId}] Timestamp:`, new Date().toISOString());
+    console.log(`🗑️ [FRONTEND-${requestId}] ================================================`);
     
     try {
       if (!userId || !userEmail) {
-        console.error('❌ [FRONTEND] VALIDAÇÃO FALHOU: Parâmetros obrigatórios faltando:', { userId, userEmail });
+        console.error(`❌ [FRONTEND-${requestId}] VALIDAÇÃO FALHOU: Parâmetros obrigatórios faltando:`, { userId, userEmail });
         throw new Error('ID do usuário e email são obrigatórios');
       }
 
-      console.log('📡 [FRONTEND] Preparando chamada para edge function...');
+      console.log(`📡 [FRONTEND-${requestId}] Preparando chamada para edge function...`);
       
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
-      console.log('🔑 [FRONTEND] Token obtido:', !!accessToken);
-      console.log('🔑 [FRONTEND] Sessão válida:', !!session);
+      console.log(`🔑 [FRONTEND-${requestId}] Token obtido:`, !!accessToken);
+      console.log(`🔑 [FRONTEND-${requestId}] Sessão válida:`, !!session);
 
       const requestBody = {
         action: 'deleteUser',
@@ -182,78 +183,106 @@ export class UserService {
         email: userEmail
       };
 
-      console.log('📦 [FRONTEND] Body da requisição:', JSON.stringify(requestBody, null, 2));
-      console.log('📡 [FRONTEND] Enviando requisição POST para edge function...');
+      console.log(`📦 [FRONTEND-${requestId}] Body da requisição:`, JSON.stringify(requestBody, null, 2));
+      console.log(`📡 [FRONTEND-${requestId}] Enviando requisição POST para edge function...`);
+      console.log(`⏰ [FRONTEND-${requestId}] Timeout configurado para 35 segundos...`);
 
-      const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
-          'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-        },
-        body: JSON.stringify(requestBody)
-      });
+      // Implementar timeout no frontend também
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
 
-      console.log('📡 [FRONTEND] Resposta HTTP recebida:');
-      console.log('📡 [FRONTEND] Status:', response.status);
-      console.log('📡 [FRONTEND] Status Text:', response.statusText);
-      console.log('📡 [FRONTEND] OK:', response.ok);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [FRONTEND] Erro HTTP:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
+      try {
+        const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
+            'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal
         });
-        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
-      }
 
-      const data = await response.json();
-      console.log('📡 [FRONTEND] Dados da resposta:', JSON.stringify(data, null, 2));
+        clearTimeout(timeoutId);
 
-      if (data.error) {
-        console.error('❌ [FRONTEND] Erro retornado pela edge function:', data.error);
-        throw new Error(data.error);
-      }
+        console.log(`📡 [FRONTEND-${requestId}] Resposta HTTP recebida:`);
+        console.log(`📡 [FRONTEND-${requestId}] Status:`, response.status);
+        console.log(`📡 [FRONTEND-${requestId}] Status Text:`, response.statusText);
+        console.log(`📡 [FRONTEND-${requestId}] OK:`, response.ok);
 
-      if (!data.success) {
-        console.error('❌ [FRONTEND] Operação não bem-sucedida:', data);
-        throw new Error(data.error || 'Falha na exclusão do usuário');
-      }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ [FRONTEND-${requestId}] Erro HTTP:`, {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText
+          });
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        }
 
-      console.log('✅ [FRONTEND] Usuário excluído com sucesso!');
-      console.log('🧹 [FRONTEND] Limpando cache...');
-      this.clearCache();
-      
-      if (data.inactivated) {
-        console.log('ℹ️ [FRONTEND] Usuário foi inativado (não excluído)');
-        toast({
-          title: "Usuário inativado",
-          description: data.message || "O usuário foi inativado porque possui dados associados.",
+        const data = await response.json();
+        console.log(`📡 [FRONTEND-${requestId}] Dados da resposta:`, JSON.stringify(data, null, 2));
+        console.log(`🔍 [FRONTEND-${requestId}] Análise da resposta:`, {
+          success: data.success,
+          error: data.error || 'Nenhum erro',
+          message: data.message || 'Nenhuma mensagem',
+          inactivated: data.inactivated || false,
+          timestamp: data.timestamp || 'Não fornecido',
+          requestId: data.requestId || 'Não fornecido'
         });
-      } else {
-        console.log('✅ [FRONTEND] Usuário foi completamente excluído');
-        toast({
-          title: "Usuário excluído",
-          description: `O usuário ${userEmail} foi excluído com sucesso.`,
-        });
+
+        if (data.error) {
+          console.error(`❌ [FRONTEND-${requestId}] Erro retornado pela edge function:`, data.error);
+          throw new Error(data.error);
+        }
+
+        if (!data.success) {
+          console.error(`❌ [FRONTEND-${requestId}] Operação não bem-sucedida:`, data);
+          throw new Error(data.error || 'Falha na exclusão do usuário');
+        }
+
+        console.log(`✅ [FRONTEND-${requestId}] Operação bem-sucedida!`);
+        console.log(`🧹 [FRONTEND-${requestId}] Limpando cache...`);
+        this.clearCache();
+        
+        if (data.inactivated) {
+          console.log(`ℹ️ [FRONTEND-${requestId}] Usuário foi INATIVADO (não excluído)`);
+          toast({
+            title: "Usuário inativado",
+            description: data.message || "O usuário foi inativado porque possui dados associados.",
+          });
+        } else {
+          console.log(`✅ [FRONTEND-${requestId}] Usuário foi COMPLETAMENTE EXCLUÍDO`);
+          toast({
+            title: "Usuário excluído",
+            description: `O usuário ${userEmail} foi excluído com sucesso.`,
+          });
+        }
+        
+        console.log(`🎉 [FRONTEND-${requestId}] ===== PROCESSO COMPLETO =====`);
+        return true;
+
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError.name === 'AbortError') {
+          console.error(`⏰ [FRONTEND-${requestId}] TIMEOUT da requisição:`, fetchError);
+          throw new Error('Timeout na operação de exclusão. Tente novamente.');
+        }
+        
+        throw fetchError;
       }
-      
-      console.log('🎉 [FRONTEND] ===== PROCESSO COMPLETO =====');
-      return true;
       
     } catch (error: any) {
-      console.error('💥 [FRONTEND] ===== ERRO CRÍTICO =====');
-      console.error('💥 [FRONTEND] Erro completo:', {
+      console.error(`💥 [FRONTEND-${requestId}] ===== ERRO CRÍTICO =====`);
+      console.error(`💥 [FRONTEND-${requestId}] Erro completo:`, {
         message: error.message,
         stack: error.stack,
         userId,
         userEmail,
         timestamp: new Date().toISOString()
       });
-      console.error('💥 [FRONTEND] ========================');
+      console.error(`💥 [FRONTEND-${requestId}] ========================`);
       
       toast({
         title: "Erro",
@@ -375,6 +404,46 @@ export class UserService {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o grupo de permissão",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }
+
+  async testConnectivity(): Promise<boolean> {
+    console.log('🧪 [FRONTEND] Testando conectividade com Edge Function...');
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
+          'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+        },
+        body: JSON.stringify({ action: 'testConnectivity' })
+      });
+
+      const data = await response.json();
+      console.log('🧪 [FRONTEND] Resultado do teste:', data);
+      
+      if (data.success) {
+        toast({
+          title: "Conectividade OK",
+          description: "Conexão com o sistema verificada com sucesso.",
+        });
+        return true;
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error: any) {
+      console.error('🧪 [FRONTEND] Erro no teste:', error);
+      toast({
+        title: "Erro de conectividade",
+        description: error.message || "Falha na verificação de conectividade.",
         variant: "destructive",
       });
       return false;

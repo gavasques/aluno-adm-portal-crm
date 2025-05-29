@@ -1,6 +1,7 @@
+
 import { useCallback } from 'react';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
-import { usePerformanceOptimizedUsers } from '@/hooks/usePerformanceOptimizedUserContext';
+import { usePerformanceOptimizedUsers } from '@/hooks/usePerformanceOptimizedUsers';
 import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
 
 export const useUserActions = () => {
@@ -9,41 +10,42 @@ export const useUserActions = () => {
   const { handleAsyncAction } = useUXFeedback();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
-    console.log('🔧 [HOOK] ===== UserActions.confirmDelete INICIADO =====');
-    console.log('🔧 [HOOK] Executando exclusão para:', userEmail, 'ID:', userId);
-    console.log('🔧 [HOOK] Timestamp:', new Date().toISOString());
-    console.log('🔧 [HOOK] =======================================');
+    const actionId = crypto.randomUUID();
+    console.log(`🔧 [HOOK-${actionId}] ===== UserActions.confirmDelete INICIADO =====`);
+    console.log(`🔧 [HOOK-${actionId}] Executando exclusão para:`, userEmail, 'ID:', userId);
+    console.log(`🔧 [HOOK-${actionId}] Timestamp:`, new Date().toISOString());
+    console.log(`🔧 [HOOK-${actionId}] ================================================`);
     
     return await handleAsyncAction(
       async () => {
         if (!userId || !userEmail) {
-          console.error('❌ [HOOK] Parâmetros inválidos:', { userId, userEmail });
+          console.error(`❌ [HOOK-${actionId}] Parâmetros inválidos:`, { userId, userEmail });
           throw new Error('ID do usuário e email são obrigatórios para exclusão');
         }
         
-        console.log('🚀 [HOOK] Chamando deleteUserFromDatabase...');
+        console.log(`🚀 [HOOK-${actionId}] Chamando deleteUserFromDatabase...`);
         const success = await deleteUserFromDatabase(userId, userEmail);
-        console.log('📊 [HOOK] Resultado da exclusão:', success);
+        console.log(`📊 [HOOK-${actionId}] Resultado da exclusão:`, success);
         
         if (!success) {
-          console.error('❌ [HOOK] deleteUserFromDatabase retornou false');
+          console.error(`❌ [HOOK-${actionId}] deleteUserFromDatabase retornou false`);
           throw new Error('Falha ao excluir usuário - operação retornou false');
         }
         
         // Aguardar antes de forçar refresh para garantir que a operação foi processada
-        console.log('⏳ [HOOK] Aguardando 2 segundos antes do refresh...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log(`⏳ [HOOK-${actionId}] Aguardando 3 segundos antes do refresh...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
-        console.log('🔄 [HOOK] Forçando refresh após exclusão bem-sucedida...');
+        console.log(`🔄 [HOOK-${actionId}] Forçando refresh após exclusão bem-sucedida...`);
         await forceRefresh?.();
         
-        console.log('✅ [HOOK] Processo de exclusão completo com sucesso');
+        console.log(`✅ [HOOK-${actionId}] Processo de exclusão completo com sucesso`);
         return true;
       },
       {
-        successMessage: `✅ Usuário ${userEmail} removido com sucesso`,
-        errorMessage: "❌ Erro ao excluir usuário",
-        loadingMessage: "🗑️ Removendo usuário..."
+        successMessage: `✅ Usuário ${userEmail} processado com sucesso`,
+        errorMessage: "❌ Erro ao processar usuário",
+        loadingMessage: "🗑️ Processando exclusão..."
       }
     ) !== null;
   }, [deleteUserFromDatabase, forceRefresh, handleAsyncAction]);

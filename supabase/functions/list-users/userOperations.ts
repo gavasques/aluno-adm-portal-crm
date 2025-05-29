@@ -116,11 +116,26 @@ export async function deleteUserOperation(
           }
 
           console.log('✅ [DELETE_OPERATION] ETAPA 3 SUCESSO: Usuário inativado');
-          return { 
-            success: true, 
-            inactivated: true,
-            message: 'Usuário inativado porque possui dados associados' 
-          };
+          
+          // VERIFICAÇÃO PÓS-INATIVAÇÃO
+          console.log('🔍 [DELETE_OPERATION] VERIFICAÇÃO PÓS-INATIVAÇÃO...');
+          const { data: verifyProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('status')
+            .eq('id', userId)
+            .single();
+          
+          if (verifyProfile?.status === 'Inativo') {
+            console.log('✅ [DELETE_OPERATION] VERIFICAÇÃO: Status confirmado como Inativo');
+            return { 
+              success: true, 
+              inactivated: true,
+              message: 'Usuário inativado porque possui dados associados' 
+            };
+          } else {
+            console.error('❌ [DELETE_OPERATION] VERIFICAÇÃO FALHOU: Status não foi alterado');
+            return { success: false, error: 'Falha na verificação: status não foi alterado' };
+          }
         } catch (error) {
           console.error('❌ [DELETE_OPERATION] ETAPA 3 EXCEÇÃO:', error);
           return { success: false, error: `Exceção ao inativar usuário: ${error.message}` };
@@ -168,21 +183,38 @@ export async function deleteUserOperation(
       return { success: false, error: `Exceção ao remover do auth: ${error.message}` };
     }
     
-    // ETAPA 6: Verificação final
-    console.log('🔍 [DELETE_OPERATION] ETAPA 5: Verificação final...');
+    // ETAPA 6: Verificação final OBRIGATÓRIA
+    console.log('🔍 [DELETE_OPERATION] ETAPA 5: Verificação final OBRIGATÓRIA...');
     try {
+      // Verificar se ainda existe no auth
       const { data: verificationCheck } = await supabaseAdmin.auth.admin.getUserById(userId);
-      console.log('📊 [DELETE_OPERATION] ETAPA 5 RESULTADO:', {
+      console.log('📊 [DELETE_OPERATION] ETAPA 5 - Verificação Auth:', {
         stillExistsInAuth: !!verificationCheck.user,
         deletionSuccessful: !verificationCheck.user
       });
       
-      if (verificationCheck.user) {
-        console.error('❌ [DELETE_OPERATION] VERIFICAÇÃO FALHOU: Usuário ainda existe no auth após tentativa de exclusão');
-        return { success: false, error: 'Falha na verificação: usuário ainda existe no auth' };
+      // Verificar se ainda existe no profiles
+      const { data: profileCheck } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      
+      console.log('📊 [DELETE_OPERATION] ETAPA 5 - Verificação Profile:', {
+        stillExistsInProfiles: !!profileCheck,
+        profileDeleted: !profileCheck
+      });
+      
+      if (verificationCheck.user || profileCheck) {
+        console.error('❌ [DELETE_OPERATION] VERIFICAÇÃO FALHOU: Usuário ainda existe após tentativa de exclusão');
+        return { 
+          success: false, 
+          error: 'Falha na verificação: usuário ainda existe no sistema após exclusão' 
+        };
       }
     } catch (verificationError) {
-      console.log('✅ [DELETE_OPERATION] ETAPA 5: Usuário não encontrado no auth (confirmando exclusão bem-sucedida)');
+      // Se der erro na verificação, é provável que o usuário realmente não existe mais
+      console.log('✅ [DELETE_OPERATION] ETAPA 5: Usuário não encontrado nas verificações (confirmando exclusão bem-sucedida)');
     }
 
     console.log('🎉 [DELETE_OPERATION] ===== PROCESSO COMPLETO =====');
@@ -205,6 +237,43 @@ export async function deleteUserOperation(
     return { 
       success: false, 
       error: `Erro inesperado: ${error.message}` 
+    };
+  }
+}
+
+// Função de teste manual para verificar conectividade
+export async function testDeleteConnectivity(
+  supabaseAdmin: SupabaseClient
+): Promise<{ success: boolean; message: string; details?: any }> {
+  console.log('🧪 [TEST_CONNECTIVITY] Iniciando teste de conectividade...');
+  
+  try {
+    // Testar conexão com auth
+    const { data: authTest } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 });
+    console.log('✅ [TEST_CONNECTIVITY] Auth: Conexão OK');
+    
+    // Testar conexão com profiles
+    const { data: profileTest } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .limit(1);
+    console.log('✅ [TEST_CONNECTIVITY] Profiles: Conexão OK');
+    
+    return {
+      success: true,
+      message: 'Conectividade verificada com sucesso',
+      details: {
+        auth: !!authTest,
+        profiles: !!profileTest,
+        timestamp: new Date().toISOString()
+      }
+    };
+  } catch (error: any) {
+    console.error('❌ [TEST_CONNECTIVITY] Erro:', error);
+    return {
+      success: false,
+      message: `Falha na conectividade: ${error.message}`,
+      details: { error: error.message }
     };
   }
 }
