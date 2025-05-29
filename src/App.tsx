@@ -22,7 +22,7 @@ import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
 import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
 import AdminGroupEnrollments from './pages/admin/AdminGroupEnrollments';
 import AdminMentoringMaterials from './pages/admin/AdminMentoringMaterials';
-import OptimizedUsers from './pages/admin/OptimizedUsers';
+import Users from './pages/admin/Users';
 import Permissions from './pages/admin/Permissions';
 import Audit from './pages/admin/Audit';
 import AdminCalendlyConfig from './pages/admin/AdminCalendlyConfig';
@@ -184,7 +184,7 @@ function AppContent() {
         <Route path="/admin/usuarios" element={
           <RouteGuard requireAdminAccess={true}>
             <Layout isAdmin={true}>
-              <OptimizedUsers />
+              <Users />
             </Layout>
           </RouteGuard>
         } />
