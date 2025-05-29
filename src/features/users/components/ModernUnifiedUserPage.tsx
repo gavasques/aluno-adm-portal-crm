@@ -40,6 +40,10 @@ const ModernUnifiedUserPage: React.FC = () => {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    roleFilter,
+    setRoleFilter,
+    mentorFilter,
+    setMentorFilter,
     filteredUsers,
     stats: filterStats
   } = useUserFilters(users, permissionGroups);
@@ -95,10 +99,6 @@ const ModernUnifiedUserPage: React.FC = () => {
     }
   };
 
-  const handleFiltersChange = (filters: any) => {
-    setStatusFilter(filters.status || 'all');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900">
       <PullToRefresh onRefresh={handleRefresh}>
@@ -125,11 +125,19 @@ const ModernUnifiedUserPage: React.FC = () => {
             transition={{ duration: 0.4, delay: 0.1 }}
           >
             <UserFilters
-              filters={{ search: searchTerm, status: statusFilter, group: 'all' }}
-              stats={filterStats}
-              onFiltersChange={handleFiltersChange}
-              onSearch={handleSearchChange}
-              bannedCount={0}
+              searchTerm={searchTerm}
+              onSearchChange={handleSearchChange}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              roleFilter={roleFilter}
+              onRoleFilterChange={setRoleFilter}
+              mentorFilter={mentorFilter}
+              onMentorFilterChange={setMentorFilter}
+              totalUsers={filterStats.total}
+              activeUsers={filterStats.active}
+              inactiveUsers={filterStats.inactive}
+              pendingUsers={filterStats.pending}
+              bannedUsers={filterStats.banned}
             />
           </motion.div>
 
