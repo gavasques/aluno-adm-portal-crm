@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from '@/types/user.types';
@@ -70,14 +69,9 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
 
   return (
     <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
-      {/* User Info */}
+      {/* User Info Column */}
       <TableCell className="py-4">
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex items-center gap-3"
-        >
+        <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border border-white/20">
             <AvatarImage src="" alt={user.name || ''} />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-medium">
@@ -92,15 +86,15 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
               {user.email}
             </div>
           </div>
-        </motion.div>
+        </div>
       </TableCell>
 
-      {/* Badges */}
+      {/* Badges Column */}
       <TableCell className="py-4">
         <UserBadges user={user} permissionGroups={permissionGroups} />
       </TableCell>
 
-      {/* Storage */}
+      {/* Storage Column */}
       <TableCell className="py-4 text-center">
         <div className="flex flex-col items-center gap-1">
           <div className="w-full max-w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -115,12 +109,12 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
         </div>
       </TableCell>
 
-      {/* Last Login */}
+      {/* Last Login Column */}
       <TableCell className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
         {formatLastLogin(user.lastLogin)}
       </TableCell>
 
-      {/* Actions */}
+      {/* Actions Column */}
       <TableCell className="py-4 text-center">
         <ModernUserActions
           user={user}
