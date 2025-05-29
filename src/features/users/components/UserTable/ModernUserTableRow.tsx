@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from '@/types/user.types';
@@ -83,9 +84,14 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   };
 
   return (
-    <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
+    <motion.tr
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50"
+    >
       {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
-      <TableCell className="py-4 w-[35%] min-w-[280px]">
+      <TableCell className="py-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border border-white/20 flex-shrink-0">
             <AvatarImage src="" alt={user.name || ''} />
@@ -105,14 +111,14 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
       </TableCell>
 
       {/* Coluna 2: Badges */}
-      <TableCell className="py-4 w-[25%] min-w-[200px]">
+      <TableCell className="py-4">
         <div className="flex flex-wrap gap-1">
           <UserBadges user={user} permissionGroups={permissionGroups} />
         </div>
       </TableCell>
 
       {/* Coluna 3: Armazenamento */}
-      <TableCell className="py-4 text-center w-[15%] min-w-[120px]">
+      <TableCell className="py-4 text-center">
         <div className="flex flex-col items-center gap-1">
           <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
@@ -127,14 +133,14 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
       </TableCell>
 
       {/* Coluna 4: Último Acesso */}
-      <TableCell className="py-4 text-center text-xs text-gray-600 dark:text-gray-400 w-[15%] min-w-[120px]">
+      <TableCell className="py-4 text-center text-xs text-gray-600 dark:text-gray-400">
         <div className="whitespace-nowrap">
           {formatLastLogin(user.lastLogin)}
         </div>
       </TableCell>
 
       {/* Coluna 5: Ações */}
-      <TableCell className="py-4 text-center w-[10%] min-w-[80px]">
+      <TableCell className="py-4 text-center">
         <div className="flex justify-center">
           <ModernUserActions
             user={user}
@@ -152,6 +158,6 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
           />
         </div>
       </TableCell>
-    </TableRow>
+    </motion.tr>
   );
 };

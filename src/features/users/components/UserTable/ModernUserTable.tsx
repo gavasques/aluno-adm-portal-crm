@@ -75,35 +75,31 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
       transition={{ duration: 0.4 }}
     >
       <Card className="backdrop-blur-xl bg-white/80 dark:bg-slate-800/80 border-white/20 shadow-xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-white/10">
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold w-[35%]">
-                Usuário
-              </TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold w-[25%]">
-                Status & Permissões
-              </TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[15%]">
-                Armazenamento
-              </TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[15%]">
-                Último Acesso
-              </TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[10%]">
-                Ações
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user, index) => (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-white/10">
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold w-[35%] min-w-[280px]">
+                  Usuário
+                </TableHead>
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold w-[25%] min-w-[200px]">
+                  Status & Permissões
+                </TableHead>
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[15%] min-w-[120px]">
+                  Armazenamento
+                </TableHead>
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[15%] min-w-[120px]">
+                  Último Acesso
+                </TableHead>
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[10%] min-w-[80px]">
+                  Ações
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user, index) => (
                 <ModernUserTableRow
+                  key={user.id}
                   user={user}
                   onViewDetails={onViewDetails}
                   onResetPassword={onResetPassword}
@@ -118,10 +114,10 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
                   onCreditsManagement={onCreditsManagement}
                   permissionGroups={permissionGroups}
                 />
-              </motion.div>
-            ))}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
     </motion.div>
   );
