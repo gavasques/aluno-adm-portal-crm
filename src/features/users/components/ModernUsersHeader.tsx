@@ -1,25 +1,28 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Users, Filter, Download, RefreshCw } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { 
+  Users, 
+  UserPlus, 
+  Mail, 
+  RefreshCw, 
+  Download,
+  Search
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 interface ModernUsersHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onAddUser: () => void;
   onInviteUser: () => void;
-  onRefresh?: () => void;
+  onRefresh: () => void;
+  onExport?: () => void;
   totalUsers: number;
-  isRefreshing?: boolean;
+  isRefreshing: boolean;
 }
 
 export const ModernUsersHeader: React.FC<ModernUsersHeaderProps> = ({
@@ -28,127 +31,97 @@ export const ModernUsersHeader: React.FC<ModernUsersHeaderProps> = ({
   onAddUser,
   onInviteUser,
   onRefresh,
+  onExport,
   totalUsers,
-  isRefreshing = false
+  isRefreshing,
 }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4 }}
       className="space-y-6"
     >
-      {/* Header com título e estatísticas */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <motion.div
-            className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
+      {/* Header Principal */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
             <Users className="h-6 w-6" />
-          </motion.div>
+          </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Gestão de Usuários
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {totalUsers} {totalUsers === 1 ? 'usuário cadastrado' : 'usuários cadastrados'}
+            <p className="text-gray-600 dark:text-gray-300 mt-1">
+              Gerencie usuários, permissões e acessos do sistema
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {onRefresh && (
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefresh}
-                disabled={isRefreshing}
-                className="backdrop-blur-sm bg-white/70 border-white/20 hover:bg-white/90"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Atualizar
-              </Button>
-            </motion.div>
-          )}
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="backdrop-blur-sm bg-white/70 border-white/20 hover:bg-white/90"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar
-                </Button>
-              </motion.div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="backdrop-blur-xl bg-white/90 border-white/20">
-              <DropdownMenuItem>
-                <span>Exportar como CSV</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <span>Exportar como Excel</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1">
+            <Users className="h-3 w-3 mr-1" />
+            {totalUsers} usuários
+          </Badge>
         </div>
       </div>
 
-      {/* Barra de ações */}
-      <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-lg">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      {/* Barra de Ações */}
+      <Card className="border-0 shadow-md bg-white/80 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            {/* Busca */}
             <div className="flex-1 max-w-md">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar usuários..."
+                  placeholder="Buscar usuários por nome ou email..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="pl-10 backdrop-blur-sm bg-white/50 border-white/20 focus:bg-white/70 transition-all duration-200"
+                  className="pl-10 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
 
+            {/* Botões de Ação */}
             <div className="flex items-center gap-2">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              {onExport && (
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="backdrop-blur-sm bg-white/70 border-white/20 hover:bg-white/90"
+                  onClick={onExport}
+                  className="flex items-center gap-2 hover:bg-gray-50"
                 >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filtros
+                  <Download className="h-4 w-4" />
+                  Exportar
                 </Button>
-              </motion.div>
+              )}
+              
+              <Button
+                variant="outline"
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 hover:bg-gray-50"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Atualizar
+              </Button>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onInviteUser}
-                  className="backdrop-blur-sm bg-white/70 border-white/20 hover:bg-white/90"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Convidar
-                </Button>
-              </motion.div>
+              <Button
+                variant="outline"
+                onClick={onInviteUser}
+                className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              >
+                <Mail className="h-4 w-4" />
+                Convidar
+              </Button>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="sm"
-                  onClick={onAddUser}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Usuário
-                </Button>
-              </motion.div>
+              <Button
+                onClick={onAddUser}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg"
+              >
+                <UserPlus className="h-4 w-4" />
+                Novo Usuário
+              </Button>
             </div>
           </div>
         </CardContent>

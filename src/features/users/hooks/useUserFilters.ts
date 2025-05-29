@@ -43,16 +43,16 @@ export const useUserFilters = (users: User[], permissionGroups: Array<{ id: stri
   }, [users, searchTerm, statusFilter, roleFilter, mentorFilter, permissionGroups]);
 
   const stats = useMemo(() => {
-    const total = users.length;
+    const total = filteredUsers.length;
     
     // Count banned users
-    const bannedUsers = users.filter(user => {
+    const bannedUsers = filteredUsers.filter(user => {
       const userPermissionGroup = permissionGroups.find(group => group.id === user.permission_group_id);
       return userPermissionGroup?.name?.toLowerCase() === "banido";
     }).length;
     
     // Count other statuses (excluding banned users)
-    const nonBannedUsers = users.filter(user => {
+    const nonBannedUsers = filteredUsers.filter(user => {
       const userPermissionGroup = permissionGroups.find(group => group.id === user.permission_group_id);
       return userPermissionGroup?.name?.toLowerCase() !== "banido";
     });
@@ -62,7 +62,7 @@ export const useUserFilters = (users: User[], permissionGroups: Array<{ id: stri
     const pending = nonBannedUsers.filter(user => user.status?.toLowerCase() === 'pendente').length;
 
     return { total, active, inactive, pending, banned: bannedUsers };
-  }, [users, permissionGroups]);
+  }, [filteredUsers, permissionGroups]);
 
   return {
     searchTerm,

@@ -10,28 +10,51 @@ export const usePerformanceOptimizedUsers = () => {
     try {
       console.log('🗑️ Starting user deletion process for:', userEmail);
       
-      // Verificar se o usuário tem dados associados
-      const { data: userData, error: checkError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          my_suppliers(count),
-          user_files(count),
-          mentoring_enrollments(count)
-        `)
-        .eq('id', userId)
-        .single();
+      // Verificar se o usuário tem dados associados usando consultas separadas
+      let hasAssociatedData = false;
 
-      if (checkError) {
-        console.error('❌ Error checking user data:', checkError);
-        throw new Error('Erro ao verificar dados do usuário');
+      // Verificar fornecedores
+      const { data: suppliersData, error: suppliersError } = await supabase
+        .from('my_suppliers')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+
+      if (suppliersError) {
+        console.error('❌ Error checking suppliers:', suppliersError);
+      } else if (suppliersData && suppliersData.length > 0) {
+        hasAssociatedData = true;
       }
 
-      const hasAssociatedData = userData && (
-        userData.my_suppliers?.length > 0 ||
-        userData.user_files?.length > 0 ||
-        userData.mentoring_enrollments?.length > 0
-      );
+      // Verificar arquivos apenas se ainda não encontrou dados associados
+      if (!hasAssociatedData) {
+        const { data: filesData, error: filesError } = await supabase
+          .from('user_files')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+
+        if (filesError) {
+          console.error('❌ Error checking files:', filesError);
+        } else if (filesData && filesData.length > 0) {
+          hasAssociatedData = true;
+        }
+      }
+
+      // Verificar inscrições em mentorias apenas se ainda não encontrou dados associados
+      if (!hasAssociatedData) {
+        const { data: mentoringData, error: mentoringError } = await supabase
+          .from('mentoring_enrollments')
+          .select('id')
+          .eq('student_id', userId)
+          .limit(1);
+
+        if (mentoringError) {
+          console.error('❌ Error checking mentoring enrollments:', mentoringError);
+        } else if (mentoringData && mentoringData.length > 0) {
+          hasAssociatedData = true;
+        }
+      }
 
       if (hasAssociatedData) {
         // Inativar usuário se tiver dados associados
