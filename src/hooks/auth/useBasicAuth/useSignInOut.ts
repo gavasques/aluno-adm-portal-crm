@@ -10,23 +10,47 @@ export function useSignInOut() {
   // Função para login
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Tentando fazer login com:", { email, hasPassword: !!password });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro no Supabase auth:", error);
+        throw error;
+      }
+      
+      console.log("Login bem-sucedido:", { user: data.user?.email, session: !!data.session });
       
       toast({
         title: "Login realizado com sucesso",
+        description: `Bem-vindo, ${data.user?.email}!`,
         variant: "default",
       });
 
+      // Aguardar um pouco para garantir que o estado seja atualizado
+      setTimeout(() => {
+        navigate("/aluno", { replace: true });
+      }, 100);
+
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
+      
+      let errorMessage = "Verifique suas credenciais e tente novamente.";
+      
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha incorretos. Verifique suas credenciais.";
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Por favor, confirme seu email antes de fazer login.";
+      } else if (error.message?.includes("Too many requests")) {
+        errorMessage = "Muitas tentativas de login. Aguarde um momento e tente novamente.";
+      }
+      
       toast({
         title: "Erro ao fazer login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;

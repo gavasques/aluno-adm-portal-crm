@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -22,6 +22,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
   
   // Dialog states
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
@@ -47,12 +48,29 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError("");
+    
+    // Validações básicas
+    if (!email.trim()) {
+      setLoginError("Por favor, digite seu email.");
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!password.trim()) {
+      setLoginError("Por favor, digite sua senha.");
+      setIsLoading(false);
+      return;
+    }
     
     try {
-      await signIn(email, password);
+      console.log("Iniciando processo de login...");
+      await signIn(email.trim(), password);
+      console.log("Login concluído com sucesso");
       // O redirecionamento é tratado pelo hook useAuth
-    } catch (error) {
-      console.error("Erro no login:", error);
+    } catch (error: any) {
+      console.error("Erro capturado no componente:", error);
+      setLoginError("Falha no login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }
@@ -61,12 +79,14 @@ const Login = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError("");
     
     try {
       await signUp(email, password, name);
       // Feedback é mostrado através do hook useAuth
     } catch (error) {
       console.error("Erro no cadastro:", error);
+      setLoginError("Erro ao criar conta. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -164,6 +184,13 @@ const Login = () => {
               {/* Tab de Login */}
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
+                  {loginError && (
+                    <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/30 rounded-md">
+                      <AlertCircle className="h-4 w-4 text-red-300" />
+                      <span className="text-red-200 text-sm">{loginError}</span>
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
                     <Label htmlFor="login-email" className="text-blue-200">Email</Label>
                     <div className="relative">
@@ -172,11 +199,12 @@ const Login = () => {
                         id="login-email"
                         type="email"
                         placeholder="seu@email.com"
-                        className="pl-10 bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300"
+                        className="pl-10 bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300 focus:border-blue-400"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         disabled={isLoading}
+                        autoComplete="email"
                       />
                     </div>
                   </div>
@@ -189,11 +217,12 @@ const Login = () => {
                         id="login-password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Sua senha"
-                        className="pl-10 pr-10 bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300"
+                        className="pl-10 pr-10 bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300 focus:border-blue-400"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
+                        autoComplete="current-password"
                       />
                       <button
                         type="button"
@@ -227,10 +256,17 @@ const Login = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white"
-                    disabled={isLoading || !email || !password}
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium"
+                    disabled={isLoading || !email.trim() || !password.trim()}
                   >
-                    {isLoading ? "Entrando..." : "Entrar"}
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Entrando...
+                      </div>
+                    ) : (
+                      "Entrar"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
