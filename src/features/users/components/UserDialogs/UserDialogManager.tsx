@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DialogState } from '../../hooks/useUserDialogs';
 import { UserDetailsDialog } from '@/components/admin/users/dialogs/UserDetailsDialog';
@@ -9,7 +10,9 @@ import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/User
 import UserStorageManagementDialog from '@/components/admin/users/dialogs/UserStorageManagementDialog';
 import UserActivityLogsDialog from '@/components/admin/users/dialogs/UserActivityLogsDialog';
 import { MentorToggleDialog } from '@/components/admin/users/dialogs/MentorToggleDialog';
+import { UserBanDialog } from '@/components/admin/users/dialogs/UserBanDialog';
 import { useUserActions } from '../../hooks/useUserActions';
+import { useUserBanning } from '@/hooks/users/useUserBanning';
 
 interface UserDialogManagerProps {
   dialogState: DialogState;
@@ -31,6 +34,8 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
     confirmSetPermissionGroup,
     confirmToggleMentor
   } = useUserActions();
+  
+  const { banUser } = useUserBanning();
 
   if (!isOpen || !user) return null;
 
@@ -104,6 +109,16 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
       console.error(`💥 [DIALOG-${actionId}] Erro no toggle mentor:`, error);
       return false;
     }
+  };
+
+  const handleBanUser = async () => {
+    console.log('🔧 UserDialogManager: Ban user:', user.id, user.email);
+    const success = await banUser(user.id, user.email);
+    if (success) {
+      onRefresh();
+      return true;
+    }
+    return false;
   };
 
   switch (type) {
@@ -194,6 +209,16 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
           onOpenChange={onCloseDialog}
           user={user}
           onConfirmToggle={handleToggleMentor}
+        />
+      );
+    
+    case 'ban':
+      return (
+        <UserBanDialog 
+          open={isOpen}
+          onOpenChange={onCloseDialog}
+          userEmail={user.email}
+          onConfirmBan={handleBanUser}
         />
       );
     

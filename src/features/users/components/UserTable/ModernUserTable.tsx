@@ -1,12 +1,17 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Table, TableBody } from '@/components/ui/table';
-import { ModernUserTableHeader } from './ModernUserTableHeader';
-import { ModernUserTableRow } from './ModernUserTableRow';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { User } from '@/types/user.types';
-import EmptyUsersList from '@/components/admin/users/EmptyUsersList';
-import LoadingUsersList from '@/components/admin/users/LoadingUsersList';
-import { Card, CardContent } from '@/components/ui/card';
+import { ModernUserTableRow } from './ModernUserTableRow';
+import { Card } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface ModernUserTableProps {
   users: User[];
@@ -20,6 +25,7 @@ interface ModernUserTableProps {
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
+  onBanUser: (user: User) => void;
   onCreditsManagement?: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
@@ -36,52 +42,29 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
   onActivityLogs,
   onSendMagicLink,
   onToggleMentor,
+  onBanUser,
   onCreditsManagement,
   permissionGroups = [],
 }) => {
   if (isLoading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table className="w-full table-fixed">
-                <ModernUserTableHeader />
-                <TableBody>
-                  <LoadingUsersList />
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <Card className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner />
+        </div>
+      </Card>
     );
   }
 
   if (users.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table className="w-full table-fixed">
-                <ModernUserTableHeader />
-                <TableBody>
-                  <EmptyUsersList />
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <Card className="p-6">
+        <div className="text-center py-8">
+          <p className="text-gray-500 dark:text-gray-400">
+            Nenhum usuário encontrado com os filtros aplicados.
+          </p>
+        </div>
+      </Card>
     );
   }
 
@@ -89,39 +72,56 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="relative"
+      transition={{ duration: 0.4 }}
     >
-      {/* Glassmorphism background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/30 rounded-xl" />
-      
-      <Card className="relative backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table className="w-full table-fixed min-w-[800px]">
-              <ModernUserTableHeader />
-              <TableBody>
-                {users.map((user, index) => (
-                  <ModernUserTableRow
-                    key={user.id}
-                    user={user}
-                    onViewDetails={onViewDetails}
-                    onResetPassword={onResetPassword}
-                    onChangePassword={onChangePassword}
-                    onDeleteUser={onDeleteUser}
-                    onSetPermissionGroup={onSetPermissionGroup}
-                    onStorageManagement={onStorageManagement}
-                    onActivityLogs={onActivityLogs}
-                    onSendMagicLink={onSendMagicLink}
-                    onToggleMentor={onToggleMentor}
-                    onCreditsManagement={onCreditsManagement}
-                    permissionGroups={permissionGroups}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+      <Card className="backdrop-blur-xl bg-white/80 dark:bg-slate-800/80 border-white/20 shadow-xl overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-white/10">
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold w-[35%]">
+                Usuário
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold w-[25%]">
+                Status & Permissões
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[15%]">
+                Armazenamento
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[15%]">
+                Último Acesso
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-center w-[10%]">
+                Ações
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user, index) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <ModernUserTableRow
+                  user={user}
+                  onViewDetails={onViewDetails}
+                  onResetPassword={onResetPassword}
+                  onChangePassword={onChangePassword}
+                  onDeleteUser={onDeleteUser}
+                  onSetPermissionGroup={onSetPermissionGroup}
+                  onStorageManagement={onStorageManagement}
+                  onActivityLogs={onActivityLogs}
+                  onSendMagicLink={onSendMagicLink}
+                  onToggleMentor={onToggleMentor}
+                  onBanUser={onBanUser}
+                  onCreditsManagement={onCreditsManagement}
+                  permissionGroups={permissionGroups}
+                />
+              </motion.div>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
     </motion.div>
   );

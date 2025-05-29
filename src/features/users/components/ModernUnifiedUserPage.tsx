@@ -185,6 +185,7 @@ const ModernUnifiedUserPage: React.FC = () => {
               onActivityLogs={(user) => openDialog('activity', user)}
               onSendMagicLink={(user) => openDialog('sendMagicLink', user)}
               onToggleMentor={(user) => openDialog('mentor', user)}
+              onBanUser={(user) => openDialog('ban', user)}
               permissionGroups={permissionGroups}
             />
           </motion.div>

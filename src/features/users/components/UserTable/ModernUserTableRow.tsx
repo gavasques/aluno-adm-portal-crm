@@ -19,6 +19,7 @@ interface ModernUserTableRowProps {
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
+  onBanUser: (user: User) => void;
   onCreditsManagement?: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
@@ -34,6 +35,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   onActivityLogs,
   onSendMagicLink,
   onToggleMentor,
+  onBanUser,
   onCreditsManagement,
   permissionGroups = [],
 }) => {
@@ -145,6 +147,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
             onActivityLogs={onActivityLogs}
             onSendMagicLink={onSendMagicLink}
             onToggleMentor={onToggleMentor}
+            onBanUser={onBanUser}
             onCreditsManagement={onCreditsManagement}
           />
         </div>

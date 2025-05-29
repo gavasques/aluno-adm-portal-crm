@@ -20,7 +20,8 @@ import {
   Link,
   Edit,
   GraduationCap,
-  CreditCard
+  CreditCard,
+  Ban
 } from 'lucide-react';
 import { User } from '@/types/user.types';
 
@@ -35,6 +36,7 @@ interface ModernUserActionsProps {
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
+  onBanUser: (user: User) => void;
   onCreditsManagement?: (user: User) => void;
 }
 
@@ -51,6 +53,7 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
   onActivityLogs,
   onSendMagicLink,
   onToggleMentor,
+  onBanUser,
   onCreditsManagement,
 }) => {
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
@@ -125,8 +128,13 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
             <span>{user.is_mentor ? 'Remover como mentor' : 'Tornar mentor'}</span>
           </DropdownMenuItem>
         )}
-        
+
         <DropdownMenuSeparator className="bg-white/20" />
+
+        <DropdownMenuItem onClick={() => onBanUser(user)} className="group text-orange-600 focus:text-orange-600">
+          <Ban className="mr-2 h-4 w-4 group-hover:text-orange-700 transition-colors" />
+          <span>Banir usuário</span>
+        </DropdownMenuItem>
         
         <DropdownMenuItem 
           onClick={() => onDeleteUser(user)} 
