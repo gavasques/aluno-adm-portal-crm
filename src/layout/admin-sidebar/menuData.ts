@@ -12,7 +12,13 @@ import {
   Shield,
   CreditCard,
   UserCog,
-  Zap
+  Zap,
+  BookOpenCheck,
+  UserCheck,
+  Users as UsersIcon,
+  FolderOpen,
+  CalendarDays,
+  Users2
 } from "lucide-react";
 import { MenuItem, MenuGroup } from "./types";
 
@@ -40,6 +46,51 @@ export const mainMenuItems: MenuItem[] = [
     href: "/admin/tarefas",
     icon: Calendar,
     gradient: "from-orange-500 to-orange-600",
+  },
+];
+
+export const mentoringMenuItems: MenuItem[] = [
+  {
+    title: "Dashboard de Mentorias",
+    href: "/admin/mentorias",
+    icon: GraduationCap,
+    gradient: "from-blue-500 to-blue-600",
+  },
+  {
+    title: "Catálogo de Mentorias",
+    href: "/admin/mentorias/catalogo",
+    icon: BookOpenCheck,
+    gradient: "from-indigo-500 to-indigo-600",
+  },
+  {
+    title: "Inscrições Individuais",
+    href: "/admin/inscricoes-individuais",
+    icon: UserCheck,
+    gradient: "from-green-500 to-green-600",
+  },
+  {
+    title: "Inscrições em Grupo",
+    href: "/admin/inscricoes-grupo",
+    icon: UsersIcon,
+    gradient: "from-emerald-500 to-emerald-600",
+  },
+  {
+    title: "Sessões Individuais",
+    href: "/admin/sessoes-individuais",
+    icon: CalendarDays,
+    gradient: "from-purple-500 to-purple-600",
+  },
+  {
+    title: "Sessões em Grupo",
+    href: "/admin/sessoes-grupo",
+    icon: Users2,
+    gradient: "from-violet-500 to-violet-600",
+  },
+  {
+    title: "Central de Materiais",
+    href: "/admin/mentorias/materiais",
+    icon: FolderOpen,
+    gradient: "from-teal-500 to-teal-600",
   },
 ];
 
@@ -108,6 +159,7 @@ export const systemMenuItems: MenuItem[] = [
 
 export const menuGroups: MenuGroup[] = [
   { title: "Principal", items: mainMenuItems },
+  { title: "Mentorias", items: mentoringMenuItems },
   { title: "Gestão", items: managementMenuItems },
   { title: "Recursos Gerais", items: resourcesMenuItems },
   { title: "Sistema", items: systemMenuItems },

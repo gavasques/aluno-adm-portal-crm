@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,6 +21,8 @@ import AdminMentoringDashboard from './pages/admin/AdminMentoringDashboard';
 import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
 import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
 import AdminGroupEnrollments from './pages/admin/AdminGroupEnrollments';
+import AdminMentoringSessionsIndividual from './pages/admin/AdminMentoringSessionsIndividual';
+import AdminMentoringSessionsGroup from './pages/admin/AdminMentoringSessionsGroup';
 import AdminMentoringMaterials from './pages/admin/AdminMentoringMaterials';
 import Users from './pages/admin/Users';
 import Permissions from './pages/admin/Permissions';
@@ -168,6 +171,22 @@ function AppContent() {
           <RouteGuard requireAdminAccess={true}>
             <Layout isAdmin={true}>
               <AdminGroupEnrollments />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/sessoes-individuais" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminMentoringSessionsIndividual />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/sessoes-grupo" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <AdminMentoringSessionsGroup />
             </Layout>
           </RouteGuard>
         } />
