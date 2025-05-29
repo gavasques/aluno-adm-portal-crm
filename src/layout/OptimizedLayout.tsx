@@ -22,7 +22,7 @@ const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
 
   // Memoize loading state
   const loadingComponent = useMemo(() => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="flex flex-col items-center space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         <p className="text-gray-600">Carregando...</p>
@@ -42,14 +42,14 @@ const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
+    <div className="min-h-screen bg-white flex w-full">
       {/* Sidebar - optimized rendering */}
       {isAdmin ? (
         <div className="flex-shrink-0">
@@ -61,10 +61,10 @@ const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
       
       {/* Main content area - optimized styling */}
       <div 
-        className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}
+        className={`flex-1 overflow-auto bg-white ${!isAdmin ? 'ml-64' : ''}`}
         style={isAdmin ? mainContentStyles : undefined}
       >
-        <main className="p-6 w-full">
+        <main className="p-6 w-full bg-white min-h-screen">
           <div className="max-w-full">
             {children}
           </div>
