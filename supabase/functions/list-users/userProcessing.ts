@@ -111,6 +111,9 @@ export const processUsers = async (users: any[], supabaseAdmin: any): Promise<an
   })).then(users => users.filter(Boolean)); // Filtrar nulos
 };
 
+// CORREÇÃO: Exportar a função que o handlers.ts está procurando
+export const processUsersForResponse = processUsers;
+
 // Função auxiliar para importar de profileManagement.ts
 export const ensureProfiles = async (users: any[], supabaseAdmin: any, profilesMap: Map<string, any>) => {
   // Importar de forma dinâmica para evitar problemas de referência circular

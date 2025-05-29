@@ -157,18 +157,29 @@ export class UserService {
   }
 
   async deleteUser(userId: string, userEmail: string): Promise<boolean> {
-    console.log('🗑️ UserService.deleteUser iniciado:', { userId, userEmail });
+    console.log('🗑️ [FRONTEND] UserService.deleteUser iniciado:', { userId, userEmail });
+    console.log('🗑️ [FRONTEND] Timestamp:', new Date().toISOString());
     
     try {
       if (!userId || !userEmail) {
-        console.error('❌ Parâmetros obrigatórios faltando:', { userId, userEmail });
+        console.error('❌ [FRONTEND] Parâmetros obrigatórios faltando:', { userId, userEmail });
         throw new Error('ID do usuário e email são obrigatórios');
       }
 
-      console.log('📡 Chamando edge function para exclusão...');
+      console.log('📡 [FRONTEND] Preparando chamada para edge function...');
       
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
+
+      console.log('🔑 [FRONTEND] Token obtido:', !!accessToken);
+
+      const requestBody = {
+        action: 'deleteUser',
+        userId,
+        email: userEmail
+      };
+
+      console.log('📦 [FRONTEND] Body da requisição:', requestBody);
 
       const response = await fetch('https://qflmguzmticupqtnlirf.supabase.co/functions/v1/list-users', {
         method: 'POST',
@@ -177,31 +188,32 @@ export class UserService {
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM',
           'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         },
-        body: JSON.stringify({
-          action: 'deleteUser',
-          userId,
-          email: userEmail
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('📡 [FRONTEND] Resposta HTTP status:', response.status);
+      console.log('📡 [FRONTEND] Resposta OK:', response.ok);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ [FRONTEND] Erro HTTP:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('📡 Resposta da edge function:', data);
+      console.log('📡 [FRONTEND] Resposta da edge function:', data);
 
       if (data.error) {
-        console.error('❌ Erro retornado pela edge function:', data.error);
+        console.error('❌ [FRONTEND] Erro retornado pela edge function:', data.error);
         throw new Error(data.error);
       }
 
       if (!data.success) {
-        console.error('❌ Operação não bem-sucedida:', data);
+        console.error('❌ [FRONTEND] Operação não bem-sucedida:', data);
         throw new Error('Falha na exclusão do usuário');
       }
 
-      console.log('✅ Usuário excluído com sucesso, limpando cache...');
+      console.log('✅ [FRONTEND] Usuário excluído com sucesso, limpando cache...');
       this.clearCache();
       
       if (data.inactivated) {
@@ -218,7 +230,7 @@ export class UserService {
       
       return true;
     } catch (error: any) {
-      console.error('❌ Erro completo ao excluir usuário:', error);
+      console.error('❌ [FRONTEND] Erro completo ao excluir usuário:', error);
       toast({
         title: "Erro",
         description: error.message || "Não foi possível excluir o usuário.",

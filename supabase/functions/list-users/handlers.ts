@@ -51,18 +51,21 @@ export async function handleGetRequest(supabaseAdmin: SupabaseClient): Promise<R
 }
 
 export async function handlePostRequest(req: Request, supabaseAdmin: SupabaseClient): Promise<Response> {
-  console.log("[handlePostRequest] Processando requisição POST");
+  console.log("[handlePostRequest] 🔥 RECEBIDA REQUISIÇÃO POST");
+  console.log("[handlePostRequest] 📋 Timestamp:", new Date().toISOString());
   
   try {
     const body = await req.json();
-    console.log("[handlePostRequest] Body recebido:", body);
+    console.log("[handlePostRequest] 📦 Body recebido:", body);
     
     const { action, userId, email } = body;
     
     if (action === 'deleteUser') {
-      console.log(`[handlePostRequest] Executando exclusão de usuário: ${email} (${userId})`);
+      console.log(`[handlePostRequest] 🗑️ AÇÃO DE EXCLUSÃO DETECTADA`);
+      console.log(`[handlePostRequest] 👤 Usuário alvo: ${email} (${userId})`);
       
       if (!userId || !email) {
+        console.error(`[handlePostRequest] ❌ Parâmetros faltando:`, { userId, email });
         return new Response(
           JSON.stringify({ 
             success: false, 
@@ -78,9 +81,10 @@ export async function handlePostRequest(req: Request, supabaseAdmin: SupabaseCli
         );
       }
       
+      console.log(`[handlePostRequest] 🚀 Iniciando operação de exclusão...`);
       const result = await deleteUserOperation(supabaseAdmin, userId, email);
       
-      console.log(`[handlePostRequest] Resultado da exclusão:`, result);
+      console.log(`[handlePostRequest] 📊 Resultado da exclusão:`, result);
       
       return new Response(
         JSON.stringify(result),
@@ -94,6 +98,7 @@ export async function handlePostRequest(req: Request, supabaseAdmin: SupabaseCli
       );
     }
     
+    console.error(`[handlePostRequest] ❌ Ação não reconhecida: ${action}`);
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -109,7 +114,12 @@ export async function handlePostRequest(req: Request, supabaseAdmin: SupabaseCli
     );
     
   } catch (error: any) {
-    console.error("Erro no handlePostRequest:", error);
+    console.error("[handlePostRequest] ❌ ERRO CRÍTICO:", {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
