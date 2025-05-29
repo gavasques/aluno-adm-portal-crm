@@ -26,11 +26,19 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
   const isAdmin = user.role === "Admin";
   
-  // Verificar se o usuário está banido
-  const isBanned = user.status === 'Banido' || 
-                   user.status === 'Banned' ||
-                   user.status?.toLowerCase() === 'banido' ||
-                   user.status?.toLowerCase() === 'banned';
+  // Buscar o grupo "Banido" pelos grupos de permissão
+  const bannedGroup = permissionGroups.find(g => 
+    g.name.toLowerCase().includes('banido') || 
+    g.name.toLowerCase().includes('banned')
+  );
+  
+  // Verificar se o usuário está banido - verificando o grupo de permissão primeiro
+  const isBanned = bannedGroup ? 
+    user.permission_group_id === bannedGroup.id :
+    (user.status === 'Banido' || 
+     user.status === 'Banned' ||
+     user.status?.toLowerCase() === 'banido' ||
+     user.status?.toLowerCase() === 'banned');
   
   // Verificar se está ativo
   const normalizedStatus = typeof user.status === 'string' ? user.status.toLowerCase() : '';
@@ -42,6 +50,8 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
   console.log('🏷️ UserBadges - Renderizando badges para:', {
     userEmail: user.email,
     status: user.status,
+    permission_group_id: user.permission_group_id,
+    bannedGroup: bannedGroup,
     isBanned: isBanned,
     isActive: isActive,
     isAdmin: isAdmin,
