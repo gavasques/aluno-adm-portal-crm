@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
-import { usePerformanceOptimizedUsers } from '@/hooks/usePerformanceOptimizedUsers';
+import { usePerformanceOptimizedUsers } from '@/hooks/users/usePerformanceOptimizedUsers';
 import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
 
 export const useUserActions = () => {
