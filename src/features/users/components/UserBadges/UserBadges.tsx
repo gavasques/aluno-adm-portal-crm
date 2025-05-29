@@ -8,9 +8,7 @@ import {
   CheckCircle, 
   XCircle, 
   GraduationCap, 
-  Ban,
-  UserX,
-  Users
+  Ban
 } from 'lucide-react';
 
 interface UserBadgesProps {
@@ -45,9 +43,6 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
   const normalizedStatus = typeof user.status === 'string' ? user.status.toLowerCase() : '';
   const isActive = normalizedStatus === "ativo" || normalizedStatus === "active";
 
-  // Encontrar o grupo de permissão
-  const permissionGroup = permissionGroups.find(g => g.id === user.permission_group_id);
-  
   console.log('🏷️ UserBadges - Renderizando badges para:', {
     userEmail: user.email,
     status: user.status,
@@ -56,8 +51,7 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
     isBanned: isBanned,
     isActive: isActive,
     isAdmin: isAdmin,
-    isTemporaryGroup: isTemporaryGroup,
-    permissionGroup: permissionGroup?.name
+    isTemporaryGroup: isTemporaryGroup
   });
 
   return (
@@ -108,14 +102,6 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
         <Badge variant="outline" className="bg-purple-50 border-purple-200 text-purple-700 text-xs">
           <GraduationCap className="w-3 h-3 mr-1" />
           Mentor
-        </Badge>
-      )}
-
-      {/* Badge do Grupo de Permissão - sempre exibir quando disponível */}
-      {permissionGroup && (
-        <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 text-xs">
-          <Users className="w-3 h-3 mr-1" />
-          {permissionGroup.name}
         </Badge>
       )}
     </div>

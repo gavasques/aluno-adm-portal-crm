@@ -3,11 +3,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { User } from '@/types/user.types';
 import { ModernUserActions } from './ModernUserActions';
 import { UserBadges } from '../UserBadges/UserBadges';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Users } from 'lucide-react';
 
 interface ModernUserTableRowProps {
   user: User;
@@ -85,9 +87,12 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
     }
   };
 
+  // Encontrar o grupo de permissão
+  const permissionGroup = permissionGroups.find(g => g.id === user.permission_group_id);
+
   return (
     <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
-      {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
+      {/* Coluna 1: Usuário (Avatar + Nome + Email + Badge de Permissão) */}
       <TableCell className="py-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border border-white/20 flex-shrink-0">
@@ -97,8 +102,16 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
-              {user.name || 'Nome não informado'}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                {user.name || 'Nome não informado'}
+              </div>
+              {permissionGroup && (
+                <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 text-xs px-1.5 py-0 h-5">
+                  <Users className="w-2.5 h-2.5 mr-1" />
+                  {permissionGroup.name}
+                </Badge>
+              )}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {user.email}
