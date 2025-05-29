@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -60,8 +61,19 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
 
   const formatLastLogin = (lastLogin: string) => {
     if (!lastLogin || lastLogin === 'Nunca') return 'Nunca';
+    
     try {
+      // Se já está no formato DD/MM/YYYY, retornar como está
+      if (lastLogin.includes('/')) {
+        return lastLogin;
+      }
+      
+      // Se está em formato ISO, converter
       const date = new Date(lastLogin);
+      if (isNaN(date.getTime())) {
+        return 'Nunca';
+      }
+      
       return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
     } catch {
       return 'Nunca';

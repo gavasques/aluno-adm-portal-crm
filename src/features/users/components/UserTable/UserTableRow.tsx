@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -48,15 +47,15 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
     }
     
     try {
-      // Verifica se já está em formato brasileiro
-      if (lastLogin.includes('/')) {
+      // Se já está no formato brasileiro DD/MM/YYYY, retornar como está
+      if (lastLogin.includes('/') && lastLogin.length === 10) {
         return lastLogin;
       }
       
-      // Tenta converter de ISO string para formato brasileiro
+      // Tentar converter de ISO string para formato brasileiro
       const date = new Date(lastLogin);
       if (isNaN(date.getTime())) {
-        return 'Data inválida';
+        return 'Nunca';
       }
       
       return date.toLocaleDateString('pt-BR', {
@@ -66,7 +65,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
       });
     } catch (error) {
       console.error('Erro ao formatar data:', error);
-      return 'Data inválida';
+      return 'Nunca';
     }
   };
 
@@ -96,7 +95,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
     }
   };
 
-  // Verificar se o usuário está banido
   const isBanned = permissionGroups.find(g => g.id === user.permission_group_id)?.name?.toLowerCase() === "banido";
 
   return (
