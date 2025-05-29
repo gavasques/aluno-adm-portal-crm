@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +18,7 @@ interface ModernUserTableRowProps {
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
+  onCreditsManagement?: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -33,6 +33,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   onActivityLogs,
   onSendMagicLink,
   onToggleMentor,
+  onCreditsManagement,
   permissionGroups = [],
 }) => {
   const getInitials = (name: string) => {
@@ -132,6 +133,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
             onActivityLogs={onActivityLogs}
             onSendMagicLink={onSendMagicLink}
             onToggleMentor={onToggleMentor}
+            onCreditsManagement={onCreditsManagement}
           />
         </div>
       </TableCell>

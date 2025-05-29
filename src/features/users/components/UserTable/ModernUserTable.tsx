@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Table, TableBody } from '@/components/ui/table';
@@ -21,6 +20,7 @@ interface ModernUserTableProps {
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
+  onCreditsManagement?: (user: User) => void;
   permissionGroups?: Array<{ id: string; name: string; }>;
 }
 
@@ -36,6 +36,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
   onActivityLogs,
   onSendMagicLink,
   onToggleMentor,
+  onCreditsManagement,
   permissionGroups = [],
 }) => {
   if (isLoading) {
@@ -113,6 +114,7 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
                     onActivityLogs={onActivityLogs}
                     onSendMagicLink={onSendMagicLink}
                     onToggleMentor={onToggleMentor}
+                    onCreditsManagement={onCreditsManagement}
                     permissionGroups={permissionGroups}
                   />
                 ))}

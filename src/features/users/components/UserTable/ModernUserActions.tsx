@@ -20,7 +20,7 @@ import {
   Link,
   Edit,
   GraduationCap,
-  Mail
+  CreditCard
 } from 'lucide-react';
 import { User } from '@/types/user.types';
 
@@ -35,6 +35,7 @@ interface ModernUserActionsProps {
   onActivityLogs: (user: User) => void;
   onSendMagicLink: (user: User) => void;
   onToggleMentor: (user: User) => void;
+  onCreditsManagement?: (user: User) => void;
 }
 
 const GERAL_GROUP_ID = "564c55dc-0ab8-481e-a0bc-97ea7e484b88";
@@ -50,6 +51,7 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
   onActivityLogs,
   onSendMagicLink,
   onToggleMentor,
+  onCreditsManagement,
 }) => {
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
 
@@ -104,6 +106,13 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
           <HardDrive className="mr-2 h-4 w-4 group-hover:text-indigo-600 transition-colors" />
           <span>Gerenciar armazenamento</span>
         </DropdownMenuItem>
+
+        {onCreditsManagement && (
+          <DropdownMenuItem onClick={() => onCreditsManagement(user)} className="group">
+            <CreditCard className="mr-2 h-4 w-4 group-hover:text-emerald-600 transition-colors" />
+            <span>Gestão de créditos</span>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuItem onClick={() => onActivityLogs(user)} className="group">
           <Activity className="mr-2 h-4 w-4 group-hover:text-gray-600 transition-colors" />
