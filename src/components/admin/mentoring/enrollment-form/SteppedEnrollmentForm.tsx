@@ -17,7 +17,7 @@ import {
 
 // Import com default export
 import StudentSearchField from './StudentSearchField';
-import { useActiveStudentsForMentoring } from '@/hooks/admin/useActiveStudentsForMentoring';
+import { useActiveUsersForEnrollment } from '@/hooks/admin/useActiveUsersForEnrollment';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MentoringCatalog } from '@/types/mentoring.types';
@@ -43,7 +43,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
 }) => {
   const { toast } = useToast();
   const { createEnrollment, loading } = useSupabaseMentoring();
-  const { students } = useActiveStudentsForMentoring();
+  const { users } = useActiveUsersForEnrollment();
   
   // Form state
   const [step, setStep] = useState(1);
@@ -59,7 +59,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
   });
   
   // Selected entities
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedMentoring, setSelectedMentoring] = useState<MentoringCatalog | null>(null);
   
   // Progress calculation
@@ -78,11 +78,11 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
     }
   };
   
-  const handleStudentSelect = (student: any) => {
-    setSelectedStudent(student);
+  const handleUserSelect = (user: any) => {
+    setSelectedUser(user);
     setFormData({
       ...formData,
-      studentId: student.id
+      studentId: user.id
     });
   };
   
@@ -138,7 +138,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
         if (success) {
           toast({
             title: "Inscrição criada com sucesso",
-            description: `${selectedStudent?.name} foi inscrito em ${selectedMentoring?.name}`,
+            description: `${selectedUser?.name} foi inscrito em ${selectedMentoring?.name}`,
             variant: "default"
           });
           
@@ -159,7 +159,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
   const isStepValid = () => {
     switch (step) {
       case 1:
-        return !!selectedStudent;
+        return !!selectedUser;
       case 2:
         return !!selectedMentoring;
       case 3:
@@ -195,7 +195,7 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
               className="flex items-center gap-1"
             >
               <User className="h-3 w-3" />
-              Aluno
+              Usuário
             </Badge>
             <Badge 
               variant={step >= 2 ? "default" : "outline"}
@@ -226,20 +226,20 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
           <div className="min-h-[300px]">
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-medium">Selecione o Aluno</h2>
+                <h2 className="text-lg font-medium">Selecione o Usuário</h2>
                 <StudentSearchField
-                  selectedStudent={selectedStudent}
-                  onStudentSelect={handleStudentSelect}
+                  selectedStudent={selectedUser}
+                  onStudentSelect={handleUserSelect}
                   onClear={() => {
-                    setSelectedStudent(null);
+                    setSelectedUser(null);
                     setFormData({...formData, studentId: ''});
                   }}
                 />
                 
-                {selectedStudent && (
+                {selectedUser && (
                   <Card className="mt-4 bg-blue-50 border-blue-200">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-blue-800">Aluno Selecionado</CardTitle>
+                      <CardTitle className="text-sm font-medium text-blue-800">Usuário Selecionado</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-3">
@@ -247,8 +247,8 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
                           <User className="h-5 w-5 text-blue-700" />
                         </div>
                         <div>
-                          <p className="font-medium">{selectedStudent.name}</p>
-                          <p className="text-sm text-gray-600">{selectedStudent.email}</p>
+                          <p className="font-medium">{selectedUser.name}</p>
+                          <p className="text-sm text-gray-600">{selectedUser.email}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -387,8 +387,8 @@ const SteppedEnrollmentForm: React.FC<SteppedEnrollmentFormProps> = ({
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Aluno:</span>
-                        <span className="font-medium">{selectedStudent?.name}</span>
+                        <span className="text-gray-600">Usuário:</span>
+                        <span className="font-medium">{selectedUser?.name}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Mentoria:</span>
