@@ -7,6 +7,7 @@ import { PageTransition, PageChild } from '@/components/animations/PageTransitio
 import { useUXFeedback } from '@/hooks/useUXFeedback';
 import { DesignStatsCard } from '@/design-system/components/DesignDashboard';
 import { YouTubeSection } from '@/components/student/dashboard/YouTubeSection';
+import { NewsSection } from '@/components/student/dashboard/NewsSection';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -136,6 +137,9 @@ const StudentDashboard = () => {
 
       {/* Seção de Vídeos do YouTube */}
       <YouTubeSection />
+
+      {/* Seção de Notícias */}
+      <NewsSection />
     </PageTransition>
   );
 };

@@ -21,7 +21,8 @@ import {
   Users2,
   ClipboardCheck,
   Database,
-  Cog
+  Cog,
+  Newspaper
 } from "lucide-react";
 import { MenuItem, MenuGroup } from "./types";
 
@@ -127,6 +128,12 @@ export const managementMenuItems: MenuItem[] = [
     href: "/admin/creditos",
     icon: CreditCard,
     gradient: "from-cyan-500 to-cyan-600",
+  },
+  {
+    title: "Notícias",
+    href: "/admin/noticias",
+    icon: Newspaper,
+    gradient: "from-blue-500 to-blue-600",
   },
 ];
 

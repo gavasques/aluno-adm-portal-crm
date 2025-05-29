@@ -1074,6 +1074,45 @@ export type Database = {
         }
         Relationships: []
       }
+      news: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          published_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       partner_types: {
         Row: {
           created_at: string
