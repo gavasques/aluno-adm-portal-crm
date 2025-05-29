@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import StudentSidebar from './StudentSidebar';
@@ -33,12 +32,11 @@ const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
         useSafeArea={true}
         mobileFirst={true}
       >
-        {/* Mobile Header */}
+        {/* Mobile Header - Hook useNotifications será usado internamente */}
         <MobileHeader
           title={isAdmin ? "Administração" : "Portal do Aluno"}
           onMenuToggle={handleMenuToggle}
           isMenuOpen={isMobileMenuOpen}
-          notificationCount={3}
         />
 
         {/* Mobile Drawer */}

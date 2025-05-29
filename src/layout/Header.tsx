@@ -12,11 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   
   // Detectar se o usuário está na área de admin ou aluno
   useEffect(() => {
@@ -38,7 +40,9 @@ const Header = () => {
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+          )}
         </Button>
         
         <DropdownMenu>

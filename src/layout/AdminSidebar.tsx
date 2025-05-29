@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const sidebarItems = [
   {
@@ -182,6 +183,7 @@ const groupedItems = sidebarItems.reduce((groups, item) => {
 export default function AdminSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -269,7 +271,9 @@ export default function AdminSidebar() {
             
             <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
+              )}
             </Button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SafeHeader } from '@/components/ui/safe-area';
+import { useNotifications } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
 
 interface MobileHeaderProps {
@@ -13,17 +14,16 @@ interface MobileHeaderProps {
   onMenuToggle: () => void;
   isMenuOpen: boolean;
   showSearch?: boolean;
-  notificationCount?: number;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
   title,
   onMenuToggle,
   isMenuOpen,
-  showSearch = true,
-  notificationCount = 0
+  showSearch = true
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const { unreadCount } = useNotifications();
 
   return (
     <SafeHeader className="bg-white/95 backdrop-blur-lg border-b border-gray-200 px-4 py-2">
@@ -92,11 +92,11 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button variant="ghost" size="sm" className="h-10 w-10 p-0 relative">
               <Bell className="h-4 w-4" />
-              {notificationCount > 0 && (
+              {unreadCount > 0 && (
                 <Badge 
                   className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center bg-red-500"
                 >
-                  {notificationCount > 9 ? '9+' : notificationCount}
+                  {unreadCount > 9 ? '9+' : unreadCount}
                 </Badge>
               )}
             </Button>

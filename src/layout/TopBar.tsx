@@ -8,6 +8,7 @@ import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ const TopBar = () => {
   const { user } = useAuth();
   const { signOut } = useSignInOut();
   const { permissions } = usePermissions();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -93,10 +95,14 @@ const TopBar = () => {
             Relatório
           </Button>
 
-          {/* Notifications */}
+          {/* Notifications - Only show badge if there are unread notifications */}
           <Button variant="ghost" size="icon" className="relative hover:bg-gray-100">
             <Bell className="h-5 w-5 text-gray-600" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Button>
 
           {/* User Menu */}

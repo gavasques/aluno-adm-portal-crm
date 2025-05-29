@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Settings, User, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useNotifications } from '@/hooks/useNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -20,10 +21,10 @@ interface ModernHeaderProps {
 
 export const ModernHeader: React.FC<ModernHeaderProps> = ({ isAdmin = false }) => {
   const { user, signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [notificationCount] = useState(3);
 
   const getBreadcrumb = () => {
     const path = location.pathname;
@@ -106,7 +107,7 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({ isAdmin = false }) =
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
+          {/* Notifications - Only show badge if there are unread notifications */}
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -115,14 +116,16 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({ isAdmin = false }) =
             <ModernButton variant="glass" size="icon" className="relative">
               <Bell className="h-4 w-4" />
               <AnimatePresence>
-                {notificationCount > 0 && (
+                {unreadCount > 0 && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center"
                   >
-                    <span className="text-xs font-bold text-white">{notificationCount}</span>
+                    <span className="text-xs font-bold text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
                   </motion.div>
                 )}
               </AnimatePresence>
