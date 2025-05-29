@@ -86,14 +86,14 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   };
 
   return (
-    <TableRow className="group border-b border-gray-200/40 hover:bg-white/5 dark:hover:bg-slate-700/50 relative">
-      {/* Linha separadora sutil */}
-      <div className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gray-200/60 to-transparent"></div>
+    <TableRow className="group border-b border-white/10 hover:bg-white/5 dark:hover:bg-slate-700/50 relative">
+      {/* Linha separadora mais visível */}
+      <td colSpan={5} className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700"></td>
       
       {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
-      <TableCell className="py-4">
+      <TableCell className="py-6">
         <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9 border border-white/20 flex-shrink-0">
+          <Avatar className="h-10 w-10 border border-white/20 flex-shrink-0">
             <AvatarImage src="" alt={user.name || ''} />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-medium">
               {getInitials(user.name || user.email)}
@@ -110,15 +110,17 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
         </div>
       </TableCell>
 
-      {/* Coluna 2: Status & Permissões (Badges) */}
-      <TableCell className="py-4">
-        <UserBadges user={user} permissionGroups={permissionGroups} />
+      {/* Coluna 2: Badges */}
+      <TableCell className="py-6">
+        <div className="w-full">
+          <UserBadges user={user} permissionGroups={permissionGroups} />
+        </div>
       </TableCell>
 
       {/* Coluna 3: Armazenamento */}
-      <TableCell className="py-4 text-center">
+      <TableCell className="py-6 text-center">
         <div className="flex flex-col items-center gap-1">
-          <div className="w-14 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-300 ${getStorageColor()}`}
               style={{ width: `${Math.min(getStoragePercentage(), 100)}%` }}
@@ -131,14 +133,14 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
       </TableCell>
 
       {/* Coluna 4: Último Acesso */}
-      <TableCell className="py-4 text-center text-xs text-gray-600 dark:text-gray-400">
+      <TableCell className="py-6 text-center text-xs text-gray-600 dark:text-gray-400">
         <div className="whitespace-nowrap">
           {formatLastLogin(user.lastLogin)}
         </div>
       </TableCell>
 
       {/* Coluna 5: Ações */}
-      <TableCell className="py-4 text-center">
+      <TableCell className="py-6 text-center">
         <div className="flex justify-center">
           <ModernUserActions
             user={user}
@@ -154,6 +156,7 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
             onBanUser={onBanUser}
             onUnbanUser={onUnbanUser}
             onCreditsManagement={onCreditsManagement}
+            permissionGroups={permissionGroups}
           />
         </div>
       </TableCell>

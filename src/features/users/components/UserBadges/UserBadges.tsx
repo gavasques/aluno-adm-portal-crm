@@ -61,62 +61,80 @@ export const UserBadges: React.FC<UserBadgesProps> = ({
   });
 
   return (
-    <div className="flex flex-wrap items-start gap-1.5">
+    <div className="flex flex-wrap items-start gap-3 lg:gap-4">
       {/* Badge de Admin */}
       {isAdmin && (
-        <Badge size="sm" variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 text-[9px] px-1.5 py-0.5">
-          <Shield className="w-2 h-2 mr-1" />
-          ADM
-        </Badge>
+        <div className="flex flex-col items-center min-w-0">
+          <span className="text-[9px] text-gray-400 mb-0.5 whitespace-nowrap">Função</span>
+          <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 text-xs whitespace-nowrap">
+            <Shield className="w-3 h-3 mr-1 flex-shrink-0" />
+            ADM
+          </Badge>
+        </div>
       )}
 
       {/* Badge de Banido - tem prioridade sobre outros status */}
       {isBanned && (
-        <Badge size="sm" variant="outline" className="bg-red-100 border-red-300 text-red-800 text-[9px] px-1.5 py-0.5">
-          <Ban className="w-2 h-2 mr-1" />
-          Banido
-        </Badge>
+        <div className="flex flex-col items-center min-w-0">
+          <span className="text-[9px] text-gray-400 mb-0.5 whitespace-nowrap">Status</span>
+          <Badge variant="outline" className="bg-red-100 border-red-300 text-red-800 text-xs whitespace-nowrap">
+            <Ban className="w-3 h-3 mr-1 flex-shrink-0" />
+            Banido
+          </Badge>
+        </div>
       )}
 
       {/* Badge de Status (apenas se não estiver banido) */}
       {!isBanned && (
-        <>
+        <div className="flex flex-col items-center min-w-0">
+          <span className="text-[9px] text-gray-400 mb-0.5 whitespace-nowrap">Status</span>
           {isActive ? (
-            <Badge size="sm" variant="outline" className="bg-green-50 border-green-200 text-green-700 text-[9px] px-1.5 py-0.5">
-              <CheckCircle className="w-2 h-2 mr-1" />
+            <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 text-xs whitespace-nowrap">
+              <CheckCircle className="w-3 h-3 mr-1 flex-shrink-0" />
               Ativo
             </Badge>
           ) : (
-            <Badge size="sm" variant="outline" className="bg-red-50 border-red-200 text-red-700 text-[9px] px-1.5 py-0.5">
-              <XCircle className="w-2 h-2 mr-1" />
+            <Badge variant="outline" className="bg-red-50 border-red-200 text-red-700 text-xs whitespace-nowrap">
+              <XCircle className="w-3 h-3 mr-1 flex-shrink-0" />
               Inativo
             </Badge>
           )}
-        </>
+        </div>
       )}
 
       {/* Badge de Grupo Temporário (apenas se não estiver banido) */}
       {!isBanned && isTemporaryGroup && (
-        <Badge size="sm" variant="outline" className="bg-orange-50 border-orange-200 text-orange-700 text-[9px] px-1.5 py-0.5">
-          <Clock className="w-2 h-2 mr-1" />
-          Pendente
-        </Badge>
+        <div className="flex flex-col items-center min-w-0">
+          <span className="text-[9px] text-gray-400 mb-0.5 whitespace-nowrap">Status</span>
+          <Badge variant="outline" className="bg-orange-50 border-orange-200 text-orange-700 text-xs whitespace-nowrap">
+            <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
+            Pendente
+          </Badge>
+        </div>
       )}
 
       {/* Badge de Mentor */}
       {user.is_mentor && (
-        <Badge size="sm" variant="outline" className="bg-purple-50 border-purple-200 text-purple-700 text-[9px] px-1.5 py-0.5">
-          <GraduationCap className="w-2 h-2 mr-1" />
-          Mentor
-        </Badge>
+        <div className="flex flex-col items-center min-w-0">
+          <span className="text-[9px] text-gray-400 mb-0.5 whitespace-nowrap">É mentor</span>
+          <Badge variant="outline" className="bg-purple-50 border-purple-200 text-purple-700 text-xs whitespace-nowrap">
+            <GraduationCap className="w-3 h-3 mr-1 flex-shrink-0" />
+            Mentor
+          </Badge>
+        </div>
       )}
 
       {/* Badge do Grupo de Permissão - sempre exibir quando disponível */}
       {permissionGroup && (
-        <Badge size="sm" variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 text-[9px] px-1.5 py-0.5">
-          <Users className="w-2 h-2 mr-1" />
-          {permissionGroup.name}
-        </Badge>
+        <div className="flex flex-col items-center min-w-0">
+          <span className="text-[9px] text-gray-400 mb-0.5 whitespace-nowrap">Permissão</span>
+          <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 text-xs">
+            <Users className="w-3 h-3 mr-1 flex-shrink-0" />
+            <span className="truncate max-w-20 lg:max-w-none" title={permissionGroup.name}>
+              {permissionGroup.name}
+            </span>
+          </Badge>
+        </div>
       )}
     </div>
   );
