@@ -1,102 +1,49 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import StudentSidebar from './StudentSidebar';
-import ModernAdminSidebar from './ModernAdminSidebar';
-import MobileAdminSidebar from './MobileAdminSidebar';
-import { MobileHeader } from '@/components/layout/MobileHeader';
-import { MobileDrawer } from '@/components/layout/MobileDrawer';
-import { ResponsiveLayout } from '@/components/ui/responsive-layout';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React from 'react';
+import { SidebarProvider } from '@/contexts/SidebarContext';
+import { useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import TopBar from './TopBar';
+import './Layout.css';
+import AdminSidebar from './admin-sidebar/AdminSidebar';
+import StudentSidebar from './student-sidebar/StudentSidebar';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
 
 interface LayoutProps {
   children: React.ReactNode;
-  isAdmin: boolean;
+  isAdmin?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
-  const isMobile = useIsMobile();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+const Layout = ({ children, isAdmin }: LayoutProps) => {
+  const location = useLocation();
 
-  const handleMenuToggle = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const handleMenuClose = () => {
-    setIsMobileMenuOpen(false);
-  };
-
-  if (isMobile) {
-    return (
-      <ResponsiveLayout
-        className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
-        useSafeArea={true}
-        mobileFirst={true}
-      >
-        {/* Mobile Header - Hook useNotifications será usado internamente */}
-        <MobileHeader
-          title={isAdmin ? "Administração" : "Portal do Aluno"}
-          onMenuToggle={handleMenuToggle}
-          isMenuOpen={isMobileMenuOpen}
-        />
-
-        {/* Mobile Drawer */}
-        <MobileDrawer isOpen={isMobileMenuOpen} onClose={handleMenuClose}>
-          {isAdmin ? (
-            <MobileAdminSidebar onItemClick={handleMenuClose} />
-          ) : (
-            <div className="p-4">
-              <p className="text-gray-600">Sidebar do Aluno Mobile em desenvolvimento</p>
-            </div>
-          )}
-        </MobileDrawer>
-
-        {/* Main Content */}
-        <motion.div 
-          className="flex-1 p-4 pt-2 pb-8 overflow-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          {children}
-        </motion.div>
-        
-        {/* Background Elements otimizado para mobile */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-400/5 rounded-full blur-2xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-purple-400/5 rounded-full blur-2xl" />
-        </div>
-      </ResponsiveLayout>
-    );
-  }
-
-  // Layout desktop
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full z-40">
-        {isAdmin ? <ModernAdminSidebar /> : <StudentSidebar />}
-      </div>
-      
-      {/* Main Content */}
-      <div className="ml-64 min-h-screen">
-        <motion.main 
-          className="p-6 lg:p-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <div className="max-w-7xl mx-auto">
-            {children}
+    <div className={`layout-container ${isAdmin ? 'admin-layout' : 'student-layout'}`}>
+      <NotificationsProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
+            
+            <div className="flex flex-1 flex-col">
+              <TopBar />
+              
+              <main className="flex-1 p-6 overflow-auto">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
+                  >
+                    {children}
+                  </motion.div>
+                </AnimatePresence>
+              </main>
+            </div>
           </div>
-        </motion.main>
-      </div>
-      
-      {/* Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl" />
-        <div className="absolute top-3/4 left-3/4 w-64 h-64 bg-pink-400/10 rounded-full blur-3xl" />
-      </div>
+        </SidebarProvider>
+      </NotificationsProvider>
     </div>
   );
 };

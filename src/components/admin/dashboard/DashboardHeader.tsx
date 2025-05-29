@@ -17,7 +17,7 @@ export function DashboardHeader() {
   // Só mostrar o badge se não estiver carregando E tiver notificações não lidas
   const shouldShowNotificationBadge = !notificationsLoading && unreadCount > 0;
 
-  console.log('🔔 DashboardHeader notification state:', {
+  console.log('🔔 [DashboardHeader] Notification state:', {
     unreadCount,
     notificationsLoading,
     shouldShowNotificationBadge

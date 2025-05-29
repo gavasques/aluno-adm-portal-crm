@@ -75,7 +75,7 @@ const TopBar = () => {
   // Só mostrar o badge se não estiver carregando E tiver notificações não lidas
   const shouldShowNotificationBadge = !notificationsLoading && unreadCount > 0;
 
-  console.log('🔔 TopBar notification state:', {
+  console.log('🔔 [TopBar] Notification state:', {
     unreadCount,
     notificationsLoading,
     shouldShowNotificationBadge
