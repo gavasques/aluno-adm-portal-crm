@@ -61,8 +61,19 @@ export const ModernUserActions: React.FC<ModernUserActionsProps> = ({
 }) => {
   const isTemporaryGroup = user.permission_group_id === GERAL_GROUP_ID && user.role !== "Admin";
   
-  // Verificar se o usuário está banido
-  const isBanned = user.status === 'Banido' || user.status === 'Banned';
+  // Verificar se o usuário está banido - verificando múltiplas condições
+  const isBanned = user.status === 'Banido' || 
+                   user.status === 'Banned' ||
+                   user.status?.toLowerCase() === 'banido' ||
+                   user.status?.toLowerCase() === 'banned';
+
+  console.log('🔍 ModernUserActions - Verificando status do usuário:', {
+    userEmail: user.email,
+    status: user.status,
+    permission_group_id: user.permission_group_id,
+    isBanned: isBanned,
+    isTemporaryGroup: isTemporaryGroup
+  });
 
   return (
     <DropdownMenu>
