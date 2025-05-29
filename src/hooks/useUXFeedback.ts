@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useModernToast } from './use-modern-toast';
+import { toast } from 'sonner';
 
 interface UXFeedbackOptions {
   successMessage?: string;
@@ -10,33 +10,30 @@ interface UXFeedbackOptions {
 }
 
 export function useUXFeedback() {
-  const { toast, success, error, info } = useModernToast();
-
   const showLoadingToast = useCallback((message: string = "Processando...") => {
-    return toast({
-      title: message,
-      variant: "info",
-      duration: 0 // Will be dismissed manually
-    });
-  }, [toast]);
+    return toast.loading(message);
+  }, []);
 
   const showSuccessToast = useCallback((message: string, description?: string) => {
-    return success(message, description, {
+    return toast.success(message, {
+      description,
       duration: 4000
     });
-  }, [success]);
+  }, []);
 
   const showErrorToast = useCallback((message: string, description?: string) => {
-    return error(message, description, {
+    return toast.error(message, {
+      description,
       duration: 6000
     });
-  }, [error]);
+  }, []);
 
   const showInfoToast = useCallback((message: string, description?: string) => {
-    return info(message, description, {
+    return toast.info(message, {
+      description,
       duration: 5000
     });
-  }, [info]);
+  }, []);
 
   // Helper for common CRUD operations
   const handleAsyncAction = useCallback(async <T>(
@@ -60,7 +57,7 @@ export function useUXFeedback() {
 
       // Dismiss loading and show success
       if (loadingToastId) {
-        // Sonner auto-dismisses when we show a new toast
+        toast.dismiss(loadingToastId);
       }
       showSuccessToast(successMessage);
 
@@ -68,7 +65,7 @@ export function useUXFeedback() {
     } catch (error) {
       // Dismiss loading and show error
       if (loadingToastId) {
-        // Sonner auto-dismisses when we show a new toast
+        toast.dismiss(loadingToastId);
       }
       
       const errorDesc = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -85,6 +82,7 @@ export function useUXFeedback() {
     userCreated: () => showSuccessToast("✅ Usuário criado", "O usuário foi criado com sucesso"),
     userUpdated: () => showSuccessToast("✅ Usuário atualizado", "As informações foram salvas"),
     userDeleted: () => showSuccessToast("✅ Usuário removido", "O usuário foi excluído do sistema"),
+    userInactivated: () => showSuccessToast("⚠️ Usuário inativado", "O usuário foi inativado devido a dados associados"),
     userInvited: () => showSuccessToast("📧 Convite enviado", "O convite foi enviado por email"),
     
     // Data operations

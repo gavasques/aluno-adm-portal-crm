@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -347,7 +346,16 @@ function AppContent() {
         {/* 404 route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Toaster />
+      {/* Centralizar todas as notificações em um único Toaster */}
+      <Toaster 
+        position="top-right"
+        richColors
+        closeButton
+        expand={true}
+        toastOptions={{
+          duration: 4000,
+        }}
+      />
     </QueryClientProvider>
   );
 }

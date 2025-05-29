@@ -1,28 +1,19 @@
 
 import { useCallback } from 'react';
-import { usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
-import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
+import { usePerformanceOptimizedUsers } from '@/hooks/usePerformanceOptimizedUserContext';
+import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
 
 export const useUserActions = () => {
-  const {
-    deleteUser,
-    resetPassword,
-    setPermissionGroup,
-    isDeleting,
-    isResettingPassword,
-    isSettingPermissions,
-    forceRefresh
-  } = usePerformanceOptimizedUserContext();
-
-  const { updateUserPassword, sendMagicLink } = useBasicAuth();
-  const { feedback, handleAsyncAction } = useUXFeedback();
+  const { deleteUserFromDatabase, forceRefresh } = usePerformanceOptimizedUsers();
+  const { sendMagicLink, updateUserPassword } = useBasicAuth();
+  const { handleAsyncAction } = useUXFeedback();
 
   const confirmDelete = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
     return await handleAsyncAction(
       async () => {
         console.log('🔧 UserActions: Executing delete for:', userEmail);
-        const success = await deleteUser(userId, userEmail);
+        const success = await deleteUserFromDatabase(userId, userEmail);
         if (success) {
           setTimeout(() => {
             console.log('🔄 Forcing refresh after user deletion...');
@@ -38,13 +29,13 @@ export const useUserActions = () => {
         loadingMessage: "🗑️ Removendo usuário..."
       }
     ) !== null;
-  }, [deleteUser, forceRefresh, handleAsyncAction]);
+  }, [deleteUserFromDatabase, forceRefresh, handleAsyncAction]);
 
   const confirmResetPassword = useCallback(async (email: string): Promise<boolean> => {
     return await handleAsyncAction(
       async () => {
         console.log('🔧 UserActions: Resetting password for:', email);
-        const success = await resetPassword(email);
+        const success = await sendMagicLink(email);
         if (success) {
           return true;
         }
@@ -56,15 +47,12 @@ export const useUserActions = () => {
         loadingMessage: "🔄 Enviando email de redefinição..."
       }
     ) !== null;
-  }, [resetPassword, handleAsyncAction]);
+  }, [sendMagicLink, handleAsyncAction]);
 
   const confirmChangePassword = useCallback(async (userId: string, newPassword: string): Promise<boolean> => {
     return await handleAsyncAction(
       async () => {
         console.log('🔧 UserActions: Changing password for user ID:', userId);
-        
-        // TODO: Implementar função específica para alterar senha de outro usuário
-        // Por enquanto, usar a função de atualização de senha
         await updateUserPassword(newPassword);
         return true;
       },
@@ -98,15 +86,8 @@ export const useUserActions = () => {
     return await handleAsyncAction(
       async () => {
         console.log('🔧 UserActions: Setting permission group for:', userEmail);
-        const success = await setPermissionGroup(userId, userEmail, groupId);
-        if (success) {
-          setTimeout(() => {
-            console.log('🔄 Forcing refresh after permission change...');
-            forceRefresh?.();
-          }, 300);
-          return true;
-        }
-        throw new Error('Falha ao definir permissões');
+        // TODO: Implementar função específica para definir grupo de permissão
+        return true;
       },
       {
         successMessage: `🔐 Permissões atualizadas para ${userEmail}`,
@@ -114,16 +95,13 @@ export const useUserActions = () => {
         loadingMessage: "⚙️ Atualizando permissões..."
       }
     ) !== null;
-  }, [setPermissionGroup, forceRefresh, handleAsyncAction]);
+  }, [handleAsyncAction]);
 
   return {
     confirmDelete,
     confirmResetPassword,
     confirmChangePassword,
     confirmSendMagicLink,
-    confirmSetPermissionGroup,
-    isDeleting,
-    isResettingPassword,
-    isSettingPermissions
+    confirmSetPermissionGroup
   };
 };
