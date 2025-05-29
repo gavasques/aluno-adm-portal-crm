@@ -16,6 +16,8 @@ export const useActiveUsersForEnrollment = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      console.log('🔍 Buscando usuários ativos para inscrição...');
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email, status')
@@ -23,20 +25,25 @@ export const useActiveUsersForEnrollment = () => {
         .order('name');
 
       if (error) {
-        console.error('Erro ao buscar usuários:', error);
+        console.error('❌ Erro ao buscar usuários:', error);
+        setUsers([]);
         return;
       }
 
+      console.log('✅ Dados brutos recebidos:', data);
+
       const usersData = data?.map(profile => ({
         id: profile.id,
-        name: profile.name || profile.email.split('@')[0],
-        email: profile.email,
-        status: profile.status
+        name: profile.name || profile.email?.split('@')[0] || 'Usuário sem nome',
+        email: profile.email || '',
+        status: profile.status || 'Ativo'
       })) || [];
 
+      console.log('📊 Usuários processados:', usersData);
       setUsers(usersData);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      console.error('❌ Erro capturado ao buscar usuários:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }

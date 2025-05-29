@@ -34,11 +34,14 @@ interface StudentSearchFieldProps {
 const StudentSearchField: React.FC<StudentSearchFieldProps> = ({ selectedStudent, onStudentSelect, onClear }) => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
-  const { users, loading } = useActiveUsersForEnrollment();
+  const { users = [], loading } = useActiveUsersForEnrollment();
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(value.toLowerCase()) ||
-    user.email.toLowerCase().includes(value.toLowerCase())
+  // Ensure users is always an array
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const filteredUsers = safeUsers.filter(user =>
+    user?.name?.toLowerCase().includes(value.toLowerCase()) ||
+    user?.email?.toLowerCase().includes(value.toLowerCase())
   );
 
   useEffect(() => {
@@ -46,6 +49,20 @@ const StudentSearchField: React.FC<StudentSearchFieldProps> = ({ selectedStudent
       setValue("")
     }
   }, [open])
+
+  if (loading) {
+    return (
+      <div className="grid gap-2">
+        <Label htmlFor="student">Usuário</Label>
+        <Input
+          id="student"
+          placeholder="Carregando usuários..."
+          disabled
+          className="h-9"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-2">
@@ -65,28 +82,40 @@ const StudentSearchField: React.FC<StudentSearchFieldProps> = ({ selectedStudent
             <CommandInput
               placeholder="Buscar usuário..."
               className="h-9"
+              value={value}
+              onValueChange={setValue}
             />
             <CommandEmpty>Nenhum usuário encontrado.</CommandEmpty>
             <CommandGroup>
               <ScrollArea className="h-72">
-                {filteredUsers.map((user) => (
-                  <CommandItem
-                    key={user.id}
-                    value={user.name}
-                    onSelect={() => {
-                      onStudentSelect(user);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className="mr-2 h-4 w-4"
-                      style={{
-                        opacity: selectedStudent?.id === user.id ? 1 : 0,
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
+                    <CommandItem
+                      key={user.id}
+                      value={user.name}
+                      onSelect={() => {
+                        onStudentSelect(user);
+                        setOpen(false);
+                        setValue("");
                       }}
-                    />
-                    {user.name}
-                  </CommandItem>
-                ))}
+                    >
+                      <Check
+                        className="mr-2 h-4 w-4"
+                        style={{
+                          opacity: selectedStudent?.id === user.id ? 1 : 0,
+                        }}
+                      />
+                      <div className="flex flex-col">
+                        <span>{user.name}</span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                      </div>
+                    </CommandItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    Nenhum usuário disponível
+                  </div>
+                )}
               </ScrollArea>
             </CommandGroup>
           </Command>
