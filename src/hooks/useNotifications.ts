@@ -21,6 +21,7 @@ export const useNotifications = () => {
 
   const fetchNotifications = async () => {
     if (!user) {
+      console.log('🔔 No user found, clearing notifications');
       setNotifications([]);
       setUnreadCount(0);
       setLoading(false);
@@ -28,6 +29,8 @@ export const useNotifications = () => {
     }
 
     try {
+      console.log('🔔 Fetching notifications for user:', user.id);
+      
       // Buscar alertas de segurança não resolvidos
       const { data: securityAlerts, error: securityError } = await supabase
         .from('security_alerts')
@@ -37,9 +40,14 @@ export const useNotifications = () => {
         .limit(10);
 
       if (securityError) {
-        console.error('Erro ao buscar alertas de segurança:', securityError);
+        console.error('🔔 Erro ao buscar alertas de segurança:', securityError);
+        setNotifications([]);
+        setUnreadCount(0);
+        setLoading(false);
         return;
       }
+
+      console.log('🔔 Security alerts found:', securityAlerts?.length || 0);
 
       // Converter alertas de segurança para formato de notificação
       const securityNotifications: Notification[] = (securityAlerts || []).map(alert => ({
@@ -53,17 +61,24 @@ export const useNotifications = () => {
       }));
 
       const allNotifications = [...securityNotifications];
+      const unreadNotifications = allNotifications.filter(n => !n.read);
+      
+      console.log('🔔 Total notifications:', allNotifications.length);
+      console.log('🔔 Unread notifications:', unreadNotifications.length);
       
       setNotifications(allNotifications);
-      setUnreadCount(allNotifications.filter(n => !n.read).length);
+      setUnreadCount(unreadNotifications.length);
     } catch (error) {
-      console.error('Erro ao buscar notificações:', error);
+      console.error('🔔 Erro ao buscar notificações:', error);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('🔔 useNotifications effect triggered, user:', user?.id || 'none');
     fetchNotifications();
 
     // Escutar mudanças em tempo real nos alertas de segurança
@@ -76,18 +91,22 @@ export const useNotifications = () => {
           schema: 'public',
           table: 'security_alerts'
         },
-        () => {
+        (payload) => {
+          console.log('🔔 Real-time security alert update:', payload);
           fetchNotifications();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('🔔 Cleaning up notifications subscription');
       supabase.removeChannel(channel);
     };
   }, [user]);
 
   const markAsRead = async (notificationId: string) => {
+    console.log('🔔 Marking notification as read:', notificationId);
+    
     // Para alertas de segurança, marcar como resolvido
     await supabase
       .from('security_alerts')
@@ -98,6 +117,8 @@ export const useNotifications = () => {
   };
 
   const markAllAsRead = async () => {
+    console.log('🔔 Marking all notifications as read');
+    
     const securityAlertIds = notifications
       .filter(n => n.type === 'security')
       .map(n => n.id);
@@ -111,6 +132,16 @@ export const useNotifications = () => {
 
     await fetchNotifications();
   };
+
+  // Log do estado atual para debug
+  useEffect(() => {
+    console.log('🔔 Notifications state update:', {
+      notificationsCount: notifications.length,
+      unreadCount,
+      loading,
+      userId: user?.id
+    });
+  }, [notifications, unreadCount, loading, user]);
 
   return {
     notifications,

@@ -22,7 +22,7 @@ const TopBar = () => {
   const { user } = useAuth();
   const { signOut } = useSignInOut();
   const { permissions } = usePermissions();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, loading: notificationsLoading } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -72,6 +72,15 @@ const TopBar = () => {
     return user?.user_metadata?.name || user?.email || "Usuário";
   };
 
+  // Só mostrar o badge se não estiver carregando E tiver notificações não lidas
+  const shouldShowNotificationBadge = !notificationsLoading && unreadCount > 0;
+
+  console.log('🔔 TopBar notification state:', {
+    unreadCount,
+    notificationsLoading,
+    shouldShowNotificationBadge
+  });
+
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0 z-40 mb-2.5">
       <div className="flex items-center justify-between px-6 py-3">
@@ -95,10 +104,10 @@ const TopBar = () => {
             Relatório
           </Button>
 
-          {/* Notifications - Only show badge if there are unread notifications */}
+          {/* Notifications - Only show badge if there are unread notifications and not loading */}
           <Button variant="ghost" size="icon" className="relative hover:bg-gray-100">
             <Bell className="h-5 w-5 text-gray-600" />
-            {unreadCount > 0 && (
+            {shouldShowNotificationBadge && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>

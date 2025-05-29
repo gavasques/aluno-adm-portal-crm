@@ -7,10 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Bell, Settings, User, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { unreadCount, loading: notificationsLoading } = useNotifications();
+
+  // Só mostrar o badge se não estiver carregando E tiver notificações não lidas
+  const shouldShowNotificationBadge = !notificationsLoading && unreadCount > 0;
+
+  console.log('🔔 DashboardHeader notification state:', {
+    unreadCount,
+    notificationsLoading,
+    shouldShowNotificationBadge
+  });
 
   return (
     <Card className="p-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -48,8 +59,13 @@ export function DashboardHeader() {
 
           {/* Ações Rápidas */}
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="hover:bg-blue-50">
+            <Button variant="outline" size="sm" className="hover:bg-blue-50 relative">
               <Bell className="h-4 w-4" />
+              {shouldShowNotificationBadge && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Button>
             <Button 
               variant="outline" 
