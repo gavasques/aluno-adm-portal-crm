@@ -12,7 +12,12 @@ import {
   Shield,
   CreditCard,
   UserCog,
-  Zap
+  Zap,
+  BookOpen,
+  UserCheck,
+  Users2,
+  CalendarCheck,
+  FileText
 } from "lucide-react";
 import { MenuItem, MenuGroup } from "./types";
 
@@ -40,6 +45,51 @@ export const mainMenuItems: MenuItem[] = [
     href: "/admin/tarefas",
     icon: Calendar,
     gradient: "from-orange-500 to-orange-600",
+  },
+];
+
+export const mentoringMenuItems: MenuItem[] = [
+  {
+    title: "Dashboard de Mentorias",
+    href: "/admin/mentoring-dashboard",
+    icon: LayoutDashboard,
+    gradient: "from-blue-500 to-blue-600",
+  },
+  {
+    title: "Catálogo de Mentorias",
+    href: "/admin/mentoring-catalog",
+    icon: BookOpen,
+    gradient: "from-indigo-500 to-indigo-600",
+  },
+  {
+    title: "Inscrições Individuais",
+    href: "/admin/mentoring-individual",
+    icon: UserCheck,
+    gradient: "from-green-500 to-green-600",
+  },
+  {
+    title: "Inscrições em Grupo",
+    href: "/admin/mentoring-group",
+    icon: Users2,
+    gradient: "from-purple-500 to-purple-600",
+  },
+  {
+    title: "Sessões Individuais",
+    href: "/admin/mentoring-sessions-individual",
+    icon: CalendarCheck,
+    gradient: "from-orange-500 to-orange-600",
+  },
+  {
+    title: "Sessões em Grupo",
+    href: "/admin/mentoring-sessions-group",
+    icon: Calendar,
+    gradient: "from-red-500 to-red-600",
+  },
+  {
+    title: "Central de Materiais",
+    href: "/admin/mentoring-materials",
+    icon: FileText,
+    gradient: "from-teal-500 to-teal-600",
   },
 ];
 
@@ -108,6 +158,7 @@ export const systemMenuItems: MenuItem[] = [
 
 export const menuGroups: MenuGroup[] = [
   { title: "Principal", items: mainMenuItems },
+  { title: "Mentorias", items: mentoringMenuItems },
   { title: "Gestão", items: managementMenuItems },
   { title: "Recursos Gerais", items: resourcesMenuItems },
   { title: "Sistema", items: systemMenuItems },
