@@ -8,31 +8,31 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { RouteGuard } from "@/components/RouteGuard";
-import { OptimizedRouteGuard } from "@/components/OptimizedRouteGuard";
+import { AuthProvider } from "@/hooks/useAuth";
+import RouteGuard from "@/components/RouteGuard";
+import OptimizedRouteGuard from "@/components/OptimizedRouteGuard";
 import { Loader2 } from "lucide-react";
 import "./App.css";
 
-// Lazy load components
-const Home = lazy(() => import("@/pages/Home"));
+// Lazy load components - usando os caminhos corretos que existem
+const Home = lazy(() => import("@/pages/Index"));
 const Login = lazy(() => import("@/pages/Login"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Dashboard = lazy(() => import("@/pages/student/Dashboard"));
 
-// Admin lazy imports
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
-const AdminStudents = lazy(() => import("@/pages/admin/AdminStudents"));
-const AdminSuppliers = lazy(() => import("@/pages/admin/AdminSuppliers"));
-const AdminPartners = lazy(() => import("@/pages/admin/AdminPartners"));
-const AdminTools = lazy(() => import("@/pages/admin/AdminTools"));
-const AdminCourses = lazy(() => import("@/pages/admin/AdminCourses"));
-const AdminMentoring = lazy(() => import("@/pages/admin/AdminMentoring"));
-const AdminBonus = lazy(() => import("@/pages/admin/AdminBonus"));
-const AdminCRM = lazy(() => import("@/pages/admin/AdminCRM"));
-const AdminTasks = lazy(() => import("@/pages/admin/AdminTasks"));
-const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings"));
-const AdminCredits = lazy(() => import("@/pages/admin/AdminCredits"));
+// Admin lazy imports - usando os caminhos corretos que existem
+const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminUsers = lazy(() => import("@/pages/admin/Users"));
+const AdminStudents = lazy(() => import("@/pages/admin/Registers"));
+const AdminSuppliers = lazy(() => import("@/pages/admin/Suppliers"));
+const AdminPartners = lazy(() => import("@/pages/admin/Partners"));
+const AdminTools = lazy(() => import("@/pages/admin/Tools"));
+const AdminCourses = lazy(() => import("@/pages/admin/Courses"));
+const AdminMentoring = lazy(() => import("@/pages/admin/Mentoring"));
+const AdminBonus = lazy(() => import("@/pages/admin/Bonus"));
+const AdminCRM = lazy(() => import("@/pages/admin/CRM"));
+const AdminTasks = lazy(() => import("@/pages/admin/Tasks"));
+const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
+const AdminCredits = lazy(() => import("@/pages/admin/Credits"));
 
 // Mentoring lazy imports
 const AdminMentoringDashboard = lazy(() => import("@/pages/admin/AdminMentoringDashboard"));
@@ -43,13 +43,13 @@ const AdminMentoringSessionsIndividual = lazy(() => import("@/pages/admin/AdminM
 const AdminMentoringSessionsGroup = lazy(() => import("@/pages/admin/AdminMentoringSessionsGroup"));
 const AdminMentoringMaterials = lazy(() => import("@/pages/admin/AdminMentoringMaterials"));
 
-// Student lazy imports
-const StudentDashboard = lazy(() => import("@/pages/student/StudentDashboard"));
-const StudentSuppliers = lazy(() => import("@/pages/student/StudentSuppliers"));
-const StudentPartners = lazy(() => import("@/pages/student/StudentPartners"));
-const StudentTools = lazy(() => import("@/pages/student/StudentTools"));
-const StudentMySuppliers = lazy(() => import("@/pages/student/StudentMySuppliers"));
-const StudentSettings = lazy(() => import("@/pages/student/StudentSettings"));
+// Student lazy imports - usando os caminhos corretos que existem
+const StudentDashboard = lazy(() => import("@/pages/student/Dashboard"));
+const StudentSuppliers = lazy(() => import("@/pages/student/Suppliers"));
+const StudentPartners = lazy(() => import("@/pages/student/Partners"));
+const StudentTools = lazy(() => import("@/pages/student/Tools"));
+const StudentMySuppliers = lazy(() => import("@/pages/student/MySuppliers"));
+const StudentSettings = lazy(() => import("@/pages/student/Settings"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
