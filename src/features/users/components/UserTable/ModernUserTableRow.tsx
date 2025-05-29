@@ -86,9 +86,9 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
   };
 
   return (
-    <TableRow className="group border-b border-gray-200/60 hover:bg-white/5 dark:hover:bg-slate-700/50 relative">
+    <TableRow className="group border-b border-gray-200/40 hover:bg-white/5 dark:hover:bg-slate-700/50 relative">
       {/* Linha separadora sutil */}
-      <div className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+      <div className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gray-200/60 to-transparent"></div>
       
       {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
       <TableCell className="py-4">
@@ -110,11 +110,9 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
         </div>
       </TableCell>
 
-      {/* Coluna 2: Badges */}
+      {/* Coluna 2: Status & Permissões (Badges) */}
       <TableCell className="py-4">
-        <div className="flex flex-wrap gap-1">
-          <UserBadges user={user} permissionGroups={permissionGroups} />
-        </div>
+        <UserBadges user={user} permissionGroups={permissionGroups} />
       </TableCell>
 
       {/* Coluna 3: Armazenamento */}
