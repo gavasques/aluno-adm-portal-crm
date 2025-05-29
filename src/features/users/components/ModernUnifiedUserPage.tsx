@@ -12,7 +12,7 @@ import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 
 const ModernUnifiedUserPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { showToast } = useUXFeedback();
+  const { showSuccessToast, showErrorToast, showInfoToast } = useUXFeedback();
 
   const {
     users,
@@ -37,18 +37,18 @@ const ModernUnifiedUserPage: React.FC = () => {
   const handleRefresh = async () => {
     try {
       await refreshUsers();
-      showToast('success', 'Lista de usuários atualizada!');
+      showSuccessToast('Lista de usuários atualizada!');
     } catch (error) {
-      showToast('error', 'Erro ao atualizar lista de usuários');
+      showErrorToast('Erro ao atualizar lista de usuários');
     }
   };
 
   const handleAddUser = () => {
-    showToast('info', 'Funcionalidade em desenvolvimento');
+    showInfoToast('Funcionalidade em desenvolvimento');
   };
 
   const handleInviteUser = () => {
-    showToast('info', 'Funcionalidade de convite em desenvolvimento');
+    showInfoToast('Funcionalidade de convite em desenvolvimento');
   };
 
   return (
