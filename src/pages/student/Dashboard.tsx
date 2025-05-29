@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Package, GraduationCap, BarChart, Wrench, Clock, CreditCard, Sparkles } from 'lucide-react';
+import { CreditCard, Package, GraduationCap, Wrench, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { PageTransition, PageChild } from '@/components/animations/PageTransition';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
-import { DesignStatsCard, DesignQuickActions, DesignActivityFeed } from '@/design-system/components/DesignDashboard';
+import { DesignStatsCard } from '@/design-system/components/DesignDashboard';
 import { YouTubeSection } from '@/components/student/dashboard/YouTubeSection';
 
 const StudentDashboard = () => {
@@ -75,73 +75,6 @@ const StudentDashboard = () => {
     }
   ];
 
-  const quickActions = [
-    {
-      id: "fornecedores",
-      title: "Fornecedores",
-      description: "Explore nossa rede de fornecedores",
-      icon: Users,
-      gradient: "primary" as const,
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/fornecedores";
-      }
-    },
-    {
-      id: "parceiros",
-      title: "Parceiros",
-      description: "Conecte-se com parceiros estratégicos",
-      icon: BarChart,
-      gradient: "accent" as const,
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/parceiros";
-      }
-    },
-    {
-      id: "ferramentas",
-      title: "Ferramentas",
-      description: "Acesse ferramentas exclusivas",
-      icon: Wrench,
-      gradient: "secondary" as const,
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/ferramentas";
-      }
-    }
-  ];
-
-  const recentActivities = [
-    {
-      id: "1",
-      title: "Novo fornecedor adicionado",
-      time: "2 horas atrás",
-      color: "bg-blue-500",
-      icon: Package
-    },
-    {
-      id: "2",
-      title: "Mentoria agendada para amanhã",
-      time: "1 dia atrás",
-      color: "bg-green-500",
-      icon: GraduationCap
-    },
-    {
-      id: "3",
-      title: "Ferramenta avaliada",
-      time: "2 dias atrás",
-      color: "bg-purple-500",
-      icon: Wrench
-    },
-    {
-      id: "4",
-      title: "Créditos renovados",
-      time: "3 dias atrás",
-      color: "bg-emerald-500",
-      icon: CreditCard
-    }
-  ];
-
   // Show welcome message on dashboard load
   React.useEffect(() => {
     feedback.systemReady();
@@ -203,19 +136,6 @@ const StudentDashboard = () => {
 
       {/* Seção de Vídeos do YouTube */}
       <YouTubeSection />
-
-      {/* Content Grid - Ações Rápidas e Atividade Recente */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
-        <PageChild className="lg:col-span-2">
-          <DesignQuickActions actions={quickActions} variant="glass" />
-        </PageChild>
-
-        {/* Recent Activity */}
-        <PageChild className="lg:col-span-1">
-          <DesignActivityFeed activities={recentActivities} variant="glass" />
-        </PageChild>
-      </div>
     </PageTransition>
   );
 };
