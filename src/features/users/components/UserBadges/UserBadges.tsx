@@ -15,12 +15,13 @@ export const UserBadges: React.FC<UserBadgesProps> = ({ user, permissionGroups =
   const isAdmin = user.role === 'Admin' || userPermissionGroup?.name?.toLowerCase().includes('admin');
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-1 flex-wrap">
       {/* Badge ADM */}
       {isAdmin && (
         <Badge 
           variant="destructive" 
-          className="text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700"
+          size="sm"
+          className="text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700 whitespace-nowrap"
         >
           <Shield className="h-3 w-3" />
           ADM
@@ -31,7 +32,8 @@ export const UserBadges: React.FC<UserBadgesProps> = ({ user, permissionGroups =
       {user.is_mentor && !isAdmin && (
         <Badge 
           variant="secondary" 
-          className="text-xs flex items-center gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200"
+          size="sm"
+          className="text-xs flex items-center gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200 whitespace-nowrap"
         >
           <GraduationCap className="h-3 w-3" />
           Mentor
@@ -42,7 +44,8 @@ export const UserBadges: React.FC<UserBadgesProps> = ({ user, permissionGroups =
       {isBanned && (
         <Badge 
           variant="destructive" 
-          className="text-xs flex items-center gap-1 bg-gray-600 hover:bg-gray-700"
+          size="sm"
+          className="text-xs flex items-center gap-1 bg-gray-600 hover:bg-gray-700 whitespace-nowrap"
         >
           <User className="h-3 w-3" />
           Banido
@@ -52,7 +55,8 @@ export const UserBadges: React.FC<UserBadgesProps> = ({ user, permissionGroups =
       {/* Badge Status */}
       <Badge 
         variant={user.status === 'Ativo' ? 'default' : 'outline'}
-        className={`text-xs ${
+        size="sm"
+        className={`text-xs whitespace-nowrap ${
           user.status === 'Ativo' 
             ? 'bg-green-100 text-green-700 hover:bg-green-200' 
             : 'bg-gray-100 text-gray-600'

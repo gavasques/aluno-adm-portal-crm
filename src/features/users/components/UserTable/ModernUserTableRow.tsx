@@ -69,8 +69,8 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
 
   return (
     <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
-      {/* Primeira Coluna: Informações do Usuário (Avatar + Nome + Email) */}
-      <TableCell className="py-4" style={{ width: '35%' }}>
+      {/* Coluna 1: Usuário (Avatar + Nome + Email) */}
+      <TableCell className="py-4 w-[35%] min-w-[280px]">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border border-white/20 flex-shrink-0">
             <AvatarImage src="" alt={user.name || ''} />
@@ -79,55 +79,61 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="font-medium text-gray-900 dark:text-white truncate">
+            <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
               {user.name || 'Nome não informado'}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {user.email}
             </div>
           </div>
         </div>
       </TableCell>
 
-      {/* Segunda Coluna: Badges (ADM, Mentor, Status) */}
-      <TableCell className="py-4" style={{ width: '25%' }}>
-        <UserBadges user={user} permissionGroups={permissionGroups} />
+      {/* Coluna 2: Badges */}
+      <TableCell className="py-4 w-[25%] min-w-[200px]">
+        <div className="flex flex-wrap gap-1">
+          <UserBadges user={user} permissionGroups={permissionGroups} />
+        </div>
       </TableCell>
 
-      {/* Terceira Coluna: Armazenamento */}
-      <TableCell className="py-4 text-center" style={{ width: '15%' }}>
+      {/* Coluna 3: Armazenamento */}
+      <TableCell className="py-4 text-center w-[15%] min-w-[120px]">
         <div className="flex flex-col items-center gap-1">
-          <div className="w-full max-w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-300 ${getStorageColor()}`}
               style={{ width: `${Math.min(getStoragePercentage(), 100)}%` }}
             />
           </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">
+          <div className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
             {user.storage_used_mb || 0}MB / {user.storage_limit_mb || 100}MB
           </div>
         </div>
       </TableCell>
 
-      {/* Quarta Coluna: Último Acesso */}
-      <TableCell className="py-4 text-center text-sm text-gray-600 dark:text-gray-400" style={{ width: '15%' }}>
-        {formatLastLogin(user.lastLogin)}
+      {/* Coluna 4: Último Acesso */}
+      <TableCell className="py-4 text-center text-xs text-gray-600 dark:text-gray-400 w-[15%] min-w-[120px]">
+        <div className="whitespace-nowrap">
+          {formatLastLogin(user.lastLogin)}
+        </div>
       </TableCell>
 
-      {/* Quinta Coluna: Ações */}
-      <TableCell className="py-4 text-center" style={{ width: '10%' }}>
-        <ModernUserActions
-          user={user}
-          onViewDetails={onViewDetails}
-          onResetPassword={onResetPassword}
-          onChangePassword={onChangePassword}
-          onDeleteUser={onDeleteUser}
-          onSetPermissionGroup={onSetPermissionGroup}
-          onStorageManagement={onStorageManagement}
-          onActivityLogs={onActivityLogs}
-          onSendMagicLink={onSendMagicLink}
-          onToggleMentor={onToggleMentor}
-        />
+      {/* Coluna 5: Ações */}
+      <TableCell className="py-4 text-center w-[10%] min-w-[80px]">
+        <div className="flex justify-center">
+          <ModernUserActions
+            user={user}
+            onViewDetails={onViewDetails}
+            onResetPassword={onResetPassword}
+            onChangePassword={onChangePassword}
+            onDeleteUser={onDeleteUser}
+            onSetPermissionGroup={onSetPermissionGroup}
+            onStorageManagement={onStorageManagement}
+            onActivityLogs={onActivityLogs}
+            onSendMagicLink={onSendMagicLink}
+            onToggleMentor={onToggleMentor}
+          />
+        </div>
       </TableCell>
     </TableRow>
   );
