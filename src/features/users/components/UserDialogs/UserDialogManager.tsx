@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogState } from '../../hooks/useUserDialogs';
 import { UserDetailsDialog } from '@/components/admin/users/dialogs/UserDetailsDialog';
@@ -29,7 +28,8 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
     confirmResetPassword,
     confirmChangePassword,
     confirmSendMagicLink,
-    confirmSetPermissionGroup
+    confirmSetPermissionGroup,
+    confirmToggleMentor
   } = useUserActions();
 
   if (!isOpen || !user) return null;
@@ -84,11 +84,26 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
     return false;
   };
 
-  const handleToggleMentor = async () => {
-    console.log('🔧 UserDialogManager: Toggle mentor for user:', user.id);
-    // TODO: Implementar toggle mentor quando a função estiver disponível
-    onRefresh();
-    return true;
+  const handleToggleMentor = async (userToToggle: any) => {
+    const actionId = crypto.randomUUID();
+    console.log(`🎓 [DIALOG-${actionId}] UserDialogManager: Toggle mentor iniciado para:`, userToToggle.email);
+    console.log(`🎓 [DIALOG-${actionId}] Status atual is_mentor:`, userToToggle.is_mentor);
+    
+    try {
+      const success = await confirmToggleMentor(userToToggle.id, userToToggle.email, userToToggle.is_mentor);
+      
+      if (success) {
+        console.log(`✅ [DIALOG-${actionId}] Toggle mentor bem-sucedido para:`, userToToggle.email);
+        onRefresh();
+        return true;
+      } else {
+        console.error(`❌ [DIALOG-${actionId}] Toggle mentor falhou para:`, userToToggle.email);
+        return false;
+      }
+    } catch (error) {
+      console.error(`💥 [DIALOG-${actionId}] Erro no toggle mentor:`, error);
+      return false;
+    }
   };
 
   switch (type) {

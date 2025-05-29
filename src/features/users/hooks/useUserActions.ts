@@ -1,8 +1,8 @@
-
 import { useCallback } from 'react';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
 import { usePerformanceOptimizedUsers } from '@/hooks/users/usePerformanceOptimizedUsers';
 import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
+import { userService } from '@/services/UserService';
 
 export const useUserActions = () => {
   const { deleteUserFromDatabase, forceRefresh } = usePerformanceOptimizedUsers();
@@ -116,11 +116,56 @@ export const useUserActions = () => {
     ) !== null;
   }, [handleAsyncAction]);
 
+  const confirmToggleMentor = useCallback(async (userId: string, userEmail: string, currentMentorStatus: boolean): Promise<boolean> => {
+    const actionId = crypto.randomUUID();
+    const action = currentMentorStatus ? 'remover' : 'tornar';
+    
+    console.log(`🎓 [HOOK-${actionId}] ===== UserActions.confirmToggleMentor INICIADO =====`);
+    console.log(`🎓 [HOOK-${actionId}] Ação: ${action} mentor para:`, userEmail, 'ID:', userId);
+    console.log(`🎓 [HOOK-${actionId}] Status atual:', currentMentorStatus);
+    console.log(`🎓 [HOOK-${actionId}] Timestamp:`, new Date().toISOString());
+    console.log(`🎓 [HOOK-${actionId}] ================================================`);
+    
+    return await handleAsyncAction(
+      async () => {
+        if (!userId || !userEmail) {
+          console.error(`❌ [HOOK-${actionId}] Parâmetros inválidos:`, { userId, userEmail });
+          throw new Error('ID do usuário e email são obrigatórios para alterar status de mentor');
+        }
+        
+        console.log(`🚀 [HOOK-${actionId}] Chamando toggleMentorStatus...`);
+        const success = await userService.toggleMentorStatus(userId, userEmail, currentMentorStatus);
+        console.log(`📊 [HOOK-${actionId}] Resultado da alteração:`, success);
+        
+        if (!success) {
+          console.error(`❌ [HOOK-${actionId}] toggleMentorStatus retornou false`);
+          throw new Error('Falha ao alterar status de mentor - operação retornou false');
+        }
+        
+        // Aguardar antes de forçar refresh para garantir que a operação foi processada
+        console.log(`⏳ [HOOK-${actionId}] Aguardando 2 segundos antes do refresh...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        console.log(`🔄 [HOOK-${actionId}] Forçando refresh após alteração bem-sucedida...`);
+        await forceRefresh?.();
+        
+        console.log(`✅ [HOOK-${actionId}] Processo de alteração de mentor completo com sucesso`);
+        return true;
+      },
+      {
+        successMessage: `🎓 Status de mentor atualizado para ${userEmail}`,
+        errorMessage: "❌ Erro ao alterar status de mentor",
+        loadingMessage: `🔄 ${currentMentorStatus ? 'Removendo' : 'Adicionando'} status de mentor...`
+      }
+    ) !== null;
+  }, [userService, forceRefresh, handleAsyncAction]);
+
   return {
     confirmDelete,
     confirmResetPassword,
     confirmChangePassword,
     confirmSendMagicLink,
-    confirmSetPermissionGroup
+    confirmSetPermissionGroup,
+    confirmToggleMentor
   };
 };
