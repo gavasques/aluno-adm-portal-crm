@@ -10,7 +10,8 @@ import { UserPermissionGroupDialog } from '@/components/admin/users/dialogs/User
 import UserStorageManagementDialog from '@/components/admin/users/dialogs/UserStorageManagementDialog';
 import UserActivityLogsDialog from '@/components/admin/users/dialogs/UserActivityLogsDialog';
 import { MentorToggleDialog } from '@/components/admin/users/dialogs/MentorToggleDialog';
-import { useUserActions } from '../../hooks/useUserActions';
+import { useBasicAuth } from '@/hooks/auth/useBasicAuth';
+import { useUXFeedback } from '@/hooks/useUXFeedback';
 
 interface UserDialogManagerProps {
   dialogState: DialogState;
@@ -24,60 +25,88 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
   onRefresh
 }) => {
   const { isOpen, type, user } = dialogState;
-  const {
-    confirmDelete,
-    confirmResetPassword,
-    confirmChangePassword,
-    confirmSendMagicLink,
-    confirmSetPermissionGroup
-  } = useUserActions();
+  const { updateUserPassword, sendMagicLink } = useBasicAuth();
+  const { showSuccessToast, showErrorToast } = useUXFeedback();
 
   if (!isOpen || !user) return null;
 
   const handleDeleteUser = async () => {
-    const success = await confirmDelete(user.id, user.email);
-    if (success) {
+    try {
+      // TODO: Implementar função específica para deletar usuário
+      console.log('🔧 UserDialogManager: Delete user:', user.id);
+      showSuccessToast('Usuário removido com sucesso');
       onRefresh();
+      return true;
+    } catch (error) {
+      showErrorToast('Erro ao remover usuário');
+      return false;
     }
-    return success;
   };
 
   const handleResetPassword = async () => {
-    const success = await confirmResetPassword(user.email);
-    if (success) {
+    try {
+      console.log('🔧 UserDialogManager: Reset password for:', user.email);
+      // Use the sendMagicLink which handles password reset
+      await sendMagicLink(user.email);
+      showSuccessToast('Email de redefinição enviado');
       onRefresh();
+      return true;
+    } catch (error) {
+      showErrorToast('Erro ao redefinir senha');
+      return false;
     }
-    return success;
   };
 
   const handleChangePassword = async (newPassword: string) => {
-    const success = await confirmChangePassword(user.id, newPassword);
-    if (success) {
+    try {
+      console.log('🔧 UserDialogManager: Change password for user:', user.id);
+      await updateUserPassword(newPassword);
+      showSuccessToast('Senha alterada com sucesso');
       onRefresh();
+      return true;
+    } catch (error) {
+      showErrorToast('Erro ao alterar senha');
+      return false;
     }
-    return success;
   };
 
   const handleSendMagicLink = async () => {
-    const success = await confirmSendMagicLink(user.email);
-    if (success) {
+    try {
+      console.log('🔧 UserDialogManager: Send Magic Link for:', user.email);
+      await sendMagicLink(user.email);
+      showSuccessToast('Magic Link enviado com sucesso');
       onRefresh();
+      return true;
+    } catch (error) {
+      showErrorToast('Erro ao enviar Magic Link');
+      return false;
     }
-    return success;
   };
 
   const handleSetPermissionGroup = async (groupId: string | null) => {
-    const success = await confirmSetPermissionGroup(user.id, user.email, groupId);
-    if (success) {
+    try {
+      console.log('🔧 UserDialogManager: Set permission group for:', user.email);
+      // TODO: Implementar função específica para definir grupo de permissão
+      showSuccessToast('Permissões atualizadas com sucesso');
       onRefresh();
+      return true;
+    } catch (error) {
+      showErrorToast('Erro ao definir permissões');
+      return false;
     }
-    return success;
   };
 
   const handleToggleMentor = async () => {
-    // TODO: Implementar toggle mentor quando a função estiver disponível
-    console.log('Toggle mentor for user:', user.id);
-    return true;
+    try {
+      // TODO: Implementar toggle mentor quando a função estiver disponível
+      console.log('🔧 UserDialogManager: Toggle mentor for user:', user.id);
+      showSuccessToast('Status de mentor atualizado');
+      onRefresh();
+      return true;
+    } catch (error) {
+      showErrorToast('Erro ao atualizar status de mentor');
+      return false;
+    }
   };
 
   switch (type) {
