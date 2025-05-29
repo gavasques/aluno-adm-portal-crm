@@ -5,6 +5,22 @@ import { Button } from '@/components/ui/button';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { GraduationCap, Plus } from 'lucide-react';
 
+// Definições de tipos necessárias para CourseForm e CourseDetails
+export type CourseStatus = "active" | "inactive" | "coming_soon";
+
+export interface Course {
+  id: string;
+  courseId: string;
+  name: string;
+  status: CourseStatus;
+  platform: string;
+  platformLink: string;
+  salesPageLink: string;
+  accessPeriod: number;
+  price: number;
+  createdAt: Date;
+}
+
 const AdminCourses = () => {
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
