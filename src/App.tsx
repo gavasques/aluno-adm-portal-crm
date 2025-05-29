@@ -96,7 +96,7 @@ function App() {
                       <Route 
                         path="/admin/dashboard" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminDashboard />
                           </OptimizedRouteGuard>
                         } 
@@ -104,7 +104,7 @@ function App() {
                       <Route 
                         path="/admin/usuarios" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminUsers />
                           </OptimizedRouteGuard>
                         } 
@@ -112,7 +112,7 @@ function App() {
                       <Route 
                         path="/admin/alunos" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminStudents />
                           </OptimizedRouteGuard>
                         } 
@@ -120,7 +120,7 @@ function App() {
                       <Route 
                         path="/admin/fornecedores" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminSuppliers />
                           </OptimizedRouteGuard>
                         } 
@@ -128,7 +128,7 @@ function App() {
                       <Route 
                         path="/admin/parceiros" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminPartners />
                           </OptimizedRouteGuard>
                         } 
@@ -136,7 +136,7 @@ function App() {
                       <Route 
                         path="/admin/ferramentas" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminTools />
                           </OptimizedRouteGuard>
                         } 
@@ -144,7 +144,7 @@ function App() {
                       <Route 
                         path="/admin/cursos" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminCourses />
                           </OptimizedRouteGuard>
                         } 
@@ -152,7 +152,7 @@ function App() {
                       <Route 
                         path="/admin/mentoria" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoring />
                           </OptimizedRouteGuard>
                         } 
@@ -160,7 +160,7 @@ function App() {
                       <Route 
                         path="/admin/bonus" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminBonus />
                           </OptimizedRouteGuard>
                         } 
@@ -168,7 +168,7 @@ function App() {
                       <Route 
                         path="/admin/crm" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminCRM />
                           </OptimizedRouteGuard>
                         } 
@@ -176,7 +176,7 @@ function App() {
                       <Route 
                         path="/admin/tarefas" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminTasks />
                           </OptimizedRouteGuard>
                         } 
@@ -184,7 +184,7 @@ function App() {
                       <Route 
                         path="/admin/configuracoes" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminSettings />
                           </OptimizedRouteGuard>
                         } 
@@ -192,7 +192,7 @@ function App() {
                       <Route 
                         path="/admin/creditos" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminCredits />
                           </OptimizedRouteGuard>
                         } 
@@ -202,7 +202,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-dashboard" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringDashboard />
                           </OptimizedRouteGuard>
                         } 
@@ -210,7 +210,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-catalog" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringCatalog />
                           </OptimizedRouteGuard>
                         } 
@@ -218,7 +218,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-individual" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringIndividual />
                           </OptimizedRouteGuard>
                         } 
@@ -226,7 +226,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-group" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringGroup />
                           </OptimizedRouteGuard>
                         } 
@@ -234,7 +234,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-sessions-individual" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringSessionsIndividual />
                           </OptimizedRouteGuard>
                         } 
@@ -242,7 +242,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-sessions-group" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringSessionsGroup />
                           </OptimizedRouteGuard>
                         } 
@@ -250,7 +250,7 @@ function App() {
                       <Route 
                         path="/admin/mentoring-materials" 
                         element={
-                          <OptimizedRouteGuard requiredRole="admin">
+                          <OptimizedRouteGuard requireAdminAccess={true}>
                             <AdminMentoringMaterials />
                           </OptimizedRouteGuard>
                         } 
