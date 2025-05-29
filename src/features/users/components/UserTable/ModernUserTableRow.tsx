@@ -69,16 +69,16 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
 
   return (
     <TableRow className="group border-b border-white/5 hover:bg-white/5 dark:hover:bg-slate-700/50">
-      {/* User Info Column */}
-      <TableCell className="py-4">
+      {/* Primeira Coluna: Informações do Usuário (Avatar + Nome + Email) */}
+      <TableCell className="py-4" style={{ width: '35%' }}>
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 border border-white/20">
+          <Avatar className="h-10 w-10 border border-white/20 flex-shrink-0">
             <AvatarImage src="" alt={user.name || ''} />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-medium">
               {getInitials(user.name || user.email)}
             </AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="font-medium text-gray-900 dark:text-white truncate">
               {user.name || 'Nome não informado'}
             </div>
@@ -89,13 +89,13 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
         </div>
       </TableCell>
 
-      {/* Badges Column */}
-      <TableCell className="py-4">
+      {/* Segunda Coluna: Badges (ADM, Mentor, Status) */}
+      <TableCell className="py-4" style={{ width: '25%' }}>
         <UserBadges user={user} permissionGroups={permissionGroups} />
       </TableCell>
 
-      {/* Storage Column */}
-      <TableCell className="py-4 text-center">
+      {/* Terceira Coluna: Armazenamento */}
+      <TableCell className="py-4 text-center" style={{ width: '15%' }}>
         <div className="flex flex-col items-center gap-1">
           <div className="w-full max-w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
@@ -109,13 +109,13 @@ export const ModernUserTableRow: React.FC<ModernUserTableRowProps> = ({
         </div>
       </TableCell>
 
-      {/* Last Login Column */}
-      <TableCell className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+      {/* Quarta Coluna: Último Acesso */}
+      <TableCell className="py-4 text-center text-sm text-gray-600 dark:text-gray-400" style={{ width: '15%' }}>
         {formatLastLogin(user.lastLogin)}
       </TableCell>
 
-      {/* Actions Column */}
-      <TableCell className="py-4 text-center">
+      {/* Quinta Coluna: Ações */}
+      <TableCell className="py-4 text-center" style={{ width: '10%' }}>
         <ModernUserActions
           user={user}
           onViewDetails={onViewDetails}
