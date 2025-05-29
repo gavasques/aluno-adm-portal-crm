@@ -47,12 +47,14 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
       >
         <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl">
           <CardContent className="p-0">
-            <Table>
-              <ModernUserTableHeader />
-              <TableBody>
-                <LoadingUsersList />
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table className="w-full table-fixed">
+                <ModernUserTableHeader />
+                <TableBody>
+                  <LoadingUsersList />
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -68,12 +70,14 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
       >
         <Card className="backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl">
           <CardContent className="p-0">
-            <Table>
-              <ModernUserTableHeader />
-              <TableBody>
-                <EmptyUsersList />
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table className="w-full table-fixed">
+                <ModernUserTableHeader />
+                <TableBody>
+                  <EmptyUsersList />
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -92,27 +96,29 @@ export const ModernUserTable: React.FC<ModernUserTableProps> = ({
       
       <Card className="relative backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border-white/20 shadow-xl overflow-hidden">
         <CardContent className="p-0">
-          <Table>
-            <ModernUserTableHeader />
-            <TableBody>
-              {users.map((user, index) => (
-                <ModernUserTableRow
-                  key={user.id}
-                  user={user}
-                  onViewDetails={onViewDetails}
-                  onResetPassword={onResetPassword}
-                  onChangePassword={onChangePassword}
-                  onDeleteUser={onDeleteUser}
-                  onSetPermissionGroup={onSetPermissionGroup}
-                  onStorageManagement={onStorageManagement}
-                  onActivityLogs={onActivityLogs}
-                  onSendMagicLink={onSendMagicLink}
-                  onToggleMentor={onToggleMentor}
-                  permissionGroups={permissionGroups}
-                />
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table className="w-full table-fixed">
+              <ModernUserTableHeader />
+              <TableBody>
+                {users.map((user, index) => (
+                  <ModernUserTableRow
+                    key={user.id}
+                    user={user}
+                    onViewDetails={onViewDetails}
+                    onResetPassword={onResetPassword}
+                    onChangePassword={onChangePassword}
+                    onDeleteUser={onDeleteUser}
+                    onSetPermissionGroup={onSetPermissionGroup}
+                    onStorageManagement={onStorageManagement}
+                    onActivityLogs={onActivityLogs}
+                    onSendMagicLink={onSendMagicLink}
+                    onToggleMentor={onToggleMentor}
+                    permissionGroups={permissionGroups}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </motion.div>

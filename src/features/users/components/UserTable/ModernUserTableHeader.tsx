@@ -8,7 +8,7 @@ export const ModernUserTableHeader: React.FC = () => {
   return (
     <TableHeader className="sticky top-0 backdrop-blur-xl bg-white/80 dark:bg-slate-800/80 border-b border-white/20">
       <TableRow className="hover:bg-transparent">
-        <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+        <TableHead className="font-semibold text-gray-700 dark:text-gray-300 w-[300px]">
           <motion.div 
             className="flex items-center space-x-2 cursor-pointer"
             whileHover={{ scale: 1.02 }}
@@ -17,16 +17,16 @@ export const ModernUserTableHeader: React.FC = () => {
             <ArrowUpDown className="h-4 w-4 opacity-50" />
           </motion.div>
         </TableHead>
-        <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+        <TableHead className="font-semibold text-gray-700 dark:text-gray-300 w-[200px]">
           <motion.div 
             className="flex items-center space-x-2 cursor-pointer"
             whileHover={{ scale: 1.02 }}
           >
-            <span>Status</span>
+            <span>Status & Badges</span>
             <ArrowUpDown className="h-4 w-4 opacity-50" />
           </motion.div>
         </TableHead>
-        <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+        <TableHead className="font-semibold text-gray-700 dark:text-gray-300 w-[150px]">
           <motion.div 
             className="flex items-center space-x-2 cursor-pointer"
             whileHover={{ scale: 1.02 }}
@@ -35,7 +35,7 @@ export const ModernUserTableHeader: React.FC = () => {
             <ArrowUpDown className="h-4 w-4 opacity-50" />
           </motion.div>
         </TableHead>
-        <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+        <TableHead className="font-semibold text-gray-700 dark:text-gray-300 w-[150px]">
           <motion.div 
             className="flex items-center space-x-2 cursor-pointer"
             whileHover={{ scale: 1.02 }}
@@ -44,7 +44,7 @@ export const ModernUserTableHeader: React.FC = () => {
             <ArrowUpDown className="h-4 w-4 opacity-50" />
           </motion.div>
         </TableHead>
-        <TableHead className="text-right font-semibold text-gray-700 dark:text-gray-300">
+        <TableHead className="text-center font-semibold text-gray-700 dark:text-gray-300 w-[80px]">
           Ações
         </TableHead>
       </TableRow>

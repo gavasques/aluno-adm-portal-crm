@@ -93,12 +93,13 @@ export const ModernUserTableRow = memo<ModernUserTableRowProps>(({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      whileHover={{ scale: 1.005 }}
+      whileHover={{ scale: 1.002 }}
     >
-      <TableCell>
+      {/* Coluna Usuário - Largura fixa e alinhada */}
+      <TableCell className="w-[300px] py-4">
         <div className="flex items-center space-x-3">
           <motion.div 
-            className={`h-10 w-10 rounded-full flex items-center justify-center backdrop-blur-sm border ${
+            className={`h-10 w-10 rounded-full flex items-center justify-center backdrop-blur-sm border flex-shrink-0 ${
               isAdminUser ? "bg-blue-100/80 border-blue-200" : 
               isTemporaryGroup ? "bg-orange-100/80 border-orange-200" : "bg-gray-100/80 border-gray-200"
             }`}
@@ -108,27 +109,24 @@ export const ModernUserTableRow = memo<ModernUserTableRowProps>(({
             {getUserIcon()}
           </motion.div>
           <div className="min-w-0 flex-1">
-            <div className="font-medium text-gray-900 dark:text-white truncate">
+            <div className="font-medium text-gray-900 dark:text-white truncate text-sm">
               {user.name || "Sem nome"}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {user.email}
             </div>
           </div>
         </div>
       </TableCell>
       
-      <TableCell>
-        <UserStatusBadge 
-          status={user.status} 
-          permissionGroupId={user.permission_group_id}
-          isTemporaryGroup={isTemporaryGroup}
-        />
-      </TableCell>
-      
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{user.role || "Não definido"}</span>
+      {/* Coluna Status & Badges - Largura fixa e centralizada */}
+      <TableCell className="w-[200px] py-4">
+        <div className="flex items-center justify-start space-x-2">
+          <UserStatusBadge 
+            status={user.status} 
+            permissionGroupId={user.permission_group_id}
+            isTemporaryGroup={isTemporaryGroup}
+          />
           {user.is_mentor && (
             <motion.span 
               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 dark:from-purple-900 dark:to-purple-800 dark:text-purple-200"
@@ -143,85 +141,98 @@ export const ModernUserTableRow = memo<ModernUserTableRowProps>(({
         </div>
       </TableCell>
       
-      <TableCell className="text-sm text-gray-600 dark:text-gray-400">
-        {user.lastLogin || "Nunca"}
+      {/* Coluna Função - Largura fixa */}
+      <TableCell className="w-[150px] py-4">
+        <div className="flex items-center">
+          <span className="font-medium text-sm">{user.role || "Não definido"}</span>
+        </div>
       </TableCell>
       
-      <TableCell className="text-right">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button 
-                variant="ghost" 
-                className="h-8 w-8 p-0 hover:bg-white/80 dark:hover:bg-slate-700/80 backdrop-blur-sm"
+      {/* Coluna Último Acesso - Largura fixa */}
+      <TableCell className="w-[150px] py-4">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          {user.lastLogin || "Nunca"}
+        </span>
+      </TableCell>
+      
+      {/* Coluna Ações - Largura fixa e centralizada */}
+      <TableCell className="w-[80px] py-4">
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <span className="sr-only">Abrir menu</span>
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-56 backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border-white/20 shadow-xl"
-          >
-            <DropdownMenuItem onClick={() => onViewDetails(user)} className="group">
-              <Eye className="mr-2 h-4 w-4 group-hover:text-blue-600 transition-colors" />
-              <span>Ver detalhes</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem onClick={() => onResetPassword(user)} className="group">
-              <KeyRound className="mr-2 h-4 w-4 group-hover:text-green-600 transition-colors" />
-              <span>Redefinir senha</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onChangePassword(user)} className="group">
-              <Edit className="mr-2 h-4 w-4 group-hover:text-blue-600 transition-colors" />
-              <span>Alterar senha</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onSendMagicLink(user)} className="group">
-              <Link className="mr-2 h-4 w-4 group-hover:text-purple-600 transition-colors" />
-              <span>Enviar Magic Link</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onSetPermissionGroup(user)} className="group">
-              <Lock className="mr-2 h-4 w-4 group-hover:text-orange-600 transition-colors" />
-              <span>
-                {isTemporaryGroup ? "Atribuir grupo definitivo" : "Gerenciar permissões"}
-              </span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onStorageManagement(user)} className="group">
-              <HardDrive className="mr-2 h-4 w-4 group-hover:text-indigo-600 transition-colors" />
-              <span>Gerenciar armazenamento</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={() => onActivityLogs(user)} className="group">
-              <Activity className="mr-2 h-4 w-4 group-hover:text-gray-600 transition-colors" />
-              <span>Logs de atividade</span>
-            </DropdownMenuItem>
-
-            {user.role === 'Student' && (
-              <DropdownMenuItem onClick={() => onToggleMentor(user)} className="group">
-                <GraduationCap className="mr-2 h-4 w-4 group-hover:text-purple-600 transition-colors" />
-                <span>{user.is_mentor ? 'Remover como mentor' : 'Tornar mentor'}</span>
-              </DropdownMenuItem>
-            )}
-            
-            <DropdownMenuSeparator className="bg-white/20" />
-            
-            <DropdownMenuItem 
-              onClick={() => onDeleteUser(user)} 
-              className="text-red-600 focus:text-red-600 hover:text-red-600 group"
+                <Button 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0 hover:bg-white/80 dark:hover:bg-slate-700/80 backdrop-blur-sm"
+                >
+                  <span className="sr-only">Abrir menu</span>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border-white/20 shadow-xl"
             >
-              <UserX className="mr-2 h-4 w-4 group-hover:text-red-700 transition-colors" />
-              <span>Excluir usuário</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem onClick={() => onViewDetails(user)} className="group">
+                <Eye className="mr-2 h-4 w-4 group-hover:text-blue-600 transition-colors" />
+                <span>Ver detalhes</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => onResetPassword(user)} className="group">
+                <KeyRound className="mr-2 h-4 w-4 group-hover:text-green-600 transition-colors" />
+                <span>Redefinir senha</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onChangePassword(user)} className="group">
+                <Edit className="mr-2 h-4 w-4 group-hover:text-blue-600 transition-colors" />
+                <span>Alterar senha</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onSendMagicLink(user)} className="group">
+                <Link className="mr-2 h-4 w-4 group-hover:text-purple-600 transition-colors" />
+                <span>Enviar Magic Link</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onSetPermissionGroup(user)} className="group">
+                <Lock className="mr-2 h-4 w-4 group-hover:text-orange-600 transition-colors" />
+                <span>
+                  {isTemporaryGroup ? "Atribuir grupo definitivo" : "Gerenciar permissões"}
+                </span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onStorageManagement(user)} className="group">
+                <HardDrive className="mr-2 h-4 w-4 group-hover:text-indigo-600 transition-colors" />
+                <span>Gerenciar armazenamento</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onActivityLogs(user)} className="group">
+                <Activity className="mr-2 h-4 w-4 group-hover:text-gray-600 transition-colors" />
+                <span>Logs de atividade</span>
+              </DropdownMenuItem>
+
+              {user.role === 'Student' && (
+                <DropdownMenuItem onClick={() => onToggleMentor(user)} className="group">
+                  <GraduationCap className="mr-2 h-4 w-4 group-hover:text-purple-600 transition-colors" />
+                  <span>{user.is_mentor ? 'Remover como mentor' : 'Tornar mentor'}</span>
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator className="bg-white/20" />
+              
+              <DropdownMenuItem 
+                onClick={() => onDeleteUser(user)} 
+                className="text-red-600 focus:text-red-600 hover:text-red-600 group"
+              >
+                <UserX className="mr-2 h-4 w-4 group-hover:text-red-700 transition-colors" />
+                <span>Excluir usuário</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </TableCell>
     </motion.tr>
   );
