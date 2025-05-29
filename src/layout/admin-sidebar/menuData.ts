@@ -18,7 +18,10 @@ import {
   Users as UsersIcon,
   FolderOpen,
   CalendarDays,
-  Users2
+  Users2,
+  ClipboardCheck,
+  Database,
+  Cog
 } from "lucide-react";
 import { MenuItem, MenuGroup } from "./types";
 
@@ -148,6 +151,45 @@ export const resourcesMenuItems: MenuItem[] = [
   },
 ];
 
+export const configurationMenuItems: MenuItem[] = [
+  {
+    title: "Categorias",
+    href: "/admin/categorias",
+    icon: Database,
+    gradient: "from-slate-500 to-slate-600",
+  },
+  {
+    title: "Tipos de Ferramentas",
+    href: "/admin/tipos-softwares",
+    icon: Cog,
+    gradient: "from-gray-500 to-gray-600",
+  },
+  {
+    title: "Tipos de Parceiros",
+    href: "/admin/tipos-parceiros",
+    icon: Users,
+    gradient: "from-stone-500 to-stone-600",
+  },
+  {
+    title: "Permissões",
+    href: "/admin/permissoes",
+    icon: Shield,
+    gradient: "from-red-500 to-red-600",
+  },
+  {
+    title: "Auditoria",
+    href: "/admin/auditoria",
+    icon: ClipboardCheck,
+    gradient: "from-orange-500 to-orange-600",
+  },
+  {
+    title: "Config. Calendly",
+    href: "/admin/calendly-config",
+    icon: Calendar,
+    gradient: "from-blue-500 to-blue-600",
+  },
+];
+
 export const systemMenuItems: MenuItem[] = [
   {
     title: "Configurações",
@@ -162,5 +204,6 @@ export const menuGroups: MenuGroup[] = [
   { title: "Mentorias", items: mentoringMenuItems },
   { title: "Gestão", items: managementMenuItems },
   { title: "Recursos Gerais", items: resourcesMenuItems },
+  { title: "Configurações", items: configurationMenuItems },
   { title: "Sistema", items: systemMenuItems },
 ];

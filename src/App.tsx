@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -54,6 +53,10 @@ const queryClient = new QueryClient();
 import Categories from './pages/admin/Categories';
 import SoftwareTypes from './pages/admin/SoftwareTypes';
 import PartnerTypes from './pages/admin/PartnerTypes';
+import Students from './pages/admin/Students';
+import Courses from './pages/admin/Courses';
+import MentoringCatalogManagement from './pages/admin/MentoringCatalogManagement';
+import Bonus from './pages/admin/Bonus';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -203,6 +206,38 @@ function AppContent() {
           <RouteGuard requireAdminAccess={true}>
             <Layout isAdmin={true}>
               <Users />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/alunos" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Students />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/cursos" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Courses />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/mentoria" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <MentoringCatalogManagement />
+            </Layout>
+          </RouteGuard>
+        } />
+        
+        <Route path="/admin/bonus" element={
+          <RouteGuard requireAdminAccess={true}>
+            <Layout isAdmin={true}>
+              <Bonus />
             </Layout>
           </RouteGuard>
         } />
