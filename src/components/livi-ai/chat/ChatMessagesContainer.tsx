@@ -40,8 +40,8 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
   }
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-6 bg-white dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto space-y-6 min-h-full flex flex-col">
+    <div className="h-full overflow-y-auto px-3 py-4 bg-white dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto space-y-4 min-h-full flex flex-col">
         {/* Welcome Message */}
         {messages.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
@@ -50,7 +50,7 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
         )}
 
         {/* Messages */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <AnimatePresence>
             {messages.map((msg) => (
               <ChatMessage
