@@ -30,7 +30,7 @@ const AdminDashboard = () => {
   };
 
   const content = (
-    <div className="container mx-auto p-3 space-y-4 max-w-full">
+    <div className="max-w-full space-y-4">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

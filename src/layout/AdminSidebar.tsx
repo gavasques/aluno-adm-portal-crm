@@ -185,7 +185,7 @@ export default function AdminSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
-  const [sidebarWidth, setSidebarWidth] = useState(200); // Largura reduzida
+  const [sidebarWidth, setSidebarWidth] = useState(200);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -256,7 +256,7 @@ export default function AdminSidebar() {
     <div className="relative">
       <div 
         ref={sidebarRef}
-        className="fixed left-0 top-0 h-screen bg-gray-900 text-white overflow-y-auto flex flex-col"
+        className="fixed left-0 top-0 h-screen bg-gray-900 text-white overflow-y-auto flex flex-col border-r border-gray-700"
         style={{ width: `${sidebarWidth}px` }}
       >
         {/* Header da sidebar com logo - mais compacto */}

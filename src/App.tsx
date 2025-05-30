@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -76,8 +75,8 @@ function App() {
                   <RouteGuard requireAdminAccess>
                     <div className="min-h-screen bg-gray-50 flex">
                       <AdminSidebar />
-                      <div className="flex-1" style={{ marginLeft: '256px' }}>
-                        <main className="p-6">
+                      <div className="flex-1" style={{ marginLeft: '200px' }}>
+                        <main className="p-4">
                           <Routes>
                             <Route path="dashboard" element={<AdminDashboard />} />
                             <Route path="usuarios" element={<AdminUsers />} />
