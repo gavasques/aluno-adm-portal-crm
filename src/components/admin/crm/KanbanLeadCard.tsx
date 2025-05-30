@@ -48,6 +48,11 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
     onOpenDetail?.(lead);
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onOpenDetail?.(lead);
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -55,8 +60,9 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
       {...attributes}
       {...listeners}
       className="cursor-grab active:cursor-grabbing"
+      onClick={handleCardClick}
     >
-      <Card className="hover:shadow-md transition-all duration-200 border border-gray-200 bg-white">
+      <Card className="hover:shadow-md transition-all duration-200 border border-gray-200 bg-white hover:bg-gray-50">
         <CardContent className="p-3">
           {/* Header do Card */}
           <div className="flex justify-between items-start mb-2">
