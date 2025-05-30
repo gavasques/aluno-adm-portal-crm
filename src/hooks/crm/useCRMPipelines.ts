@@ -19,9 +19,11 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
       setPipelines(data || []);
+      return data || [];
     } catch (error) {
       console.error('Erro ao buscar pipelines:', error);
       toast.error('Erro ao carregar pipelines');
+      return [];
     }
   };
 
@@ -40,9 +42,11 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
       setColumns(data || []);
+      return data || [];
     } catch (error) {
       console.error('Erro ao buscar colunas:', error);
       toast.error('Erro ao carregar colunas');
+      return [];
     }
   };
 
@@ -86,6 +90,29 @@ export const useCRMPipelines = () => {
 
   const deletePipeline = async (id: string) => {
     try {
+      // Primeiro, verificar se há leads associados
+      const { data: leads, error: leadsError } = await supabase
+        .from('crm_leads')
+        .select('id')
+        .eq('pipeline_id', id)
+        .limit(1);
+
+      if (leadsError) throw leadsError;
+
+      if (leads && leads.length > 0) {
+        toast.error('Não é possível excluir um pipeline que contém leads. Mova os leads primeiro.');
+        return;
+      }
+
+      // Desativar colunas do pipeline
+      const { error: columnsError } = await supabase
+        .from('crm_pipeline_columns')
+        .update({ is_active: false })
+        .eq('pipeline_id', id);
+
+      if (columnsError) throw columnsError;
+
+      // Desativar pipeline
       const { error } = await supabase
         .from('crm_pipelines')
         .update({ is_active: false })
@@ -94,6 +121,7 @@ export const useCRMPipelines = () => {
       if (error) throw error;
       
       await fetchPipelines();
+      await fetchColumns();
       toast.success('Pipeline removido com sucesso');
     } catch (error) {
       console.error('Erro ao remover pipeline:', error);
@@ -142,6 +170,20 @@ export const useCRMPipelines = () => {
 
   const deleteColumn = async (id: string) => {
     try {
+      // Verificar se há leads na coluna
+      const { data: leads, error: leadsError } = await supabase
+        .from('crm_leads')
+        .select('id')
+        .eq('column_id', id)
+        .limit(1);
+
+      if (leadsError) throw leadsError;
+
+      if (leads && leads.length > 0) {
+        toast.error('Não é possível excluir uma coluna que contém leads. Mova os leads primeiro.');
+        return;
+      }
+
       const { error } = await supabase
         .from('crm_pipeline_columns')
         .update({ is_active: false })

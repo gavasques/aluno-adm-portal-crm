@@ -12,9 +12,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface PipelineManagerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPipelineChange?: () => void; // Novo callback para notificar mudanças
 }
 
-const PipelineManagerDialog = ({ open, onOpenChange }: PipelineManagerDialogProps) => {
+const PipelineManagerDialog = ({ open, onOpenChange, onPipelineChange }: PipelineManagerDialogProps) => {
   const [selectedPipeline, setSelectedPipeline] = useState<CRMPipeline | null>(null);
   const [activeTab, setActiveTab] = useState('pipelines');
   const { pipelines, loading, fetchPipelines } = useCRMPipelines();
@@ -24,8 +25,10 @@ const PipelineManagerDialog = ({ open, onOpenChange }: PipelineManagerDialogProp
     setActiveTab('columns');
   };
 
-  const handleRefresh = () => {
-    fetchPipelines();
+  const handleRefresh = async () => {
+    await fetchPipelines();
+    // Notificar mudanças para atualizar outros componentes
+    onPipelineChange?.();
   };
 
   const handleTabChange = (value: string) => {
@@ -35,9 +38,17 @@ const PipelineManagerDialog = ({ open, onOpenChange }: PipelineManagerDialogProp
     }
   };
 
+  const handleClose = (open: boolean) => {
+    onOpenChange(open);
+    if (!open) {
+      // Ao fechar, garantir que atualizações sejam propagadas
+      onPipelineChange?.();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[85vh] p-0 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 border-0 shadow-2xl">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-5xl h-[80vh] p-0 overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 border-0 shadow-2xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -45,19 +56,19 @@ const PipelineManagerDialog = ({ open, onOpenChange }: PipelineManagerDialogProp
           className="h-full flex flex-col"
         >
           {/* Header Compacto */}
-          <DialogHeader className="px-6 py-4 border-b border-white/20 bg-white/60 backdrop-blur-xl">
+          <DialogHeader className="px-4 py-3 border-b border-white/20 bg-white/60 backdrop-blur-xl">
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <DialogTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Gerenciar Pipelines
                 </DialogTitle>
-                <p className="text-gray-600 text-sm font-medium">
+                <p className="text-gray-600 text-xs font-medium">
                   Configure e organize seus fluxos de trabalho
                 </p>
               </div>
               <Badge 
                 variant="outline" 
-                className="bg-white/80 border-blue-200 text-blue-700 font-semibold px-3 py-1 text-sm"
+                className="bg-white/80 border-blue-200 text-blue-700 font-semibold px-2 py-1 text-xs"
               >
                 {pipelines.length} {pipelines.length === 1 ? 'Pipeline' : 'Pipelines'}
               </Badge>
@@ -65,28 +76,28 @@ const PipelineManagerDialog = ({ open, onOpenChange }: PipelineManagerDialogProp
           </DialogHeader>
           
           {/* Tabs Compactas */}
-          <div className="flex-1 flex flex-col px-6 py-4 min-h-0">
+          <div className="flex-1 flex flex-col px-4 py-3 min-h-0">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-              <TabsList className="grid w-full max-w-md grid-cols-2 bg-white/60 backdrop-blur-sm border border-white/30 p-1 rounded-xl shadow-lg mb-4">
+              <TabsList className="grid w-full max-w-xs grid-cols-2 bg-white/60 backdrop-blur-sm border border-white/30 p-1 rounded-lg shadow-lg mb-3">
                 <TabsTrigger 
                   value="pipelines"
-                  className="rounded-lg font-medium text-sm transition-all data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 text-gray-600"
+                  className="rounded-md font-medium text-xs transition-all data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 text-gray-600"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                     Pipelines
                   </div>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="columns" 
                   disabled={!selectedPipeline}
-                  className="rounded-lg font-medium text-sm transition-all data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 text-gray-600 disabled:opacity-50"
+                  className="rounded-md font-medium text-xs transition-all data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 text-gray-600 disabled:opacity-50"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
                     Colunas
                     {selectedPipeline && (
-                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-1 truncate max-w-16">
+                      <span className="text-xs bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full ml-1 truncate max-w-12">
                         {selectedPipeline.name}
                       </span>
                     )}

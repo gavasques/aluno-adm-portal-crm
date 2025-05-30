@@ -6,13 +6,20 @@ import PipelineManagerDialog from './pipeline-manager/PipelineManagerDialog';
 
 interface CRMPipelineManagerProps {
   onRefresh?: () => void;
+  onPipelineChange?: () => void; // Novo prop para mudanças de pipeline
 }
 
-const CRMPipelineManager = ({ onRefresh }: CRMPipelineManagerProps) => {
+const CRMPipelineManager = ({ onRefresh, onPipelineChange }: CRMPipelineManagerProps) => {
   const [showManager, setShowManager] = useState(false);
 
   const handleClose = () => {
     setShowManager(false);
+    onRefresh?.();
+  };
+
+  const handlePipelineChange = () => {
+    // Notificar mudanças nos pipelines
+    onPipelineChange?.();
     onRefresh?.();
   };
 
@@ -26,6 +33,7 @@ const CRMPipelineManager = ({ onRefresh }: CRMPipelineManagerProps) => {
       <PipelineManagerDialog
         open={showManager}
         onOpenChange={handleClose}
+        onPipelineChange={handlePipelineChange}
       />
     </>
   );

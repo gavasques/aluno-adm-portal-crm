@@ -26,9 +26,10 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const [filters, setFilters] = useState<CRMFiltersType>({});
   const [pipelineId, setPipelineId] = useState<string>('');
   const [draggedLead, setDraggedLead] = useState<CRMLead | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger para forçar refresh
 
-  const { leads, loading: leadsLoading } = useCRMLeads(filters);
-  const { columns, pipelines, loading: columnsLoading } = useCRMPipelines();
+  const { leads, loading: leadsLoading, refetch: refetchLeads } = useCRMLeads(filters);
+  const { columns, pipelines, loading: columnsLoading, fetchPipelines, fetchColumns } = useCRMPipelines();
   const { moveToColumn } = useCRMLeadUpdate();
 
   const loading = leadsLoading || columnsLoading;
@@ -40,6 +41,13 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
       setFilters(prev => ({ ...prev, pipeline_id: pipelines[0].id }));
     }
   }, [pipelineId, pipelines]);
+
+  // Refresh quando pipelines mudarem
+  React.useEffect(() => {
+    if (refreshTrigger > 0) {
+      refetchLeads?.();
+    }
+  }, [refreshTrigger, refetchLeads]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const lead = leads.find(l => l.id === event.active.id);
@@ -69,6 +77,9 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
         toast.success(
           `Lead "${draggedLead.name}" movido para "${newColumn?.name || 'Nova coluna'}"`
         );
+        
+        // Refresh leads após mover
+        refetchLeads?.();
       } catch (error) {
         toast.error('Erro ao mover lead');
       }
@@ -82,6 +93,16 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const handlePipelineChange = (newPipelineId: string) => {
     setPipelineId(newPipelineId);
     setFilters(prev => ({ ...prev, pipeline_id: newPipelineId }));
+  };
+
+  const handlePipelineManagerRefresh = async () => {
+    // Atualizar pipelines e colunas
+    await fetchPipelines();
+    if (pipelineId) {
+      await fetchColumns(pipelineId);
+    }
+    // Trigger refresh dos leads
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const getLeadsByColumn = (columnId: string) => {
@@ -131,7 +152,10 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
             <List className="h-4 w-4 mr-2" />
             Lista
           </Button>
-          <CRMPipelineManager />
+          <CRMPipelineManager 
+            onRefresh={handlePipelineManagerRefresh}
+            onPipelineChange={handlePipelineManagerRefresh}
+          />
           <Button onClick={onNewLead}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Lead
@@ -141,7 +165,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
 
       {/* Main Content */}
       <motion.div
-        key={viewMode}
+        key={`${viewMode}-${refreshTrigger}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
