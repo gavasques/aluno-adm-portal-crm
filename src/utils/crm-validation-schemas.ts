@@ -19,9 +19,9 @@ export const leadFormSchema = z.object({
   ready_to_invest_3k: z.boolean().default(false),
   calendly_scheduled: z.boolean().default(false),
   calendly_link: z.string().url('Link do Calendly inválido').optional().or(z.literal('')),
-  column_id: z.string().min(1, 'Selecione uma coluna'),
+  column_id: z.string().optional(),
   responsible_id: z.string().optional(),
-  scheduled_contact_date: z.string().min(1, 'Data de contato é obrigatória'),
+  scheduled_contact_date: z.string().optional(),
   notes: z.string().optional(),
 }).refine((data) => {
   // Se vende na Amazon, alguns campos se tornam obrigatórios

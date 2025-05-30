@@ -68,12 +68,26 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
   // Filtrar colunas do pipeline atual
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
+  // Selecionar primeira coluna por padrão
+  useEffect(() => {
+    if (pipelineColumns.length > 0 && !form.watch('column_id')) {
+      const firstColumn = pipelineColumns.sort((a, b) => a.sort_order - b.sort_order)[0];
+      setValue('column_id', firstColumn.id);
+    }
+  }, [pipelineColumns, setValue, form]);
+
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true);
     try {
+      // Garantir que column_id está definido
+      const columnId = data.column_id || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
+      
       await createLead({
         ...data,
         pipeline_id: pipelineId,
+        column_id: columnId,
+        name: data.name!,
+        email: data.email!,
       });
       toast.success('Lead criado com sucesso!');
       onSuccess();
@@ -131,15 +145,12 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="scheduled_contact_date">Data de Contato *</Label>
+            <Label htmlFor="scheduled_contact_date">Data de Contato</Label>
             <Input
               id="scheduled_contact_date"
               type="datetime-local"
               {...form.register('scheduled_contact_date')}
             />
-            {form.formState.errors.scheduled_contact_date && (
-              <p className="text-sm text-red-600">{form.formState.errors.scheduled_contact_date.message}</p>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -350,8 +361,11 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="column_id">Coluna inicial *</Label>
-            <Select onValueChange={(value) => setValue('column_id', value)}>
+            <Label htmlFor="column_id">Coluna inicial</Label>
+            <Select 
+              value={form.watch('column_id') || ''}
+              onValueChange={(value) => setValue('column_id', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a coluna" />
               </SelectTrigger>
@@ -365,9 +379,6 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
                   ))}
               </SelectContent>
             </Select>
-            {form.formState.errors.column_id && (
-              <p className="text-sm text-red-600">{form.formState.errors.column_id.message}</p>
-            )}
           </div>
 
           <div className="space-y-2">
