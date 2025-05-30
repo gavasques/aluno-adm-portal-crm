@@ -67,7 +67,7 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
       setLoading(true);
       setError(null);
 
-      console.log('🎥 Buscando vídeos do cache...');
+      console.log('🎥 Buscando vídeos...');
 
       const { data, error: supabaseError } = await supabase.functions.invoke('youtube-videos');
 
@@ -77,16 +77,27 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
       }
 
       if (data?.error) {
-        console.error('❌ Erro retornado pela API:', data.error);
+        console.warn('⚠️ Aviso retornado pela API:', data.error);
         setError(data.error);
-        setVideos([]);
+        
+        // Se há vídeos em cache mesmo com erro, usar eles
+        if (data.videos && data.videos.length > 0) {
+          setVideos(data.videos);
+        } else {
+          setVideos([]);
+        }
+        
+        if (data.channel_info) {
+          setChannelInfo(data.channel_info);
+          setLastSync(data.channel_info.last_sync);
+        }
         return;
       }
 
       const fetchedVideos = data?.videos || [];
       const channelData = data?.channel_info || null;
       
-      console.log(`✅ ${fetchedVideos.length} vídeos carregados do cache`);
+      console.log(`✅ ${fetchedVideos.length} vídeos carregados`);
       
       setVideos(fetchedVideos);
       setChannelInfo(channelData);
@@ -127,7 +138,15 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
 
       if (data?.error) {
         console.error('❌ Erro retornado:', data.error);
-        throw new Error(data.error);
+        
+        if (data.quota_exceeded) {
+          toast.error('Quota da API do YouTube excedida. Tente novamente mais tarde.', { id: 'sync' });
+        } else if (data.error.includes('API key')) {
+          toast.error('Configuração da API necessária. Entre em contato com o administrador.', { id: 'sync' });
+        } else {
+          toast.error(data.error, { id: 'sync' });
+        }
+        return;
       }
 
       console.log('✅ Sincronização concluída:', data);

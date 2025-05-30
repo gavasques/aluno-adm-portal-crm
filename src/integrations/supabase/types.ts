@@ -1692,6 +1692,108 @@ export type Database = {
         }
         Relationships: []
       }
+      youtube_cache: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: string
+          id: string
+          published_at: string
+          thumbnail: string
+          title: string
+          updated_at: string
+          video_id: string
+          view_count: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration: string
+          id?: string
+          published_at: string
+          thumbnail: string
+          title: string
+          updated_at?: string
+          video_id: string
+          view_count?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: string
+          id?: string
+          published_at?: string
+          thumbnail?: string
+          title?: string
+          updated_at?: string
+          video_id?: string
+          view_count?: string
+        }
+        Relationships: []
+      }
+      youtube_channel_info: {
+        Row: {
+          channel_id: string
+          channel_name: string
+          created_at: string
+          id: string
+          last_sync: string
+          subscriber_count: string
+          sync_status: string
+          updated_at: string
+        }
+        Insert: {
+          channel_id: string
+          channel_name: string
+          created_at?: string
+          id?: string
+          last_sync?: string
+          subscriber_count?: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string
+          channel_name?: string
+          created_at?: string
+          id?: string
+          last_sync?: string
+          subscriber_count?: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      youtube_sync_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          status: string
+          sync_duration_ms: number | null
+          sync_type: string
+          videos_synced: number
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status: string
+          sync_duration_ms?: number | null
+          sync_type?: string
+          videos_synced?: number
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          sync_duration_ms?: number | null
+          sync_type?: string
+          videos_synced?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

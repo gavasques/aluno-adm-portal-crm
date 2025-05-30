@@ -37,16 +37,35 @@ Deno.serve(async (req) => {
       .order('published_at', { ascending: false })
       .limit(6);
 
+    // Se houve erro no cache, retornar resposta vazia mas válida
     if (cacheError) {
       console.error('❌ Erro ao buscar cache:', cacheError);
-      throw cacheError;
+      
+      // Retornar dados vazios em vez de erro
+      return new Response(
+        JSON.stringify({ 
+          videos: [],
+          channel_info: null,
+          error: 'Cache temporariamente indisponível',
+          cached: false,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
     }
 
     // Buscar informações do canal
-    const { data: channelInfo } = await supabaseClient
+    const { data: channelInfo, error: channelError } = await supabaseClient
       .from('youtube_channel_info')
       .select('*')
       .single();
+
+    if (channelError) {
+      console.warn('⚠️ Aviso ao buscar info do canal:', channelError);
+    }
 
     // Converter dados do cache para o formato esperado
     const videos: YouTubeVideo[] = cachedVideos?.map(video => ({
@@ -81,15 +100,16 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Erro ao carregar vídeos:', error);
+    console.error('❌ Erro geral ao carregar vídeos:', error);
     
     // Fallback: retornar array vazio em caso de erro
     return new Response(
       JSON.stringify({ 
         videos: [],
         channel_info: null,
-        error: 'Erro ao carregar vídeos do cache',
-        cached: false
+        error: 'Serviço temporariamente indisponível',
+        cached: false,
+        timestamp: new Date().toISOString()
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
