@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -255,7 +256,7 @@ export default function AdminSidebar() {
     <div className="relative">
       <div 
         ref={sidebarRef}
-        className="fixed left-0 top-0 h-screen bg-gray-900 text-white overflow-y-auto flex flex-col border-r border-gray-700/50"
+        className="fixed left-0 top-0 h-screen bg-gray-900 text-white overflow-y-auto flex flex-col"
         style={{ width: `${sidebarWidth}px` }}
       >
         {/* Header da sidebar com logo - mais compacto */}

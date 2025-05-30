@@ -168,7 +168,7 @@ const StudentSidebar = () => {
 
   return (
     <motion.div 
-      className="fixed left-0 top-0 h-screen w-56 glass border-r border-gray-200/50 dark:border-gray-700/50 flex flex-col z-50 backdrop-blur-xl"
+      className="fixed left-0 top-0 h-screen w-56 glass border-r border-white/20 flex flex-col z-50 backdrop-blur-xl"
       initial={{ x: -224 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
