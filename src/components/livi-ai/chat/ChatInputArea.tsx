@@ -28,45 +28,53 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
     }
   }, [message]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSendMessage();
+      if (message.trim() && !isLoading && hasCredits && isSessionActive) {
+        onSendMessage();
+      }
     }
   };
 
-  if (!isSessionActive) {
-    return null;
-  }
+  const canSend = message.trim() && !isLoading && hasCredits && isSessionActive;
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="relative bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 focus-within:border-blue-500 dark:focus-within:border-blue-400 transition-colors">
+        <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 focus-within:border-blue-500 dark:focus-within:border-blue-400 transition-colors shadow-sm">
           <Textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={hasCredits ? "Digite sua pergunta sobre importação ou Amazon..." : "Créditos insuficientes"}
+            placeholder={
+              !isSessionActive 
+                ? "Inicie uma sessão para começar a conversar..."
+                : !hasCredits 
+                ? "Créditos insuficientes"
+                : "Digite sua pergunta sobre importação ou Amazon..."
+            }
             className={cn(
-              "bg-transparent border-0 resize-none shadow-none focus-visible:ring-0 min-h-[24px] max-h-[200px] py-3 px-4 pr-12",
-              "placeholder:text-gray-500 dark:placeholder:text-gray-400"
+              "bg-transparent border-0 resize-none shadow-none focus-visible:ring-0 min-h-[48px] max-h-[120px] py-3 px-4 pr-14",
+              "placeholder:text-gray-500 dark:placeholder:text-gray-400",
+              "scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
             )}
-            disabled={isLoading || !hasCredits}
+            disabled={isLoading || !hasCredits || !isSessionActive}
             rows={1}
           />
           <Button
             onClick={onSendMessage}
-            disabled={!message.trim() || isLoading || !hasCredits}
+            disabled={!canSend}
             className={cn(
-              "absolute right-2 bottom-2 h-8 w-8 p-0 rounded-lg",
+              "absolute right-3 bottom-3 h-8 w-8 p-0 rounded-lg",
               "bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600",
-              "transition-all duration-200"
+              "transition-all duration-200",
+              canSend ? "opacity-100" : "opacity-50"
             )}
           >
             {isLoading ? (
@@ -78,11 +86,18 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         </div>
 
         {/* Status Messages */}
-        {!hasCredits && (
-          <div className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
-            Créditos insuficientes. Adquira mais créditos para continuar.
-          </div>
-        )}
+        <div className="mt-2 text-center">
+          {!isSessionActive && (
+            <div className="text-sm text-amber-600 dark:text-amber-400">
+              Inicie uma sessão para começar a conversar com o Livi AI
+            </div>
+          )}
+          {isSessionActive && !hasCredits && (
+            <div className="text-sm text-red-600 dark:text-red-400">
+              Créditos insuficientes. Adquira mais créditos para continuar.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

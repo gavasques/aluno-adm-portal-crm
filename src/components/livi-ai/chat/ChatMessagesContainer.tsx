@@ -30,7 +30,7 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
 
   if (messagesLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Carregando conversa...</p>
@@ -40,25 +40,31 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="h-full overflow-y-auto px-4 py-6 bg-white dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto space-y-6 min-h-full flex flex-col">
         {/* Welcome Message */}
-        {messages.length === 0 && <ChatWelcomeMessage />}
+        {messages.length === 0 && (
+          <div className="flex-1 flex items-center justify-center">
+            <ChatWelcomeMessage />
+          </div>
+        )}
 
         {/* Messages */}
-        <AnimatePresence>
-          {messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              onCopyMessage={onCopyMessage}
-              copiedMessageId={copiedMessageId}
-            />
-          ))}
-        </AnimatePresence>
+        <div className="space-y-6">
+          <AnimatePresence>
+            {messages.map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                onCopyMessage={onCopyMessage}
+                copiedMessageId={copiedMessageId}
+              />
+            ))}
+          </AnimatePresence>
 
-        {/* Loading Indicator */}
-        {isLoading && <ChatLoadingIndicator />}
+          {/* Loading Indicator */}
+          {isLoading && <ChatLoadingIndicator />}
+        </div>
 
         <div ref={messagesEndRef} />
       </div>

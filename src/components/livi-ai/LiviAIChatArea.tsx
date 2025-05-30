@@ -40,25 +40,29 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white dark:bg-gray-900">
-      {/* Chat Messages Area */}
-      <ChatMessagesContainer
-        messages={messages}
-        isLoading={isLoading}
-        messagesLoading={messagesLoading}
-        onCopyMessage={copyToClipboard}
-        copiedMessageId={copiedMessageId}
-      />
+    <div className="flex flex-col h-full w-full bg-white dark:bg-gray-900 overflow-hidden">
+      {/* Chat Messages Area - flex-1 para ocupar espaço disponível */}
+      <div className="flex-1 overflow-hidden">
+        <ChatMessagesContainer
+          messages={messages}
+          isLoading={isLoading}
+          messagesLoading={messagesLoading}
+          onCopyMessage={copyToClipboard}
+          copiedMessageId={copiedMessageId}
+        />
+      </div>
 
-      {/* Input Area */}
-      <ChatInputArea
-        message={message}
-        setMessage={setMessage}
-        onSendMessage={onSendMessage}
-        isLoading={isLoading}
-        hasCredits={hasCredits}
-        isSessionActive={isSessionActive}
-      />
+      {/* Input Area - fixo na parte inferior */}
+      <div className="flex-shrink-0">
+        <ChatInputArea
+          message={message}
+          setMessage={setMessage}
+          onSendMessage={onSendMessage}
+          isLoading={isLoading}
+          hasCredits={hasCredits}
+          isSessionActive={isSessionActive}
+        />
+      </div>
     </div>
   );
 };
