@@ -166,9 +166,9 @@ const LiviAI = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      {/* Sidebar - Menor largura */}
-      <div className="hidden lg:block w-64 xl:w-72">
+    <div className="h-screen flex bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 overflow-hidden">
+      {/* Sidebar - Largura reduzida */}
+      <div className="hidden lg:block w-56 flex-shrink-0">
         <SessionHistorySidebar
           sessions={sessions}
           currentSession={currentSession}
@@ -179,26 +179,26 @@ const LiviAI = () => {
         />
       </div>
 
-      {/* Main Content - Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header - Layout mais compacto */}
+      {/* Main Content - Flex column para ocupar toda altura */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Header - Altura fixa e compacta */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm"
+          className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm flex-shrink-0"
         >
-          <div className="p-3 lg:p-4">
+          <div className="p-3">
             <div className="flex items-center justify-between">
               {/* Logo e Status - Layout mais compacto */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
-                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
                 >
-                  <Bot className="h-5 w-5 text-white" />
+                  <Bot className="h-4 w-4 text-white" />
                 </motion.div>
                 <div>
-                  <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     Livi AI
                   </h1>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -215,7 +215,7 @@ const LiviAI = () => {
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                   size="sm"
                 >
-                  <Play className="h-4 w-4 mr-1" />
+                  <Play className="h-3 w-3 mr-1" />
                   Iniciar
                 </Button>
                 <Button 
@@ -225,7 +225,7 @@ const LiviAI = () => {
                   className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm"
                   size="sm"
                 >
-                  <Square className="h-4 w-4 mr-1" />
+                  <Square className="h-3 w-3 mr-1" />
                   Encerrar
                 </Button>
               </div>
@@ -233,17 +233,19 @@ const LiviAI = () => {
           </div>
         </motion.div>
 
-        {/* Chat Area */}
-        <LiviAIChatArea
-          messages={sessionMessages}
-          message={message}
-          setMessage={setMessage}
-          onSendMessage={sendMessage}
-          isLoading={isLoading}
-          hasCredits={hasCredits()}
-          isSessionActive={currentSession?.is_active || false}
-          messagesLoading={messagesLoading}
-        />
+        {/* Chat Area - Ocupa o restante da altura */}
+        <div className="flex-1 min-h-0">
+          <LiviAIChatArea
+            messages={sessionMessages}
+            message={message}
+            setMessage={setMessage}
+            onSendMessage={sendMessage}
+            isLoading={isLoading}
+            hasCredits={hasCredits()}
+            isSessionActive={currentSession?.is_active || false}
+            messagesLoading={messagesLoading}
+          />
+        </div>
       </div>
     </div>
   );
