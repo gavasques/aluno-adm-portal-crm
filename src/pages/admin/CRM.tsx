@@ -9,8 +9,8 @@ import CRMFilters from '@/components/admin/crm/CRMFilters';
 import CRMKanbanBoard from '@/components/admin/crm/CRMKanbanBoard';
 import CRMListView from '@/components/admin/crm/CRMListView';
 import CRMLeadFormDialog from '@/components/admin/crm/CRMLeadFormDialog';
-import CRMPipelineManager from '@/components/admin/crm/CRMPipelineManager';
 import CRMTagsManager from '@/components/admin/crm/CRMTagsManager';
+import PipelineManagerDialog from '@/components/admin/crm/pipeline-manager/PipelineManagerDialog';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { CRMFilters as CRMFiltersType, CRMLead } from '@/types/crm.types';
 
@@ -27,7 +27,7 @@ const CRM = () => {
     tags: []
   });
 
-  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
+  const { pipelines, loading: pipelinesLoading, fetchPipelines } = useCRMPipelines();
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
 
   React.useEffect(() => {
@@ -50,6 +50,11 @@ const CRM = () => {
   const handlePipelineChange = (pipelineId: string) => {
     setSelectedPipelineId(pipelineId);
     setFilters(prev => ({ ...prev, pipeline_id: pipelineId }));
+  };
+
+  const handlePipelineManagerClose = () => {
+    setShowPipelineManager(false);
+    fetchPipelines(); // Refresh pipelines after changes
   };
 
   if (pipelinesLoading) {
@@ -142,9 +147,9 @@ const CRM = () => {
         onSuccess={handleFormSuccess}
       />
 
-      <CRMPipelineManager
+      <PipelineManagerDialog
         open={showPipelineManager}
-        onOpenChange={setShowPipelineManager}
+        onOpenChange={handlePipelineManagerClose}
       />
 
       <CRMTagsManager

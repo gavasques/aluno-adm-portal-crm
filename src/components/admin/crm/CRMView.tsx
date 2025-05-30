@@ -11,6 +11,7 @@ import CRMKanbanBoard from './CRMKanbanBoard';
 import CRMListView from './CRMListView';
 import CRMStatsCards from './CRMStatsCards';
 import CRMFiltersComponent from './CRMFilters';
+import CRMPipelineManager from './CRMPipelineManager';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, List, Plus } from 'lucide-react';
 import { toast } from 'sonner';
