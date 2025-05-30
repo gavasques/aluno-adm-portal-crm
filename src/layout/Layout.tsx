@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Outlet } from 'react-router-dom';
 import StudentSidebar from './StudentSidebar';
 import ModernAdminSidebar from './ModernAdminSidebar';
 import MobileAdminSidebar from './MobileAdminSidebar';
@@ -11,11 +12,10 @@ import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
-  children: React.ReactNode;
   isAdmin: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
+const Layout: React.FC<LayoutProps> = ({ isAdmin }) => {
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -60,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {children}
+            <Outlet />
           </motion.div>
           
           {/* Background Elements otimizado para mobile */}
@@ -91,7 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children, isAdmin }) => {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <div className="max-w-7xl mx-auto">
-              {children}
+              <Outlet />
             </div>
           </motion.main>
         </div>
