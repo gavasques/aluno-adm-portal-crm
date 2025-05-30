@@ -1,11 +1,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Package, GraduationCap, Wrench, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { PageTransition, PageChild } from '@/components/animations/PageTransition';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
-import { DesignStatsCard } from '@/design-system/components/DesignDashboard';
 import { YouTubeSection } from '@/components/student/dashboard/YouTubeSection';
 import { NewsSection } from '@/components/student/dashboard/NewsSection';
 
@@ -25,64 +24,8 @@ const StudentDashboard = () => {
     return 'Boa noite';
   };
 
-  const statsCards = [
-    {
-      title: "Meus Créditos",
-      value: "85",
-      description: "créditos disponíveis",
-      icon: CreditCard,
-      gradient: "secondary" as const,
-      trend: { value: "+15 este mês", isPositive: true },
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/creditos";
-      }
-    },
-    {
-      title: "Meus Fornecedores",
-      value: "12",
-      description: "fornecedores cadastrados",
-      icon: Package,
-      gradient: "primary" as const,
-      trend: { value: "+3 este mês", isPositive: true },
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/meus-fornecedores";
-      }
-    },
-    {
-      title: "Mentorias Ativas",
-      value: "3",
-      description: "em andamento",
-      icon: GraduationCap,
-      gradient: "accent" as const,
-      trend: { value: "2 agendadas", isPositive: true },
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/mentoria";
-      }
-    },
-    {
-      title: "Ferramentas",
-      value: "18",
-      description: "disponíveis para você",
-      icon: Wrench,
-      gradient: "warning" as const,
-      trend: { value: "+2 adicionadas", isPositive: true },
-      onClick: () => {
-        feedback.dataLoaded();
-        window.location.href = "/aluno/ferramentas";
-      }
-    }
-  ];
-
-  // Removido: feedback.systemReady() que estava causando as notificações automáticas
-  // React.useEffect(() => {
-  //   feedback.systemReady();
-  // }, [feedback]);
-
   return (
-    <PageTransition className="space-y-4 p-4">
+    <PageTransition className="space-y-6 p-4">
       {/* Header com saudação personalizada - mais compacto */}
       <PageChild>
         <motion.div 
@@ -110,36 +53,11 @@ const StudentDashboard = () => {
         </motion.div>
       </PageChild>
 
-      {/* Stats Cards - grid mais compacto */}
-      <PageChild>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {statsCards.map((card, index) => (
-            <motion.div
-              key={card.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <DesignStatsCard
-                title={card.title}
-                value={card.value}
-                description={card.description}
-                icon={card.icon}
-                gradient={card.gradient}
-                trend={card.trend}
-                onClick={card.onClick}
-                variant="glass"
-              />
-            </motion.div>
-          ))}
-        </div>
-      </PageChild>
-
-      {/* Seção de Vídeos do YouTube */}
-      <YouTubeSection />
-
-      {/* Seção de Notícias */}
+      {/* Seção de Notícias - movida para o topo */}
       <NewsSection />
+
+      {/* Seção de Vídeos do YouTube - movida para baixo */}
+      <YouTubeSection />
     </PageTransition>
   );
 };
