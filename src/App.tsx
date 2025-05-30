@@ -6,32 +6,13 @@ import AdminLayout from '@/layout/AdminLayout';
 import StudentLayout from '@/layout/StudentLayout';
 import { SimpleRouteGuard } from '@/components/SimpleRouteGuard';
 
-// Admin Pages
+// Admin Pages - apenas as que existem
 import AdminDashboard from '@/pages/admin/Dashboard';
 import CRM from '@/pages/admin/CRM';
 import LeadDetails from '@/pages/admin/LeadDetails';
-import UserManagement from '@/pages/admin/UserManagement';
-import StudentManagement from '@/pages/admin/StudentManagement';
-import CourseManagement from '@/pages/admin/CourseManagement';
-import BonusManagement from '@/pages/admin/BonusManagement';
-import CreditsManagement from '@/pages/admin/CreditsManagement';
-import TaskManagement from '@/pages/admin/TaskManagement';
-import NewsManagement from '@/pages/admin/NewsManagement';
-import SuppliersAdm from '@/pages/admin/SuppliersAdm';
-import PartnersAdm from '@/pages/admin/PartnersAdm';
-import ToolsAdm from '@/pages/admin/ToolsAdm';
 import Categories from '@/pages/admin/Categories';
-import Types from '@/pages/admin/Types';
 import Permissions from '@/pages/admin/Permissions';
 import Audit from '@/pages/admin/Audit';
-import CalendlyConfig from '@/pages/admin/CalendlyConfig';
-
-// Mentoring Admin Pages
-import MentoringDashboard from '@/pages/admin/mentoring/Dashboard';
-import MentoringCatalog from '@/pages/admin/mentoring/Catalog';
-import MentoringEnrollments from '@/pages/admin/mentoring/Enrollments';
-import MentoringSessions from '@/pages/admin/mentoring/Sessions';
-import MentoringMaterials from '@/pages/admin/mentoring/Materials';
 
 // Student Pages
 import StudentDashboard from '@/pages/student/Dashboard';
@@ -70,36 +51,11 @@ function App() {
             }>
               <Route index element={<AdminDashboard />} />
               <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="usuarios" element={<UserManagement />} />
               <Route path="crm" element={<CRM />} />
               <Route path="crm/lead/:id" element={<LeadDetails />} />
-              <Route path="lista-tarefas" element={<TaskManagement />} />
-              
-              {/* Mentoring Routes */}
-              <Route path="mentoria" element={<MentoringDashboard />} />
-              <Route path="mentoria/catalogo" element={<MentoringCatalog />} />
-              <Route path="mentoria/inscricoes" element={<MentoringEnrollments />} />
-              <Route path="mentoria/sessoes" element={<MentoringSessions />} />
-              <Route path="mentoria/materiais" element={<MentoringMaterials />} />
-              
-              {/* Management Routes */}
-              <Route path="gestao-alunos" element={<StudentManagement />} />
-              <Route path="cadastro-cursos" element={<CourseManagement />} />
-              <Route path="cadastro-bonus" element={<BonusManagement />} />
-              <Route path="gestao-creditos" element={<CreditsManagement />} />
-              <Route path="noticias" element={<NewsManagement />} />
-              
-              {/* Resources Routes */}
-              <Route path="fornecedores-adm" element={<SuppliersAdm />} />
-              <Route path="parceiros-adm" element={<PartnersAdm />} />
-              <Route path="ferramentas-adm" element={<ToolsAdm />} />
-              
-              {/* Configuration Routes */}
               <Route path="categorias" element={<Categories />} />
-              <Route path="tipos" element={<Types />} />
               <Route path="permissoes" element={<Permissions />} />
               <Route path="auditoria" element={<Audit />} />
-              <Route path="config-calendly" element={<CalendlyConfig />} />
             </Route>
 
             {/* Student Routes */}
