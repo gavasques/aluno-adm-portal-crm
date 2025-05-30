@@ -47,27 +47,27 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
       layout
       className="group"
     >
-      <Card className="hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm border-white/40 hover:border-blue-200">
-        <CardContent className="p-4">
+      <Card className="hover:shadow-md transition-all duration-300 bg-white/80 backdrop-blur-sm border-white/40 hover:border-blue-200">
+        <CardContent className="p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
+            <div className="flex items-center gap-2 flex-1">
               <div
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded transition-colors"
               >
-                <GripVertical className="h-4 w-4 text-gray-400" />
+                <GripVertical className="h-3 w-3 text-gray-400" />
               </div>
               
               <div 
-                className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm" 
+                className="w-3 h-3 rounded-full flex-shrink-0 border border-white shadow-sm" 
                 style={{ backgroundColor: column.color }}
               />
               
-              <div className="flex-1">
-                <h4 className="font-semibold text-gray-900">{column.name}</h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-gray-500">Posição: {column.sort_order + 1}</span>
-                  <Badge variant={column.is_active ? 'default' : 'secondary'} className="text-xs">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-gray-900 text-sm truncate">{column.name}</h4>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-gray-500">Pos: {column.sort_order + 1}</span>
+                  <Badge variant={column.is_active ? 'default' : 'secondary'} className="text-xs h-4 px-1">
                     {column.is_active ? 'Ativa' : 'Inativa'}
                   </Badge>
                 </div>
@@ -79,10 +79,10 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit(column)}
-                className="hover:bg-blue-50 hover:text-blue-600"
+                className="hover:bg-blue-50 hover:text-blue-600 h-7 w-7 p-0"
                 title="Editar Coluna"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-3 w-3" />
               </Button>
               
               <Button
@@ -90,9 +90,9 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
                 size="sm"
                 onClick={() => onDelete(column)}
                 title="Excluir Coluna"
-                className="hover:bg-red-50 hover:text-red-600"
+                className="hover:bg-red-50 hover:text-red-600 h-7 w-7 p-0"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3" />
               </Button>
             </div>
           </div>
@@ -183,29 +183,29 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
   };
 
   return (
-    <div className="space-y-6 h-full overflow-auto">
-      {/* Header */}
+    <div className="space-y-4 h-full overflow-auto">
+      {/* Header Compacto */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onBack}
-            className="hover:bg-blue-50 hover:text-blue-600"
+            className="hover:bg-blue-50 hover:text-blue-600 h-8 px-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
             Voltar
           </Button>
           <div>
-            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Columns className="h-6 w-6 text-blue-600" />
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Columns className="h-5 w-5 text-blue-600" />
               Colunas do Pipeline
             </h3>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 text-sm">
               <span className="font-semibold text-blue-600">{pipeline.name}</span> • 
               {columns.length} {columns.length === 1 ? ' coluna' : ' colunas'}
             </p>
@@ -215,13 +215,15 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
+            size="sm"
             onClick={() => setShowPreview(true)}
             className="bg-white/80 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200"
           >
             <Eye className="h-4 w-4 mr-2" />
-            Visualizar
+            Preview
           </Button>
           <Button 
+            size="sm"
             onClick={() => setShowCreateForm(true)}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
           >
@@ -231,22 +233,22 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
         </div>
       </motion.div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+      {/* Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-4">
         {/* Columns List */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-4"
+          className="space-y-3"
         >
           <Card className="bg-white/70 backdrop-blur-sm border-white/30 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="h-5 w-5 text-blue-600" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-600" />
                 Colunas do Pipeline
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               {columns.length > 0 ? (
                 <DndContext
                   sensors={sensors}
@@ -257,7 +259,7 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
                     items={columns.map(col => col.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
                       <AnimatePresence>
                         {columns.map((column) => (
                           <motion.div
@@ -282,18 +284,19 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-12"
+                  className="text-center py-8"
                 >
-                  <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Plus className="h-8 w-8 text-blue-600" />
+                  <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Plus className="h-6 w-6 text-blue-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h4 className="text-base font-semibold text-gray-900 mb-2">
                     Nenhuma coluna encontrada
                   </h4>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 text-sm mb-3">
                     Adicione colunas para organizar os estágios do seu pipeline.
                   </p>
                   <Button 
+                    size="sm"
                     onClick={() => setShowCreateForm(true)}
                     className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                   >
@@ -306,21 +309,23 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
           </Card>
         </motion.div>
 
-        {/* Preview */}
+        {/* Preview Compacto */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-4"
+          className="space-y-3"
         >
           <Card className="bg-white/70 backdrop-blur-sm border-white/30 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Eye className="h-5 w-5 text-purple-600" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Eye className="h-4 w-4 text-purple-600" />
                 Preview do Pipeline
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <PipelinePreview pipeline={pipeline} columns={columns} />
+            <CardContent className="pt-0">
+              <div className="max-h-96 overflow-y-auto">
+                <PipelinePreview pipeline={pipeline} columns={columns} />
+              </div>
             </CardContent>
           </Card>
         </motion.div>
