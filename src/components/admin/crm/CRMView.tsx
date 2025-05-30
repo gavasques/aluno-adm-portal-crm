@@ -23,13 +23,22 @@ interface CRMViewProps {
 const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [filters, setFilters] = useState<CRMFiltersType>({});
+  const [pipelineId, setPipelineId] = useState<string>('');
   const [draggedLead, setDraggedLead] = useState<CRMLead | null>(null);
 
   const { leads, loading: leadsLoading } = useCRMLeads(filters);
-  const { columns, loading: columnsLoading } = useCRMPipelines();
+  const { columns, pipelines, loading: columnsLoading } = useCRMPipelines();
   const { moveToColumn } = useCRMLeadUpdate();
 
   const loading = leadsLoading || columnsLoading;
+
+  // Set default pipeline if none selected
+  React.useEffect(() => {
+    if (!pipelineId && pipelines.length > 0) {
+      setPipelineId(pipelines[0].id);
+      setFilters(prev => ({ ...prev, pipeline_id: pipelines[0].id }));
+    }
+  }, [pipelineId, pipelines]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const lead = leads.find(l => l.id === event.active.id);
@@ -69,15 +78,13 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
     setFilters(newFilters);
   };
 
-  const getLeadsByColumn = (columnId: string) => {
-    return leads.filter(lead => lead.column_id === columnId);
+  const handlePipelineChange = (newPipelineId: string) => {
+    setPipelineId(newPipelineId);
+    setFilters(prev => ({ ...prev, pipeline_id: newPipelineId }));
   };
 
-  const stats = {
-    total: leads.length,
-    new: leads.filter(l => l.column?.name?.toLowerCase().includes('novo')).length,
-    qualified: leads.filter(l => l.ready_to_invest_3k).length,
-    converted: leads.filter(l => l.column?.name?.toLowerCase().includes('convertido')).length
+  const getLeadsByColumn = (columnId: string) => {
+    return leads.filter(lead => lead.column_id === columnId);
   };
 
   if (loading) {
@@ -92,10 +99,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <CRMStatsCards 
-        total={stats.total}
-        new={stats.new}
-        qualified={stats.qualified}
-        converted={stats.converted}
+        filters={filters}
       />
 
       {/* Filters and View Controls */}
@@ -104,6 +108,8 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
           <CRMFiltersComponent
             filters={filters}
             onFiltersChange={handleFiltersChange}
+            pipelineId={pipelineId}
+            onPipelineChange={handlePipelineChange}
           />
         </div>
         
@@ -145,11 +151,8 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
             onDragEnd={handleDragEnd}
           >
             <CRMKanbanBoard
-              onOpenDetail={onEditLead}
-              onAddLead={(columnId) => {
-                setFilters(prev => ({ ...prev, column_id: columnId }));
-                onNewLead?.();
-              }}
+              filters={filters}
+              pipelineId={pipelineId}
             />
           </DndContext>
         ) : (
