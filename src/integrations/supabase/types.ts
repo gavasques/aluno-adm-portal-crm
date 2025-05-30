@@ -396,6 +396,130 @@ export type Database = {
         }
         Relationships: []
       }
+      livi_ai_messages: {
+        Row: {
+          ai_response: string | null
+          created_at: string
+          credits_used: number
+          error_message: string | null
+          id: string
+          message_order: number
+          message_text: string
+          response_time_ms: number | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          created_at?: string
+          credits_used?: number
+          error_message?: string | null
+          id?: string
+          message_order: number
+          message_text: string
+          response_time_ms?: number | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          created_at?: string
+          credits_used?: number
+          error_message?: string | null
+          id?: string
+          message_order?: number
+          message_text?: string
+          response_time_ms?: number | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livi_ai_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "livi_ai_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livi_ai_session_logs: {
+        Row: {
+          action_data: Json | null
+          action_type: string
+          created_at: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          action_data?: Json | null
+          action_type: string
+          created_at?: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          action_data?: Json | null
+          action_type?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livi_ai_session_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "livi_ai_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livi_ai_sessions: {
+        Row: {
+          created_at: string
+          credits_consumed: number
+          ended_at: string | null
+          id: string
+          is_active: boolean
+          session_duration_minutes: number | null
+          session_name: string
+          started_at: string
+          total_messages: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_consumed?: number
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          session_duration_minutes?: number | null
+          session_name: string
+          started_at?: string
+          total_messages?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_consumed?: number
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          session_duration_minutes?: number | null
+          session_name?: string
+          started_at?: string
+          total_messages?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mentoring_catalogs: {
         Row: {
           active: boolean
@@ -1625,6 +1749,10 @@ export type Database = {
       }
       generate_bonus_id: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_session_name: {
+        Args: { first_message: string }
         Returns: string
       }
       get_allowed_menus: {
