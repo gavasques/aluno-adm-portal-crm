@@ -28,9 +28,7 @@ export {
 } from './components/DesignInput';
 
 export {
-  DesignStatsCard,
-  DesignQuickActions,
-  DesignActivityFeed
+  DesignStatsCard
 } from './components/DesignDashboard';
 
 // New UX Components
