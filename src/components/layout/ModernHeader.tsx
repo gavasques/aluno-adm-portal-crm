@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Settings, User, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,

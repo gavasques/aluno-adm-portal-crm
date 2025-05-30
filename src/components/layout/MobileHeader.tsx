@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SafeHeader } from '@/components/ui/safe-area';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { cn } from '@/lib/utils';
 
 interface MobileHeaderProps {

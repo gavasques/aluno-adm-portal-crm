@@ -5,9 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Bell, Settings, User, Plus } from "lucide-react";
+import { Search, Bell, Settings, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications } from "@/contexts/NotificationsContext";
 
 export function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("");

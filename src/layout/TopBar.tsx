@@ -8,7 +8,7 @@ import { useSignInOut } from "@/hooks/auth/useBasicAuth/useSignInOut";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications } from "@/contexts/NotificationsContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
