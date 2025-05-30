@@ -1,4 +1,5 @@
 
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -53,6 +54,10 @@ import StudentSettings from "@/pages/student/Settings";
 
 const queryClient = new QueryClient();
 
+// Force cache refresh marker - App v2.0.1
+const APP_VERSION = "app-with-modern-sidebar-v2.0.1";
+console.log(`🚀 App loaded with ${APP_VERSION}`);
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -74,7 +79,7 @@ function App() {
                 path="/admin/*" 
                 element={
                   <RouteGuard requireAdminAccess>
-                    <div className="min-h-screen bg-gray-50 flex">
+                    <div className="min-h-screen bg-gray-50 flex" data-app-version={APP_VERSION}>
                       <ModernAdminSidebar />
                       <div className="flex-1" style={{ marginLeft: '220px' }}>
                         <main className="p-4">

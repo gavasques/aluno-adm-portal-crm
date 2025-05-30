@@ -46,6 +46,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 
+// Force cache refresh marker - v2.0.1
+const SIDEBAR_VERSION = "modern-admin-v2.0.1";
+
 const sidebarItems = [
   {
     title: "Dashboard",
@@ -188,6 +191,9 @@ export default function ModernAdminSidebar() {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
+  // Force new component recognition
+  console.log(`🔧 ModernAdminSidebar loaded - ${SIDEBAR_VERSION}`);
+
   const getActiveGroup = () => {
     for (const item of sidebarItems) {
       if (location.pathname === item.url) {
@@ -250,11 +256,12 @@ export default function ModernAdminSidebar() {
   }, [activeGroup, openGroups]);
 
   return (
-    <div className="relative">
+    <div className="relative" data-sidebar-version={SIDEBAR_VERSION}>
       <div 
         ref={sidebarRef}
         className="fixed left-0 top-0 h-screen bg-slate-900 text-white overflow-y-auto flex flex-col border-r border-slate-700 shadow-2xl"
         style={{ width: `${sidebarWidth}px` }}
+        data-testid="modern-admin-sidebar"
       >
         {/* Header compacto */}
         <div className="p-3 border-b border-slate-700">
