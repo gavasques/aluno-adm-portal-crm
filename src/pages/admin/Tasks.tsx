@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminTasks = () => {
@@ -11,7 +11,7 @@ const AdminTasks = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Lista de Tarefas</h1>
           <p className="text-muted-foreground">
-            Gerencie suas tarefas, mentorias e compromissos
+            Gerencie suas tarefas, mentorias e reuniões agendadas
           </p>
         </div>
         <Button>
@@ -24,14 +24,14 @@ const AdminTasks = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Pendentes
+              <Calendar className="h-5 w-5 mr-2" />
+              Hoje
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">8</div>
             <p className="text-xs text-muted-foreground">
-              Tarefas em aberto
+              Tarefas agendadas
             </p>
           </CardContent>
         </Card>
@@ -39,14 +39,14 @@ const AdminTasks = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              Urgentes
+              <Clock className="h-5 w-5 mr-2" />
+              Pendentes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">23</div>
             <p className="text-xs text-muted-foreground">
-              Requer atenção
+              Para fazer
             </p>
           </CardContent>
         </Card>
@@ -59,9 +59,9 @@ const AdminTasks = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">25</div>
+            <div className="text-2xl font-bold">156</div>
             <p className="text-xs text-muted-foreground">
-              Esta semana
+              Este mês
             </p>
           </CardContent>
         </Card>
@@ -69,86 +69,68 @@ const AdminTasks = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Mentorias
+              <AlertCircle className="h-5 w-5 mr-2" />
+              Atrasadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-2xl font-bold">3</div>
             <p className="text-xs text-muted-foreground">
-              Agendadas hoje
+              Requer atenção
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tarefas de Hoje</CardTitle>
-            <CardDescription>
-              Suas tarefas e compromissos para hoje
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3 p-3 border rounded-lg">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Reunião com equipe de desenvolvimento</p>
-                <p className="text-xs text-muted-foreground">09:00 - 10:00</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+      <Card>
+        <CardHeader>
+          <CardTitle>Agenda da Semana</CardTitle>
+          <CardDescription>
+            Suas mentorias, reuniões e tarefas importantes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4 p-3 border rounded-lg">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium">Mentoria individual - João Silva</p>
-                <p className="text-xs text-muted-foreground">14:00 - 15:00</p>
+                <p className="font-medium">Mentoria - João Silva</p>
+                <p className="text-sm text-muted-foreground">Hoje, 14:00 - E-commerce Avançado</p>
               </div>
+              <Badge variant="secondary">Mentoria</Badge>
             </div>
-            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+            
+            <div className="flex items-center space-x-4 p-3 border rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium">Revisão de relatórios mensais</p>
-                <p className="text-xs text-muted-foreground">16:00 - 17:00</p>
+                <p className="font-medium">Reunião de Planejamento</p>
+                <p className="text-sm text-muted-foreground">Amanhã, 10:00 - Estratégia Q1</p>
               </div>
+              <Badge variant="secondary">Reunião</Badge>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Próximas Mentorias</CardTitle>
-            <CardDescription>
-              Mentorias agendadas para os próximos dias
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3 p-3 border rounded-lg">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Mentoria em grupo - E-commerce</p>
-                <p className="text-xs text-muted-foreground">Amanhã, 15:00</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+            
+            <div className="flex items-center space-x-4 p-3 border rounded-lg">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium">Mentoria individual - Maria Santos</p>
-                <p className="text-xs text-muted-foreground">Quinta, 10:00</p>
+                <p className="font-medium">Review de Conteúdo</p>
+                <p className="text-sm text-muted-foreground">Quinta, 16:00 - Novos materiais</p>
               </div>
+              <Badge variant="secondary">Tarefa</Badge>
             </div>
-            <div className="flex items-center space-x-3 p-3 border rounded-lg">
-              <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Workshop de Marketing Digital</p>
-                <p className="text-xs text-muted-foreground">Sexta, 09:00</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+// Badge component temporário
+const Badge = ({ children, variant }: { children: React.ReactNode; variant: string }) => (
+  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+    variant === 'secondary' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'
+  }`}>
+    {children}
+  </span>
+);
 
 export default AdminTasks;

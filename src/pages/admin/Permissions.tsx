@@ -1,64 +1,99 @@
 
-import React, { useState } from 'react';
-import { PermissionGroup } from '@/hooks/admin/usePermissionGroups';
-import PermissionsHeader from '@/components/admin/permissions/PermissionsHeader';
-import PerformanceOptimizedPermissions from '@/components/admin/permissions/PerformanceOptimizedPermissions';
-import PermissionsDialogs from '@/components/admin/permissions/PermissionsDialogs';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shield, Users, Lock, Key } from 'lucide-react';
 
 const AdminPermissions = () => {
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showUsersDialog, setShowUsersDialog] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleAddGroup = () => {
-    setShowAddDialog(true);
-  };
-
-  const handleEditGroup = (group: PermissionGroup) => {
-    setSelectedGroup(group);
-    setShowEditDialog(true);
-  };
-
-  const handleDeleteGroup = (group: PermissionGroup) => {
-    setSelectedGroup(group);
-    setShowDeleteDialog(true);
-  };
-
-  const handleViewUsers = (group: PermissionGroup) => {
-    setSelectedGroup(group);
-    setShowUsersDialog(true);
-  };
-
-  const handleSuccess = () => {
-    setRefreshTrigger(prev => prev + 1);
-  };
-
   return (
     <div className="space-y-6">
-      <PermissionsHeader onAdd={handleAddGroup} />
-      
-      <PerformanceOptimizedPermissions
-        onEdit={handleEditGroup}
-        onDelete={handleDeleteGroup}
-        onViewUsers={handleViewUsers}
-        key={refreshTrigger}
-      />
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Permissões</h1>
+        <p className="text-muted-foreground">
+          Gerencie permissões e controle de acesso do sistema
+        </p>
+      </div>
 
-      <PermissionsDialogs
-        showAddDialog={showAddDialog}
-        setShowAddDialog={setShowAddDialog}
-        showEditDialog={showEditDialog}
-        setShowEditDialog={setShowEditDialog}
-        showDeleteDialog={showDeleteDialog}
-        setShowDeleteDialog={setShowDeleteDialog}
-        showUsersDialog={showUsersDialog}
-        setShowUsersDialog={setShowUsersDialog}
-        selectedGroup={selectedGroup}
-        onSuccess={handleSuccess}
-      />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Shield className="h-5 w-5 mr-2" />
+              Grupos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8</div>
+            <p className="text-xs text-muted-foreground">
+              Grupos de permissão
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Usuários
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">234</div>
+            <p className="text-xs text-muted-foreground">
+              Com permissões
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Lock className="h-5 w-5 mr-2" />
+              Recursos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">45</div>
+            <p className="text-xs text-muted-foreground">
+              Protegidos
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Key className="h-5 w-5 mr-2" />
+              Roles
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12</div>
+            <p className="text-xs text-muted-foreground">
+              Funções ativas
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sistema de Permissões</CardTitle>
+          <CardDescription>
+            Funcionalidade será implementada em breve
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            O sistema de permissões granular está sendo desenvolvido para oferecer:
+          </p>
+          <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground space-y-1">
+            <li>Controle de acesso baseado em roles</li>
+            <li>Permissões granulares por funcionalidade</li>
+            <li>Grupos de usuários personalizáveis</li>
+            <li>Auditoria de acessos e modificações</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 };

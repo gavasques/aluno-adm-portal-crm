@@ -12,6 +12,15 @@ import LiviAI from './pages/student/LiviAI';
 import AdminLayout from './layout/AdminLayout';
 import Layout from './layout/Layout';
 import Users from './pages/admin/Users';
+import AdminCRM from './pages/admin/CRM';
+import AdminCredits from './pages/admin/Credits';
+import AdminTasks from './pages/admin/Tasks';
+import AdminSuppliers from './pages/admin/Suppliers';
+import AdminPartners from './pages/admin/Partners';
+import AdminTools from './pages/admin/Tools';
+import AdminMentoring from './pages/admin/Mentoring';
+import AdminPermissions from './pages/admin/Permissions';
+import AdminAudit from './pages/admin/Audit';
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
 
@@ -29,8 +38,36 @@ function App() {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="dashboard" element={<AdminDashboard />} />
+                  
+                  {/* Operacional */}
+                  <Route path="creditos" element={<AdminCredits />} />
+                  <Route path="tarefas" element={<AdminTasks />} />
+                  <Route path="crm" element={<AdminCRM />} />
+                  
+                  {/* Geral ADM */}
+                  <Route path="fornecedores" element={<AdminSuppliers />} />
+                  <Route path="parceiros" element={<AdminPartners />} />
+                  <Route path="ferramentas" element={<AdminTools />} />
+                  
+                  {/* Mentorias */}
+                  <Route path="mentorias" element={<AdminMentoring />} />
+                  <Route path="mentorias/catalogo" element={<AdminMentoring />} />
+                  <Route path="inscricoes-individuais" element={<AdminMentoring />} />
+                  <Route path="inscricoes-grupo" element={<AdminMentoring />} />
+                  <Route path="mentorias/materiais" element={<AdminMentoring />} />
+                  
+                  {/* Gestão */}
                   <Route path="usuarios" element={<Users />} />
+                  <Route path="permissoes" element={<AdminPermissions />} />
+                  <Route path="auditoria" element={<AdminAudit />} />
+                  <Route path="calendly-config" element={<Settings />} />
+                  
+                  {/* Cadastros */}
                   <Route path="categorias" element={<Categories />} />
+                  <Route path="tipos-softwares" element={<Categories />} />
+                  <Route path="tipos-parceiros" element={<Categories />} />
+                  
+                  {/* Sistema */}
                   <Route path="configuracoes" element={<Settings />} />
                 </Route>
 
