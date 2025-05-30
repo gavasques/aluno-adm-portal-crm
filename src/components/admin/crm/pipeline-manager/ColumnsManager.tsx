@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Edit, Trash2, GripVertical, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, GripVertical, Eye, Columns, Target } from 'lucide-react';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -40,14 +40,20 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className="hover:shadow-md transition-shadow group">
+    <motion.div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes}
+      layout
+      className="group"
+    >
+      <Card className="hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm border-white/40 hover:border-blue-200">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <div
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+                className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <GripVertical className="h-4 w-4 text-gray-400" />
               </div>
@@ -58,13 +64,14 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
               />
               
               <div className="flex-1">
-                <h4 className="font-medium">{column.name}</h4>
-                <p className="text-sm text-gray-500">Posição: {column.sort_order}</p>
+                <h4 className="font-semibold text-gray-900">{column.name}</h4>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm text-gray-500">Posição: {column.sort_order + 1}</span>
+                  <Badge variant={column.is_active ? 'default' : 'secondary'} className="text-xs">
+                    {column.is_active ? 'Ativa' : 'Inativa'}
+                  </Badge>
+                </div>
               </div>
-              
-              <Badge variant={column.is_active ? 'default' : 'secondary'}>
-                {column.is_active ? 'Ativa' : 'Inativa'}
-              </Badge>
             </div>
             
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -72,6 +79,7 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit(column)}
+                className="hover:bg-blue-50 hover:text-blue-600"
                 title="Editar Coluna"
               >
                 <Edit className="h-4 w-4" />
@@ -82,7 +90,7 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
                 size="sm"
                 onClick={() => onDelete(column)}
                 title="Excluir Coluna"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -90,7 +98,7 @@ const SortableColumnItem = ({ column, onEdit, onDelete }: SortableColumnItemProp
           </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 
@@ -133,7 +141,6 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
       const newColumns = arrayMove(columns, oldIndex, newIndex);
       setColumns(newColumns);
 
-      // Atualizar sort_order no backend
       try {
         for (let i = 0; i < newColumns.length; i++) {
           await updateColumn(newColumns[i].id, { sort_order: i });
@@ -142,7 +149,6 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
         toast.success('Ordem das colunas atualizada!');
       } catch (error) {
         toast.error('Erro ao reordenar colunas');
-        // Reverter mudanças locais em caso de erro
         setColumns(columns);
       }
     }
@@ -177,40 +183,68 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+    <div className="space-y-6 h-full overflow-auto">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onBack}
+            className="hover:bg-blue-50 hover:text-blue-600"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
           <div>
-            <h3 className="text-lg font-semibold">
-              Colunas do Pipeline: {pipeline.name}
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Columns className="h-6 w-6 text-blue-600" />
+              Colunas do Pipeline
             </h3>
-            <p className="text-sm text-gray-500">
-              {columns.length} {columns.length === 1 ? 'coluna' : 'colunas'}
+            <p className="text-gray-600 mt-1">
+              <span className="font-semibold text-blue-600">{pipeline.name}</span> • 
+              {columns.length} {columns.length === 1 ? ' coluna' : ' colunas'}
             </p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowPreview(true)}>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowPreview(true)}
+            className="bg-white/80 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200"
+          >
             <Eye className="h-4 w-4 mr-2" />
             Visualizar
           </Button>
-          <Button onClick={() => setShowCreateForm(true)}>
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nova Coluna
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <Card>
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        {/* Columns List */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-4"
+        >
+          <Card className="bg-white/70 backdrop-blur-sm border-white/30 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-base">Colunas do Pipeline</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-600" />
+                Colunas do Pipeline
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {columns.length > 0 ? (
@@ -223,7 +257,7 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
                     items={columns.map(col => col.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <AnimatePresence>
                         {columns.map((column) => (
                           <motion.div
@@ -245,38 +279,54 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
                   </SortableContext>
                 </DndContext>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-4">
-                    <Plus className="h-12 w-12 mx-auto" />
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12"
+                >
+                  <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Plus className="h-8 w-8 text-blue-600" />
                   </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
                     Nenhuma coluna encontrada
                   </h4>
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-gray-600 mb-4">
                     Adicione colunas para organizar os estágios do seu pipeline.
                   </p>
-                  <Button onClick={() => setShowCreateForm(true)}>
+                  <Button 
+                    onClick={() => setShowCreateForm(true)}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Criar Primeira Coluna
                   </Button>
-                </div>
+                </motion.div>
               )}
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        <div className="space-y-4">
-          <Card>
+        {/* Preview */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-4"
+        >
+          <Card className="bg-white/70 backdrop-blur-sm border-white/30 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-base">Preview do Pipeline</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Eye className="h-5 w-5 text-purple-600" />
+                Preview do Pipeline
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <PipelinePreview pipeline={pipeline} columns={columns} />
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
 
+      {/* Dialogs */}
       <ColumnFormDialog
         open={showCreateForm}
         onOpenChange={setShowCreateForm}
