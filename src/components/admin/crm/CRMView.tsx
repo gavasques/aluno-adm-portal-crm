@@ -26,9 +26,9 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const [filters, setFilters] = useState<CRMFiltersType>({});
   const [pipelineId, setPipelineId] = useState<string>('');
   const [draggedLead, setDraggedLead] = useState<CRMLead | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger para forçar refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { leads, loading: leadsLoading, refetch: refetchLeads } = useCRMLeads(filters);
+  const { leads, loading: leadsLoading, fetchLeads } = useCRMLeads(filters);
   const { columns, pipelines, loading: columnsLoading, fetchPipelines, fetchColumns } = useCRMPipelines();
   const { moveToColumn } = useCRMLeadUpdate();
 
@@ -45,9 +45,9 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   // Refresh quando pipelines mudarem
   React.useEffect(() => {
     if (refreshTrigger > 0) {
-      refetchLeads?.();
+      fetchLeads?.();
     }
-  }, [refreshTrigger, refetchLeads]);
+  }, [refreshTrigger, fetchLeads]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const lead = leads.find(l => l.id === event.active.id);
@@ -79,7 +79,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
         );
         
         // Refresh leads após mover
-        refetchLeads?.();
+        fetchLeads?.();
       } catch (error) {
         toast.error('Erro ao mover lead');
       }
@@ -118,7 +118,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stats Cards */}
       <CRMStatsCards 
         filters={filters}
@@ -169,6 +169,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
+        className="min-h-[calc(100vh-300px)]"
       >
         {viewMode === 'kanban' ? (
           <DndContext
