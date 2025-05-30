@@ -1,5 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,11 +26,11 @@ import { toast } from 'sonner';
 
 interface CRMListViewProps {
   filters: CRMFilters;
-  onOpenDetail?: (lead: CRMLead) => void;
   onEditLead?: (lead: CRMLead) => void;
 }
 
-const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) => {
+const CRMListView = ({ filters, onEditLead }: CRMListViewProps) => {
+  const navigate = useNavigate();
   const { leads, loading, deleteLead } = useCRMLeads(filters);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof CRMLead>('created_at');
@@ -127,6 +127,10 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const handleOpenDetail = (lead: CRMLead) => {
+    navigate(`/admin/crm/lead/${lead.id}`);
   };
 
   const columns = [
@@ -261,7 +265,7 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onOpenDetail?.(lead)}
+            onClick={() => handleOpenDetail(lead)}
             className="h-8 w-8 p-0"
           >
             <Eye className="h-4 w-4" />
@@ -332,7 +336,7 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
             className: col.key === 'actions' ? 'w-32' : undefined
           }))}
           keyExtractor={(lead) => lead.id}
-          onRowClick={onOpenDetail}
+          onRowClick={handleOpenDetail}
           loading={loading}
           emptyMessage="Nenhum lead encontrado com os filtros aplicados."
         />

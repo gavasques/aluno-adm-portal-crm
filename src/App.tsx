@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -23,6 +22,7 @@ import AdminPermissions from './pages/admin/Permissions';
 import AdminAudit from './pages/admin/Audit';
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
+import LeadDetail from '@/pages/admin/LeadDetail';
 
 const queryClient = new QueryClient();
 
@@ -43,6 +43,9 @@ function App() {
                   <Route path="creditos" element={<AdminCredits />} />
                   <Route path="tarefas" element={<AdminTasks />} />
                   <Route path="crm" element={<AdminCRM />} />
+                  
+                  {/* Add the new lead detail route */}
+                  <Route path="crm/lead/:leadId" element={<LeadDetail />} />
                   
                   {/* Geral ADM */}
                   <Route path="fornecedores" element={<AdminSuppliers />} />

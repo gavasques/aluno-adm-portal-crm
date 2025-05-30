@@ -11,7 +11,6 @@ import CRMListView from '@/components/admin/crm/CRMListView';
 import CRMLeadFormDialog from '@/components/admin/crm/CRMLeadFormDialog';
 import CRMPipelineManager from '@/components/admin/crm/CRMPipelineManager';
 import CRMTagsManager from '@/components/admin/crm/CRMTagsManager';
-import LeadDetailModal from '@/components/admin/crm/LeadDetailModal';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { CRMFilters as CRMFiltersType, CRMLead } from '@/types/crm.types';
 
@@ -20,8 +19,6 @@ const CRM = () => {
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const [showPipelineManager, setShowPipelineManager] = useState(false);
   const [showTagsManager, setShowTagsManager] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<CRMLead | null>(null);
-  const [showLeadDetail, setShowLeadDetail] = useState(false);
   const [editingLead, setEditingLead] = useState<CRMLead | null>(null);
   const [filters, setFilters] = useState<CRMFiltersType>({
     search: '',
@@ -40,20 +37,9 @@ const CRM = () => {
     }
   }, [pipelines, selectedPipelineId]);
 
-  const handleOpenDetail = (lead: CRMLead) => {
-    setSelectedLead(lead);
-    setShowLeadDetail(true);
-  };
-
   const handleEditLead = (lead: CRMLead) => {
     setEditingLead(lead);
     setShowNewLeadForm(true);
-  };
-
-  const handleLeadUpdate = () => {
-    // Refresh data after lead update
-    setShowLeadDetail(false);
-    setSelectedLead(null);
   };
 
   const handleFormSuccess = () => {
@@ -140,7 +126,6 @@ const CRM = () => {
             <TabsContent value="list">
               <CRMListView 
                 filters={filters}
-                onOpenDetail={handleOpenDetail}
                 onEditLead={handleEditLead}
               />
             </TabsContent>
@@ -165,13 +150,6 @@ const CRM = () => {
       <CRMTagsManager
         open={showTagsManager}
         onOpenChange={setShowTagsManager}
-      />
-
-      <LeadDetailModal
-        lead={selectedLead}
-        open={showLeadDetail}
-        onOpenChange={setShowLeadDetail}
-        onLeadUpdate={handleLeadUpdate}
       />
     </div>
   );
