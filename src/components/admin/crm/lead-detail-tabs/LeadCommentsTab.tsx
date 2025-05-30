@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { MessageSquare } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useCRMLeadComments } from '@/hooks/crm/useCRMLeadComments';
 import { CRMLeadComment } from '@/types/crm.types';
-import RichCommentEditor from '../comments/RichCommentEditor';
+import CommentEditor from '../comments/CommentEditor';
 import CommentItem from '../comments/CommentItem';
 
 interface LeadCommentsTabProps {
@@ -13,125 +12,19 @@ interface LeadCommentsTabProps {
 }
 
 const LeadCommentsTab = ({ leadId }: LeadCommentsTabProps) => {
-  const [comments, setComments] = useState<CRMLeadComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string>('');
-
-  useEffect(() => {
-    getCurrentUser();
-    fetchComments();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`lead-comments-${leadId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'crm_lead_comments',
-          filter: `lead_id=eq.${leadId}`
-        },
-        () => {
-          fetchComments();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [leadId]);
-
-  const getCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setCurrentUserId(user.id);
-    }
-  };
-
-  const fetchComments = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('crm_lead_comments')
-        .select(`
-          *,
-          user:profiles!crm_lead_comments_user_id_fkey(name, avatar_url)
-        `)
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setComments(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar comentários:', error);
-      toast.error('Erro ao carregar comentários');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { comments, loading, addComment, updateComment, deleteComment } = useCRMLeadComments(leadId);
 
   const handleAddComment = async (content: string, mentions: string[]) => {
-    if (!content.trim()) return;
-
-    setSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('crm_lead_comments')
-        .insert({
-          lead_id: leadId,
-          user_id: currentUserId,
-          content,
-          mentions
-        });
-
-      if (error) throw error;
-      
-      toast.success('Comentário adicionado!');
-      
-      // Enviar notificações para usuários mencionados
-      if (mentions.length > 0) {
-        await sendMentionNotifications(mentions, content);
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar comentário:', error);
-      toast.error('Erro ao adicionar comentário');
-    } finally {
-      setSubmitting(false);
-    }
+    await addComment(content, mentions);
   };
 
   const handleEditComment = async (commentId: string, content: string) => {
-    try {
-      const { error } = await supabase
-        .from('crm_lead_comments')
-        .update({ 
-          content,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', commentId);
-
-      if (error) throw error;
-      toast.success('Comentário atualizado!');
-    } catch (error) {
-      console.error('Erro ao editar comentário:', error);
-      toast.error('Erro ao editar comentário');
-    }
+    await updateComment(commentId, content);
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    try {
-      const { error } = await supabase
-        .from('crm_lead_comments')
-        .delete()
-        .eq('id', commentId);
-
-      if (error) throw error;
-      toast.success('Comentário removido!');
-    } catch (error) {
-      console.error('Erro ao deletar comentário:', error);
-      toast.error('Erro ao deletar comentário');
+    if (window.confirm('Tem certeza que deseja excluir este comentário?')) {
+      await deleteComment(commentId);
     }
   };
 
@@ -140,57 +33,9 @@ const LeadCommentsTab = ({ leadId }: LeadCommentsTabProps) => {
     console.log('Like comment:', commentId);
   };
 
-  // Corrigir a assinatura da função handleReply
   const handleReply = async (parentId: string, content: string, mentions: string[]) => {
-    if (!content.trim()) return;
-
-    setSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('crm_lead_comments')
-        .insert({
-          lead_id: leadId,
-          user_id: currentUserId,
-          parent_id: parentId,
-          content,
-          mentions
-        });
-
-      if (error) throw error;
-      
-      toast.success('Resposta adicionada!');
-      
-      // Enviar notificações para usuários mencionados
-      if (mentions.length > 0) {
-        await sendMentionNotifications(mentions, content);
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar resposta:', error);
-      toast.error('Erro ao adicionar resposta');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const sendMentionNotifications = async (mentions: string[], content: string) => {
-    try {
-      const notifications = mentions.map(userId => ({
-        user_id: userId,
-        lead_id: leadId,
-        type: 'mention' as const,
-        title: 'Você foi mencionado em um comentário',
-        message: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-        read: false
-      }));
-
-      const { error } = await supabase
-        .from('crm_notifications')
-        .insert(notifications);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Erro ao enviar notificações:', error);
-    }
+    // Por enquanto, tratamos respostas como comentários normais
+    await addComment(content, mentions);
   };
 
   // Organizar comentários por thread (comentários principais e respostas)
@@ -235,9 +80,8 @@ const LeadCommentsTab = ({ leadId }: LeadCommentsTabProps) => {
           Comentários ({comments.length})
         </h3>
         
-        <RichCommentEditor
+        <CommentEditor
           onSubmit={handleAddComment}
-          disabled={submitting}
           placeholder="Escreva um comentário... Use @ para mencionar alguém"
         />
       </div>
@@ -259,7 +103,7 @@ const LeadCommentsTab = ({ leadId }: LeadCommentsTabProps) => {
               <CommentItem
                 key={comment.id}
                 comment={comment}
-                currentUserId={currentUserId}
+                currentUserId="current-user-id" // TODO: Pegar do contexto de auth
                 onLike={handleLikeComment}
                 onReply={handleReply}
                 onEdit={handleEditComment}

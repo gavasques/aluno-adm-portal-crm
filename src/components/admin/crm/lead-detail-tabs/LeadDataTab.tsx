@@ -6,11 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Save, Edit, X, Plus } from 'lucide-react';
+import { Save, Edit, X } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 import { useCRMTags } from '@/hooks/crm/useCRMTags';
+import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
 import { toast } from 'sonner';
 
 interface LeadDataTabProps {
@@ -20,6 +20,9 @@ interface LeadDataTabProps {
 
 const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const { tags } = useCRMTags();
+  const { updateLead, updateLeadTags, updating } = useCRMLeadUpdate();
+  
   const [formData, setFormData] = useState({
     name: lead.name || '',
     email: lead.email || '',
@@ -42,19 +45,18 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
     notes: lead.notes || ''
   });
 
-  const { tags } = useCRMTags();
   const [selectedTags, setSelectedTags] = useState<string[]>(
     lead.tags?.map(tag => tag.id) || []
   );
 
   const handleSave = async () => {
     try {
-      // Aqui você implementaria a lógica de salvamento
-      // Para demonstração, vamos simular o salvamento
-      console.log('Salvando dados:', formData);
-      setIsEditing(false);
-      toast.success('Dados atualizados com sucesso!');
-      onUpdate?.();
+      const success = await updateLead(lead.id, formData);
+      if (success) {
+        await updateLeadTags(lead.id, selectedTags);
+        setIsEditing(false);
+        onUpdate?.();
+      }
     } catch (error) {
       console.error('Erro ao salvar:', error);
       toast.error('Erro ao atualizar dados');
@@ -106,13 +108,13 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel}>
+            <Button variant="outline" onClick={handleCancel} disabled={updating}>
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={updating}>
               <Save className="h-4 w-4 mr-2" />
-              Salvar
+              {updating ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         )}

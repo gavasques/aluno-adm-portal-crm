@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -12,69 +12,14 @@ import {
   UserPlus,
   FileText
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-interface HistoryEntry {
-  id: string;
-  action_type: 'created' | 'updated' | 'moved' | 'assigned' | 'commented';
-  field_name?: string;
-  old_value?: string;
-  new_value?: string;
-  description?: string;
-  created_at: string;
-  user?: {
-    name: string;
-  };
-}
+import { useCRMLeadHistory } from '@/hooks/crm/useCRMLeadHistory';
 
 interface LeadHistoryTabProps {
   leadId: string;
 }
 
 const LeadHistoryTab = ({ leadId }: LeadHistoryTabProps) => {
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchHistory();
-  }, [leadId]);
-
-  const fetchHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('crm_lead_history')
-        .select(`
-          *,
-          user:profiles!crm_lead_history_user_id_fkey(name)
-        `)
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Mapear e filtrar dados para garantir tipos corretos
-      const typedHistory: HistoryEntry[] = (data || [])
-        .map(item => ({
-          id: item.id,
-          action_type: item.action_type as HistoryEntry['action_type'],
-          field_name: item.field_name,
-          old_value: item.old_value,
-          new_value: item.new_value,
-          description: item.description,
-          created_at: item.created_at,
-          user: item.user
-        }))
-        .filter(item => ['created', 'updated', 'moved', 'assigned', 'commented'].includes(item.action_type));
-      
-      setHistory(typedHistory);
-    } catch (error) {
-      console.error('Erro ao buscar histórico:', error);
-      toast.error('Erro ao carregar histórico');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { history, loading } = useCRMLeadHistory(leadId);
 
   const getActionIcon = (actionType: string) => {
     switch (actionType) {
