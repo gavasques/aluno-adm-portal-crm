@@ -155,6 +155,7 @@ export interface CRMLeadComment {
   id: string;
   lead_id: string;
   user_id: string;
+  parent_id?: string;
   content: string;
   mentions: string[];
   created_at: string;
