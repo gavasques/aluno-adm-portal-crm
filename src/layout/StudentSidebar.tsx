@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   LayoutDashboard,
@@ -17,6 +18,7 @@ import {
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -28,6 +30,7 @@ import {
 
 const StudentSidebar = () => {
   const { user, signOut } = useAuth();
+  const { creditStatus, isLoading: creditsLoading } = useCredits();
   const navigate = useNavigate();
   
   const generalMenuItems = [
@@ -204,6 +207,28 @@ const StudentSidebar = () => {
         {renderMenuGroup("Inteligência Artificial", aiMenuItems)}
         {renderMenuGroup("Sistema", settingsMenuItems)}
       </nav>
+
+      {/* Credits Display */}
+      <motion.div 
+        className="p-3 border-t border-white/10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+        <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-200/20 dark:border-green-800/20">
+          <div className="p-1.5 rounded-md bg-gradient-to-br from-green-500 to-emerald-600 shadow-modern-1">
+            <CreditCard className="h-3 w-3 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-green-700 dark:text-green-300 uppercase tracking-wider">
+              Créditos
+            </p>
+            <p className="text-xs font-bold text-green-800 dark:text-green-200">
+              {creditsLoading ? '...' : creditStatus?.credits?.current || 0}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* User Menu - mais compacto */}
       <motion.div 
