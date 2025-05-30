@@ -27,7 +27,7 @@ export interface CRMTag {
   created_at: string;
 }
 
-// Tipos para dados vindos do Supabase (podem ter campos opcionais)
+// Tipos para dados vindos do Supabase (estrutura exata da query)
 export interface CRMLeadFromDB {
   id: string;
   name: string;
@@ -56,11 +56,11 @@ export interface CRMLeadFromDB {
   scheduled_contact_date?: string | null;
   notes?: string | null;
   
-  // Relacionamentos vindos do Supabase
+  // Relacionamentos vindos do Supabase (estrutura exata)
   pipeline?: { id: string; name: string } | null;
   column?: { id: string; name: string; color: string } | null;
   responsible?: { id: string; name: string; email: string } | null;
-  tags?: CRMTag[];
+  tags?: { tag: CRMTag }[];
 }
 
 // Tipo para dados processados na aplicação
@@ -92,15 +92,37 @@ export interface CRMLead {
   scheduled_contact_date?: string;
   notes?: string;
   
-  // Relacionamentos
-  pipeline?: CRMPipeline;
-  column?: CRMPipelineColumn;
-  responsible?: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  // Relacionamentos processados
+  pipeline?: { id: string; name: string };
+  column?: { id: string; name: string; color: string };
+  responsible?: { id: string; name: string; email: string };
   tags?: CRMTag[];
+}
+
+// Tipo para inserção no Supabase (apenas campos da tabela)
+export interface CRMLeadInsert {
+  name: string;
+  email: string;
+  phone?: string;
+  has_company?: boolean;
+  what_sells?: string;
+  keep_or_new_niches?: string;
+  sells_on_amazon?: boolean;
+  amazon_store_link?: string;
+  amazon_state?: string;
+  amazon_tax_regime?: string;
+  works_with_fba?: boolean;
+  had_contact_with_lv?: boolean;
+  seeks_private_label?: boolean;
+  main_doubts?: string;
+  ready_to_invest_3k?: boolean;
+  calendly_scheduled?: boolean;
+  calendly_link?: string;
+  pipeline_id?: string;
+  column_id?: string;
+  responsible_id?: string;
+  scheduled_contact_date?: string;
+  notes?: string;
 }
 
 // Tipo para criação de leads (campos obrigatórios)
