@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,40 +17,25 @@ import {
   Eye,
   AlertTriangle,
   CheckCircle,
-  Clock
+  Clock,
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Interface simplificada que funciona com os dados retornados
+// Interface otimizada para os dados retornados
 interface UserCreditsData {
   id: string;
   email: string;
   name?: string | null;
-  avatar_url?: string | null;
-  created_at?: string | null;
-  is_mentor?: boolean | null;
-  permission_group_id?: string | null;
-  role?: string | null;
-  status?: string | null;
-  storage_limit_mb?: number | null;
-  storage_used_mb?: number | null;
-  updated_at?: string | null;
-  user_credits?: any;
-  credit_subscriptions?: any;
-}
-
-interface AdjustCreditsParams {
-  userId: string;
-  amount: string;
-  type: string;
-  reason: string;
-}
-
-interface AdjustLimitParams {
-  userId: string;
-  newLimit: string;
+  current_credits?: number;
+  monthly_limit?: number;
+  used_this_month?: number;
+  renewal_date?: string;
+  subscription_status?: string;
+  subscription_monthly_credits?: number;
 }
 
 const UserCreditsManagement = () => {
@@ -60,116 +46,123 @@ const UserCreditsManagement = () => {
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
+  // Query otimizada com JOIN melhorado
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users-credits', searchTerm],
     queryFn: async () => {
+      console.log('🔍 Buscando usuários com créditos, termo de busca:', searchTerm);
+      
       let query = supabase
         .from('profiles')
         .select(`
-          *,
+          id,
+          email,
+          name,
           user_credits (
             current_credits,
             monthly_limit,
             used_this_month,
-            renewal_date,
-            subscription_type
-          ),
-          credit_subscriptions (
-            status,
-            monthly_credits,
-            next_billing_date
+            renewal_date
           )
         `);
 
-      if (searchTerm) {
+      if (searchTerm.trim()) {
         query = query.or(`email.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data: profiles, error } = await query.order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Supabase query error:', error);
+        console.error('Erro na query de perfis:', error);
         throw error;
       }
-      return data || [];
-    }
-  });
 
-  const adjustCreditsMutation = useMutation({
-    mutationFn: async ({ userId, amount, type, reason }: AdjustCreditsParams) => {
-      const { data: userCredits } = await supabase
-        .from('user_credits')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (!userCredits) throw new Error('Usuário não encontrado');
-
-      let newAmount;
-      if (type === 'add') {
-        newAmount = userCredits.current_credits + parseInt(amount);
-      } else if (type === 'subtract') {
-        newAmount = Math.max(0, userCredits.current_credits - parseInt(amount));
-      } else {
-        newAmount = parseInt(amount);
+      // Buscar assinaturas separadamente para evitar JOIN complexo
+      const userIds = profiles?.map(p => p.id) || [];
+      let subscriptions: any[] = [];
+      
+      if (userIds.length > 0) {
+        const { data: subsData } = await supabase
+          .from('credit_subscriptions')
+          .select('user_id, status, monthly_credits')
+          .in('user_id', userIds)
+          .eq('status', 'active');
+        
+        subscriptions = subsData || [];
       }
 
-      const { error: updateError } = await supabase
-        .from('user_credits')
-        .update({ current_credits: newAmount })
-        .eq('user_id', userId);
+      // Combinar dados
+      const result = profiles?.map(profile => {
+        const credits = Array.isArray(profile.user_credits) && profile.user_credits.length > 0
+          ? profile.user_credits[0] 
+          : null;
+        
+        const subscription = subscriptions.find(s => s.user_id === profile.id);
+        
+        return {
+          ...profile,
+          current_credits: credits?.current_credits || 0,
+          monthly_limit: credits?.monthly_limit || 50,
+          used_this_month: credits?.used_this_month || 0,
+          renewal_date: credits?.renewal_date,
+          subscription_status: subscription?.status,
+          subscription_monthly_credits: subscription?.monthly_credits
+        };
+      }) || [];
 
-      if (updateError) throw updateError;
-
-      // Registrar no histórico
-      const { error: historyError } = await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: userId,
-          type: type === 'add' ? 'compra' : type === 'subtract' ? 'uso' : 'renovacao',
-          amount: type === 'subtract' ? -parseInt(amount) : parseInt(amount),
-          description: `Ajuste manual pelo admin: ${reason}`
-        });
-
-      if (historyError) throw historyError;
+      console.log('✅ Dados de usuários carregados:', result.length, 'usuários');
+      return result;
     },
-    onSuccess: () => {
-      toast.success('Créditos ajustados com sucesso!');
+    staleTime: 60000, // Cache por 1 minuto
+    retry: 2
+  });
+
+  // Mutação otimizada usando a nova função do banco
+  const adjustCreditsMutation = useMutation({
+    mutationFn: async ({ userId, amount, type, reason }: {
+      userId: string;
+      amount: string; 
+      type: string; 
+      reason: string;
+    }) => {
+      console.log('🔧 Ajustando créditos via função do banco:', { userId, amount, type, reason });
+
+      const { data, error } = await supabase.rpc('admin_adjust_user_credits', {
+        target_user_id: userId,
+        adjustment_amount: parseInt(amount),
+        adjustment_type: type,
+        reason: reason
+      });
+
+      if (error) {
+        console.error('Erro na função de ajuste:', error);
+        throw error;
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro desconhecido no ajuste');
+      }
+
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      console.log('✅ Créditos ajustados com sucesso:', data);
+      toast.success(`Créditos ajustados! ${data.previous_credits} → ${data.new_credits}`);
       queryClient.invalidateQueries({ queryKey: ['admin-users-credits'] });
       setSelectedUser(null);
       setAdjustmentAmount("");
       setAdjustmentReason("");
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('❌ Erro ao ajustar créditos:', error);
       toast.error('Erro ao ajustar créditos: ' + error.message);
     }
   });
 
-  const adjustLimitMutation = useMutation({
-    mutationFn: async ({ userId, newLimit }: AdjustLimitParams) => {
-      const { error } = await supabase
-        .from('user_credits')
-        .update({ monthly_limit: parseInt(newLimit) })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success('Limite mensal atualizado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['admin-users-credits'] });
-    },
-    onError: (error) => {
-      toast.error('Erro ao atualizar limite: ' + error.message);
-    }
-  });
-
   const getStatusBadge = (user: UserCreditsData) => {
-    const credits = Array.isArray(user.user_credits) ? user.user_credits[0] : null;
-    if (!credits) return <Badge variant="secondary">Sem dados</Badge>;
-
-    const percentage = (credits.current_credits / credits.monthly_limit) * 100;
+    const percentage = (user.current_credits / user.monthly_limit) * 100;
     
-    if (credits.current_credits === 0) {
+    if (user.current_credits === 0) {
       return <Badge variant="destructive" className="gap-1">
         <AlertTriangle className="w-3 h-3" />
         Sem créditos
@@ -197,7 +190,10 @@ const UserCreditsManagement = () => {
       <div className="max-w-full overflow-x-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Carregando usuários...</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Carregando gestão de créditos...
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="animate-pulse space-y-4">
@@ -218,6 +214,14 @@ const UserCreditsManagement = () => {
           <CardTitle className="flex items-center justify-between">
             <span>Gestão de Créditos por Usuário</span>
             <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => refetch()} 
+                variant="outline" 
+                size="sm"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -246,154 +250,159 @@ const UserCreditsManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => {
-                  const credits = Array.isArray(user.user_credits) ? user.user_credits[0] : null;
-                  const subscription = Array.isArray(user.credit_subscriptions) ? user.credit_subscriptions[0] : null;
-                  
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{user.name || user.email}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        {credits?.current_credits || 0}
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        {credits?.monthly_limit || 50}
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        {credits?.used_this_month || 0}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(user)}
-                      </TableCell>
-                      <TableCell>
-                        {subscription?.status === 'active' ? (
-                          <Badge variant="default" className="bg-blue-600">
-                            +{subscription.monthly_credits}/mês
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">Sem assinatura</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {credits?.renewal_date ? 
-                          new Date(credits.renewal_date).toLocaleDateString('pt-BR') : 
-                          '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setSelectedUser(user)}
-                              >
-                                <Settings className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Ajustar Créditos - {user.name || user.email}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label>Créditos Atuais</Label>
-                                    <div className="text-2xl font-bold text-blue-600">
-                                      {credits?.current_credits || 0}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <Label>Limite Mensal</Label>
-                                    <div className="text-2xl font-bold">
-                                      {credits?.monthly_limit || 50}
-                                    </div>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{user.name || user.email}</div>
+                        <div className="text-sm text-gray-500">{user.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {user.current_credits}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {user.monthly_limit}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {user.used_this_month}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(user)}
+                    </TableCell>
+                    <TableCell>
+                      {user.subscription_status === 'active' ? (
+                        <Badge variant="default" className="bg-blue-600">
+                          +{user.subscription_monthly_credits}/mês
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Sem assinatura</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {user.renewal_date ? 
+                        new Date(user.renewal_date).toLocaleDateString('pt-BR') : 
+                        '-'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedUser(user)}
+                            >
+                              <Settings className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Ajustar Créditos - {user.name || user.email}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Créditos Atuais</Label>
+                                  <div className="text-2xl font-bold text-blue-600">
+                                    {user.current_credits}
                                   </div>
                                 </div>
-
-                                <div className="space-y-2">
-                                  <Label>Tipo de Ajuste</Label>
-                                  <Select value={adjustmentType} onValueChange={setAdjustmentType}>
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="add">Adicionar Créditos</SelectItem>
-                                      <SelectItem value="subtract">Remover Créditos</SelectItem>
-                                      <SelectItem value="set">Definir Quantidade</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label>Quantidade</Label>
-                                  <Input
-                                    type="number"
-                                    value={adjustmentAmount}
-                                    onChange={(e) => setAdjustmentAmount(e.target.value)}
-                                    placeholder="Digite a quantidade"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label>Motivo do Ajuste</Label>
-                                  <Textarea
-                                    value={adjustmentReason}
-                                    onChange={(e) => setAdjustmentReason(e.target.value)}
-                                    placeholder="Descreva o motivo do ajuste..."
-                                  />
-                                </div>
-
-                                <div className="flex gap-2">
-                                  <Button
-                                    onClick={() => {
-                                      if (!adjustmentAmount || !adjustmentReason) {
-                                        toast.error('Preencha quantidade e motivo');
-                                        return;
-                                      }
-                                      adjustCreditsMutation.mutate({
-                                        userId: user.id,
-                                        amount: adjustmentAmount,
-                                        type: adjustmentType,
-                                        reason: adjustmentReason
-                                      });
-                                    }}
-                                    disabled={adjustCreditsMutation.isPending}
-                                  >
-                                    {adjustmentType === 'add' && <Plus className="w-4 h-4 mr-2" />}
-                                    {adjustmentType === 'subtract' && <Minus className="w-4 h-4 mr-2" />}
-                                    {adjustmentType === 'set' && <Settings className="w-4 h-4 mr-2" />}
-                                    Aplicar Ajuste
-                                  </Button>
+                                <div>
+                                  <Label>Limite Mensal</Label>
+                                  <div className="text-2xl font-bold">
+                                    {user.monthly_limit}
+                                  </div>
                                 </div>
                               </div>
-                            </DialogContent>
-                          </Dialog>
 
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Histórico de Créditos - {user.name || user.email}</DialogTitle>
-                              </DialogHeader>
-                              <UserCreditHistory userId={user.id} />
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                              <div className="space-y-2">
+                                <Label>Tipo de Ajuste</Label>
+                                <Select value={adjustmentType} onValueChange={setAdjustmentType}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="add">Adicionar Créditos</SelectItem>
+                                    <SelectItem value="subtract">Remover Créditos</SelectItem>
+                                    <SelectItem value="set">Definir Quantidade</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>Quantidade</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={adjustmentAmount}
+                                  onChange={(e) => setAdjustmentAmount(e.target.value)}
+                                  placeholder="Digite a quantidade"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>Motivo do Ajuste</Label>
+                                <Textarea
+                                  value={adjustmentReason}
+                                  onChange={(e) => setAdjustmentReason(e.target.value)}
+                                  placeholder="Descreva o motivo do ajuste..."
+                                />
+                              </div>
+
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => {
+                                    if (!adjustmentAmount || !adjustmentReason.trim()) {
+                                      toast.error('Preencha quantidade e motivo');
+                                      return;
+                                    }
+                                    
+                                    const amount = parseInt(adjustmentAmount);
+                                    if (isNaN(amount) || amount <= 0) {
+                                      toast.error('Quantidade deve ser um número positivo');
+                                      return;
+                                    }
+
+                                    adjustCreditsMutation.mutate({
+                                      userId: user.id,
+                                      amount: adjustmentAmount,
+                                      type: adjustmentType,
+                                      reason: adjustmentReason.trim()
+                                    });
+                                  }}
+                                  disabled={adjustCreditsMutation.isPending}
+                                  className="flex-1"
+                                >
+                                  {adjustCreditsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                  {adjustmentType === 'add' && <Plus className="w-4 h-4 mr-2" />}
+                                  {adjustmentType === 'subtract' && <Minus className="w-4 h-4 mr-2" />}
+                                  {adjustmentType === 'set' && <Settings className="w-4 h-4 mr-2" />}
+                                  {adjustCreditsMutation.isPending ? 'Processando...' : 'Aplicar Ajuste'}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Histórico de Créditos - {user.name || user.email}</DialogTitle>
+                            </DialogHeader>
+                            <UserCreditHistory userId={user.id} />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -424,7 +433,12 @@ const UserCreditHistory = ({ userId }: UserCreditHistoryProps) => {
   });
 
   if (isLoading) {
-    return <div>Carregando histórico...</div>;
+    return (
+      <div className="flex items-center gap-2 py-4">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Carregando histórico...</span>
+      </div>
+    );
   }
 
   return (

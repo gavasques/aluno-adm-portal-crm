@@ -1582,6 +1582,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_adjust_user_credits: {
+        Args: {
+          target_user_id: string
+          adjustment_amount: number
+          adjustment_type: string
+          reason: string
+        }
+        Returns: Json
+      }
       calculate_user_storage_usage: {
         Args: { user_uuid: string }
         Returns: number
@@ -1604,6 +1613,10 @@ export type Database = {
       }
       drop_policies_for_table: {
         Args: { table_name: string }
+        Returns: undefined
+      }
+      ensure_user_credits: {
+        Args: { target_user_id: string }
         Returns: undefined
       }
       execute_sql: {

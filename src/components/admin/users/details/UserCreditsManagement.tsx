@@ -16,7 +16,8 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  Calendar
+  Calendar,
+  Loader2
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,32 +40,56 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const queryClient = useQueryClient();
 
-  // Buscar dados de créditos do usuário
+  // Buscar dados de créditos do usuário com query otimizada
   const { data: userCredits, isLoading: creditsLoading } = useQuery({
     queryKey: ['user-credits-detail', userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('🔍 Buscando créditos para usuário:', userId);
+      
+      // Primeiro garantir que o usuário tem créditos
+      const { error: ensureError } = await supabase.rpc('ensure_user_credits', {
+        target_user_id: userId
+      });
+      
+      if (ensureError) {
+        console.error('Erro ao garantir créditos:', ensureError);
+      }
+
+      // Buscar créditos do usuário
+      const { data: credits, error: creditsError } = await supabase
         .from('user_credits')
-        .select(`
-          *,
-          credit_subscriptions!inner(
-            status,
-            monthly_credits,
-            next_billing_date
-          )
-        `)
+        .select('*')
         .eq('user_id', userId)
         .single();
       
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
-    }
+      if (creditsError) {
+        console.error('Erro ao buscar créditos:', creditsError);
+        throw creditsError;
+      }
+
+      // Buscar assinatura separadamente (opcional)
+      const { data: subscription } = await supabase
+        .from('credit_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      return {
+        ...credits,
+        subscription
+      };
+    },
+    retry: 1,
+    staleTime: 30000 // Cache por 30 segundos
   });
 
-  // Buscar histórico de transações
+  // Buscar histórico de transações com limite
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['user-credit-transactions', userId],
     queryFn: async () => {
+      console.log('🔍 Buscando transações para usuário:', userId);
+      
       const { data, error } = await supabase
         .from('credit_transactions')
         .select('*')
@@ -72,62 +97,61 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
         .order('created_at', { ascending: false })
         .limit(10);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar transações:', error);
+        throw error;
+      }
+      
       return data || [];
-    }
+    },
+    enabled: !!userId,
+    retry: 1
   });
 
-  // Mutação para ajustar créditos
+  // Mutação otimizada para ajustar créditos usando função do banco
   const adjustCreditsMutation = useMutation({
     mutationFn: async ({ amount, type, reason }: { 
       amount: string; 
       type: string; 
       reason: string; 
     }) => {
-      if (!userCredits) throw new Error('Dados de créditos não encontrados');
+      console.log('🔧 Ajustando créditos:', { userId, amount, type, reason });
 
-      let newAmount;
-      if (type === 'add') {
-        newAmount = userCredits.current_credits + parseInt(amount);
-      } else if (type === 'subtract') {
-        newAmount = Math.max(0, userCredits.current_credits - parseInt(amount));
-      } else {
-        newAmount = parseInt(amount);
+      const { data, error } = await supabase.rpc('admin_adjust_user_credits', {
+        target_user_id: userId,
+        adjustment_amount: parseInt(amount),
+        adjustment_type: type,
+        reason: reason
+      });
+
+      if (error) {
+        console.error('Erro na função de ajuste:', error);
+        throw error;
       }
 
-      const { error: updateError } = await supabase
-        .from('user_credits')
-        .update({ current_credits: newAmount })
-        .eq('user_id', userId);
+      if (!data.success) {
+        throw new Error(data.error || 'Erro desconhecido no ajuste');
+      }
 
-      if (updateError) throw updateError;
-
-      // Registrar no histórico
-      const { error: historyError } = await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: userId,
-          type: type === 'add' ? 'compra' : type === 'subtract' ? 'uso' : 'renovacao',
-          amount: type === 'subtract' ? -parseInt(amount) : parseInt(amount),
-          description: `Ajuste manual pelo admin: ${reason}`
-        });
-
-      if (historyError) throw historyError;
+      return data;
     },
-    onSuccess: () => {
-      toast.success('Créditos ajustados com sucesso!');
+    onSuccess: (data) => {
+      console.log('✅ Créditos ajustados com sucesso:', data);
+      toast.success(`Créditos ajustados! ${data.previous_credits} → ${data.new_credits}`);
       queryClient.invalidateQueries({ queryKey: ['user-credits-detail', userId] });
       queryClient.invalidateQueries({ queryKey: ['user-credit-transactions', userId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-credits'] });
       setAdjustmentAmount("");
       setAdjustmentReason("");
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao ajustar créditos:', error);
       toast.error('Erro ao ajustar créditos: ' + error.message);
     }
   });
 
   const getStatusBadge = () => {
-    if (!userCredits) return <Badge variant="secondary">Sem dados</Badge>;
+    if (!userCredits) return <Badge variant="secondary">Carregando...</Badge>;
 
     const percentage = (userCredits.current_credits / userCredits.monthly_limit) * 100;
     
@@ -152,10 +176,26 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
   if (creditsLoading) {
     return (
       <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Carregando dados de créditos...</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -238,6 +278,7 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
               <Label>Quantidade</Label>
               <Input
                 type="number"
+                min="1"
                 value={adjustmentAmount}
                 onChange={(e) => setAdjustmentAmount(e.target.value)}
                 placeholder="Digite a quantidade"
@@ -257,19 +298,27 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
 
           <Button
             onClick={() => {
-              if (!adjustmentAmount || !adjustmentReason) {
+              if (!adjustmentAmount || !adjustmentReason.trim()) {
                 toast.error('Preencha quantidade e motivo');
                 return;
               }
+              
+              const amount = parseInt(adjustmentAmount);
+              if (isNaN(amount) || amount <= 0) {
+                toast.error('Quantidade deve ser um número positivo');
+                return;
+              }
+
               adjustCreditsMutation.mutate({
                 amount: adjustmentAmount,
                 type: adjustmentType,
-                reason: adjustmentReason
+                reason: adjustmentReason.trim()
               });
             }}
             disabled={adjustCreditsMutation.isPending}
             className="w-full"
           >
+            {adjustCreditsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {adjustmentType === 'add' && <Plus className="w-4 h-4 mr-2" />}
             {adjustmentType === 'subtract' && <Minus className="w-4 h-4 mr-2" />}
             {adjustmentType === 'set' && <Settings className="w-4 h-4 mr-2" />}
@@ -285,10 +334,9 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
         </CardHeader>
         <CardContent>
           {transactionsLoading ? (
-            <div className="animate-pulse space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-gray-200 rounded"></div>
-              ))}
+            <div className="flex items-center gap-2 py-8">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Carregando histórico...</span>
             </div>
           ) : transactions && transactions.length > 0 ? (
             <div className="overflow-x-auto">
