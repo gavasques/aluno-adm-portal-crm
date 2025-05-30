@@ -8,7 +8,6 @@ import AddItemForm from "@/components/admin/AddItemForm";
 import EditCategoryForm from "@/components/admin/EditCategoryForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { useCategories, Category } from "@/hooks/useCategories";
-import { Toaster } from "@/components/ui/toaster";
 
 const Categories = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -150,8 +149,6 @@ const Categories = () => {
           )}
         </DialogContent>
       </Dialog>
-
-      <Toaster />
     </div>
   );
 };

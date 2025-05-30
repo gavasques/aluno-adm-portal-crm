@@ -21,12 +21,16 @@ const AdminDashboard = () => {
   }, [feedback]);
 
   const handleRefresh = async () => {
-    feedback.loading("Atualizando dashboard...");
+    const loadingId = feedback.loading("Atualizando dashboard...");
     
-    // Simular carregamento de dados
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    feedback.syncCompleted();
+    try {
+      // Simular carregamento de dados
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      feedback.syncCompleted();
+    } catch (error) {
+      feedback.serverError();
+    }
   };
 
   const content = (

@@ -14,6 +14,8 @@ export function ImprovedToaster() {
       expand={true}
       richColors
       closeButton
+      visibleToasts={5}
+      duration={4000}
       toastOptions={{
         style: {
           background: 'var(--background)',

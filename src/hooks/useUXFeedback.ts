@@ -35,6 +35,13 @@ export function useUXFeedback() {
     });
   }, []);
 
+  const showWarningToast = useCallback((message: string, description?: string) => {
+    return toast.warning(message, {
+      description,
+      duration: 5000
+    });
+  }, []);
+
   // Helper for common CRUD operations
   const handleAsyncAction = useCallback(async <T>(
     action: () => Promise<T>,
@@ -82,7 +89,7 @@ export function useUXFeedback() {
     userCreated: () => showSuccessToast("✅ Usuário criado", "O usuário foi criado com sucesso"),
     userUpdated: () => showSuccessToast("✅ Usuário atualizado", "As informações foram salvas"),
     userDeleted: () => showSuccessToast("✅ Usuário removido", "O usuário foi excluído do sistema"),
-    userInactivated: () => showSuccessToast("⚠️ Usuário inativado", "O usuário foi inativado devido a dados associados"),
+    userInactivated: () => showWarningToast("⚠️ Usuário inativado", "O usuário foi inativado devido a dados associados"),
     userInvited: () => showSuccessToast("📧 Convite enviado", "O convite foi enviado por email"),
     
     // Data operations
@@ -117,6 +124,7 @@ export function useUXFeedback() {
     showErrorToast,
     showInfoToast,
     showLoadingToast,
+    showWarningToast,
     handleAsyncAction,
     feedback
   };
