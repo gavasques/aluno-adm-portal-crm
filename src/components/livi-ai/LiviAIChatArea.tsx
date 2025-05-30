@@ -40,8 +40,8 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-white dark:bg-gray-900 overflow-hidden">
-      {/* Chat Messages Area - flex-1 para ocupar espaço disponível */}
+    <div className="flex flex-col w-full bg-white dark:bg-gray-900 overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
+      {/* Chat Messages Area */}
       <div className="flex-1 overflow-hidden">
         <ChatMessagesContainer
           messages={messages}
@@ -52,7 +52,7 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
         />
       </div>
 
-      {/* Input Area - fixo na parte inferior */}
+      {/* Input Area */}
       <div className="flex-shrink-0">
         <ChatInputArea
           message={message}
