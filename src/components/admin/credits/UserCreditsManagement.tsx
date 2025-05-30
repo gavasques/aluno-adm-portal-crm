@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,8 +139,8 @@ const UserCreditsManagement = () => {
         throw error;
       }
 
-      // Cast do tipo para AdminAdjustCreditsResponse
-      const result = data as AdminAdjustCreditsResponse;
+      // Cast do tipo através de unknown primeiro
+      const result = data as unknown as AdminAdjustCreditsResponse;
 
       if (!result.success) {
         throw new Error(result.error || 'Erro desconhecido no ajuste');
