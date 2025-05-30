@@ -1,12 +1,40 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead, CRMFilters } from '@/types/crm.types';
+import { CRMLead, CRMLeadFromDB, CRMLeadCreate, CRMFilters } from '@/types/crm.types';
 import { toast } from 'sonner';
 
 export const useCRMLeads = (filters: CRMFilters = {}) => {
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const transformLeadData = (dbLead: CRMLeadFromDB): CRMLead => {
+    return {
+      ...dbLead,
+      has_company: dbLead.has_company ?? false,
+      sells_on_amazon: dbLead.sells_on_amazon ?? false,
+      works_with_fba: dbLead.works_with_fba ?? false,
+      had_contact_with_lv: dbLead.had_contact_with_lv ?? false,
+      seeks_private_label: dbLead.seeks_private_label ?? false,
+      ready_to_invest_3k: dbLead.ready_to_invest_3k ?? false,
+      calendly_scheduled: dbLead.calendly_scheduled ?? false,
+      phone: dbLead.phone || undefined,
+      what_sells: dbLead.what_sells || undefined,
+      keep_or_new_niches: dbLead.keep_or_new_niches || undefined,
+      amazon_store_link: dbLead.amazon_store_link || undefined,
+      amazon_state: dbLead.amazon_state || undefined,
+      amazon_tax_regime: dbLead.amazon_tax_regime || undefined,
+      main_doubts: dbLead.main_doubts || undefined,
+      calendly_link: dbLead.calendly_link || undefined,
+      pipeline_id: dbLead.pipeline_id || undefined,
+      column_id: dbLead.column_id || undefined,
+      responsible_id: dbLead.responsible_id || undefined,
+      created_by: dbLead.created_by || undefined,
+      scheduled_contact_date: dbLead.scheduled_contact_date || undefined,
+      notes: dbLead.notes || undefined,
+      tags: dbLead.tags || []
+    };
+  };
 
   const fetchLeads = async () => {
     try {
@@ -44,10 +72,13 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
       if (error) throw error;
 
       // Transformar dados para incluir tags como array
-      const transformedData = data?.map(lead => ({
-        ...lead,
-        tags: lead.tags?.map((lt: any) => lt.tag).filter(Boolean) || []
-      })) || [];
+      const transformedData = (data as CRMLeadFromDB[])?.map(lead => {
+        const transformedLead = transformLeadData(lead);
+        return {
+          ...transformedLead,
+          tags: lead.tags?.map((lt: any) => lt.tag).filter(Boolean) || []
+        };
+      }) || [];
 
       setLeads(transformedData);
     } catch (error) {
@@ -56,7 +87,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
     }
   };
 
-  const createLead = async (leadData: Partial<CRMLead>) => {
+  const createLead = async (leadData: CRMLeadCreate) => {
     try {
       const { data, error } = await supabase
         .from('crm_leads')
@@ -76,7 +107,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
     }
   };
 
-  const updateLead = async (leadId: string, updates: Partial<CRMLead>) => {
+  const updateLead = async (leadId: string, updates: Partial<CRMLeadCreate>) => {
     try {
       const { error } = await supabase
         .from('crm_leads')

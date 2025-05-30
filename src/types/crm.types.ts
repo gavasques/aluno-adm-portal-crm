@@ -27,6 +27,43 @@ export interface CRMTag {
   created_at: string;
 }
 
+// Tipos para dados vindos do Supabase (podem ter campos opcionais)
+export interface CRMLeadFromDB {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  has_company: boolean | null;
+  what_sells?: string | null;
+  keep_or_new_niches?: string | null;
+  sells_on_amazon: boolean | null;
+  amazon_store_link?: string | null;
+  amazon_state?: string | null;
+  amazon_tax_regime?: string | null;
+  works_with_fba: boolean | null;
+  had_contact_with_lv: boolean | null;
+  seeks_private_label: boolean | null;
+  main_doubts?: string | null;
+  ready_to_invest_3k: boolean | null;
+  calendly_scheduled: boolean | null;
+  calendly_link?: string | null;
+  pipeline_id?: string | null;
+  column_id?: string | null;
+  responsible_id?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  scheduled_contact_date?: string | null;
+  notes?: string | null;
+  
+  // Relacionamentos vindos do Supabase
+  pipeline?: { id: string; name: string } | null;
+  column?: { id: string; name: string; color: string } | null;
+  responsible?: { id: string; name: string; email: string } | null;
+  tags?: CRMTag[];
+}
+
+// Tipo para dados processados na aplicação
 export interface CRMLead {
   id: string;
   name: string;
@@ -64,6 +101,32 @@ export interface CRMLead {
     email: string;
   };
   tags?: CRMTag[];
+}
+
+// Tipo para criação de leads (campos obrigatórios)
+export interface CRMLeadCreate {
+  name: string;
+  email: string;
+  phone?: string;
+  has_company?: boolean;
+  what_sells?: string;
+  keep_or_new_niches?: string;
+  sells_on_amazon?: boolean;
+  amazon_store_link?: string;
+  amazon_state?: string;
+  amazon_tax_regime?: string;
+  works_with_fba?: boolean;
+  had_contact_with_lv?: boolean;
+  seeks_private_label?: boolean;
+  main_doubts?: string;
+  ready_to_invest_3k?: boolean;
+  calendly_scheduled?: boolean;
+  calendly_link?: string;
+  pipeline_id?: string;
+  column_id?: string;
+  responsible_id?: string;
+  scheduled_contact_date?: string;
+  notes?: string;
 }
 
 export interface CRMLeadComment {
