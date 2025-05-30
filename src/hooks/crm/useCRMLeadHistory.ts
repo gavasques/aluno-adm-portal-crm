@@ -20,7 +20,14 @@ export const useCRMLeadHistory = (leadId: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHistory(data || []);
+      
+      // Cast explícito para garantir que action_type seja do tipo correto
+      const typedHistory: CRMLeadHistory[] = (data || []).map(item => ({
+        ...item,
+        action_type: item.action_type as CRMLeadHistory['action_type']
+      }));
+      
+      setHistory(typedHistory);
     } catch (error) {
       console.error('Erro ao buscar histórico:', error);
       toast.error('Erro ao carregar histórico');
