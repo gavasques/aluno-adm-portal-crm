@@ -182,14 +182,37 @@ export const useLiviAISessions = () => {
       const newMessage = data as LiviAIMessage;
       setSessionMessages(prev => [...prev, newMessage]);
 
-      // Atualizar contadores da sessão
-      await supabase
+      // Atualizar contadores da sessão usando operação aritmética correta
+      const { error: updateError } = await supabase
         .from('livi_ai_sessions')
         .update({
           total_messages: messageOrder,
-          credits_consumed: supabase.sql`credits_consumed + ${creditsUsed}`
+          credits_consumed: supabase.from('livi_ai_sessions')
+            .select('credits_consumed')
+            .eq('id', sessionId)
+            .single()
+            .then(({ data }) => (data?.credits_consumed || 0) + creditsUsed)
         })
         .eq('id', sessionId);
+
+      if (updateError) {
+        // Se falhar, usar uma query separada para buscar e atualizar
+        const { data: sessionData } = await supabase
+          .from('livi_ai_sessions')
+          .select('credits_consumed')
+          .eq('id', sessionId)
+          .single();
+
+        const currentCredits = sessionData?.credits_consumed || 0;
+        
+        await supabase
+          .from('livi_ai_sessions')
+          .update({
+            total_messages: messageOrder,
+            credits_consumed: currentCredits + creditsUsed
+          })
+          .eq('id', sessionId);
+      }
 
       // Atualizar estado local da sessão
       setSessions(prev => prev.map(s => 

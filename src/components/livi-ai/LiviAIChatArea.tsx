@@ -4,11 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Clock, AlertCircle, Copy, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { LiviAIMessage } from '@/hooks/useLiviAISessions';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 interface LiviAIChatAreaProps {
@@ -53,7 +49,8 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      second: '2-digit'
     });
   };
 
@@ -66,61 +63,43 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
       className="space-y-4"
     >
       {/* User Message */}
-      <div className="flex justify-end">
-        <div className="max-w-[70%] group">
-          <div className="bg-violet-500 text-white rounded-2xl px-4 py-3 shadow-lg">
-            <p className="text-sm whitespace-pre-wrap">{msg.message_text}</p>
-            <div className="flex items-center justify-between mt-2 text-xs opacity-70">
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{formatTime(msg.created_at)}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>{msg.credits_used} crédito{msg.credits_used > 1 ? 's' : ''}</span>
-              </div>
-            </div>
+      <div className="flex items-start space-x-4 justify-end">
+        <div className="flex-1 text-right">
+          <div className="bg-primary text-white rounded-lg p-4 shadow-sm inline-block max-w-md">
+            <p className="text-sm">{msg.message_text}</p>
           </div>
+          <div className="mt-1 text-xs text-gray-400">{formatTime(msg.created_at)}</div>
+        </div>
+        <div className="w-8 h-8 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center">
+          <User className="h-5 w-5 text-gray-500" />
         </div>
       </div>
 
       {/* AI Response */}
       {msg.ai_response && (
-        <div className="flex justify-start">
-          <div className="max-w-[70%] group">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-violet-500 rounded-full mt-1">
-                <Bot className="h-4 w-4 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="bg-white dark:bg-slate-700 rounded-2xl px-4 py-3 shadow-lg border border-gray-200 dark:border-slate-600">
-                  <p className="text-sm whitespace-pre-wrap text-gray-900 dark:text-white">
-                    {msg.ai_response}
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatTime(msg.created_at)}</span>
-                      {msg.response_time_ms && (
-                        <>
-                          <span>•</span>
-                          <span>{(msg.response_time_ms / 1000).toFixed(1)}s</span>
-                        </>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => copyToClipboard(msg.ai_response!, msg.id)}
-                    >
-                      {copiedMessageId === msg.id ? (
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+        <div className="flex items-start space-x-4">
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex-shrink-0 flex items-center justify-center">
+            <Bot className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 group">
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {msg.ai_response}
+              </p>
+              <div className="flex items-center justify-between mt-2">
+                <div className="text-xs text-gray-400">{formatTime(msg.created_at)}</div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => copyToClipboard(msg.ai_response!, msg.id)}
+                >
+                  {copiedMessageId === msg.id ? (
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -129,21 +108,14 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
 
       {/* Error Message */}
       {msg.error_message && (
-        <div className="flex justify-start">
-          <div className="max-w-[70%]">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-red-500 rounded-full mt-1">
-                <AlertCircle className="h-4 w-4 text-white" />
-              </div>
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-4 py-3">
-                <p className="text-sm text-red-800 dark:text-red-200">
-                  {msg.error_message}
-                </p>
-                <div className="flex items-center gap-1 mt-2 text-xs text-red-600 dark:text-red-400">
-                  <Clock className="h-3 w-3" />
-                  <span>{formatTime(msg.created_at)}</span>
-                </div>
-              </div>
+        <div className="flex items-start space-x-4">
+          <div className="w-8 h-8 rounded-lg bg-red-500 flex-shrink-0 flex items-center justify-center">
+            <AlertCircle className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">{msg.error_message}</p>
+              <div className="text-xs text-red-600 mt-1">{formatTime(msg.created_at)}</div>
             </div>
           </div>
         </div>
@@ -153,10 +125,10 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
 
   if (messagesLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-blue-50/50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Carregando mensagens...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando mensagens...</p>
         </div>
       </div>
     );
@@ -164,55 +136,48 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4">
-        {messages.length > 0 ? (
-          <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Chat Container */}
+      <div className="flex-1 bg-blue-50/50 p-6 overflow-y-auto chat-container">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {messages.length > 0 ? (
             <AnimatePresence>
               {messages.map(renderMessage)}
             </AnimatePresence>
-            <div ref={messagesEndRef} />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-md">
-              <div className="p-4 bg-violet-100 dark:bg-violet-900/20 rounded-full w-fit mx-auto mb-4">
-                <Bot className="h-12 w-12 text-violet-600 dark:text-violet-400" />
+          ) : (
+            <div className="flex items-start space-x-4">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex-shrink-0 flex items-center justify-center">
+                <Bot className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Olá! Eu sou a Livi AI
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {isSessionActive 
-                  ? "Como posso ajudá-lo hoje? Digite sua mensagem abaixo para começarmos nossa conversa."
-                  : "Inicie uma nova sessão para começar nossa conversa."
-                }
-              </p>
-              {!hasCredits && (
-                <Badge variant="destructive" className="mb-4">
-                  Créditos insuficientes
-                </Badge>
-              )}
+              <div className="flex-1">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <p className="text-gray-700">
+                    Olá! Eu sou o Livi AI, seu assistente especializado em importação e Amazon. Como posso ajudar você hoje?
+                  </p>
+                </div>
+                <div className="mt-1 text-xs text-gray-400">
+                  {new Date().toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </ScrollArea>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
 
-      {/* Input Area */}
+      {/* Message Input */}
       {isSessionActive && (
-        <motion.div 
-          className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border-t border-white/20 p-4"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center gap-3 max-w-4xl mx-auto">
-            <div className="flex-1 relative">
+        <div className="bg-white p-4 border-t border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-1 bg-gray-100 rounded-lg px-4 py-3 flex items-center">
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder={hasCredits ? "Digite sua mensagem..." : "Créditos insuficientes"}
-                className="pr-12 py-3 text-base rounded-xl border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                placeholder={hasCredits ? "Digite sua pergunta sobre importação ou Amazon..." : "Créditos insuficientes"}
+                className="bg-transparent border-none outline-none shadow-none focus-visible:ring-0 text-gray-700"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -221,34 +186,29 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
                 }}
                 disabled={isLoading || !hasCredits}
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <Button 
-                  onClick={onSendMessage} 
-                  disabled={!message.trim() || isLoading || !hasCredits}
-                  size="sm"
-                  className="h-8 w-8 p-0 rounded-lg bg-violet-500 hover:bg-violet-600"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
+            <Button 
+              onClick={onSendMessage} 
+              disabled={!message.trim() || isLoading || !hasCredits}
+              className="ml-3 bg-primary text-white p-3 rounded-full hover:bg-primary/90 transition-colors"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
           </div>
           
-          {!hasCredits && (
-            <div className="mt-3 text-center">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                Créditos insuficientes. Adquira mais créditos para continuar usando a Livi AI.
-              </p>
+          {isLoading && (
+            <div className="text-xs text-gray-500 mt-2 flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+              <span>Livi AI está processando sua pergunta...</span>
             </div>
           )}
 
-          {isLoading && (
-            <div className="mt-3 flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-500"></div>
-              <span>Livi AI está pensando...</span>
+          {!hasCredits && (
+            <div className="text-xs text-red-600 mt-2">
+              Créditos insuficientes. Adquira mais créditos para continuar.
             </div>
           )}
-        </motion.div>
+        </div>
       )}
     </div>
   );
