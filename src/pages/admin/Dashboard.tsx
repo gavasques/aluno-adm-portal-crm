@@ -30,7 +30,7 @@ const AdminDashboard = () => {
   };
 
   const content = (
-    <div className="max-w-full space-y-4">
+    <div className="container mx-auto p-6 space-y-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ const AdminDashboard = () => {
         <StatsOverview />
       </motion.div>
 
-      <div className={isMobile ? "space-y-4" : "grid grid-cols-1 lg:grid-cols-3 gap-4"}>
+      <div className={isMobile ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-3 gap-6"}>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
         </motion.div>
       </div>
 
-      <div className={isMobile ? "space-y-4" : "grid grid-cols-1 lg:grid-cols-2 gap-4"}>
+      <div className={isMobile ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

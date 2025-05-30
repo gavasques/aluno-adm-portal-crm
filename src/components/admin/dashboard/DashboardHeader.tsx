@@ -24,45 +24,45 @@ export function DashboardHeader() {
   });
 
   return (
-    <Card className="p-3 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+    <Card className="p-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="flex-1">
           <motion.h1 
-            className="text-xl font-bold text-gray-900 mb-1"
+            className="text-2xl font-bold text-gray-900 mb-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
             Dashboard Administrativo
           </motion.h1>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 text-xs">
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
               Sistema Online
             </Badge>
-            <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
+            <Badge variant="outline" className="text-blue-600 border-blue-200">
               125 Usuários Ativos
             </Badge>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full lg:w-auto">
+        <div className="flex items-center gap-3 w-full lg:w-auto">
           {/* Campo de Busca */}
-          <div className="relative flex-1 lg:w-64">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+          <div className="relative flex-1 lg:w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Buscar usuários, fornecedores..."
+              placeholder="Buscar usuários, fornecedores, mentorias..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 text-xs h-8 border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+              className="pl-10 border-gray-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
 
           {/* Ações Rápidas */}
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="hover:bg-blue-50 relative h-8 w-8 p-0">
-              <Bell className="h-3 w-3" />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="hover:bg-blue-50 relative">
+              <Bell className="h-4 w-4" />
               {shouldShowNotificationBadge && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -71,12 +71,12 @@ export function DashboardHeader() {
               variant="outline" 
               size="sm" 
               onClick={() => navigate('/admin/configuracoes')}
-              className="hover:bg-gray-50 h-8 w-8 p-0"
+              className="hover:bg-gray-50"
             >
-              <Settings className="h-3 w-3" />
+              <Settings className="h-4 w-4" />
             </Button>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-8 text-xs px-3">
-              <Plus className="h-3 w-3 mr-1" />
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-1" />
               Novo
             </Button>
           </div>

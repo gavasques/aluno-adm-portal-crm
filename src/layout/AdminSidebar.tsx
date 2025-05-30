@@ -46,10 +46,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 
-// FRESH COMPONENT - Cache Breaker v3.0.0
-const FRESH_SIDEBAR_VERSION = `fresh-admin-sidebar-${Date.now()}`;
-console.log(`🔥 FreshAdminSidebar loaded - CACHE BROKEN - ${FRESH_SIDEBAR_VERSION}`);
-
 const sidebarItems = [
   {
     title: "Dashboard",
@@ -173,6 +169,7 @@ const sidebarItems = [
   }
 ];
 
+// Ordem dos grupos
 const groupOrder = ["Geral", "Operacional", "Geral ADM", "Mentorias", "Gestão", "Cadastros", "Sistema"];
 
 const groupedItems = sidebarItems.reduce((groups, item) => {
@@ -184,7 +181,7 @@ const groupedItems = sidebarItems.reduce((groups, item) => {
   return groups;
 }, {} as Record<string, typeof sidebarItems>);
 
-export default function FreshAdminSidebar() {
+export default function AdminSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
@@ -192,9 +189,7 @@ export default function FreshAdminSidebar() {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Force recognition with timestamp
-  console.log(`🆕 FRESH SIDEBAR RENDERING - ${new Date().toISOString()}`);
-
+  // Determinar qual grupo contém a rota ativa
   const getActiveGroup = () => {
     for (const item of sidebarItems) {
       if (location.pathname === item.url) {
@@ -250,6 +245,7 @@ export default function FreshAdminSidebar() {
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
+  // Garantir que o grupo ativo esteja sempre aberto
   React.useEffect(() => {
     if (activeGroup && !openGroups.includes(activeGroup)) {
       setOpenGroups(prev => [...prev, activeGroup]);
@@ -257,17 +253,15 @@ export default function FreshAdminSidebar() {
   }, [activeGroup, openGroups]);
 
   return (
-    <div className="relative" data-fresh-sidebar={FRESH_SIDEBAR_VERSION}>
+    <div className="relative">
       <div 
         ref={sidebarRef}
-        className="fixed left-0 top-0 h-screen bg-slate-900 text-white overflow-y-auto flex flex-col border-r border-slate-700 shadow-2xl"
+        className="fixed left-0 top-0 h-screen bg-gray-900 text-white overflow-y-auto flex flex-col"
         style={{ width: `${sidebarWidth}px` }}
-        data-testid="fresh-admin-sidebar"
-        data-cache-breaker={Date.now()}
       >
-        {/* Header compacto */}
-        <div className="p-3 border-b border-slate-700">
-          <div className="flex items-center justify-between mb-2">
+        {/* Header da sidebar com logo - mais compacto */}
+        <div className="p-3 border-b border-gray-700">
+          <div className="flex items-center justify-between mb-3">
             <Link to="/admin/dashboard" className="flex items-center">
               <img 
                 src="/lovable-uploads/fa166a7e-b1af-4959-a15a-12517ab1ed07.png"
@@ -276,16 +270,16 @@ export default function FreshAdminSidebar() {
               />
             </Link>
             
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-slate-700 h-7 w-7">
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700 h-8 w-8">
               <Bell className="h-3 w-3" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-red-500"></span>
+                <span className="absolute top-0.5 right-1 flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
               )}
             </Button>
           </div>
         </div>
 
-        {/* Menu navegação */}
+        {/* Menu de navegação com Accordion - mais compacto */}
         <div className="flex-1 p-2">
           <Accordion 
             type="multiple" 
@@ -303,24 +297,24 @@ export default function FreshAdminSidebar() {
                   value={groupName}
                   className="border-none"
                 >
-                  <AccordionTrigger className="text-xs font-semibold text-slate-400 uppercase tracking-wider hover:no-underline hover:text-slate-300 py-2 px-2">
+                  <AccordionTrigger className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider hover:no-underline hover:text-gray-300 py-1.5 px-2">
                     {groupName}
                   </AccordionTrigger>
                   <AccordionContent className="pb-1">
-                    <nav className="space-y-1 pl-1">
+                    <nav className="space-y-0.5 pl-1">
                       {items.map((item) => (
                         <Link
                           key={item.title}
                           to={item.url}
                           className={cn(
-                            "flex items-center px-2 py-2 text-xs font-medium rounded-lg transition-all duration-200",
+                            "flex items-center px-2 py-1.5 text-[11px] font-medium rounded-md transition-colors",
                             location.pathname === item.url
-                              ? "bg-blue-600 text-white shadow-lg border-l-4 border-blue-400"
-                              : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                              ? "bg-gray-800 text-white border-l-2 border-blue-500"
+                              : "text-gray-300 hover:bg-gray-700 hover:text-white"
                           )}
                         >
-                          <item.icon className="mr-2 h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{item.title}</span>
+                          <item.icon className="mr-2 h-3 w-3" />
+                          {item.title}
                         </Link>
                       ))}
                     </nav>
@@ -331,51 +325,51 @@ export default function FreshAdminSidebar() {
           </Accordion>
         </div>
 
-        {/* Menu usuário */}
-        <div className="p-2 border-t border-slate-700 mt-auto">
+        {/* Menu do usuário na parte inferior - mais compacto */}
+        <div className="p-2 border-t border-gray-700 mt-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start h-auto p-2 text-white hover:bg-slate-700">
+              <Button variant="ghost" className="w-full justify-start h-auto p-2 text-white hover:bg-gray-700">
                 <div className="flex flex-col items-start text-left w-full">
-                  <span className="font-medium text-xs">{getUserName()}</span>
-                  <span className="text-slate-300 text-xs truncate w-full">{user?.email}</span>
+                  <span className="font-medium text-[11px]">{getUserName()}</span>
+                  <span className="text-gray-300 text-[10px] truncate w-full">{user?.email}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <div className="bg-blue-600 text-white p-2 -mt-1 -mx-1 rounded-t-md">
                 <div className="font-medium text-xs">Minha Conta</div>
-                <div className="text-xs text-blue-100">
+                <div className="text-[10px] text-blue-100">
                   {user?.email || "admin@portaledu.com"}
                 </div>
               </div>
               
               <DropdownMenuItem asChild>
-                <Link to="/admin/dashboard" className="flex cursor-pointer items-center gap-2 text-sm">
-                  <User className="h-4 w-4" />
+                <Link to="/admin/dashboard" className="flex cursor-pointer items-center gap-2 text-xs">
+                  <User className="h-3 w-3" />
                   Dashboard
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/admin/configuracoes" className="flex cursor-pointer items-center gap-2 text-sm">
-                  <Settings className="h-4 w-4" />
+                <Link to="/admin/configuracoes" className="flex cursor-pointer items-center gap-2 text-xs">
+                  <Settings className="h-3 w-3" />
                   Configurações
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/aluno" className="flex cursor-pointer items-center gap-2 text-sm">
-                  <ExternalLink className="h-4 w-4" />
+                <Link to="/aluno" className="flex cursor-pointer items-center gap-2 text-xs">
+                  <ExternalLink className="h-3 w-3" />
                   Ir para Área do Aluno
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600 cursor-pointer text-sm">
+              <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600 cursor-pointer text-xs">
                 <div className="flex items-center gap-2">
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-3 w-3" />
                   Sair
                 </div>
               </DropdownMenuItem>
@@ -384,9 +378,9 @@ export default function FreshAdminSidebar() {
         </div>
       </div>
 
-      {/* Handle redimensionamento */}
+      {/* Handle de redimensionamento */}
       <div
-        className="fixed top-0 h-screen w-1 bg-slate-600 hover:bg-slate-500 cursor-col-resize z-50 transition-colors"
+        className="fixed top-0 h-screen w-1 bg-gray-600 hover:bg-gray-500 cursor-col-resize z-50 transition-colors"
         style={{ left: `${sidebarWidth}px` }}
         onMouseDown={handleMouseDown}
       />

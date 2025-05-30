@@ -1,104 +1,136 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { CardStats } from "@/components/ui/card-stats";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   Users, 
-  Building2, 
-  GraduationCap, 
+  Book, 
+  UserCheck, 
+  Building, 
   TrendingUp, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle,
-  CreditCard
+  TrendingDown,
+  Calendar,
+  DollarSign
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const statsData = [
+  {
+    title: "Usuários Totais",
+    value: "125",
+    change: "+12%",
+    trend: "up",
+    icon: Users,
+    color: "blue",
+    description: "último mês",
+    route: "/admin/usuarios"
+  },
+  {
+    title: "Alunos Ativos",
+    value: "98",
+    change: "+8%",
+    trend: "up",
+    icon: UserCheck,
+    color: "green",
+    description: "neste período",
+    route: "/admin/alunos"
+  },
+  {
+    title: "Fornecedores",
+    value: "47",
+    change: "+3",
+    trend: "up",
+    icon: Building,
+    color: "purple",
+    description: "cadastrados",
+    route: "/admin/fornecedores"
+  },
+  {
+    title: "Mentorias",
+    value: "26",
+    change: "-2",
+    trend: "down",
+    icon: Book,
+    color: "amber",
+    description: "agendadas",
+    route: "/admin/mentorias"
+  },
+  {
+    title: "Tarefas",
+    value: "15",
+    change: "+5",
+    trend: "up",
+    icon: Calendar,
+    color: "red",
+    description: "pendentes",
+    route: "/admin/tarefas"
+  },
+  {
+    title: "Receita",
+    value: "R$ 12.5k",
+    change: "+18%",
+    trend: "up",
+    icon: DollarSign,
+    color: "emerald",
+    description: "este mês",
+    route: "/admin/crm"
+  }
+];
+
+const colorMap = {
+  blue: "from-blue-500 to-blue-600",
+  green: "from-green-500 to-green-600",
+  purple: "from-purple-500 to-purple-600",
+  amber: "from-amber-500 to-amber-600",
+  red: "from-red-500 to-red-600",
+  emerald: "from-emerald-500 to-emerald-600"
+};
 
 export function StatsOverview() {
-  const stats = [
-    {
-      title: "Total de Usuários",
-      value: "1,247",
-      icon: <Users className="h-3 w-3" />,
-      description: "último mês",
-      trend: "up" as const,
-      trendValue: "+12%"
-    },
-    {
-      title: "Fornecedores Ativos",
-      value: "89",
-      icon: <Building2 className="h-3 w-3" />,
-      description: "verificados",
-      trend: "up" as const,
-      trendValue: "+5%"
-    },
-    {
-      title: "Mentorias Ativas",
-      value: "156",
-      icon: <GraduationCap className="h-3 w-3" />,
-      description: "em andamento",
-      trend: "up" as const,
-      trendValue: "+8%"
-    },
-    {
-      title: "Receita Mensal",
-      value: "R$ 24.350",
-      icon: <TrendingUp className="h-3 w-3" />,
-      description: "crescimento",
-      trend: "up" as const,
-      trendValue: "+18%"
-    },
-    {
-      title: "Tarefas Concluídas",
-      value: "342",
-      icon: <CheckCircle className="h-3 w-3" />,
-      description: "este mês",
-      trend: "up" as const,
-      trendValue: "+25%"
-    },
-    {
-      title: "Sessões Pendentes",
-      value: "23",
-      icon: <Clock className="h-3 w-3" />,
-      description: "para agendar",
-      trend: "down" as const,
-      trendValue: "-3%"
-    },
-    {
-      title: "Tickets Abertos",
-      value: "7",
-      icon: <AlertCircle className="h-3 w-3" />,
-      description: "suporte",
-      trend: "down" as const,
-      trendValue: "-15%"
-    },
-    {
-      title: "Créditos Vendidos",
-      value: "4,892",
-      icon: <CreditCard className="h-3 w-3" />,
-      description: "este mês",
-      trend: "up" as const,
-      trendValue: "+22%"
-    }
-  ];
+  const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-      {stats.map((stat, index) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {statsData.map((stat, index) => (
         <motion.div
           key={stat.title}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.05 }}
+          transition={{ duration: 0.4, delay: index * 0.1 }}
+          whileHover={{ y: -2 }}
+          className="cursor-pointer"
+          onClick={() => navigate(stat.route)}
         >
-          <CardStats
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            description={stat.description}
-            trend={stat.trend}
-            trendValue={stat.trendValue}
-            className="h-20"
-          />
+          <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
+            <div className={`h-1 bg-gradient-to-r ${colorMap[stat.color as keyof typeof colorMap]}`} />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${colorMap[stat.color as keyof typeof colorMap]} text-white group-hover:scale-110 transition-transform`}>
+                  <stat.icon className="h-4 w-4" />
+                </div>
+                <div className="flex items-center gap-1">
+                  {stat.trend === "up" ? (
+                    <TrendingUp className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500" />
+                  )}
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${stat.trend === "up" ? "text-green-600 border-green-200" : "text-red-600 border-red-200"}`}
+                  >
+                    {stat.change}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.title}</h3>
+                <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       ))}
     </div>

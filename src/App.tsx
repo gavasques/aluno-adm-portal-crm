@@ -7,8 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
 import { AuthProvider } from "@/hooks/useAuth";
 import RouteGuard from "@/components/RouteGuard";
-import FreshAdminSidebar from "@/layout/FreshAdminSidebar";
-import StudentSidebar from "@/layout/StudentSidebar";
+import AdminLayout from "@/layout/AdminLayout";
+import StudentLayout from "@/layout/StudentLayout";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
@@ -53,19 +53,15 @@ import StudentSettings from "@/pages/student/Settings";
 
 const queryClient = new QueryClient();
 
-// CACHE BREAKER - FRESH START v3.0.0
-const FRESH_APP_VERSION = `fresh-app-${Date.now()}`;
-console.log(`🔥 FRESH APP LOADED - CACHE BROKEN - ${FRESH_APP_VERSION}`);
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <ImprovedToaster />
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <ImprovedToaster />
+        <BrowserRouter>
+          <AuthProvider>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
@@ -78,44 +74,35 @@ function App() {
                 path="/admin/*" 
                 element={
                   <RouteGuard requireAdminAccess>
-                    <div 
-                      className="min-h-screen bg-gray-50 flex" 
-                      data-fresh-app={FRESH_APP_VERSION}
-                      data-cache-breaker={Date.now()}
-                    >
-                      <FreshAdminSidebar />
-                      <div className="flex-1" style={{ marginLeft: '220px' }}>
-                        <main className="p-4">
-                          <Routes>
-                            <Route path="dashboard" element={<AdminDashboard />} />
-                            <Route path="usuarios" element={<AdminUsers />} />
-                            <Route path="fornecedores" element={<AdminSuppliers />} />
-                            <Route path="parceiros" element={<AdminPartners />} />
-                            <Route path="ferramentas" element={<AdminTools />} />
-                            <Route path="mentoria" element={<AdminMentoring />} />
-                            <Route path="alunos" element={<AdminStudents />} />
-                            <Route path="tarefas" element={<AdminTasks />} />
-                            <Route path="crm" element={<AdminCRM />} />
-                            <Route path="creditos" element={<AdminCredits />} />
-                            <Route path="permissoes" element={<AdminPermissions />} />
-                            <Route path="auditoria" element={<AdminAudit />} />
-                            <Route path="categorias" element={<AdminCategories />} />
-                            <Route path="tipos-softwares" element={<AdminSoftwareTypes />} />
-                            <Route path="tipos-parceiros" element={<AdminPartnerTypes />} />
-                            <Route path="calendly-config" element={<AdminCalendlyConfig />} />
-                            <Route path="configuracoes" element={<AdminSettings />} />
-                            <Route path="bonus" element={<AdminBonus />} />
-                            <Route path="mentorias" element={<AdminMentoringDashboard />} />
-                            <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
-                            <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
-                            <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
-                            <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
-                            <Route path="noticias" element={<AdminNews />} />
-                            <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
-                          </Routes>
-                        </main>
-                      </div>
-                    </div>
+                    <AdminLayout>
+                      <Routes>
+                        <Route path="dashboard" element={<AdminDashboard />} />
+                        <Route path="usuarios" element={<AdminUsers />} />
+                        <Route path="fornecedores" element={<AdminSuppliers />} />
+                        <Route path="parceiros" element={<AdminPartners />} />
+                        <Route path="ferramentas" element={<AdminTools />} />
+                        <Route path="mentoria" element={<AdminMentoring />} />
+                        <Route path="alunos" element={<AdminStudents />} />
+                        <Route path="tarefas" element={<AdminTasks />} />
+                        <Route path="crm" element={<AdminCRM />} />
+                        <Route path="creditos" element={<AdminCredits />} />
+                        <Route path="permissoes" element={<AdminPermissions />} />
+                        <Route path="auditoria" element={<AdminAudit />} />
+                        <Route path="categorias" element={<AdminCategories />} />
+                        <Route path="tipos-softwares" element={<AdminSoftwareTypes />} />
+                        <Route path="tipos-parceiros" element={<AdminPartnerTypes />} />
+                        <Route path="calendly-config" element={<AdminCalendlyConfig />} />
+                        <Route path="configuracoes" element={<AdminSettings />} />
+                        <Route path="bonus" element={<AdminBonus />} />
+                        <Route path="mentorias" element={<AdminMentoringDashboard />} />
+                        <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
+                        <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
+                        <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
+                        <Route path="mentorias/materiais" element={<AdminMentoringMaterials />} />
+                        <Route path="noticias" element={<AdminNews />} />
+                        <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+                      </Routes>
+                    </AdminLayout>
                   </RouteGuard>
                 } 
               />
@@ -125,34 +112,27 @@ function App() {
                 path="/aluno/*" 
                 element={
                   <RouteGuard>
-                    <div className="min-h-screen bg-gray-50 flex">
-                      <StudentSidebar />
-                      <div className="flex-1 ml-56">
-                        <main className="p-6">
-                          <Routes>
-                            <Route path="dashboard" element={<StudentDashboard />} />
-                            <Route path="fornecedores" element={<StudentSuppliers />} />
-                            <Route path="parceiros" element={<StudentPartners />} />
-                            <Route path="ferramentas" element={<StudentTools />} />
-                            <Route path="mentoria" element={<StudentMentoring />} />
-                            <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
-                            <Route path="creditos" element={<StudentCredits />} />
-                            <Route path="configuracoes" element={<StudentSettings />} />
-                            <Route path="" element={<Navigate to="/aluno/dashboard" replace />} />
-                          </Routes>
-                        </main>
-                      </div>
-                    </div>
+                    <StudentLayout />
                   </RouteGuard>
                 }
-              />
+              >
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="fornecedores" element={<StudentSuppliers />} />
+                <Route path="parceiros" element={<StudentPartners />} />
+                <Route path="ferramentas" element={<StudentTools />} />
+                <Route path="mentoria" element={<StudentMentoring />} />
+                <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
+                <Route path="creditos" element={<StudentCredits />} />
+                <Route path="configuracoes" element={<StudentSettings />} />
+                <Route path="" element={<Navigate to="/aluno/dashboard" replace />} />
+              </Route>
 
               {/* Catch all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </TooltipProvider>
-        </AuthProvider>
-      </BrowserRouter>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
