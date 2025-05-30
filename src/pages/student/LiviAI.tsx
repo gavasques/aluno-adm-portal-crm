@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { useLiviAISessions } from '@/hooks/useLiviAISessions';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { getWebhookUrl } from '@/utils/webhookConfig';
 import { SessionHistorySidebar } from '@/components/livi-ai/SessionHistorySidebar';
 import { LiviAIChatArea } from '@/components/livi-ai/LiviAIChatArea';
@@ -39,20 +39,12 @@ const LiviAI = () => {
   // Iniciar nova sessão
   const startSession = async () => {
     if (currentSession?.is_active) {
-      toast({
-        title: "Sessão ativa",
-        description: "Encerre a sessão atual antes de iniciar uma nova.",
-        variant: "destructive"
-      });
+      toast.error("Encerre a sessão atual antes de iniciar uma nova.");
       return;
     }
 
     if (!hasCredits()) {
-      toast({
-        title: "Créditos insuficientes",
-        description: "Você precisa de créditos para usar o Livi AI. Adquira mais créditos para continuar.",
-        variant: "destructive"
-      });
+      toast.error("Você precisa de créditos para usar o Livi AI. Adquira mais créditos para continuar.");
       return;
     }
 
@@ -60,10 +52,7 @@ const LiviAI = () => {
     const session = await createSession(defaultMessage);
     
     if (session) {
-      toast({
-        title: "Sessão iniciada",
-        description: "Nova sessão do Livi AI iniciada com sucesso!"
-      });
+      toast.success("Nova sessão do Livi AI iniciada com sucesso!");
     }
   };
 
@@ -72,10 +61,7 @@ const LiviAI = () => {
     if (!currentSession) return;
 
     await endSession(currentSession.id);
-    toast({
-      title: "Sessão encerrada",
-      description: "Sessão do Livi AI encerrada com sucesso!"
-    });
+    toast.success("Sessão do Livi AI encerrada com sucesso!");
   };
 
   // Enviar mensagem com debug melhorado
@@ -83,11 +69,7 @@ const LiviAI = () => {
     if (!message.trim() || !user) return;
 
     if (!hasCredits()) {
-      toast({
-        title: "Créditos insuficientes",
-        description: "Você precisa de créditos para enviar mensagens. Adquira mais créditos para continuar.",
-        variant: "destructive"
-      });
+      toast.error("Você precisa de créditos para enviar mensagens. Adquira mais créditos para continuar.");
       return;
     }
 
@@ -113,11 +95,7 @@ const LiviAI = () => {
       const creditConsumed = await consumeCredits(1, 'Mensagem Livi AI');
       
       if (!creditConsumed) {
-        toast({
-          title: "Erro ao consumir créditos",
-          description: "Não foi possível consumir os créditos necessários.",
-          variant: "destructive"
-        });
+        toast.error("Não foi possível consumir os créditos necessários.");
         return;
       }
 
@@ -136,11 +114,8 @@ const LiviAI = () => {
       };
       console.log('📦 Payload da requisição:', requestPayload);
 
-      // Toast de debug temporário
-      toast({
-        title: "Debug: Enviando para webhook",
-        description: `URL: ${webhookUrl.substring(0, 50)}...`,
-      });
+      // Toast de debug para URL do webhook
+      toast.info(`Debug: Enviando para webhook ${webhookUrl.substring(0, 50)}...`);
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -192,10 +167,7 @@ const LiviAI = () => {
 
       await saveMessage(session.id, userMessage, aiResponse, 1, responseTime);
 
-      toast({
-        title: "Mensagem enviada",
-        description: "Resposta recebida com sucesso!",
-      });
+      toast.success("Resposta recebida com sucesso!");
 
     } catch (error) {
       console.error('❌ Erro detalhado:', error);
@@ -222,11 +194,7 @@ const LiviAI = () => {
         errorMessage
       );
 
-      toast({
-        title: "Erro na comunicação",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
       console.log('🏁 Processo de envio finalizado');
