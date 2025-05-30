@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useUserDialogs } from '../hooks/useUserDialogs';
@@ -187,6 +186,7 @@ const ModernUnifiedUserPage: React.FC = () => {
               onToggleMentor={(user) => openDialog('mentor', user)}
               onBanUser={(user) => openDialog('ban', user)}
               onUnbanUser={(user) => openDialog('unban', user)}
+              onCreditsManagement={(user) => openDialog('credits', user)}
               permissionGroups={permissionGroups}
             />
           </motion.div>

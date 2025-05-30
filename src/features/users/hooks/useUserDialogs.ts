@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { User } from '@/types/user.types';
 
-export type DialogType = 'view' | 'delete' | 'reset' | 'changePassword' | 'sendMagicLink' | 'permissions' | 'storage' | 'activity' | 'mentor' | 'ban' | 'unban';
+export type DialogType = 'view' | 'delete' | 'reset' | 'changePassword' | 'sendMagicLink' | 'permissions' | 'storage' | 'activity' | 'mentor' | 'ban' | 'unban' | 'credits';
 
 export interface DialogState {
   isOpen: boolean;

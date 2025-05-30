@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogState } from '../../hooks/useUserDialogs';
 import { UserDetailsDialog } from '@/components/admin/users/dialogs/UserDetailsDialog';
@@ -12,6 +11,7 @@ import UserActivityLogsDialog from '@/components/admin/users/dialogs/UserActivit
 import { MentorToggleDialog } from '@/components/admin/users/dialogs/MentorToggleDialog';
 import { UserBanDialog } from '@/components/admin/users/dialogs/UserBanDialog';
 import { UserUnbanDialog } from '@/components/admin/users/dialogs/UserUnbanDialog';
+import { UserCreditsDialog } from '@/components/admin/users/dialogs/UserCreditsDialog';
 import { useUserActions } from '../../hooks/useUserActions';
 import { useUserBanning } from '@/hooks/users/useUserBanning';
 import { useUserUnbanning } from '@/hooks/users/useUserUnbanning';
@@ -242,6 +242,15 @@ export const UserDialogManager: React.FC<UserDialogManagerProps> = ({
           onOpenChange={onCloseDialog}
           userEmail={user.email}
           onConfirmUnban={handleUnbanUser}
+        />
+      );
+    
+    case 'credits':
+      return (
+        <UserCreditsDialog 
+          open={isOpen}
+          onOpenChange={onCloseDialog}
+          user={user}
         />
       );
     
