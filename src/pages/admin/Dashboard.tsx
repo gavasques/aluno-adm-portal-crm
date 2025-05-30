@@ -1,105 +1,56 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
-import { StatsOverview } from "@/components/admin/dashboard/StatsOverview";
-import { QuickActions } from "@/components/admin/dashboard/QuickActions";
-import { SystemHealth } from "@/components/admin/dashboard/SystemHealth";
-import { RecentActivities } from "@/components/admin/dashboard/RecentActivities";
-import { PerformanceMetrics } from "@/components/admin/dashboard/PerformanceMetrics";
-import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { useUXFeedback } from "@/hooks/useUXFeedback";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const AdminDashboard = () => {
-  const { feedback } = useUXFeedback();
-  const isMobile = useIsMobile();
-
-  // Removido o useEffect que chamava feedback.systemReady() para evitar notificações duplicadas
-
-  const handleRefresh = async () => {
-    const loadingId = feedback.loading("Atualizando dashboard...");
-    
-    try {
-      // Simular carregamento de dados
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      feedback.syncCompleted();
-    } catch (error) {
-      feedback.serverError();
-    }
-  };
-
-  const content = (
-    <div className="container mx-auto p-6 space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <DashboardHeader />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      >
-        <StatsOverview />
-      </motion.div>
-
-      <div className={isMobile ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-3 gap-6"}>
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className={isMobile ? "" : "lg:col-span-2"}
-        >
-          <RecentActivities />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <QuickActions />
-        </motion.div>
-      </div>
-
-      <div className={isMobile ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <SystemHealth />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-        >
-          <PerformanceMetrics />
-        </motion.div>
-      </div>
-    </div>
-  );
-
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700">
-        <PullToRefresh onRefresh={handleRefresh}>
-          {content}
-        </PullToRefresh>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700">
-      {content}
+    <div className="container mx-auto p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
+        <p className="text-gray-600 mt-1">Visão geral da plataforma</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total de Usuários</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">1,234</p>
+            <p className="text-sm text-gray-600">+12% este mês</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Leads CRM</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">89</p>
+            <p className="text-sm text-gray-600">23 novos hoje</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Mentorias Ativas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">45</p>
+            <p className="text-sm text-gray-600">8 iniciando hoje</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Receita do Mês</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">R$ 25.4k</p>
+            <p className="text-sm text-gray-600">+8% vs mês anterior</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

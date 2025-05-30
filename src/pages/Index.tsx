@@ -1,69 +1,75 @@
 
-import { useAuth } from "@/hooks/useAuth";
-import { Navigate, Link } from "react-router-dom";
-import { ConnectionTest } from "@/components/debug/ConnectionTest";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user } = useSimpleAuth();
 
-  console.log("Index page - User:", user, "Loading:", loading);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  // Se o usuário já está logado, redirecionar para a área do aluno
-  if (user) {
-    return <Navigate to="/aluno" replace />;
-  }
-
-  // Página de boas-vindas para usuários não logados
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-800 to-black flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center space-y-8">
-        {/* Logo */}
-        <div className="mb-8">
-          <img 
-            src="/lovable-uploads/ac3223f2-8f29-482c-a887-ed1bcabecec0.png" 
-            alt="Guilherme Vasques Logo" 
-            className="h-20 md:h-24 mx-auto object-cover" 
-          />
-        </div>
-
-        {/* Título e descrição */}
-        <div className="text-white space-y-4">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Portal do Aluno
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Portal LV - Educação Avançada
           </h1>
-          <p className="text-blue-200 text-lg">
-            Sua jornada de aprendizado começa aqui
+          <p className="text-xl text-gray-600 mb-8">
+            Plataforma educacional completa com cursos, mentorias e recursos para crescimento profissional
           </p>
-        </div>
-
-        {/* Botões de ação */}
-        <div className="space-y-4">
-          <Link to="/login" className="block">
-            <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 text-lg">
-              Acessar Portal
-            </Button>
-          </Link>
           
-          <p className="text-blue-300 text-sm">
-            Não tem uma conta? 
-            <Link to="/login" className="text-white hover:underline ml-1">
-              Cadastre-se aqui
-            </Link>
-          </p>
+          {!user ? (
+            <div className="space-x-4">
+              <Link to="/login">
+                <Button size="lg">Fazer Login</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-x-4">
+              <Link to="/aluno">
+                <Button size="lg">Área do Aluno</Button>
+              </Link>
+              <Link to="/admin">
+                <Button size="lg" variant="outline">Área Administrativa</Button>
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* Debug info (apenas em desenvolvimento) */}
-        <div className="mt-8">
-          <ConnectionTest />
+        <div className="grid md:grid-cols-3 gap-8 mt-16">
+          <Card>
+            <CardHeader>
+              <CardTitle>Cursos e Mentorias</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Acesso a cursos exclusivos e programas de mentoria personalizados
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recursos Exclusivos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Ferramentas, fornecedores e parceiros para impulsionar seu negócio
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>IA Assistente</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Livi AI - Sua assistente inteligente para dúvidas e orientações
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
