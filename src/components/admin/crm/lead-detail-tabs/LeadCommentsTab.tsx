@@ -140,6 +140,38 @@ const LeadCommentsTab = ({ leadId }: LeadCommentsTabProps) => {
     console.log('Like comment:', commentId);
   };
 
+  // Corrigir a assinatura da função handleReply
+  const handleReply = async (parentId: string, content: string, mentions: string[]) => {
+    if (!content.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('crm_lead_comments')
+        .insert({
+          lead_id: leadId,
+          user_id: currentUserId,
+          parent_id: parentId,
+          content,
+          mentions
+        });
+
+      if (error) throw error;
+      
+      toast.success('Resposta adicionada!');
+      
+      // Enviar notificações para usuários mencionados
+      if (mentions.length > 0) {
+        await sendMentionNotifications(mentions, content);
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar resposta:', error);
+      toast.error('Erro ao adicionar resposta');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const sendMentionNotifications = async (mentions: string[], content: string) => {
     try {
       const notifications = mentions.map(userId => ({
@@ -229,7 +261,7 @@ const LeadCommentsTab = ({ leadId }: LeadCommentsTabProps) => {
                 comment={comment}
                 currentUserId={currentUserId}
                 onLike={handleLikeComment}
-                onReply={handleAddComment}
+                onReply={handleReply}
                 onEdit={handleEditComment}
                 onDelete={handleDeleteComment}
                 replies={comment.replies}

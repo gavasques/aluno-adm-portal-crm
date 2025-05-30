@@ -15,12 +15,18 @@ export const useCRMUsers = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, is_closer, is_onboarding')
         .order('name');
 
       if (error) throw error;
       
-      setUsers(data || []);
+      const usersWithDefaults = data?.map(user => ({
+        ...user,
+        is_closer: user.is_closer || false,
+        is_onboarding: user.is_onboarding || false
+      })) || [];
+      
+      setUsers(usersWithDefaults);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {

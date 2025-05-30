@@ -2,7 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, At, Bold, Italic, List } from 'lucide-react';
+import { Send, AtSign, Bold, Italic, List } from 'lucide-react';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import { CRMUser } from '@/types/crm.types';
 
@@ -188,7 +188,7 @@ const RichCommentEditor = ({ onSubmit, placeholder = "Escreva um comentário..."
               }
             }}
           >
-            <At className="h-4 w-4" />
+            <AtSign className="h-4 w-4" />
           </Button>
         </div>
         
