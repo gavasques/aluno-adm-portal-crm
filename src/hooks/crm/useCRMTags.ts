@@ -20,6 +20,8 @@ export const useCRMTags = () => {
     } catch (error) {
       console.error('Erro ao buscar tags:', error);
       toast.error('Erro ao carregar tags');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,12 +35,10 @@ export const useCRMTags = () => {
 
       if (error) throw error;
 
-      setTags(prev => [...prev, data]);
-      toast.success('Tag criada com sucesso');
+      setTags(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
       return data;
     } catch (error) {
       console.error('Erro ao criar tag:', error);
-      toast.error('Erro ao criar tag');
       throw error;
     }
   };
@@ -54,17 +54,24 @@ export const useCRMTags = () => {
 
       setTags(prev => prev.map(tag => 
         tag.id === tagId ? { ...tag, name, color } : tag
-      ));
-      
-      toast.success('Tag atualizada com sucesso');
+      ).sort((a, b) => a.name.localeCompare(b.name)));
     } catch (error) {
       console.error('Erro ao atualizar tag:', error);
-      toast.error('Erro ao atualizar tag');
+      throw error;
     }
   };
 
   const deleteTag = async (tagId: string) => {
     try {
+      // Primeiro, remover a tag de todos os leads
+      const { error: deleteLeadTagsError } = await supabase
+        .from('crm_lead_tags')
+        .delete()
+        .eq('tag_id', tagId);
+
+      if (deleteLeadTagsError) throw deleteLeadTagsError;
+
+      // Depois, excluir a tag
       const { error } = await supabase
         .from('crm_tags')
         .delete()
@@ -73,10 +80,9 @@ export const useCRMTags = () => {
       if (error) throw error;
 
       setTags(prev => prev.filter(tag => tag.id !== tagId));
-      toast.success('Tag removida com sucesso');
     } catch (error) {
       console.error('Erro ao remover tag:', error);
-      toast.error('Erro ao remover tag');
+      throw error;
     }
   };
 
@@ -87,10 +93,9 @@ export const useCRMTags = () => {
         .insert({ lead_id: leadId, tag_id: tagId });
 
       if (error) throw error;
-      toast.success('Tag adicionada ao lead');
     } catch (error) {
       console.error('Erro ao adicionar tag ao lead:', error);
-      toast.error('Erro ao adicionar tag');
+      throw error;
     }
   };
 
@@ -103,21 +108,38 @@ export const useCRMTags = () => {
         .eq('tag_id', tagId);
 
       if (error) throw error;
-      toast.success('Tag removida do lead');
     } catch (error) {
       console.error('Erro ao remover tag do lead:', error);
-      toast.error('Erro ao remover tag');
+      throw error;
+    }
+  };
+
+  const updateLeadTags = async (leadId: string, tagIds: string[]) => {
+    try {
+      // Primeiro, remover todas as tags do lead
+      const { error: deleteError } = await supabase
+        .from('crm_lead_tags')
+        .delete()
+        .eq('lead_id', leadId);
+
+      if (deleteError) throw deleteError;
+
+      // Depois, adicionar as novas tags
+      if (tagIds.length > 0) {
+        const { error: insertError } = await supabase
+          .from('crm_lead_tags')
+          .insert(tagIds.map(tagId => ({ lead_id: leadId, tag_id: tagId })));
+
+        if (insertError) throw insertError;
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar tags do lead:', error);
+      throw error;
     }
   };
 
   useEffect(() => {
-    const loadTags = async () => {
-      setLoading(true);
-      await fetchTags();
-      setLoading(false);
-    };
-
-    loadTags();
+    fetchTags();
   }, []);
 
   return {
@@ -128,6 +150,7 @@ export const useCRMTags = () => {
     updateTag,
     deleteTag,
     addTagToLead,
-    removeTagFromLead
+    removeTagFromLead,
+    updateLeadTags
   };
 };
