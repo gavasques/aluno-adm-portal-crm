@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,14 +19,14 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
-import { CRMFiltersType, CRMLead } from '@/types/crm.types';
+import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
 
 interface CRMListViewProps {
-  filters: CRMFiltersType;
+  filters: CRMFilters;
   onOpenDetail?: (lead: CRMLead) => void;
   onEditLead?: (lead: CRMLead) => void;
 }

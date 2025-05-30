@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Mail, Phone, Star } from 'lucide-react';
+import { Mail, Phone, Star, X } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 import { motion } from 'framer-motion';
 

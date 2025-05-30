@@ -223,3 +223,6 @@ export interface CRMFilters {
   date_from?: string;
   date_to?: string;
 }
+
+// Legacy alias for backwards compatibility
+export type CRMFiltersType = CRMFilters;
