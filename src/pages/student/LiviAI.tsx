@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Send, Play, Square, Clock, MessageSquare } from 'lucide-react';
+import { Bot, Send, Play, Square, Clock, MessageSquare, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useCredits } from '@/hooks/useCredits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +30,7 @@ interface Session {
 
 const LiviAI = () => {
   const { user } = useAuth();
+  const { creditStatus, consumeCredits, isLoading: creditsLoading } = useCredits();
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [message, setMessage] = useState('');
@@ -68,12 +71,26 @@ const LiviAI = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentSession?.messages]);
 
+  // Verificar se tem créditos suficientes
+  const hasCredits = () => {
+    return creditStatus?.credits?.current && creditStatus.credits.current > 0;
+  };
+
   // Iniciar nova sessão
   const startSession = () => {
     if (currentSession?.isActive) {
       toast({
         title: "Sessão ativa",
         description: "Encerre a sessão atual antes de iniciar uma nova.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!hasCredits()) {
+      toast({
+        title: "Créditos insuficientes",
+        description: "Você precisa de créditos para usar o Livi AI. Adquira mais créditos para continuar.",
         variant: "destructive"
       });
       return;
@@ -133,6 +150,16 @@ const LiviAI = () => {
   const sendMessage = async () => {
     if (!message.trim() || !currentSession || !user) return;
 
+    // Verificar créditos antes de enviar
+    if (!hasCredits()) {
+      toast({
+        title: "Créditos insuficientes",
+        description: "Você precisa de créditos para enviar mensagens. Adquira mais créditos para continuar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const userMessage: Message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       text: message.trim(),
@@ -149,6 +176,19 @@ const LiviAI = () => {
     setIsLoading(true);
 
     try {
+      // Consumir 1 crédito antes de enviar a mensagem
+      const creditConsumed = await consumeCredits(1, 'Mensagem Livi AI');
+      
+      if (!creditConsumed) {
+        // Se não conseguiu consumir crédito, não enviar mensagem
+        toast({
+          title: "Erro ao consumir créditos",
+          description: "Não foi possível consumir os créditos necessários.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Usar a URL configurada pelo admin
       const webhookUrl = getWebhookUrl();
       
@@ -159,8 +199,8 @@ const LiviAI = () => {
         },
         body: JSON.stringify({
           mensagem: userMessage.text,
-          usuario: user.email || user.id,
-          sessao: currentSession.id
+          userId: user.id,
+          sessionId: currentSession.id
         })
       });
 
@@ -295,12 +335,20 @@ const LiviAI = () => {
                   {currentSession?.isActive ? 'Sessão ativa' : 'Nenhuma sessão ativa'}
                 </p>
               </div>
+              
+              {/* Display de Créditos */}
+              <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <CreditCard className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <span className="text-sm font-semibold text-red-700 dark:text-red-300">
+                  {creditsLoading ? '...' : creditStatus?.credits?.current || 0} créditos
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
               <Button 
                 onClick={startSession} 
-                disabled={currentSession?.isActive}
+                disabled={currentSession?.isActive || !hasCredits()}
                 variant="default"
                 size="sm"
                 className="flex items-center gap-2"
@@ -356,7 +404,10 @@ const LiviAI = () => {
                   Bem-vindo ao Livi AI
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400">
-                  Inicie uma nova sessão para começar a conversar
+                  {hasCredits() 
+                    ? "Inicie uma nova sessão para começar a conversar"
+                    : "Você precisa de créditos para usar o Livi AI"
+                  }
                 </p>
               </div>
             </div>
@@ -375,7 +426,7 @@ const LiviAI = () => {
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Digite sua mensagem..."
+                placeholder={hasCredits() ? "Digite sua mensagem..." : "Créditos insuficientes"}
                 className="flex-1"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -383,11 +434,11 @@ const LiviAI = () => {
                     sendMessage();
                   }
                 }}
-                disabled={isLoading}
+                disabled={isLoading || !hasCredits()}
               />
               <Button 
                 onClick={sendMessage} 
-                disabled={!message.trim() || isLoading}
+                disabled={!message.trim() || isLoading || !hasCredits()}
                 size="sm"
                 className="flex items-center gap-2"
               >
@@ -395,6 +446,14 @@ const LiviAI = () => {
                 {isLoading ? 'Enviando...' : 'Enviar'}
               </Button>
             </div>
+            
+            {!hasCredits() && (
+              <div className="mt-2 text-center">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  Créditos insuficientes. Adquira mais créditos para continuar usando o Livi AI.
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
       </div>
