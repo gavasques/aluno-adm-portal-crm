@@ -76,10 +76,10 @@ const StudentDashboard = () => {
     }
   ];
 
-  // Show welcome message on dashboard load
-  React.useEffect(() => {
-    feedback.systemReady();
-  }, [feedback]);
+  // Removido: feedback.systemReady() que estava causando as notificações automáticas
+  // React.useEffect(() => {
+  //   feedback.systemReady();
+  // }, [feedback]);
 
   return (
     <PageTransition className="space-y-4 p-4">
