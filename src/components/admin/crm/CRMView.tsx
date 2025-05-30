@@ -130,6 +130,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
             <List className="h-4 w-4 mr-2" />
             Lista
           </Button>
+          <CRMPipelineManager />
           <Button onClick={onNewLead}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Lead

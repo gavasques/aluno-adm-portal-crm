@@ -1,26 +1,33 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
+import PipelineManagerDialog from './pipeline-manager/PipelineManagerDialog';
 
 interface CRMPipelineManagerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onRefresh?: () => void;
 }
 
-const CRMPipelineManager = ({ open, onOpenChange }: CRMPipelineManagerProps) => {
+const CRMPipelineManager = ({ onRefresh }: CRMPipelineManagerProps) => {
+  const [showManager, setShowManager] = useState(false);
+
+  const handleClose = () => {
+    setShowManager(false);
+    onRefresh?.();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Gerenciar Pipelines</DialogTitle>
-        </DialogHeader>
-        <div className="p-4">
-          <p className="text-sm text-muted-foreground">
-            Gerenciador de pipelines em desenvolvimento...
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button variant="outline" onClick={() => setShowManager(true)}>
+        <Settings className="h-4 w-4 mr-2" />
+        Gerenciar Pipelines
+      </Button>
+
+      <PipelineManagerDialog
+        open={showManager}
+        onOpenChange={handleClose}
+      />
+    </>
   );
 };
 
