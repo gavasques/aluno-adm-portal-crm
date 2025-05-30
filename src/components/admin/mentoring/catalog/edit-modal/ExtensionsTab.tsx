@@ -28,7 +28,7 @@ const ExtensionsTab: React.FC<ExtensionsTabProps> = ({
           <Zap className="h-5 w-5 text-blue-600" />
           ⚡ Gerenciar Extensões
           {extensions && extensions.length > 0 && (
-            <Badge variant="outline" size="sm" className="ml-2 bg-blue-100 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-700 border-blue-200 text-xs">
               {extensions.length} ativa(s)
             </Badge>
           )}

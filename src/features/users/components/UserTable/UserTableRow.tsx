@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -117,8 +118,7 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
         <div className="flex flex-col gap-1.5">
           <Badge 
             variant={getStatusVariant(user.status)}
-            size="sm"
-            className="w-fit"
+            className="w-fit text-xs"
           >
             {user.status}
           </Badge>
@@ -126,7 +126,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
           <div className="flex flex-wrap gap-1">
             <Badge 
               variant={getRoleVariant(user.role)}
-              size="sm"
               className="text-xs"
             >
               {user.role}
@@ -135,7 +134,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             {user.is_mentor && (
               <Badge 
                 variant="default" 
-                size="sm"
                 className="bg-purple-100 text-purple-800 hover:bg-purple-200 text-xs"
               >
                 <GraduationCap className="h-3 w-3 mr-1" />
@@ -146,7 +144,6 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
             {isBanned && (
               <Badge 
                 variant="destructive"
-                size="sm" 
                 className="text-xs"
               >
                 Banido

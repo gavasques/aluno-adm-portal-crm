@@ -36,18 +36,18 @@ const EditModalHeader: React.FC<EditModalHeaderProps> = ({ catalog }) => {
               ✨ Editar Mentoria - DESIGN MODERNO ✨
             </DialogTitle>
             <div className="flex items-center gap-2 mt-2">
-              <Badge size="sm" className={`text-xs px-2 py-1 border ${getTypeColor(catalog.type)}`}>
+              <Badge className={`text-xs px-2 py-1 border ${getTypeColor(catalog.type)}`}>
                 {catalog.type === 'Individual' ? (
                   <><User className="h-3 w-3 mr-1" />{catalog.type}</>
                 ) : (
                   <><Users className="h-3 w-3 mr-1" />{catalog.type}</>
                 )}
               </Badge>
-              <Badge size="sm" className={`text-xs px-2 py-1 border ${getStatusColor(catalog.active)}`}>
+              <Badge className={`text-xs px-2 py-1 border ${getStatusColor(catalog.active)}`}>
                 {catalog.active ? 'Ativa' : 'Inativa'}
               </Badge>
               {catalog.extensions && catalog.extensions.length > 0 && (
-                <Badge variant="outline" size="sm" className="text-xs bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200">
                   <Plus className="h-3 w-3 mr-1" />
                   {catalog.extensions.length} extensão(ões)
                 </Badge>
