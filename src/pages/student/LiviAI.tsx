@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Send, Play, Square, Clock, MessageSquare, CreditCard } from 'lucide-react';
+import { Bot, Send, Play, Square, Clock, MessageSquare, CreditCard, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ interface Session {
 
 const LiviAI = () => {
   const { user } = useAuth();
-  const { creditStatus, consumeCredits, isLoading: creditsLoading } = useCredits();
+  const { creditStatus, consumeCredits, isLoading: creditsLoading, refreshCredits } = useCredits();
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [message, setMessage] = useState('');
@@ -336,12 +335,21 @@ const LiviAI = () => {
                 </p>
               </div>
               
-              {/* Display de Créditos */}
-              <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <CreditCard className="h-4 w-4 text-red-600 dark:text-red-400" />
-                <span className="text-sm font-semibold text-red-700 dark:text-red-300">
+              {/* Display de Créditos com refresh */}
+              <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <CreditCard className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-semibold text-green-700 dark:text-green-300">
                   {creditsLoading ? '...' : creditStatus?.credits?.current || 0} créditos
                 </span>
+                <Button
+                  onClick={refreshCredits}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  disabled={creditsLoading}
+                >
+                  <RefreshCw className={`h-3 w-3 ${creditsLoading ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
             </div>
 
@@ -409,6 +417,16 @@ const LiviAI = () => {
                     : "Você precisa de créditos para usar o Livi AI"
                   }
                 </p>
+                <Button
+                  onClick={refreshCredits}
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  disabled={creditsLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${creditsLoading ? 'animate-spin' : ''}`} />
+                  Atualizar Créditos
+                </Button>
               </div>
             </div>
           )}

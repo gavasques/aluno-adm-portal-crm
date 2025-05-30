@@ -2,8 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CreditCard, Calendar, TrendingUp } from 'lucide-react';
+import { CreditCard, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useCredits } from '@/hooks/useCredits';
 
 interface CreditDisplayProps {
   current: number;
@@ -22,6 +24,8 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
   usagePercentage,
   subscriptionType
 }) => {
+  const { refreshCredits, isLoading } = useCredits();
+  
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
@@ -39,6 +43,11 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
     return 'default';
   };
 
+  const handleRefresh = () => {
+    console.log("🔄 Refresh de créditos solicitado");
+    refreshCredits();
+  };
+
   return (
     <Card className="border-l-4 border-l-blue-500">
       <CardHeader className="pb-3">
@@ -50,6 +59,15 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
               {subscriptionType}
             </Badge>
           )}
+          <Button
+            onClick={handleRefresh}
+            variant="ghost"
+            size="sm"
+            className="ml-2"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

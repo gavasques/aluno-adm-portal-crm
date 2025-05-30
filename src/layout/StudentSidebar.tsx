@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   LayoutDashboard,
@@ -14,12 +13,14 @@ import {
   LogOut,
   Sparkles,
   Bot,
+  RefreshCw,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +31,7 @@ import {
 
 const StudentSidebar = () => {
   const { user, signOut } = useAuth();
-  const { creditStatus, isLoading: creditsLoading } = useCredits();
+  const { creditStatus, isLoading: creditsLoading, refreshCredits } = useCredits();
   const navigate = useNavigate();
   
   const generalMenuItems = [
@@ -113,6 +114,11 @@ const StudentSidebar = () => {
 
   const handleGoToAdmin = () => {
     navigate("/admin/dashboard");
+  };
+
+  const handleRefreshCredits = () => {
+    console.log("🔄 Refresh manual de créditos solicitado pelo usuário");
+    refreshCredits();
   };
 
   const renderMenuGroup = (title: string, items: any[]) => (
@@ -208,7 +214,7 @@ const StudentSidebar = () => {
         {renderMenuGroup("Sistema", settingsMenuItems)}
       </nav>
 
-      {/* Credits Display */}
+      {/* Credits Display com refresh */}
       <motion.div 
         className="p-3 border-t border-white/10"
         initial={{ opacity: 0, y: 20 }}
@@ -227,6 +233,15 @@ const StudentSidebar = () => {
               {creditsLoading ? '...' : creditStatus?.credits?.current || 0}
             </p>
           </div>
+          <Button
+            onClick={handleRefreshCredits}
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
+            disabled={creditsLoading}
+          >
+            <RefreshCw className={`h-3 w-3 ${creditsLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
       </motion.div>
 

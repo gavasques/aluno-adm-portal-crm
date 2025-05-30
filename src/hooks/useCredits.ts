@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CreditStatus } from '@/types/credits.types';
 import { toast } from 'sonner';
@@ -8,30 +8,47 @@ export const useCredits = () => {
   const [creditStatus, setCreditStatus] = useState<CreditStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetch, setLastFetch] = useState<number>(0);
 
-  const fetchCredits = async () => {
+  const fetchCredits = useCallback(async (forceRefresh = false) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      console.log('Iniciando fetch de créditos...');
+      // Cache por 10 segundos, a menos que seja refresh forçado
+      const now = Date.now();
+      if (!forceRefresh && lastFetch && (now - lastFetch) < 10000) {
+        console.log('🔄 Usando cache de créditos');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('🔍 Buscando créditos...');
 
       const { data, error } = await supabase.functions.invoke('check-credits');
       
-      console.log('Resposta da função check-credits:', data, error);
+      console.log('📊 Resposta da função check-credits:', data, error);
       
       if (error) {
-        console.error('Erro na função check-credits:', error);
+        console.error('❌ Erro na função check-credits:', error);
         throw error;
       }
       
-      // Se data.error existe, é um erro tratado pela função
+      // Verificar se há erro na resposta
       if (data?.error) {
-        console.error('Erro retornado pela função:', data.error);
-        // Ainda assim usar os dados padrão retornados
+        console.error('❌ Erro retornado pela função:', data.error);
+        // Continuar com os dados padrão retornados
       }
       
       setCreditStatus(data);
+      setLastFetch(now);
+
+      // Debug logs
+      console.log('✅ Créditos carregados:', {
+        current: data?.credits?.current,
+        transactions: data?.transactions?.length,
+        debug: data?.debug
+      });
 
       // Mostrar alertas se necessário
       if (data?.alerts?.noCredits) {
@@ -40,7 +57,7 @@ export const useCredits = () => {
         toast.warning('Atenção: Você já usou 90% dos seus créditos mensais.');
       }
     } catch (err) {
-      console.error('Error fetching credits:', err);
+      console.error('❌ Error fetching credits:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar créditos');
       
       // Definir dados padrão em caso de erro
@@ -62,7 +79,12 @@ export const useCredits = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [lastFetch]);
+
+  const refreshCredits = useCallback(() => {
+    console.log('🔄 Refresh manual de créditos');
+    return fetchCredits(true);
+  }, [fetchCredits]);
 
   const consumeCredits = async (amount: number = 1, description: string = 'Uso de funcionalidade') => {
     try {
@@ -78,7 +100,10 @@ export const useCredits = () => {
       }
 
       toast.success(`${amount} crédito(s) consumido(s). Restam ${data.remainingCredits} créditos.`);
-      await fetchCredits(); // Atualizar status
+      
+      // Refresh automático após consumo
+      setTimeout(() => refreshCredits(), 1000);
+      
       return true;
     } catch (err) {
       console.error('Error consuming credits:', err);
@@ -97,7 +122,7 @@ export const useCredits = () => {
 
       if (data.demo) {
         toast.success(`Compra simulada: ${credits} créditos adicionados! (Modo demonstração)`);
-        await fetchCredits();
+        await refreshCredits();
         return true;
       }
 
@@ -124,7 +149,7 @@ export const useCredits = () => {
 
       if (data.demo) {
         toast.success(`Assinatura simulada: +${monthlyCredits} créditos/mês ativada! (Modo demonstração)`);
-        await fetchCredits();
+        await refreshCredits();
         return true;
       }
 
@@ -143,13 +168,30 @@ export const useCredits = () => {
 
   useEffect(() => {
     fetchCredits();
-  }, []);
+  }, [fetchCredits]);
+
+  // Listener para mudanças na autenticação
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        console.log('🔐 Usuário logado, atualizando créditos');
+        refreshCredits();
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🚪 Usuário deslogado, limpando créditos');
+        setCreditStatus(null);
+        setLastFetch(0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [refreshCredits]);
 
   return {
     creditStatus,
     isLoading,
     error,
     fetchCredits,
+    refreshCredits,
     consumeCredits,
     purchaseCredits,
     subscribeCredits
