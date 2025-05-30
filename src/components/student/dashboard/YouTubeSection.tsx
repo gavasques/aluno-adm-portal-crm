@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Youtube, RefreshCw, AlertCircle, Wifi, Users, Calendar, Sync } from 'lucide-react';
+import { Youtube, RefreshCw, AlertCircle, Wifi, Users, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -108,7 +107,7 @@ export const YouTubeSection: React.FC = () => {
                 className="space-x-2"
                 disabled={syncing}
               >
-                <Sync className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
                 <span>Sincronizar agora</span>
               </Button>
             )}
@@ -162,7 +161,7 @@ export const YouTubeSection: React.FC = () => {
           <div className="flex items-center gap-2">
             {syncing && (
               <Badge variant="secondary" className="text-xs">
-                <Sync className="w-3 h-3 mr-1 animate-spin" />
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
                 Sincronizando...
               </Badge>
             )}
@@ -176,7 +175,7 @@ export const YouTubeSection: React.FC = () => {
                 disabled={syncing}
                 title="Sincronizar vídeos agora (apenas admin)"
               >
-                <Sync className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
               </Button>
             )}
             
