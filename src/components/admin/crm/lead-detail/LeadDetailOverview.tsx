@@ -38,44 +38,44 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
         {/* Coluna principal - Informações básicas */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Informações de contato - reduzidas */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <User className="h-5 w-5 text-blue-600" />
+          {/* Informações de contato - compactadas */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-white/20 shadow-lg">
+            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+              <User className="h-4 w-4 text-blue-600" />
               Informações de Contato
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-lg">
-                <Mail className="h-4 w-4 text-blue-600" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 p-2 bg-gray-50/50 rounded-lg">
+                <Mail className="h-3 w-3 text-blue-600" />
                 <div>
                   <p className="text-xs text-gray-500">Email</p>
-                  <p className="font-medium text-sm">{lead.email}</p>
+                  <p className="font-medium text-xs">{lead.email}</p>
                 </div>
               </div>
               {lead.phone && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-lg">
-                  <Phone className="h-4 w-4 text-green-600" />
+                <div className="flex items-center gap-2 p-2 bg-gray-50/50 rounded-lg">
+                  <Phone className="h-3 w-3 text-green-600" />
                   <div>
                     <p className="text-xs text-gray-500">Telefone</p>
-                    <p className="font-medium text-sm">{lead.phone}</p>
+                    <p className="font-medium text-xs">{lead.phone}</p>
                   </div>
                 </div>
               )}
               {lead.scheduled_contact_date && (
-                <div className="flex items-center gap-3 p-3 bg-green-50/50 rounded-lg">
-                  <Calendar className="h-4 w-4 text-green-600" />
+                <div className="flex items-center gap-2 p-2 bg-green-50/50 rounded-lg">
+                  <Calendar className="h-3 w-3 text-green-600" />
                   <div>
                     <p className="text-xs text-gray-500">Próximo contato</p>
-                    <p className="font-medium text-sm">{formatDate(lead.scheduled_contact_date)}</p>
+                    <p className="font-medium text-xs">{formatDate(lead.scheduled_contact_date)}</p>
                   </div>
                 </div>
               )}
               {lead.responsible && (
-                <div className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-lg">
-                  <UserCheck className="h-4 w-4 text-purple-600" />
+                <div className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-lg">
+                  <UserCheck className="h-3 w-3 text-purple-600" />
                   <div>
                     <p className="text-xs text-gray-500">Responsável</p>
-                    <p className="font-medium text-sm">{lead.responsible.name}</p>
+                    <p className="font-medium text-xs">{lead.responsible.name}</p>
                   </div>
                 </div>
               )}
@@ -138,7 +138,7 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
 
         {/* Sidebar direita - Comentários recentes e ações */}
         <div className="space-y-6">
-          {/* Comentários recentes - maior espaço */}
+          {/* Comentários recentes - espaço expandido */}
           <RecentComments leadId={lead.id} />
 
           {/* Quick actions */}

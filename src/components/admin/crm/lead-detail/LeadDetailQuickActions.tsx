@@ -84,7 +84,7 @@ export const LeadDetailQuickActions = ({
         mode="edit"
         onSuccess={() => {
           setShowEditModal(false);
-          // Refresh será feito automaticamente pelo hook
+          // O hook useCRMLeadDetail vai refetch automaticamente
         }}
       />
     </>

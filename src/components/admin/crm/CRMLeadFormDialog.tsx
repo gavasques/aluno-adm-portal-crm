@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
 import CRMLeadForm from './CRMLeadForm';
@@ -9,6 +9,8 @@ interface CRMLeadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   leadId?: string;
+  pipelineId?: string;
+  initialColumnId?: string;
   mode: 'create' | 'edit';
   onSuccess?: () => void;
 }
@@ -17,16 +19,12 @@ const CRMLeadFormDialog = ({
   open, 
   onOpenChange, 
   leadId, 
+  pipelineId,
+  initialColumnId,
   mode, 
   onSuccess 
 }: CRMLeadFormDialogProps) => {
-  const { lead, loading, refetch } = useCRMLeadDetail(leadId || '');
-
-  useEffect(() => {
-    if (open && mode === 'edit' && leadId) {
-      refetch();
-    }
-  }, [open, mode, leadId, refetch]);
+  const { lead, loading } = useCRMLeadDetail(leadId || '');
 
   const handleSuccess = () => {
     onSuccess?.();
@@ -59,7 +57,9 @@ const CRMLeadFormDialog = ({
         
         <div className="flex-1 overflow-y-auto">
           <CRMLeadForm
-            initialData={mode === 'edit' ? lead : undefined}
+            pipelineId={pipelineId || lead?.pipeline_id || ''}
+            initialColumnId={initialColumnId || lead?.column_id}
+            lead={mode === 'edit' ? lead : undefined}
             onSuccess={handleSuccess}
             onCancel={() => onOpenChange(false)}
           />
