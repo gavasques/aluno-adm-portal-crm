@@ -35,21 +35,25 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
 
       if (supabaseError) {
         console.error('❌ Erro na Edge Function:', supabaseError);
-        throw new Error(supabaseError.message || 'Erro ao buscar vídeos');
+        throw new Error('Erro de conexão com o serviço');
       }
 
       if (data?.error) {
         console.error('❌ Erro retornado pela API:', data.error);
-        throw new Error(data.error);
+        // Não lançar erro se a API retornou array vazio com mensagem de erro
+        setError(data.error);
+        setVideos([]);
+        return;
       }
 
       const fetchedVideos = data?.videos || [];
       console.log(`✅ ${fetchedVideos.length} vídeos carregados`);
       
       setVideos(fetchedVideos);
+      setError(null);
     } catch (err) {
       console.error('❌ Erro ao carregar vídeos:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setError('Não foi possível carregar os vídeos');
       setVideos([]);
     } finally {
       setLoading(false);
@@ -61,6 +65,7 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
   }, []);
 
   const refetch = () => {
+    console.log('🔄 Recarregando vídeos...');
     fetchVideos();
   };
 

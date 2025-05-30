@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Youtube, RefreshCw, AlertCircle } from 'lucide-react';
+import { Youtube, RefreshCw, AlertCircle, Wifi } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,16 +30,18 @@ export const YouTubeSection: React.FC = () => {
       return (
         <div className="text-center py-8 space-y-4">
           <div className="flex justify-center">
-            <AlertCircle className="w-12 h-12 text-red-500" />
+            <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
+              <Wifi className="w-8 h-8 text-red-500" />
+            </div>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Erro ao carregar vídeos
+              Problema de Conexão
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {error}
+            <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+              Não foi possível carregar os vídeos no momento. Isso pode ser temporário.
             </p>
-            <Button onClick={refetch} variant="outline" className="space-x-2">
+            <Button onClick={refetch} variant="outline" size="sm" className="space-x-2">
               <RefreshCw className="w-4 h-4" />
               <span>Tentar novamente</span>
             </Button>
@@ -52,18 +54,20 @@ export const YouTubeSection: React.FC = () => {
       return (
         <div className="text-center py-8 space-y-4">
           <div className="flex justify-center">
-            <Youtube className="w-12 h-12 text-gray-400" />
+            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full">
+              <Youtube className="w-8 h-8 text-gray-400" />
+            </div>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Nenhum vídeo encontrado
+              Nenhum vídeo disponível
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Não foi possível carregar os vídeos do canal no momento.
+            <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+              Os vídeos mais recentes aparecerão aqui em breve.
             </p>
-            <Button onClick={refetch} variant="outline" className="space-x-2">
+            <Button onClick={refetch} variant="outline" size="sm" className="space-x-2">
               <RefreshCw className="w-4 h-4" />
-              <span>Recarregar</span>
+              <span>Verificar novamente</span>
             </Button>
           </div>
         </div>
@@ -101,14 +105,15 @@ export const YouTubeSection: React.FC = () => {
             </div>
           </div>
           
-          {!loading && !error && (
+          {!loading && (
             <Button 
               onClick={refetch} 
               variant="ghost" 
               size="sm"
               className="opacity-70 hover:opacity-100"
+              disabled={loading}
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           )}
         </CardHeader>
