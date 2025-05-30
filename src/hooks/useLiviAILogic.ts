@@ -96,9 +96,6 @@ export const useLiviAILogic = () => {
 
       console.log('✅ Créditos consumidos com sucesso');
 
-      await saveMessage(session.id, userMessage, undefined, 1);
-      console.log('💾 Mensagem salva no banco de dados');
-
       const webhookUrl = getWebhookUrl();
       console.log('🔗 URL do webhook:', webhookUrl);
 
@@ -158,6 +155,7 @@ export const useLiviAILogic = () => {
 
       console.log('✅ Resposta final da IA:', aiResponse);
 
+      // Salvar apenas UMA vez - a conversa completa (pergunta + resposta)
       await saveMessage(session.id, userMessage, aiResponse, 1, responseTime);
 
       toast.success("Resposta recebida com sucesso!");
