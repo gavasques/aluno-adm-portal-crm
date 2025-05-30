@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +31,6 @@ interface CRMListViewProps {
 }
 
 const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) => {
-  const navigate = useNavigate();
   const { leads, loading, deleteLead } = useCRMLeads(filters);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof CRMLead>('created_at');
@@ -289,10 +287,6 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
     }
   ];
 
-  const handleViewDetails = (lead: CRMLead) => {
-    navigate(`/admin/crm/lead/${lead.id}`);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -338,7 +332,7 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
             className: col.key === 'actions' ? 'w-32' : undefined
           }))}
           keyExtractor={(lead) => lead.id}
-          onRowClick={handleViewDetails}
+          onRowClick={onOpenDetail}
           loading={loading}
           emptyMessage="Nenhum lead encontrado com os filtros aplicados."
         />

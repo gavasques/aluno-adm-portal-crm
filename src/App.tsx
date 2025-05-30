@@ -1,86 +1,93 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
-import AdminLayout from '@/layout/AdminLayout';
-import StudentLayout from '@/layout/StudentLayout';
-import { SimpleRouteGuard } from '@/components/SimpleRouteGuard';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './hooks/useAuth';
+import AdminDashboard from './pages/admin/Dashboard';
+import Categories from './pages/admin/Categories';
+import Settings from './pages/admin/Settings';
+import StudentDashboard from './pages/student/Dashboard';
+import StudentSettings from './pages/student/Settings';
+import LiviAI from './pages/student/LiviAI';
+import AdminLayout from './layout/AdminLayout';
+import Layout from './layout/Layout';
+import Users from './pages/admin/Users';
+import AdminCRM from './pages/admin/CRM';
+import AdminCredits from './pages/admin/Credits';
+import AdminTasks from './pages/admin/Tasks';
+import AdminSuppliers from './pages/admin/Suppliers';
+import AdminPartners from './pages/admin/Partners';
+import AdminTools from './pages/admin/Tools';
+import AdminMentoring from './pages/admin/Mentoring';
+import AdminPermissions from './pages/admin/Permissions';
+import AdminAudit from './pages/admin/Audit';
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { ImprovedToaster } from "@/components/ui/improved-toaster";
 
-// Admin Pages - apenas as que existem
-import AdminDashboard from '@/pages/admin/Dashboard';
-import CRM from '@/pages/admin/CRM';
-import LeadDetails from '@/pages/admin/LeadDetails';
-import Categories from '@/pages/admin/Categories';
-import Permissions from '@/pages/admin/Permissions';
-import Audit from '@/pages/admin/Audit';
-
-// Student Pages
-import StudentDashboard from '@/pages/student/Dashboard';
-import StudentCredits from '@/pages/student/Credits';
-import StudentSuppliers from '@/pages/student/Suppliers';
-import StudentPartners from '@/pages/student/Partners';
-import StudentTools from '@/pages/student/Tools';
-import StudentMySuppliers from '@/pages/student/MySuppliers';
-import StudentMentoring from '@/pages/student/Mentoring';
-import StudentLiviAI from '@/pages/student/LiviAI';
-
-// Public Pages
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import NotFound from '@/pages/NotFound';
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
-      <HelmetProvider>
-        <Helmet>
-          <title>Portal LV - Educação Avançada</title>
-          <meta name="description" content="Portal educacional completo com cursos, mentorias e recursos para crescimento profissional." />
-        </Helmet>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <NotificationsProvider>
+            <div className="min-h-screen bg-background font-sans antialiased">
+              <Routes>
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  
+                  {/* Operacional */}
+                  <Route path="creditos" element={<AdminCredits />} />
+                  <Route path="tarefas" element={<AdminTasks />} />
+                  <Route path="crm" element={<AdminCRM />} />
+                  
+                  {/* Geral ADM */}
+                  <Route path="fornecedores" element={<AdminSuppliers />} />
+                  <Route path="parceiros" element={<AdminPartners />} />
+                  <Route path="ferramentas" element={<AdminTools />} />
+                  
+                  {/* Mentorias */}
+                  <Route path="mentorias" element={<AdminMentoring />} />
+                  <Route path="mentorias/catalogo" element={<AdminMentoring />} />
+                  <Route path="inscricoes-individuais" element={<AdminMentoring />} />
+                  <Route path="inscricoes-grupo" element={<AdminMentoring />} />
+                  <Route path="mentorias/materiais" element={<AdminMentoring />} />
+                  
+                  {/* Gestão */}
+                  <Route path="usuarios" element={<Users />} />
+                  <Route path="permissoes" element={<AdminPermissions />} />
+                  <Route path="auditoria" element={<AdminAudit />} />
+                  <Route path="calendly-config" element={<Settings />} />
+                  
+                  {/* Cadastros */}
+                  <Route path="categorias" element={<Categories />} />
+                  <Route path="tipos-softwares" element={<Categories />} />
+                  <Route path="tipos-parceiros" element={<Categories />} />
+                  
+                  {/* Sistema */}
+                  <Route path="configuracoes" element={<Settings />} />
+                </Route>
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={
-              <SimpleRouteGuard requireAuth={true} requireAdmin={true}>
-                <AdminLayout />
-              </SimpleRouteGuard>
-            }>
-              <Route index element={<AdminDashboard />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="crm" element={<CRM />} />
-              <Route path="crm/lead/:id" element={<LeadDetails />} />
-              <Route path="categorias" element={<Categories />} />
-              <Route path="permissoes" element={<Permissions />} />
-              <Route path="auditoria" element={<Audit />} />
-            </Route>
+                {/* Student Routes */}
+                <Route path="/aluno" element={<Layout isAdmin={false} />}>
+                  <Route index element={<StudentDashboard />} />
+                  <Route path="dashboard" element={<StudentDashboard />} />
+                  <Route path="livi-ai" element={<LiviAI />} />
+                  <Route path="configuracoes" element={<StudentSettings />} />
+                </Route>
 
-            {/* Student Routes */}
-            <Route path="/aluno" element={
-              <SimpleRouteGuard requireAuth={true}>
-                <StudentLayout />
-              </SimpleRouteGuard>
-            }>
-              <Route index element={<StudentDashboard />} />
-              <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="meus-creditos" element={<StudentCredits />} />
-              <Route path="fornecedores" element={<StudentSuppliers />} />
-              <Route path="parceiros" element={<StudentPartners />} />
-              <Route path="ferramentas" element={<StudentTools />} />
-              <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
-              <Route path="mentoria" element={<StudentMentoring />} />
-              <Route path="livi-ai" element={<StudentLiviAI />} />
-            </Route>
-
-            {/* Not Found Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </HelmetProvider>
-    </div>
+                {/* Redirect to Admin Dashboard by default */}
+                <Route path="/" element={<Navigate to="/admin" />} />
+              </Routes>
+              <ImprovedToaster />
+            </div>
+          </NotificationsProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
