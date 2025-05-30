@@ -25,9 +25,8 @@ const CRM = () => {
   const [editingLead, setEditingLead] = useState<CRMLead | null>(null);
   const [filters, setFilters] = useState<CRMFiltersType>({
     search: '',
-    status: 'all',
-    responsible: 'all',
-    dateRange: { from: '', to: '' },
+    responsible_id: undefined,
+    column_id: undefined,
     tags: []
   });
 
@@ -37,6 +36,7 @@ const CRM = () => {
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
       setSelectedPipelineId(pipelines[0].id);
+      setFilters(prev => ({ ...prev, pipeline_id: pipelines[0].id }));
     }
   }, [pipelines, selectedPipelineId]);
 
@@ -59,6 +59,11 @@ const CRM = () => {
   const handleFormSuccess = () => {
     setShowNewLeadForm(false);
     setEditingLead(null);
+  };
+
+  const handlePipelineChange = (pipelineId: string) => {
+    setSelectedPipelineId(pipelineId);
+    setFilters(prev => ({ ...prev, pipeline_id: pipelineId }));
   };
 
   if (pipelinesLoading) {
@@ -95,15 +100,14 @@ const CRM = () => {
       </div>
 
       {/* Stats Cards */}
-      <CRMStatsCards />
+      <CRMStatsCards filters={filters} />
 
       {/* Filters */}
       <CRMFilters 
         filters={filters} 
         onFiltersChange={setFilters}
-        pipelines={pipelines}
-        selectedPipelineId={selectedPipelineId}
-        onPipelineChange={setSelectedPipelineId}
+        pipelineId={selectedPipelineId}
+        onPipelineChange={handlePipelineChange}
       />
 
       {/* Main Content */}
@@ -131,8 +135,6 @@ const CRM = () => {
               <CRMKanbanBoard 
                 pipelineId={selectedPipelineId} 
                 filters={filters}
-                onOpenDetail={handleOpenDetail}
-                onEditLead={handleEditLead}
               />
             </TabsContent>
             <TabsContent value="list">

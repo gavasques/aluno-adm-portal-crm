@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { CRMFilters } from '@/types/crm.types';
+import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import KanbanColumn from './KanbanColumn';
@@ -19,7 +19,7 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
   const { columns, loading: columnsLoading } = useCRMPipelines();
   const { leads, loading: leadsLoading, moveLeadToColumn, fetchLeads } = useCRMLeads(filters);
   const [activeLead, setActiveLead] = React.useState(null);
-  const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedLead, setSelectedLead] = useState<CRMLead | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState<string>('');
@@ -66,7 +66,12 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
     }
   };
 
-  const handleOpenDetail = (lead) => {
+  const handleOpenDetail = (lead: CRMLead) => {
+    setSelectedLead(lead);
+    setShowDetailModal(true);
+  };
+
+  const handleEditLead = (lead: CRMLead) => {
     setSelectedLead(lead);
     setShowDetailModal(true);
   };
@@ -78,6 +83,8 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
 
   const handleLeadUpdate = () => {
     fetchLeads();
+    setShowDetailModal(false);
+    setSelectedLead(null);
   };
 
   const handleCreateSuccess = () => {
@@ -132,7 +139,7 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
         </div>
 
         <DragOverlay>
-          {activeLead ? <KanbanLeadCard lead={activeLead} /> : null}
+          {activeLead ? <KanbanLeadCard lead={activeLead} onOpenDetail={handleOpenDetail} /> : null}
         </DragOverlay>
       </DndContext>
 

@@ -14,10 +14,11 @@ interface CRMFiltersProps {
   filters: CRMFiltersType;
   onFiltersChange: (filters: CRMFiltersType) => void;
   pipelineId: string;
+  onPipelineChange: (pipelineId: string) => void;
 }
 
-const CRMFilters = ({ filters, onFiltersChange, pipelineId }: CRMFiltersProps) => {
-  const { columns } = useCRMPipelines();
+const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: CRMFiltersProps) => {
+  const { columns, pipelines } = useCRMPipelines();
   const { users } = useCRMUsers();
   const { tags } = useCRMTags();
 
@@ -76,6 +77,22 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId }: CRMFiltersProps) =
             className="pl-10"
           />
         </div>
+
+        <Select
+          value={pipelineId || 'all'}
+          onValueChange={(value) => value !== 'all' && onPipelineChange(value)}
+        >
+          <SelectTrigger className="w-full md:w-48">
+            <SelectValue placeholder="Selecionar pipeline" />
+          </SelectTrigger>
+          <SelectContent>
+            {pipelines.map(pipeline => (
+              <SelectItem key={pipeline.id} value={pipeline.id}>
+                {pipeline.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Select
           value={filters.column_id || 'all'}
