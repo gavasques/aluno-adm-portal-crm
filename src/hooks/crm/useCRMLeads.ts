@@ -193,6 +193,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
     } catch (error) {
       console.error('Erro ao remover lead:', error);
       toast.error('Erro ao remover lead');
+      throw error;
     }
   };
 

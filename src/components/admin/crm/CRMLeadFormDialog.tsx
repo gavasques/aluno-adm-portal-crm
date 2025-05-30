@@ -4,16 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import CRMLeadForm from './CRMLeadForm';
+import { CRMLead } from '@/types/crm.types';
 
 interface CRMLeadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pipelineId: string;
   initialColumnId?: string;
+  lead?: CRMLead | null;
   onSuccess?: () => void;
 }
 
-const CRMLeadFormDialog = ({ open, onOpenChange, pipelineId, initialColumnId, onSuccess }: CRMLeadFormDialogProps) => {
+const CRMLeadFormDialog = ({ 
+  open, 
+  onOpenChange, 
+  pipelineId, 
+  initialColumnId, 
+  lead,
+  onSuccess 
+}: CRMLeadFormDialogProps) => {
   const handleSuccess = () => {
     onSuccess?.();
     onOpenChange(false);
@@ -23,7 +32,9 @@ const CRMLeadFormDialog = ({ open, onOpenChange, pipelineId, initialColumnId, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <DialogTitle className="text-xl font-semibold">Novo Lead</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            {lead ? 'Editar Lead' : 'Novo Lead'}
+          </DialogTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -37,6 +48,7 @@ const CRMLeadFormDialog = ({ open, onOpenChange, pipelineId, initialColumnId, on
         <CRMLeadForm 
           pipelineId={pipelineId}
           initialColumnId={initialColumnId}
+          lead={lead}
           onSuccess={handleSuccess}
           onCancel={() => onOpenChange(false)}
         />

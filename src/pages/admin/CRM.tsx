@@ -10,8 +10,9 @@ import CRMFilters from '@/components/admin/crm/CRMFilters';
 import CRMLeadFormDialog from '@/components/admin/crm/CRMLeadFormDialog';
 import CRMPipelineManager from '@/components/admin/crm/CRMPipelineManager';
 import CRMTagsManager from '@/components/admin/crm/CRMTagsManager';
+import LeadDetailModal from '@/components/admin/crm/LeadDetailModal';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { CRMFilters as CRMFiltersType, ViewMode } from '@/types/crm.types';
+import { CRMFilters as CRMFiltersType, ViewMode, CRMLead } from '@/types/crm.types';
 
 const AdminCRM = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
@@ -20,6 +21,9 @@ const AdminCRM = () => {
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [showPipelineManager, setShowPipelineManager] = useState(false);
   const [showTagsManager, setShowTagsManager] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<CRMLead | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [editingLead, setEditingLead] = useState<CRMLead | null>(null);
 
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
 
@@ -38,6 +42,27 @@ const AdminCRM = () => {
 
   const handleFiltersChange = (newFilters: CRMFiltersType) => {
     setFilters(newFilters);
+  };
+
+  const handleOpenDetail = (lead: CRMLead) => {
+    setSelectedLead(lead);
+    setShowDetailModal(true);
+  };
+
+  const handleEditLead = (lead: CRMLead) => {
+    setEditingLead(lead);
+    setShowLeadForm(true);
+  };
+
+  const handleLeadUpdate = () => {
+    // Refresh leads será feito automaticamente pelo hook
+    setShowDetailModal(false);
+    setSelectedLead(null);
+  };
+
+  const handleFormSuccess = () => {
+    setShowLeadForm(false);
+    setEditingLead(null);
   };
 
   if (pipelinesLoading) {
@@ -141,6 +166,8 @@ const AdminCRM = () => {
             ) : (
               <CRMListView 
                 filters={filters}
+                onOpenDetail={handleOpenDetail}
+                onEditLead={handleEditLead}
               />
             )}
           </div>
@@ -152,6 +179,15 @@ const AdminCRM = () => {
         open={showLeadForm}
         onOpenChange={setShowLeadForm}
         pipelineId={selectedPipeline}
+        lead={editingLead}
+        onSuccess={handleFormSuccess}
+      />
+
+      <LeadDetailModal
+        lead={selectedLead}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        onLeadUpdate={handleLeadUpdate}
       />
 
       <CRMPipelineManager
