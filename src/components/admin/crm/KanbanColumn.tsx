@@ -10,9 +10,10 @@ import KanbanLeadCard from './KanbanLeadCard';
 interface KanbanColumnProps {
   column: CRMPipelineColumn;
   leads: CRMLead[];
+  onOpenDetail?: (lead: CRMLead) => void;
 }
 
-const KanbanColumn = ({ column, leads }: KanbanColumnProps) => {
+const KanbanColumn = ({ column, leads, onOpenDetail }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -46,7 +47,11 @@ const KanbanColumn = ({ column, leads }: KanbanColumnProps) => {
         >
           <div className="space-y-2">
             {leads.map(lead => (
-              <KanbanLeadCard key={lead.id} lead={lead} />
+              <KanbanLeadCard 
+                key={lead.id} 
+                lead={lead} 
+                onOpenDetail={onOpenDetail}
+              />
             ))}
             
             {leads.length === 0 && (

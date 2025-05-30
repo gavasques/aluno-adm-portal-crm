@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CRMFilters } from '@/types/crm.types';
@@ -7,6 +7,7 @@ import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import KanbanColumn from './KanbanColumn';
 import KanbanLeadCard from './KanbanLeadCard';
+import LeadDetailModal from './LeadDetailModal';
 
 interface CRMKanbanBoardProps {
   filters: CRMFilters;
@@ -15,8 +16,10 @@ interface CRMKanbanBoardProps {
 
 const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
   const { columns, loading: columnsLoading } = useCRMPipelines();
-  const { leads, loading: leadsLoading, moveLeadToColumn } = useCRMLeads(filters);
+  const { leads, loading: leadsLoading, moveLeadToColumn, fetchLeads } = useCRMLeads(filters);
   const [activeLead, setActiveLead] = React.useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -60,6 +63,15 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
     }
   };
 
+  const handleOpenDetail = (lead) => {
+    setSelectedLead(lead);
+    setShowDetailModal(true);
+  };
+
+  const handleLeadUpdate = () => {
+    fetchLeads();
+  };
+
   if (columnsLoading || leadsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -78,34 +90,44 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
-        <div className="flex gap-3 min-w-max h-full px-2">
-          <SortableContext 
-            items={pipelineColumns.map(col => col.id)} 
-            strategy={horizontalListSortingStrategy}
-          >
-            {pipelineColumns
-              .sort((a, b) => a.sort_order - b.sort_order)
-              .map(column => (
-                <KanbanColumn
-                  key={column.id}
-                  column={column}
-                  leads={leadsByColumn[column.id] || []}
-                />
-              ))}
-          </SortableContext>
+    <>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
+          <div className="flex gap-3 min-w-max h-full px-2">
+            <SortableContext 
+              items={pipelineColumns.map(col => col.id)} 
+              strategy={horizontalListSortingStrategy}
+            >
+              {pipelineColumns
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map(column => (
+                  <KanbanColumn
+                    key={column.id}
+                    column={column}
+                    leads={leadsByColumn[column.id] || []}
+                    onOpenDetail={handleOpenDetail}
+                  />
+                ))}
+            </SortableContext>
+          </div>
         </div>
-      </div>
 
-      <DragOverlay>
-        {activeLead ? <KanbanLeadCard lead={activeLead} /> : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay>
+          {activeLead ? <KanbanLeadCard lead={activeLead} /> : null}
+        </DragOverlay>
+      </DndContext>
+
+      <LeadDetailModal
+        lead={selectedLead}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        onLeadUpdate={handleLeadUpdate}
+      />
+    </>
   );
 };
 

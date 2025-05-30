@@ -6,14 +6,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign } from 'lucide-react';
+import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign, Eye } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 
 interface KanbanLeadCardProps {
   lead: CRMLead;
+  onOpenDetail?: (lead: CRMLead) => void;
 }
 
-const KanbanLeadCard = ({ lead }: KanbanLeadCardProps) => {
+const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
   const {
     attributes,
     listeners,
@@ -42,6 +43,11 @@ const KanbanLeadCard = ({ lead }: KanbanLeadCardProps) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onOpenDetail?.(lead);
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -63,9 +69,19 @@ const KanbanLeadCard = ({ lead }: KanbanLeadCardProps) => {
                 <span className="line-clamp-1 text-xs">{lead.email}</span>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 ml-1">
-              <MoreHorizontal className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600" 
+                onClick={handleViewDetails}
+              >
+                <Eye className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600">
+                <MoreHorizontal className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
 
           {/* Informações de Contato */}
