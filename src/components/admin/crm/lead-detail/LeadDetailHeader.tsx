@@ -1,15 +1,14 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { X, Mail, Phone, Star } from 'lucide-react';
+import { Mail, Phone, Star } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 import { motion } from 'framer-motion';
 
 interface LeadDetailHeaderProps {
   lead: CRMLead;
-  onClose: () => void;
+  onClose?: () => void; // Make optional since it's not always needed
 }
 
 export const LeadDetailHeader = ({ lead, onClose }: LeadDetailHeaderProps) => {
@@ -110,14 +109,17 @@ export const LeadDetailHeader = ({ lead, onClose }: LeadDetailHeaderProps) => {
             </Badge>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0 hover:bg-white/20 backdrop-blur-sm"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {/* Remove close button or make it conditional */}
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0 hover:bg-white/20 backdrop-blur-sm"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

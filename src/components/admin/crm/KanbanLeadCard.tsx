@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ interface KanbanLeadCardProps {
 }
 
 const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
+  const navigate = useNavigate();
+  
   const {
     attributes,
     listeners,
@@ -45,12 +47,12 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onOpenDetail?.(lead);
+    navigate(`/admin/crm/lead/${lead.id}`);
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onOpenDetail?.(lead);
+    navigate(`/admin/crm/lead/${lead.id}`);
   };
 
   return (

@@ -1,5 +1,5 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,19 +18,20 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
-import { CRMFilters, CRMLead } from '@/types/crm.types';
+import { CRMFiltersType, CRMLead } from '@/types/crm.types';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
 
 interface CRMListViewProps {
-  filters: CRMFilters;
+  filters: CRMFiltersType;
   onOpenDetail?: (lead: CRMLead) => void;
   onEditLead?: (lead: CRMLead) => void;
 }
 
 const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) => {
+  const navigate = useNavigate();
   const { leads, loading, deleteLead } = useCRMLeads(filters);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof CRMLead>('created_at');
@@ -287,6 +288,10 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
     }
   ];
 
+  const handleViewDetails = (lead: CRMLead) => {
+    navigate(`/admin/crm/lead/${lead.id}`);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -332,7 +337,7 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
             className: col.key === 'actions' ? 'w-32' : undefined
           }))}
           keyExtractor={(lead) => lead.id}
-          onRowClick={onOpenDetail}
+          onRowClick={handleViewDetails}
           loading={loading}
           emptyMessage="Nenhum lead encontrado com os filtros aplicados."
         />
