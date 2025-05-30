@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Filter, X, Check, Tags } from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
@@ -62,6 +63,10 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
     onFiltersChange({ pipeline_id: filters.pipeline_id });
   };
 
+  const clearTagsFilter = () => {
+    onFiltersChange({ ...filters, tags: undefined });
+  };
+
   const hasActiveFilters = !!(
     filters.search || 
     filters.column_id || 
@@ -83,63 +88,101 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
         />
       </div>
 
-      {/* Tags Dropdown Menu */}
+      {/* Tags Multi-Select */}
       {tags.length > 0 && (
-        <Popover open={tagsOpen} onOpenChange={setTagsOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={tagsOpen}
-              className="w-full md:w-48 justify-between"
-            >
-              <div className="flex items-center gap-2">
-                <Tags className="h-4 w-4" />
-                {selectedTags.length > 0 ? (
-                  <span className="truncate">
-                    {selectedTags.length} tag{selectedTags.length !== 1 ? 's' : ''}
-                  </span>
-                ) : (
-                  "Filtrar por tags"
-                )}
-              </div>
-              <Filter className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-0" align="start">
-            <Command>
-              <CommandInput placeholder="Buscar tags..." />
-              <CommandList>
-                <CommandEmpty>Nenhuma tag encontrada.</CommandEmpty>
-                <CommandGroup>
-                  {tags.map((tag) => {
-                    const isSelected = filters.tags?.includes(tag.id);
-                    return (
+        <div className="flex items-center gap-2">
+          <Popover open={tagsOpen} onOpenChange={setTagsOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={tagsOpen}
+                className="w-full md:w-48 justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <Tags className="h-4 w-4" />
+                  {selectedTags.length > 0 ? (
+                    <span className="truncate">
+                      {selectedTags.length} tag{selectedTags.length !== 1 ? 's' : ''}
+                    </span>
+                  ) : (
+                    "Filtrar por tags"
+                  )}
+                </div>
+                <Filter className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Buscar tags..." />
+                <CommandList>
+                  <CommandEmpty>Nenhuma tag encontrada.</CommandEmpty>
+                  <CommandGroup>
+                    {tags.map((tag) => {
+                      const isSelected = filters.tags?.includes(tag.id);
+                      return (
+                        <CommandItem
+                          key={tag.id}
+                          value={tag.name}
+                          onSelect={() => handleTagToggle(tag.id)}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onChange={() => handleTagToggle(tag.id)}
+                            className="mr-2"
+                          />
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: tag.color }}
+                          />
+                          <span className="flex-1">{tag.name}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                  {selectedTags.length > 0 && (
+                    <CommandGroup>
                       <CommandItem
-                        key={tag.id}
-                        value={tag.name}
-                        onSelect={() => handleTagToggle(tag.id)}
-                        className="flex items-center gap-2 cursor-pointer"
+                        onSelect={clearTagsFilter}
+                        className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            isSelected ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: tag.color }}
-                        />
-                        <span className="flex-1">{tag.name}</span>
+                        <X className="h-4 w-4" />
+                        <span>Limpar tags selecionadas</span>
                       </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Selected Tags Display */}
+          {selectedTags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {selectedTags.slice(0, 2).map(tag => (
+                <Badge
+                  key={tag.id}
+                  variant="default"
+                  className="cursor-pointer text-xs px-2 py-1"
+                  style={{
+                    backgroundColor: tag.color,
+                    color: 'white'
+                  }}
+                  onClick={() => handleTagToggle(tag.id)}
+                >
+                  {tag.name}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              ))}
+              {selectedTags.length > 2 && (
+                <Badge variant="outline" className="text-xs px-2 py-1">
+                  +{selectedTags.length - 2}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       <Select
@@ -198,27 +241,6 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
           <X className="h-4 w-4 mr-2" />
           Limpar
         </Button>
-      )}
-
-      {/* Selected Tags Display */}
-      {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
-          {selectedTags.map(tag => (
-            <Badge
-              key={tag.id}
-              variant="default"
-              className="cursor-pointer"
-              style={{
-                backgroundColor: tag.color,
-                color: 'white'
-              }}
-              onClick={() => handleTagToggle(tag.id)}
-            >
-              {tag.name}
-              <X className="h-3 w-3 ml-1" />
-            </Badge>
-          ))}
-        </div>
       )}
     </div>
   );
