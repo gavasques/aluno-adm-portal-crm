@@ -22,10 +22,10 @@ export const LiviAIHeader: React.FC<LiviAIHeaderProps> = ({
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm flex-shrink-0 overflow-x-hidden"
+      className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-b border-gray-200/50 dark:border-slate-700/50 shadow-sm flex-shrink-0 overflow-x-hidden"
     >
-      <div className="p-3 w-full max-w-4xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between gap-4 min-w-0">
+      <div className="p-4 w-full">
+        <div className="flex items-center justify-between gap-4 min-w-0 max-w-4xl mx-auto">
           {/* Logo e Status */}
           <div className="flex items-center space-x-3 min-w-0 flex-1">
             <motion.div 

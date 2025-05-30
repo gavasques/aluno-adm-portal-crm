@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -89,7 +88,7 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className={`session-card bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 rounded-lg p-2.5 mb-2 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-white/80 dark:hover:bg-slate-800/80 ${
+      className={`session-card bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border border-gray-200/50 dark:border-slate-600/50 rounded-lg p-2.5 mb-2 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-white/90 dark:hover:bg-slate-700/90 ${
         currentSession?.id === session.id ? 'ring-1 ring-blue-500 border-blue-200 dark:border-blue-600' : ''
       }`}
       onClick={() => onSelectSession(session)}
@@ -169,9 +168,9 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
   );
 
   return (
-    <div className="w-full h-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg border-r border-white/20 dark:border-slate-700/20 shadow-lg flex flex-col">
+    <div className="w-full h-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-r border-gray-200/50 dark:border-slate-700/50 shadow-sm flex flex-col">
       {/* Header */}
-      <div className="p-3 border-b border-white/20 dark:border-slate-700/20">
+      <div className="p-3 border-b border-gray-200/50 dark:border-slate-700/50">
         <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">
           Histórico de Sessões
         </h2>
@@ -183,7 +182,7 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
             placeholder="Buscar conversas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-7 h-7 text-xs bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-white/20 dark:border-slate-700/20"
+            className="pl-7 h-7 text-xs bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-gray-200/50 dark:border-slate-600/50"
           />
         </div>
       </div>
@@ -193,7 +192,7 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
         {loading ? (
           <div className="space-y-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-14 bg-white/40 dark:bg-slate-800/40 rounded-lg animate-pulse" />
+              <div key={i} className="h-14 bg-white/40 dark:bg-slate-700/40 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : (
