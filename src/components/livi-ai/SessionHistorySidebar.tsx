@@ -89,17 +89,17 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className={`session-card bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 rounded-lg p-3 mb-3 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-white/80 dark:hover:bg-slate-800/80 ${
+      className={`session-card bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 rounded-lg p-2.5 mb-2 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-white/80 dark:hover:bg-slate-800/80 ${
         currentSession?.id === session.id ? 'ring-1 ring-blue-500 border-blue-200 dark:border-blue-600' : ''
       }`}
       onClick={() => onSelectSession(session)}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
     >
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-1.5">
         <div className="flex items-center min-w-0 flex-1">
-          <div className="w-4 h-4 flex items-center justify-center mr-2 flex-shrink-0">
-            <MessageSquare className={`h-3 w-3 ${session.is_active ? 'text-blue-500' : 'text-gray-400'}`} />
+          <div className="w-3 h-3 flex items-center justify-center mr-2 flex-shrink-0">
+            <MessageSquare className={`h-2.5 w-2.5 ${session.is_active ? 'text-blue-500' : 'text-gray-400'}`} />
           </div>
           {editingSessionId === session.id ? (
             <Input
@@ -110,7 +110,7 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
                 if (e.key === 'Escape') cancelEdit();
               }}
               onBlur={saveEdit}
-              className="text-xs h-5 p-1 bg-white/80 dark:bg-slate-700/80"
+              className="text-xs h-4 p-1 bg-white/80 dark:bg-slate-700/80"
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
@@ -120,10 +120,10 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+        <div className="flex items-center gap-1 flex-shrink-0 ml-1">
           <Badge 
             variant={session.is_active ? "default" : "secondary"}
-            className={`text-xs px-2 py-0 rounded-full whitespace-nowrap h-5 ${
+            className={`text-xs px-1.5 py-0 rounded-full whitespace-nowrap h-4 ${
               session.is_active 
                 ? 'bg-blue-500 text-white' 
                 : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
@@ -134,18 +134,18 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-5 w-5 p-0 hover:bg-white/60 dark:hover:bg-slate-700/60"
+            className="h-4 w-4 p-0 hover:bg-white/60 dark:hover:bg-slate-700/60"
             onClick={(e) => {
               e.stopPropagation();
               startEdit(session);
             }}
           >
-            <Edit3 className="h-2.5 w-2.5" />
+            <Edit3 className="h-2 w-2" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-5 w-5 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="h-4 w-4 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
             onClick={(e) => {
               e.stopPropagation();
               if (confirm('Tem certeza que deseja deletar esta sessão?')) {
@@ -153,13 +153,13 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
               }
             }}
           >
-            <Trash2 className="h-2.5 w-2.5" />
+            <Trash2 className="h-2 w-2" />
           </Button>
         </div>
       </div>
 
       <div className="text-gray-500 dark:text-gray-400 text-xs flex items-center mb-1">
-        <Clock className="h-3 w-3 mr-1" />
+        <Clock className="h-2.5 w-2.5 mr-1" />
         <span>{formatTimeRange(session)}</span>
       </div>
       <div className="text-gray-500 dark:text-gray-400 text-xs">
@@ -171,29 +171,29 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
   return (
     <div className="w-full h-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg border-r border-white/20 dark:border-slate-700/20 shadow-lg flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-white/20 dark:border-slate-700/20">
-        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3">
+      <div className="p-3 border-b border-white/20 dark:border-slate-700/20">
+        <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">
           Histórico de Sessões
         </h2>
         
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
           <Input
             placeholder="Buscar conversas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8 text-xs bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-white/20 dark:border-slate-700/20"
+            className="pl-7 h-7 text-xs bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-white/20 dark:border-slate-700/20"
           />
         </div>
       </div>
 
       {/* Sessions List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {loading ? (
           <div className="space-y-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-white/40 dark:bg-slate-800/40 rounded-lg animate-pulse" />
+              <div key={i} className="h-14 bg-white/40 dark:bg-slate-800/40 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : (
@@ -204,10 +204,10 @@ export const SessionHistorySidebar: React.FC<SessionHistorySidebarProps> = ({
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center py-8"
+                className="text-center py-6"
               >
-                <MessageSquare className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                <MessageSquare className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600 dark:text-gray-400 text-xs">
                   {searchTerm ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
                 </p>
               </motion.div>
