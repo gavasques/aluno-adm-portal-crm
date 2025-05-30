@@ -1,57 +1,69 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
 import CRMLeadForm from './CRMLeadForm';
-import { CRMLead } from '@/types/crm.types';
+import { Loader2 } from 'lucide-react';
 
 interface CRMLeadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  pipelineId: string;
-  initialColumnId?: string;
-  lead?: CRMLead | null;
+  leadId?: string;
+  mode: 'create' | 'edit';
   onSuccess?: () => void;
 }
 
 const CRMLeadFormDialog = ({ 
   open, 
   onOpenChange, 
-  pipelineId, 
-  initialColumnId, 
-  lead,
+  leadId, 
+  mode, 
   onSuccess 
 }: CRMLeadFormDialogProps) => {
+  const { lead, loading, refetch } = useCRMLeadDetail(leadId || '');
+
+  useEffect(() => {
+    if (open && mode === 'edit' && leadId) {
+      refetch();
+    }
+  }, [open, mode, leadId, refetch]);
+
   const handleSuccess = () => {
     onSuccess?.();
     onOpenChange(false);
   };
 
+  if (mode === 'edit' && loading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span>Carregando dados do lead...</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <DialogTitle className="text-xl font-semibold">
-            {lead ? 'Editar Lead' : 'Novo Lead'}
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>
+            {mode === 'create' ? 'Novo Lead' : `Editar Lead - ${lead?.name}`}
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
         
-        <CRMLeadForm 
-          pipelineId={pipelineId}
-          initialColumnId={initialColumnId}
-          lead={lead}
-          onSuccess={handleSuccess}
-          onCancel={() => onOpenChange(false)}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <CRMLeadForm
+            initialData={mode === 'edit' ? lead : undefined}
+            onSuccess={handleSuccess}
+            onCancel={() => onOpenChange(false)}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

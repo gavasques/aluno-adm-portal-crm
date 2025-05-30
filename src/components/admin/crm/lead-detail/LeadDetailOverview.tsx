@@ -11,10 +11,10 @@ import {
   Calendar,
   Globe,
   DollarSign,
-  UserCheck,
-  Activity
+  UserCheck
 } from 'lucide-react';
 import { LeadDetailQuickActions } from './LeadDetailQuickActions';
+import { RecentComments } from './RecentComments';
 
 interface LeadDetailOverviewProps {
   lead: CRMLead;
@@ -38,51 +38,47 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
         {/* Coluna principal - Informações básicas */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Informações de contato */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          {/* Informações de contato - reduzidas */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <User className="h-5 w-5 text-blue-600" />
               Informações de Contato
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-lg">
+                <Mail className="h-4 w-4 text-blue-600" />
+                <div>
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="font-medium text-sm">{lead.email}</p>
+                </div>
+              </div>
+              {lead.phone && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-lg">
-                  <Mail className="h-4 w-4 text-blue-600" />
+                  <Phone className="h-4 w-4 text-green-600" />
                   <div>
-                    <p className="text-xs text-gray-500">Email</p>
-                    <p className="font-medium">{lead.email}</p>
+                    <p className="text-xs text-gray-500">Telefone</p>
+                    <p className="font-medium text-sm">{lead.phone}</p>
                   </div>
                 </div>
-                {lead.scheduled_contact_date && (
-                  <div className="flex items-center gap-3 p-3 bg-green-50/50 rounded-lg">
-                    <Calendar className="h-4 w-4 text-green-600" />
-                    <div>
-                      <p className="text-xs text-gray-500">Próximo contato</p>
-                      <p className="font-medium">{formatDate(lead.scheduled_contact_date)}</p>
-                    </div>
+              )}
+              {lead.scheduled_contact_date && (
+                <div className="flex items-center gap-3 p-3 bg-green-50/50 rounded-lg">
+                  <Calendar className="h-4 w-4 text-green-600" />
+                  <div>
+                    <p className="text-xs text-gray-500">Próximo contato</p>
+                    <p className="font-medium text-sm">{formatDate(lead.scheduled_contact_date)}</p>
                   </div>
-                )}
-              </div>
-              <div className="space-y-3">
-                {lead.phone && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-lg">
-                    <Phone className="h-4 w-4 text-green-600" />
-                    <div>
-                      <p className="text-xs text-gray-500">Telefone</p>
-                      <p className="font-medium">{lead.phone}</p>
-                    </div>
+                </div>
+              )}
+              {lead.responsible && (
+                <div className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-lg">
+                  <UserCheck className="h-4 w-4 text-purple-600" />
+                  <div>
+                    <p className="text-xs text-gray-500">Responsável</p>
+                    <p className="font-medium text-sm">{lead.responsible.name}</p>
                   </div>
-                )}
-                {lead.responsible && (
-                  <div className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-lg">
-                    <UserCheck className="h-4 w-4 text-purple-600" />
-                    <div>
-                      <p className="text-xs text-gray-500">Responsável</p>
-                      <p className="font-medium">{lead.responsible.name}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -140,41 +136,13 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
           )}
         </div>
 
-        {/* Sidebar direita - Atividades recentes */}
+        {/* Sidebar direita - Comentários recentes e ações */}
         <div className="space-y-6">
-          {/* Atividades recentes */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-purple-600" />
-              Atividades Recentes
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 bg-blue-50/50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="text-sm font-medium">Lead criado</p>
-                  <p className="text-xs text-gray-500">{formatDate(lead.created_at)}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-green-50/50 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="text-sm font-medium">Status atualizado</p>
-                  <p className="text-xs text-gray-500">Há 2 dias</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-orange-50/50 rounded-lg">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="text-sm font-medium">Comentário adicionado</p>
-                  <p className="text-xs text-gray-500">Há 3 dias</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Comentários recentes - maior espaço */}
+          <RecentComments leadId={lead.id} />
 
           {/* Quick actions */}
-          <LeadDetailQuickActions />
+          <LeadDetailQuickActions leadId={lead.id} leadName={lead.name} />
         </div>
       </div>
     </motion.div>
