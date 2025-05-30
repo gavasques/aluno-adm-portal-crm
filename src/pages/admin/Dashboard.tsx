@@ -15,10 +15,7 @@ const AdminDashboard = () => {
   const { feedback } = useUXFeedback();
   const isMobile = useIsMobile();
 
-  // Show welcome message on dashboard load
-  React.useEffect(() => {
-    feedback.systemReady();
-  }, [feedback]);
+  // Removido o useEffect que chamava feedback.systemReady() para evitar notificações duplicadas
 
   const handleRefresh = async () => {
     const loadingId = feedback.loading("Atualizando dashboard...");
