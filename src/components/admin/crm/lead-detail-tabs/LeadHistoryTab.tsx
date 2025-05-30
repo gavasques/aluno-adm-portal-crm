@@ -52,7 +52,22 @@ const LeadHistoryTab = ({ leadId }: LeadHistoryTabProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHistory(data || []);
+      
+      // Mapear e filtrar dados para garantir tipos corretos
+      const typedHistory: HistoryEntry[] = (data || [])
+        .map(item => ({
+          id: item.id,
+          action_type: item.action_type as HistoryEntry['action_type'],
+          field_name: item.field_name,
+          old_value: item.old_value,
+          new_value: item.new_value,
+          description: item.description,
+          created_at: item.created_at,
+          user: item.user
+        }))
+        .filter(item => ['created', 'updated', 'moved', 'assigned', 'commented'].includes(item.action_type));
+      
+      setHistory(typedHistory);
     } catch (error) {
       console.error('Erro ao buscar histórico:', error);
       toast.error('Erro ao carregar histórico');

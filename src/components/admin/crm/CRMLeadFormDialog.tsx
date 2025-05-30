@@ -9,16 +9,19 @@ interface CRMLeadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pipelineId: string;
+  initialColumnId?: string;
+  onSuccess?: () => void;
 }
 
-const CRMLeadFormDialog = ({ open, onOpenChange, pipelineId }: CRMLeadFormDialogProps) => {
+const CRMLeadFormDialog = ({ open, onOpenChange, pipelineId, initialColumnId, onSuccess }: CRMLeadFormDialogProps) => {
   const handleSuccess = () => {
+    onSuccess?.();
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <DialogTitle className="text-xl font-semibold">Novo Lead</DialogTitle>
           <Button
@@ -33,6 +36,7 @@ const CRMLeadFormDialog = ({ open, onOpenChange, pipelineId }: CRMLeadFormDialog
         
         <CRMLeadForm 
           pipelineId={pipelineId}
+          initialColumnId={initialColumnId}
           onSuccess={handleSuccess}
           onCancel={() => onOpenChange(false)}
         />

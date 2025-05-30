@@ -290,7 +290,7 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
 
               <div className="space-y-2">
                 <Label htmlFor="amazon_tax_regime">Regime tributário</Label>
-                <Select onValueChange={(value) => setValue('amazon_tax_regime', value as any)}>
+                <Select onValueChange={(value) => setValue('amazon_tax_regime', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o regime" />
                   </SelectTrigger>

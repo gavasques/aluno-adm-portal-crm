@@ -9,20 +9,22 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, User, Building2, Globe, DollarSign } from 'lucide-react';
+import { Calendar, User, Building2, Globe, DollarSign, Tags } from 'lucide-react';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
+import CRMTagsSelector from './CRMTagsSelector';
 
 interface CRMLeadFormProps {
   pipelineId: string;
+  initialColumnId?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
+const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLeadFormProps) => {
   const [loading, setLoading] = useState(false);
   const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
   const { createLead } = useCRMLeads();
@@ -38,6 +40,8 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
       seeks_private_label: false,
       ready_to_invest_3k: false,
       calendly_scheduled: false,
+      column_id: initialColumnId || '',
+      tags: [],
     }
   });
 
@@ -68,19 +72,19 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
   // Filtrar colunas do pipeline atual
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
-  // Selecionar primeira coluna por padrão
+  // Selecionar primeira coluna por padrão se não tiver coluna inicial
   useEffect(() => {
-    if (pipelineColumns.length > 0 && !form.watch('column_id')) {
+    if (pipelineColumns.length > 0 && !form.watch('column_id') && !initialColumnId) {
       const firstColumn = pipelineColumns.sort((a, b) => a.sort_order - b.sort_order)[0];
       setValue('column_id', firstColumn.id);
     }
-  }, [pipelineColumns, setValue, form]);
+  }, [pipelineColumns, setValue, form, initialColumnId]);
 
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true);
     try {
       // Garantir que column_id está definido
-      const columnId = data.column_id || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
+      const columnId = data.column_id || initialColumnId || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
       
       await createLead({
         ...data,
@@ -176,15 +180,12 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
           {hasCompany && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="what_sells">O que vende? *</Label>
+                <Label htmlFor="what_sells">O que vende?</Label>
                 <Input
                   id="what_sells"
                   {...form.register('what_sells')}
                   placeholder="Produtos/serviços que comercializa"
                 />
-                {form.formState.errors.what_sells && (
-                  <p className="text-sm text-red-600">{form.formState.errors.what_sells.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -232,26 +233,20 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
                   {...form.register('amazon_store_link')}
                   placeholder="https://amazon.com.br/..."
                 />
-                {form.formState.errors.amazon_store_link && (
-                  <p className="text-sm text-red-600">{form.formState.errors.amazon_store_link.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amazon_state">Estado na Amazon *</Label>
+                <Label htmlFor="amazon_state">Estado na Amazon</Label>
                 <Input
                   id="amazon_state"
                   {...form.register('amazon_state')}
                   placeholder="SP, RJ, MG..."
                 />
-                {form.formState.errors.amazon_state && (
-                  <p className="text-sm text-red-600">{form.formState.errors.amazon_state.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amazon_tax_regime">Regime tributário *</Label>
-                <Select onValueChange={(value) => setValue('amazon_tax_regime', value as any)}>
+                <Label htmlFor="amazon_tax_regime">Regime tributário</Label>
+                <Select onValueChange={(value) => setValue('amazon_tax_regime', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o regime" />
                   </SelectTrigger>
@@ -262,9 +257,6 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
                     <SelectItem value="mei">MEI</SelectItem>
                   </SelectContent>
                 </Select>
-                {form.formState.errors.amazon_tax_regime && (
-                  <p className="text-sm text-red-600">{form.formState.errors.amazon_tax_regime.message}</p>
-                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -334,9 +326,6 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
               {...form.register('calendly_link')}
               placeholder="https://calendly.com/..."
             />
-            {form.formState.errors.calendly_link && (
-              <p className="text-sm text-red-600">{form.formState.errors.calendly_link.message}</p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -348,6 +337,22 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
               rows={3}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Tags */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Tags className="h-5 w-5 text-purple-500" />
+            Tags
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CRMTagsSelector
+            selectedTags={watch('tags') || []}
+            onTagsChange={(tags) => setValue('tags', tags)}
+          />
         </CardContent>
       </Card>
 
@@ -363,7 +368,7 @@ const CRMLeadForm = ({ pipelineId, onSuccess, onCancel }: CRMLeadFormProps) => {
           <div className="space-y-2">
             <Label htmlFor="column_id">Coluna inicial</Label>
             <Select 
-              value={form.watch('column_id') || ''}
+              value={form.watch('column_id') || initialColumnId || ''}
               onValueChange={(value) => setValue('column_id', value)}
             >
               <SelectTrigger>

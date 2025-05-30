@@ -8,6 +8,7 @@ import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import KanbanColumn from './KanbanColumn';
 import KanbanLeadCard from './KanbanLeadCard';
 import LeadDetailModal from './LeadDetailModal';
+import CRMLeadFormDialog from './CRMLeadFormDialog';
 
 interface CRMKanbanBoardProps {
   filters: CRMFilters;
@@ -20,6 +21,8 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
   const [activeLead, setActiveLead] = React.useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedColumnId, setSelectedColumnId] = useState<string>('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -68,7 +71,18 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
     setShowDetailModal(true);
   };
 
+  const handleAddLead = (columnId: string) => {
+    setSelectedColumnId(columnId);
+    setShowCreateModal(true);
+  };
+
   const handleLeadUpdate = () => {
+    fetchLeads();
+  };
+
+  const handleCreateSuccess = () => {
+    setShowCreateModal(false);
+    setSelectedColumnId('');
     fetchLeads();
   };
 
@@ -110,6 +124,7 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
                     column={column}
                     leads={leadsByColumn[column.id] || []}
                     onOpenDetail={handleOpenDetail}
+                    onAddLead={handleAddLead}
                   />
                 ))}
             </SortableContext>
@@ -126,6 +141,14 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
         open={showDetailModal}
         onOpenChange={setShowDetailModal}
         onLeadUpdate={handleLeadUpdate}
+      />
+
+      <CRMLeadFormDialog
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        pipelineId={pipelineId}
+        initialColumnId={selectedColumnId}
+        onSuccess={handleCreateSuccess}
       />
     </>
   );
