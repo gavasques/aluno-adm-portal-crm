@@ -185,7 +185,7 @@ export default function AdminSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
-  const [sidebarWidth, setSidebarWidth] = useState(220);
+  const [sidebarWidth, setSidebarWidth] = useState(200); // Largura reduzida
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -260,32 +260,32 @@ export default function AdminSidebar() {
         style={{ width: `${sidebarWidth}px` }}
       >
         {/* Header da sidebar com logo - mais compacto */}
-        <div className="p-3 border-b border-gray-700">
-          <div className="flex items-center justify-between mb-3">
+        <div className="p-2 border-b border-gray-700">
+          <div className="flex items-center justify-between mb-2">
             <Link to="/admin/dashboard" className="flex items-center">
               <img 
                 src="/lovable-uploads/fa166a7e-b1af-4959-a15a-12517ab1ed07.png"
                 alt="Logo" 
-                className="h-6"
+                className="h-5"
               />
             </Link>
             
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700 h-8 w-8">
-              <Bell className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700 h-6 w-6">
+              <Bell className="h-2 w-2" />
               {unreadCount > 0 && (
-                <span className="absolute top-0.5 right-1 flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                <span className="absolute top-0 right-0.5 flex h-1 w-1 rounded-full bg-red-500"></span>
               )}
             </Button>
           </div>
         </div>
 
         {/* Menu de navegação com Accordion - mais compacto */}
-        <div className="flex-1 p-2">
+        <div className="flex-1 p-1">
           <Accordion 
             type="multiple" 
             value={openGroups} 
             onValueChange={setOpenGroups}
-            className="space-y-1"
+            className="space-y-0.5"
           >
             {groupOrder.map((groupName) => {
               const items = groupedItems[groupName];
@@ -297,23 +297,23 @@ export default function AdminSidebar() {
                   value={groupName}
                   className="border-none"
                 >
-                  <AccordionTrigger className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider hover:no-underline hover:text-gray-300 py-1.5 px-2">
+                  <AccordionTrigger className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider hover:no-underline hover:text-gray-300 py-1 px-1.5">
                     {groupName}
                   </AccordionTrigger>
-                  <AccordionContent className="pb-1">
-                    <nav className="space-y-0.5 pl-1">
+                  <AccordionContent className="pb-0.5">
+                    <nav className="space-y-0.5 pl-0.5">
                       {items.map((item) => (
                         <Link
                           key={item.title}
                           to={item.url}
                           className={cn(
-                            "flex items-center px-2 py-1.5 text-[11px] font-medium rounded-md transition-colors",
+                            "flex items-center px-1.5 py-1 text-[10px] font-medium rounded-md transition-colors",
                             location.pathname === item.url
                               ? "bg-gray-800 text-white border-l-2 border-blue-500"
                               : "text-gray-300 hover:bg-gray-700 hover:text-white"
                           )}
                         >
-                          <item.icon className="mr-2 h-3 w-3" />
+                          <item.icon className="mr-1.5 h-2.5 w-2.5" />
                           {item.title}
                         </Link>
                       ))}
@@ -326,20 +326,20 @@ export default function AdminSidebar() {
         </div>
 
         {/* Menu do usuário na parte inferior - mais compacto */}
-        <div className="p-2 border-t border-gray-700 mt-auto">
+        <div className="p-1.5 border-t border-gray-700 mt-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start h-auto p-2 text-white hover:bg-gray-700">
+              <Button variant="ghost" className="w-full justify-start h-auto p-1.5 text-white hover:bg-gray-700">
                 <div className="flex flex-col items-start text-left w-full">
-                  <span className="font-medium text-[11px]">{getUserName()}</span>
-                  <span className="text-gray-300 text-[10px] truncate w-full">{user?.email}</span>
+                  <span className="font-medium text-[10px]">{getUserName()}</span>
+                  <span className="text-gray-300 text-[9px] truncate w-full">{user?.email}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <div className="bg-blue-600 text-white p-2 -mt-1 -mx-1 rounded-t-md">
-                <div className="font-medium text-xs">Minha Conta</div>
-                <div className="text-[10px] text-blue-100">
+            <DropdownMenuContent align="end" className="w-44">
+              <div className="bg-blue-600 text-white p-1.5 -mt-1 -mx-1 rounded-t-md">
+                <div className="font-medium text-[10px]">Minha Conta</div>
+                <div className="text-[9px] text-blue-100">
                   {user?.email || "admin@portaledu.com"}
                 </div>
               </div>
