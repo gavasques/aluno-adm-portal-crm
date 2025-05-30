@@ -26,7 +26,7 @@ const LiviAI = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 overflow-x-hidden">
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full max-w-full">
         {/* Sidebar */}
         <div className="hidden lg:block w-56 flex-shrink-0 h-full overflow-hidden">
           <SessionHistorySidebar
@@ -39,28 +39,34 @@ const LiviAI = () => {
           />
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+        {/* Main Content - Centralized and Responsive */}
+        <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden max-w-full">
           {/* Header */}
-          <LiviAIHeader
-            currentSession={currentSession}
-            onStartSession={startSession}
-            onEndSession={handleEndSession}
-            hasCredits={hasCredits}
-          />
-
-          {/* Chat Area - ocupa todo espaço restante */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <LiviAIChatArea
-              messages={sessionMessages}
-              message={message}
-              setMessage={setMessage}
-              onSendMessage={sendMessage}
-              isLoading={isLoading}
+          <div className="flex-shrink-0 w-full overflow-x-hidden">
+            <LiviAIHeader
+              currentSession={currentSession}
+              onStartSession={startSession}
+              onEndSession={handleEndSession}
               hasCredits={hasCredits}
-              isSessionActive={currentSession?.is_active || false}
-              messagesLoading={messagesLoading}
             />
+          </div>
+
+          {/* Chat Area - Centralized with proper spacing */}
+          <div className="flex-1 min-h-0 overflow-hidden py-4 sm:py-6 lg:py-8">
+            <div className="h-full w-full max-w-full mx-auto px-2 sm:px-4 lg:px-6">
+              <div className="h-full max-w-4xl mx-auto">
+                <LiviAIChatArea
+                  messages={sessionMessages}
+                  message={message}
+                  setMessage={setMessage}
+                  onSendMessage={sendMessage}
+                  isLoading={isLoading}
+                  hasCredits={hasCredits}
+                  isSessionActive={currentSession?.is_active || false}
+                  messagesLoading={messagesLoading}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

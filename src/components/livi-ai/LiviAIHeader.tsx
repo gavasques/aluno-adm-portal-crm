@@ -22,38 +22,38 @@ export const LiviAIHeader: React.FC<LiviAIHeaderProps> = ({
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm flex-shrink-0"
+      className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm flex-shrink-0 overflow-x-hidden"
     >
-      <div className="p-3 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between">
+      <div className="p-3 w-full max-w-4xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between gap-4 min-w-0">
           {/* Logo e Status */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+              className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0"
             >
               <Bot className="h-4 w-4 text-white" />
             </motion.div>
-            <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent truncate">
                 Livi AI
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                 {currentSession?.is_active ? 'Sessão ativa' : 'Nenhuma sessão ativa'}
               </p>
             </div>
           </div>
 
           {/* Ações */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button 
               onClick={onStartSession} 
               disabled={currentSession?.is_active || !hasCredits}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               size="sm"
             >
-              <Play className="h-4 w-4 mr-2" />
-              Iniciar
+              <Play className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Iniciar</span>
             </Button>
             <Button 
               onClick={onEndSession} 
@@ -62,8 +62,8 @@ export const LiviAIHeader: React.FC<LiviAIHeaderProps> = ({
               className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm"
               size="sm"
             >
-              <Square className="h-4 w-4 mr-2" />
-              Encerrar
+              <Square className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Encerrar</span>
             </Button>
           </div>
         </div>

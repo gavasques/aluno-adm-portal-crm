@@ -42,12 +42,12 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-gray-900 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
       <div className="w-full min-h-full flex flex-col justify-end">
-        {/* Messages Container */}
-        <div className="space-y-3 p-2 sm:p-4">
+        {/* Messages Container - Centralized and responsive */}
+        <div className="w-full max-w-full px-3 sm:px-4 lg:px-6 py-4 space-y-4">
           {/* Welcome Message */}
           {messages.length === 0 && (
-            <div className="flex justify-center">
-              <div className="w-full max-w-3xl">
+            <div className="flex justify-center w-full">
+              <div className="w-full max-w-2xl">
                 <ChatWelcomeMessage />
               </div>
             </div>
@@ -56,8 +56,8 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
           {/* Messages */}
           <AnimatePresence>
             {messages.map((msg) => (
-              <div key={msg.id} className="flex justify-center">
-                <div className="w-full max-w-4xl">
+              <div key={msg.id} className="flex justify-center w-full">
+                <div className="w-full max-w-3xl">
                   <ChatMessage
                     message={msg}
                     onCopyMessage={onCopyMessage}
@@ -70,8 +70,8 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
 
           {/* Loading Indicator */}
           {isLoading && (
-            <div className="flex justify-center">
-              <div className="w-full max-w-3xl">
+            <div className="flex justify-center w-full">
+              <div className="w-full max-w-2xl">
                 <ChatLoadingIndicator />
               </div>
             </div>

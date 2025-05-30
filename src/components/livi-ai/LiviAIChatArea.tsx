@@ -40,31 +40,28 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-white dark:bg-gray-900 overflow-hidden">
-      {/* Container centralizado com largura máxima e margens automáticas */}
-      <div className="flex flex-col w-full max-w-6xl mx-auto h-full px-4 py-6 sm:px-6 lg:px-8">
-        {/* Chat Messages Area */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          <ChatMessagesContainer
-            messages={messages}
-            isLoading={isLoading}
-            messagesLoading={messagesLoading}
-            onCopyMessage={copyToClipboard}
-            copiedMessageId={copiedMessageId}
-          />
-        </div>
+    <div className="flex flex-col w-full h-full bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Chat Messages Area - Centralized and responsive */}
+      <div className="flex-1 overflow-hidden min-h-0">
+        <ChatMessagesContainer
+          messages={messages}
+          isLoading={isLoading}
+          messagesLoading={messagesLoading}
+          onCopyMessage={copyToClipboard}
+          copiedMessageId={copiedMessageId}
+        />
+      </div>
 
-        {/* Input Area */}
-        <div className="flex-shrink-0 mt-4">
-          <ChatInputArea
-            message={message}
-            setMessage={setMessage}
-            onSendMessage={onSendMessage}
-            isLoading={isLoading}
-            hasCredits={hasCredits}
-            isSessionActive={isSessionActive}
-          />
-        </div>
+      {/* Input Area - Fixed at bottom */}
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+        <ChatInputArea
+          message={message}
+          setMessage={setMessage}
+          onSendMessage={onSendMessage}
+          isLoading={isLoading}
+          hasCredits={hasCredits}
+          isSessionActive={isSessionActive}
+        />
       </div>
     </div>
   );
