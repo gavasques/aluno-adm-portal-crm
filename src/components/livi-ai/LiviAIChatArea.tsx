@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Clock, AlertCircle, Copy, CheckCircle } from 'lucide-react';
+import { Send, Bot, User, Clock, AlertCircle, Copy, CheckCircle, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LiviAIMessage } from '@/hooks/useLiviAISessions';
@@ -71,7 +71,12 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
           >
             <p className="text-sm leading-relaxed">{msg.message_text}</p>
           </motion.div>
-          <div className="mt-1 text-xs text-gray-400">{formatTime(msg.created_at)}</div>
+          <div className="mt-1 text-xs text-gray-400 flex items-center justify-end gap-1">
+            {formatTime(msg.created_at)}
+            {msg.response_time_ms && (
+              <span className="text-blue-500">• {msg.response_time_ms}ms</span>
+            )}
+          </div>
         </div>
         <motion.div 
           whileHover={{ scale: 1.05 }}
@@ -100,7 +105,12 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
                 {msg.ai_response}
               </p>
               <div className="flex items-center justify-between mt-2">
-                <div className="text-xs text-gray-400">{formatTime(msg.created_at)}</div>
+                <div className="text-xs text-gray-400 flex items-center gap-1">
+                  {formatTime(msg.created_at)}
+                  {msg.response_time_ms && (
+                    <span className="text-green-500">• {msg.response_time_ms}ms</span>
+                  )}
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -127,8 +137,19 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
           </div>
           <div className="flex-1">
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl rounded-tl-md p-3 max-w-xs sm:max-w-md lg:max-w-lg">
-              <p className="text-sm text-red-800 dark:text-red-300">{msg.error_message}</p>
-              <div className="text-xs text-red-600 dark:text-red-400 mt-1">{formatTime(msg.created_at)}</div>
+              <div className="flex items-start gap-2">
+                <Bug className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-red-800 dark:text-red-300 font-medium mb-1">Erro no processamento</p>
+                  <p className="text-xs text-red-700 dark:text-red-400">{msg.error_message}</p>
+                </div>
+              </div>
+              <div className="text-xs text-red-600 dark:text-red-400 mt-2 flex items-center gap-1">
+                {formatTime(msg.created_at)}
+                {msg.response_time_ms && (
+                  <span>• {msg.response_time_ms}ms</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

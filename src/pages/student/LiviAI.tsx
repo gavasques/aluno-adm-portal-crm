@@ -78,7 +78,7 @@ const LiviAI = () => {
     });
   };
 
-  // Enviar mensagem
+  // Enviar mensagem com debug melhorado
   const sendMessage = async () => {
     if (!message.trim() || !user) return;
 
@@ -105,6 +105,11 @@ const LiviAI = () => {
     const startTime = Date.now();
 
     try {
+      console.log('🚀 Iniciando processo de envio de mensagem...');
+      console.log('📤 Mensagem do usuário:', userMessage);
+      console.log('🔑 ID da sessão:', session.id);
+      console.log('👤 ID do usuário:', user.id);
+
       const creditConsumed = await consumeCredits(1, 'Mensagem Livi AI');
       
       if (!creditConsumed) {
@@ -116,35 +121,97 @@ const LiviAI = () => {
         return;
       }
 
+      console.log('✅ Créditos consumidos com sucesso');
+
       await saveMessage(session.id, userMessage, undefined, 1);
+      console.log('💾 Mensagem salva no banco de dados');
 
       const webhookUrl = getWebhookUrl();
-      
+      console.log('🔗 URL do webhook:', webhookUrl);
+
+      const requestPayload = {
+        mensagem: userMessage,
+        userId: user.id,
+        sessionId: session.id
+      };
+      console.log('📦 Payload da requisição:', requestPayload);
+
+      // Toast de debug temporário
+      toast({
+        title: "Debug: Enviando para webhook",
+        description: `URL: ${webhookUrl.substring(0, 50)}...`,
+      });
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          mensagem: userMessage,
-          userId: user.id,
-          sessionId: session.id
-        })
+        body: JSON.stringify(requestPayload)
       });
 
-      const endTime = Date.now();
-      const responseTime = endTime - startTime;
+      console.log('📊 Status da resposta:', response.status);
+      console.log('📋 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
-      if (response.ok) {
-        const aiResponse = await response.text();
-        await saveMessage(session.id, userMessage, aiResponse || 'Mensagem recebida!', 1, responseTime);
-      } else {
-        throw new Error('Erro na comunicação com o AI');
-      }
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
+      console.log('⏱️ Tempo de resposta:', responseTime, 'ms');
+
+      if (!response.ok) {
+        console.error('❌ Erro HTTP:', response.status, response.statusText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Verificar tipo de conteúdo
+      const contentType = response.headers.get('content-type');
+      console.log('📝 Tipo de conteúdo:', contentType);
+
+      let aiResponse;
+      try {
+        if (contentType && contentType.includes('application/json')) {
+          const jsonResponse = await response.json();
+          console.log('📄 Resposta JSON completa:', jsonResponse);
+          aiResponse = jsonResponse.response || jsonResponse.message || jsonResponse.reply || JSON.stringify(jsonResponse);
+        } else {
+          aiResponse = await response.text();
+          console.log('📄 Resposta em texto:', aiResponse);
+        }
+      } catch (parseError) {
+        console.error('❌ Erro ao processar resposta:', parseError);
+        const rawText = await response.text();
+        console.log('📄 Texto bruto da resposta:', rawText);
+        aiResponse = rawText || 'Resposta recebida mas não foi possível processar o conteúdo.';
+      }
+
+      if (!aiResponse || aiResponse.trim() === '') {
+        console.warn('⚠️ Resposta vazia do webhook');
+        aiResponse = 'Mensagem processada, mas resposta vazia recebida do servidor.';
+      }
+
+      console.log('✅ Resposta final da IA:', aiResponse);
+
+      await saveMessage(session.id, userMessage, aiResponse, 1, responseTime);
+
+      toast({
+        title: "Mensagem enviada",
+        description: "Resposta recebida com sucesso!",
+      });
+
+    } catch (error) {
+      console.error('❌ Erro detalhado:', error);
+      
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+      
+      let errorMessage = 'Erro desconhecido ao processar mensagem.';
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = 'Erro de conectividade. Verifique sua conexão com a internet.';
+      } else if (error instanceof Error) {
+        errorMessage = `Erro: ${error.message}`;
+      }
+
+      console.log('💾 Salvando mensagem com erro:', errorMessage);
       
       await saveMessage(
         session.id, 
@@ -152,16 +219,17 @@ const LiviAI = () => {
         undefined, 
         1, 
         responseTime, 
-        'Erro ao processar mensagem. Tente novamente.'
+        errorMessage
       );
 
       toast({
-        title: "Erro",
-        description: "Não foi possível enviar a mensagem. Tente novamente.",
+        title: "Erro na comunicação",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
+      console.log('🏁 Processo de envio finalizado');
     }
   };
 
