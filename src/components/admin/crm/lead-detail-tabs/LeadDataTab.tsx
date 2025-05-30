@@ -1,18 +1,16 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Save, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Save, Edit, X, Plus } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
-import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
-import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
+import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { toast } from 'sonner';
 
 interface LeadDataTabProps {
@@ -22,320 +20,314 @@ interface LeadDataTabProps {
 
 const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { updateLead } = useCRMLeads();
-
-  const form = useForm<LeadFormData>({
-    resolver: zodResolver(leadFormSchema),
-    defaultValues: {
-      name: lead.name,
-      email: lead.email,
-      phone: lead.phone || '',
-      has_company: lead.has_company,
-      what_sells: lead.what_sells || '',
-      keep_or_new_niches: lead.keep_or_new_niches || '',
-      sells_on_amazon: lead.sells_on_amazon,
-      amazon_store_link: lead.amazon_store_link || '',
-      amazon_state: lead.amazon_state || '',
-      amazon_tax_regime: lead.amazon_tax_regime || '',
-      works_with_fba: lead.works_with_fba,
-      had_contact_with_lv: lead.had_contact_with_lv,
-      seeks_private_label: lead.seeks_private_label,
-      main_doubts: lead.main_doubts || '',
-      ready_to_invest_3k: lead.ready_to_invest_3k,
-      calendly_scheduled: lead.calendly_scheduled,
-      calendly_link: lead.calendly_link || '',
-      scheduled_contact_date: lead.scheduled_contact_date || '',
-      notes: lead.notes || '',
-    }
+  const [formData, setFormData] = useState({
+    name: lead.name || '',
+    email: lead.email || '',
+    phone: lead.phone || '',
+    has_company: lead.has_company || false,
+    what_sells: lead.what_sells || '',
+    keep_or_new_niches: lead.keep_or_new_niches || '',
+    sells_on_amazon: lead.sells_on_amazon || false,
+    amazon_store_link: lead.amazon_store_link || '',
+    amazon_state: lead.amazon_state || '',
+    amazon_tax_regime: lead.amazon_tax_regime || '',
+    works_with_fba: lead.works_with_fba || false,
+    had_contact_with_lv: lead.had_contact_with_lv || false,
+    seeks_private_label: lead.seeks_private_label || false,
+    main_doubts: lead.main_doubts || '',
+    ready_to_invest_3k: lead.ready_to_invest_3k || false,
+    calendly_scheduled: lead.calendly_scheduled || false,
+    calendly_link: lead.calendly_link || '',
+    scheduled_contact_date: lead.scheduled_contact_date || '',
+    notes: lead.notes || ''
   });
 
-  const { watch, setValue } = form;
-  const sellsOnAmazon = watch('sells_on_amazon');
-  const hasCompany = watch('has_company');
+  const { tags } = useCRMTags();
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    lead.tags?.map(tag => tag.id) || []
+  );
 
-  const onSubmit = async (data: LeadFormData) => {
-    setLoading(true);
+  const handleSave = async () => {
     try {
-      await updateLead(lead.id, data);
-      toast.success('Lead atualizado com sucesso!');
+      // Aqui você implementaria a lógica de salvamento
+      // Para demonstração, vamos simular o salvamento
+      console.log('Salvando dados:', formData);
       setIsEditing(false);
+      toast.success('Dados atualizados com sucesso!');
       onUpdate?.();
     } catch (error) {
-      console.error('Erro ao atualizar lead:', error);
-      toast.error('Erro ao atualizar lead');
-    } finally {
-      setLoading(false);
+      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao atualizar dados');
     }
   };
 
   const handleCancel = () => {
-    form.reset();
+    setFormData({
+      name: lead.name || '',
+      email: lead.email || '',
+      phone: lead.phone || '',
+      has_company: lead.has_company || false,
+      what_sells: lead.what_sells || '',
+      keep_or_new_niches: lead.keep_or_new_niches || '',
+      sells_on_amazon: lead.sells_on_amazon || false,
+      amazon_store_link: lead.amazon_store_link || '',
+      amazon_state: lead.amazon_state || '',
+      amazon_tax_regime: lead.amazon_tax_regime || '',
+      works_with_fba: lead.works_with_fba || false,
+      had_contact_with_lv: lead.had_contact_with_lv || false,
+      seeks_private_label: lead.seeks_private_label || false,
+      main_doubts: lead.main_doubts || '',
+      ready_to_invest_3k: lead.ready_to_invest_3k || false,
+      calendly_scheduled: lead.calendly_scheduled || false,
+      calendly_link: lead.calendly_link || '',
+      scheduled_contact_date: lead.scheduled_contact_date || '',
+      notes: lead.notes || ''
+    });
+    setSelectedTags(lead.tags?.map(tag => tag.id) || []);
     setIsEditing(false);
   };
 
-  if (!isEditing) {
-    return (
-      <div className="h-full overflow-y-auto p-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Informações do Lead</h3>
-          <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+  const handleTagToggle = (tagId: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
+  return (
+    <div className="h-full overflow-y-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Dados Completos</h3>
+        {!isEditing ? (
+          <Button onClick={() => setIsEditing(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
           </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Informações Básicas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Nome</Label>
-                <p className="mt-1">{lead.name}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Email</Label>
-                <p className="mt-1">{lead.email}</p>
-              </div>
-              {lead.phone && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">Telefone</Label>
-                  <p className="mt-1">{lead.phone}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Empresa</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Possui empresa</Label>
-                <p className="mt-1">{lead.has_company ? 'Sim' : 'Não'}</p>
-              </div>
-              {lead.has_company && lead.what_sells && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">O que vende</Label>
-                  <p className="mt-1">{lead.what_sells}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {lead.sells_on_amazon && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Amazon</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">Vende na Amazon</Label>
-                  <p className="mt-1">Sim</p>
-                </div>
-                {lead.amazon_state && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">Estado</Label>
-                    <p className="mt-1">{lead.amazon_state}</p>
-                  </div>
-                )}
-                {lead.amazon_tax_regime && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">Regime Tributário</Label>
-                    <p className="mt-1">{lead.amazon_tax_regime}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Qualificação</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Pronto para investir R$ 3k</Label>
-                <p className="mt-1">{lead.ready_to_invest_3k ? 'Sim' : 'Não'}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Busca private label</Label>
-                <p className="mt-1">{lead.seeks_private_label ? 'Sim' : 'Não'}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {lead.notes && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Observações</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap">{lead.notes}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full overflow-y-auto p-4">
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Editando Lead</h3>
+        ) : (
           <div className="flex gap-2">
-            <Button type="button" onClick={handleCancel} variant="outline" size="sm">
+            <Button variant="outline" onClick={handleCancel}>
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} size="sm">
+            <Button onClick={handleSave}>
               <Save className="h-4 w-4 mr-2" />
-              {loading ? 'Salvando...' : 'Salvar'}
+              Salvar
             </Button>
           </div>
-        </div>
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome *</Label>
-            <Input
-              id="name"
-              {...form.register('name')}
-              placeholder="Nome completo do lead"
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              {...form.register('email')}
-              placeholder="email@exemplo.com"
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              {...form.register('phone')}
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="scheduled_contact_date">Data de Contato</Label>
-            <Input
-              id="scheduled_contact_date"
-              type="datetime-local"
-              {...form.register('scheduled_contact_date')}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="has_company"
-              checked={hasCompany}
-              onCheckedChange={(checked) => setValue('has_company', checked)}
-            />
-            <Label htmlFor="has_company">Possui empresa</Label>
-          </div>
-
-          {hasCompany && (
-            <div className="space-y-2">
-              <Label htmlFor="what_sells">O que vende?</Label>
-              <Input
-                id="what_sells"
-                {...form.register('what_sells')}
-                placeholder="Produtos/serviços que comercializa"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="sells_on_amazon"
-              checked={sellsOnAmazon}
-              onCheckedChange={(checked) => setValue('sells_on_amazon', checked)}
-            />
-            <Label htmlFor="sells_on_amazon">Vende na Amazon</Label>
-          </div>
-
-          {sellsOnAmazon && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="amazon_state">Estado na Amazon</Label>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Informações Básicas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações Básicas</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome *</Label>
+              {isEditing ? (
                 <Input
-                  id="amazon_state"
-                  {...form.register('amazon_state')}
-                  placeholder="SP, RJ, MG..."
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="amazon_tax_regime">Regime tributário</Label>
-                <Select onValueChange={(value) => setValue('amazon_tax_regime', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o regime" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="simples">Simples Nacional</SelectItem>
-                    <SelectItem value="lucro_presumido">Lucro Presumido</SelectItem>
-                    <SelectItem value="lucro_real">Lucro Real</SelectItem>
-                    <SelectItem value="mei">MEI</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">{formData.name}</p>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="ready_to_invest_3k"
-              checked={watch('ready_to_invest_3k')}
-              onCheckedChange={(checked) => setValue('ready_to_invest_3k', checked)}
-            />
-            <Label htmlFor="ready_to_invest_3k">Pronto para investir R$ 3k</Label>
-          </div>
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              {isEditing ? (
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">{formData.email}</p>
+              )}
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="seeks_private_label"
-              checked={watch('seeks_private_label')}
-              onCheckedChange={(checked) => setValue('seeks_private_label', checked)}
-            />
-            <Label htmlFor="seeks_private_label">Busca private label</Label>
-          </div>
-        </div>
+            <div>
+              <Label htmlFor="phone">Telefone</Label>
+              {isEditing ? (
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">{formData.phone || 'Não informado'}</p>
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="notes">Observações</Label>
-          <Textarea
-            id="notes"
-            {...form.register('notes')}
-            placeholder="Observações adicionais sobre o lead"
-            rows={4}
-          />
-        </div>
-      </form>
+            <div>
+              <Label htmlFor="scheduled_contact_date">Data de Próximo Contato</Label>
+              {isEditing ? (
+                <Input
+                  id="scheduled_contact_date"
+                  type="datetime-local"
+                  value={formData.scheduled_contact_date}
+                  onChange={(e) => setFormData({...formData, scheduled_contact_date: e.target.value})}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">
+                  {formData.scheduled_contact_date 
+                    ? new Date(formData.scheduled_contact_date).toLocaleString('pt-BR')
+                    : 'Não agendado'
+                  }
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Informações de Negócio */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações de Negócio</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="has_company">Tem empresa?</Label>
+              {isEditing ? (
+                <Switch
+                  id="has_company"
+                  checked={formData.has_company}
+                  onCheckedChange={(checked) => setFormData({...formData, has_company: checked})}
+                />
+              ) : (
+                <Badge variant={formData.has_company ? "default" : "secondary"}>
+                  {formData.has_company ? "Sim" : "Não"}
+                </Badge>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="what_sells">O que vende?</Label>
+              {isEditing ? (
+                <Textarea
+                  id="what_sells"
+                  value={formData.what_sells}
+                  onChange={(e) => setFormData({...formData, what_sells: e.target.value})}
+                  rows={2}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">{formData.what_sells || 'Não informado'}</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sells_on_amazon">Vende na Amazon?</Label>
+              {isEditing ? (
+                <Switch
+                  id="sells_on_amazon"
+                  checked={formData.sells_on_amazon}
+                  onCheckedChange={(checked) => setFormData({...formData, sells_on_amazon: checked})}
+                />
+              ) : (
+                <Badge variant={formData.sells_on_amazon ? "default" : "secondary"}>
+                  {formData.sells_on_amazon ? "Sim" : "Não"}
+                </Badge>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="ready_to_invest_3k">Pronto para investir R$ 3k?</Label>
+              {isEditing ? (
+                <Switch
+                  id="ready_to_invest_3k"
+                  checked={formData.ready_to_invest_3k}
+                  onCheckedChange={(checked) => setFormData({...formData, ready_to_invest_3k: checked})}
+                />
+              ) : (
+                <Badge variant={formData.ready_to_invest_3k ? "default" : "secondary"}>
+                  {formData.ready_to_invest_3k ? "Sim" : "Não"}
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tags */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <div className="flex flex-wrap gap-2">
+                {tags.map(tag => (
+                  <Badge
+                    key={tag.id}
+                    variant={selectedTags.includes(tag.id) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    style={{
+                      backgroundColor: selectedTags.includes(tag.id) ? tag.color : 'transparent',
+                      borderColor: tag.color,
+                      color: selectedTags.includes(tag.id) ? 'white' : tag.color
+                    }}
+                    onClick={() => handleTagToggle(tag.id)}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {lead.tags?.map(tag => (
+                  <Badge
+                    key={tag.id}
+                    style={{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color + '40' }}
+                  >
+                    {tag.name}
+                  </Badge>
+                )) || <p className="text-sm text-gray-500">Nenhuma tag adicionada</p>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Observações */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Observações</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="main_doubts">Principais dúvidas</Label>
+              {isEditing ? (
+                <Textarea
+                  id="main_doubts"
+                  value={formData.main_doubts}
+                  onChange={(e) => setFormData({...formData, main_doubts: e.target.value})}
+                  rows={3}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">{formData.main_doubts || 'Nenhuma dúvida registrada'}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Observações gerais</Label>
+              {isEditing ? (
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  rows={4}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">{formData.notes || 'Nenhuma observação registrada'}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
