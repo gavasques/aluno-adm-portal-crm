@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Send, Play, Square, Clock, MessageSquare } from 'lucide-react';
@@ -10,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
+import { getWebhookUrl } from '@/utils/webhookConfig';
 
 interface Message {
   id: string;
@@ -149,8 +149,10 @@ const LiviAI = () => {
     setIsLoading(true);
 
     try {
-      // Enviar para o webhook do n8n
-      const response = await fetch('https://n8n.guilhermevasques.club/webhook/mensagem', {
+      // Usar a URL configurada pelo admin
+      const webhookUrl = getWebhookUrl();
+      
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

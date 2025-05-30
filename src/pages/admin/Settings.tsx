@@ -1,9 +1,63 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, User, Shield, Database } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Bot, Save, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminSettings = () => {
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Carregar URL atual do localStorage
+  useEffect(() => {
+    const savedUrl = localStorage.getItem('admin_webhook_config');
+    setWebhookUrl(savedUrl || 'https://n8n.guilhermevasques.club/webhook/mensagem');
+  }, []);
+
+  // Validar URL
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Salvar configurações
+  const handleSave = async () => {
+    if (!webhookUrl.trim()) {
+      toast.error('URL do webhook é obrigatória');
+      return;
+    }
+
+    if (!isValidUrl(webhookUrl)) {
+      toast.error('Por favor, insira uma URL válida');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      localStorage.setItem('admin_webhook_config', webhookUrl);
+      toast.success('Configurações salvas com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao salvar configurações');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Resetar para padrão
+  const handleReset = () => {
+    const defaultUrl = 'https://n8n.guilhermevasques.club/webhook/mensagem';
+    setWebhookUrl(defaultUrl);
+    localStorage.setItem('admin_webhook_config', defaultUrl);
+    toast.success('URL resetada para o valor padrão');
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -13,119 +67,67 @@ const AdminSettings = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              Configurações de Usuário
-            </CardTitle>
-            <CardDescription>
-              Configurações relacionadas aos usuários do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Registro automático</span>
-                <span className="text-sm text-green-600">Ativo</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Validação de email</span>
-                <span className="text-sm text-green-600">Ativo</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Limite de armazenamento padrão</span>
-                <span className="text-sm">100 MB</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            Configurações de Inteligência Artificial
+          </CardTitle>
+          <CardDescription>
+            Configure a URL do webhook para integração com o Livi AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="webhookUrl">URL do Webhook</Label>
+            <Input
+              id="webhookUrl"
+              type="url"
+              placeholder="https://n8n.guilhermevasques.club/webhook/mensagem"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              className="w-full"
+            />
+            <p className="text-sm text-gray-500">
+              URL do webhook N8N onde as mensagens do Livi AI serão enviadas
+            </p>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Shield className="h-5 w-5 mr-2" />
-              Segurança
-            </CardTitle>
-            <CardDescription>
-              Configurações de segurança e auditoria
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Log de auditoria</span>
-                <span className="text-sm text-green-600">Ativo</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Autenticação 2FA</span>
-                <span className="text-sm text-yellow-600">Opcional</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Sessão máxima</span>
-                <span className="text-sm">24 horas</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving || !webhookUrl.trim()}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleReset}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Resetar Padrão
+            </Button>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Database className="h-5 w-5 mr-2" />
-              Sistema
-            </CardTitle>
-            <CardDescription>
-              Informações e configurações do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Versão</span>
-                <span className="text-sm">1.0.0</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Banco de dados</span>
-                <span className="text-sm text-green-600">Conectado</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Backup automático</span>
-                <span className="text-sm text-green-600">Diário</span>
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <Bot className="h-4 w-4 text-blue-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-blue-900 dark:text-blue-100">
+                  Configuração Atual
+                </p>
+                <p className="text-blue-700 dark:text-blue-300 break-all">
+                  {webhookUrl || 'Nenhuma URL configurada'}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Settings className="h-5 w-5 mr-2" />
-              Manutenção
-            </CardTitle>
-            <CardDescription>
-              Ferramentas de manutenção do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Limpeza de cache</span>
-                <span className="text-sm text-blue-600">Executar</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Otimizar banco</span>
-                <span className="text-sm text-blue-600">Executar</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Último backup</span>
-                <span className="text-sm">Hoje, 03:00</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
