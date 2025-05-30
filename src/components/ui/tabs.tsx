@@ -1,9 +1,8 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { Badge } from "@/components/ui/badge"
-
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 const Tabs = TabsPrimitive.Root
 
@@ -37,13 +36,14 @@ const TabsTrigger = React.forwardRef<
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
+interface TabsTriggerWithBadgeProps extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
+  badgeContent?: string | number;
+}
+
 const TabsTriggerWithBadge = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & {
-    badgeContent?: string | number;
-    badgeVariant?: "default" | "secondary" | "destructive" | "outline";
-  }
->(({ className, children, badgeContent, badgeVariant = "secondary", ...props }, ref) => (
+  TabsTriggerWithBadgeProps
+>(({ className, children, badgeContent, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -52,17 +52,17 @@ const TabsTriggerWithBadge = React.forwardRef<
     )}
     {...props}
   >
-    <span className="flex items-center gap-2">
+    <div className="flex items-center gap-2">
       {children}
       {badgeContent && (
-        <Badge variant={badgeVariant} className="text-xs">
+        <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
           {badgeContent}
         </Badge>
       )}
-    </span>
+    </div>
   </TabsPrimitive.Trigger>
 ))
-TabsTriggerWithBadge.displayName = TabsPrimitive.Trigger.displayName
+TabsTriggerWithBadge.displayName = "TabsTriggerWithBadge"
 
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,

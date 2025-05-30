@@ -14,6 +14,7 @@ export const useCRMPipelines = () => {
       const { data, error } = await supabase
         .from('crm_pipelines')
         .select('*')
+        .eq('is_active', true)
         .order('sort_order');
 
       if (error) throw error;
@@ -29,13 +30,13 @@ export const useCRMPipelines = () => {
       let query = supabase
         .from('crm_pipeline_columns')
         .select('*')
-        .order('sort_order');
+        .eq('is_active', true);
 
       if (pipelineId) {
         query = query.eq('pipeline_id', pipelineId);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order('sort_order');
 
       if (error) throw error;
       setColumns(data || []);
@@ -45,92 +46,122 @@ export const useCRMPipelines = () => {
     }
   };
 
-  const updateColumnOrder = async (columnId: string, newSortOrder: number) => {
+  const createPipeline = async (pipeline: Omit<CRMPipeline, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { error } = await supabase
-        .from('crm_pipeline_columns')
-        .update({ sort_order: newSortOrder })
-        .eq('id', columnId);
+      const { data, error } = await supabase
+        .from('crm_pipelines')
+        .insert(pipeline)
+        .select()
+        .single();
 
       if (error) throw error;
       
-      // Recarregar colunas
-      const activePipeline = pipelines[0]?.id;
-      if (activePipeline) {
-        await fetchColumns(activePipeline);
-      }
+      await fetchPipelines();
+      toast.success('Pipeline criado com sucesso');
+      return data;
     } catch (error) {
-      console.error('Erro ao atualizar ordem da coluna:', error);
-      toast.error('Erro ao reordenar coluna');
+      console.error('Erro ao criar pipeline:', error);
+      toast.error('Erro ao criar pipeline');
+      throw error;
     }
   };
 
-  const createColumn = async (pipelineId: string, name: string, color: string) => {
+  const updatePipeline = async (id: string, updates: Partial<CRMPipeline>) => {
     try {
-      const maxOrder = Math.max(...columns.filter(c => c.pipeline_id === pipelineId).map(c => c.sort_order), -1);
-      
       const { error } = await supabase
-        .from('crm_pipeline_columns')
-        .insert({
-          pipeline_id: pipelineId,
-          name,
-          color,
-          sort_order: maxOrder + 1
-        });
+        .from('crm_pipelines')
+        .update(updates)
+        .eq('id', id);
 
       if (error) throw error;
       
-      await fetchColumns(pipelineId);
+      await fetchPipelines();
+      toast.success('Pipeline atualizado com sucesso');
+    } catch (error) {
+      console.error('Erro ao atualizar pipeline:', error);
+      toast.error('Erro ao atualizar pipeline');
+      throw error;
+    }
+  };
+
+  const deletePipeline = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('crm_pipelines')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchPipelines();
+      toast.success('Pipeline removido com sucesso');
+    } catch (error) {
+      console.error('Erro ao remover pipeline:', error);
+      toast.error('Erro ao remover pipeline');
+      throw error;
+    }
+  };
+
+  const createColumn = async (column: Omit<CRMPipelineColumn, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('crm_pipeline_columns')
+        .insert(column)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchColumns(column.pipeline_id);
       toast.success('Coluna criada com sucesso');
+      return data;
     } catch (error) {
       console.error('Erro ao criar coluna:', error);
       toast.error('Erro ao criar coluna');
+      throw error;
     }
   };
 
-  const updateColumn = async (columnId: string, name: string, color: string) => {
+  const updateColumn = async (id: string, updates: Partial<CRMPipelineColumn>) => {
     try {
       const { error } = await supabase
         .from('crm_pipeline_columns')
-        .update({ name, color })
-        .eq('id', columnId);
+        .update(updates)
+        .eq('id', id);
 
       if (error) throw error;
       
-      // Atualizar estado local
-      setColumns(prev => prev.map(col => 
-        col.id === columnId ? { ...col, name, color } : col
-      ));
-      
+      await fetchColumns();
       toast.success('Coluna atualizada com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar coluna:', error);
       toast.error('Erro ao atualizar coluna');
+      throw error;
     }
   };
 
-  const deleteColumn = async (columnId: string) => {
+  const deleteColumn = async (id: string) => {
     try {
       const { error } = await supabase
         .from('crm_pipeline_columns')
-        .delete()
-        .eq('id', columnId);
+        .update({ is_active: false })
+        .eq('id', id);
 
       if (error) throw error;
       
-      setColumns(prev => prev.filter(col => col.id !== columnId));
+      await fetchColumns();
       toast.success('Coluna removida com sucesso');
     } catch (error) {
       console.error('Erro ao remover coluna:', error);
       toast.error('Erro ao remover coluna');
+      throw error;
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await fetchPipelines();
-      await fetchColumns();
+      await Promise.all([fetchPipelines(), fetchColumns()]);
       setLoading(false);
     };
 
@@ -143,7 +174,9 @@ export const useCRMPipelines = () => {
     loading,
     fetchPipelines,
     fetchColumns,
-    updateColumnOrder,
+    createPipeline,
+    updatePipeline,
+    deletePipeline,
     createColumn,
     updateColumn,
     deleteColumn

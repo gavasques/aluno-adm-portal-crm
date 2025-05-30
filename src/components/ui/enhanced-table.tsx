@@ -1,136 +1,132 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { OptimizedTable } from '@/components/performance/OptimizedTable';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface EnhancedTableProps<T> {
-  data: T[];
-  columns: {
-    key: string;
-    label: string;
-    render: (item: T, index: number) => React.ReactNode;
-    className?: string;
-    sortable?: boolean;
-  }[];
-  keyExtractor: (item: T, index: number) => string;
-  onRowClick?: (item: T, index: number) => void;
-  loading?: boolean;
-  emptyMessage?: string;
-  virtualizeThreshold?: number;
+interface Column<T> {
+  key: keyof T | string;
+  label: string;
+  render?: (item: T) => React.ReactNode;
+  sortable?: boolean;
   className?: string;
 }
 
-export const EnhancedTable = memo<EnhancedTableProps<any>>(({
+interface EnhancedTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  keyExtractor: (item: T) => string;
+  onRowClick?: (item: T) => void;
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (field: string) => void;
+  loading?: boolean;
+  emptyMessage?: string;
+  className?: string;
+}
+
+export function EnhancedTable<T>({
   data,
   columns,
   keyExtractor,
   onRowClick,
+  sortField,
+  sortDirection,
+  onSort,
   loading = false,
-  emptyMessage = 'Nenhum item encontrado',
-  virtualizeThreshold = 100,
+  emptyMessage = 'Nenhum item encontrado.',
   className
-}) => {
-  const isMobile = useIsMobile();
+}: EnhancedTableProps<T>) {
+  const getSortIcon = (column: Column<T>) => {
+    if (!column.sortable || !onSort) return null;
+    
+    const field = column.key as string;
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-4 w-4" />
+      : <ArrowDown className="h-4 w-4" />;
+  };
 
-  // Use virtualization for large datasets
-  const shouldVirtualize = data.length > virtualizeThreshold;
-
-  const renderHeader = () => (
-    <TableRow>
-      {columns.map((column) => (
-        <TableHead 
-          key={column.key}
-          className={cn(
-            'font-semibold text-gray-900',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500',
-            column.sortable && 'cursor-pointer hover:bg-gray-50',
-            column.className
-          )}
-          tabIndex={column.sortable ? 0 : -1}
-          role={column.sortable ? 'button' : undefined}
-          aria-sort={column.sortable ? 'none' : undefined}
-        >
-          {column.label}
-        </TableHead>
-      ))}
-    </TableRow>
-  );
-
-  const renderRow = (item: any, index: number) => (
-    <TableRow
-      key={keyExtractor(item, index)}
-      className={cn(
-        'hover:bg-gray-50 transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset',
-        onRowClick && 'cursor-pointer'
-      )}
-      onClick={() => onRowClick?.(item, index)}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
-          e.preventDefault();
-          onRowClick(item, index);
-        }
-      }}
-      tabIndex={onRowClick ? 0 : -1}
-      role={onRowClick ? 'button' : undefined}
-      aria-label={onRowClick ? `Ver detalhes do item ${index + 1}` : undefined}
-    >
-      {columns.map((column) => (
-        <TableCell
-          key={column.key}
-          className={cn(
-            'py-3 px-4',
-            column.className
-          )}
-        >
-          {column.render(item, index)}
-        </TableCell>
-      ))}
-    </TableRow>
-  );
+  const handleSort = (column: Column<T>) => {
+    if (column.sortable && onSort) {
+      onSort(column.key as string);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-        <span className="sr-only">Carregando dados...</span>
+      <div className="space-y-3">
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 rounded mb-3"></div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-12 bg-gray-100 rounded"></div>
+          ))}
+        </div>
       </div>
-    );
-  }
-
-  if (data.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        {emptyMessage}
-      </div>
-    );
-  }
-
-  if (shouldVirtualize && !isMobile) {
-    return (
-      <OptimizedTable
-        data={data}
-        renderHeader={renderHeader}
-        renderRow={renderRow}
-        keyExtractor={keyExtractor}
-        onItemClick={onRowClick}
-        className={className}
-      />
     );
   }
 
   return (
-    <Table className={className}>
-      <TableHeader>
-        {renderHeader()}
-      </TableHeader>
-      <TableBody>
-        {data.map((item, index) => renderRow(item, index))}
-      </TableBody>
-    </Table>
+    <div className={cn("rounded-md border", className)}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead 
+                key={column.key as string}
+                className={cn(
+                  column.className,
+                  column.sortable && onSort && "cursor-pointer hover:bg-gray-50"
+                )}
+                onClick={() => handleSort(column)}
+              >
+                <div className="flex items-center space-x-2">
+                  <span>{column.label}</span>
+                  {getSortIcon(column)}
+                </div>
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell 
+                colSpan={columns.length} 
+                className="text-center py-8 text-gray-500"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((item) => (
+              <TableRow
+                key={keyExtractor(item)}
+                className={cn(
+                  onRowClick && "cursor-pointer hover:bg-gray-50"
+                )}
+                onClick={() => onRowClick?.(item)}
+              >
+                {columns.map((column) => (
+                  <TableCell 
+                    key={column.key as string}
+                    className={column.className}
+                  >
+                    {column.render 
+                      ? column.render(item)
+                      : String(item[column.key as keyof T] || '')
+                    }
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
-});
-
-EnhancedTable.displayName = 'EnhancedTable';
+}
