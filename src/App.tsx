@@ -1,5 +1,4 @@
 
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
 import { AuthProvider } from "@/hooks/useAuth";
 import RouteGuard from "@/components/RouteGuard";
-import ModernAdminSidebar from "@/layout/ModernAdminSidebar";
+import FreshAdminSidebar from "@/layout/FreshAdminSidebar";
 import StudentSidebar from "@/layout/StudentSidebar";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -54,9 +53,9 @@ import StudentSettings from "@/pages/student/Settings";
 
 const queryClient = new QueryClient();
 
-// Force cache refresh marker - App v2.0.1
-const APP_VERSION = "app-with-modern-sidebar-v2.0.1";
-console.log(`🚀 App loaded with ${APP_VERSION}`);
+// CACHE BREAKER - FRESH START v3.0.0
+const FRESH_APP_VERSION = `fresh-app-${Date.now()}`;
+console.log(`🔥 FRESH APP LOADED - CACHE BROKEN - ${FRESH_APP_VERSION}`);
 
 function App() {
   return (
@@ -79,8 +78,12 @@ function App() {
                 path="/admin/*" 
                 element={
                   <RouteGuard requireAdminAccess>
-                    <div className="min-h-screen bg-gray-50 flex" data-app-version={APP_VERSION}>
-                      <ModernAdminSidebar />
+                    <div 
+                      className="min-h-screen bg-gray-50 flex" 
+                      data-fresh-app={FRESH_APP_VERSION}
+                      data-cache-breaker={Date.now()}
+                    >
+                      <FreshAdminSidebar />
                       <div className="flex-1" style={{ marginLeft: '220px' }}>
                         <main className="p-4">
                           <Routes>

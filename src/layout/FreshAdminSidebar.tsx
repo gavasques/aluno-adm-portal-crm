@@ -46,8 +46,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 
-// Force cache refresh marker - v2.0.1
-const SIDEBAR_VERSION = "modern-admin-v2.0.1";
+// FRESH COMPONENT - Cache Breaker v3.0.0
+const FRESH_SIDEBAR_VERSION = `fresh-admin-sidebar-${Date.now()}`;
+console.log(`🔥 FreshAdminSidebar loaded - CACHE BROKEN - ${FRESH_SIDEBAR_VERSION}`);
 
 const sidebarItems = [
   {
@@ -183,7 +184,7 @@ const groupedItems = sidebarItems.reduce((groups, item) => {
   return groups;
 }, {} as Record<string, typeof sidebarItems>);
 
-export default function ModernAdminSidebar() {
+export default function FreshAdminSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
@@ -191,8 +192,8 @@ export default function ModernAdminSidebar() {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Force new component recognition
-  console.log(`🔧 ModernAdminSidebar loaded - ${SIDEBAR_VERSION}`);
+  // Force recognition with timestamp
+  console.log(`🆕 FRESH SIDEBAR RENDERING - ${new Date().toISOString()}`);
 
   const getActiveGroup = () => {
     for (const item of sidebarItems) {
@@ -256,12 +257,13 @@ export default function ModernAdminSidebar() {
   }, [activeGroup, openGroups]);
 
   return (
-    <div className="relative" data-sidebar-version={SIDEBAR_VERSION}>
+    <div className="relative" data-fresh-sidebar={FRESH_SIDEBAR_VERSION}>
       <div 
         ref={sidebarRef}
         className="fixed left-0 top-0 h-screen bg-slate-900 text-white overflow-y-auto flex flex-col border-r border-slate-700 shadow-2xl"
         style={{ width: `${sidebarWidth}px` }}
-        data-testid="modern-admin-sidebar"
+        data-testid="fresh-admin-sidebar"
+        data-cache-breaker={Date.now()}
       >
         {/* Header compacto */}
         <div className="p-3 border-b border-slate-700">
