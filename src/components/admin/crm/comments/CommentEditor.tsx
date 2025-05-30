@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Mention } from 'lucide-react';
+import { Send, AtSign } from 'lucide-react';
 import { CRMUser } from '@/types/crm.types';
 import UserMention from './UserMention';
 
@@ -110,7 +110,7 @@ const CommentEditor = ({
         
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-xs text-gray-500">
-            <Mention className="h-3 w-3" />
+            <AtSign className="h-3 w-3" />
             <span>Use @ para mencionar alguém</span>
           </div>
           

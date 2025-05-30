@@ -175,6 +175,9 @@ export interface CRMLeadAttachment {
   file_size?: number;
   file_type?: string;
   created_at: string;
+  user?: {
+    name: string;
+  };
 }
 
 export interface CRMLeadHistory {
