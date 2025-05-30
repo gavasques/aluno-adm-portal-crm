@@ -6,6 +6,8 @@ import AdminLayout from '@/layout/AdminLayout';
 import LeadDetails from '@/pages/admin/LeadDetails';
 import CRM from '@/pages/admin/CRM';
 import Index from '@/pages/Index';
+import Login from '@/pages/Login';
+import NotFound from '@/pages/NotFound';
 
 function App() {
   return (
@@ -19,6 +21,9 @@ function App() {
           <Routes>
             {/* Home Route */}
             <Route path="/" element={<Index />} />
+            
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
@@ -27,7 +32,7 @@ function App() {
             </Route>
 
             {/* Not Found Route */}
-            <Route path="*" element={<div>Página não encontrada</div>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </HelmetProvider>
