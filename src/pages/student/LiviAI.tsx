@@ -202,7 +202,7 @@ const LiviAI = () => {
   };
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 overflow-hidden">
+    <div className="max-h-screen flex bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 overflow-hidden">
       {/* Sidebar - Largura reduzida */}
       <div className="hidden lg:block w-56 flex-shrink-0">
         <SessionHistorySidebar
@@ -216,25 +216,25 @@ const LiviAI = () => {
       </div>
 
       {/* Main Content - Flex column para ocupar toda altura */}
-      <div className="flex-1 flex flex-col min-w-0 h-full">
-        {/* Header - Altura fixa e compacta */}
+      <div className="flex-1 flex flex-col min-w-0 max-h-screen">
+        {/* Header - Altura reduzida e mais compacta */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm flex-shrink-0"
         >
-          <div className="p-3">
+          <div className="p-2">
             <div className="flex items-center justify-between">
               {/* Logo e Status - Layout mais compacto */}
               <div className="flex items-center space-x-2">
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
-                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+                  className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
                 >
-                  <Bot className="h-4 w-4 text-white" />
+                  <Bot className="h-3.5 w-3.5 text-white" />
                 </motion.div>
                 <div>
-                  <h1 className="text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-sm font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     Livi AI
                   </h1>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -244,11 +244,11 @@ const LiviAI = () => {
               </div>
 
               {/* Ações - Layout horizontal compacto */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Button 
                   onClick={startSession} 
                   disabled={currentSession?.is_active || !hasCredits()}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-7 px-2 text-xs"
                   size="sm"
                 >
                   <Play className="h-3 w-3 mr-1" />
@@ -258,7 +258,7 @@ const LiviAI = () => {
                   onClick={handleEndSession} 
                   disabled={!currentSession?.is_active}
                   variant="outline"
-                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm h-7 px-2 text-xs"
                   size="sm"
                 >
                   <Square className="h-3 w-3 mr-1" />
@@ -269,8 +269,8 @@ const LiviAI = () => {
           </div>
         </motion.div>
 
-        {/* Chat Area - Ocupa o restante da altura */}
-        <div className="flex-1 min-h-0">
+        {/* Chat Area - Ocupa o restante da altura disponível */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           <LiviAIChatArea
             messages={sessionMessages}
             message={message}
