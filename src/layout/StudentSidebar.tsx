@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   LayoutDashboard,
@@ -13,6 +12,7 @@ import {
   Shield,
   LogOut,
   Sparkles,
+  Bot,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -78,6 +78,15 @@ const StudentSidebar = () => {
       href: "/aluno/mentoria",
       icon: GraduationCap,
       gradient: "from-indigo-500 to-indigo-600",
+    },
+  ];
+
+  const aiMenuItems = [
+    {
+      title: "Livi AI",
+      href: "/aluno/livi-ai",
+      icon: Bot,
+      gradient: "from-violet-500 to-violet-600",
     },
   ];
 
@@ -192,6 +201,7 @@ const StudentSidebar = () => {
         {renderMenuGroup("Geral", generalMenuItems)}
         {renderMenuGroup("Recursos", resourcesMenuItems)}
         {renderMenuGroup("Minha Área", myAreaMenuItems)}
+        {renderMenuGroup("Inteligência Artificial", aiMenuItems)}
         {renderMenuGroup("Sistema", settingsMenuItems)}
       </nav>
 

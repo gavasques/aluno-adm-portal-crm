@@ -50,6 +50,7 @@ import StudentMentoring from "@/pages/student/Mentoring";
 import StudentMySuppliers from "@/pages/student/MySuppliers";
 import StudentCredits from "@/pages/student/Credits";
 import StudentSettings from "@/pages/student/Settings";
+import LiviAI from "@/pages/student/LiviAI";
 
 const queryClient = new QueryClient();
 
@@ -124,6 +125,7 @@ function App() {
                 <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
                 <Route path="creditos" element={<StudentCredits />} />
                 <Route path="configuracoes" element={<StudentSettings />} />
+                <Route path="livi-ai" element={<LiviAI />} />
                 <Route path="" element={<Navigate to="/aluno/dashboard" replace />} />
               </Route>
 
