@@ -15,33 +15,48 @@ import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
+import { CRMLead } from '@/types/crm.types';
 import CRMTagsSelector from './CRMTagsSelector';
 
 interface CRMLeadFormProps {
   pipelineId: string;
   initialColumnId?: string;
+  lead?: CRMLead | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLeadFormProps) => {
+const CRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }: CRMLeadFormProps) => {
   const [loading, setLoading] = useState(false);
   const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
-  const { createLead } = useCRMLeads();
+  const { createLead, updateLead } = useCRMLeads();
   const { columns } = useCRMPipelines();
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
-      has_company: false,
-      sells_on_amazon: false,
-      works_with_fba: false,
-      had_contact_with_lv: false,
-      seeks_private_label: false,
-      ready_to_invest_3k: false,
-      calendly_scheduled: false,
-      column_id: initialColumnId || '',
-      tags: [],
+      name: lead?.name || '',
+      email: lead?.email || '',
+      phone: lead?.phone || '',
+      has_company: lead?.has_company || false,
+      what_sells: lead?.what_sells || '',
+      keep_or_new_niches: lead?.keep_or_new_niches || '',
+      sells_on_amazon: lead?.sells_on_amazon || false,
+      amazon_store_link: lead?.amazon_store_link || '',
+      amazon_state: lead?.amazon_state || '',
+      amazon_tax_regime: lead?.amazon_tax_regime || '',
+      works_with_fba: lead?.works_with_fba || false,
+      had_contact_with_lv: lead?.had_contact_with_lv || false,
+      seeks_private_label: lead?.seeks_private_label || false,
+      main_doubts: lead?.main_doubts || '',
+      ready_to_invest_3k: lead?.ready_to_invest_3k || false,
+      calendly_scheduled: lead?.calendly_scheduled || false,
+      calendly_link: lead?.calendly_link || '',
+      column_id: lead?.column_id || initialColumnId || '',
+      responsible_id: lead?.responsible_id || '',
+      scheduled_contact_date: lead?.scheduled_contact_date || '',
+      notes: lead?.notes || '',
+      tags: lead?.tags?.map(tag => tag.id) || [],
     }
   });
 
@@ -74,11 +89,11 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLe
 
   // Selecionar primeira coluna por padrão se não tiver coluna inicial
   useEffect(() => {
-    if (pipelineColumns.length > 0 && !form.watch('column_id') && !initialColumnId) {
+    if (pipelineColumns.length > 0 && !form.watch('column_id') && !initialColumnId && !lead) {
       const firstColumn = pipelineColumns.sort((a, b) => a.sort_order - b.sort_order)[0];
       setValue('column_id', firstColumn.id);
     }
-  }, [pipelineColumns, setValue, form, initialColumnId]);
+  }, [pipelineColumns, setValue, form, initialColumnId, lead]);
 
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true);
@@ -86,18 +101,29 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLe
       // Garantir que column_id está definido
       const columnId = data.column_id || initialColumnId || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
       
-      await createLead({
-        ...data,
-        pipeline_id: pipelineId,
-        column_id: columnId,
-        name: data.name!,
-        email: data.email!,
-      });
-      toast.success('Lead criado com sucesso!');
+      if (lead) {
+        // Atualizar lead existente
+        await updateLead(lead.id, {
+          ...data,
+          pipeline_id: pipelineId,
+          column_id: columnId,
+        });
+        toast.success('Lead atualizado com sucesso!');
+      } else {
+        // Criar novo lead
+        await createLead({
+          ...data,
+          pipeline_id: pipelineId,
+          column_id: columnId,
+          name: data.name!,
+          email: data.email!,
+        });
+        toast.success('Lead criado com sucesso!');
+      }
       onSuccess();
     } catch (error) {
-      console.error('Erro ao criar lead:', error);
-      toast.error('Erro ao criar lead');
+      console.error('Erro ao salvar lead:', error);
+      toast.error('Erro ao salvar lead');
     } finally {
       setLoading(false);
     }
@@ -190,7 +216,7 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLe
 
               <div className="space-y-2">
                 <Label htmlFor="keep_or_new_niches">Manter ou novos nichos?</Label>
-                <Select onValueChange={(value) => setValue('keep_or_new_niches', value)}>
+                <Select onValueChange={(value) => setValue('keep_or_new_niches', value)} value={watch('keep_or_new_niches')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma opção" />
                   </SelectTrigger>
@@ -246,7 +272,7 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLe
 
               <div className="space-y-2">
                 <Label htmlFor="amazon_tax_regime">Regime tributário</Label>
-                <Select onValueChange={(value) => setValue('amazon_tax_regime', value)}>
+                <Select onValueChange={(value) => setValue('amazon_tax_regime', value)} value={watch('amazon_tax_regime')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o regime" />
                   </SelectTrigger>
@@ -388,7 +414,7 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLe
 
           <div className="space-y-2">
             <Label htmlFor="responsible_id">Responsável</Label>
-            <Select onValueChange={(value) => setValue('responsible_id', value)}>
+            <Select onValueChange={(value) => setValue('responsible_id', value)} value={watch('responsible_id')}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o responsável" />
               </SelectTrigger>
@@ -425,7 +451,7 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, onSuccess, onCancel }: CRMLe
           Cancelar
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar Lead'}
+          {loading ? 'Salvando...' : lead ? 'Atualizar Lead' : 'Salvar Lead'}
         </Button>
       </div>
     </form>

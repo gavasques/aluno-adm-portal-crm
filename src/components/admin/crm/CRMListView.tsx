@@ -226,17 +226,17 @@ const CRMListView = ({ filters, onOpenDetail, onEditLead }: CRMListViewProps) =>
       render: (lead: CRMLead) => (
         <div className="space-y-1">
           {lead.ready_to_invest_3k && (
-            <Badge size="sm" variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
               R$ 3k OK
             </Badge>
           )}
           {lead.seeks_private_label && (
-            <Badge size="sm" variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
               Private Label
             </Badge>
           )}
           {lead.sells_on_amazon && (
-            <Badge size="sm" variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+            <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
               Amazon
             </Badge>
           )}
