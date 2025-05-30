@@ -7,7 +7,6 @@ import { Plus, LayoutGrid, List, Settings } from 'lucide-react';
 import CRMKanbanBoard from '@/components/admin/crm/CRMKanbanBoard';
 import CRMListView from '@/components/admin/crm/CRMListView';
 import CRMFilters from '@/components/admin/crm/CRMFilters';
-import CRMStatsCards from '@/components/admin/crm/CRMStatsCards';
 import CRMLeadFormDialog from '@/components/admin/crm/CRMLeadFormDialog';
 import CRMPipelineManager from '@/components/admin/crm/CRMPipelineManager';
 import CRMTagsManager from '@/components/admin/crm/CRMTagsManager';
@@ -84,8 +83,6 @@ const AdminCRM = () => {
           </Button>
         </div>
       </div>
-
-      <CRMStatsCards filters={filters} />
 
       <Card>
         <CardHeader>
