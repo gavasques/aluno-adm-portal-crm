@@ -10,7 +10,7 @@ import StudentDashboard from './pages/student/Dashboard';
 import StudentSettings from './pages/student/Settings';
 import AdminLayout from './layout/AdminLayout';
 import Layout from './layout/Layout';
-import { UsersPage } from './pages/admin/UsersPage';
+import Users from './pages/admin/Users';
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
 
@@ -28,7 +28,7 @@ function App() {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="dashboard" element={<AdminDashboard />} />
-                  <Route path="usuarios" element={<UsersPage />} />
+                  <Route path="usuarios" element={<Users />} />
                   <Route path="categorias" element={<Categories />} />
                   <Route path="configuracoes" element={<Settings />} />
                 </Route>
