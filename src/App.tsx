@@ -5,6 +5,7 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import AdminLayout from '@/layout/AdminLayout';
 import LeadDetails from '@/pages/admin/LeadDetails';
 import CRM from '@/pages/admin/CRM';
+import Index from '@/pages/Index';
 
 function App() {
   return (
@@ -16,6 +17,9 @@ function App() {
         </Helmet>
         <BrowserRouter>
           <Routes>
+            {/* Home Route */}
+            <Route path="/" element={<Index />} />
+
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="crm" element={<CRM />} />
