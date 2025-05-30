@@ -8,6 +8,7 @@ import Categories from './pages/admin/Categories';
 import Settings from './pages/admin/Settings';
 import StudentDashboard from './pages/student/Dashboard';
 import StudentSettings from './pages/student/Settings';
+import LiviAI from './pages/student/LiviAI';
 import AdminLayout from './layout/AdminLayout';
 import Layout from './layout/Layout';
 import Users from './pages/admin/Users';
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/aluno" element={<Layout isAdmin={false} />}>
                   <Route index element={<StudentDashboard />} />
                   <Route path="dashboard" element={<StudentDashboard />} />
+                  <Route path="livi-ai" element={<LiviAI />} />
                   <Route path="configuracoes" element={<StudentSettings />} />
                 </Route>
 

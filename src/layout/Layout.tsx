@@ -13,9 +13,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   isAdmin: boolean;
+  children?: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ isAdmin }) => {
+const Layout: React.FC<LayoutProps> = ({ isAdmin, children }) => {
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -60,7 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <Outlet />
+            {children || <Outlet />}
           </motion.div>
           
           {/* Background Elements otimizado para mobile */}
@@ -91,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin }) => {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <div className="max-w-7xl mx-auto">
-              <Outlet />
+              {children || <Outlet />}
             </div>
           </motion.main>
         </div>
