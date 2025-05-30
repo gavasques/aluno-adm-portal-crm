@@ -6,11 +6,11 @@ import { motion } from 'framer-motion';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
-import { CRMLead, CRMFilters, ViewMode } from '@/types/crm.types';
+import { CRMLead, CRMFilters as CRMFiltersType, ViewMode } from '@/types/crm.types';
 import CRMKanbanBoard from './CRMKanbanBoard';
 import CRMListView from './CRMListView';
 import CRMStatsCards from './CRMStatsCards';
-import CRMFilters from './CRMFilters';
+import CRMFiltersComponent from './CRMFilters';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, List, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ interface CRMViewProps {
 
 const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-  const [filters, setFilters] = useState<CRMFilters>({});
+  const [filters, setFilters] = useState<CRMFiltersType>({});
   const [draggedLead, setDraggedLead] = useState<CRMLead | null>(null);
 
   const { leads, loading: leadsLoading } = useCRMLeads(filters);
@@ -65,7 +65,7 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
     }
   };
 
-  const handleFiltersChange = (newFilters: CRMFilters) => {
+  const handleFiltersChange = (newFilters: CRMFiltersType) => {
     setFilters(newFilters);
   };
 
@@ -91,12 +91,17 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <CRMStatsCards stats={stats} />
+      <CRMStatsCards 
+        total={stats.total}
+        new={stats.new}
+        qualified={stats.qualified}
+        converted={stats.converted}
+      />
 
       {/* Filters and View Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
-          <CRMFilters
+          <CRMFiltersComponent
             filters={filters}
             onFiltersChange={handleFiltersChange}
           />
@@ -140,14 +145,11 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
             onDragEnd={handleDragEnd}
           >
             <CRMKanbanBoard
-              leads={leads}
-              columns={columns}
               onOpenDetail={onEditLead}
               onAddLead={(columnId) => {
                 setFilters(prev => ({ ...prev, column_id: columnId }));
                 onNewLead?.();
               }}
-              getLeadsByColumn={getLeadsByColumn}
             />
           </DndContext>
         ) : (

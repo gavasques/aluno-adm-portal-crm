@@ -25,7 +25,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       const file = e.target.files[0];
       
       // Verificar se pode fazer upload
-      const canUpload = await canUploadFile(file.size);
+      const canUpload = await canUploadFile(file.size / (1024 * 1024)); // Convert bytes to MB
       
       if (!canUpload) {
         toast.error(
@@ -50,7 +50,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           // Registrar o arquivo no sistema
           recordFileUpload(
             file.name,
-            file.size,
+            file.size / (1024 * 1024), // Convert bytes to MB
             file.type,
             supplierId
           );

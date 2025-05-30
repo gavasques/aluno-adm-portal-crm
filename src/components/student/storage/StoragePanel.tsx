@@ -58,7 +58,8 @@ const StoragePanel: React.FC = () => {
     storage_used_mb: 0,
     storage_limit_mb: 100,
     storage_available_mb: 100,
-    usage_percentage: 0
+    usage_percentage: 0,
+    storage_percentage: 0
   };
 
   return (

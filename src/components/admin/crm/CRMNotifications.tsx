@@ -32,7 +32,14 @@ const CRMNotifications = ({ onOpenLead }: CRMNotificationsProps) => {
         .limit(50);
 
       if (error) throw error;
-      setNotifications(data || []);
+      
+      // Cast para garantir que type seja do tipo correto
+      const typedNotifications: CRMNotification[] = (data || []).map(item => ({
+        ...item,
+        type: item.type as CRMNotification['type']
+      }));
+      
+      setNotifications(typedNotifications);
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
       toast.error('Erro ao carregar notificações');
@@ -153,18 +160,18 @@ const CRMNotifications = ({ onOpenLead }: CRMNotificationsProps) => {
     fetchNotifications();
 
     // Subscribe to real-time notifications
-    const { data: { user } } = supabase.auth.getUser();
-    user?.then(userData => {
-      if (userData.user) {
+    const initializeRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
         const channel = supabase
-          .channel(`notifications-${userData.user.id}`)
+          .channel(`notifications-${user.id}`)
           .on(
             'postgres_changes',
             {
               event: '*',
               schema: 'public',
               table: 'crm_notifications',
-              filter: `user_id=eq.${userData.user.id}`
+              filter: `user_id=eq.${user.id}`
             },
             () => {
               fetchNotifications();
@@ -176,7 +183,9 @@ const CRMNotifications = ({ onOpenLead }: CRMNotificationsProps) => {
           supabase.removeChannel(channel);
         };
       }
-    });
+    };
+
+    initializeRealtimeSubscription();
   }, []);
 
   if (loading) {
