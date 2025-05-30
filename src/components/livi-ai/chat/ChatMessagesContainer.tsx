@@ -33,36 +33,49 @@ export const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
       <div className="flex items-center justify-center h-full bg-white dark:bg-gray-900">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Carregando conversa...</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Carregando conversa...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto px-2 py-2 bg-white dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto min-h-full flex flex-col justify-end">
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-white dark:bg-gray-900 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+      <div className="w-full min-h-full flex flex-col justify-end">
         {/* Messages Container */}
-        <div className="space-y-3 mb-4">
+        <div className="space-y-3 p-2 sm:p-4">
           {/* Welcome Message */}
           {messages.length === 0 && (
-            <ChatWelcomeMessage />
+            <div className="flex justify-center">
+              <div className="w-full max-w-3xl">
+                <ChatWelcomeMessage />
+              </div>
+            </div>
           )}
 
           {/* Messages */}
           <AnimatePresence>
             {messages.map((msg) => (
-              <ChatMessage
-                key={msg.id}
-                message={msg}
-                onCopyMessage={onCopyMessage}
-                copiedMessageId={copiedMessageId}
-              />
+              <div key={msg.id} className="flex justify-center">
+                <div className="w-full max-w-4xl">
+                  <ChatMessage
+                    message={msg}
+                    onCopyMessage={onCopyMessage}
+                    copiedMessageId={copiedMessageId}
+                  />
+                </div>
+              </div>
             ))}
           </AnimatePresence>
 
           {/* Loading Indicator */}
-          {isLoading && <ChatLoadingIndicator />}
+          {isLoading && (
+            <div className="flex justify-center">
+              <div className="w-full max-w-3xl">
+                <ChatLoadingIndicator />
+              </div>
+            </div>
+          )}
         </div>
 
         <div ref={messagesEndRef} />

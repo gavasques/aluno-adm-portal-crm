@@ -40,28 +40,31 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full bg-white dark:bg-gray-900 overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
-      {/* Chat Messages Area */}
-      <div className="flex-1 overflow-hidden">
-        <ChatMessagesContainer
-          messages={messages}
-          isLoading={isLoading}
-          messagesLoading={messagesLoading}
-          onCopyMessage={copyToClipboard}
-          copiedMessageId={copiedMessageId}
-        />
-      </div>
+    <div className="flex flex-col w-full h-full bg-white dark:bg-gray-900 overflow-hidden">
+      {/* Container centralizado com largura máxima e margens automáticas */}
+      <div className="flex flex-col w-full max-w-6xl mx-auto h-full px-4 py-6 sm:px-6 lg:px-8">
+        {/* Chat Messages Area */}
+        <div className="flex-1 overflow-hidden min-h-0">
+          <ChatMessagesContainer
+            messages={messages}
+            isLoading={isLoading}
+            messagesLoading={messagesLoading}
+            onCopyMessage={copyToClipboard}
+            copiedMessageId={copiedMessageId}
+          />
+        </div>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0">
-        <ChatInputArea
-          message={message}
-          setMessage={setMessage}
-          onSendMessage={onSendMessage}
-          isLoading={isLoading}
-          hasCredits={hasCredits}
-          isSessionActive={isSessionActive}
-        />
+        {/* Input Area */}
+        <div className="flex-shrink-0 mt-4">
+          <ChatInputArea
+            message={message}
+            setMessage={setMessage}
+            onSendMessage={onSendMessage}
+            isLoading={isLoading}
+            hasCredits={hasCredits}
+            isSessionActive={isSessionActive}
+          />
+        </div>
       </div>
     </div>
   );

@@ -44,8 +44,8 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   const canSend = message.trim() && !isLoading && hasCredits && isSessionActive;
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2">
-      <div className="max-w-4xl mx-auto">
+    <div className="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pt-4">
+      <div className="w-full max-w-4xl mx-auto">
         <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 focus-within:border-blue-500 dark:focus-within:border-blue-400 transition-colors shadow-sm">
           <Textarea
             ref={textareaRef}
@@ -60,8 +60,8 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                 : "Digite sua pergunta sobre importação ou Amazon..."
             }
             className={cn(
-              "bg-transparent border-0 resize-none shadow-none focus-visible:ring-0 min-h-[40px] max-h-[100px] py-2 px-3 pr-12",
-              "placeholder:text-gray-500 dark:placeholder:text-gray-400",
+              "bg-transparent border-0 resize-none shadow-none focus-visible:ring-0 min-h-[40px] max-h-[100px] py-3 px-4 pr-14 w-full",
+              "placeholder:text-gray-500 dark:placeholder:text-gray-400 text-sm sm:text-base",
               "scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
             )}
             disabled={isLoading || !hasCredits || !isSessionActive}
@@ -71,29 +71,29 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             onClick={onSendMessage}
             disabled={!canSend}
             className={cn(
-              "absolute right-2 bottom-2 h-7 w-7 p-0 rounded-lg",
+              "absolute right-3 bottom-3 h-8 w-8 p-0 rounded-lg",
               "bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600",
               "transition-all duration-200",
               canSend ? "opacity-100" : "opacity-50"
             )}
           >
             {isLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-4 w-4" />
             )}
           </Button>
         </div>
 
         {/* Status Messages */}
-        <div className="mt-1 text-center">
+        <div className="mt-3 text-center">
           {!isSessionActive && (
-            <div className="text-xs text-amber-600 dark:text-amber-400">
+            <div className="text-xs sm:text-sm text-amber-600 dark:text-amber-400">
               Inicie uma sessão para começar a conversar com o Livi AI
             </div>
           )}
           {isSessionActive && !hasCredits && (
-            <div className="text-xs text-red-600 dark:text-red-400">
+            <div className="text-xs sm:text-sm text-red-600 dark:text-red-400">
               Créditos insuficientes. Adquira mais créditos para continuar.
             </div>
           )}
