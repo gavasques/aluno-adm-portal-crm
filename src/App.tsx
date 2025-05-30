@@ -19,8 +19,8 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
           <NotificationsProvider>
             <div className="min-h-screen bg-background font-sans antialiased">
               <Routes>
@@ -46,8 +46,8 @@ function App() {
               <ImprovedToaster />
             </div>
           </NotificationsProvider>
-        </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
