@@ -62,3 +62,12 @@ export interface SubscriptionPlan {
   description: string;
   popular?: boolean;
 }
+
+// Novo tipo para o retorno da função admin_adjust_user_credits
+export interface AdminAdjustCreditsResponse {
+  success: boolean;
+  error?: string;
+  previous_credits?: number;
+  new_credits?: number;
+  adjustment_amount?: number;
+}

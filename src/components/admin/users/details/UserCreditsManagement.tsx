@@ -23,6 +23,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { AdminAdjustCreditsResponse } from "@/types/credits.types";
 
 interface UserCreditsManagementProps {
   userId: string;
@@ -129,11 +130,14 @@ const UserCreditsManagement: React.FC<UserCreditsManagementProps> = ({
         throw error;
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Erro desconhecido no ajuste');
+      // Cast do tipo para AdminAdjustCreditsResponse
+      const result = data as AdminAdjustCreditsResponse;
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erro desconhecido no ajuste');
       }
 
-      return data;
+      return result;
     },
     onSuccess: (data) => {
       console.log('✅ Créditos ajustados com sucesso:', data);
