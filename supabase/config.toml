@@ -42,6 +42,9 @@ pop3_port = 54327
 [functions.youtube-videos]
 verify_jwt = true
 
+[functions.youtube-sync]
+verify_jwt = false
+
 [functions.audit-logger]
 verify_jwt = true
 
@@ -55,6 +58,9 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.purchase-credits]
+verify_jwt = true
+
+[functions.check-credits]
 verify_jwt = true
 
 [edge-runtime]

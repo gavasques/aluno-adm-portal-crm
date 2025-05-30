@@ -1,15 +1,50 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Youtube, RefreshCw, AlertCircle, Wifi } from 'lucide-react';
+import { Youtube, RefreshCw, AlertCircle, Wifi, Users, Calendar, Sync } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { YouTubeVideoCard } from './YouTubeVideoCard';
 import { useYouTubeVideos } from '@/hooks/useYouTubeVideos';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const YouTubeSection: React.FC = () => {
-  const { videos, loading, error, refetch } = useYouTubeVideos();
+  const { 
+    videos, 
+    channelInfo, 
+    loading, 
+    error, 
+    isAdmin, 
+    refetch, 
+    syncVideos, 
+    syncing, 
+    lastSync 
+  } = useYouTubeVideos();
+
+  const formatSubscriberCount = (count: string) => {
+    const num = parseInt(count);
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toString();
+  };
+
+  const formatLastSync = (syncDate: string) => {
+    try {
+      return formatDistanceToNow(new Date(syncDate), { 
+        addSuffix: true, 
+        locale: ptBR 
+      });
+    } catch {
+      return 'data inválida';
+    }
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -65,10 +100,18 @@ export const YouTubeSection: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
               Os vídeos mais recentes aparecerão aqui em breve.
             </p>
-            <Button onClick={refetch} variant="outline" size="sm" className="space-x-2">
-              <RefreshCw className="w-4 h-4" />
-              <span>Verificar novamente</span>
-            </Button>
+            {isAdmin && (
+              <Button 
+                onClick={syncVideos} 
+                variant="outline" 
+                size="sm" 
+                className="space-x-2"
+                disabled={syncing}
+              >
+                <Sync className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                <span>Sincronizar agora</span>
+              </Button>
+            )}
           </div>
         </div>
       );
@@ -95,27 +138,60 @@ export const YouTubeSection: React.FC = () => {
             <div className="p-2 bg-red-600 rounded-lg">
               <Youtube className="w-6 h-6 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                Últimos Vídeos
+                Últimos vídeos de Meu canal @guilhermeavasques
               </CardTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Confira o conteúdo mais recente do canal
-              </p>
+              <div className="flex items-center gap-4 mt-1">
+                {channelInfo && (
+                  <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                    <Users className="w-4 h-4" />
+                    <span>{formatSubscriberCount(channelInfo.subscriber_count)} seguidores</span>
+                  </div>
+                )}
+                {lastSync && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500">
+                    <Calendar className="w-3 h-3" />
+                    <span>Atualizado {formatLastSync(lastSync)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           
-          {!loading && (
-            <Button 
-              onClick={refetch} 
-              variant="ghost" 
-              size="sm"
-              className="opacity-70 hover:opacity-100"
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {syncing && (
+              <Badge variant="secondary" className="text-xs">
+                <Sync className="w-3 h-3 mr-1 animate-spin" />
+                Sincronizando...
+              </Badge>
+            )}
+            
+            {isAdmin && (
+              <Button 
+                onClick={syncVideos} 
+                variant="ghost" 
+                size="sm"
+                className="opacity-70 hover:opacity-100"
+                disabled={syncing}
+                title="Sincronizar vídeos agora (apenas admin)"
+              >
+                <Sync className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+            
+            {!loading && (
+              <Button 
+                onClick={refetch} 
+                variant="ghost" 
+                size="sm"
+                className="opacity-70 hover:opacity-100"
+                disabled={loading || syncing}
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+          </div>
         </CardHeader>
         
         <CardContent>

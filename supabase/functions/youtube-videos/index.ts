@@ -17,127 +17,63 @@ interface YouTubeVideo {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('🎥 Iniciando busca de vídeos do YouTube...');
+    console.log('🎥 Buscando vídeos do cache...');
     
-    const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY');
-    if (!YOUTUBE_API_KEY) {
-      console.error('❌ YouTube API key não configurada');
-      // Retornar array vazio em vez de erro para não quebrar o frontend
-      return new Response(
-        JSON.stringify({ videos: [] }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    // Buscar vídeos do cache
+    const { data: cachedVideos, error: cacheError } = await supabaseClient
+      .from('youtube_cache')
+      .select('*')
+      .order('published_at', { ascending: false })
+      .limit(6);
+
+    if (cacheError) {
+      console.error('❌ Erro ao buscar cache:', cacheError);
+      throw cacheError;
     }
 
-    // Canal ID direto do @guilhermeavasques
-    const channelId = 'UCccs9hxFuzq77stdELIU59w';
-    
-    console.log(`✅ Usando canal ID: ${channelId}`);
+    // Buscar informações do canal
+    const { data: channelInfo } = await supabaseClient
+      .from('youtube_channel_info')
+      .select('*')
+      .single();
 
-    // Buscar os últimos vídeos do canal
-    const videosUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=6&order=date&type=video&key=${YOUTUBE_API_KEY}`;
-    console.log('🔗 URL da busca:', videosUrl.replace(YOUTUBE_API_KEY, '[HIDDEN]'));
+    // Converter dados do cache para o formato esperado
+    const videos: YouTubeVideo[] = cachedVideos?.map(video => ({
+      id: video.video_id,
+      title: video.title,
+      description: video.description || '',
+      thumbnail: video.thumbnail,
+      publishedAt: video.published_at,
+      duration: video.duration,
+      viewCount: video.view_count
+    })) || [];
 
-    const videosResponse = await fetch(videosUrl);
-    
-    console.log('📡 Status da resposta:', videosResponse.status);
+    console.log(`✅ ${videos.length} vídeos carregados do cache`);
 
-    if (!videosResponse.ok) {
-      const errorText = await videosResponse.text();
-      console.error(`❌ Erro na API do YouTube (${videosResponse.status}):`, errorText);
-      
-      // Se erro 403 (quota exceeded ou API key inválida), retornar array vazio
-      if (videosResponse.status === 403) {
-        console.log('⚠️ Erro 403 - Retornando array vazio para não quebrar o frontend');
-        return new Response(
-          JSON.stringify({ videos: [] }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        );
-      }
-      
-      throw new Error(`Erro na API do YouTube: ${videosResponse.status} - ${errorText}`);
-    }
-
-    const videosData = await videosResponse.json();
-    console.log('📊 Dados recebidos:', {
-      itemCount: videosData.items?.length || 0,
-      hasError: !!videosData.error
-    });
-    
-    if (videosData.error) {
-      console.error('❌ Erro no JSON da resposta:', videosData.error);
-      return new Response(
-        JSON.stringify({ videos: [] }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
-    }
-    
-    if (!videosData.items || videosData.items.length === 0) {
-      console.log('📹 Nenhum vídeo encontrado');
-      return new Response(
-        JSON.stringify({ videos: [] }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
-    }
-
-    // Obter detalhes adicionais dos vídeos (duração, visualizações)
-    const videoIds = videosData.items.map((item: any) => item.id.videoId).join(',');
-    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
-    
-    console.log('🔍 Buscando detalhes dos vídeos...');
-    const detailsResponse = await fetch(detailsUrl);
-
-    let videoDetails = new Map();
-    if (detailsResponse.ok) {
-      const detailsData = await detailsResponse.json();
-      videoDetails = new Map(
-        detailsData.items?.map((item: any) => [item.id, item]) || []
-      );
-      console.log('✅ Detalhes obtidos para', videoDetails.size, 'vídeos');
-    } else {
-      console.warn('⚠️ Não foi possível obter detalhes dos vídeos, continuando sem eles');
-    }
-
-    // Processar vídeos
-    const videos: YouTubeVideo[] = videosData.items.map((item: any) => {
-      const details = videoDetails.get(item.id.videoId);
-      
-      return {
-        id: item.id.videoId,
-        title: item.snippet.title,
-        description: item.snippet.description || '',
-        thumbnail: item.snippet.thumbnails.high?.url || 
-                  item.snippet.thumbnails.medium?.url || 
-                  item.snippet.thumbnails.default?.url || 
-                  '/placeholder-video.jpg',
-        publishedAt: item.snippet.publishedAt,
-        duration: details?.contentDetails?.duration || 'PT0M0S',
-        viewCount: details?.statistics?.viewCount || '0'
-      };
-    });
-
-    console.log(`✅ ${videos.length} vídeos processados com sucesso`);
+    const response = {
+      videos,
+      channel_info: channelInfo ? {
+        subscriber_count: channelInfo.subscriber_count,
+        channel_name: channelInfo.channel_name,
+        last_sync: channelInfo.last_sync
+      } : null,
+      cached: true,
+      timestamp: new Date().toISOString()
+    };
 
     return new Response(
-      JSON.stringify({ videos }),
+      JSON.stringify(response),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
@@ -145,13 +81,15 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Erro geral na função:', error);
+    console.error('❌ Erro ao carregar vídeos:', error);
     
-    // Sempre retornar array vazio em vez de erro 500 para não quebrar o frontend
+    // Fallback: retornar array vazio em caso de erro
     return new Response(
       JSON.stringify({ 
         videos: [],
-        error: 'Erro ao carregar vídeos, tente novamente mais tarde'
+        channel_info: null,
+        error: 'Erro ao carregar vídeos do cache',
+        cached: false
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
