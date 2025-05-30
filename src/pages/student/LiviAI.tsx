@@ -56,7 +56,6 @@ const LiviAI = () => {
       return;
     }
 
-    // Criar sessão com uma mensagem padrão
     const defaultMessage = "Nova conversa com Livi AI";
     const session = await createSession(defaultMessage);
     
@@ -83,7 +82,6 @@ const LiviAI = () => {
   const sendMessage = async () => {
     if (!message.trim() || !user) return;
 
-    // Verificar créditos antes de enviar
     if (!hasCredits()) {
       toast({
         title: "Créditos insuficientes",
@@ -95,7 +93,6 @@ const LiviAI = () => {
 
     let session = currentSession;
 
-    // Criar nova sessão se não houver uma ativa
     if (!session?.is_active) {
       session = await createSession(message);
       if (!session) return;
@@ -108,7 +105,6 @@ const LiviAI = () => {
     const startTime = Date.now();
 
     try {
-      // Consumir 1 crédito antes de enviar a mensagem
       const creditConsumed = await consumeCredits(1, 'Mensagem Livi AI');
       
       if (!creditConsumed) {
@@ -120,10 +116,8 @@ const LiviAI = () => {
         return;
       }
 
-      // Salvar mensagem do usuário primeiro
       await saveMessage(session.id, userMessage, undefined, 1);
 
-      // Usar a URL configurada pelo admin
       const webhookUrl = getWebhookUrl();
       
       const response = await fetch(webhookUrl, {
@@ -143,8 +137,6 @@ const LiviAI = () => {
 
       if (response.ok) {
         const aiResponse = await response.text();
-        
-        // Atualizar a mensagem com a resposta da IA
         await saveMessage(session.id, userMessage, aiResponse || 'Mensagem recebida!', 1, responseTime);
       } else {
         throw new Error('Erro na comunicação com o AI');
@@ -154,7 +146,6 @@ const LiviAI = () => {
       const endTime = Date.now();
       const responseTime = endTime - startTime;
       
-      // Salvar mensagem com erro
       await saveMessage(
         session.id, 
         userMessage, 
@@ -175,71 +166,101 @@ const LiviAI = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Sidebar do Histórico */}
-      <SessionHistorySidebar
-        sessions={sessions}
-        currentSession={currentSession}
-        onSelectSession={selectSession}
-        onDeleteSession={deleteSession}
-        onRenameSession={renameSession}
-        loading={sessionsLoading}
-      />
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      {/* Sidebar - Responsivo */}
+      <div className="hidden lg:block lg:w-80 xl:w-96">
+        <SessionHistorySidebar
+          sessions={sessions}
+          currentSession={currentSession}
+          onSelectSession={selectSession}
+          onDeleteSession={deleteSession}
+          onRenameSession={renameSession}
+          loading={sessionsLoading}
+        />
+      </div>
 
       {/* Main Content - Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white shadow-sm p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Bot className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Livi AI</h2>
-              <p className="text-gray-500 text-sm">
-                {currentSession?.is_active ? 'Sessão ativa' : 'Nenhuma sessão ativa'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center px-4 py-2 rounded-lg ${
-              hasCredits() ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-            }`}>
-              <CreditCard className="h-5 w-5 mr-2" />
-              <span className="font-medium">
-                {creditsLoading ? '...' : creditStatus?.credits?.current || 0} créditos
-              </span>
-              <Button
-                onClick={refreshCredits}
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 ml-2"
-                disabled={creditsLoading}
-              >
-                <RefreshCw className={`h-3 w-3 ${creditsLoading ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-            <Button 
-              onClick={startSession} 
-              disabled={currentSession?.is_active || !hasCredits()}
-              className="bg-gray-700 text-white px-6 py-2 rounded-lg flex items-center whitespace-nowrap"
-            >
-              <Play className="h-5 w-5 mr-2" />
-              Iniciar Sessão
-            </Button>
-            <Button 
-              onClick={handleEndSession} 
-              disabled={!currentSession?.is_active}
-              variant="destructive"
-              className="bg-red-200 text-red-600 px-6 py-2 rounded-lg flex items-center whitespace-nowrap hover:bg-red-300"
-            >
-              <Square className="h-5 w-5 mr-2" />
-              Encerrar Sessão
-            </Button>
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header - Responsivo */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-white/20 dark:border-slate-700/20 shadow-sm"
+        >
+          <div className="p-4 lg:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              {/* Logo e Status */}
+              <div className="flex items-center space-x-4">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+                >
+                  <Bot className="h-6 w-6 text-white" />
+                </motion.div>
+                <div>
+                  <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Livi AI
+                  </h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {currentSession?.is_active ? 'Sessão ativa' : 'Nenhuma sessão ativa'}
+                  </p>
+                </div>
+              </div>
 
-        {/* Área do Chat */}
+              {/* Créditos e Ações */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className={`flex items-center px-4 py-2 rounded-lg shadow-sm ${
+                    hasCredits() 
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200' 
+                      : 'bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200'
+                  }`}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  <span className="font-medium text-sm">
+                    {creditsLoading ? '...' : creditStatus?.credits?.current || 0} créditos
+                  </span>
+                  <Button
+                    onClick={refreshCredits}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 ml-2 hover:bg-transparent"
+                    disabled={creditsLoading}
+                  >
+                    <RefreshCw className={`h-3 w-3 ${creditsLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </motion.div>
+
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button 
+                    onClick={startSession} 
+                    disabled={currentSession?.is_active || !hasCredits()}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex-1 sm:flex-none"
+                    size="sm"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Iniciar Sessão</span>
+                    <span className="sm:hidden">Iniciar</span>
+                  </Button>
+                  <Button 
+                    onClick={handleEndSession} 
+                    disabled={!currentSession?.is_active}
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm flex-1 sm:flex-none"
+                    size="sm"
+                  >
+                    <Square className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Encerrar</span>
+                    <span className="sm:hidden">Parar</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Chat Area */}
         <LiviAIChatArea
           messages={sessionMessages}
           message={message}

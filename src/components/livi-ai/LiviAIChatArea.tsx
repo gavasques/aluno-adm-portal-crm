@@ -49,8 +49,7 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      minute: '2-digit'
     });
   };
 
@@ -60,62 +59,76 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-4"
+      className="space-y-4 px-4 lg:px-6"
     >
       {/* User Message */}
-      <div className="flex items-start space-x-4 justify-end">
+      <div className="flex items-start space-x-3 justify-end">
         <div className="flex-1 text-right">
-          <div className="bg-primary text-white rounded-lg p-4 shadow-sm inline-block max-w-md">
-            <p className="text-sm">{msg.message_text}</p>
-          </div>
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-tr-md p-4 shadow-lg inline-block max-w-xs sm:max-w-md lg:max-w-lg"
+          >
+            <p className="text-sm leading-relaxed">{msg.message_text}</p>
+          </motion.div>
           <div className="mt-1 text-xs text-gray-400">{formatTime(msg.created_at)}</div>
         </div>
-        <div className="w-8 h-8 rounded-lg bg-gray-200 flex-shrink-0 flex items-center justify-center">
-          <User className="h-5 w-5 text-gray-500" />
-        </div>
+        <motion.div 
+          whileHover={{ scale: 1.05 }}
+          className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-md"
+        >
+          <User className="h-4 w-4 text-white" />
+        </motion.div>
       </div>
 
       {/* AI Response */}
       {msg.ai_response && (
-        <div className="flex items-start space-x-4">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex-shrink-0 flex items-center justify-center">
-            <Bot className="h-5 w-5 text-primary" />
-          </div>
+        <div className="flex items-start space-x-3">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex-shrink-0 flex items-center justify-center shadow-md"
+          >
+            <Bot className="h-4 w-4 text-white" />
+          </motion.div>
           <div className="flex-1">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 group">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl rounded-tl-md p-4 shadow-lg border border-white/20 dark:border-slate-700/20 group max-w-xs sm:max-w-md lg:max-w-lg"
+            >
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                 {msg.ai_response}
               </p>
-              <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center justify-between mt-3">
                 <div className="text-xs text-gray-400">{formatTime(msg.created_at)}</div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100 dark:hover:bg-slate-700"
                   onClick={() => copyToClipboard(msg.ai_response!, msg.id)}
                 >
                   {copiedMessageId === msg.id ? (
                     <CheckCircle className="h-3 w-3 text-green-500" />
                   ) : (
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-3 w-3 text-gray-500" />
                   )}
                 </Button>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
 
       {/* Error Message */}
       {msg.error_message && (
-        <div className="flex items-start space-x-4">
-          <div className="w-8 h-8 rounded-lg bg-red-500 flex-shrink-0 flex items-center justify-center">
-            <AlertCircle className="h-5 w-5 text-white" />
+        <div className="flex items-start space-x-3">
+          <div className="w-8 h-8 rounded-full bg-red-500 flex-shrink-0 flex items-center justify-center shadow-md">
+            <AlertCircle className="h-4 w-4 text-white" />
           </div>
           <div className="flex-1">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-800">{msg.error_message}</p>
-              <div className="text-xs text-red-600 mt-1">{formatTime(msg.created_at)}</div>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl rounded-tl-md p-4 max-w-xs sm:max-w-md lg:max-w-lg">
+              <p className="text-sm text-red-800 dark:text-red-300">{msg.error_message}</p>
+              <div className="text-xs text-red-600 dark:text-red-400 mt-1">{formatTime(msg.created_at)}</div>
             </div>
           </div>
         </div>
@@ -125,44 +138,51 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
 
   if (messagesLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-blue-50/50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando mensagens...</p>
-        </div>
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-slate-800/50 dark:to-slate-900/50">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Carregando mensagens...</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Chat Container */}
-      <div className="flex-1 bg-blue-50/50 p-6 overflow-y-auto chat-container">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 bg-gradient-to-br from-blue-50/30 to-purple-50/30 dark:from-slate-800/30 dark:to-slate-900/30 overflow-y-auto">
+        <div className="max-w-4xl mx-auto py-6 space-y-6">
           {messages.length > 0 ? (
             <AnimatePresence>
               {messages.map(renderMessage)}
             </AnimatePresence>
           ) : (
-            <div className="flex items-start space-x-4">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex-shrink-0 flex items-center justify-center">
-                <Bot className="h-5 w-5 text-primary" />
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start space-x-3 px-4 lg:px-6"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex-shrink-0 flex items-center justify-center shadow-md">
+                <Bot className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <p className="text-gray-700">
+                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl rounded-tl-md p-4 shadow-lg border border-white/20 dark:border-slate-700/20 max-w-xs sm:max-w-md lg:max-w-lg">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                     Olá! Eu sou o Livi AI, seu assistente especializado em importação e Amazon. Como posso ajudar você hoje?
                   </p>
                 </div>
                 <div className="mt-1 text-xs text-gray-400">
                   {new Date().toLocaleTimeString('pt-BR', {
                     hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
+                    minute: '2-digit'
                   })}
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -170,45 +190,61 @@ export const LiviAIChatArea: React.FC<LiviAIChatAreaProps> = ({
 
       {/* Message Input */}
       {isSessionActive && (
-        <div className="bg-white p-4 border-t border-gray-200">
-          <div className="flex items-center">
-            <div className="flex-1 bg-gray-100 rounded-lg px-4 py-3 flex items-center">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder={hasCredits ? "Digite sua pergunta sobre importação ou Amazon..." : "Créditos insuficientes"}
-                className="bg-transparent border-none outline-none shadow-none focus-visible:ring-0 text-gray-700"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    onSendMessage();
-                  }
-                }}
-                disabled={isLoading || !hasCredits}
-              />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-t border-white/20 dark:border-slate-700/20 p-4"
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-end gap-3">
+              <div className="flex-1 bg-white/60 dark:bg-slate-700/60 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-slate-600/20 shadow-sm">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={hasCredits ? "Digite sua pergunta sobre importação ou Amazon..." : "Créditos insuficientes"}
+                  className="bg-transparent border-none outline-none shadow-none focus-visible:ring-0 text-gray-700 dark:text-gray-300 p-4 text-sm rounded-2xl resize-none min-h-[44px]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      onSendMessage();
+                    }
+                  }}
+                  disabled={isLoading || !hasCredits}
+                />
+              </div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  onClick={onSendMessage} 
+                  disabled={!message.trim() || isLoading || !hasCredits}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 min-w-[44px] h-[44px]"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </motion.div>
             </div>
-            <Button 
-              onClick={onSendMessage} 
-              disabled={!message.trim() || isLoading || !hasCredits}
-              className="ml-3 bg-primary text-white p-3 rounded-full hover:bg-primary/90 transition-colors"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          </div>
-          
-          {isLoading && (
-            <div className="text-xs text-gray-500 mt-2 flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-              <span>Livi AI está processando sua pergunta...</span>
-            </div>
-          )}
+            
+            {isLoading && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center"
+              >
+                <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent mr-2"></div>
+                <span>Livi AI está processando sua pergunta...</span>
+              </motion.div>
+            )}
 
-          {!hasCredits && (
-            <div className="text-xs text-red-600 mt-2">
-              Créditos insuficientes. Adquira mais créditos para continuar.
-            </div>
-          )}
-        </div>
+            {!hasCredits && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-red-600 dark:text-red-400 mt-3"
+              >
+                Créditos insuficientes. Adquira mais créditos para continuar.
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
       )}
     </div>
   );
