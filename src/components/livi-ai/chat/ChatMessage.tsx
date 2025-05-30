@@ -1,0 +1,113 @@
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Bot, User, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LiviAIMessage } from '@/hooks/useLiviAISessions';
+
+interface ChatMessageProps {
+  message: LiviAIMessage;
+  onCopyMessage: (text: string, messageId: string) => void;
+  copiedMessageId: string | null;
+}
+
+export const ChatMessage: React.FC<ChatMessageProps> = ({
+  message,
+  onCopyMessage,
+  copiedMessageId
+}) => {
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* User Message */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-start gap-4 justify-end"
+      >
+        <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm p-4 max-w-xs sm:max-w-md lg:max-w-2xl">
+          <p className="leading-relaxed">{message.message_text}</p>
+          <div className="text-xs text-blue-100 mt-2 flex items-center gap-2">
+            {formatTime(message.created_at)}
+            {message.response_time_ms && (
+              <span>• {message.response_time_ms}ms</span>
+            )}
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center flex-shrink-0">
+          <User className="h-4 w-4 text-white" />
+        </div>
+      </motion.div>
+
+      {/* AI Response */}
+      {message.ai_response && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-4 max-w-3xl"
+        >
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
+            <Bot className="h-4 w-4 text-white" />
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl rounded-tl-sm p-4 flex-1 group">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <p className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap m-0">
+                {message.ai_response}
+              </p>
+            </div>
+            <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                {formatTime(message.created_at)}
+                {message.response_time_ms && (
+                  <span className="text-green-600 dark:text-green-400">• {message.response_time_ms}ms</span>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onCopyMessage(message.ai_response!, message.id)}
+              >
+                {copiedMessageId === message.id ? (
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                ) : (
+                  <Copy className="h-3 w-3 text-gray-500" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Error Message */}
+      {message.error_message && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-4 max-w-3xl"
+        >
+          <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="h-4 w-4 text-white" />
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl rounded-tl-sm p-4 flex-1">
+            <div className="flex items-start gap-2">
+              <div>
+                <p className="text-red-800 dark:text-red-300 font-medium mb-1">Erro no processamento</p>
+                <p className="text-sm text-red-700 dark:text-red-400">{message.error_message}</p>
+              </div>
+            </div>
+            <div className="text-xs text-red-600 dark:text-red-400 mt-2">
+              {formatTime(message.created_at)}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+};
