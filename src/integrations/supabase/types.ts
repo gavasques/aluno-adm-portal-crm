@@ -396,6 +396,442 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_lead_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          lead_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          lead_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          lead_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_attachments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_attachments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          lead_id: string | null
+          mentions: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          mentions?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          mentions?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_comments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_history: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          description: string | null
+          field_name: string | null
+          id: string
+          lead_id: string | null
+          new_value: string | null
+          old_value: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          description?: string | null
+          field_name?: string | null
+          id?: string
+          lead_id?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          field_name?: string | null
+          id?: string
+          lead_id?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          lead_id: string | null
+          tag_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          tag_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_tags_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "crm_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          amazon_state: string | null
+          amazon_store_link: string | null
+          amazon_tax_regime: string | null
+          calendly_link: string | null
+          calendly_scheduled: boolean | null
+          column_id: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string
+          had_contact_with_lv: boolean | null
+          has_company: boolean | null
+          id: string
+          keep_or_new_niches: string | null
+          main_doubts: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          pipeline_id: string | null
+          ready_to_invest_3k: boolean | null
+          responsible_id: string | null
+          scheduled_contact_date: string | null
+          seeks_private_label: boolean | null
+          sells_on_amazon: boolean | null
+          updated_at: string | null
+          what_sells: string | null
+          works_with_fba: boolean | null
+        }
+        Insert: {
+          amazon_state?: string | null
+          amazon_store_link?: string | null
+          amazon_tax_regime?: string | null
+          calendly_link?: string | null
+          calendly_scheduled?: boolean | null
+          column_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          had_contact_with_lv?: boolean | null
+          has_company?: boolean | null
+          id?: string
+          keep_or_new_niches?: string | null
+          main_doubts?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          pipeline_id?: string | null
+          ready_to_invest_3k?: boolean | null
+          responsible_id?: string | null
+          scheduled_contact_date?: string | null
+          seeks_private_label?: boolean | null
+          sells_on_amazon?: boolean | null
+          updated_at?: string | null
+          what_sells?: string | null
+          works_with_fba?: boolean | null
+        }
+        Update: {
+          amazon_state?: string | null
+          amazon_store_link?: string | null
+          amazon_tax_regime?: string | null
+          calendly_link?: string | null
+          calendly_scheduled?: boolean | null
+          column_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          had_contact_with_lv?: boolean | null
+          has_company?: boolean | null
+          id?: string
+          keep_or_new_niches?: string | null
+          main_doubts?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          pipeline_id?: string | null
+          ready_to_invest_3k?: boolean | null
+          responsible_id?: string | null
+          scheduled_contact_date?: string | null
+          seeks_private_label?: boolean | null
+          sells_on_amazon?: boolean | null
+          updated_at?: string | null
+          what_sells?: string | null
+          works_with_fba?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_leads_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipeline_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_leads_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipelines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_leads_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          lead_id: string | null
+          message: string | null
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          message?: string | null
+          read?: boolean | null
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          message?: string | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_notifications_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_pipeline_columns: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          pipeline_id: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          pipeline_id?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          pipeline_id?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_pipeline_columns_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_pipelines: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      crm_tags: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       livi_ai_messages: {
         Row: {
           ai_response: string | null
@@ -1375,7 +1811,9 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          is_closer: boolean | null
           is_mentor: boolean
+          is_onboarding: boolean | null
           name: string | null
           permission_group_id: string | null
           role: string | null
@@ -1389,7 +1827,9 @@ export type Database = {
           created_at?: string | null
           email: string
           id: string
+          is_closer?: boolean | null
           is_mentor?: boolean
+          is_onboarding?: boolean | null
           name?: string | null
           permission_group_id?: string | null
           role?: string | null
@@ -1403,7 +1843,9 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          is_closer?: boolean | null
           is_mentor?: boolean
+          is_onboarding?: boolean | null
           name?: string | null
           permission_group_id?: string | null
           role?: string | null
@@ -1874,6 +2316,10 @@ export type Database = {
           module_name: string
           actions: string[]
         }[]
+      }
+      has_crm_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       is_admin: {
         Args: Record<PropertyKey, never>
