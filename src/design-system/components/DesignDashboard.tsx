@@ -1,218 +1,105 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
-import { DesignCard, DesignCardHeader, DesignCardTitle, DesignCardDescription, DesignCardContent } from './DesignCard';
-import { DesignButton } from './DesignButton';
 import { cn } from '@/lib/utils';
-import { designTokens } from '../tokens';
+import { LucideIcon } from 'lucide-react';
 
-// Stats Card Component
-interface StatsCardProps {
+type GradientType = 'primary' | 'secondary' | 'accent' | 'warning' | 'success' | 'error';
+type VariantType = 'default' | 'glass' | 'solid';
+
+interface Trend {
+  value: string;
+  isPositive: boolean;
+}
+
+interface DesignStatsCardProps {
   title: string;
   value: string | number;
   description?: string;
   icon: LucideIcon;
-  trend?: {
-    value: string;
-    isPositive: boolean;
-  };
+  gradient: GradientType;
+  trend?: Trend;
   onClick?: () => void;
-  variant?: 'glass' | 'neumorphism' | 'modern';
-  gradient?: keyof typeof designTokens.gradients;
+  variant?: VariantType;
+  className?: string;
 }
 
-export const DesignStatsCard: React.FC<StatsCardProps> = ({
+const gradientClasses = {
+  primary: 'from-blue-500 to-blue-600',
+  secondary: 'from-purple-500 to-purple-600',
+  accent: 'from-pink-500 to-pink-600',
+  warning: 'from-amber-500 to-amber-600',
+  success: 'from-green-500 to-green-600',
+  error: 'from-red-500 to-red-600',
+};
+
+const backgroundVariants = {
+  default: 'bg-white dark:bg-gray-800',
+  glass: 'bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm',
+  solid: 'bg-white dark:bg-gray-800',
+};
+
+export const DesignStatsCard: React.FC<DesignStatsCardProps> = ({
   title,
   value,
   description,
   icon: Icon,
+  gradient,
   trend,
   onClick,
-  variant = 'glass',
-  gradient = 'primary'
+  variant = 'default',
+  className,
 }) => {
   return (
-    <DesignCard
-      variant={variant}
-      size="md"
-      interactive={!!onClick}
+    <motion.div
+      className={cn(
+        'rounded-xl border border-white/20 shadow-lg p-4 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1',
+        backgroundVariants[variant],
+        className
+      )}
       onClick={onClick}
-      className="relative overflow-hidden group"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
-      {/* Background Gradient */}
-      <div 
-        className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
-        style={{ background: designTokens.gradients[gradient] }}
-      />
-      
-      <DesignCardContent className="relative z-10">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-              {title}
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            {title}
+          </p>
+          <div className="space-y-1">
+            <p className="text-xl font-bold text-gray-900 dark:text-white">
+              {value}
             </p>
-            <div className="space-y-1">
-              <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                {value}
+            {description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {description}
               </p>
-              {description && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {description}
-                </p>
-              )}
-              {trend && (
-                <div className={cn(
-                  "flex items-center text-xs font-medium",
-                  trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                )}>
-                  <span>{trend.value}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div 
-            className="p-3 rounded-xl"
-            style={{ background: designTokens.gradients[gradient] }}
-          >
-            <Icon className="h-6 w-6 text-white" />
-          </div>
-        </div>
-      </DesignCardContent>
-    </DesignCard>
-  );
-};
-
-// Quick Actions Component
-interface QuickAction {
-  id: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  onClick: () => void;
-  gradient?: keyof typeof designTokens.gradients;
-}
-
-interface QuickActionsProps {
-  actions: QuickAction[];
-  variant?: 'glass' | 'neumorphism' | 'modern';
-}
-
-export const DesignQuickActions: React.FC<QuickActionsProps> = ({
-  actions,
-  variant = 'glass'
-}) => {
-  return (
-    <DesignCard variant={variant} size="lg">
-      <DesignCardHeader>
-        <DesignCardTitle>Ações Rápidas</DesignCardTitle>
-        <DesignCardDescription>
-          Acesse rapidamente as principais funcionalidades
-        </DesignCardDescription>
-      </DesignCardHeader>
-      
-      <DesignCardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {actions.map((action, index) => {
-            const Icon = action.icon;
-            
-            return (
-              <motion.div
-                key={action.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }}
-              >
-                <DesignButton
-                  variant="glass"
-                  size="lg"
-                  fullWidth
-                  onClick={action.onClick}
-                  className="h-auto p-6 flex-col gap-3 group"
-                  gradient={action.gradient}
+            )}
+            {trend && (
+              <div className="flex items-center gap-1">
+                <span
+                  className={cn(
+                    'text-xs font-medium',
+                    trend.isPositive ? 'text-green-600' : 'text-red-600'
+                  )}
                 >
-                  <div 
-                    className="p-3 rounded-xl group-hover:scale-110 transition-transform duration-200"
-                    style={{ background: designTokens.gradients[action.gradient || 'primary'] }}
-                  >
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="font-semibold text-slate-900 dark:text-white">
-                      {action.title}
-                    </div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      {action.description}
-                    </div>
-                  </div>
-                </DesignButton>
-              </motion.div>
-            );
-          })}
+                  {trend.isPositive ? '↗' : '↘'} {trend.value}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      </DesignCardContent>
-    </DesignCard>
-  );
-};
-
-// Activity Feed Component
-interface Activity {
-  id: string;
-  title: string;
-  time: string;
-  icon: LucideIcon;
-  color: string;
-}
-
-interface ActivityFeedProps {
-  activities: Activity[];
-  variant?: 'glass' | 'neumorphism' | 'modern';
-}
-
-export const DesignActivityFeed: React.FC<ActivityFeedProps> = ({
-  activities,
-  variant = 'glass'
-}) => {
-  return (
-    <DesignCard variant={variant} size="lg" className="h-full">
-      <DesignCardHeader>
-        <DesignCardTitle>Atividade Recente</DesignCardTitle>
-        <DesignCardDescription>
-          Suas últimas ações no sistema
-        </DesignCardDescription>
-      </DesignCardHeader>
+        
+        <div className={cn(
+          'p-2 rounded-lg bg-gradient-to-br shadow-md',
+          gradientClasses[gradient]
+        )}>
+          <Icon className="h-4 w-4 text-white" />
+        </div>
+      </div>
       
-      <DesignCardContent>
-        <div className="space-y-4">
-          {activities.map((activity, index) => {
-            const Icon = activity.icon;
-            
-            return (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }}
-                className="flex items-center space-x-3 p-3 rounded-xl bg-white/20 dark:bg-white/5 border border-white/10 hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200"
-              >
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", activity.color)}>
-                  <Icon className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    {activity.title}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {activity.time}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </DesignCardContent>
-    </DesignCard>
+      {/* Hover effect overlay */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+    </motion.div>
   );
 };

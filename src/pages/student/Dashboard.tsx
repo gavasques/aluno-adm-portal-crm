@@ -82,37 +82,37 @@ const StudentDashboard = () => {
   }, [feedback]);
 
   return (
-    <PageTransition className="space-y-8 p-6">
-      {/* Header com saudação personalizada */}
+    <PageTransition className="space-y-4 p-4">
+      {/* Header com saudação personalizada - mais compacto */}
       <PageChild>
         <motion.div 
-          className="space-y-4"
+          className="space-y-2"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-              <Sparkles className="h-8 w-8 text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-md">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold font-display bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 bg-clip-text text-transparent dark:from-white dark:via-purple-100 dark:to-white">
+              <h1 className="text-2xl font-bold font-display bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 bg-clip-text text-transparent dark:from-white dark:via-purple-100 dark:to-white">
                 {getGreeting()}, {firstName}! 👋
               </h1>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Bem-vindo ao seu portal de aprendizado e crescimento
               </p>
             </div>
           </div>
           
-          {/* Linha decorativa */}
-          <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+          {/* Linha decorativa menor */}
+          <div className="h-0.5 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
         </motion.div>
       </PageChild>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - grid mais compacto */}
       <PageChild>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {statsCards.map((card, index) => (
             <motion.div
               key={card.title}
