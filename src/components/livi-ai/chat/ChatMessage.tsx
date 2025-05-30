@@ -36,7 +36,25 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
+  // Função para processar markdown básico
+  const processMarkdown = (text: string) => {
+    // Processar **negrito**
+    let processed = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Processar *itálico*
+    processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Processar listas com -
+    processed = processed.replace(/^- (.*$)/gim, '• $1');
+    
+    // Processar quebras de linha
+    processed = processed.replace(/\n/g, '<br />');
+    
+    return processed;
+  };
+
   const formattedAIResponse = message.ai_response ? formatAIResponse(message.ai_response) : null;
+  const processedAIResponse = formattedAIResponse ? processMarkdown(formattedAIResponse) : null;
 
   return (
     <div className="space-y-4 w-full max-w-full overflow-x-hidden">
@@ -61,7 +79,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       </motion.div>
 
       {/* AI Response */}
-      {formattedAIResponse && (
+      {processedAIResponse && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -72,9 +90,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
           <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl rounded-tl-sm p-2 sm:p-3 flex-1 group max-w-[85%] sm:max-w-[75%] lg:max-w-none overflow-hidden">
             <div className="prose prose-sm max-w-none dark:prose-invert">
-              <p className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap m-0 text-xs sm:text-sm break-words overflow-wrap-anywhere">
-                {formattedAIResponse}
-              </p>
+              <div 
+                className="text-gray-900 dark:text-gray-100 leading-relaxed m-0 text-xs sm:text-sm break-words overflow-wrap-anywhere"
+                dangerouslySetInnerHTML={{ __html: processedAIResponse }}
+              />
             </div>
             <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-200 dark:border-gray-700 flex-wrap gap-2">
               <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
@@ -87,7 +106,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                onClick={() => onCopyMessage(formattedAIResponse, message.id)}
+                onClick={() => onCopyMessage(formattedAIResponse || '', message.id)}
               >
                 {copiedMessageId === message.id ? (
                   <CheckCircle className="h-3 w-3 text-green-500" />
