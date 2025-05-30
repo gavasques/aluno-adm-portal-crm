@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
 import { AuthProvider } from "@/hooks/useAuth";
 import RouteGuard from "@/components/RouteGuard";
-import AdminSidebar from "@/layout/AdminSidebar";
+import ModernAdminSidebar from "@/layout/ModernAdminSidebar";
 import StudentSidebar from "@/layout/StudentSidebar";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -74,8 +75,8 @@ function App() {
                 element={
                   <RouteGuard requireAdminAccess>
                     <div className="min-h-screen bg-gray-50 flex">
-                      <AdminSidebar />
-                      <div className="flex-1" style={{ marginLeft: '200px' }}>
+                      <ModernAdminSidebar />
+                      <div className="flex-1" style={{ marginLeft: '220px' }}>
                         <main className="p-4">
                           <Routes>
                             <Route path="dashboard" element={<AdminDashboard />} />

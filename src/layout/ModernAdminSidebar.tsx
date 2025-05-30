@@ -169,7 +169,6 @@ const sidebarItems = [
   }
 ];
 
-// Ordem dos grupos
 const groupOrder = ["Geral", "Operacional", "Geral ADM", "Mentorias", "Gestão", "Cadastros", "Sistema"];
 
 const groupedItems = sidebarItems.reduce((groups, item) => {
@@ -181,15 +180,14 @@ const groupedItems = sidebarItems.reduce((groups, item) => {
   return groups;
 }, {} as Record<string, typeof sidebarItems>);
 
-export default function AdminSidebar() {
+export default function ModernAdminSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
-  const [sidebarWidth, setSidebarWidth] = useState(200);
+  const [sidebarWidth, setSidebarWidth] = useState(220);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Determinar qual grupo contém a rota ativa
   const getActiveGroup = () => {
     for (const item of sidebarItems) {
       if (location.pathname === item.url) {
@@ -245,7 +243,6 @@ export default function AdminSidebar() {
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
-  // Garantir que o grupo ativo esteja sempre aberto
   React.useEffect(() => {
     if (activeGroup && !openGroups.includes(activeGroup)) {
       setOpenGroups(prev => [...prev, activeGroup]);
@@ -256,36 +253,36 @@ export default function AdminSidebar() {
     <div className="relative">
       <div 
         ref={sidebarRef}
-        className="fixed left-0 top-0 h-screen bg-gray-900 text-white overflow-y-auto flex flex-col border-r border-gray-700"
+        className="fixed left-0 top-0 h-screen bg-slate-900 text-white overflow-y-auto flex flex-col border-r border-slate-700 shadow-2xl"
         style={{ width: `${sidebarWidth}px` }}
       >
-        {/* Header da sidebar com logo - mais compacto */}
-        <div className="p-2 border-b border-gray-700">
+        {/* Header compacto */}
+        <div className="p-3 border-b border-slate-700">
           <div className="flex items-center justify-between mb-2">
             <Link to="/admin/dashboard" className="flex items-center">
               <img 
                 src="/lovable-uploads/fa166a7e-b1af-4959-a15a-12517ab1ed07.png"
                 alt="Logo" 
-                className="h-5"
+                className="h-6"
               />
             </Link>
             
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-gray-700 h-6 w-6">
-              <Bell className="h-2 w-2" />
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-slate-700 h-7 w-7">
+              <Bell className="h-3 w-3" />
               {unreadCount > 0 && (
-                <span className="absolute top-0 right-0.5 flex h-1 w-1 rounded-full bg-red-500"></span>
+                <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-red-500"></span>
               )}
             </Button>
           </div>
         </div>
 
-        {/* Menu de navegação com Accordion - mais compacto */}
-        <div className="flex-1 p-1">
+        {/* Menu navegação */}
+        <div className="flex-1 p-2">
           <Accordion 
             type="multiple" 
             value={openGroups} 
             onValueChange={setOpenGroups}
-            className="space-y-0.5"
+            className="space-y-1"
           >
             {groupOrder.map((groupName) => {
               const items = groupedItems[groupName];
@@ -297,24 +294,24 @@ export default function AdminSidebar() {
                   value={groupName}
                   className="border-none"
                 >
-                  <AccordionTrigger className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider hover:no-underline hover:text-gray-300 py-1 px-1.5">
+                  <AccordionTrigger className="text-xs font-semibold text-slate-400 uppercase tracking-wider hover:no-underline hover:text-slate-300 py-2 px-2">
                     {groupName}
                   </AccordionTrigger>
-                  <AccordionContent className="pb-0.5">
-                    <nav className="space-y-0.5 pl-0.5">
+                  <AccordionContent className="pb-1">
+                    <nav className="space-y-1 pl-1">
                       {items.map((item) => (
                         <Link
                           key={item.title}
                           to={item.url}
                           className={cn(
-                            "flex items-center px-1.5 py-1 text-[10px] font-medium rounded-md transition-colors",
+                            "flex items-center px-2 py-2 text-xs font-medium rounded-lg transition-all duration-200",
                             location.pathname === item.url
-                              ? "bg-gray-800 text-white border-l-2 border-blue-500"
-                              : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                              ? "bg-blue-600 text-white shadow-lg border-l-4 border-blue-400"
+                              : "text-slate-300 hover:bg-slate-700 hover:text-white"
                           )}
                         >
-                          <item.icon className="mr-1.5 h-2.5 w-2.5" />
-                          {item.title}
+                          <item.icon className="mr-2 h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{item.title}</span>
                         </Link>
                       ))}
                     </nav>
@@ -325,51 +322,51 @@ export default function AdminSidebar() {
           </Accordion>
         </div>
 
-        {/* Menu do usuário na parte inferior - mais compacto */}
-        <div className="p-1.5 border-t border-gray-700 mt-auto">
+        {/* Menu usuário */}
+        <div className="p-2 border-t border-slate-700 mt-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start h-auto p-1.5 text-white hover:bg-gray-700">
+              <Button variant="ghost" className="w-full justify-start h-auto p-2 text-white hover:bg-slate-700">
                 <div className="flex flex-col items-start text-left w-full">
-                  <span className="font-medium text-[10px]">{getUserName()}</span>
-                  <span className="text-gray-300 text-[9px] truncate w-full">{user?.email}</span>
+                  <span className="font-medium text-xs">{getUserName()}</span>
+                  <span className="text-slate-300 text-xs truncate w-full">{user?.email}</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <div className="bg-blue-600 text-white p-1.5 -mt-1 -mx-1 rounded-t-md">
-                <div className="font-medium text-[10px]">Minha Conta</div>
-                <div className="text-[9px] text-blue-100">
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="bg-blue-600 text-white p-2 -mt-1 -mx-1 rounded-t-md">
+                <div className="font-medium text-xs">Minha Conta</div>
+                <div className="text-xs text-blue-100">
                   {user?.email || "admin@portaledu.com"}
                 </div>
               </div>
               
               <DropdownMenuItem asChild>
-                <Link to="/admin/dashboard" className="flex cursor-pointer items-center gap-2 text-xs">
-                  <User className="h-3 w-3" />
+                <Link to="/admin/dashboard" className="flex cursor-pointer items-center gap-2 text-sm">
+                  <User className="h-4 w-4" />
                   Dashboard
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/admin/configuracoes" className="flex cursor-pointer items-center gap-2 text-xs">
-                  <Settings className="h-3 w-3" />
+                <Link to="/admin/configuracoes" className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Settings className="h-4 w-4" />
                   Configurações
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/aluno" className="flex cursor-pointer items-center gap-2 text-xs">
-                  <ExternalLink className="h-3 w-3" />
+                <Link to="/aluno" className="flex cursor-pointer items-center gap-2 text-sm">
+                  <ExternalLink className="h-4 w-4" />
                   Ir para Área do Aluno
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600 cursor-pointer text-xs">
+              <DropdownMenuItem onClick={() => signOut()} className="text-red-600 focus:text-red-600 cursor-pointer text-sm">
                 <div className="flex items-center gap-2">
-                  <LogOut className="h-3 w-3" />
+                  <LogOut className="h-4 w-4" />
                   Sair
                 </div>
               </DropdownMenuItem>
@@ -378,9 +375,9 @@ export default function AdminSidebar() {
         </div>
       </div>
 
-      {/* Handle de redimensionamento */}
+      {/* Handle redimensionamento */}
       <div
-        className="fixed top-0 h-screen w-1 bg-gray-600 hover:bg-gray-500 cursor-col-resize z-50 transition-colors"
+        className="fixed top-0 h-screen w-1 bg-slate-600 hover:bg-slate-500 cursor-col-resize z-50 transition-colors"
         style={{ left: `${sidebarWidth}px` }}
         onMouseDown={handleMouseDown}
       />
