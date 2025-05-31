@@ -6,23 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormLabel } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Lead, Administrator } from "@/hooks/useCRMState";
+import { CRMLead, CRMUser } from "@/types/crm.types";
 
 interface EditLeadFormProps {
-  lead: Lead | null;
-  administrators: Administrator[];
+  lead: CRMLead | null;
+  users: CRMUser[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
-const EditLeadForm = ({ lead, administrators, onSubmit, onCancel }: EditLeadFormProps) => {
+const EditLeadForm = React.memo(({ lead, users, onSubmit, onCancel }: EditLeadFormProps) => {
   const form = useForm({
     defaultValues: {
       name: "",
-      company: "",
       email: "",
       phone: "",
-      responsible: ""
+      responsible_id: ""
     }
   });
 
@@ -31,10 +30,9 @@ const EditLeadForm = ({ lead, administrators, onSubmit, onCancel }: EditLeadForm
     if (lead) {
       form.reset({
         name: lead.name,
-        company: lead.company,
         email: lead.email,
-        phone: lead.phone,
-        responsible: lead.responsible
+        phone: lead.phone || "",
+        responsible_id: lead.responsible_id || ""
       });
     }
   }, [lead, form]);
@@ -47,14 +45,6 @@ const EditLeadForm = ({ lead, administrators, onSubmit, onCancel }: EditLeadForm
           <Input 
             id="edit-name" 
             {...form.register('name', { required: true })} 
-          />
-        </div>
-        
-        <div className="grid gap-2">
-          <FormLabel htmlFor="edit-company">Empresa</FormLabel>
-          <Input 
-            id="edit-company" 
-            {...form.register('company', { required: true })} 
           />
         </div>
         
@@ -78,16 +68,17 @@ const EditLeadForm = ({ lead, administrators, onSubmit, onCancel }: EditLeadForm
         <div className="grid gap-2">
           <FormLabel htmlFor="edit-responsible">Responsável</FormLabel>
           <Select 
-            onValueChange={value => form.setValue('responsible', value)} 
-            defaultValue={lead?.responsible || ""}
+            onValueChange={value => form.setValue('responsible_id', value)} 
+            defaultValue={lead?.responsible_id || ""}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione o responsável" />
             </SelectTrigger>
             <SelectContent>
-              {administrators.map(admin => (
-                <SelectItem key={admin.id} value={admin.name}>
-                  {admin.name}
+              <SelectItem value="">Sem responsável</SelectItem>
+              {users.map(user => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -102,6 +93,8 @@ const EditLeadForm = ({ lead, administrators, onSubmit, onCancel }: EditLeadForm
       </DialogFooter>
     </form>
   );
-};
+});
+
+EditLeadForm.displayName = 'EditLeadForm';
 
 export default EditLeadForm;

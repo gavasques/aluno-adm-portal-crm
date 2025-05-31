@@ -3,24 +3,50 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
-import { Lead, Column } from "@/hooks/useCRMState";
+import { Search, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CRMFilters, CRMLead, CRMPipelineColumn } from "@/types/crm.types";
+import { useCRMData } from "@/hooks/crm/useCRMData";
 
 interface ListViewProps {
-  filteredLeads: Lead[];
-  columns: Column[];
+  filters: CRMFilters;
+  columns: CRMPipelineColumn[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  openLeadDetails: (lead: Lead) => void;
+  onOpenLeadDetails: (lead: CRMLead) => void;
 }
 
-const ListView = ({ 
-  filteredLeads, 
+const ListView = React.memo(({ 
+  filters, 
   columns, 
   searchQuery, 
   onSearchChange, 
-  openLeadDetails 
+  onOpenLeadDetails 
 }: ListViewProps) => {
+  const { leadsWithContacts, loading } = useCRMData(filters);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const getColumnInfo = (columnId?: string) => {
+    if (!columnId) return { name: 'Não definido', color: '#6b7280' };
+    const column = columns.find(col => col.id === columnId);
+    return column ? { name: column.name, color: column.color } : { name: 'Não definido', color: '#6b7280' };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="sticky top-0 z-10 bg-white border-b p-4">
@@ -43,35 +69,47 @@ const ListView = ({
               <thead className="sticky top-0 bg-white z-10">
                 <tr className="bg-gray-50">
                   <th className="px-4 py-2 text-left">Nome</th>
-                  <th className="px-4 py-2 text-left">Empresa</th>
+                  <th className="px-4 py-2 text-left">Email</th>
+                  <th className="px-4 py-2 text-left">Telefone</th>
                   <th className="px-4 py-2 text-left">Responsável</th>
                   <th className="px-4 py-2 text-left">Estágio</th>
-                  <th className="px-4 py-2 text-left">Último Contato</th>
+                  <th className="px-4 py-2 text-left">Criado em</th>
                   <th className="px-4 py-2 text-left">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredLeads.map(lead => {
-                  const column = columns.find(col => col.id === lead.column);
+                {leadsWithContacts.map(lead => {
+                  const columnInfo = getColumnInfo(lead.column_id);
                   return (
                     <tr key={lead.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3">{lead.name}</td>
-                      <td className="px-4 py-3">{lead.company}</td>
-                      <td className="px-4 py-3">{lead.responsible}</td>
+                      <td className="px-4 py-3 font-medium">{lead.name}</td>
+                      <td className="px-4 py-3">{lead.email}</td>
+                      <td className="px-4 py-3">{lead.phone || '-'}</td>
+                      <td className="px-4 py-3">{lead.responsible?.name || 'Sem responsável'}</td>
                       <td className="px-4 py-3">
-                        {column && (
-                          <span className={`px-2 py-1 rounded-full text-xs ${column.color}`}>
-                            {column.name}
-                          </span>
-                        )}
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs"
+                          style={{ 
+                            backgroundColor: columnInfo.color + '15', 
+                            color: columnInfo.color,
+                            borderColor: columnInfo.color + '30'
+                          }}
+                        >
+                          {columnInfo.name}
+                        </Badge>
                       </td>
-                      <td className="px-4 py-3">{lead.lastContact}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {formatDate(lead.created_at)}
+                      </td>
                       <td className="px-4 py-3">
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => openLeadDetails(lead)}
+                          onClick={() => onOpenLeadDetails(lead)}
+                          className="flex items-center gap-1"
                         >
+                          <Eye className="h-4 w-4" />
                           Ver Detalhes
                         </Button>
                       </td>
@@ -80,7 +118,7 @@ const ListView = ({
                 })}
               </tbody>
             </table>
-            {filteredLeads.length === 0 && (
+            {leadsWithContacts.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Nenhum lead encontrado com os critérios de busca.
               </div>
@@ -90,6 +128,8 @@ const ListView = ({
       </div>
     </div>
   );
-};
+});
+
+ListView.displayName = 'ListView';
 
 export default ListView;
