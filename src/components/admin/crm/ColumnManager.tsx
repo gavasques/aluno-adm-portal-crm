@@ -9,23 +9,87 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Save } from "lucide-react";
-import SortableColumnListItem from "./SortableColumnListItem";
-import { Column, Lead } from "@/hooks/useCRMState";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Save, GripVertical, Trash2 } from "lucide-react";
+import { CRMPipelineColumn } from "@/types/crm.types";
 
 interface ColumnManagerProps {
   isOpen: boolean;
-  columns: Column[];
-  leads: Lead[];
+  columns: CRMPipelineColumn[];
+  leads: any[];
   onOpenChange: (open: boolean) => void;
   onAddColumn: (name: string) => void;
-  onRemoveColumn: (column: Column) => void;
+  onRemoveColumn: (column: CRMPipelineColumn) => void;
   onReorderColumns: (event: any) => void;
   onSave: () => void;
   onCancel: () => void;
 }
+
+interface SortableColumnItemProps {
+  column: CRMPipelineColumn;
+  leadCount: number;
+  onRemove: (column: CRMPipelineColumn) => void;
+}
+
+const SortableColumnItem = ({ column, leadCount, onRemove }: SortableColumnItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: column.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow"
+    >
+      <div
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+      >
+        <GripVertical className="h-4 w-4 text-gray-400" />
+      </div>
+      
+      <div 
+        className="w-3 h-3 rounded-full flex-shrink-0" 
+        style={{ backgroundColor: column.color }}
+      />
+      
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-gray-900 truncate">{column.name}</h4>
+        <p className="text-sm text-gray-500">{leadCount} leads</p>
+      </div>
+      
+      <Badge variant={column.is_active ? 'default' : 'secondary'} className="text-xs">
+        {column.is_active ? 'Ativa' : 'Inativa'}
+      </Badge>
+      
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onRemove(column)}
+        className="hover:bg-red-50 hover:text-red-600 h-8 w-8 p-0"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
 
 const ColumnManager = ({ 
   isOpen, 
@@ -94,7 +158,7 @@ const ColumnManager = ({
                   {columns.map(column => {
                     const leadCount = leads.filter(lead => lead.column === column.id).length;
                     return (
-                      <SortableColumnListItem 
+                      <SortableColumnItem 
                         key={column.id} 
                         column={column} 
                         leadCount={leadCount} 
