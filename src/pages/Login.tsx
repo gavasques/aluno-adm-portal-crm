@@ -21,20 +21,27 @@ const Login = () => {
 
     try {
       setLoading(true);
+      console.log('🔐 Tentando fazer login com:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro no login:', error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('✅ Login realizado com sucesso:', data.user.email);
         toast.success('Login realizado com sucesso!');
+        
         // Redirecionar para CRM após login bem-sucedido
-        navigate('/admin/crm');
+        navigate('/admin/crm', { replace: true });
       }
     } catch (error: any) {
-      console.error('Erro no login:', error);
+      console.error('❌ Erro no login:', error);
       toast.error(error.message || 'Erro ao fazer login');
     } finally {
       setLoading(false);

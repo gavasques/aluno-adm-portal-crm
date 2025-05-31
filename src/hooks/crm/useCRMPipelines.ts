@@ -33,6 +33,18 @@ export const useCRMPipelines = () => {
       }
 
       // Buscar colunas
+      await fetchAllColumns();
+
+    } catch (error) {
+      console.error('❌ Erro ao buscar pipelines:', error);
+      toast.error('Erro ao carregar pipelines');
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  const fetchAllColumns = useCallback(async () => {
+    try {
       const { data: columnsData, error: columnsError } = await supabase
         .from('crm_pipeline_columns')
         .select('*')
@@ -43,12 +55,29 @@ export const useCRMPipelines = () => {
 
       console.log('📊 Colunas encontradas:', columnsData?.length || 0);
       setColumns(columnsData || []);
-
     } catch (error) {
-      console.error('❌ Erro ao buscar pipelines:', error);
-      toast.error('Erro ao carregar pipelines');
-    } finally {
-      setLoading(false);
+      console.error('❌ Erro ao buscar colunas:', error);
+      toast.error('Erro ao carregar colunas');
+    }
+  }, [toast]);
+
+  const fetchColumns = useCallback(async (pipelineId: string) => {
+    try {
+      const { data: columnsData, error: columnsError } = await supabase
+        .from('crm_pipeline_columns')
+        .select('*')
+        .eq('pipeline_id', pipelineId)
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (columnsError) throw columnsError;
+
+      setColumns(columnsData || []);
+      return columnsData || [];
+    } catch (error) {
+      console.error('❌ Erro ao buscar colunas do pipeline:', error);
+      toast.error('Erro ao carregar colunas do pipeline');
+      return [];
     }
   }, [toast]);
 
@@ -105,6 +134,112 @@ export const useCRMPipelines = () => {
     }
   };
 
+  const createPipeline = useCallback(async (data: Omit<CRMPipeline, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data: newPipeline, error } = await supabase
+        .from('crm_pipelines')
+        .insert(data)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setPipelines(prev => [...prev, newPipeline]);
+      return newPipeline;
+    } catch (error) {
+      console.error('❌ Erro ao criar pipeline:', error);
+      throw error;
+    }
+  }, []);
+
+  const updatePipeline = useCallback(async (id: string, data: Partial<CRMPipeline>) => {
+    try {
+      const { data: updatedPipeline, error } = await supabase
+        .from('crm_pipelines')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setPipelines(prev => prev.map(p => p.id === id ? updatedPipeline : p));
+      return updatedPipeline;
+    } catch (error) {
+      console.error('❌ Erro ao atualizar pipeline:', error);
+      throw error;
+    }
+  }, []);
+
+  const deletePipeline = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('crm_pipelines')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setPipelines(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('❌ Erro ao deletar pipeline:', error);
+      throw error;
+    }
+  }, []);
+
+  const createColumn = useCallback(async (data: Omit<CRMPipelineColumn, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data: newColumn, error } = await supabase
+        .from('crm_pipeline_columns')
+        .insert(data)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setColumns(prev => [...prev, newColumn]);
+      return newColumn;
+    } catch (error) {
+      console.error('❌ Erro ao criar coluna:', error);
+      throw error;
+    }
+  }, []);
+
+  const updateColumn = useCallback(async (id: string, data: Partial<CRMPipelineColumn>) => {
+    try {
+      const { data: updatedColumn, error } = await supabase
+        .from('crm_pipeline_columns')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setColumns(prev => prev.map(c => c.id === id ? updatedColumn : c));
+      return updatedColumn;
+    } catch (error) {
+      console.error('❌ Erro ao atualizar coluna:', error);
+      throw error;
+    }
+  }, []);
+
+  const deleteColumn = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('crm_pipeline_columns')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setColumns(prev => prev.filter(c => c.id !== id));
+    } catch (error) {
+      console.error('❌ Erro ao deletar coluna:', error);
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
     fetchPipelines();
   }, [fetchPipelines]);
@@ -114,6 +249,14 @@ export const useCRMPipelines = () => {
     columns,
     loading,
     fetchPipelines,
+    fetchColumns,
+    fetchAllColumns,
+    createPipeline,
+    updatePipeline,
+    deletePipeline,
+    createColumn,
+    updateColumn,
+    deleteColumn,
     refetch: fetchPipelines
   };
 };

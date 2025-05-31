@@ -70,9 +70,9 @@ export const useCRMData = (filters: CRMFilters = {}) => {
   }, []);
 
   const fetchLeadsWithContacts = useCallback(async (): Promise<LeadWithContacts[]> => {
-    // Se não há pipeline_id, retornar array vazio
+    // Se não há pipeline_id, retornar array vazio mas continuar tentando
     if (!filters.pipeline_id) {
-      console.log('⚠️ Nenhum pipeline_id fornecido, retornando array vazio');
+      console.log('⚠️ Nenhum pipeline_id fornecido, aguardando seleção...');
       return [];
     }
 
@@ -197,7 +197,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
     queryKey: ['crm-leads-with-contacts', filters],
     queryFn: fetchLeadsWithContacts,
-    enabled: true, // Sempre habilitado
+    enabled: true,
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
   });
