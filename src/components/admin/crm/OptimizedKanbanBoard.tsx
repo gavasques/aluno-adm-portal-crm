@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -15,11 +15,11 @@ interface OptimizedKanbanBoardProps {
   pipelineId: string;
 }
 
-const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps) => {
+const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
   const { columns, loading: columnsLoading } = useCRMPipelines();
   const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
-  const [activeLead, setActiveLead] = React.useState<CRMLead | null>(null);
+  const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState<string>('');
 
@@ -31,31 +31,23 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
     })
   );
 
-  if (!pipelineId) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Selecione um pipeline para visualizar os leads.</p>
-      </div>
-    );
-  }
-
-  const loading = columnsLoading || leadsLoading;
-
-  // Filtrar colunas do pipeline atual
-  const pipelineColumns = React.useMemo(() => {
-    return columns.filter(col => col.pipeline_id === pipelineId);
+  // Filtrar colunas do pipeline atual com memoização
+  const pipelineColumns = useMemo(() => {
+    return columns
+      .filter(col => col.pipeline_id === pipelineId)
+      .sort((a, b) => a.sort_order - b.sort_order);
   }, [columns, pipelineId]);
 
-  const handleDragStart = (event: any) => {
+  const handleDragStart = useCallback((event: any) => {
     const leadId = event.active.id;
     // Encontrar o lead nos dados agrupados
     const lead = Object.values(leadsByColumn)
       .flat()
       .find(l => l.id === leadId);
     setActiveLead(lead || null);
-  };
+  }, [leadsByColumn]);
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveLead(null);
 
@@ -76,17 +68,27 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
         console.error('Error moving lead:', error);
       }
     }
-  };
+  }, [leadsByColumn, moveLeadToColumn]);
 
-  const handleOpenDetail = (lead: CRMLead) => {
+  const handleOpenDetail = useCallback((lead: CRMLead) => {
     navigate(`/admin/crm/lead/${lead.id}`);
-  };
+  }, [navigate]);
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = useCallback(() => {
     setShowCreateModal(false);
     setSelectedColumnId('');
     refetch();
-  };
+  }, [refetch]);
+
+  const loading = columnsLoading || leadsLoading;
+
+  if (!pipelineId) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Selecione um pipeline para visualizar os leads.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <KanbanSkeleton />;
@@ -114,36 +116,34 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
               items={pipelineColumns.map(col => col.id)} 
               strategy={horizontalListSortingStrategy}
             >
-              {pipelineColumns
-                .sort((a, b) => a.sort_order - b.sort_order)
-                .map(column => {
-                  const columnLeads = leadsByColumn[column.id] || [];
-                  
-                  return (
-                    <div key={column.id} className="w-80 bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: column.color }}
-                          />
-                          <h3 className="font-medium text-gray-900">{column.name}</h3>
-                          <span className="text-sm text-gray-500">({columnLeads.length})</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-                        {columnLeads.map(lead => (
-                          <OptimizedKanbanLeadCard
-                            key={lead.id}
-                            lead={lead}
-                            onOpenDetail={handleOpenDetail}
-                          />
-                        ))}
+              {pipelineColumns.map(column => {
+                const columnLeads = leadsByColumn[column.id] || [];
+                
+                return (
+                  <div key={column.id} className="w-80 bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: column.color }}
+                        />
+                        <h3 className="font-medium text-gray-900">{column.name}</h3>
+                        <span className="text-sm text-gray-500">({columnLeads.length})</span>
                       </div>
                     </div>
-                  );
-                })}
+                    
+                    <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                      {columnLeads.map(lead => (
+                        <OptimizedKanbanLeadCard
+                          key={lead.id}
+                          lead={lead}
+                          onOpenDetail={handleOpenDetail}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </SortableContext>
           </div>
         </div>
@@ -168,6 +168,8 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
       />
     </>
   );
-};
+});
+
+OptimizedKanbanBoard.displayName = 'OptimizedKanbanBoard';
 
 export default OptimizedKanbanBoard;

@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, DollarSign, Clock } from 'lucide-react';
 import { useCRMData } from '@/hooks/crm/useCRMData';
 import { CRMFilters } from '@/types/crm.types';
+import { CardStats } from '@/components/ui/card-stats';
 
 interface CRMStatsCardsProps {
   filters: CRMFilters;
 }
 
-const CRMStatsCards = ({ filters }: CRMStatsCardsProps) => {
+const CRMStatsCards = React.memo(({ filters }: CRMStatsCardsProps) => {
   const { leadsWithContacts, loading } = useCRMData(filters);
 
   const stats = React.useMemo(() => {
@@ -29,61 +29,48 @@ const CRMStatsCards = ({ filters }: CRMStatsCardsProps) => {
     return { total, qualified, closed, pending };
   }, [leadsWithContacts, loading]);
 
+  const statsData = React.useMemo(() => [
+    {
+      title: "Total de Leads",
+      value: stats.total,
+      icon: <Users className="h-4 w-4" />,
+      description: "No pipeline atual"
+    },
+    {
+      title: "Qualificados",
+      value: stats.qualified,
+      icon: <TrendingUp className="h-4 w-4" />,
+      description: "Em processo de venda"
+    },
+    {
+      title: "Fechados",
+      value: stats.closed,
+      icon: <DollarSign className="h-4 w-4" />,
+      description: "Vendas concluídas"
+    },
+    {
+      title: "Sem Responsável",
+      value: stats.pending,
+      icon: <Clock className="h-4 w-4" />,
+      description: "Aguardando atribuição"
+    }
+  ], [stats]);
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.total}</div>
-          <p className="text-xs text-muted-foreground">
-            No pipeline atual
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Qualificados</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.qualified}</div>
-          <p className="text-xs text-muted-foreground">
-            Em processo de venda
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Fechados</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.closed}</div>
-          <p className="text-xs text-muted-foreground">
-            Vendas concluídas
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Sem Responsável</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.pending}</div>
-          <p className="text-xs text-muted-foreground">
-            Aguardando atribuição
-          </p>
-        </CardContent>
-      </Card>
+      {statsData.map((stat, index) => (
+        <CardStats
+          key={index}
+          title={stat.title}
+          value={stat.value}
+          icon={stat.icon}
+          description={stat.description}
+        />
+      ))}
     </div>
   );
-};
+});
+
+CRMStatsCards.displayName = 'CRMStatsCards';
 
 export default CRMStatsCards;

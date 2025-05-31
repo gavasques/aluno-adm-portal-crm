@@ -6,19 +6,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, User, Calendar, Eye, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
-import { CRMLead, CRMLeadContact } from '@/types/crm.types';
+import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign, Eye, Clock, AlertTriangle } from 'lucide-react';
+import { CRMLead } from '@/types/crm.types';
+import { useCRMLeadContacts } from '@/hooks/crm/useCRMLeadContacts';
 import { differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
 
 interface OptimizedKanbanLeadCardProps {
-  lead: CRMLead & {
-    pending_contacts?: CRMLeadContact[];
-    last_completed_contact?: CRMLeadContact;
-  };
+  lead: CRMLead;
   onOpenDetail?: (lead: CRMLead) => void;
 }
 
-const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCardProps) => {
+const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKanbanLeadCardProps) => {
   const {
     attributes,
     listeners,
@@ -28,58 +26,51 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
     isDragging,
   } = useSortable({ id: lead.id });
 
-  const style = {
+  const { contacts } = useCRMLeadContacts(lead.id, { status: 'pending' });
+
+  const style = React.useMemo(() => ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
+  }), [transform, transition, isDragging]);
 
-  const getInitials = (name: string) => {
+  const getInitials = React.useCallback((name: string) => {
     return name
       .split(' ')
       .map(word => word[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
+  }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
-  };
+  }, []);
 
-  const handleViewDetails = (e: React.MouseEvent) => {
+  const handleViewDetails = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onOpenDetail?.(lead);
-  };
+  }, [onOpenDetail, lead]);
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onOpenDetail?.(lead);
-  };
+  }, [onOpenDetail, lead]);
 
-  // Buscar próximo contato pendente (apenas contatos com status 'pending')
-  const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
-    ? lead.pending_contacts
-        .filter(contact => contact.status === 'pending')
-        .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
-    : null;
+  // Buscar próximo contato pendente
+  const nextContact = React.useMemo(() => {
+    return contacts
+      .filter(contact => contact.status === 'pending')
+      .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0];
+  }, [contacts]);
 
-  // Último contato realizado (apenas contatos com status 'completed' e completed_at)
-  const lastCompletedContact = lead.last_completed_contact;
+  const getContactBadge = React.useCallback(() => {
+    if (!nextContact) return null;
 
-  const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
-    if (isCompleted) {
-      return (
-        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 h-5 px-1.5">
-          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
-          Realizado
-        </Badge>
-      );
-    }
-
-    const contactDateObj = new Date(contactDate);
+    const contactDate = new Date(nextContact.contact_date);
+    const today = new Date();
     
-    if (isPast(contactDateObj) && !isToday(contactDateObj)) {
+    if (isPast(contactDate) && !isToday(contactDate)) {
       return (
         <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 h-5 px-1.5">
           <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
@@ -88,7 +79,7 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
       );
     }
     
-    if (isToday(contactDateObj)) {
+    if (isToday(contactDate)) {
       return (
         <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
           <Clock className="h-2.5 w-2.5 mr-0.5" />
@@ -97,7 +88,7 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
       );
     }
     
-    if (isTomorrow(contactDateObj)) {
+    if (isTomorrow(contactDate)) {
       return (
         <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
           <Clock className="h-2.5 w-2.5 mr-0.5" />
@@ -106,7 +97,7 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
       );
     }
     
-    const daysDiff = differenceInDays(contactDateObj, new Date());
+    const daysDiff = differenceInDays(contactDate, today);
     if (daysDiff <= 7) {
       return (
         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
@@ -115,9 +106,9 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
         </Badge>
       );
     }
-
+    
     return null;
-  };
+  }, [nextContact]);
 
   return (
     <div
@@ -136,6 +127,10 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
               <h4 className="font-medium text-gray-900 text-xs line-clamp-1 mb-1">
                 {lead.name}
               </h4>
+              <div className="flex items-center text-xs text-gray-500">
+                <Mail className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="line-clamp-1 text-xs">{lead.email}</span>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <Button 
@@ -152,30 +147,24 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
             </div>
           </div>
 
-          {/* Próximo Contato - Só exibe se houver contatos pendentes */}
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-2.5 h-2.5" />
-              <span className="text-xs">
-                Próximo: {nextContact ? formatDate(nextContact.contact_date) : 'Sem Contatos'}
-              </span>
+          {/* Informações de Contato */}
+          {lead.phone && (
+            <div className="flex items-center text-xs text-gray-500 mb-2">
+              <Phone className="w-3 h-3 mr-1 flex-shrink-0" />
+              <span className="text-xs">{lead.phone}</span>
             </div>
-            {nextContact && getContactBadge(nextContact.contact_date)}
-          </div>
+          )}
 
-          {/* Último Contato - Sempre exibe, baseado em completed_at */}
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
-            <div className="flex items-center gap-1">
-              <CheckCircle className="w-2.5 h-2.5" />
-              <span className="text-xs">
-                Último: {lastCompletedContact && lastCompletedContact.completed_at
-                  ? formatDate(lastCompletedContact.completed_at) 
-                  : 'Sem Contatos'
-                }
-              </span>
+          {/* Próximo Contato */}
+          {nextContact && (
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-2.5 h-2.5" />
+                <span className="text-xs">Próximo: {formatDate(nextContact.contact_date)}</span>
+              </div>
+              {getContactBadge()}
             </div>
-            {lastCompletedContact && lastCompletedContact.completed_at && getContactBadge(lastCompletedContact.completed_at, true)}
-          </div>
+          )}
 
           {/* Tags */}
           {lead.tags && lead.tags.length > 0 && (
@@ -215,10 +204,33 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
               </span>
             </div>
           </div>
+
+          {/* Informações Importantes */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {lead.has_company && (
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
+                <Building className="h-2.5 w-2.5 mr-0.5" />
+                Empresa
+              </Badge>
+            )}
+            {lead.sells_on_amazon && (
+              <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
+                Amazon
+              </Badge>
+            )}
+            {lead.ready_to_invest_3k && (
+              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 h-5 px-1.5">
+                <DollarSign className="h-2.5 w-2.5 mr-0.5" />
+                R$ 3k
+              </Badge>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
   );
-};
+});
+
+OptimizedKanbanLeadCard.displayName = 'OptimizedKanbanLeadCard';
 
 export default OptimizedKanbanLeadCard;
