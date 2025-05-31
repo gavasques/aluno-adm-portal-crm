@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Settings, Tags, BarChart3, List, Kanban } from 'lucide-react';
-import CRMStatsCards from '@/components/admin/crm/CRMStatsCards';
 import CRMFilters from '@/components/admin/crm/CRMFilters';
 import CRMKanbanBoard from '@/components/admin/crm/CRMKanbanBoard';
 import CRMListView from '@/components/admin/crm/CRMListView';
@@ -66,9 +65,9 @@ const CRM = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 h-screen flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">CRM</h1>
           <p className="text-gray-600 mt-1">Gestão de leads e pipeline de vendas</p>
@@ -90,20 +89,19 @@ const CRM = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <CRMStatsCards filters={filters} />
-
       {/* Filters */}
-      <CRMFilters 
-        filters={filters} 
-        onFiltersChange={setFilters}
-        pipelineId={selectedPipelineId}
-        onPipelineChange={handlePipelineChange}
-      />
+      <div className="flex-shrink-0">
+        <CRMFilters 
+          filters={filters} 
+          onFiltersChange={setFilters}
+          pipelineId={selectedPipelineId}
+          onPipelineChange={handlePipelineChange}
+        />
+      </div>
 
-      {/* Main Content */}
-      <Card>
-        <CardHeader>
+      {/* Main Content - Expanded to fill remaining space */}
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
             <span>Pipeline de Vendas</span>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -120,15 +118,15 @@ const CRM = () => {
             </Tabs>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsContent value="kanban">
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <TabsContent value="kanban" className="flex-1 overflow-hidden m-0 p-6">
               <CRMKanbanBoard 
                 pipelineId={selectedPipelineId} 
                 filters={filters}
               />
             </TabsContent>
-            <TabsContent value="list">
+            <TabsContent value="list" className="flex-1 overflow-hidden m-0 p-6">
               <CRMListView 
                 filters={filters}
                 onEditLead={handleEditLead}
