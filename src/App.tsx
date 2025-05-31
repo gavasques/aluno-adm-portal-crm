@@ -56,19 +56,17 @@ function App() {
 
                   {/* Admin Routes with Layout */}
                   <Route
-                    path="/admin/*"
+                    path="/admin"
                     element={
                       <RouteGuard>
-                        <AdminLayout>
-                          <Routes>
-                            <Route path="crm" element={<CRM />} />
-                            <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
-                            <Route path="*" element={<CRM />} />
-                          </Routes>
-                        </AdminLayout>
+                        <AdminLayout />
                       </RouteGuard>
                     }
-                  />
+                  >
+                    <Route path="crm" element={<CRM />} />
+                    <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
+                    <Route index element={<CRM />} />
+                  </Route>
                   
                   {/* 404 Route */}
                   <Route path="*" element={<NotFound />} />
