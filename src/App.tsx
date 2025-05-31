@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import AdminMentoring from './pages/admin/Mentoring';
 import AdminMentoringCatalogManagement from './pages/admin/MentoringCatalogManagement';
 import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
 import AdminMentoringSessionsIndividual from './pages/admin/AdminMentoringSessionsIndividual';
+import AdminStudents from './pages/admin/Students';
 import AdminPermissions from './pages/admin/Permissions';
 import AdminAudit from './pages/admin/Audit';
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
@@ -66,6 +68,7 @@ function App() {
                   
                   {/* Gestão */}
                   <Route path="usuarios" element={<Users />} />
+                  <Route path="alunos" element={<AdminStudents />} />
                   <Route path="permissoes" element={<AdminPermissions />} />
                   <Route path="auditoria" element={<AdminAudit />} />
                   <Route path="calendly-config" element={<Settings />} />
@@ -100,3 +103,4 @@ function App() {
 }
 
 export default App;
+
