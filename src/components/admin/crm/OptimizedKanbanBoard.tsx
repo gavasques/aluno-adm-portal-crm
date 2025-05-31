@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMDataOptimized } from '@/hooks/crm/useCRMDataOptimized';
+import { useCRMData } from '@/hooks/crm/useCRMData';
 import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
@@ -21,11 +21,16 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   const navigate = useNavigate();
   const toast = useToastManager();
   const { columns, loading: columnsLoading } = useCRMPipelines();
-  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMDataOptimized(filters);
+  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState<string>('');
+
+  console.log('🎯 Kanban Debug - Pipeline ID:', pipelineId);
+  console.log('🎯 Kanban Debug - Columns:', columns);
+  console.log('🎯 Kanban Debug - Leads by Column:', leadsByColumn);
+  console.log('🎯 Kanban Debug - Loading states:', { columnsLoading, leadsLoading });
 
   // Configurar sensores mais responsivos para drag and drop
   const sensors = useSensors(
@@ -44,9 +49,12 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
 
   // Filtrar colunas do pipeline atual com memoização
   const pipelineColumns = useMemo(() => {
-    return columns
+    const filtered = columns
       .filter(col => col.pipeline_id === pipelineId)
       .sort((a, b) => a.sort_order - b.sort_order);
+    
+    console.log('🔍 Filtered columns for pipeline:', pipelineId, filtered);
+    return filtered;
   }, [columns, pipelineId]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -146,6 +154,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
             {pipelineColumns.map(column => {
               const columnLeads = leadsByColumn[column.id] || [];
               const isDragOver = activeColumnId === column.id;
+              
+              console.log(`📋 Column ${column.name} has ${columnLeads.length} leads:`, columnLeads);
               
               return (
                 <KanbanColumn

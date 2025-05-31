@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToastManager } from '@/hooks/useToastManager';
 import { CRMNotification } from '@/types/crm.types';
+import { useDebouncedCallback } from 'use-debounce';
 
 export const useCRMNotifications = () => {
   const { user } = useAuth();
@@ -13,18 +14,19 @@ export const useCRMNotifications = () => {
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<any>(null);
   const isFetchingRef = useRef(false);
+  const mountedRef = useRef(true);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!user || isFetchingRef.current) {
-      setNotifications([]);
-      setUnreadCount(0);
-      setLoading(false);
+  // Debounced fetch para evitar loops
+  const debouncedFetch = useDebouncedCallback(async () => {
+    if (!user || isFetchingRef.current || !mountedRef.current) {
       return;
     }
 
     try {
       isFetchingRef.current = true;
       setLoading(true);
+
+      console.log('🔔 Fetching notifications for user:', user.id);
 
       const { data, error } = await supabase
         .from('crm_notifications')
@@ -35,6 +37,8 @@ export const useCRMNotifications = () => {
 
       if (error) throw error;
 
+      if (!mountedRef.current) return;
+
       const typedNotifications: CRMNotification[] = (data || []).map(item => ({
         ...item,
         type: item.type as CRMNotification['type']
@@ -42,14 +46,24 @@ export const useCRMNotifications = () => {
 
       setNotifications(typedNotifications);
       setUnreadCount(typedNotifications.filter(n => !n.read).length);
+      
+      console.log('🔔 Notifications loaded:', typedNotifications.length);
     } catch (error) {
       console.error('Erro ao buscar notificações CRM:', error);
-      toast.error('Erro ao carregar notificações');
+      if (mountedRef.current) {
+        toast.error('Erro ao carregar notificações');
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
       isFetchingRef.current = false;
     }
-  }, [user, toast]);
+  }, 1000);
+
+  const fetchNotifications = useCallback(() => {
+    debouncedFetch();
+  }, [debouncedFetch]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -121,6 +135,8 @@ export const useCRMNotifications = () => {
 
   // Setup inicial e cleanup
   useEffect(() => {
+    mountedRef.current = true;
+    
     if (!user?.id) {
       setNotifications([]);
       setUnreadCount(0);
@@ -137,7 +153,7 @@ export const useCRMNotifications = () => {
       channelRef.current = null;
     }
 
-    // Subscribe to real-time notifications apenas uma vez
+    // Subscribe to real-time notifications apenas uma vez com debounce
     const channel = supabase
       .channel(`crm_notifications-${user.id}`)
       .on(
@@ -150,9 +166,9 @@ export const useCRMNotifications = () => {
         },
         (payload) => {
           console.log('🔔 Notification event:', payload);
-          // Evitar loop - só refetch se não estiver já buscando
-          if (!isFetchingRef.current) {
-            fetchNotifications();
+          // Usar debounce para evitar múltiplas chamadas
+          if (mountedRef.current) {
+            debouncedFetch();
           }
         }
       )
@@ -161,6 +177,7 @@ export const useCRMNotifications = () => {
     channelRef.current = channel;
 
     return () => {
+      mountedRef.current = false;
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

@@ -29,20 +29,42 @@ const CRM = () => {
   const { pipelines, loading: pipelinesLoading, fetchPipelines } = useCRMPipelines();
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
 
-  // Usar o hook unificado para dados do CRM
-  const { refetch } = useCRMData({ ...filters, pipeline_id: selectedPipelineId });
+  console.log('🔍 CRM Debug - Pipelines:', pipelines);
+  console.log('🔍 CRM Debug - Selected Pipeline:', selectedPipelineId);
+  console.log('🔍 CRM Debug - Filters:', filters);
+
+  // Usar hook unificado para dados do CRM
+  const { leadsWithContacts, leadsByColumn, loading, refetch } = useCRMData({ 
+    ...filters, 
+    pipeline_id: selectedPipelineId 
+  });
+
+  console.log('🔍 CRM Debug - Leads:', leadsWithContacts);
+  console.log('🔍 CRM Debug - Leads by Column:', leadsByColumn);
+  console.log('🔍 CRM Debug - Loading:', loading);
 
   // Setup realtime subscriptions
   useCRMRealtime({
-    onLeadUpdate: refetch,
-    onCommentAdded: refetch,
-    onContactUpdate: refetch
+    onLeadUpdate: () => {
+      console.log('🔄 Real-time: Lead updated, refetching...');
+      refetch();
+    },
+    onCommentAdded: () => {
+      console.log('🔄 Real-time: Comment added, refetching...');
+      refetch();
+    },
+    onContactUpdate: () => {
+      console.log('🔄 Real-time: Contact updated, refetching...');
+      refetch();
+    }
   });
 
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
-      setSelectedPipelineId(pipelines[0].id);
-      setFilters(prev => ({ ...prev, pipeline_id: pipelines[0].id }));
+      const firstPipeline = pipelines[0];
+      console.log('🎯 Setting first pipeline as selected:', firstPipeline);
+      setSelectedPipelineId(firstPipeline.id);
+      setFilters(prev => ({ ...prev, pipeline_id: firstPipeline.id }));
     }
   }, [pipelines, selectedPipelineId]);
 
@@ -58,6 +80,7 @@ const CRM = () => {
   };
 
   const handlePipelineChange = (pipelineId: string) => {
+    console.log('🔄 Pipeline changed to:', pipelineId);
     setSelectedPipelineId(pipelineId);
     setFilters(prev => ({ ...prev, pipeline_id: pipelineId }));
   };

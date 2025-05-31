@@ -39,7 +39,8 @@ export const useCRMRealtime = ({
     isSetupRef.current = true;
 
     try {
-      // Subscription para leads
+      // Subscription para leads - com debounce
+      let leadUpdateTimeout: NodeJS.Timeout;
       const leadsChannel = supabase
         .channel('crm_leads_changes')
         .on(
@@ -51,20 +52,26 @@ export const useCRMRealtime = ({
           },
           (payload) => {
             console.log('🔴 Lead updated:', payload);
-            if (onLeadUpdate) {
-              onLeadUpdate();
-            }
             
-            if (payload.eventType === 'INSERT') {
-              toast.success('Novo lead criado');
-            } else if (payload.eventType === 'UPDATE') {
-              toast.info('Lead atualizado');
-            }
+            // Debounce para evitar múltiplas chamadas
+            clearTimeout(leadUpdateTimeout);
+            leadUpdateTimeout = setTimeout(() => {
+              if (onLeadUpdate) {
+                onLeadUpdate();
+              }
+              
+              if (payload.eventType === 'INSERT') {
+                toast.success('Novo lead criado');
+              } else if (payload.eventType === 'UPDATE') {
+                toast.info('Lead atualizado');
+              }
+            }, 500);
           }
         )
         .subscribe();
 
-      // Subscription para comentários
+      // Subscription para comentários - com debounce
+      let commentTimeout: NodeJS.Timeout;
       const commentsChannel = supabase
         .channel('crm_comments_changes')
         .on(
@@ -76,15 +83,20 @@ export const useCRMRealtime = ({
           },
           (payload) => {
             console.log('🔴 New comment:', payload);
-            if (onCommentAdded) {
-              onCommentAdded();
-            }
-            toast.info('Novo comentário adicionado');
+            
+            clearTimeout(commentTimeout);
+            commentTimeout = setTimeout(() => {
+              if (onCommentAdded) {
+                onCommentAdded();
+              }
+              toast.info('Novo comentário adicionado');
+            }, 500);
           }
         )
         .subscribe();
 
-      // Subscription para contatos
+      // Subscription para contatos - com debounce
+      let contactTimeout: NodeJS.Timeout;
       const contactsChannel = supabase
         .channel('crm_contacts_changes')
         .on(
@@ -96,15 +108,19 @@ export const useCRMRealtime = ({
           },
           (payload) => {
             console.log('🔴 Contact updated:', payload);
-            if (onContactUpdate) {
-              onContactUpdate();
-            }
             
-            if (payload.eventType === 'INSERT') {
-              toast.success('Contato agendado');
-            } else if (payload.eventType === 'UPDATE') {
-              toast.info('Status do contato atualizado');
-            }
+            clearTimeout(contactTimeout);
+            contactTimeout = setTimeout(() => {
+              if (onContactUpdate) {
+                onContactUpdate();
+              }
+              
+              if (payload.eventType === 'INSERT') {
+                toast.success('Contato agendado');
+              } else if (payload.eventType === 'UPDATE') {
+                toast.info('Status do contato atualizado');
+              }
+            }, 500);
           }
         )
         .subscribe();
@@ -127,7 +143,7 @@ export const useCRMRealtime = ({
         cleanup();
       }
     };
-  }, [setupRealtimeSubscriptions]);
+  }, []); // Remover dependências para evitar loops
 
   return {
     setupRealtimeSubscriptions,
