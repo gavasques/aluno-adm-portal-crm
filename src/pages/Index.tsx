@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 import { Navigate, Link } from "react-router-dom";
 import { ConnectionTest } from "@/components/debug/ConnectionTest";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ const Index = () => {
     );
   }
 
-  // Se o usuário já está logado, redirecionar para a área do aluno
+  // Se o usuário já está logado, redirecionar para a área admin
   if (user) {
-    return <Navigate to="/admin/crm" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   // Página de boas-vindas para usuários não logados

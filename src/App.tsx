@@ -63,9 +63,9 @@ function App() {
                       </RouteGuard>
                     }
                   >
+                    <Route index element={<CRM />} />
                     <Route path="crm" element={<CRM />} />
                     <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
-                    <Route index element={<CRM />} />
                   </Route>
                   
                   {/* 404 Route */}

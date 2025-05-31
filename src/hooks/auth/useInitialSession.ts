@@ -1,7 +1,6 @@
 
 import React, { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocation } from "react-router-dom";
 import { recoveryModeUtils } from "./useRecoveryMode";
 
 /**
@@ -12,7 +11,6 @@ export const useInitialSession = (
   setUser: (user: any) => void,
   setLoading: (loading: boolean) => void
 ) => {
-  const location = useLocation();
   const hasCheckedInitial = useRef(false);
   const isCheckingRef = useRef(false);
 
@@ -44,16 +42,16 @@ export const useInitialSession = (
           userEmail: currentSession?.user?.email,
           userId: currentSession?.user?.id,
           audience: currentSession?.user?.aud,
-          path: location.pathname
+          path: window.location.pathname
         });
         
         // Detectar o máximo possível de indicadores de recuperação de senha
-        if (recoveryModeUtils.detectRecoveryFlow(currentSession, location.pathname)) {
+        if (recoveryModeUtils.detectRecoveryFlow(currentSession, window.location.pathname)) {
           console.log("Em fluxo de recuperação de senha - armazenando sessão mas não autenticando");
           
           if (currentSession?.user?.aud === "recovery" || 
               window.location.href.includes("type=recovery") || 
-              (window.location.href.includes("access_token=") && location.pathname === "/reset-password")) {
+              (window.location.href.includes("access_token=") && window.location.pathname === "/reset-password")) {
             recoveryModeUtils.setRecoveryMode(true);
           }
           
@@ -83,5 +81,5 @@ export const useInitialSession = (
     };
 
     checkSession();
-  }, [setSession, setUser, setLoading, location.pathname]);
+  }, [setSession, setUser, setLoading]);
 };

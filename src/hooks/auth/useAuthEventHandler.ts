@@ -2,7 +2,6 @@
 import React, { useState, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, useLocation } from "react-router-dom";
 import { recoveryModeUtils } from "./useRecoveryMode";
 
 /**
@@ -12,16 +11,14 @@ export const useAuthEventHandler = () => {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   // Verificar se estamos na página de redefinição de senha
-  const isResetPasswordPage = location.pathname === "/reset-password";
+  const isResetPasswordPage = window.location.pathname === "/reset-password";
 
   const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
     console.log("=== AUTH EVENT DEBUG ===");
     console.log("Event:", event);
-    console.log("Path:", location.pathname);
+    console.log("Path:", window.location.pathname);
     console.log("User email:", currentSession?.user?.email);
     console.log("User ID:", currentSession?.user?.id);
     console.log("Session exists:", !!currentSession);
@@ -44,7 +41,7 @@ export const useAuthEventHandler = () => {
       
       // Forçar redirecionamento para a página inicial
       setTimeout(() => {
-        navigate("/", { replace: true });
+        window.location.href = "/";
       }, 100);
       
       return;
@@ -53,7 +50,7 @@ export const useAuthEventHandler = () => {
     // Detectar o máximo possível de indicadores de recuperação de senha
     if (event === "PASSWORD_RECOVERY" || 
         (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery") ||
-        recoveryModeUtils.detectRecoveryFlow(currentSession, location.pathname)) {
+        recoveryModeUtils.detectRecoveryFlow(currentSession, window.location.pathname)) {
       console.log("Evento de recuperação de senha detectado");
       recoveryModeUtils.setRecoveryMode(true);
       setSession(currentSession);
@@ -79,7 +76,7 @@ export const useAuthEventHandler = () => {
     setSession(currentSession);
     setUser(currentSession?.user ?? null);
     setLoading(false);
-  }, [location.pathname, isResetPasswordPage, navigate]);
+  }, [isResetPasswordPage]);
 
   return {
     user,
