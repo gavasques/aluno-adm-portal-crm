@@ -6,14 +6,13 @@ import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import { AuthProvider } from '@/hooks/useAuth';
-import { Dashboard } from '@/pages/admin/Dashboard';
-import { Users } from '@/pages/admin/Users';
-import { Tools } from '@/pages/admin/Tools';
-import { Settings } from '@/pages/admin/Settings';
-import { Suppliers } from '@/pages/admin/Suppliers';
+import Dashboard from '@/pages/admin/Dashboard';
+import Users from '@/pages/admin/Users';
+import Tools from '@/pages/admin/Tools';
+import Settings from '@/pages/admin/Settings';
+import Suppliers from '@/pages/admin/Suppliers';
 import Login from '@/pages/Login';
-import { Profile } from '@/pages/student/Profile';
-import { MySuppliers } from '@/pages/student/MySuppliers';
+import MySuppliers from '@/pages/student/MySuppliers';
 import Index from '@/pages/Index';
 import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
@@ -42,8 +41,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   
                   {/* Student Routes */}
-                  <Route path="/aluno" element={<Profile />} />
-                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/aluno" element={<Index />} />
                   <Route path="/my-suppliers" element={<MySuppliers />} />
                   
                   {/* Admin Routes */}
