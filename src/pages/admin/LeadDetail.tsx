@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -30,6 +29,7 @@ const LeadDetail = () => {
   };
 
   const handleLeadUpdate = () => {
+    console.log('🔄 Lead updated, refetching data...');
     refetch();
   };
 
@@ -91,7 +91,11 @@ const LeadDetail = () => {
 
       {/* Header do Lead */}
       <div className="bg-white rounded-2xl border border-gray-200/50 shadow-lg overflow-hidden">
-        <LeadDetailHeader lead={lead} onClose={handleBack} />
+        <LeadDetailHeader 
+          lead={lead} 
+          onClose={handleBack} 
+          onLeadUpdate={handleLeadUpdate}
+        />
       </div>
 
       {/* Conteúdo Principal */}

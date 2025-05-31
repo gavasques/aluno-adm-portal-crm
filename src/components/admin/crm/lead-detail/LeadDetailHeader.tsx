@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -23,9 +22,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 interface LeadDetailHeaderProps {
   lead: CRMLead;
   onClose: () => void;
+  onLeadUpdate?: () => void;
 }
 
-export const LeadDetailHeader = ({ lead, onClose }: LeadDetailHeaderProps) => {
+export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHeaderProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const getInitials = (name: string) => {
@@ -47,7 +47,12 @@ export const LeadDetailHeader = ({ lead, onClose }: LeadDetailHeaderProps) => {
 
   const handleEditSuccess = () => {
     setShowEditModal(false);
-    // Aqui você pode adicionar lógica para recarregar os dados do lead se necessário
+    // Forçar atualização dos dados do lead
+    if (onLeadUpdate) {
+      onLeadUpdate();
+    }
+    // Recarregar a página para garantir que os dados sejam atualizados
+    window.location.reload();
   };
 
   return (

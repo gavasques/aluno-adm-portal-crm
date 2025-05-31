@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabsTriggerWithBadge } from '@/components/ui/tabs';
@@ -28,6 +27,13 @@ interface LeadDetailModalProps {
 const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailModalProps) => {
   const [activeTab, setActiveTab] = useState('overview');
 
+  const handleLeadUpdate = () => {
+    console.log('🔄 Lead updated in modal, calling parent update...');
+    if (onLeadUpdate) {
+      onLeadUpdate();
+    }
+  };
+
   if (!lead) return null;
 
   return (
@@ -43,7 +49,11 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
               className="flex flex-col h-full"
             >
               {/* Header */}
-              <LeadDetailHeader lead={lead} onClose={() => onOpenChange(false)} />
+              <LeadDetailHeader 
+                lead={lead} 
+                onClose={() => onOpenChange(false)} 
+                onLeadUpdate={handleLeadUpdate}
+              />
 
               {/* Tabs Container */}
               <div className="flex-1 overflow-hidden">
