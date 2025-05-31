@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 export const usePerformanceOptimizedUsers = () => {
   const queryClient = useQueryClient();
   const [users, setUsers] = useState<User[]>([]);
-  const [filters, setFilters] = useState<UserFilters>({
+  const [filters, setFiltersState] = useState<UserFilters>({
     search: '',
     status: 'all',
     group: 'all'
@@ -72,7 +72,11 @@ export const usePerformanceOptimizedUsers = () => {
     return optimizedUserService.filterUsers(users, filters);
   }, [users, filters]);
 
-  // Actions
+  // Actions with correct types
+  const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
+    setFiltersState(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
   const refreshUsers = useCallback(async () => {
     setIsRefreshing(true);
     await fetchUsers();
@@ -84,8 +88,8 @@ export const usePerformanceOptimizedUsers = () => {
   }, [fetchUsers]);
 
   const searchUsers = useCallback((query: string) => {
-    setFilters(prev => ({ ...prev, search: query }));
-  }, []);
+    setFilters({ search: query });
+  }, [setFilters]);
 
   // CRUD Operations
   const createUser = useCallback(async (userData: CreateUserData): Promise<boolean> => {
@@ -111,6 +115,23 @@ export const usePerformanceOptimizedUsers = () => {
       return success;
     } finally {
       setIsDeleting(false);
+    }
+  }, [refreshUsers]);
+
+  // Add deleteUserFromDatabase function
+  const deleteUserFromDatabase = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
+    try {
+      console.log('🗑️ Starting user deletion process for:', userEmail);
+      
+      // Use the same logic as deleteUser for now
+      const success = await optimizedUserService.deleteUser(userId, userEmail);
+      if (success) {
+        await refreshUsers();
+      }
+      return success;
+    } catch (error) {
+      console.error('❌ User deletion failed:', error);
+      return false;
     }
   }, [refreshUsers]);
 
@@ -194,6 +215,7 @@ export const usePerformanceOptimizedUsers = () => {
     // CRUD Operations
     createUser,
     deleteUser,
+    deleteUserFromDatabase,
     resetPassword,
     setPermissionGroup,
     toggleUserStatus,

@@ -30,6 +30,7 @@ interface PerformanceOptimizedUserContextValue {
   // CRUD Operations
   createUser: (userData: CreateUserData) => Promise<boolean>;
   deleteUser: (userId: string, userEmail: string) => Promise<boolean>;
+  deleteUserFromDatabase: (userId: string, userEmail: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) => Promise<boolean>;
   toggleUserStatus: (userId: string, userEmail: string, isActive: boolean) => Promise<boolean>;
