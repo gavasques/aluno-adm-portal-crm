@@ -25,40 +25,46 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
 
   const { pipelines, loading: pipelinesLoading, fetchPipelines } = useCRMPipelines();
 
+  console.log('🎯 CRMView render - pipelines:', pipelines.length, 'pipelineId:', pipelineId, 'loading:', pipelinesLoading);
+
   // Set default pipeline if none selected
   React.useEffect(() => {
-    console.log('CRMView - pipelines:', pipelines.length, 'pipelineId:', pipelineId);
+    console.log('🔄 CRMView useEffect - pipelines:', pipelines.length, 'current pipelineId:', pipelineId);
     
     if (!pipelineId && pipelines.length > 0) {
       const defaultPipeline = pipelines[0];
-      console.log('Setting default pipeline:', defaultPipeline.id);
+      console.log('🎯 Setting default pipeline:', defaultPipeline.id, defaultPipeline.name);
       setPipelineId(defaultPipeline.id);
       setFilters(prev => ({ ...prev, pipeline_id: defaultPipeline.id }));
     }
   }, [pipelineId, pipelines]);
 
   const handleFiltersChange = (newFilters: CRMFiltersType) => {
-    console.log('CRMView - filters changing:', newFilters);
+    console.log('🔍 CRMView - filters changing:', newFilters);
     setFilters(newFilters);
   };
 
   const handlePipelineChange = (newPipelineId: string) => {
-    console.log('CRMView - pipeline changing to:', newPipelineId);
+    console.log('🔄 CRMView - pipeline changing to:', newPipelineId);
     setPipelineId(newPipelineId);
     setFilters(prev => ({ ...prev, pipeline_id: newPipelineId }));
   };
 
   const handlePipelineManagerRefresh = async () => {
+    console.log('🔄 Refreshing pipelines...');
     await fetchPipelines();
     setRefreshTrigger(prev => prev + 1);
   };
 
+  // Loading state
   if (pipelinesLoading) {
+    console.log('⏳ Showing loading skeleton...');
     return <CRMLoadingSkeleton />;
   }
 
-  // Guard: Não renderizar se não há pipelines
+  // No pipelines state
   if (pipelines.length === 0) {
+    console.log('📭 No pipelines found');
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Nenhum pipeline encontrado.</p>
@@ -72,6 +78,8 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
       </div>
     );
   }
+
+  console.log('🎨 Rendering main CRM interface');
 
   return (
     <div className="space-y-4">
@@ -128,17 +136,20 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
         className="min-h-[calc(100vh-300px)]"
       >
         {pipelineId ? (
-          viewMode === 'kanban' ? (
-            <CRMKanbanBoard
-              filters={filters}
-              pipelineId={pipelineId}
-            />
-          ) : (
-            <CRMListView
-              filters={filters}
-              onEditLead={onEditLead}
-            />
-          )
+          <>
+            {console.log('🎯 Rendering view mode:', viewMode, 'for pipeline:', pipelineId)}
+            {viewMode === 'kanban' ? (
+              <CRMKanbanBoard
+                filters={filters}
+                pipelineId={pipelineId}
+              />
+            ) : (
+              <CRMListView
+                filters={filters}
+                onEditLead={onEditLead}
+              />
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500">Carregando pipeline...</p>
