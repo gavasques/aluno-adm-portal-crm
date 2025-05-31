@@ -3,10 +3,18 @@ import React, { createContext, useContext } from 'react';
 import { User, UserFilters, UserStats, CreateUserData } from '@/types/user.types';
 import { usePerformanceOptimizedUsers } from '@/hooks/users/usePerformanceOptimizedUsers';
 
+interface StudentStats {
+  total: number;
+  active: number;
+  mentors: number;
+  newThisMonth: number;
+}
+
 interface PerformanceOptimizedUserContextValue {
   users: User[];
   filteredUsers: User[];
   stats: UserStats;
+  studentStats: StudentStats;
   filters: UserFilters;
   isLoading: boolean;
   isRefreshing: boolean;
@@ -24,6 +32,8 @@ interface PerformanceOptimizedUserContextValue {
   deleteUser: (userId: string, userEmail: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) => Promise<boolean>;
+  toggleUserStatus: (userId: string, userEmail: string, isActive: boolean) => Promise<boolean>;
+  toggleMentorStatus: (userId: string, currentMentorStatus: boolean) => Promise<boolean>;
   
   // Mutation states
   isCreating: boolean;

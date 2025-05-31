@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { UserCog, Plus, Search, Users, GraduationCap, UserCheck } from 'lucide-react';
-import { useUsers } from '@/hooks/users/useUsers';
+import { PerformanceOptimizedUserProvider, usePerformanceOptimizedUserContext } from '@/contexts/PerformanceOptimizedUserContext';
 import { User } from '@/types/user.types';
 import LoadingUsersList from '@/components/admin/users/LoadingUsersList';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +24,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Eye, Shield, UserMinus, UserPlus } from 'lucide-react';
+import { MoreVertical, Eye, UserMinus, UserPlus } from 'lucide-react';
 import { CardStats } from '@/components/ui/card-stats';
 
-const AdminStudents = () => {
+const StudentsContent = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { 
     users, 
@@ -35,7 +35,7 @@ const AdminStudents = () => {
     toggleMentorStatus,
     toggleUserStatus,
     studentStats 
-  } = useUsers();
+  } = usePerformanceOptimizedUserContext();
 
   const breadcrumbItems = [
     { label: 'Admin', href: '/admin' },
@@ -60,7 +60,7 @@ const AdminStudents = () => {
 
   const handleToggleStatus = async (user: User) => {
     const isActive = user.status?.toLowerCase() === 'ativo';
-    const success = await toggleUserStatus(user.id, user.email, !isActive);
+    const success = await toggleUserStatus(user.id, user.email, isActive);
     if (success) {
       console.log(`Status toggled for ${user.email}`);
     }
@@ -71,36 +71,30 @@ const AdminStudents = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  // Estatísticas dos estudantes
-  const totalStudents = students.length;
-  const activeStudents = students.filter(s => s.status?.toLowerCase() === 'ativo').length;
-  const mentorStudents = students.filter(s => s.is_mentor).length;
-  const inactiveStudents = students.filter(s => s.status?.toLowerCase() === 'inativo').length;
-
   const statsData = [
     {
       title: "Total de Estudantes",
-      value: totalStudents,
+      value: studentStats.total,
       icon: <Users className="h-4 w-4" />,
       description: "Cadastrados no sistema"
     },
     {
       title: "Ativos",
-      value: activeStudents,
+      value: studentStats.active,
       icon: <UserCheck className="h-4 w-4" />,
       description: "Estudantes ativos"
     },
     {
       title: "Mentores",
-      value: mentorStudents,
+      value: studentStats.mentors,
       icon: <GraduationCap className="h-4 w-4" />,
       description: "Também são mentores"
     },
     {
-      title: "Inativos",
-      value: inactiveStudents,
-      icon: <UserMinus className="h-4 w-4" />,
-      description: "Estudantes inativos"
+      title: "Novos este mês",
+      value: studentStats.newThisMonth,
+      icon: <UserPlus className="h-4 w-4" />,
+      description: "Cadastrados este mês"
     }
   ];
 
@@ -280,6 +274,14 @@ const AdminStudents = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+const AdminStudents = () => {
+  return (
+    <PerformanceOptimizedUserProvider>
+      <StudentsContent />
+    </PerformanceOptimizedUserProvider>
   );
 };
 

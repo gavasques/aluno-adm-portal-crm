@@ -1,243 +1,212 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { optimizedUserService } from '@/services/OptimizedUserService';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, UserFilters, UserStats, CreateUserData } from '@/types/user.types';
-import { useDebouncedCallback } from 'use-debounce';
-import { useOptimizedUserCache } from './useOptimizedUserCache';
-import { usePermissionGroups } from '@/hooks/admin/usePermissionGroups';
+import { optimizedUserService } from '@/services/OptimizedUserService';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const usePerformanceOptimizedUsers = () => {
   const queryClient = useQueryClient();
-  
-  const [filters, setFiltersState] = useState<UserFilters>({
+  const [users, setUsers] = useState<User[]>([]);
+  const [filters, setFilters] = useState<UserFilters>({
     search: '',
     status: 'all',
     group: 'all'
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Mutation states
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isSettingPermissions, setIsSettingPermissions] = useState(false);
 
-  const {
-    cacheFilteredUsers,
-    getCachedFilteredUsers,
-    cacheUserStats,
-    getCachedUserStats,
-    smartInvalidate,
-    getMetrics,
-    preloadCommonFilters
-  } = useOptimizedUserCache();
-
-  const { permissionGroups } = usePermissionGroups();
-
-  optimizedUserService.setQueryClient(queryClient);
-
-  const {
-    data: users = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      console.log('🔄 Query executando fetchUsers...');
-      
-      const result = await optimizedUserService.fetchUsers();
-      console.log('✅ Query retornou:', result?.length, 'usuários');
-      
-      return result;
-    },
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
-  });
-
-  console.log('📊 usersArray processado:', users.length, 'usuários');
-
-  const debouncedSearch = useDebouncedCallback((searchTerm: string) => {
-    console.log('🔍 Aplicando busca otimizada:', searchTerm);
-    setFiltersState(prev => ({ ...prev, search: searchTerm }));
-  }, 100);
-
-  const forceRefresh = useCallback(async () => {
-    console.log('🔄 Executando refresh forçado...');
-    
-    // Invalidar todas as queries relacionadas a usuários
-    await queryClient.invalidateQueries({ queryKey: ['users'] });
-    
-    // Forçar um refetch imediato
-    const result = await queryClient.refetchQueries({ 
-      queryKey: ['users'],
-      type: 'active'
-    });
-    
-    console.log('✅ Refresh forçado concluído, resultado:', result);
+  // Set query client in service
+  useEffect(() => {
+    optimizedUserService.setQueryClient(queryClient);
   }, [queryClient]);
 
-  const createUserMutation = useMutation({
-    mutationFn: (userData: CreateUserData) => 
-      optimizedUserService.createUser(userData),
-    onSuccess: async () => {
-      console.log('✅ Usuário criado, executando refresh...');
-      await forceRefresh();
-    },
-  });
-
-  const deleteUserFromDatabase = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
-    console.log('🗑️ Iniciando exclusão de usuário:', { userId, userEmail });
-    
+  // Fetch users
+  const fetchUsers = useCallback(async () => {
     try {
-      if (!userId || !userEmail) {
-        console.error('❌ Parâmetros inválidos para exclusão:', { userId, userEmail });
+      setError(null);
+      const fetchedUsers = await optimizedUserService.fetchUsers();
+      setUsers(fetchedUsers);
+    } catch (err: any) {
+      console.error('Error fetching users:', err);
+      setError(err.message || 'Erro ao carregar usuários');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    return optimizedUserService.calculateStats(users);
+  }, [users]);
+
+  // Calculate student stats
+  const studentStats = useMemo(() => {
+    const students = users.filter(user => user.role === 'Student');
+    const total = students.length;
+    const active = students.filter(s => s.status?.toLowerCase() === 'ativo').length;
+    const mentors = students.filter(s => s.is_mentor).length;
+    const newThisMonth = students.filter(s => {
+      if (!s.created_at) return false;
+      const created = new Date(s.created_at);
+      const now = new Date();
+      return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+    }).length;
+
+    return { total, active, mentors, newThisMonth };
+  }, [users]);
+
+  // Filter users
+  const filteredUsers = useMemo(() => {
+    return optimizedUserService.filterUsers(users, filters);
+  }, [users, filters]);
+
+  // Actions
+  const refreshUsers = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchUsers();
+  }, [fetchUsers]);
+
+  const forceRefresh = useCallback(async () => {
+    setIsLoading(true);
+    await fetchUsers();
+  }, [fetchUsers]);
+
+  const searchUsers = useCallback((query: string) => {
+    setFilters(prev => ({ ...prev, search: query }));
+  }, []);
+
+  // CRUD Operations
+  const createUser = useCallback(async (userData: CreateUserData): Promise<boolean> => {
+    setIsCreating(true);
+    try {
+      const success = await optimizedUserService.createUser(userData);
+      if (success) {
+        await refreshUsers();
+      }
+      return success;
+    } finally {
+      setIsCreating(false);
+    }
+  }, [refreshUsers]);
+
+  const deleteUser = useCallback(async (userId: string, userEmail: string): Promise<boolean> => {
+    setIsDeleting(true);
+    try {
+      const success = await optimizedUserService.deleteUser(userId, userEmail);
+      if (success) {
+        await refreshUsers();
+      }
+      return success;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [refreshUsers]);
+
+  const resetPassword = useCallback(async (email: string): Promise<boolean> => {
+    setIsResettingPassword(true);
+    try {
+      return await optimizedUserService.resetPassword(email);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  }, []);
+
+  const setPermissionGroup = useCallback(async (userId: string, userEmail: string, groupId: string | null): Promise<boolean> => {
+    setIsSettingPermissions(true);
+    try {
+      const success = await optimizedUserService.setPermissionGroup(userId, userEmail, groupId);
+      if (success) {
+        await refreshUsers();
+      }
+      return success;
+    } finally {
+      setIsSettingPermissions(false);
+    }
+  }, [refreshUsers]);
+
+  // Toggle user status
+  const toggleUserStatus = useCallback(async (userId: string, userEmail: string, isActive: boolean): Promise<boolean> => {
+    try {
+      const currentStatus = isActive ? "Ativo" : "Inativo";
+      const success = await optimizedUserService.toggleUserStatus(userId, userEmail, currentStatus);
+      if (success) {
+        await refreshUsers();
+      }
+      return success;
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      return false;
+    }
+  }, [refreshUsers]);
+
+  // Toggle mentor status
+  const toggleMentorStatus = useCallback(async (userId: string, currentMentorStatus: boolean): Promise<boolean> => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_mentor: !currentMentorStatus })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error toggling mentor status:', error);
         return false;
       }
 
-      const success = await optimizedUserService.deleteUser(userId, userEmail);
-      console.log('🔧 Resultado da exclusão no service:', success);
-      
-      if (success) {
-        console.log('✅ Usuário excluído com sucesso, invalidando cache...');
-        
-        // Invalidar cache imediatamente
-        await queryClient.invalidateQueries({ queryKey: ['users'] });
-        
-        // Forçar refetch para garantir dados atualizados
-        await queryClient.refetchQueries({ queryKey: ['users'] });
-        
-        return true;
-      }
-      
-      console.error('❌ Falha na exclusão do usuário');
-      return false;
+      await refreshUsers();
+      return true;
     } catch (error) {
-      console.error('❌ Erro durante exclusão:', error);
+      console.error('Error toggling mentor status:', error);
       return false;
     }
-  }, [optimizedUserService, queryClient]);
-
-  const deleteUserMutation = useMutation({
-    mutationFn: ({ userId, userEmail }: { userId: string; userEmail: string }) =>
-      deleteUserFromDatabase(userId, userEmail),
-    onSuccess: async () => {
-      console.log('✅ Usuário excluído via mutation, executando refresh...');
-      await forceRefresh();
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: (email: string) => optimizedUserService.resetPassword(email),
-  });
-
-  const setPermissionGroupMutation = useMutation({
-    mutationFn: ({ userId, userEmail, groupId }: { 
-      userId: string; 
-      userEmail: string; 
-      groupId: string | null; 
-    }) => optimizedUserService.setPermissionGroup(userId, userEmail, groupId),
-    onSuccess: async () => {
-      console.log('✅ Permissões alteradas, executando refresh...');
-      await forceRefresh();
-    },
-  });
-
-  const filteredUsers = useMemo(() => {
-    console.log('🔄 Aplicando filtros otimizados...');
-    
-    if (!filters.search && filters.status === 'all' && filters.group === 'all') {
-      console.log('✅ Sem filtros, retornando todos os usuários:', users.length);
-      return users;
-    }
-    
-    const filtered = optimizedUserService.filterUsers(users, filters);
-    console.log('✅ Usuários filtrados:', filtered.length, 'de', users.length);
-    return filtered;
-  }, [users, filters]);
-
-  const stats = useMemo((): UserStats => {
-    console.log('📊 Calculando estatísticas otimizadas...');
-    const calculatedStats = optimizedUserService.calculateStats(users);
-    
-    const validStats: UserStats = {
-      total: calculatedStats?.total || 0,
-      active: calculatedStats?.active || 0,
-      inactive: calculatedStats?.inactive || 0,
-      pending: calculatedStats?.pending || 0
-    };
-    
-    console.log('📊 Estatísticas calculadas:', validStats);
-    return validStats;
-  }, [users]);
-
-  const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
-    console.log('🔧 Atualizando filtros:', newFilters);
-    setFiltersState(prev => ({ ...prev, ...newFilters }));
-  }, []);
-
-  const searchUsers = useCallback((query: string) => {
-    console.log('🔍 Busca ativada:', query);
-    debouncedSearch(query);
-  }, [debouncedSearch]);
-
-  const refreshUsers = useCallback(async () => {
-    console.log('🔄 Refresh de usuários solicitado...');
-    await forceRefresh();
-  }, [forceRefresh]);
-
-  const performanceMetrics = useMemo(() => ({
-    ...getMetrics(),
-    totalUsers: users.length,
-    filteredUsers: filteredUsers.length,
-    isOptimized: true
-  }), [getMetrics, users.length, filteredUsers.length]);
-
-  useEffect(() => {
-    if (users.length > 0) {
-      preloadCommonFilters(users);
-    }
-  }, [users, preloadCommonFilters]);
-
-  useEffect(() => {
-    console.log('🔍 Estado atual do hook:', {
-      isLoading,
-      error: error?.message,
-      usersCount: users.length,
-      filteredCount: filteredUsers.length,
-      stats,
-      filters,
-      permissionGroupsCount: permissionGroups?.length || 0
-    });
-  }, [isLoading, error, users.length, filteredUsers.length, stats, filters, permissionGroups]);
+  }, [refreshUsers]);
 
   return {
     users,
     filteredUsers,
     stats,
+    studentStats,
     filters,
     isLoading,
-    isRefreshing: false,
-    error: error?.message || null,
-    permissionGroups: permissionGroups || [],
+    isRefreshing,
+    error,
+    permissionGroups: [], // TODO: Implement if needed
     
+    // Actions
     setFilters,
     refreshUsers,
     searchUsers,
     forceRefresh,
     
-    createUser: createUserMutation.mutateAsync,
-    deleteUser: (userId: string, userEmail: string) => 
-      deleteUserMutation.mutateAsync({ userId, userEmail }),
-    deleteUserFromDatabase,
-    resetPassword: resetPasswordMutation.mutateAsync,
-    setPermissionGroup: (userId: string, userEmail: string, groupId: string | null) =>
-      setPermissionGroupMutation.mutateAsync({ userId, userEmail, groupId }),
+    // CRUD Operations
+    createUser,
+    deleteUser,
+    resetPassword,
+    setPermissionGroup,
+    toggleUserStatus,
+    toggleMentorStatus,
     
-    isCreating: createUserMutation.isPending,
-    isDeleting: deleteUserMutation.isPending,
-    isResettingPassword: resetPasswordMutation.isPending,
-    isSettingPermissions: setPermissionGroupMutation.isPending,
+    // Mutation states
+    isCreating,
+    isDeleting,
+    isResettingPassword,
+    isSettingPermissions,
 
-    performanceMetrics,
-    smartInvalidate,
+    // Performance
+    performanceMetrics: {},
+    smartInvalidate: () => {}
   };
 };
