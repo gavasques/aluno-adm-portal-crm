@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +13,7 @@ interface LeadWithContacts extends CRMLead {
 export const useCRMData = (filters: CRMFilters = {}) => {
   const queryClient = useQueryClient();
 
-  const transformLeadData = useCallback((dbLead: CRMLeadFromDB): CRMLead => {
+  const transformLeadData = useCallback((dbLead: any): CRMLead => {
     return {
       ...dbLead,
       has_company: dbLead.has_company ?? false,
@@ -37,7 +36,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       responsible_id: dbLead.responsible_id || undefined,
       created_by: dbLead.created_by || undefined,
       notes: dbLead.notes || undefined,
-      tags: dbLead.tags?.map(tagWrapper => tagWrapper.tag) || []
+      tags: dbLead.tags?.map((tagWrapper: any) => tagWrapper.tag) || []
     };
   }, []);
 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface PermissionGroup {
+export interface PermissionGroup {
   id: string;
   name: string;
   description?: string;
@@ -37,6 +37,105 @@ export const usePermissionGroups = () => {
     }
   };
 
+  const createPermissionGroup = async (groupData: Omit<PermissionGroup, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('permission_groups')
+        .insert(groupData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setPermissionGroups(prev => [...prev, data]);
+      return data;
+    } catch (err) {
+      console.error('Erro ao criar grupo de permissão:', err);
+      throw err;
+    }
+  };
+
+  const updatePermissionGroup = async (id: string, updates: Partial<PermissionGroup>) => {
+    try {
+      const { data, error } = await supabase
+        .from('permission_groups')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setPermissionGroups(prev => 
+        prev.map(group => group.id === id ? data : group)
+      );
+      return data;
+    } catch (err) {
+      console.error('Erro ao atualizar grupo de permissão:', err);
+      throw err;
+    }
+  };
+
+  const deletePermissionGroup = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('permission_groups')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setPermissionGroups(prev => prev.filter(group => group.id !== id));
+    } catch (err) {
+      console.error('Erro ao deletar grupo de permissão:', err);
+      throw err;
+    }
+  };
+
+  const getPermissionGroupUsers = async (groupId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .eq('permission_group_id', groupId);
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error('Erro ao buscar usuários do grupo:', err);
+      throw err;
+    }
+  };
+
+  const removeUserFromGroup = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ permission_group_id: null })
+        .eq('id', userId);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Erro ao remover usuário do grupo:', err);
+      throw err;
+    }
+  };
+
+  const getPermissionGroupMenus = async (groupId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('permission_group_menus')
+        .select('menu_key')
+        .eq('permission_group_id', groupId);
+
+      if (error) throw error;
+      return data?.map(item => item.menu_key) || [];
+    } catch (err) {
+      console.error('Erro ao buscar menus do grupo:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchPermissionGroups();
   }, []);
@@ -45,6 +144,12 @@ export const usePermissionGroups = () => {
     permissionGroups,
     isLoading,
     error,
-    refetch: fetchPermissionGroups
+    refetch: fetchPermissionGroups,
+    createPermissionGroup,
+    updatePermissionGroup,
+    deletePermissionGroup,
+    getPermissionGroupUsers,
+    removeUserFromGroup,
+    getPermissionGroupMenus
   };
 };
