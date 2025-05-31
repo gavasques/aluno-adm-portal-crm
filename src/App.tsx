@@ -8,6 +8,7 @@ import { AccessibilityProvider } from '@/components/accessibility/AccessibilityP
 import { AuthProvider, useAuth } from '@/hooks/auth';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
+import AdminDashboard from '@/pages/admin/Dashboard';
 import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
 import NotFound from '@/pages/NotFound';
@@ -63,7 +64,8 @@ function App() {
                       </RouteGuard>
                     }
                   >
-                    <Route index element={<CRM />} />
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
                     <Route path="crm" element={<CRM />} />
                     <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
                   </Route>
