@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -13,14 +14,20 @@ import {
   Edit,
   Building2,
   Globe,
-  DollarSign
+  DollarSign,
+  Clock,
+  CheckCircle
 } from 'lucide-react';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLead, CRMLeadContact } from '@/types/crm.types';
 import LeadDataTab from '../lead-detail-tabs/LeadDataTab';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { isToday, isTomorrow, isPast, differenceInDays } from 'date-fns';
 
 interface LeadDetailHeaderProps {
-  lead: CRMLead;
+  lead: CRMLead & {
+    pending_contacts?: CRMLeadContact[];
+    last_completed_contact?: CRMLeadContact;
+  };
   onClose: () => void;
   onLeadUpdate?: () => void;
 }
@@ -53,6 +60,68 @@ export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHead
     }
     // Recarregar a página para garantir que os dados sejam atualizados
     window.location.reload();
+  };
+
+  // Buscar próximo contato pendente
+  const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
+    ? lead.pending_contacts
+        .filter(contact => contact.status === 'pending')
+        .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
+    : null;
+
+  // Último contato realizado
+  const lastCompletedContact = lead.last_completed_contact;
+
+  const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
+    if (isCompleted) {
+      return (
+        <Badge variant="secondary" className="bg-green-500/20 text-green-100 border-green-400/30 text-xs">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Realizado
+        </Badge>
+      );
+    }
+
+    const contactDateObj = new Date(contactDate);
+    
+    if (isPast(contactDateObj) && !isToday(contactDateObj)) {
+      return (
+        <Badge variant="secondary" className="bg-red-500/20 text-red-100 border-red-400/30 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          Atrasado
+        </Badge>
+      );
+    }
+    
+    if (isToday(contactDateObj)) {
+      return (
+        <Badge variant="secondary" className="bg-orange-500/20 text-orange-100 border-orange-400/30 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          Hoje
+        </Badge>
+      );
+    }
+    
+    if (isTomorrow(contactDateObj)) {
+      return (
+        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-100 border-yellow-400/30 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          Amanhã
+        </Badge>
+      );
+    }
+    
+    const daysDiff = differenceInDays(contactDateObj, new Date());
+    if (daysDiff <= 7) {
+      return (
+        <Badge variant="secondary" className="bg-blue-500/20 text-blue-100 border-blue-400/30 text-xs">
+          <Calendar className="h-3 w-3 mr-1" />
+          {daysDiff}d
+        </Badge>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -146,43 +215,61 @@ export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHead
                 <Calendar className="h-4 w-4" />
                 <span className="text-sm font-medium">Próximo Contato</span>
               </div>
-              <p className="text-white font-semibold">
-                {lead.scheduled_contact_date 
-                  ? formatDate(lead.scheduled_contact_date)
-                  : 'Não agendado'
-                }
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-white font-semibold">
+                  {nextContact 
+                    ? formatDate(nextContact.contact_date)
+                    : 'Não agendado'
+                  }
+                </p>
+                {nextContact && getContactBadge(nextContact.contact_date)}
+              </div>
             </div>
 
-            {/* Qualificação */}
+            {/* Último Contato */}
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <User className="h-4 w-4" />
-                <span className="text-sm font-medium">Qualificação</span>
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Último Contato</span>
               </div>
-              <div className="flex flex-wrap gap-1">
-                {lead.has_company && (
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-100 border-blue-400/30 text-xs">
-                    <Building2 className="h-3 w-3 mr-1" />
-                    Empresa
-                  </Badge>
-                )}
-                {lead.sells_on_amazon && (
-                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-100 border-orange-400/30 text-xs">
-                    <Globe className="h-3 w-3 mr-1" />
-                    Amazon
-                  </Badge>
-                )}
-                {lead.ready_to_invest_3k && (
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-100 border-green-400/30 text-xs">
-                    <DollarSign className="h-3 w-3 mr-1" />
-                    R$ 3k
-                  </Badge>
-                )}
-                {!lead.has_company && !lead.sells_on_amazon && !lead.ready_to_invest_3k && (
-                  <span className="text-white/60 text-xs">Não qualificado</span>
-                )}
+              <div className="flex items-center justify-between">
+                <p className="text-white font-semibold">
+                  {lastCompletedContact && lastCompletedContact.completed_at
+                    ? formatDate(lastCompletedContact.completed_at)
+                    : 'Nenhum realizado'
+                  }
+                </p>
+                {lastCompletedContact && lastCompletedContact.completed_at && 
+                  getContactBadge(lastCompletedContact.completed_at, true)
+                }
               </div>
+            </div>
+          </div>
+
+          {/* Qualificação Badges */}
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
+              {lead.has_company && (
+                <Badge variant="secondary" className="bg-blue-500/20 text-blue-100 border-blue-400/30 text-xs">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  Empresa
+                </Badge>
+              )}
+              {lead.sells_on_amazon && (
+                <Badge variant="secondary" className="bg-orange-500/20 text-orange-100 border-orange-400/30 text-xs">
+                  <Globe className="h-3 w-3 mr-1" />
+                  Amazon
+                </Badge>
+              )}
+              {lead.ready_to_invest_3k && (
+                <Badge variant="secondary" className="bg-green-500/20 text-green-100 border-green-400/30 text-xs">
+                  <DollarSign className="h-3 w-3 mr-1" />
+                  R$ 3k
+                </Badge>
+              )}
+              {!lead.has_company && !lead.sells_on_amazon && !lead.ready_to_invest_3k && (
+                <span className="text-white/60 text-xs">Não qualificado</span>
+              )}
             </div>
           </div>
 

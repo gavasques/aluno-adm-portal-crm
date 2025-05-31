@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabsTriggerWithBadge } from '@/components/ui/tabs';
@@ -8,7 +9,7 @@ import {
   Clock,
   Calendar
 } from 'lucide-react';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLead, CRMLeadContact } from '@/types/crm.types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LeadDetailHeader } from './lead-detail/LeadDetailHeader';
 import { LeadDetailOverview } from './lead-detail/LeadDetailOverview';
@@ -18,7 +19,10 @@ import LeadHistoryTab from './lead-detail-tabs/LeadHistoryTab';
 import LeadContactsTab from './lead-detail-tabs/LeadContactsTab';
 
 interface LeadDetailModalProps {
-  lead: CRMLead | null;
+  lead: (CRMLead & {
+    pending_contacts?: CRMLeadContact[];
+    last_completed_contact?: CRMLeadContact;
+  }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLeadUpdate?: () => void;
