@@ -1,14 +1,15 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMData } from '@/hooks/crm/useCRMData';
+import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
 import CRMLeadFormDialog from './CRMLeadFormDialog';
+import { cn } from '@/lib/utils';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -20,13 +21,21 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   const { columns, loading: columnsLoading } = useCRMPipelines();
   const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
+  const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState<string>('');
 
+  // Configurar sensores mais responsivos para drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 3, // Reduzir distância para ativação mais fácil
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150, // Pequeno delay para evitar conflito com scroll
+        tolerance: 5,
       },
     })
   );
@@ -38,18 +47,36 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
       .sort((a, b) => a.sort_order - b.sort_order);
   }, [columns, pipelineId]);
 
-  const handleDragStart = useCallback((event: any) => {
-    const leadId = event.active.id;
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const leadId = event.active.id as string;
+    
     // Encontrar o lead nos dados agrupados
     const lead = Object.values(leadsByColumn)
       .flat()
       .find(l => l.id === leadId);
+    
     setActiveLead(lead || null);
+    
+    // Encontrar a coluna atual do lead
+    const currentColumnId = Object.keys(leadsByColumn).find(columnId => 
+      leadsByColumn[columnId].some(l => l.id === leadId)
+    );
+    setActiveColumnId(currentColumnId || null);
   }, [leadsByColumn]);
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const { over } = event;
+    if (over) {
+      setActiveColumnId(over.id as string);
+    }
+  }, []);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
+    
+    // Resetar estados
     setActiveLead(null);
+    setActiveColumnId(null);
 
     if (!over) return;
 
@@ -63,9 +90,10 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
     
     if (currentLead && currentLead.column_id !== newColumnId) {
       try {
+        console.log(`🔄 Moving lead ${leadId} to column ${newColumnId}`);
         await moveLeadToColumn(leadId, newColumnId);
       } catch (error) {
-        console.error('Error moving lead:', error);
+        console.error('❌ Error moving lead:', error);
       }
     }
   }, [leadsByColumn, moveLeadToColumn]);
@@ -108,52 +136,39 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
-          <div className="flex gap-4 min-w-max h-full px-3">
-            <SortableContext 
-              items={pipelineColumns.map(col => col.id)} 
-              strategy={horizontalListSortingStrategy}
-            >
-              {pipelineColumns.map(column => {
-                const columnLeads = leadsByColumn[column.id] || [];
-                
-                return (
-                  <div key={column.id} className="w-80 bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: column.color }}
-                        />
-                        <h3 className="font-medium text-gray-900">{column.name}</h3>
-                        <span className="text-sm text-gray-500">({columnLeads.length})</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-                      {columnLeads.map(lead => (
-                        <OptimizedKanbanLeadCard
-                          key={lead.id}
-                          lead={lead}
-                          onOpenDetail={handleOpenDetail}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </SortableContext>
+          <div className={cn(
+            "flex gap-4 min-w-max h-full px-3 transition-all duration-300",
+            activeLead && "pointer-events-none"
+          )}>
+            {pipelineColumns.map(column => {
+              const columnLeads = leadsByColumn[column.id] || [];
+              const isDragOver = activeColumnId === column.id;
+              
+              return (
+                <KanbanColumn
+                  key={column.id}
+                  column={column}
+                  leads={columnLeads}
+                  onOpenDetail={handleOpenDetail}
+                  isDragOver={isDragOver}
+                />
+              );
+            })}
           </div>
         </div>
 
         <DragOverlay>
           {activeLead ? (
-            <OptimizedKanbanLeadCard 
-              lead={activeLead} 
-              onOpenDetail={handleOpenDetail} 
-            />
+            <div className="transform rotate-6 scale-110 transition-transform duration-200">
+              <OptimizedKanbanLeadCard 
+                lead={activeLead} 
+                onOpenDetail={handleOpenDetail} 
+              />
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>

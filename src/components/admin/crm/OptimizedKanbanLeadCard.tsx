@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -10,6 +9,7 @@ import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign, Eye,
 import { CRMLead } from '@/types/crm.types';
 import { useCRMLeadContacts } from '@/hooks/crm/useCRMLeadContacts';
 import { differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface OptimizedKanbanLeadCardProps {
   lead: CRMLead;
@@ -30,8 +30,7 @@ const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKan
 
   const style = React.useMemo(() => ({
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDragging ? 'none' : transition || 'transform 200ms ease',
   }), [transform, transition, isDragging]);
 
   const getInitials = React.useCallback((name: string) => {
@@ -57,7 +56,6 @@ const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKan
     onOpenDetail?.(lead);
   }, [onOpenDetail, lead]);
 
-  // Buscar próximo contato pendente
   const nextContact = React.useMemo(() => {
     return contacts
       .filter(contact => contact.status === 'pending')
@@ -116,10 +114,18 @@ const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKan
       style={style}
       {...attributes}
       {...listeners}
-      className="cursor-grab active:cursor-grabbing"
+      className={cn(
+        "group transition-all duration-200 ease-out",
+        isDragging ? "cursor-grabbing z-50 rotate-3 scale-105" : "cursor-grab hover:-translate-y-1 hover:scale-[1.02]"
+      )}
       onClick={handleCardClick}
     >
-      <Card className="hover:shadow-md transition-all duration-200 border border-gray-200 bg-white hover:bg-gray-50">
+      <Card className={cn(
+        "transition-all duration-200 ease-out border border-gray-200 bg-white",
+        isDragging 
+          ? "shadow-2xl ring-2 ring-blue-400 ring-opacity-60 bg-white/95 backdrop-blur-sm" 
+          : "hover:shadow-lg hover:bg-gray-50 hover:border-gray-300"
+      )}>
         <CardContent className="p-3">
           {/* Header do Card */}
           <div className="flex justify-between items-start mb-2">
@@ -132,16 +138,19 @@ const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKan
                 <span className="line-clamp-1 text-xs">{lead.email}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className={cn(
+              "flex items-center gap-1 transition-opacity duration-200",
+              isDragging ? "opacity-50" : "group-hover:opacity-100 opacity-70"
+            )}>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600" 
+                className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600 transition-colors" 
                 onClick={handleViewDetails}
               >
                 <Eye className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600">
+              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 transition-colors">
                 <MoreHorizontal className="h-3 w-3" />
               </Button>
             </div>
@@ -157,7 +166,7 @@ const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKan
 
           {/* Próximo Contato */}
           {nextContact && (
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md transition-colors duration-200">
               <div className="flex items-center gap-1">
                 <Calendar className="w-2.5 h-2.5" />
                 <span className="text-xs">Próximo: {formatDate(nextContact.contact_date)}</span>
@@ -173,7 +182,7 @@ const OptimizedKanbanLeadCard = React.memo(({ lead, onOpenDetail }: OptimizedKan
                 <Badge 
                   key={tag.id} 
                   variant="outline" 
-                  className="text-xs px-1.5 py-0.5 border-gray-200 h-5"
+                  className="text-xs px-1.5 py-0.5 border-gray-200 h-5 transition-all duration-200"
                   style={{ 
                     backgroundColor: tag.color + '15', 
                     color: tag.color,
