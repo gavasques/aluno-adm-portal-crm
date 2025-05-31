@@ -8,12 +8,77 @@ import { AccessibilityProvider } from '@/components/accessibility/AccessibilityP
 import { AuthProvider, useAuth } from '@/hooks/auth';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
-import AdminDashboard from '@/pages/admin/Dashboard';
-import CRM from '@/pages/admin/CRM';
-import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
+import ResetPassword from '@/pages/ResetPassword';
+import CompleteRegistration from '@/pages/CompleteRegistration';
 import NotFound from '@/pages/NotFound';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AdminLayout from '@/layout/AdminLayout';
+import StudentLayout from '@/layout/StudentLayout';
+
+// Admin Pages
+import AdminDashboard from '@/pages/admin/Dashboard';
+import CRM from '@/pages/admin/CRM';
+import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
+import LeadDetail from '@/pages/admin/LeadDetail';
+import Users from '@/pages/admin/Users';
+import ModernUsers from '@/pages/admin/ModernUsers';
+import Students from '@/pages/admin/Students';
+import StudentDetail from '@/pages/admin/StudentDetail';
+import Suppliers from '@/pages/admin/Suppliers';
+import Partners from '@/pages/admin/Partners';
+import Tools from '@/pages/admin/Tools';
+import Credits from '@/pages/admin/Credits';
+import News from '@/pages/admin/News';
+import Tasks from '@/pages/admin/Tasks';
+import TaskDetail from '@/pages/admin/TaskDetail';
+import Permissions from '@/pages/admin/Permissions';
+import Settings from '@/pages/admin/Settings';
+import Categories from '@/pages/admin/Categories';
+import Bonus from '@/pages/admin/Bonus';
+import BonusDetail from '@/pages/admin/BonusDetail';
+import PartnerTypes from '@/pages/admin/PartnerTypes';
+import SoftwareTypes from '@/pages/admin/SoftwareTypes';
+import Registers from '@/pages/admin/Registers';
+import Audit from '@/pages/admin/Audit';
+import AuditAnalytics from '@/pages/admin/AuditAnalytics';
+import AuditBehaviorAnalytics from '@/pages/admin/AuditBehaviorAnalytics';
+import AuditReports from '@/pages/admin/AuditReports';
+import AdminCalendlyConfig from '@/pages/admin/AdminCalendlyConfig';
+import Courses from '@/pages/admin/Courses';
+import CourseDetails from '@/pages/admin/CourseDetails';
+
+// Admin Mentoring Pages
+import Mentoring from '@/pages/admin/Mentoring';
+import MentoringDetail from '@/pages/admin/MentoringDetail';
+import AdminMentoringDashboard from '@/pages/admin/AdminMentoringDashboard';
+import AdminMentoringCatalog from '@/pages/admin/AdminMentoringCatalog';
+import MentoringCatalogManagement from '@/pages/admin/MentoringCatalogManagement';
+import AdminMentoringEnrollments from '@/pages/admin/AdminMentoringEnrollments';
+import AdminIndividualEnrollments from '@/pages/admin/AdminIndividualEnrollments';
+import AdminGroupEnrollments from '@/pages/admin/AdminGroupEnrollments';
+import AdminMentoringSessions from '@/pages/admin/AdminMentoringSessions';
+import AdminIndividualSessions from '@/pages/admin/AdminIndividualSessions';
+import AdminGroupSessions from '@/pages/admin/AdminGroupSessions';
+import AdminMentoringSessionsGroup from '@/pages/admin/AdminMentoringSessionsGroup';
+import AdminMentoringSessionsIndividual from '@/pages/admin/AdminMentoringSessionsIndividual';
+import AdminMentoringMaterials from '@/pages/admin/AdminMentoringMaterials';
+import AdminMentoringManagement from '@/pages/admin/AdminMentoringManagement';
+import AdminGroups from '@/pages/admin/AdminGroups';
+
+// Student Pages
+import StudentDashboard from '@/pages/student/Dashboard';
+import StudentCredits from '@/pages/student/Credits';
+import StudentLiviAI from '@/pages/student/LiviAI';
+import StudentMentoring from '@/pages/student/Mentoring';
+import StudentMentoringDetail from '@/pages/student/MentoringDetail';
+import StudentMentoringSession from '@/pages/student/MentoringSession';
+import StudentMySuppliers from '@/pages/student/MySuppliers';
+import MySupplierDetail from '@/pages/student/MySupplierDetail';
+import StudentPartners from '@/pages/student/Partners';
+import StudentSuppliers from '@/pages/student/Suppliers';
+import SupplierDetail from '@/pages/student/SupplierDetail';
+import StudentTools from '@/pages/student/Tools';
+import StudentSettings from '@/pages/student/Settings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +119,8 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/complete-registration" element={<CompleteRegistration />} />
 
                   {/* Admin Routes with Layout */}
                   <Route
@@ -64,10 +131,104 @@ function App() {
                       </RouteGuard>
                     }
                   >
+                    {/* Main Admin Pages */}
                     <Route index element={<AdminDashboard />} />
                     <Route path="dashboard" element={<AdminDashboard />} />
+                    
+                    {/* Users & Students */}
+                    <Route path="users" element={<Users />} />
+                    <Route path="modern-users" element={<ModernUsers />} />
+                    <Route path="students" element={<Students />} />
+                    <Route path="students/:id" element={<StudentDetail />} />
+                    
+                    {/* CRM */}
                     <Route path="crm" element={<CRM />} />
                     <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
+                    <Route path="lead/:id" element={<LeadDetail />} />
+                    
+                    {/* Resources Management */}
+                    <Route path="suppliers" element={<Suppliers />} />
+                    <Route path="partners" element={<Partners />} />
+                    <Route path="tools" element={<Tools />} />
+                    
+                    {/* Mentoring System */}
+                    <Route path="mentoring" element={<Mentoring />} />
+                    <Route path="mentoring/:id" element={<MentoringDetail />} />
+                    <Route path="mentoring-dashboard" element={<AdminMentoringDashboard />} />
+                    <Route path="mentoring-catalog" element={<AdminMentoringCatalog />} />
+                    <Route path="mentoring-catalog-management" element={<MentoringCatalogManagement />} />
+                    <Route path="mentoring-enrollments" element={<AdminMentoringEnrollments />} />
+                    <Route path="individual-enrollments" element={<AdminIndividualEnrollments />} />
+                    <Route path="group-enrollments" element={<AdminGroupEnrollments />} />
+                    <Route path="mentoring-sessions" element={<AdminMentoringSessions />} />
+                    <Route path="individual-sessions" element={<AdminIndividualSessions />} />
+                    <Route path="group-sessions" element={<AdminGroupSessions />} />
+                    <Route path="mentoring-sessions-group" element={<AdminMentoringSessionsGroup />} />
+                    <Route path="mentoring-sessions-individual" element={<AdminMentoringSessionsIndividual />} />
+                    <Route path="mentoring-materials" element={<AdminMentoringMaterials />} />
+                    <Route path="mentoring-management" element={<AdminMentoringManagement />} />
+                    <Route path="groups" element={<AdminGroups />} />
+                    
+                    {/* Content & Learning */}
+                    <Route path="courses" element={<Courses />} />
+                    <Route path="courses/:id" element={<CourseDetails />} />
+                    <Route path="news" element={<News />} />
+                    <Route path="bonus" element={<Bonus />} />
+                    <Route path="bonus/:id" element={<BonusDetail />} />
+                    
+                    {/* Management */}
+                    <Route path="tasks" element={<Tasks />} />
+                    <Route path="tasks/:id" element={<TaskDetail />} />
+                    <Route path="credits" element={<Credits />} />
+                    
+                    {/* System Configuration */}
+                    <Route path="permissions" element={<Permissions />} />
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="partner-types" element={<PartnerTypes />} />
+                    <Route path="software-types" element={<SoftwareTypes />} />
+                    <Route path="registers" element={<Registers />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="calendly-config" element={<AdminCalendlyConfig />} />
+                    
+                    {/* Audit & Analytics */}
+                    <Route path="audit" element={<Audit />} />
+                    <Route path="audit-analytics" element={<AuditAnalytics />} />
+                    <Route path="audit-behavior" element={<AuditBehaviorAnalytics />} />
+                    <Route path="audit-reports" element={<AuditReports />} />
+                  </Route>
+
+                  {/* Student Routes with Layout */}
+                  <Route
+                    path="/aluno"
+                    element={
+                      <RouteGuard>
+                        <StudentLayout />
+                      </RouteGuard>
+                    }
+                  >
+                    {/* Main Student Pages */}
+                    <Route index element={<StudentDashboard />} />
+                    <Route path="dashboard" element={<StudentDashboard />} />
+                    
+                    {/* Student Resources */}
+                    <Route path="creditos" element={<StudentCredits />} />
+                    <Route path="livi-ai" element={<StudentLiviAI />} />
+                    
+                    {/* Mentoring */}
+                    <Route path="mentoria" element={<StudentMentoring />} />
+                    <Route path="mentoria/:id" element={<StudentMentoringDetail />} />
+                    <Route path="mentoria/sessao/:id" element={<StudentMentoringSession />} />
+                    
+                    {/* Suppliers & Resources */}
+                    <Route path="fornecedores" element={<StudentSuppliers />} />
+                    <Route path="fornecedores/:id" element={<SupplierDetail />} />
+                    <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
+                    <Route path="meus-fornecedores/:id" element={<MySupplierDetail />} />
+                    <Route path="parceiros" element={<StudentPartners />} />
+                    <Route path="ferramentas" element={<StudentTools />} />
+                    
+                    {/* Settings */}
+                    <Route path="configuracoes" element={<StudentSettings />} />
                   </Route>
                   
                   {/* 404 Route */}
