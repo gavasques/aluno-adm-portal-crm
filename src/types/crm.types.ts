@@ -1,3 +1,4 @@
+
 export interface CRMPipeline {
   id: string;
   name: string;
@@ -52,7 +53,6 @@ export interface CRMLeadFromDB {
   created_by?: string | null;
   created_at: string;
   updated_at: string;
-  scheduled_contact_date?: string | null;
   notes?: string | null;
   
   // Relacionamentos vindos do Supabase (estrutura exata)
@@ -88,7 +88,6 @@ export interface CRMLead {
   created_by?: string;
   created_at: string;
   updated_at: string;
-  scheduled_contact_date?: string;
   notes?: string;
   
   // Relacionamentos processados
@@ -98,8 +97,8 @@ export interface CRMLead {
   tags?: CRMTag[];
 }
 
-// Tipo para inserção no Supabase (apenas campos da tabela)
-export interface CRMLeadInsert {
+// Tipo unificado para criação/inserção de leads
+export interface CRMLeadInput {
   name: string;
   email: string;
   phone?: string;
@@ -120,33 +119,6 @@ export interface CRMLeadInsert {
   pipeline_id?: string;
   column_id?: string;
   responsible_id?: string;
-  scheduled_contact_date?: string;
-  notes?: string;
-}
-
-// Tipo para criação de leads (campos obrigatórios)
-export interface CRMLeadCreate {
-  name: string;
-  email: string;
-  phone?: string;
-  has_company?: boolean;
-  what_sells?: string;
-  keep_or_new_niches?: string;
-  sells_on_amazon?: boolean;
-  amazon_store_link?: string;
-  amazon_state?: string;
-  amazon_tax_regime?: string;
-  works_with_fba?: boolean;
-  had_contact_with_lv?: boolean;
-  seeks_private_label?: boolean;
-  main_doubts?: string;
-  ready_to_invest_3k?: boolean;
-  calendly_scheduled?: boolean;
-  calendly_link?: string;
-  pipeline_id?: string;
-  column_id?: string;
-  responsible_id?: string;
-  scheduled_contact_date?: string;
   notes?: string;
 }
 

@@ -3,15 +3,18 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings, Tags, BarChart3, List, Kanban } from 'lucide-react';
+import { Plus, Settings, Tags, BarChart3 } from 'lucide-react';
 import CRMFilters from '@/components/admin/crm/CRMFilters';
-import CRMKanbanBoard from '@/components/admin/crm/CRMKanbanBoard';
+import CRMStatsCards from '@/components/admin/crm/CRMStatsCards';
+import OptimizedKanbanBoard from '@/components/admin/crm/OptimizedKanbanBoard';
 import CRMListView from '@/components/admin/crm/CRMListView';
 import CRMLeadFormDialog from '@/components/admin/crm/CRMLeadFormDialog';
 import CRMTagsManager from '@/components/admin/crm/CRMTagsManager';
 import PipelineManagerDialog from '@/components/admin/crm/pipeline-manager/PipelineManagerDialog';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
+import { useCRMData } from '@/hooks/crm/useCRMData';
 import { CRMFilters as CRMFiltersType, CRMLead } from '@/types/crm.types';
+import { motion } from 'framer-motion';
 
 const CRM = () => {
   const [activeTab, setActiveTab] = useState('kanban');
@@ -19,15 +22,13 @@ const CRM = () => {
   const [showPipelineManager, setShowPipelineManager] = useState(false);
   const [showTagsManager, setShowTagsManager] = useState(false);
   const [editingLead, setEditingLead] = useState<CRMLead | null>(null);
-  const [filters, setFilters] = useState<CRMFiltersType>({
-    search: '',
-    responsible_id: undefined,
-    column_id: undefined,
-    tags: []
-  });
+  const [filters, setFilters] = useState<CRMFiltersType>({});
 
   const { pipelines, loading: pipelinesLoading, fetchPipelines } = useCRMPipelines();
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
+
+  // Usar o hook unificado para dados do CRM
+  const { refetch } = useCRMData({ ...filters, pipeline_id: selectedPipelineId });
 
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
@@ -44,6 +45,7 @@ const CRM = () => {
   const handleFormSuccess = () => {
     setShowNewLeadForm(false);
     setEditingLead(null);
+    refetch();
   };
 
   const handlePipelineChange = (pipelineId: string) => {
@@ -53,7 +55,7 @@ const CRM = () => {
 
   const handlePipelineManagerClose = () => {
     setShowPipelineManager(false);
-    fetchPipelines(); // Refresh pipelines after changes
+    fetchPipelines();
   };
 
   if (pipelinesLoading) {
@@ -64,10 +66,30 @@ const CRM = () => {
     );
   }
 
+  if (pipelines.length === 0) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-12">
+          <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum pipeline encontrado</h3>
+          <p className="text-gray-500 mb-4">Configure pipelines para começar a usar o CRM.</p>
+          <Button onClick={() => setShowPipelineManager(true)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Configurar Pipelines
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6 h-screen flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center flex-shrink-0">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-between items-center flex-shrink-0"
+      >
         <div>
           <h1 className="text-3xl font-bold text-gray-900">CRM</h1>
           <p className="text-gray-600 mt-1">Gestão de leads e pipeline de vendas</p>
@@ -87,54 +109,69 @@ const CRM = () => {
             Novo Lead
           </Button>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Stats Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <CRMStatsCards filters={{ ...filters, pipeline_id: selectedPipelineId }} />
+      </motion.div>
 
       {/* Filters */}
-      <div className="flex-shrink-0">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="flex-shrink-0"
+      >
         <CRMFilters 
           filters={filters} 
           onFiltersChange={setFilters}
           pipelineId={selectedPipelineId}
           onPipelineChange={handlePipelineChange}
         />
-      </div>
+      </motion.div>
 
-      {/* Main Content - Expanded to fill remaining space */}
-      <Card className="flex-1 flex flex-col overflow-hidden">
-        <CardHeader className="flex-shrink-0">
-          <CardTitle className="flex items-center justify-between">
-            <span>Pipeline de Vendas</span>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="kanban" className="flex items-center gap-2">
-                  <Kanban className="h-4 w-4" />
-                  Kanban
-                </TabsTrigger>
-                <TabsTrigger value="list" className="flex items-center gap-2">
-                  <List className="h-4 w-4" />
-                  Lista
-                </TabsTrigger>
-              </TabsList>
+      {/* Main Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex-1 flex flex-col overflow-hidden"
+      >
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <CardHeader className="flex-shrink-0">
+            <CardTitle className="flex items-center justify-between">
+              <span>Pipeline de Vendas</span>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="kanban">Kanban</TabsTrigger>
+                  <TabsTrigger value="list">Lista</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+              <TabsContent value="kanban" className="flex-1 overflow-hidden m-0 p-6">
+                <OptimizedKanbanBoard 
+                  pipelineId={selectedPipelineId} 
+                  filters={{ ...filters, pipeline_id: selectedPipelineId }}
+                />
+              </TabsContent>
+              <TabsContent value="list" className="flex-1 overflow-hidden m-0 p-6">
+                <CRMListView 
+                  filters={{ ...filters, pipeline_id: selectedPipelineId }}
+                  onEditLead={handleEditLead}
+                />
+              </TabsContent>
             </Tabs>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsContent value="kanban" className="flex-1 overflow-hidden m-0 p-6">
-              <CRMKanbanBoard 
-                pipelineId={selectedPipelineId} 
-                filters={filters}
-              />
-            </TabsContent>
-            <TabsContent value="list" className="flex-1 overflow-hidden m-0 p-6">
-              <CRMListView 
-                filters={filters}
-                onEditLead={handleEditLead}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Modals */}
       <CRMLeadFormDialog
