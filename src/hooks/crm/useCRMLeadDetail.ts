@@ -1,11 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead, CRMLeadFromDB } from '@/types/crm.types';
+import { CRMLead, CRMLeadFromDB, CRMLeadContact } from '@/types/crm.types';
 import { toast } from 'sonner';
 
+interface LeadWithContacts extends CRMLead {
+  pending_contacts: CRMLeadContact[];
+  last_completed_contact?: CRMLeadContact;
+}
+
 export const useCRMLeadDetail = (leadId: string) => {
-  const [lead, setLead] = useState<CRMLead | null>(null);
+  const [lead, setLead] = useState<LeadWithContacts | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +47,8 @@ export const useCRMLeadDetail = (leadId: string) => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
+      // Buscar dados do lead
+      const { data: leadData, error: leadError } = await supabase
         .from('crm_leads')
         .select(`
           *,
@@ -56,14 +62,71 @@ export const useCRMLeadDetail = (leadId: string) => {
         .eq('id', leadId)
         .single();
 
-      if (error) throw error;
-
-      if (data) {
-        const transformedLead = transformLeadData(data as CRMLeadFromDB);
-        setLead(transformedLead);
-      } else {
+      if (leadError) throw leadError;
+      if (!leadData) {
         setError('Lead não encontrado');
+        return;
       }
+
+      // Buscar contatos pendentes (apenas status 'pending')
+      const { data: pendingContacts, error: pendingContactsError } = await supabase
+        .from('crm_lead_contacts')
+        .select(`
+          *,
+          responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+        `)
+        .eq('lead_id', leadId)
+        .eq('status', 'pending')
+        .order('contact_date', { ascending: true });
+
+      if (pendingContactsError) {
+        console.error('⚠️ Error fetching pending contacts (non-critical):', pendingContactsError);
+      }
+
+      // Buscar último contato realizado (apenas status 'completed' com completed_at)
+      const { data: completedContacts, error: completedContactsError } = await supabase
+        .from('crm_lead_contacts')
+        .select(`
+          *,
+          responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+        `)
+        .eq('lead_id', leadId)
+        .eq('status', 'completed')
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (completedContactsError) {
+        console.error('⚠️ Error fetching completed contacts (non-critical):', completedContactsError);
+      }
+
+      // Transformar contatos pendentes
+      const transformedPendingContacts = (pendingContacts || [])
+        .filter(contact => contact.status === 'pending')
+        .map(contact => ({
+          ...contact,
+          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+          status: contact.status as 'pending' | 'completed' | 'overdue'
+        }));
+
+      // Transformar último contato realizado
+      const lastCompletedContact = completedContacts && completedContacts.length > 0
+        ? {
+            ...completedContacts[0],
+            contact_type: completedContacts[0].contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+            status: completedContacts[0].status as 'pending' | 'completed' | 'overdue'
+          }
+        : undefined;
+
+      // Transformar lead e adicionar contatos
+      const transformedLead = transformLeadData(leadData as CRMLeadFromDB);
+      const leadWithContacts: LeadWithContacts = {
+        ...transformedLead,
+        pending_contacts: transformedPendingContacts,
+        last_completed_contact: lastCompletedContact
+      };
+
+      setLead(leadWithContacts);
     } catch (error) {
       console.error('Erro ao buscar lead:', error);
       setError('Erro ao carregar detalhes do lead');

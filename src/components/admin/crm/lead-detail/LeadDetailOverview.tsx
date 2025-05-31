@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLead, CRMLeadContact } from '@/types/crm.types';
 import { 
   User, 
   Building2, 
@@ -12,13 +12,19 @@ import {
   Globe,
   DollarSign,
   UserCheck,
-  Badge as BadgeIcon
+  Badge as BadgeIcon,
+  Clock,
+  CheckCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { RecentComments } from './RecentComments';
+import { isToday, isTomorrow, isPast, differenceInDays } from 'date-fns';
 
 interface LeadDetailOverviewProps {
-  lead: CRMLead;
+  lead: CRMLead & {
+    pending_contacts?: CRMLeadContact[];
+    last_completed_contact?: CRMLeadContact;
+  };
 }
 
 export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
@@ -28,6 +34,68 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  // Buscar próximo contato pendente
+  const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
+    ? lead.pending_contacts
+        .filter(contact => contact.status === 'pending')
+        .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
+    : null;
+
+  // Último contato realizado
+  const lastCompletedContact = lead.last_completed_contact;
+
+  const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
+    if (isCompleted) {
+      return (
+        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Realizado
+        </Badge>
+      );
+    }
+
+    const contactDateObj = new Date(contactDate);
+    
+    if (isPast(contactDateObj) && !isToday(contactDateObj)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+          <Clock className="h-3 w-3 mr-1" />
+          Atrasado
+        </Badge>
+      );
+    }
+    
+    if (isToday(contactDateObj)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+          <Clock className="h-3 w-3 mr-1" />
+          Hoje
+        </Badge>
+      );
+    }
+    
+    if (isTomorrow(contactDateObj)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+          <Clock className="h-3 w-3 mr-1" />
+          Amanhã
+        </Badge>
+      );
+    }
+    
+    const daysDiff = differenceInDays(contactDateObj, new Date());
+    if (daysDiff <= 7) {
+      return (
+        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+          <Calendar className="h-3 w-3 mr-1" />
+          {daysDiff}d
+        </Badge>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -62,15 +130,6 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
                   </div>
                 </div>
               )}
-              {lead.scheduled_contact_date && (
-                <div className="flex items-center gap-2 p-2 bg-green-50/50 rounded-lg">
-                  <Calendar className="h-3 w-3 text-green-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">Próximo contato</p>
-                    <p className="font-medium text-xs">{formatDate(lead.scheduled_contact_date)}</p>
-                  </div>
-                </div>
-              )}
               {lead.responsible && (
                 <div className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-lg">
                   <UserCheck className="h-3 w-3 text-purple-600" />
@@ -80,6 +139,48 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Informações de Contatos - Nova seção */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              Gestão de Contatos
+            </h3>
+            <div className="space-y-3">
+              {/* Próximo Contato */}
+              <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Próximo Contato</p>
+                    <p className="text-xs text-gray-500">
+                      {nextContact ? formatDate(nextContact.contact_date) : 'Sem contatos agendados'}
+                    </p>
+                  </div>
+                </div>
+                {nextContact && getContactBadge(nextContact.contact_date)}
+              </div>
+
+              {/* Último Contato */}
+              <div className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Último Contato</p>
+                    <p className="text-xs text-gray-500">
+                      {lastCompletedContact && lastCompletedContact.completed_at
+                        ? formatDate(lastCompletedContact.completed_at)
+                        : 'Nenhum contato realizado'
+                      }
+                    </p>
+                  </div>
+                </div>
+                {lastCompletedContact && lastCompletedContact.completed_at && 
+                  getContactBadge(lastCompletedContact.completed_at, true)
+                }
+              </div>
             </div>
           </div>
 
