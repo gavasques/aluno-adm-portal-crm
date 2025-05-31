@@ -1,10 +1,7 @@
 
 import React, { useState } from 'react';
 import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import { motion } from 'framer-motion';
-import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
-import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
 import { CRMLead, CRMFilters as CRMFiltersType, ViewMode } from '@/types/crm.types';
 import CRMKanbanBoard from './CRMKanbanBoard';
@@ -12,9 +9,11 @@ import CRMListView from './CRMListView';
 import CRMStatsCards from './CRMStatsCards';
 import CRMFiltersComponent from './CRMFilters';
 import CRMPipelineManager from './CRMPipelineManager';
+import { CRMLoadingSkeleton } from './LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, List, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 interface CRMViewProps {
   onNewLead?: () => void;
@@ -25,14 +24,10 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [filters, setFilters] = useState<CRMFiltersType>({});
   const [pipelineId, setPipelineId] = useState<string>('');
-  const [draggedLead, setDraggedLead] = useState<CRMLead | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { leads, loading: leadsLoading, fetchLeads } = useCRMLeads(filters);
-  const { columns, pipelines, loading: columnsLoading, fetchPipelines, fetchColumns } = useCRMPipelines();
+  const { pipelines, loading: pipelinesLoading, fetchPipelines } = useCRMPipelines();
   const { moveToColumn } = useCRMLeadUpdate();
-
-  const loading = leadsLoading || columnsLoading;
 
   // Set default pipeline if none selected
   React.useEffect(() => {
@@ -41,50 +36,6 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
       setFilters(prev => ({ ...prev, pipeline_id: pipelines[0].id }));
     }
   }, [pipelineId, pipelines]);
-
-  // Refresh quando pipelines mudarem
-  React.useEffect(() => {
-    if (refreshTrigger > 0) {
-      fetchLeads?.();
-    }
-  }, [refreshTrigger, fetchLeads]);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const lead = leads.find(l => l.id === event.active.id);
-    setDraggedLead(lead || null);
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    // Lógica para hover visual durante drag
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    setDraggedLead(null);
-
-    if (!over || !draggedLead) return;
-
-    const newColumnId = over.id as string;
-    const oldColumnId = draggedLead.column_id;
-
-    if (newColumnId !== oldColumnId) {
-      try {
-        await moveToColumn(draggedLead.id, newColumnId);
-        
-        const newColumn = columns.find(c => c.id === newColumnId);
-        const oldColumn = columns.find(c => c.id === oldColumnId);
-        
-        toast.success(
-          `Lead "${draggedLead.name}" movido para "${newColumn?.name || 'Nova coluna'}"`
-        );
-        
-        // Refresh leads após mover
-        fetchLeads?.();
-      } catch (error) {
-        toast.error('Erro ao mover lead');
-      }
-    }
-  };
 
   const handleFiltersChange = (newFilters: CRMFiltersType) => {
     setFilters(newFilters);
@@ -96,25 +47,12 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   };
 
   const handlePipelineManagerRefresh = async () => {
-    // Atualizar pipelines e colunas
     await fetchPipelines();
-    if (pipelineId) {
-      await fetchColumns(pipelineId);
-    }
-    // Trigger refresh dos leads
     setRefreshTrigger(prev => prev + 1);
   };
 
-  const getLeadsByColumn = (columnId: string) => {
-    return leads.filter(lead => lead.column_id === columnId);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (pipelinesLoading) {
+    return <CRMLoadingSkeleton />;
   }
 
   return (
@@ -172,16 +110,10 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
         className="min-h-[calc(100vh-300px)]"
       >
         {viewMode === 'kanban' ? (
-          <DndContext
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <CRMKanbanBoard
-              filters={filters}
-              pipelineId={pipelineId}
-            />
-          </DndContext>
+          <CRMKanbanBoard
+            filters={filters}
+            pipelineId={pipelineId}
+          />
         ) : (
           <CRMListView
             filters={filters}
