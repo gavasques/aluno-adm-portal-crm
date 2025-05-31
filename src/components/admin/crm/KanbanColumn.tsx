@@ -21,7 +21,7 @@ const KanbanColumn = ({ column, leads, onOpenDetail, onAddLead }: KanbanColumnPr
   });
 
   return (
-    <div className="flex flex-col w-80 bg-white rounded-lg border border-gray-200 shadow-sm h-fit max-h-[90vh]">
+    <div className="flex flex-col w-80 bg-white rounded-lg border border-gray-200 shadow-sm h-fit max-h-[95vh]">
       <div className="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-lg">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ const KanbanColumn = ({ column, leads, onOpenDetail, onAddLead }: KanbanColumnPr
       
       <div 
         ref={setNodeRef}
-        className={`flex-1 p-3 min-h-[400px] max-h-[80vh] overflow-y-auto transition-colors ${
+        className={`flex-1 p-3 min-h-[500px] max-h-[85vh] overflow-y-auto transition-colors ${
           isOver ? 'bg-blue-50/30' : ''
         }`}
       >
