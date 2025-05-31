@@ -21,17 +21,17 @@ const KanbanColumn = ({ column, leads, onOpenDetail, onAddLead }: KanbanColumnPr
   });
 
   return (
-    <div className="flex flex-col w-72 bg-white rounded-lg border border-gray-200 shadow-sm h-fit max-h-[85vh]">
-      <div className="p-3 border-b border-gray-100 bg-gray-50/50 rounded-t-lg">
-        <div className="flex items-center justify-between mb-2">
+    <div className="flex flex-col w-80 bg-white rounded-lg border border-gray-200 shadow-sm h-fit max-h-[90vh]">
+      <div className="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-lg">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div 
-              className="w-2 h-2 rounded-full flex-shrink-0" 
+              className="w-3 h-3 rounded-full flex-shrink-0" 
               style={{ backgroundColor: column.color }}
             />
             <h3 className="font-medium text-gray-900 text-sm truncate">{column.name}</h3>
           </div>
-          <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5">
+          <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 px-2 py-1">
             {leads.length}
           </Badge>
         </div>
@@ -40,16 +40,16 @@ const KanbanColumn = ({ column, leads, onOpenDetail, onAddLead }: KanbanColumnPr
           onClick={() => onAddLead?.(column.id)}
           variant="outline"
           size="sm"
-          className="w-full h-8 text-xs"
+          className="w-full h-9 text-sm"
         >
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="h-4 w-4 mr-2" />
           Adicionar Lead
         </Button>
       </div>
       
       <div 
         ref={setNodeRef}
-        className={`flex-1 p-2 min-h-[300px] max-h-[75vh] overflow-y-auto transition-colors ${
+        className={`flex-1 p-3 min-h-[400px] max-h-[80vh] overflow-y-auto transition-colors ${
           isOver ? 'bg-blue-50/30' : ''
         }`}
       >
@@ -57,7 +57,7 @@ const KanbanColumn = ({ column, leads, onOpenDetail, onAddLead }: KanbanColumnPr
           items={leads.map(lead => lead.id)} 
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-2">
+          <div className="space-y-3">
             {leads.map(lead => (
               <KanbanLeadCard 
                 key={lead.id} 
@@ -67,9 +67,9 @@ const KanbanColumn = ({ column, leads, onOpenDetail, onAddLead }: KanbanColumnPr
             ))}
             
             {leads.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-6 text-gray-400">
-                <Plus className="h-6 w-6 mb-1" />
-                <p className="text-xs">Nenhum lead nesta coluna</p>
+              <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                <Plus className="h-8 w-8 mb-2" />
+                <p className="text-sm">Nenhum lead nesta coluna</p>
               </div>
             )}
           </div>

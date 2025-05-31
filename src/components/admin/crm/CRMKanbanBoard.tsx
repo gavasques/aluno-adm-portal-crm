@@ -106,7 +106,7 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
         onDragEnd={handleDragEnd}
       >
         <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
-          <div className="flex gap-3 min-w-max h-full px-2">
+          <div className="flex gap-4 min-w-max h-full px-3">
             <SortableContext 
               items={pipelineColumns.map(col => col.id)} 
               strategy={horizontalListSortingStrategy}
