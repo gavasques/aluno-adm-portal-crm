@@ -57,10 +57,15 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
     onOpenDetail?.(lead);
   };
 
-  // Buscar próximo contato pendente
+  // Buscar próximo contato pendente (apenas contatos realmente pendentes)
   const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
-    ? lead.pending_contacts.sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
+    ? lead.pending_contacts
+        .filter(contact => contact.status === 'pending')
+        .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
     : null;
+
+  // Último contato realizado
+  const lastCompletedContact = lead.last_completed_contact;
 
   const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
     if (isCompleted) {
@@ -97,7 +102,7 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
         <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
           <Clock className="h-2.5 w-2.5 mr-0.5" />
           Amanhã
-      </Badge>
+        </Badge>
       );
     }
     
@@ -147,7 +152,7 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
             </div>
           </div>
 
-          {/* Próximo Contato */}
+          {/* Próximo Contato - Só exibe se houver contatos pendentes */}
           <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
             <div className="flex items-center gap-1">
               <Calendar className="w-2.5 h-2.5" />
@@ -158,18 +163,18 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
             {nextContact && getContactBadge(nextContact.contact_date)}
           </div>
 
-          {/* Último Contato */}
+          {/* Último Contato - Sempre exibe */}
           <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
             <div className="flex items-center gap-1">
               <CheckCircle className="w-2.5 h-2.5" />
               <span className="text-xs">
-                Último: {lead.last_completed_contact 
-                  ? formatDate(lead.last_completed_contact.completed_at || lead.last_completed_contact.contact_date) 
+                Último: {lastCompletedContact 
+                  ? formatDate(lastCompletedContact.completed_at || lastCompletedContact.contact_date) 
                   : 'Sem Contatos'
                 }
               </span>
             </div>
-            {lead.last_completed_contact && getContactBadge(lead.last_completed_contact.completed_at || lead.last_completed_contact.contact_date, true)}
+            {lastCompletedContact && getContactBadge(lastCompletedContact.completed_at || lastCompletedContact.contact_date, true)}
           </div>
 
           {/* Tags */}

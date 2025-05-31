@@ -67,27 +67,27 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
     console.log('🔍 Filtering leads by contact filter:', contactFilter);
 
     return leadsData.filter(lead => {
-      const hasContacts = lead.pending_contacts.length > 0;
+      const hasPendingContacts = lead.pending_contacts.length > 0;
       
       switch (contactFilter) {
         case 'today':
-          return hasContacts && lead.pending_contacts.some(contact => 
+          return hasPendingContacts && lead.pending_contacts.some(contact => 
             isToday(new Date(contact.contact_date))
           );
         
         case 'tomorrow':
-          return hasContacts && lead.pending_contacts.some(contact => 
+          return hasPendingContacts && lead.pending_contacts.some(contact => 
             isTomorrow(new Date(contact.contact_date))
           );
         
         case 'overdue':
-          return hasContacts && lead.pending_contacts.some(contact => {
+          return hasPendingContacts && lead.pending_contacts.some(contact => {
             const contactDate = new Date(contact.contact_date);
             return isPast(contactDate) && !isToday(contactDate);
           });
         
         case 'no_contact':
-          return !hasContacts;
+          return !hasPendingContacts;
         
         default:
           return true;
@@ -187,6 +187,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         `)
         .in('lead_id', leadIds)
         .eq('status', 'completed')
+        .not('completed_at', 'is', null)
         .order('completed_at', { ascending: false });
 
       if (completedContactsError) {
@@ -195,19 +196,23 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
 
       console.log('✅ Completed contacts fetched:', completedContacts?.length || 0);
 
-      // Transformar contatos pendentes
-      const transformedPendingContacts = (pendingContacts || []).map(contact => ({
-        ...contact,
-        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-        status: contact.status as 'pending' | 'completed' | 'overdue'
-      }));
+      // Transformar contatos pendentes (apenas os que realmente estão pendentes)
+      const transformedPendingContacts = (pendingContacts || [])
+        .filter(contact => contact.status === 'pending')
+        .map(contact => ({
+          ...contact,
+          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+          status: contact.status as 'pending' | 'completed' | 'overdue'
+        }));
 
-      // Transformar contatos realizados
-      const transformedCompletedContacts = (completedContacts || []).map(contact => ({
-        ...contact,
-        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-        status: contact.status as 'pending' | 'completed' | 'overdue'
-      }));
+      // Transformar contatos realizados (apenas os que foram realmente realizados)
+      const transformedCompletedContacts = (completedContacts || [])
+        .filter(contact => contact.status === 'completed' && contact.completed_at)
+        .map(contact => ({
+          ...contact,
+          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+          status: contact.status as 'pending' | 'completed' | 'overdue'
+        }));
 
       // Agrupar contatos pendentes por lead
       const pendingContactsByLead = transformedPendingContacts.reduce((acc, contact) => {
@@ -218,7 +223,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         return acc;
       }, {} as Record<string, CRMLeadContact[]>);
 
-      // Agrupar último contato realizado por lead
+      // Agrupar último contato realizado por lead (pegar o mais recente)
       const lastCompletedContactsByLead = transformedCompletedContacts.reduce((acc, contact) => {
         if (!acc[contact.lead_id]) {
           acc[contact.lead_id] = contact; // Primeiro contato (mais recente devido ao order)
@@ -226,7 +231,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         return acc;
       }, {} as Record<string, CRMLeadContact>);
 
-      console.log('🔗 Contacts grouped by lead');
+      console.log('🔗 Contacts grouped by lead - Pending:', Object.keys(pendingContactsByLead).length, 'Completed:', Object.keys(lastCompletedContactsByLead).length);
 
       // Combinar leads com seus contatos
       const leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
