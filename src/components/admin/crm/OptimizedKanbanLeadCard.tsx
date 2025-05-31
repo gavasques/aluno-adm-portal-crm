@@ -6,17 +6,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, User, Calendar, Eye, Clock, AlertTriangle } from 'lucide-react';
+import { MoreHorizontal, User, Calendar, Eye, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { CRMLead, CRMLeadContact } from '@/types/crm.types';
 import { differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
 
 interface OptimizedKanbanLeadCardProps {
-  lead: CRMLead;
-  pendingContacts: CRMLeadContact[];
+  lead: CRMLead & {
+    pending_contacts?: CRMLeadContact[];
+    last_completed_contact?: CRMLeadContact;
+  };
   onOpenDetail?: (lead: CRMLead) => void;
 }
 
-const OptimizedKanbanLeadCard = ({ lead, pendingContacts, onOpenDetail }: OptimizedKanbanLeadCardProps) => {
+const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCardProps) => {
   const {
     attributes,
     listeners,
@@ -56,52 +58,75 @@ const OptimizedKanbanLeadCard = ({ lead, pendingContacts, onOpenDetail }: Optimi
   };
 
   // Buscar próximo contato pendente
-  const nextContact = pendingContacts
-    .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0];
+  const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
+    ? lead.pending_contacts.sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
+    : null;
+
+  // Se não tem contato pendente, mostrar o último realizado
+  const contactToShow = nextContact || lead.last_completed_contact;
 
   const getContactBadge = () => {
-    if (!nextContact) return null;
+    if (!contactToShow) return null;
 
-    const contactDate = new Date(nextContact.contact_date);
-    const today = new Date();
-    
-    if (isPast(contactDate) && !isToday(contactDate)) {
+    // Se é um contato pendente
+    if (nextContact) {
+      const contactDate = new Date(nextContact.contact_date);
+      
+      if (isPast(contactDate) && !isToday(contactDate)) {
+        return (
+          <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 h-5 px-1.5">
+            <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+            Atrasado
+          </Badge>
+        );
+      }
+      
+      if (isToday(contactDate)) {
+        return (
+          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
+            <Clock className="h-2.5 w-2.5 mr-0.5" />
+            Hoje
+          </Badge>
+        );
+      }
+      
+      if (isTomorrow(contactDate)) {
+        return (
+          <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
+            <Clock className="h-2.5 w-2.5 mr-0.5" />
+            Amanhã
+        </Badge>
+        );
+      }
+      
+      const daysDiff = differenceInDays(contactDate, new Date());
+      if (daysDiff <= 7) {
+        return (
+          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
+            <Calendar className="h-2.5 w-2.5 mr-0.5" />
+            {daysDiff}d
+          </Badge>
+        );
+      }
+    } else if (lead.last_completed_contact) {
+      // Se é o último contato realizado
       return (
-        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 h-5 px-1.5">
-          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-          Atrasado
+        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 h-5 px-1.5">
+          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+          Realizado
         </Badge>
       );
     }
     
-    if (isToday(contactDate)) {
-      return (
-        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
-          <Clock className="h-2.5 w-2.5 mr-0.5" />
-          Hoje
-        </Badge>
-      );
+    return null;
+  };
+
+  const getContactLabel = () => {
+    if (nextContact) {
+      return "Próximo";
+    } else if (lead.last_completed_contact) {
+      return "Último";
     }
-    
-    if (isTomorrow(contactDate)) {
-      return (
-        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
-          <Clock className="h-2.5 w-2.5 mr-0.5" />
-          Amanhã
-        </Badge>
-      );
-    }
-    
-    const daysDiff = differenceInDays(contactDate, today);
-    if (daysDiff <= 7) {
-      return (
-        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
-          <Calendar className="h-2.5 w-2.5 mr-0.5" />
-          {daysDiff}d
-        </Badge>
-      );
-    }
-    
     return null;
   };
 
@@ -138,12 +163,16 @@ const OptimizedKanbanLeadCard = ({ lead, pendingContacts, onOpenDetail }: Optimi
             </div>
           </div>
 
-          {/* Próximo Contato */}
-          {nextContact && (
+          {/* Próximo Contato ou Último Contato */}
+          {contactToShow && (
             <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
               <div className="flex items-center gap-1">
                 <Calendar className="w-2.5 h-2.5" />
-                <span className="text-xs">Próximo: {formatDate(nextContact.contact_date)}</span>
+                <span className="text-xs">
+                  {getContactLabel()}: {formatDate(
+                    nextContact ? nextContact.contact_date : lead.last_completed_contact!.completed_at || lead.last_completed_contact!.contact_date
+                  )}
+                </span>
               </div>
               {getContactBadge()}
             </div>

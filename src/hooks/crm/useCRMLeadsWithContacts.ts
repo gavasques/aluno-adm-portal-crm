@@ -7,6 +7,7 @@ import { isToday, isTomorrow, isPast } from 'date-fns';
 
 interface LeadWithContacts extends CRMLead {
   pending_contacts: CRMLeadContact[];
+  last_completed_contact?: CRMLeadContact;
 }
 
 export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
@@ -157,9 +158,9 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
 
       // Buscar contatos pendentes para todos os leads de uma vez
       const leadIds = transformedLeads.map(lead => lead.id);
-      console.log('📡 Fetching contacts for leads:', leadIds.length);
+      console.log('📡 Fetching pending contacts for leads:', leadIds.length);
       
-      const { data: contacts, error: contactsError } = await supabase
+      const { data: pendingContacts, error: pendingContactsError } = await supabase
         .from('crm_lead_contacts')
         .select(`
           *,
@@ -169,22 +170,47 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         .eq('status', 'pending')
         .order('contact_date', { ascending: true });
 
-      if (contactsError) {
-        console.error('⚠️ Error fetching contacts (non-critical):', contactsError);
-        // Não falhar se contatos não carregarem
+      if (pendingContactsError) {
+        console.error('⚠️ Error fetching pending contacts (non-critical):', pendingContactsError);
       }
 
-      console.log('✅ Contacts fetched:', contacts?.length || 0);
+      console.log('✅ Pending contacts fetched:', pendingContacts?.length || 0);
 
-      // Transformar contatos
-      const transformedContacts = (contacts || []).map(contact => ({
+      // Buscar último contato realizado para cada lead
+      console.log('📡 Fetching last completed contacts for leads:', leadIds.length);
+      
+      const { data: completedContacts, error: completedContactsError } = await supabase
+        .from('crm_lead_contacts')
+        .select(`
+          *,
+          responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+        `)
+        .in('lead_id', leadIds)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false });
+
+      if (completedContactsError) {
+        console.error('⚠️ Error fetching completed contacts (non-critical):', completedContactsError);
+      }
+
+      console.log('✅ Completed contacts fetched:', completedContacts?.length || 0);
+
+      // Transformar contatos pendentes
+      const transformedPendingContacts = (pendingContacts || []).map(contact => ({
         ...contact,
         contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
         status: contact.status as 'pending' | 'completed' | 'overdue'
       }));
 
-      // Agrupar contatos por lead
-      const contactsByLead = transformedContacts.reduce((acc, contact) => {
+      // Transformar contatos realizados
+      const transformedCompletedContacts = (completedContacts || []).map(contact => ({
+        ...contact,
+        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+        status: contact.status as 'pending' | 'completed' | 'overdue'
+      }));
+
+      // Agrupar contatos pendentes por lead
+      const pendingContactsByLead = transformedPendingContacts.reduce((acc, contact) => {
         if (!acc[contact.lead_id]) {
           acc[contact.lead_id] = [];
         }
@@ -192,12 +218,21 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         return acc;
       }, {} as Record<string, CRMLeadContact[]>);
 
+      // Agrupar último contato realizado por lead
+      const lastCompletedContactsByLead = transformedCompletedContacts.reduce((acc, contact) => {
+        if (!acc[contact.lead_id]) {
+          acc[contact.lead_id] = contact; // Primeiro contato (mais recente devido ao order)
+        }
+        return acc;
+      }, {} as Record<string, CRMLeadContact>);
+
       console.log('🔗 Contacts grouped by lead');
 
       // Combinar leads com seus contatos
       const leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
         ...lead,
-        pending_contacts: contactsByLead[lead.id] || []
+        pending_contacts: pendingContactsByLead[lead.id] || [],
+        last_completed_contact: lastCompletedContactsByLead[lead.id]
       }));
 
       // Aplicar filtro de contatos
