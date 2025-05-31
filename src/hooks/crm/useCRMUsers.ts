@@ -34,6 +34,16 @@ export const useCRMUsers = () => {
     }
   };
 
+  const searchUsers = (query: string): CRMUser[] => {
+    if (!query.trim()) return users;
+    
+    const searchTerm = query.toLowerCase();
+    return users.filter(user => 
+      user.name.toLowerCase().includes(searchTerm) ||
+      user.email.toLowerCase().includes(searchTerm)
+    );
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -41,6 +51,7 @@ export const useCRMUsers = () => {
   return {
     users,
     loading,
-    fetchUsers
+    fetchUsers,
+    searchUsers
   };
 };

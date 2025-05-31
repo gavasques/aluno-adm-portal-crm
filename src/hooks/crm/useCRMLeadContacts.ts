@@ -44,7 +44,14 @@ export const useCRMLeadContacts = (leadId: string, filters: ContactFilters = {})
 
       if (error) throw error;
 
-      setContacts(data || []);
+      // Fazer cast explícito dos tipos para garantir conformidade
+      const transformedContacts: CRMLeadContact[] = (data || []).map(contact => ({
+        ...contact,
+        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+        status: contact.status as 'pending' | 'completed' | 'overdue'
+      }));
+
+      setContacts(transformedContacts);
     } catch (error) {
       console.error('Erro ao buscar contatos:', error);
       toast.error('Erro ao carregar contatos');
