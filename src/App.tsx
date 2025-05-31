@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,6 +19,9 @@ import AdminSuppliers from './pages/admin/Suppliers';
 import AdminPartners from './pages/admin/Partners';
 import AdminTools from './pages/admin/Tools';
 import AdminMentoring from './pages/admin/Mentoring';
+import AdminMentoringCatalogManagement from './pages/admin/MentoringCatalogManagement';
+import AdminIndividualEnrollments from './pages/admin/AdminIndividualEnrollments';
+import AdminMentoringSessionsIndividual from './pages/admin/AdminMentoringSessionsIndividual';
 import AdminPermissions from './pages/admin/Permissions';
 import AdminAudit from './pages/admin/Audit';
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
@@ -52,12 +56,13 @@ function App() {
                   <Route path="parceiros" element={<AdminPartners />} />
                   <Route path="ferramentas" element={<AdminTools />} />
                   
-                  {/* Mentorias */}
+                  {/* Mentorias - Rotas Corrigidas */}
                   <Route path="mentorias" element={<AdminMentoring />} />
-                  <Route path="mentorias/catalogo" element={<AdminMentoring />} />
-                  <Route path="inscricoes-individuais" element={<AdminMentoring />} />
+                  <Route path="mentorias/catalogo" element={<AdminMentoringCatalogManagement />} />
+                  <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
                   <Route path="inscricoes-grupo" element={<AdminMentoring />} />
                   <Route path="mentorias/materiais" element={<AdminMentoring />} />
+                  <Route path="mentorias/sessoes-individuais" element={<AdminMentoringSessionsIndividual />} />
                   
                   {/* Gestão */}
                   <Route path="usuarios" element={<Users />} />
