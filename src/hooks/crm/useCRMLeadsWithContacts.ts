@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMLeadFromDB, CRMFilters, CRMLeadContact } from '@/types/crm.types';
 import { toast } from 'sonner';
+import { isToday, isTomorrow, isPast } from 'date-fns';
 
 interface LeadWithContacts extends CRMLead {
   pending_contacts: CRMLeadContact[];
@@ -59,6 +60,40 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
     }
   }, []);
 
+  const filterLeadsByContact = useCallback((leadsData: LeadWithContacts[], contactFilter?: string) => {
+    if (!contactFilter) return leadsData;
+
+    console.log('🔍 Filtering leads by contact filter:', contactFilter);
+
+    return leadsData.filter(lead => {
+      const hasContacts = lead.pending_contacts.length > 0;
+      
+      switch (contactFilter) {
+        case 'today':
+          return hasContacts && lead.pending_contacts.some(contact => 
+            isToday(new Date(contact.contact_date))
+          );
+        
+        case 'tomorrow':
+          return hasContacts && lead.pending_contacts.some(contact => 
+            isTomorrow(new Date(contact.contact_date))
+          );
+        
+        case 'overdue':
+          return hasContacts && lead.pending_contacts.some(contact => {
+            const contactDate = new Date(contact.contact_date);
+            return isPast(contactDate) && !isToday(contactDate);
+          });
+        
+        case 'no_contact':
+          return !hasContacts;
+        
+        default:
+          return true;
+      }
+    });
+  }, []);
+
   const fetchLeadsWithContacts = useCallback(async () => {
     console.log('🚀 fetchLeadsWithContacts called with filters:', filters);
 
@@ -74,7 +109,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
       setLoading(true);
       console.log('📡 Starting fetch for pipeline:', filters.pipeline_id);
 
-      // Buscar leads com filtros - CORRIGINDO A QUERY PARA INCLUIR created_at nas tags
+      // Buscar leads com filtros
       let leadsQuery = supabase
         .from('crm_leads')
         .select(`
@@ -116,7 +151,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         return;
       }
 
-      // Agora a transformação deve funcionar corretamente com os tipos alinhados
+      // Transformar leads
       const transformedLeads = leads.map(transformLeadData);
       console.log('🔄 Leads transformed:', transformedLeads.length);
 
@@ -165,8 +200,12 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         pending_contacts: contactsByLead[lead.id] || []
       }));
 
-      console.log('✅ Final leads with contacts prepared:', leadsWithContactsData.length);
-      setLeadsWithContacts(leadsWithContactsData);
+      // Aplicar filtro de contatos
+      const filteredLeads = filterLeadsByContact(leadsWithContactsData, filters.contact_filter);
+      console.log('🔍 Leads after contact filter:', filteredLeads.length, 'from', leadsWithContactsData.length);
+
+      console.log('✅ Final leads with contacts prepared:', filteredLeads.length);
+      setLeadsWithContacts(filteredLeads);
     } catch (error) {
       console.error('💥 Critical error in fetchLeadsWithContacts:', error);
       toast.error('Erro ao carregar leads');
@@ -175,7 +214,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
       setLoading(false);
       console.log('🏁 fetchLeadsWithContacts completed');
     }
-  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.search, transformLeadData]);
+  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.search, filters.contact_filter, transformLeadData, filterLeadsByContact]);
 
   useEffect(() => {
     console.log('🔄 useEffect triggered, pipeline_id:', filters.pipeline_id);
