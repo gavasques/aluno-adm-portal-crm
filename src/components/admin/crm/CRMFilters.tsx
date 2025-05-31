@@ -93,14 +93,14 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
 
         {/* Filtro de contatos */}
         <Select 
-          value={filters.contact_filter || ''} 
-          onValueChange={(value) => updateFilter('contact_filter', value || undefined)}
+          value={filters.contact_filter || 'all'} 
+          onValueChange={(value) => updateFilter('contact_filter', value === 'all' ? undefined : value)}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Filtrar por contatos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os contatos</SelectItem>
+            <SelectItem value="all">Todos os contatos</SelectItem>
             <SelectItem value="today">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-orange-600" />
@@ -130,14 +130,14 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
 
         {/* Coluna */}
         <Select 
-          value={filters.column_id || ''} 
-          onValueChange={(value) => updateFilter('column_id', value || undefined)}
+          value={filters.column_id || 'all'} 
+          onValueChange={(value) => updateFilter('column_id', value === 'all' ? undefined : value)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrar por coluna" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as colunas</SelectItem>
+            <SelectItem value="all">Todas as colunas</SelectItem>
             {pipelineColumns.map(column => (
               <SelectItem key={column.id} value={column.id}>
                 <div className="flex items-center gap-2">
@@ -154,14 +154,14 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
 
         {/* Responsável */}
         <Select 
-          value={filters.responsible_id || ''} 
-          onValueChange={(value) => updateFilter('responsible_id', value || undefined)}
+          value={filters.responsible_id || 'all'} 
+          onValueChange={(value) => updateFilter('responsible_id', value === 'all' ? undefined : value)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrar por responsável" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os responsáveis</SelectItem>
+            <SelectItem value="all">Todos os responsáveis</SelectItem>
             {users.map(user => (
               <SelectItem key={user.id} value={user.id}>
                 {user.name}
