@@ -21,7 +21,7 @@ export const useCRMLeadDetail = (leadId: string) => {
         .from('crm_leads')
         .select(`
           *,
-          pipeline:crm_pipelines(id, name),
+          pipeline:crm_pipelines(id, name, sort_order, is_active, created_at, updated_at),
           column:crm_pipeline_columns(id, name, color),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           tags:crm_lead_tags(
@@ -57,7 +57,10 @@ export const useCRMLeadDetail = (leadId: string) => {
           responsible_id: data.responsible_id || undefined,
           created_by: data.created_by || undefined,
           notes: data.notes || undefined,
-          tags: data.tags?.map((tagWrapper: any) => tagWrapper.tag) || []
+          tags: data.tags?.map((tagWrapper: any) => tagWrapper.tag) || [],
+          pipeline: data.pipeline || undefined,
+          column: data.column || undefined,
+          responsible: data.responsible || undefined
         };
 
         setLead(transformedLead);

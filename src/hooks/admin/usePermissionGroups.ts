@@ -12,6 +12,14 @@ export interface PermissionGroup {
   updated_at: string;
 }
 
+interface PermissionGroupInput {
+  name: string;
+  description?: string;
+  is_admin: boolean;
+  allow_admin_access: boolean;
+  menu_keys: string[];
+}
+
 export const usePermissionGroups = () => {
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,15 +45,31 @@ export const usePermissionGroups = () => {
     }
   };
 
-  const createPermissionGroup = async (groupData: Omit<PermissionGroup, 'id' | 'created_at' | 'updated_at'>) => {
+  const createPermissionGroup = async (groupData: PermissionGroupInput) => {
     try {
+      const { menu_keys, ...permissionGroupData } = groupData;
+      
       const { data, error } = await supabase
         .from('permission_groups')
-        .insert(groupData)
+        .insert(permissionGroupData)
         .select()
         .single();
 
       if (error) throw error;
+
+      // Adicionar menus se fornecidos
+      if (menu_keys && menu_keys.length > 0) {
+        const menuInserts = menu_keys.map(menuKey => ({
+          permission_group_id: data.id,
+          menu_key: menuKey
+        }));
+
+        const { error: menuError } = await supabase
+          .from('permission_group_menus')
+          .insert(menuInserts);
+
+        if (menuError) throw menuError;
+      }
 
       setPermissionGroups(prev => [...prev, data]);
       return data;
@@ -55,8 +79,10 @@ export const usePermissionGroups = () => {
     }
   };
 
-  const updatePermissionGroup = async (id: string, updates: Partial<PermissionGroup>) => {
+  const updatePermissionGroup = async (groupData: { id: string } & Partial<PermissionGroupInput>) => {
     try {
+      const { id, menu_keys, ...updates } = groupData;
+      
       const { data, error } = await supabase
         .from('permission_groups')
         .update(updates)
@@ -65,6 +91,29 @@ export const usePermissionGroups = () => {
         .single();
 
       if (error) throw error;
+
+      // Atualizar menus se fornecidos
+      if (menu_keys !== undefined) {
+        // Remover menus existentes
+        await supabase
+          .from('permission_group_menus')
+          .delete()
+          .eq('permission_group_id', id);
+
+        // Adicionar novos menus
+        if (menu_keys.length > 0) {
+          const menuInserts = menu_keys.map(menuKey => ({
+            permission_group_id: id,
+            menu_key: menuKey
+          }));
+
+          const { error: menuError } = await supabase
+            .from('permission_group_menus')
+            .insert(menuInserts);
+
+          if (menuError) throw menuError;
+        }
+      }
 
       setPermissionGroups(prev => 
         prev.map(group => group.id === id ? data : group)
@@ -96,7 +145,7 @@ export const usePermissionGroups = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, role')
         .eq('permission_group_id', groupId);
 
       if (error) throw error;
@@ -129,7 +178,7 @@ export const usePermissionGroups = () => {
         .eq('permission_group_id', groupId);
 
       if (error) throw error;
-      return data?.map(item => item.menu_key) || [];
+      return data || [];
     } catch (err) {
       console.error('Erro ao buscar menus do grupo:', err);
       throw err;
