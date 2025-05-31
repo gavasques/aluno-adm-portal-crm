@@ -57,14 +57,14 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
     onOpenDetail?.(lead);
   };
 
-  // Buscar próximo contato pendente (apenas contatos realmente pendentes)
+  // Buscar próximo contato pendente (apenas contatos com status 'pending')
   const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
     ? lead.pending_contacts
         .filter(contact => contact.status === 'pending')
         .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
     : null;
 
-  // Último contato realizado
+  // Último contato realizado (apenas contatos com status 'completed' e completed_at)
   const lastCompletedContact = lead.last_completed_contact;
 
   const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
@@ -163,18 +163,18 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
             {nextContact && getContactBadge(nextContact.contact_date)}
           </div>
 
-          {/* Último Contato - Sempre exibe */}
+          {/* Último Contato - Sempre exibe, baseado em completed_at */}
           <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
             <div className="flex items-center gap-1">
               <CheckCircle className="w-2.5 h-2.5" />
               <span className="text-xs">
-                Último: {lastCompletedContact 
-                  ? formatDate(lastCompletedContact.completed_at || lastCompletedContact.contact_date) 
+                Último: {lastCompletedContact && lastCompletedContact.completed_at
+                  ? formatDate(lastCompletedContact.completed_at) 
                   : 'Sem Contatos'
                 }
               </span>
             </div>
-            {lastCompletedContact && getContactBadge(lastCompletedContact.completed_at || lastCompletedContact.contact_date, true)}
+            {lastCompletedContact && lastCompletedContact.completed_at && getContactBadge(lastCompletedContact.completed_at, true)}
           </div>
 
           {/* Tags */}
@@ -215,14 +215,6 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
               </span>
             </div>
           </div>
-
-          {/* Data de contato agendada */}
-          {lead.scheduled_contact_date && (
-            <div className="flex items-center text-xs text-gray-500 bg-gray-50 rounded-md px-2 py-1">
-              <Calendar className="w-2.5 h-2.5 mr-1" />
-              <span className="text-xs">Contato: {formatDate(lead.scheduled_contact_date)}</span>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

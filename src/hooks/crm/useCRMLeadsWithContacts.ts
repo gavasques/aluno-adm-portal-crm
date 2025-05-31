@@ -156,7 +156,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
       const transformedLeads = leads.map(transformLeadData);
       console.log('🔄 Leads transformed:', transformedLeads.length);
 
-      // Buscar contatos pendentes para todos os leads de uma vez
+      // Buscar contatos pendentes (apenas status 'pending')
       const leadIds = transformedLeads.map(lead => lead.id);
       console.log('📡 Fetching pending contacts for leads:', leadIds.length);
       
@@ -176,7 +176,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
 
       console.log('✅ Pending contacts fetched:', pendingContacts?.length || 0);
 
-      // Buscar último contato realizado para cada lead
+      // Buscar último contato realizado (apenas status 'completed' com completed_at)
       console.log('📡 Fetching last completed contacts for leads:', leadIds.length);
       
       const { data: completedContacts, error: completedContactsError } = await supabase
@@ -196,7 +196,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
 
       console.log('✅ Completed contacts fetched:', completedContacts?.length || 0);
 
-      // Transformar contatos pendentes (apenas os que realmente estão pendentes)
+      // Transformar contatos pendentes (filtrar rigorosamente)
       const transformedPendingContacts = (pendingContacts || [])
         .filter(contact => contact.status === 'pending')
         .map(contact => ({
@@ -205,7 +205,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
           status: contact.status as 'pending' | 'completed' | 'overdue'
         }));
 
-      // Transformar contatos realizados (apenas os que foram realmente realizados)
+      // Transformar contatos realizados (filtrar rigorosamente)
       const transformedCompletedContacts = (completedContacts || [])
         .filter(contact => contact.status === 'completed' && contact.completed_at)
         .map(contact => ({
@@ -223,10 +223,10 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         return acc;
       }, {} as Record<string, CRMLeadContact[]>);
 
-      // Agrupar último contato realizado por lead (pegar o mais recente)
+      // Agrupar último contato realizado por lead (pegar o mais recente por completed_at)
       const lastCompletedContactsByLead = transformedCompletedContacts.reduce((acc, contact) => {
         if (!acc[contact.lead_id]) {
-          acc[contact.lead_id] = contact; // Primeiro contato (mais recente devido ao order)
+          acc[contact.lead_id] = contact; // Primeiro contato (mais recente devido ao order by completed_at DESC)
         }
         return acc;
       }, {} as Record<string, CRMLeadContact>);
