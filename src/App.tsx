@@ -5,10 +5,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
-import { useAuth } from '@/hooks/useAuth';
+import { AuthProvider, useAuth } from '@/hooks/auth';
 import Login from '@/pages/Login';
 import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,37 +39,41 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <Toaster />
-        <AccessibilityProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Login />} />
-              <Route path="/login" element={<Login />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ToastProvider>
+            <Toaster />
+            <AccessibilityProvider>
+              <BrowserRouter>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Login />} />
+                  <Route path="/login" element={<Login />} />
 
-              {/* Admin Routes */}
-              <Route
-                path="/admin/*"
-                element={
-                  <RouteGuard>
-                    <Routes>
-                      <Route path="crm" element={<CRM />} />
-                      <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
-                      <Route path="*" element={<CRM />} />
-                    </Routes>
-                  </RouteGuard>
-                }
-              />
-              
-              {/* Default Route */}
-              <Route path="*" element={<Login />} />
-            </Routes>
-          </BrowserRouter>
-        </AccessibilityProvider>
-      </ToastProvider>
-    </QueryClientProvider>
+                  {/* Admin Routes */}
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <RouteGuard>
+                        <Routes>
+                          <Route path="crm" element={<CRM />} />
+                          <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
+                          <Route path="*" element={<CRM />} />
+                        </Routes>
+                      </RouteGuard>
+                    }
+                  />
+                  
+                  {/* Default Route */}
+                  <Route path="*" element={<Login />} />
+                </Routes>
+              </BrowserRouter>
+            </AccessibilityProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
