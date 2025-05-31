@@ -17,7 +17,7 @@ interface UserWithPermission {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role?: string;
 }
 
 const PermissionGroupUsers: React.FC<PermissionGroupUsersProps> = ({
@@ -37,7 +37,12 @@ const PermissionGroupUsers: React.FC<PermissionGroupUsersProps> = ({
       try {
         setIsLoading(true);
         const groupUsers = await getPermissionGroupUsers(permissionGroup.id);
-        setUsers(groupUsers);
+        // Mapear para incluir role padrão se não existir
+        const usersWithRole = groupUsers.map(user => ({
+          ...user,
+          role: user.role || 'Student'
+        }));
+        setUsers(usersWithRole);
       } catch (error) {
         console.error("Erro ao carregar usuários do grupo:", error);
       } finally {

@@ -19,7 +19,7 @@ const Index = () => {
 
   // Se o usuário já está logado, redirecionar para a área do aluno
   if (user) {
-    return <Navigate to="/aluno" replace />;
+    return <Navigate to="/admin/crm" replace />;
   }
 
   // Página de boas-vindas para usuários não logados
@@ -38,10 +38,10 @@ const Index = () => {
         {/* Título e descrição */}
         <div className="text-white space-y-4">
           <h1 className="text-3xl md:text-4xl font-bold">
-            Portal do Aluno
+            Portal Administrativo
           </h1>
           <p className="text-blue-200 text-lg">
-            Sua jornada de aprendizado começa aqui
+            Sistema de gerenciamento e CRM
           </p>
         </div>
 
@@ -49,22 +49,21 @@ const Index = () => {
         <div className="space-y-4">
           <Link to="/login" className="block">
             <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 text-lg">
-              Acessar Portal
+              Acessar Sistema
             </Button>
           </Link>
           
           <p className="text-blue-300 text-sm">
-            Não tem uma conta? 
-            <Link to="/login" className="text-white hover:underline ml-1">
-              Cadastre-se aqui
-            </Link>
+            Faça login para acessar o painel administrativo
           </p>
         </div>
 
         {/* Debug info (apenas em desenvolvimento) */}
-        <div className="mt-8">
-          <ConnectionTest />
-        </div>
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8">
+            <ConnectionTest />
+          </div>
+        )}
       </div>
     </div>
   );

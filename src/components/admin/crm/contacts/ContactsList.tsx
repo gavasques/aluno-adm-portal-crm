@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -180,8 +179,8 @@ const ContactsList = ({ contacts, onCompleteContact, onDeleteContact, loading }:
               {contact.status === 'completed' && contact.completed_at && (
                 <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
                   Realizado em {formatDate(contact.completed_at)}
-                  {contact.completed_by_user && (
-                    <span> por {contact.completed_by_user.name}</span>
+                  {contact.completed_by && (
+                    <span> por {contact.completed_by}</span>
                   )}
                 </div>
               )}

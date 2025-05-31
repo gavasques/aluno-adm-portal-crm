@@ -11,55 +11,63 @@ export const useCRMLeadAttachments = (leadId: string) => {
 
   const fetchAttachments = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('crm_lead_attachments')
         .select(`
           *,
-          user:profiles!crm_lead_attachments_user_id_fkey(name)
+          user:profiles!crm_lead_attachments_user_id_fkey(id, name, email)
         `)
         .eq('lead_id', leadId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAttachments(data || []);
+
+      // Transform data to match expected type
+      const transformedAttachments = (data || []).map(attachment => ({
+        ...attachment,
+        user: attachment.user ? {
+          id: attachment.user.id,
+          name: attachment.user.name,
+          email: attachment.user.email
+        } : undefined
+      }));
+
+      setAttachments(transformedAttachments);
     } catch (error) {
-      console.error('Erro ao buscar anexos:', error);
-      toast.error('Erro ao carregar anexos');
+      console.error('Erro ao buscar anexos do lead:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const uploadAttachment = async (file: File) => {
-    setUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      // Para demonstração, vamos simular o upload
-      // Em um ambiente real, você faria o upload para o Supabase Storage
-      const filePath = `lead-attachments/${leadId}/${Date.now()}-${file.name}`;
+      setUploading(true);
       
-      const { error: insertError } = await supabase
+      const filePath = `crm-attachments/${leadId}/${Date.now()}-${file.name}`;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
         .from('crm_lead_attachments')
         .insert({
           lead_id: leadId,
-          user_id: user.id,
           file_name: file.name,
           file_path: filePath,
+          file_type: file.type,
           file_size: file.size,
-          file_type: file.type
+          user_id: user.id
         });
 
-      if (insertError) throw insertError;
+      if (error) throw error;
       
       await fetchAttachments();
-      toast.success('Arquivo enviado com sucesso!');
-      return true;
+      toast.success('Arquivo enviado com sucesso');
     } catch (error) {
-      console.error('Erro ao fazer upload:', error);
+      console.error('Erro ao enviar arquivo:', error);
       toast.error('Erro ao enviar arquivo');
-      return false;
     } finally {
       setUploading(false);
     }
@@ -75,7 +83,7 @@ export const useCRMLeadAttachments = (leadId: string) => {
       if (error) throw error;
       
       await fetchAttachments();
-      toast.success('Arquivo removido com sucesso!');
+      toast.success('Arquivo removido com sucesso');
     } catch (error) {
       console.error('Erro ao remover arquivo:', error);
       toast.error('Erro ao remover arquivo');
@@ -84,9 +92,8 @@ export const useCRMLeadAttachments = (leadId: string) => {
 
   const downloadAttachment = async (attachment: CRMLeadAttachment) => {
     try {
-      // Em um ambiente real, você baixaria o arquivo do Supabase Storage
-      // Por enquanto, vamos simular o download
-      toast.info(`Download iniciado: ${attachment.file_name}`);
+      console.log('Downloading:', attachment.file_path, attachment.file_name);
+      toast.info('Funcionalidade de download será implementada');
     } catch (error) {
       console.error('Erro ao baixar arquivo:', error);
       toast.error('Erro ao baixar arquivo');
@@ -94,16 +101,17 @@ export const useCRMLeadAttachments = (leadId: string) => {
   };
 
   useEffect(() => {
-    fetchAttachments();
+    if (leadId) {
+      fetchAttachments();
+    }
   }, [leadId]);
 
-  return {
-    attachments,
-    loading,
+  return { 
+    attachments, 
+    loading, 
     uploading,
     uploadAttachment,
     deleteAttachment,
-    downloadAttachment,
-    fetchAttachments
+    downloadAttachment
   };
 };

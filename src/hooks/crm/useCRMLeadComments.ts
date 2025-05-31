@@ -10,20 +10,32 @@ export const useCRMLeadComments = (leadId: string) => {
 
   const fetchComments = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('crm_lead_comments')
         .select(`
           *,
-          user:profiles!crm_lead_comments_user_id_fkey(name, avatar_url)
+          user:profiles!crm_lead_comments_user_id_fkey(id, name, email, avatar_url)
         `)
         .eq('lead_id', leadId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setComments(data || []);
+
+      // Transform data to match expected type
+      const transformedComments = (data || []).map(comment => ({
+        ...comment,
+        user: comment.user ? {
+          id: comment.user.id,
+          name: comment.user.name,
+          email: comment.user.email,
+          avatar_url: comment.user.avatar_url
+        } : undefined
+      }));
+
+      setComments(transformedComments);
     } catch (error) {
-      console.error('Erro ao buscar comentários:', error);
-      toast.error('Erro ao carregar comentários');
+      console.error('Erro ao buscar comentários do lead:', error);
     } finally {
       setLoading(false);
     }
@@ -32,7 +44,7 @@ export const useCRMLeadComments = (leadId: string) => {
   const addComment = async (content: string, mentions: string[] = []) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
         .from('crm_lead_comments')
@@ -46,13 +58,7 @@ export const useCRMLeadComments = (leadId: string) => {
       if (error) throw error;
       
       await fetchComments();
-      toast.success('Comentário adicionado!');
-      
-      // Enviar notificações para usuários mencionados
-      if (mentions.length > 0) {
-        await sendMentionNotifications(mentions, content);
-      }
-      
+      toast.success('Comentário adicionado com sucesso');
       return true;
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -65,18 +71,16 @@ export const useCRMLeadComments = (leadId: string) => {
     try {
       const { error } = await supabase
         .from('crm_lead_comments')
-        .update({ 
-          content,
-          updated_at: new Date().toISOString()
-        })
+        .update({ content, updated_at: new Date().toISOString() })
         .eq('id', commentId);
 
       if (error) throw error;
+      
       await fetchComments();
-      toast.success('Comentário atualizado!');
+      toast.success('Comentário atualizado com sucesso');
     } catch (error) {
-      console.error('Erro ao editar comentário:', error);
-      toast.error('Erro ao editar comentário');
+      console.error('Erro ao atualizar comentário:', error);
+      toast.error('Erro ao atualizar comentário');
     }
   };
 
@@ -88,66 +92,26 @@ export const useCRMLeadComments = (leadId: string) => {
         .eq('id', commentId);
 
       if (error) throw error;
+      
       await fetchComments();
-      toast.success('Comentário removido!');
+      toast.success('Comentário removido com sucesso');
     } catch (error) {
-      console.error('Erro ao deletar comentário:', error);
-      toast.error('Erro ao deletar comentário');
-    }
-  };
-
-  const sendMentionNotifications = async (mentions: string[], content: string) => {
-    try {
-      const notifications = mentions.map(userId => ({
-        user_id: userId,
-        lead_id: leadId,
-        type: 'mention' as const,
-        title: 'Você foi mencionado em um comentário',
-        message: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-        read: false
-      }));
-
-      const { error } = await supabase
-        .from('crm_notifications')
-        .insert(notifications);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Erro ao enviar notificações:', error);
+      console.error('Erro ao remover comentário:', error);
+      toast.error('Erro ao remover comentário');
     }
   };
 
   useEffect(() => {
-    fetchComments();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`lead-comments-${leadId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'crm_lead_comments',
-          filter: `lead_id=eq.${leadId}`
-        },
-        () => {
-          fetchComments();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    if (leadId) {
+      fetchComments();
+    }
   }, [leadId]);
 
-  return {
-    comments,
-    loading,
+  return { 
+    comments, 
+    loading, 
     addComment,
     updateComment,
-    deleteComment,
-    fetchComments
+    deleteComment
   };
 };

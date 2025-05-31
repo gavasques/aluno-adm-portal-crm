@@ -21,9 +21,18 @@ const UserMention = ({ onMention, trigger, position, onClose }: UserMentionProps
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const users = searchUsers(query);
-    setFilteredUsers(users.slice(0, 5)); // Limitar a 5 resultados
-    setSelectedIndex(0);
+    const fetchUsers = async () => {
+      try {
+        const users = await searchUsers(query);
+        setFilteredUsers(users.slice(0, 5)); // Limitar a 5 resultados
+        setSelectedIndex(0);
+      } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+        setFilteredUsers([]);
+      }
+    };
+
+    fetchUsers();
   }, [query, searchUsers]);
 
   useEffect(() => {

@@ -5,17 +5,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
-import { AuthProvider } from '@/hooks/useAuth';
-import Dashboard from '@/pages/admin/Dashboard';
-import Users from '@/pages/admin/Users';
-import Tools from '@/pages/admin/Tools';
-import Settings from '@/pages/admin/Settings';
-import Suppliers from '@/pages/admin/Suppliers';
-import Login from '@/pages/Login';
-import MySuppliers from '@/pages/student/MySuppliers';
+import { AuthProvider, useAuth } from '@/hooks/auth';
 import Index from '@/pages/Index';
+import Login from '@/pages/Login';
 import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
+import NotFound from '@/pages/NotFound';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
@@ -25,6 +20,24 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const RouteGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   return (
@@ -39,31 +52,23 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
-                  
-                  {/* Student Routes */}
-                  <Route path="/aluno" element={<Index />} />
-                  <Route path="/my-suppliers" element={<MySuppliers />} />
-                  
+
                   {/* Admin Routes */}
-                  <Route path="/admin/*" element={
-                    <Routes>
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="users" element={<Users />} />
-                      <Route path="tools" element={<Tools />} />
-                      <Route path="settings" element={<Settings />} />
-                      <Route path="suppliers" element={<Suppliers />} />
-                      
-                      {/* CRM Routes */}
-                      <Route path="crm" element={<CRM />} />
-                      <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
-                      
-                      {/* Default Admin Route */}
-                      <Route path="*" element={<Dashboard />} />
-                    </Routes>
-                  } />
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <RouteGuard>
+                        <Routes>
+                          <Route path="crm" element={<CRM />} />
+                          <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
+                          <Route path="*" element={<CRM />} />
+                        </Routes>
+                      </RouteGuard>
+                    }
+                  />
                   
-                  {/* Default Route */}
-                  <Route path="*" element={<Index />} />
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthProvider>
             </BrowserRouter>
