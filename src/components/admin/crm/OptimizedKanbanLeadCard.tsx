@@ -62,54 +62,8 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
     ? lead.pending_contacts.sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
     : null;
 
-  // Se não tem contato pendente, mostrar o último realizado
-  const contactToShow = nextContact || lead.last_completed_contact;
-
-  const getContactBadge = () => {
-    if (!contactToShow) return null;
-
-    // Se é um contato pendente
-    if (nextContact) {
-      const contactDate = new Date(nextContact.contact_date);
-      
-      if (isPast(contactDate) && !isToday(contactDate)) {
-        return (
-          <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 h-5 px-1.5">
-            <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-            Atrasado
-          </Badge>
-        );
-      }
-      
-      if (isToday(contactDate)) {
-        return (
-          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
-            <Clock className="h-2.5 w-2.5 mr-0.5" />
-            Hoje
-          </Badge>
-        );
-      }
-      
-      if (isTomorrow(contactDate)) {
-        return (
-          <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
-            <Clock className="h-2.5 w-2.5 mr-0.5" />
-            Amanhã
-        </Badge>
-        );
-      }
-      
-      const daysDiff = differenceInDays(contactDate, new Date());
-      if (daysDiff <= 7) {
-        return (
-          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
-            <Calendar className="h-2.5 w-2.5 mr-0.5" />
-            {daysDiff}d
-          </Badge>
-        );
-      }
-    } else if (lead.last_completed_contact) {
-      // Se é o último contato realizado
+  const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
+    if (isCompleted) {
       return (
         <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 h-5 px-1.5">
           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
@@ -117,16 +71,46 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
         </Badge>
       );
     }
-    
-    return null;
-  };
 
-  const getContactLabel = () => {
-    if (nextContact) {
-      return "Próximo";
-    } else if (lead.last_completed_contact) {
-      return "Último";
+    const contactDateObj = new Date(contactDate);
+    
+    if (isPast(contactDateObj) && !isToday(contactDateObj)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 h-5 px-1.5">
+          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+          Atrasado
+        </Badge>
+      );
     }
+    
+    if (isToday(contactDateObj)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
+          Hoje
+        </Badge>
+      );
+    }
+    
+    if (isTomorrow(contactDateObj)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
+          Amanhã
+      </Badge>
+      );
+    }
+    
+    const daysDiff = differenceInDays(contactDateObj, new Date());
+    if (daysDiff <= 7) {
+      return (
+        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
+          <Calendar className="h-2.5 w-2.5 mr-0.5" />
+          {daysDiff}d
+        </Badge>
+      );
+    }
+
     return null;
   };
 
@@ -163,20 +147,30 @@ const OptimizedKanbanLeadCard = ({ lead, onOpenDetail }: OptimizedKanbanLeadCard
             </div>
           </div>
 
-          {/* Próximo Contato ou Último Contato */}
-          {contactToShow && (
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-2.5 h-2.5" />
-                <span className="text-xs">
-                  {getContactLabel()}: {formatDate(
-                    nextContact ? nextContact.contact_date : lead.last_completed_contact!.completed_at || lead.last_completed_contact!.contact_date
-                  )}
-                </span>
-              </div>
-              {getContactBadge()}
+          {/* Próximo Contato */}
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-2.5 h-2.5" />
+              <span className="text-xs">
+                Próximo: {nextContact ? formatDate(nextContact.contact_date) : 'Sem Contatos'}
+              </span>
             </div>
-          )}
+            {nextContact && getContactBadge(nextContact.contact_date)}
+          </div>
+
+          {/* Último Contato */}
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="w-2.5 h-2.5" />
+              <span className="text-xs">
+                Último: {lead.last_completed_contact 
+                  ? formatDate(lead.last_completed_contact.completed_at || lead.last_completed_contact.contact_date) 
+                  : 'Sem Contatos'
+                }
+              </span>
+            </div>
+            {lead.last_completed_contact && getContactBadge(lead.last_completed_contact.completed_at || lead.last_completed_contact.contact_date, true)}
+          </div>
 
           {/* Tags */}
           {lead.tags && lead.tags.length > 0 && (

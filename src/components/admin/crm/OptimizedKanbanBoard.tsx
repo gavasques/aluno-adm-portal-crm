@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -182,7 +181,6 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
                             <OptimizedKanbanLeadCard
                               key={lead.id}
                               lead={lead}
-                              pendingContacts={lead.pending_contacts}
                               onOpenDetail={handleOpenDetail}
                             />
                           );
@@ -199,7 +197,6 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
           {activeLead ? (
             <OptimizedKanbanLeadCard 
               lead={activeLead} 
-              pendingContacts={[]} 
               onOpenDetail={handleOpenDetail} 
             />
           ) : null}
