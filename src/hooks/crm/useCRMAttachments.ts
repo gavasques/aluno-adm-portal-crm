@@ -42,10 +42,13 @@ export const useCRMAttachments = (leadId: string) => {
     try {
       setUploading(true);
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
       // Gerar nome único para o arquivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${leadId}/${fileName}`;
+      const filePath = `${user.id}/${leadId}/${fileName}`;
 
       // Upload para o Supabase Storage
       const { error: uploadError } = await supabase.storage
@@ -59,6 +62,7 @@ export const useCRMAttachments = (leadId: string) => {
         .from('crm_lead_attachments')
         .insert({
           lead_id: leadId,
+          user_id: user.id,
           file_name: file.name,
           file_path: filePath,
           file_size: file.size,

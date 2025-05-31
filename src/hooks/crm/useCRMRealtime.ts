@@ -2,6 +2,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToastManager } from '@/hooks/useToastManager';
+import { useDebouncedCallback } from 'use-debounce';
 
 interface UseCRMRealtimeProps {
   onLeadUpdate?: () => void;
@@ -19,11 +20,39 @@ export const useCRMRealtime = ({
   const toast = useToastManager();
   const channelsRef = useRef<any[]>([]);
   const isSetupRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  // Debounced callbacks para evitar múltiplas chamadas
+  const debouncedLeadUpdate = useDebouncedCallback(() => {
+    if (mountedRef.current && onLeadUpdate) {
+      onLeadUpdate();
+    }
+  }, 1000);
+
+  const debouncedCommentAdded = useDebouncedCallback(() => {
+    if (mountedRef.current && onCommentAdded) {
+      onCommentAdded();
+    }
+  }, 500);
+
+  const debouncedContactUpdate = useDebouncedCallback(() => {
+    if (mountedRef.current && onContactUpdate) {
+      onContactUpdate();
+    }
+  }, 1000);
+
+  const debouncedNotificationReceived = useDebouncedCallback(() => {
+    if (mountedRef.current && onNotificationReceived) {
+      onNotificationReceived();
+    }
+  }, 500);
 
   const cleanupChannels = useCallback(() => {
     console.log('🧹 Cleaning up CRM realtime channels');
     channelsRef.current.forEach(channel => {
-      supabase.removeChannel(channel);
+      if (channel && typeof channel.unsubscribe === 'function') {
+        channel.unsubscribe();
+      }
     });
     channelsRef.current = [];
     isSetupRef.current = false;
@@ -39,8 +68,9 @@ export const useCRMRealtime = ({
     isSetupRef.current = true;
 
     try {
-      // Subscription para leads - com debounce
-      let leadUpdateTimeout: NodeJS.Timeout;
+      const channels = [];
+
+      // Subscription para leads
       const leadsChannel = supabase
         .channel('crm_leads_changes')
         .on(
@@ -53,25 +83,20 @@ export const useCRMRealtime = ({
           (payload) => {
             console.log('🔴 Lead updated:', payload);
             
-            // Debounce para evitar múltiplas chamadas
-            clearTimeout(leadUpdateTimeout);
-            leadUpdateTimeout = setTimeout(() => {
-              if (onLeadUpdate) {
-                onLeadUpdate();
-              }
-              
-              if (payload.eventType === 'INSERT') {
-                toast.success('Novo lead criado');
-              } else if (payload.eventType === 'UPDATE') {
-                toast.info('Lead atualizado');
-              }
-            }, 500);
+            debouncedLeadUpdate();
+            
+            if (payload.eventType === 'INSERT') {
+              toast.success('Novo lead criado');
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('Lead atualizado');
+            }
           }
         )
         .subscribe();
 
-      // Subscription para comentários - com debounce
-      let commentTimeout: NodeJS.Timeout;
+      channels.push(leadsChannel);
+
+      // Subscription para comentários
       const commentsChannel = supabase
         .channel('crm_comments_changes')
         .on(
@@ -83,20 +108,15 @@ export const useCRMRealtime = ({
           },
           (payload) => {
             console.log('🔴 New comment:', payload);
-            
-            clearTimeout(commentTimeout);
-            commentTimeout = setTimeout(() => {
-              if (onCommentAdded) {
-                onCommentAdded();
-              }
-              toast.info('Novo comentário adicionado');
-            }, 500);
+            debouncedCommentAdded();
+            toast.info('Novo comentário adicionado');
           }
         )
         .subscribe();
 
-      // Subscription para contatos - com debounce
-      let contactTimeout: NodeJS.Timeout;
+      channels.push(commentsChannel);
+
+      // Subscription para contatos
       const contactsChannel = supabase
         .channel('crm_contacts_changes')
         .on(
@@ -109,23 +129,39 @@ export const useCRMRealtime = ({
           (payload) => {
             console.log('🔴 Contact updated:', payload);
             
-            clearTimeout(contactTimeout);
-            contactTimeout = setTimeout(() => {
-              if (onContactUpdate) {
-                onContactUpdate();
-              }
-              
-              if (payload.eventType === 'INSERT') {
-                toast.success('Contato agendado');
-              } else if (payload.eventType === 'UPDATE') {
-                toast.info('Status do contato atualizado');
-              }
-            }, 500);
+            debouncedContactUpdate();
+            
+            if (payload.eventType === 'INSERT') {
+              toast.success('Contato agendado');
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('Status do contato atualizado');
+            }
           }
         )
         .subscribe();
 
-      channelsRef.current = [leadsChannel, commentsChannel, contactsChannel];
+      channels.push(contactsChannel);
+
+      // Subscription para notificações
+      const notificationsChannel = supabase
+        .channel('crm_notifications_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'crm_notifications'
+          },
+          (payload) => {
+            console.log('🔴 New notification:', payload);
+            debouncedNotificationReceived();
+          }
+        )
+        .subscribe();
+
+      channels.push(notificationsChannel);
+
+      channelsRef.current = channels;
 
       return cleanupChannels;
     } catch (error) {
@@ -133,17 +169,26 @@ export const useCRMRealtime = ({
       isSetupRef.current = false;
       return cleanupChannels;
     }
-  }, [onLeadUpdate, onCommentAdded, onContactUpdate, toast, cleanupChannels]);
+  }, [
+    debouncedLeadUpdate,
+    debouncedCommentAdded,
+    debouncedContactUpdate,
+    debouncedNotificationReceived,
+    toast,
+    cleanupChannels
+  ]);
 
   useEffect(() => {
+    mountedRef.current = true;
     const cleanup = setupRealtimeSubscriptions();
     
     return () => {
+      mountedRef.current = false;
       if (cleanup) {
         cleanup();
       }
     };
-  }, []); // Remover dependências para evitar loops
+  }, []); // Dependências vazias para evitar loops
 
   return {
     setupRealtimeSubscriptions,
