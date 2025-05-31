@@ -13,7 +13,6 @@ import {
 import { motion } from 'framer-motion';
 import { LeadDetailHeader } from '@/components/admin/crm/lead-detail/LeadDetailHeader';
 import { LeadDetailOverview } from '@/components/admin/crm/lead-detail/LeadDetailOverview';
-import LeadDataTab from '@/components/admin/crm/lead-detail-tabs/LeadDataTab';
 import LeadAttachmentsTab from '@/components/admin/crm/lead-detail-tabs/LeadAttachmentsTab';
 import LeadCommentsTab from '@/components/admin/crm/lead-detail-tabs/LeadCommentsTab';
 import LeadHistoryTab from '@/components/admin/crm/lead-detail-tabs/LeadHistoryTab';
@@ -100,11 +99,7 @@ const LeadDetail = () => {
             <TabsList className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Visão Geral
-              </TabsTrigger>
-              <TabsTrigger value="data" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Dados Completos
+                Visão Geral & Dados
               </TabsTrigger>
               <TabsTriggerWithBadge 
                 value="attachments" 
@@ -132,10 +127,6 @@ const LeadDetail = () => {
           <div className="p-6">
             <TabsContent value="overview" className="mt-0">
               <LeadDetailOverview lead={lead} />
-            </TabsContent>
-            
-            <TabsContent value="data" className="mt-0">
-              <LeadDataTab lead={lead} onUpdate={handleLeadUpdate} />
             </TabsContent>
             
             <TabsContent value="attachments" className="mt-0">

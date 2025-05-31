@@ -12,7 +12,6 @@ import { CRMLead } from '@/types/crm.types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LeadDetailHeader } from './lead-detail/LeadDetailHeader';
 import { LeadDetailOverview } from './lead-detail/LeadDetailOverview';
-import LeadDataTab from './lead-detail-tabs/LeadDataTab';
 import LeadAttachmentsTab from './lead-detail-tabs/LeadAttachmentsTab';
 import LeadCommentsTab from './lead-detail-tabs/LeadCommentsTab';
 import LeadHistoryTab from './lead-detail-tabs/LeadHistoryTab';
@@ -51,11 +50,7 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                     <TabsList className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm">
                       <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                         <User className="h-4 w-4" />
-                        Visão Geral
-                      </TabsTrigger>
-                      <TabsTrigger value="data" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        <FileText className="h-4 w-4" />
-                        Dados Completos
+                        Visão Geral & Dados
                       </TabsTrigger>
                       <TabsTriggerWithBadge 
                         value="attachments" 
@@ -83,10 +78,6 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                   <div className="flex-1 overflow-hidden">
                     <TabsContent value="overview" className="h-full mt-0 p-6">
                       <LeadDetailOverview lead={lead} />
-                    </TabsContent>
-                    
-                    <TabsContent value="data" className="h-full mt-0">
-                      <LeadDataTab lead={lead} onUpdate={onLeadUpdate} />
                     </TabsContent>
                     
                     <TabsContent value="attachments" className="h-full mt-0">
