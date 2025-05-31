@@ -12,6 +12,7 @@ import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
 import NotFound from '@/pages/NotFound';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AdminLayout from '@/layout/AdminLayout';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,16 +54,18 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
 
-                  {/* Admin Routes */}
+                  {/* Admin Routes with Layout */}
                   <Route
                     path="/admin/*"
                     element={
                       <RouteGuard>
-                        <Routes>
-                          <Route path="crm" element={<CRM />} />
-                          <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
-                          <Route path="*" element={<CRM />} />
-                        </Routes>
+                        <AdminLayout>
+                          <Routes>
+                            <Route path="crm" element={<CRM />} />
+                            <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
+                            <Route path="*" element={<CRM />} />
+                          </Routes>
+                        </AdminLayout>
                       </RouteGuard>
                     }
                   />
