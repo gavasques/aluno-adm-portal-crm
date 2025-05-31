@@ -6,9 +6,11 @@ import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
 import { AuthProvider, useAuth } from '@/hooks/auth';
+import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
+import NotFound from '@/pages/NotFound';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
@@ -48,7 +50,7 @@ function App() {
               <BrowserRouter>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={<Login />} />
+                  <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
 
                   {/* Admin Routes */}
@@ -65,8 +67,8 @@ function App() {
                     }
                   />
                   
-                  {/* Default Route */}
-                  <Route path="*" element={<Login />} />
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
             </AccessibilityProvider>
