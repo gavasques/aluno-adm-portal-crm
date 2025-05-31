@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/auth';
 import { useToastManager } from '@/hooks/useToastManager';
 
 const Login = () => {
@@ -14,6 +14,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToastManager();
+  const { signIn } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,23 +24,13 @@ const Login = () => {
       setLoading(true);
       console.log('🔐 Tentando fazer login com:', email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error('❌ Erro no login:', error);
-        throw error;
-      }
-
-      if (data.user) {
-        console.log('✅ Login realizado com sucesso:', data.user.email);
-        toast.success('Login realizado com sucesso!');
-        
-        // Redirecionar para CRM após login bem-sucedido
-        navigate('/admin/crm', { replace: true });
-      }
+      await signIn(email, password);
+      
+      console.log('✅ Login realizado com sucesso');
+      toast.success('Login realizado com sucesso!');
+      
+      // Redirecionar para CRM após login bem-sucedido
+      navigate('/admin/crm', { replace: true });
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       toast.error(error.message || 'Erro ao fazer login');
