@@ -22,7 +22,7 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
           tags:crm_lead_tags(
             tag:crm_tags(*)
           ),
-          responsible:profiles!crm_leads_responsible_id_fkey(name)
+          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email)
         `)
         .order('created_at', { ascending: false });
 
