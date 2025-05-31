@@ -22,7 +22,7 @@ export const useCRMLeadDetail = (leadId: string) => {
         .select(`
           *,
           pipeline:crm_pipelines(id, name, sort_order, is_active, created_at, updated_at),
-          column:crm_pipeline_columns(id, name, color),
+          column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           tags:crm_lead_tags(
             tag:crm_tags(id, name, color, created_at)

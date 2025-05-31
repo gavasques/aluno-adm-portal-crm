@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLeadContact, CRMLeadContactCreate, ContactFilters } from '@/types/crm.types';
+import { toast } from 'sonner';
 
 export const useCRMLeadContacts = (leadId?: string, filters?: ContactFilters) => {
   const [contacts, setContacts] = useState<CRMLeadContact[]>([]);
@@ -44,7 +45,15 @@ export const useCRMLeadContacts = (leadId?: string, filters?: ContactFilters) =>
       const { data, error } = await query.order('contact_date', { ascending: false });
 
       if (error) throw error;
-      setContacts(data || []);
+      
+      // Transform data to match expected type, ensuring contact_type is properly typed
+      const transformedContacts = (data || []).map(contact => ({
+        ...contact,
+        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+        status: contact.status as 'pending' | 'completed' | 'overdue'
+      }));
+      
+      setContacts(transformedContacts);
     } catch (error) {
       console.error('Erro ao buscar contatos:', error);
     } finally {
@@ -62,10 +71,53 @@ export const useCRMLeadContacts = (leadId?: string, filters?: ContactFilters) =>
 
       if (error) throw error;
       fetchContacts(); // Refresh list
+      toast.success('Contato agendado com sucesso');
       return data;
     } catch (error) {
       console.error('Erro ao criar contato:', error);
+      toast.error('Erro ao agendar contato');
       throw error;
+    }
+  };
+
+  const completeContact = async (contactId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('crm_lead_contacts')
+        .update({
+          status: 'completed',
+          completed_by: user.id,
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', contactId);
+
+      if (error) throw error;
+      
+      await fetchContacts();
+      toast.success('Contato marcado como realizado');
+    } catch (error) {
+      console.error('Erro ao completar contato:', error);
+      toast.error('Erro ao marcar contato como realizado');
+    }
+  };
+
+  const deleteContact = async (contactId: string) => {
+    try {
+      const { error } = await supabase
+        .from('crm_lead_contacts')
+        .delete()
+        .eq('id', contactId);
+
+      if (error) throw error;
+      
+      await fetchContacts();
+      toast.success('Contato removido com sucesso');
+    } catch (error) {
+      console.error('Erro ao remover contato:', error);
+      toast.error('Erro ao remover contato');
     }
   };
 
@@ -77,6 +129,8 @@ export const useCRMLeadContacts = (leadId?: string, filters?: ContactFilters) =>
     contacts,
     loading,
     createContact,
+    completeContact,
+    deleteContact,
     refetch: fetchContacts
   };
 };
