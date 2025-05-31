@@ -15,7 +15,6 @@ import {
   Badge as BadgeIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { LeadDetailQuickActions } from './LeadDetailQuickActions';
 import { RecentComments } from './RecentComments';
 
 interface LeadDetailOverviewProps {
@@ -214,17 +213,10 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
 
         {/* Coluna direita - Comentários expandidos */}
         <div className="space-y-4">
-          {/* Comentários recentes com mais espaço */}
+          {/* Comentários recentes com editor integrado */}
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg h-[calc(100vh-300px)] min-h-[500px] flex flex-col">
             <RecentComments leadId={lead.id} />
           </div>
-
-          {/* Ações rápidas na horizontal e compactas */}
-          <LeadDetailQuickActions 
-            leadId={lead.id} 
-            leadName={lead.name}
-            compact={true}
-          />
         </div>
       </div>
     </motion.div>

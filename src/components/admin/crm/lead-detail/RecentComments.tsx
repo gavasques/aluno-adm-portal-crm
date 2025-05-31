@@ -1,17 +1,27 @@
 
-import React from 'react';
-import { MessageSquare, User, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { MessageSquare, User, Clock, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useCRMLeadComments } from '@/hooks/crm/useCRMLeadComments';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import CommentEditor from '../comments/CommentEditor';
 
 interface RecentCommentsProps {
   leadId: string;
 }
 
 export const RecentComments = ({ leadId }: RecentCommentsProps) => {
-  const { comments, loading } = useCRMLeadComments(leadId);
+  const { comments, loading, addComment } = useCRMLeadComments(leadId);
+  const [showEditor, setShowEditor] = useState(false);
+
+  const handleSubmitComment = async (content: string, mentions: string[]) => {
+    const success = await addComment(content, mentions);
+    if (success) {
+      setShowEditor(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -23,10 +33,37 @@ export const RecentComments = ({ leadId }: RecentCommentsProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 flex-shrink-0">
-        <MessageSquare className="h-5 w-5 text-purple-600" />
-        Comentários Recentes ({comments.length})
-      </h3>
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <MessageSquare className="h-5 w-5 text-purple-600" />
+          Comentários Recentes ({comments.length})
+        </h3>
+        <Button
+          size="sm"
+          onClick={() => setShowEditor(!showEditor)}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Comentar
+        </Button>
+      </div>
+
+      {/* Editor de comentário */}
+      {showEditor && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mb-4 flex-shrink-0"
+        >
+          <CommentEditor
+            onSubmit={handleSubmitComment}
+            onCancel={() => setShowEditor(false)}
+            showCancel={true}
+            placeholder="Escreva um comentário sobre este lead..."
+          />
+        </motion.div>
+      )}
       
       {comments.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
