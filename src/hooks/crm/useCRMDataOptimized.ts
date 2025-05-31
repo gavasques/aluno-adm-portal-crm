@@ -30,18 +30,25 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
       if (filters.search) {
         query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
       }
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      if (filters.column_id && filters.column_id !== 'all') {
+        query = query.eq('column_id', filters.column_id);
       }
-      if (filters.responsible && filters.responsible !== 'all') {
-        query = query.eq('responsible_id', filters.responsible);
+      if (filters.responsible_id && filters.responsible_id !== 'all') {
+        query = query.eq('responsible_id', filters.responsible_id);
       }
 
       const { data, error } = await query;
       
       if (error) throw error;
       
-      setLeads(data || []);
+      // Processar dados para o formato correto
+      const processedLeads: CRMLead[] = (data || []).map(lead => ({
+        ...lead,
+        tags: lead.tags?.map((tagRelation: any) => tagRelation.tag) || [],
+        responsible: lead.responsible || undefined
+      }));
+      
+      setLeads(processedLeads);
     } catch (error) {
       console.error('Erro ao buscar leads:', error);
       toast.error('Erro ao carregar leads');

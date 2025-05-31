@@ -70,17 +70,17 @@ export const useToastManager = () => {
     const toastId = toast[type](message, {
       description,
       onDismiss: () => {
-        setActiveToasts(prev => prev.filter(id => id !== toastId));
+        setActiveToasts(prev => prev.filter(id => id !== String(toastId)));
         pendingToasts.current.delete(toastKey);
       },
       onAutoClose: () => {
-        setActiveToasts(prev => prev.filter(id => id !== toastId));
+        setActiveToasts(prev => prev.filter(id => id !== String(toastId)));
         pendingToasts.current.delete(toastKey);
       }
     });
 
     if (toastId) {
-      setActiveToasts(prev => [...prev, toastId]);
+      setActiveToasts(prev => [...prev, String(toastId)]);
     }
 
     // Remover do pendente após um tempo
