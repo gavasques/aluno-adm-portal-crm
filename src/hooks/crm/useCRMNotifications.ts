@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToastManager } from '@/hooks/useToastManager';
@@ -11,9 +11,11 @@ export const useCRMNotifications = () => {
   const [notifications, setNotifications] = useState<CRMNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef<any>(null);
+  const isFetchingRef = useRef(false);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user) {
+    if (!user || isFetchingRef.current) {
       setNotifications([]);
       setUnreadCount(0);
       setLoading(false);
@@ -21,6 +23,9 @@ export const useCRMNotifications = () => {
     }
 
     try {
+      isFetchingRef.current = true;
+      setLoading(true);
+
       const { data, error } = await supabase
         .from('crm_notifications')
         .select('*')
@@ -42,6 +47,7 @@ export const useCRMNotifications = () => {
       toast.error('Erro ao carregar notificações');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [user, toast]);
 
@@ -113,30 +119,54 @@ export const useCRMNotifications = () => {
     }
   }, [toast]);
 
+  // Setup inicial e cleanup
   useEffect(() => {
+    if (!user?.id) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setLoading(false);
+      return;
+    }
+
+    // Buscar notificações iniciais
     fetchNotifications();
 
-    // Subscribe to real-time notifications
+    // Cleanup anterior
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Subscribe to real-time notifications apenas uma vez
     const channel = supabase
-      .channel(`crm_notifications-${user?.id}`)
+      .channel(`crm_notifications-${user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'crm_notifications',
-          filter: `user_id=eq.${user?.id}`
+          filter: `user_id=eq.${user.id}`
         },
-        () => {
-          fetchNotifications();
+        (payload) => {
+          console.log('🔔 Notification event:', payload);
+          // Evitar loop - só refetch se não estiver já buscando
+          if (!isFetchingRef.current) {
+            fetchNotifications();
+          }
         }
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [fetchNotifications, user?.id]);
+  }, [user?.id]); // Só depende do user.id
 
   return {
     notifications,

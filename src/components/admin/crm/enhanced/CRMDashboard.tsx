@@ -120,13 +120,13 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {insights.length === 0 ? (
+            {insights && insights.length === 0 ? (
               <p className="text-gray-500 text-center py-4">
                 Nenhum insight disponível no momento
               </p>
             ) : (
               <div className="space-y-3">
-                {insights.map((insight, index) => (
+                {insights && insights.map((insight, index) => (
                   <div key={index} className="p-3 border rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

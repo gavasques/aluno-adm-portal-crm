@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToastManager } from '@/hooks/useToastManager';
 
@@ -17,111 +17,120 @@ export const useCRMRealtime = ({
   onNotificationReceived
 }: UseCRMRealtimeProps) => {
   const toast = useToastManager();
+  const channelsRef = useRef<any[]>([]);
+  const isSetupRef = useRef(false);
+
+  const cleanupChannels = useCallback(() => {
+    console.log('🧹 Cleaning up CRM realtime channels');
+    channelsRef.current.forEach(channel => {
+      supabase.removeChannel(channel);
+    });
+    channelsRef.current = [];
+    isSetupRef.current = false;
+  }, []);
 
   const setupRealtimeSubscriptions = useCallback(() => {
+    if (isSetupRef.current) {
+      console.log('🔄 CRM realtime already setup, skipping');
+      return cleanupChannels;
+    }
+
     console.log('🔴 Setting up CRM realtime subscriptions');
+    isSetupRef.current = true;
 
-    // Subscription para leads
-    const leadsChannel = supabase
-      .channel('crm_leads_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'crm_leads'
-        },
-        (payload) => {
-          console.log('🔴 Lead updated:', payload);
-          onLeadUpdate?.();
-          
-          if (payload.eventType === 'INSERT') {
-            toast.success('Novo lead criado');
-          } else if (payload.eventType === 'UPDATE') {
-            toast.info('Lead atualizado');
+    try {
+      // Subscription para leads
+      const leadsChannel = supabase
+        .channel('crm_leads_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'crm_leads'
+          },
+          (payload) => {
+            console.log('🔴 Lead updated:', payload);
+            if (onLeadUpdate) {
+              onLeadUpdate();
+            }
+            
+            if (payload.eventType === 'INSERT') {
+              toast.success('Novo lead criado');
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('Lead atualizado');
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    // Subscription para comentários
-    const commentsChannel = supabase
-      .channel('crm_comments_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'crm_lead_comments'
-        },
-        (payload) => {
-          console.log('🔴 New comment:', payload);
-          onCommentAdded?.();
-          toast.info('Novo comentário adicionado');
-        }
-      )
-      .subscribe();
-
-    // Subscription para contatos
-    const contactsChannel = supabase
-      .channel('crm_contacts_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'crm_lead_contacts'
-        },
-        (payload) => {
-          console.log('🔴 Contact updated:', payload);
-          onContactUpdate?.();
-          
-          if (payload.eventType === 'INSERT') {
-            toast.success('Contato agendado');
-          } else if (payload.eventType === 'UPDATE') {
-            toast.info('Status do contato atualizado');
+      // Subscription para comentários
+      const commentsChannel = supabase
+        .channel('crm_comments_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'crm_lead_comments'
+          },
+          (payload) => {
+            console.log('🔴 New comment:', payload);
+            if (onCommentAdded) {
+              onCommentAdded();
+            }
+            toast.info('Novo comentário adicionado');
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    // Subscription para notificações
-    const notificationsChannel = supabase
-      .channel('crm_notifications_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'crm_notifications'
-        },
-        (payload) => {
-          console.log('🔴 New notification:', payload);
-          onNotificationReceived?.();
-          
-          const notification = payload.new as any;
-          if (notification?.title) {
-            toast.info(notification.title);
+      // Subscription para contatos
+      const contactsChannel = supabase
+        .channel('crm_contacts_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'crm_lead_contacts'
+          },
+          (payload) => {
+            console.log('🔴 Contact updated:', payload);
+            if (onContactUpdate) {
+              onContactUpdate();
+            }
+            
+            if (payload.eventType === 'INSERT') {
+              toast.success('Contato agendado');
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('Status do contato atualizado');
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      console.log('🔴 Cleaning up CRM realtime subscriptions');
-      supabase.removeChannel(leadsChannel);
-      supabase.removeChannel(commentsChannel);
-      supabase.removeChannel(contactsChannel);
-      supabase.removeChannel(notificationsChannel);
-    };
-  }, [onLeadUpdate, onCommentAdded, onContactUpdate, onNotificationReceived, toast]);
+      channelsRef.current = [leadsChannel, commentsChannel, contactsChannel];
+
+      return cleanupChannels;
+    } catch (error) {
+      console.error('❌ Error setting up CRM realtime:', error);
+      isSetupRef.current = false;
+      return cleanupChannels;
+    }
+  }, [onLeadUpdate, onCommentAdded, onContactUpdate, toast, cleanupChannels]);
 
   useEffect(() => {
     const cleanup = setupRealtimeSubscriptions();
-    return cleanup;
+    
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
   }, [setupRealtimeSubscriptions]);
 
   return {
-    setupRealtimeSubscriptions
+    setupRealtimeSubscriptions,
+    cleanup: cleanupChannels
   };
 };

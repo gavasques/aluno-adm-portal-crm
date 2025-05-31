@@ -11,13 +11,15 @@ import CRMListView from '@/components/admin/crm/CRMListView';
 import CRMLeadFormDialog from '@/components/admin/crm/CRMLeadFormDialog';
 import CRMTagsManager from '@/components/admin/crm/CRMTagsManager';
 import PipelineManagerDialog from '@/components/admin/crm/pipeline-manager/PipelineManagerDialog';
+import CRMDashboard from '@/components/admin/crm/enhanced/CRMDashboard';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMData } from '@/hooks/crm/useCRMData';
+import { useCRMRealtime } from '@/hooks/crm/useCRMRealtime';
 import { CRMFilters as CRMFiltersType, CRMLead } from '@/types/crm.types';
 import { motion } from 'framer-motion';
 
 const CRM = () => {
-  const [activeTab, setActiveTab] = useState('kanban');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const [showPipelineManager, setShowPipelineManager] = useState(false);
   const [showTagsManager, setShowTagsManager] = useState(false);
@@ -29,6 +31,13 @@ const CRM = () => {
 
   // Usar o hook unificado para dados do CRM
   const { refetch } = useCRMData({ ...filters, pipeline_id: selectedPipelineId });
+
+  // Setup realtime subscriptions
+  useCRMRealtime({
+    onLeadUpdate: refetch,
+    onCommentAdded: refetch,
+    onContactUpdate: refetch
+  });
 
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
@@ -56,6 +65,11 @@ const CRM = () => {
   const handlePipelineManagerClose = () => {
     setShowPipelineManager(false);
     fetchPipelines();
+  };
+
+  const handleOpenLead = (leadId: string) => {
+    console.log('Opening lead:', leadId);
+    // Implementar navegação para detalhes do lead
   };
 
   if (pipelinesLoading) {
@@ -111,29 +125,33 @@ const CRM = () => {
         </div>
       </motion.div>
 
-      {/* Stats Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <CRMStatsCards filters={{ ...filters, pipeline_id: selectedPipelineId }} />
-      </motion.div>
+      {/* Stats Cards - Only show if not on dashboard tab */}
+      {activeTab !== 'dashboard' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <CRMStatsCards filters={{ ...filters, pipeline_id: selectedPipelineId }} />
+        </motion.div>
+      )}
 
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="flex-shrink-0"
-      >
-        <CRMFilters 
-          filters={filters} 
-          onFiltersChange={setFilters}
-          pipelineId={selectedPipelineId}
-          onPipelineChange={handlePipelineChange}
-        />
-      </motion.div>
+      {/* Filters - Only show if not on dashboard tab */}
+      {activeTab !== 'dashboard' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex-shrink-0"
+        >
+          <CRMFilters 
+            filters={filters} 
+            onFiltersChange={setFilters}
+            pipelineId={selectedPipelineId}
+            onPipelineChange={handlePipelineChange}
+          />
+        </motion.div>
+      )}
 
       {/* Main Content */}
       <motion.div
@@ -145,9 +163,10 @@ const CRM = () => {
         <Card className="flex-1 flex flex-col overflow-hidden">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="flex items-center justify-between">
-              <span>Pipeline de Vendas</span>
+              <span>CRM</span>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
+                  <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                   <TabsTrigger value="kanban">Kanban</TabsTrigger>
                   <TabsTrigger value="list">Lista</TabsTrigger>
                 </TabsList>
@@ -156,6 +175,9 @@ const CRM = () => {
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+              <TabsContent value="dashboard" className="flex-1 overflow-hidden m-0 p-6">
+                <CRMDashboard onOpenLead={handleOpenLead} />
+              </TabsContent>
               <TabsContent value="kanban" className="flex-1 overflow-hidden m-0 p-6">
                 <OptimizedKanbanBoard 
                   pipelineId={selectedPipelineId} 

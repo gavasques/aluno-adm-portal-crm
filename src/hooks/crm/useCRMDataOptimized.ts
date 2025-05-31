@@ -10,9 +10,16 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
   const [loading, setLoading] = useState(true);
   const toast = useToastManager();
   const movingLeads = useRef<Set<string>>(new Set());
+  const isFetchingRef = useRef(false);
 
   const fetchLeads = useCallback(async () => {
+    if (isFetchingRef.current) {
+      console.log('🚫 Already fetching leads, skipping...');
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       
       let query = supabase
@@ -39,7 +46,10 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching leads:', error);
+        throw error;
+      }
       
       // Processar dados para o formato correto
       const processedLeads: CRMLead[] = (data || []).map(lead => ({
@@ -49,11 +59,14 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
       }));
       
       setLeads(processedLeads);
+      console.log('✅ Leads fetched successfully:', processedLeads.length);
     } catch (error) {
       console.error('Erro ao buscar leads:', error);
       toast.error('Erro ao carregar leads');
+      setLeads([]); // Set empty array on error
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [filters, toast]);
 
@@ -66,7 +79,7 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
     const grouped: { [key: string]: CRMLead[] } = {};
     
     leads.forEach(lead => {
-      const columnId = lead.column_id;
+      const columnId = lead.column_id || 'unassigned';
       if (!grouped[columnId]) {
         grouped[columnId] = [];
       }
@@ -102,7 +115,6 @@ export const useCRMDataOptimized = (filters: CRMFilters) => {
 
       if (error) throw error;
 
-      // Toast de sucesso apenas uma vez
       console.log('✅ Lead movido com sucesso');
       
     } catch (error) {
