@@ -1,13 +1,12 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLeadInsert } from '@/types/crm.types';
+import { CRMLeadInput } from '@/types/crm.types';
 import { toast } from 'sonner';
 
 export const useCRMLeadUpdate = () => {
   const [updating, setUpdating] = useState(false);
 
-  const updateLead = async (leadId: string, data: Partial<CRMLeadInsert>) => {
+  const updateLead = async (leadId: string, data: Partial<CRMLeadInput>) => {
     setUpdating(true);
     try {
       const { error } = await supabase

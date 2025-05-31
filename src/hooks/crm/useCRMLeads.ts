@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMLeadFromDB, CRMLeadCreate, CRMLeadInsert, CRMFilters } from '@/types/crm.types';
@@ -46,7 +45,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
           column:crm_pipeline_columns(id, name, color),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           tags:crm_lead_tags(
-            tag:crm_tags(id, name, color)
+            tag:crm_tags(id, name, color, created_at)
           )
         `);
 
@@ -71,7 +70,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
 
       if (error) throw error;
 
-      let transformedData = (data as CRMLeadFromDB[])?.map(transformLeadData) || [];
+      let transformedData = data?.map(transformLeadData) || [];
 
       // Aplicar filtros de contato se necessário
       if (filters.contact_filter) {

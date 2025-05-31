@@ -56,7 +56,7 @@ export const useCRMLeadDetail = (leadId: string) => {
           column:crm_pipeline_columns(id, name, color),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           tags:crm_lead_tags(
-            tag:crm_tags(id, name, color)
+            tag:crm_tags(id, name, color, created_at)
           )
         `)
         .eq('id', leadId)
@@ -119,7 +119,7 @@ export const useCRMLeadDetail = (leadId: string) => {
         : undefined;
 
       // Transformar lead e adicionar contatos
-      const transformedLead = transformLeadData(leadData as CRMLeadFromDB);
+      const transformedLead = transformLeadData(leadData);
       const leadWithContacts: LeadWithContacts = {
         ...transformedLead,
         pending_contacts: transformedPendingContacts,
