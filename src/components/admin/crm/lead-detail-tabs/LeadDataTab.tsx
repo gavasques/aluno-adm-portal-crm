@@ -41,7 +41,6 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
     ready_to_invest_3k: lead.ready_to_invest_3k || false,
     calendly_scheduled: lead.calendly_scheduled || false,
     calendly_link: lead.calendly_link || '',
-    scheduled_contact_date: lead.scheduled_contact_date || '',
     notes: lead.notes || ''
   });
 
@@ -82,7 +81,6 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
       ready_to_invest_3k: lead.ready_to_invest_3k || false,
       calendly_scheduled: lead.calendly_scheduled || false,
       calendly_link: lead.calendly_link || '',
-      scheduled_contact_date: lead.scheduled_contact_date || '',
       notes: lead.notes || ''
     });
     setSelectedTags(lead.tags?.map(tag => tag.id) || []);
@@ -164,25 +162,6 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
                 />
               ) : (
                 <p className="text-sm text-gray-600 mt-1">{formData.phone || 'Não informado'}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="scheduled_contact_date">Data de Próximo Contato</Label>
-              {isEditing ? (
-                <Input
-                  id="scheduled_contact_date"
-                  type="datetime-local"
-                  value={formData.scheduled_contact_date}
-                  onChange={(e) => setFormData({...formData, scheduled_contact_date: e.target.value})}
-                />
-              ) : (
-                <p className="text-sm text-gray-600 mt-1">
-                  {formData.scheduled_contact_date 
-                    ? new Date(formData.scheduled_contact_date).toLocaleString('pt-BR')
-                    : 'Não agendado'
-                  }
-                </p>
               )}
             </div>
           </CardContent>

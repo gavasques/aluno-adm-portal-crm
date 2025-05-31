@@ -54,7 +54,6 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }:
       calendly_link: lead?.calendly_link || '',
       column_id: lead?.column_id || initialColumnId || '',
       responsible_id: lead?.responsible_id || '',
-      scheduled_contact_date: lead?.scheduled_contact_date || '',
       notes: lead?.notes || '',
       tags: lead?.tags?.map(tag => tag.id) || [],
     }
@@ -171,15 +170,6 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }:
               id="phone"
               {...form.register('phone')}
               placeholder="(11) 99999-9999"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="scheduled_contact_date">Data de Contato</Label>
-            <Input
-              id="scheduled_contact_date"
-              type="datetime-local"
-              {...form.register('scheduled_contact_date')}
             />
           </div>
         </CardContent>

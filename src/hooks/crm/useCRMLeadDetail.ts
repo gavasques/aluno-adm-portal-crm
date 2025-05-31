@@ -36,7 +36,6 @@ export const useCRMLeadDetail = (leadId: string) => {
       column_id: dbLead.column_id || undefined,
       responsible_id: dbLead.responsible_id || undefined,
       created_by: dbLead.created_by || undefined,
-      scheduled_contact_date: dbLead.scheduled_contact_date || undefined,
       notes: dbLead.notes || undefined,
       tags: dbLead.tags?.map(tagWrapper => tagWrapper.tag) || []
     };

@@ -223,14 +223,6 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
               </Badge>
             )}
           </div>
-
-          {/* Data de contato agendada */}
-          {lead.scheduled_contact_date && (
-            <div className="flex items-center text-xs text-gray-500 bg-gray-50 rounded-md px-2 py-1">
-              <Calendar className="w-2.5 h-2.5 mr-1" />
-              <span className="text-xs">Contato: {formatDate(lead.scheduled_contact_date)}</span>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

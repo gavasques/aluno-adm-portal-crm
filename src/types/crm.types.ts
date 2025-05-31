@@ -1,3 +1,4 @@
+
 export interface CRMPipeline {
   id: string;
   name: string;
@@ -53,7 +54,6 @@ export interface CRMLeadFromDB {
   created_at: string;
   updated_at: string;
   notes?: string | null;
-  scheduled_contact_date?: string | null;
   
   // Relacionamentos vindos do Supabase (estrutura exata)
   pipeline?: { id: string; name: string } | null;
@@ -89,7 +89,6 @@ export interface CRMLead {
   created_at: string;
   updated_at: string;
   notes?: string;
-  scheduled_contact_date?: string;
   
   // Relacionamentos processados
   pipeline?: { id: string; name: string };
@@ -125,7 +124,6 @@ export interface CRMLeadInput {
   column_id?: string;
   responsible_id?: string;
   notes?: string;
-  scheduled_contact_date?: string;
 }
 
 export interface CRMLeadComment {

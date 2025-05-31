@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMLeadFromDB, CRMLeadCreate, CRMLeadInsert, CRMFilters } from '@/types/crm.types';
@@ -29,7 +30,6 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
       column_id: dbLead.column_id || undefined,
       responsible_id: dbLead.responsible_id || undefined,
       created_by: dbLead.created_by || undefined,
-      scheduled_contact_date: dbLead.scheduled_contact_date || undefined,
       notes: dbLead.notes || undefined,
       tags: dbLead.tags?.map(tagWrapper => tagWrapper.tag) || []
     };
@@ -163,7 +163,6 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
         pipeline_id: leadData.pipeline_id,
         column_id: leadData.column_id,
         responsible_id: leadData.responsible_id,
-        scheduled_contact_date: leadData.scheduled_contact_date,
         notes: leadData.notes
       };
 
