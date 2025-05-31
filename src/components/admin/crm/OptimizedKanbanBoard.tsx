@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMData } from '@/hooks/crm/useCRMData';
+import { useCRMDataOptimized } from '@/hooks/crm/useCRMDataOptimized';
 import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
 import CRMLeadFormDialog from './CRMLeadFormDialog';
 import { cn } from '@/lib/utils';
+import { useToastManager } from '@/hooks/useToastManager';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -18,8 +19,9 @@ interface OptimizedKanbanBoardProps {
 
 const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
+  const toast = useToastManager();
   const { columns, loading: columnsLoading } = useCRMPipelines();
-  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
+  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMDataOptimized(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -29,12 +31,12 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3, // Reduzir distância para ativação mais fácil
+        distance: 3,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 150, // Pequeno delay para evitar conflito com scroll
+        delay: 150,
         tolerance: 5,
       },
     })
@@ -50,14 +52,12 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const leadId = event.active.id as string;
     
-    // Encontrar o lead nos dados agrupados
     const lead = Object.values(leadsByColumn)
       .flat()
       .find(l => l.id === leadId);
     
     setActiveLead(lead || null);
     
-    // Encontrar a coluna atual do lead
     const currentColumnId = Object.keys(leadsByColumn).find(columnId => 
       leadsByColumn[columnId].some(l => l.id === leadId)
     );
@@ -74,7 +74,6 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     
-    // Resetar estados
     setActiveLead(null);
     setActiveColumnId(null);
 
@@ -83,7 +82,6 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
     const leadId = active.id as string;
     const newColumnId = over.id as string;
 
-    // Verificar se o lead foi movido para uma coluna diferente
     const currentLead = Object.values(leadsByColumn)
       .flat()
       .find(l => l.id === leadId);
@@ -106,7 +104,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
     setShowCreateModal(false);
     setSelectedColumnId('');
     refetch();
-  }, [refetch]);
+    toast.success('Lead criado com sucesso');
+  }, [refetch, toast]);
 
   const loading = columnsLoading || leadsLoading;
 

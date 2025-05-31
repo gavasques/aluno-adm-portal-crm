@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -30,7 +29,14 @@ import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { ImprovedToaster } from "@/components/ui/improved-toaster";
 import LeadDetail from '@/pages/admin/LeadDetail';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
@@ -93,6 +99,8 @@ function App() {
                 {/* Redirect to Admin Dashboard by default */}
                 <Route path="/" element={<Navigate to="/admin" />} />
               </Routes>
+              
+              {/* Toast único e otimizado */}
               <ImprovedToaster />
             </div>
           </NotificationsProvider>
@@ -103,4 +111,3 @@ function App() {
 }
 
 export default App;
-

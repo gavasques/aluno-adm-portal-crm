@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useToastManager } from '@/hooks/useToastManager';
 
 export interface Notification {
   id: string;
@@ -30,6 +31,7 @@ interface NotificationsProviderProps {
 
 export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ children }) => {
   const { user } = useAuth();
+  const toast = useToastManager();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,6 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     try {
       console.log('🔔 Fetching notifications for user:', user.id);
       
-      // Buscar alertas de segurança não resolvidos
       const { data: securityAlerts, error: securityError } = await supabase
         .from('security_alerts')
         .select('*')
@@ -64,7 +65,6 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
 
       console.log('🔔 Security alerts found:', securityAlerts?.length || 0);
 
-      // Converter alertas de segurança para formato de notificação
       const securityNotifications: Notification[] = (securityAlerts || []).map(alert => ({
         id: alert.id,
         type: 'security' as const,
@@ -96,7 +96,6 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     console.log('🔔 NotificationsProvider effect triggered, user:', user?.id || 'none');
     fetchNotifications();
 
-    // Escutar mudanças em tempo real nos alertas de segurança
     const channel = supabase
       .channel('notifications_realtime')
       .on(
@@ -122,13 +121,13 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
   const markAsRead = async (notificationId: string) => {
     console.log('🔔 Marking notification as read:', notificationId);
     
-    // Para alertas de segurança, marcar como resolvido
     await supabase
       .from('security_alerts')
       .update({ resolved: true, resolved_by: user?.id })
       .eq('id', notificationId);
 
     await fetchNotifications();
+    toast.success('Notificação marcada como lida');
   };
 
   const markAllAsRead = async () => {
@@ -146,6 +145,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     }
 
     await fetchNotifications();
+    toast.success('Todas as notificações foram marcadas como lidas');
   };
 
   const value: NotificationsContextType = {
