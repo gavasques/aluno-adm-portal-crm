@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -142,6 +143,7 @@ const CRMKanbanBoard = ({ filters, pipelineId }: CRMKanbanBoardProps) => {
         onOpenChange={setShowCreateModal}
         pipelineId={pipelineId}
         initialColumnId={selectedColumnId}
+        mode="create"
         onSuccess={handleCreateSuccess}
       />
     </>

@@ -143,7 +143,8 @@ const CRM = () => {
         open={showNewLeadForm}
         onOpenChange={setShowNewLeadForm}
         pipelineId={selectedPipelineId}
-        lead={editingLead}
+        leadId={editingLead?.id}
+        mode={editingLead ? "edit" : "create"}
         onSuccess={handleFormSuccess}
       />
 
