@@ -1,76 +1,70 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/auth';
+import { useState, useEffect } from "react";
+import { PermissionServiceFactory } from "@/services/permissions";
+import { useAuth } from "@/hooks/auth";
+import { useOptimizedPermissions } from "./useOptimizedPermissions";
 
 interface Permissions {
   hasAdminAccess: boolean;
   allowedMenus: string[];
-  isLoading: boolean;
 }
 
-export const usePermissions = () => {
-  const { user } = useAuth();
+export const usePermissions = (useOptimization: boolean = true) => {
+  const { user, loading: authLoading } = useAuth();
   const [permissions, setPermissions] = useState<Permissions>({
     hasAdminAccess: false,
-    allowedMenus: [],
-    isLoading: true
+    allowedMenus: []
   });
+  const [loading, setLoading] = useState(true);
 
-  const fetchPermissions = useCallback(async () => {
-    if (!user) {
+  // Hook otimizado
+  const optimizedResult = useOptimizedPermissions();
+
+  useEffect(() => {
+    // Se está usando otimização, usar o resultado otimizado
+    if (useOptimization) {
       setPermissions({
-        hasAdminAccess: false,
-        allowedMenus: [],
-        isLoading: false
+        hasAdminAccess: optimizedResult.permissions.hasAdminAccess,
+        allowedMenus: optimizedResult.permissions.allowedMenus
       });
+      setLoading(optimizedResult.loading);
       return;
     }
 
-    try {
-      // Buscar perfil do usuário
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          permission_group:permission_groups(
-            *,
-            menus:permission_group_menus(menu_key)
-          )
-        `)
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
-        throw profileError;
+    // Fallback para implementação original apenas se necessário
+    const fetchPermissions = async () => {
+      if (!user || authLoading) {
+        if (!authLoading) {
+          setPermissions({ hasAdminAccess: false, allowedMenus: [] });
+          setLoading(false);
+        }
+        return;
       }
 
-      const hasAdminAccess = profile?.permission_group?.allow_admin_access || false;
-      const allowedMenus = profile?.permission_group?.menus?.map((menu: any) => menu.menu_key) || [];
+      try {
+        setLoading(true);
+        
+        const validationService = PermissionServiceFactory.getPermissionValidationService();
+        const menuService = PermissionServiceFactory.getSystemMenuService();
 
-      setPermissions({
-        hasAdminAccess,
-        allowedMenus,
-        isLoading: false
-      });
-    } catch (error) {
-      console.error('Erro ao buscar permissões:', error);
-      setPermissions({
-        hasAdminAccess: false,
-        allowedMenus: [],
-        isLoading: false
-      });
+        const [hasAdminAccess, allowedMenus] = await Promise.all([
+          validationService.hasAdminAccess(),
+          menuService.getAllowedMenusForUser()
+        ]);
+
+        setPermissions({ hasAdminAccess, allowedMenus });
+      } catch (error) {
+        console.error('Erro ao buscar permissões:', error);
+        setPermissions({ hasAdminAccess: false, allowedMenus: [] });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!useOptimization) {
+      fetchPermissions();
     }
-  }, [user]);
+  }, [user?.id, authLoading, useOptimization, optimizedResult.permissions, optimizedResult.loading]);
 
-  useEffect(() => {
-    fetchPermissions();
-  }, [fetchPermissions]);
-
-  return {
-    permissions,
-    loading: permissions.isLoading,
-    refetch: fetchPermissions
-  };
+  return { permissions, loading };
 };

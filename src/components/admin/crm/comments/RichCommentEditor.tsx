@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, AtSign, Bold, Italic, List } from 'lucide-react';
@@ -21,7 +21,6 @@ const RichCommentEditor = ({ onSubmit, placeholder = "Escreva um comentário..."
   const [content, setContent] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
-  const [mentionSuggestions, setMentionSuggestions] = useState<CRMUser[]>([]);
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [mentions, setMentions] = useState<string[]>([]);
@@ -31,25 +30,7 @@ const RichCommentEditor = ({ onSubmit, placeholder = "Escreva um comentário..."
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { searchUsers } = useCRMUsers();
 
-  // Buscar usuários quando mentionQuery mudar
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (mentionQuery) {
-        try {
-          const users = await searchUsers(mentionQuery);
-          setMentionSuggestions(users.slice(0, 5)); // Limitar a 5 resultados
-          setSelectedMentionIndex(0);
-        } catch (error) {
-          console.error('Erro ao buscar usuários:', error);
-          setMentionSuggestions([]);
-        }
-      } else {
-        setMentionSuggestions([]);
-      }
-    };
-
-    fetchSuggestions();
-  }, [mentionQuery, searchUsers]);
+  const mentionSuggestions = mentionQuery ? searchUsers(mentionQuery) : [];
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -64,6 +45,7 @@ const RichCommentEditor = ({ onSubmit, placeholder = "Escreva um comentário..."
     if (mentionMatch) {
       setMentionQuery(mentionMatch[1]);
       setShowMentions(true);
+      setSelectedMentionIndex(0);
       
       // Calcular posição do dropdown
       const textarea = textareaRef.current;

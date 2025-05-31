@@ -9,40 +9,49 @@ export const useCRMUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email, avatar_url, role, created_at')
+        .select('id, name, email, is_closer, is_onboarding, role')
+        .or('is_closer.eq.true,is_onboarding.eq.true,role.eq.Admin')
         .order('name');
 
       if (error) throw error;
-      setUsers(data || []);
+
+      const transformedUsers: CRMUser[] = (data || []).map(user => ({
+        id: user.id,
+        name: user.name || 'Usuário',
+        email: user.email,
+        is_closer: user.is_closer || false,
+        is_onboarding: user.is_onboarding || false,
+        role: user.role || 'Student'
+      }));
+
+      setUsers(transformedUsers);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      console.error('Erro ao buscar usuários CRM:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const searchUsers = async (query: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, email, avatar_url, role')
-        .ilike('name', `%${query}%`)
-        .limit(10);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-      return [];
-    }
+  const searchUsers = (query: string): CRMUser[] => {
+    if (!query.trim()) return users;
+    
+    const searchTerm = query.toLowerCase();
+    return users.filter(user => 
+      user.name.toLowerCase().includes(searchTerm) ||
+      user.email.toLowerCase().includes(searchTerm)
+    );
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  return { users, loading, searchUsers };
+  return {
+    users,
+    loading,
+    fetchUsers,
+    searchUsers
+  };
 };

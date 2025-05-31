@@ -1,17 +1,31 @@
-
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
-import { AuthProvider, useAuth } from '@/hooks/auth';
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
+import { useAuth } from '@/hooks/useAuth';
+import { SiteHeader } from '@/components/layout/SiteHeader';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { Dashboard } from '@/pages/admin/Dashboard';
+import { Users } from '@/pages/admin/Users';
+import { Tools } from '@/pages/admin/Tools';
+import { Settings } from '@/pages/admin/Settings';
+import { Suppliers } from '@/pages/admin/Suppliers';
+import { Login } from '@/pages/auth/Login';
+import { Register } from '@/pages/auth/Register';
+import { ForgotPassword } from '@/pages/auth/ForgotPassword';
+import { ResetPassword } from '@/pages/auth/ResetPassword';
+import { Profile } from '@/pages/student/Profile';
+import { MySuppliers } from '@/pages/student/MySuppliers';
+import { PublicPage } from '@/pages/PublicPage';
+import { Terms } from '@/pages/Terms';
+import { Privacy } from '@/pages/Privacy';
+import { Contact } from '@/pages/Contact';
+import { Pricing } from '@/pages/Pricing';
+import { Upgrade } from '@/pages/Upgrade';
 import CRM from '@/pages/admin/CRM';
 import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
-import NotFound from '@/pages/NotFound';
-import ErrorBoundary from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,17 +36,9 @@ const queryClient = new QueryClient({
 });
 
 const RouteGuard = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { isLoggedIn } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
+  if (!isLoggedIn) {
     return <Login />;
   }
 
@@ -41,41 +47,79 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <Toaster />
-          <AccessibilityProvider>
-            <BrowserRouter>
-              <AuthProvider>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <Toaster />
+        <AccessibilityProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<PublicPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/pricing" element={<Pricing />} />
 
-                  {/* Admin Routes */}
-                  <Route
-                    path="/admin/*"
-                    element={
-                      <RouteGuard>
-                        <Routes>
-                          <Route path="crm" element={<CRM />} />
-                          <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
-                          <Route path="*" element={<CRM />} />
-                        </Routes>
-                      </RouteGuard>
-                    }
-                  />
-                  
-                  {/* 404 Route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </AuthProvider>
-            </BrowserRouter>
-          </AccessibilityProvider>
-        </ToastProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+              {/* Auth Routes */}
+              <Route
+                path="/profile"
+                element={
+                  <RouteGuard>
+                    <Profile />
+                  </RouteGuard>
+                }
+              />
+              <Route
+                path="/my-suppliers"
+                element={
+                  <RouteGuard>
+                    <MySuppliers />
+                  </RouteGuard>
+                }
+              />
+              <Route
+                path="/upgrade"
+                element={
+                  <RouteGuard>
+                    <Upgrade />
+                  </RouteGuard>
+                }
+              />
+              
+              {/* Admin Routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <RouteGuard>
+                    <Routes>
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="users" element={<Users />} />
+                      <Route path="tools" element={<Tools />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="suppliers" element={<Suppliers />} />
+                      
+                      {/* CRM Routes */}
+                      <Route path="crm" element={<CRM />} />
+                      <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
+                      
+                      {/* Default Admin Route */}
+                      <Route path="*" element={<Dashboard />} />
+                    </Routes>
+                  </RouteGuard>
+                }
+              />
+              
+              {/* Default Route */}
+              <Route path="*" element={<PublicPage />} />
+            </Routes>
+          </BrowserRouter>
+        </AccessibilityProvider>
+      </ToastProvider>
+    </QueryClientProvider>
   );
 }
 

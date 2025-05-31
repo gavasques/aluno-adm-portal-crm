@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,7 @@ interface LeadWithContacts extends CRMLead {
 export const useCRMData = (filters: CRMFilters = {}) => {
   const queryClient = useQueryClient();
 
-  const transformLeadData = useCallback((dbLead: any): CRMLead => {
+  const transformLeadData = useCallback((dbLead: CRMLeadFromDB): CRMLead => {
     return {
       ...dbLead,
       has_company: dbLead.has_company ?? false,
@@ -36,7 +37,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       responsible_id: dbLead.responsible_id || undefined,
       created_by: dbLead.created_by || undefined,
       notes: dbLead.notes || undefined,
-      tags: dbLead.tags?.map((tagWrapper: any) => tagWrapper.tag) || []
+      tags: dbLead.tags?.map(tagWrapper => tagWrapper.tag) || []
     };
   }, []);
 
@@ -69,134 +70,117 @@ export const useCRMData = (filters: CRMFilters = {}) => {
   }, []);
 
   const fetchLeadsWithContacts = useCallback(async (): Promise<LeadWithContacts[]> => {
-    // Se não há pipeline_id, retornar array vazio mas continuar tentando
     if (!filters.pipeline_id) {
-      console.log('⚠️ Nenhum pipeline_id fornecido, aguardando seleção...');
       return [];
     }
 
-    try {
-      console.log('📊 Buscando leads para pipeline:', filters.pipeline_id);
+    // Buscar leads com filtros
+    let leadsQuery = supabase
+      .from('crm_leads')
+      .select(`
+        *,
+        pipeline:crm_pipelines(id, name),
+        column:crm_pipeline_columns(id, name, color),
+        responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
+        tags:crm_lead_tags(
+          tag:crm_tags(id, name, color, created_at)
+        )
+      `)
+      .eq('pipeline_id', filters.pipeline_id);
 
-      // Buscar leads com filtros
-      let leadsQuery = supabase
-        .from('crm_leads')
+    if (filters.column_id) {
+      leadsQuery = leadsQuery.eq('column_id', filters.column_id);
+    }
+    
+    if (filters.responsible_id) {
+      leadsQuery = leadsQuery.eq('responsible_id', filters.responsible_id);
+    }
+    
+    if (filters.search) {
+      leadsQuery = leadsQuery.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+    }
+
+    const { data: leads, error: leadsError } = await leadsQuery.order('created_at', { ascending: false });
+
+    if (leadsError) throw leadsError;
+    if (!leads || leads.length === 0) return [];
+
+    // Transformar leads
+    const transformedLeads = leads.map(transformLeadData);
+    const leadIds = transformedLeads.map(lead => lead.id);
+
+    // Buscar contatos em paralelo
+    const [pendingContactsResult, completedContactsResult] = await Promise.allSettled([
+      supabase
+        .from('crm_lead_contacts')
         .select(`
           *,
-          pipeline:crm_pipelines(id, name),
-          column:crm_pipeline_columns(id, name, color),
-          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-          tags:crm_lead_tags(
-            tag:crm_tags(id, name, color, created_at)
-          )
+          responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
         `)
-        .eq('pipeline_id', filters.pipeline_id);
-
-      if (filters.column_id) {
-        leadsQuery = leadsQuery.eq('column_id', filters.column_id);
-      }
+        .in('lead_id', leadIds)
+        .eq('status', 'pending')
+        .order('contact_date', { ascending: true }),
       
-      if (filters.responsible_id) {
-        leadsQuery = leadsQuery.eq('responsible_id', filters.responsible_id);
-      }
-      
-      if (filters.search) {
-        leadsQuery = leadsQuery.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
-      }
+      supabase
+        .from('crm_lead_contacts')
+        .select(`
+          *,
+          responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+        `)
+        .in('lead_id', leadIds)
+        .eq('status', 'completed')
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+    ]);
 
-      const { data: leads, error: leadsError } = await leadsQuery.order('created_at', { ascending: false });
+    const pendingContacts = pendingContactsResult.status === 'fulfilled' ? pendingContactsResult.value.data || [] : [];
+    const completedContacts = completedContactsResult.status === 'fulfilled' ? completedContactsResult.value.data || [] : [];
 
-      if (leadsError) throw leadsError;
-
-      console.log('📊 Leads encontrados:', leads?.length || 0);
-
-      if (!leads || leads.length === 0) {
-        return [];
-      }
-
-      // Transformar leads
-      const transformedLeads = leads.map(transformLeadData);
-      const leadIds = transformedLeads.map(lead => lead.id);
-
-      // Buscar contatos em paralelo
-      const [pendingContactsResult, completedContactsResult] = await Promise.allSettled([
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            *,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .in('lead_id', leadIds)
-          .eq('status', 'pending')
-          .order('contact_date', { ascending: true }),
-        
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            *,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .in('lead_id', leadIds)
-          .eq('status', 'completed')
-          .not('completed_at', 'is', null)
-          .order('completed_at', { ascending: false })
-      ]);
-
-      const pendingContacts = pendingContactsResult.status === 'fulfilled' ? pendingContactsResult.value.data || [] : [];
-      const completedContacts = completedContactsResult.status === 'fulfilled' ? completedContactsResult.value.data || [] : [];
-
-      // Transformar e agrupar contatos
-      const transformedPendingContacts = pendingContacts
-        .filter(contact => contact.status === 'pending')
-        .map(contact => ({
-          ...contact,
-          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-          status: contact.status as 'pending' | 'completed' | 'overdue'
-        }));
-
-      const transformedCompletedContacts = completedContacts
-        .filter(contact => contact.status === 'completed' && contact.completed_at)
-        .map(contact => ({
-          ...contact,
-          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-          status: contact.status as 'pending' | 'completed' | 'overdue'
-        }));
-
-      // Agrupar contatos por lead
-      const pendingContactsByLead = transformedPendingContacts.reduce((acc, contact) => {
-        if (!acc[contact.lead_id]) acc[contact.lead_id] = [];
-        acc[contact.lead_id].push(contact);
-        return acc;
-      }, {} as Record<string, CRMLeadContact[]>);
-
-      const lastCompletedContactsByLead = transformedCompletedContacts.reduce((acc, contact) => {
-        if (!acc[contact.lead_id]) {
-          acc[contact.lead_id] = contact;
-        }
-        return acc;
-      }, {} as Record<string, CRMLeadContact>);
-
-      // Combinar leads com contatos
-      const leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
-        ...lead,
-        pending_contacts: pendingContactsByLead[lead.id] || [],
-        last_completed_contact: lastCompletedContactsByLead[lead.id]
+    // Transformar e agrupar contatos
+    const transformedPendingContacts = pendingContacts
+      .filter(contact => contact.status === 'pending')
+      .map(contact => ({
+        ...contact,
+        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+        status: contact.status as 'pending' | 'completed' | 'overdue'
       }));
 
-      console.log('📊 Leads processados com contatos:', leadsWithContactsData.length);
-      return filterLeadsByContact(leadsWithContactsData, filters.contact_filter);
+    const transformedCompletedContacts = completedContacts
+      .filter(contact => contact.status === 'completed' && contact.completed_at)
+      .map(contact => ({
+        ...contact,
+        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+        status: contact.status as 'pending' | 'completed' | 'overdue'
+      }));
 
-    } catch (error) {
-      console.error('❌ Erro ao buscar dados CRM:', error);
-      toast.error('Erro ao carregar dados do CRM');
-      return [];
-    }
+    // Agrupar contatos por lead
+    const pendingContactsByLead = transformedPendingContacts.reduce((acc, contact) => {
+      if (!acc[contact.lead_id]) acc[contact.lead_id] = [];
+      acc[contact.lead_id].push(contact);
+      return acc;
+    }, {} as Record<string, CRMLeadContact[]>);
+
+    const lastCompletedContactsByLead = transformedCompletedContacts.reduce((acc, contact) => {
+      if (!acc[contact.lead_id]) {
+        acc[contact.lead_id] = contact;
+      }
+      return acc;
+    }, {} as Record<string, CRMLeadContact>);
+
+    // Combinar leads com contatos
+    const leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
+      ...lead,
+      pending_contacts: pendingContactsByLead[lead.id] || [],
+      last_completed_contact: lastCompletedContactsByLead[lead.id]
+    }));
+
+    return filterLeadsByContact(leadsWithContactsData, filters.contact_filter);
   }, [filters, transformLeadData, filterLeadsByContact]);
 
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
     queryKey: ['crm-leads-with-contacts', filters],
     queryFn: fetchLeadsWithContacts,
-    enabled: true,
+    enabled: !!filters.pipeline_id,
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
   });
