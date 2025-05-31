@@ -43,11 +43,11 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ToastProvider>
-            <Toaster />
-            <AccessibilityProvider>
-              <BrowserRouter>
+        <ToastProvider>
+          <Toaster />
+          <AccessibilityProvider>
+            <BrowserRouter>
+              <AuthProvider>
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Index />} />
@@ -70,10 +70,10 @@ function App() {
                   {/* 404 Route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </AccessibilityProvider>
-          </ToastProvider>
-        </AuthProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </AccessibilityProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
