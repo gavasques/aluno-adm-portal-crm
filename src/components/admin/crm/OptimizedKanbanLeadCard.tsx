@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign, Eye, Clock, AlertTriangle } from 'lucide-react';
+import { MoreHorizontal, User, Calendar, Eye, Clock, AlertTriangle } from 'lucide-react';
 import { CRMLead, CRMLeadContact } from '@/types/crm.types';
 import { differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
 
@@ -122,10 +122,6 @@ const OptimizedKanbanLeadCard = ({ lead, pendingContacts, onOpenDetail }: Optimi
               <h4 className="font-medium text-gray-900 text-xs line-clamp-1 mb-1">
                 {lead.name}
               </h4>
-              <div className="flex items-center text-xs text-gray-500">
-                <Mail className="w-3 h-3 mr-1 flex-shrink-0" />
-                <span className="line-clamp-1 text-xs">{lead.email}</span>
-              </div>
             </div>
             <div className="flex items-center gap-1">
               <Button 
@@ -141,14 +137,6 @@ const OptimizedKanbanLeadCard = ({ lead, pendingContacts, onOpenDetail }: Optimi
               </Button>
             </div>
           </div>
-
-          {/* Informações de Contato */}
-          {lead.phone && (
-            <div className="flex items-center text-xs text-gray-500 mb-2">
-              <Phone className="w-3 h-3 mr-1 flex-shrink-0" />
-              <span className="text-xs">{lead.phone}</span>
-            </div>
-          )}
 
           {/* Próximo Contato */}
           {nextContact && (
@@ -198,27 +186,6 @@ const OptimizedKanbanLeadCard = ({ lead, pendingContacts, onOpenDetail }: Optimi
                 {lead.responsible ? lead.responsible.name : 'Sem responsável'}
               </span>
             </div>
-          </div>
-
-          {/* Informações Importantes */}
-          <div className="flex flex-wrap gap-1 mb-2">
-            {lead.has_company && (
-              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
-                <Building className="h-2.5 w-2.5 mr-0.5" />
-                Empresa
-              </Badge>
-            )}
-            {lead.sells_on_amazon && (
-              <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
-                Amazon
-              </Badge>
-            )}
-            {lead.ready_to_invest_3k && (
-              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 h-5 px-1.5">
-                <DollarSign className="h-2.5 w-2.5 mr-0.5" />
-                R$ 3k
-              </Badge>
-            )}
           </div>
 
           {/* Data de contato agendada */}
