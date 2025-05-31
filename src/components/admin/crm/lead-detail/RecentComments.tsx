@@ -13,8 +13,6 @@ interface RecentCommentsProps {
 export const RecentComments = ({ leadId }: RecentCommentsProps) => {
   const { comments, loading } = useCRMLeadComments(leadId);
 
-  const recentComments = comments.slice(0, 3);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -24,21 +22,23 @@ export const RecentComments = ({ leadId }: RecentCommentsProps) => {
   }
 
   return (
-    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg">
-      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+    <div className="flex flex-col h-full">
+      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 flex-shrink-0">
         <MessageSquare className="h-5 w-5 text-purple-600" />
-        Comentários Recentes
+        Comentários Recentes ({comments.length})
       </h3>
       
-      {recentComments.length === 0 ? (
-        <div className="text-center py-8">
-          <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Nenhum comentário ainda</p>
-          <p className="text-gray-400 text-xs">Seja o primeiro a comentar</p>
+      {comments.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">Nenhum comentário ainda</p>
+            <p className="text-gray-400 text-xs">Seja o primeiro a comentar</p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {recentComments.map((comment, index) => (
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          {comments.map((comment, index) => (
             <motion.div
               key={comment.id}
               initial={{ opacity: 0, x: -20 }}
@@ -63,21 +63,13 @@ export const RecentComments = ({ leadId }: RecentCommentsProps) => {
                       })}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 line-clamp-2">
+                  <p className="text-sm text-gray-700 break-words">
                     {comment.content}
                   </p>
                 </div>
               </div>
             </motion.div>
           ))}
-          
-          {comments.length > 3 && (
-            <div className="text-center pt-2">
-              <p className="text-xs text-gray-500">
-                +{comments.length - 3} comentários adicionais
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

@@ -35,9 +35,9 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="h-full overflow-y-auto"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-        {/* Coluna principal - Informações básicas */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+        {/* Coluna esquerda - Informações do lead */}
+        <div className="space-y-6">
           {/* Informações de contato - compactadas */}
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-white/20 shadow-lg">
             <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
@@ -136,13 +136,19 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
           )}
         </div>
 
-        {/* Sidebar direita - Comentários recentes e ações */}
+        {/* Coluna direita - Comentários expandidos */}
         <div className="space-y-6">
-          {/* Comentários recentes - espaço expandido */}
-          <RecentComments leadId={lead.id} />
+          {/* Comentários recentes com mais espaço */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg h-[calc(100vh-280px)] min-h-[500px] flex flex-col">
+            <RecentComments leadId={lead.id} />
+          </div>
 
-          {/* Quick actions */}
-          <LeadDetailQuickActions leadId={lead.id} leadName={lead.name} />
+          {/* Ações rápidas na horizontal e compactas */}
+          <LeadDetailQuickActions 
+            leadId={lead.id} 
+            leadName={lead.name}
+            compact={true}
+          />
         </div>
       </div>
     </motion.div>
