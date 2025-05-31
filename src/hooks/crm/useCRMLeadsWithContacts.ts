@@ -74,7 +74,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
       setLoading(true);
       console.log('📡 Starting fetch for pipeline:', filters.pipeline_id);
 
-      // Buscar leads com filtros
+      // Buscar leads com filtros - CORRIGINDO A QUERY PARA INCLUIR created_at nas tags
       let leadsQuery = supabase
         .from('crm_leads')
         .select(`
@@ -83,7 +83,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
           column:crm_pipeline_columns(id, name, color),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           tags:crm_lead_tags(
-            tag:crm_tags(id, name, color)
+            tag:crm_tags(id, name, color, created_at)
           )
         `)
         .eq('pipeline_id', filters.pipeline_id);
@@ -116,6 +116,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         return;
       }
 
+      // Agora a transformação deve funcionar corretamente com os tipos alinhados
       const transformedLeads = leads.map(transformLeadData);
       console.log('🔄 Leads transformed:', transformedLeads.length);
 
