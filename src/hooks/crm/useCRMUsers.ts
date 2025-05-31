@@ -7,45 +7,40 @@ export const useCRMUsers = () => {
   const [users, setUsers] = useState<CRMUser[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email, is_closer, is_onboarding')
+        .select('id, name, email, is_closer, is_onboarding, role')
+        .or('is_closer.eq.true,is_onboarding.eq.true,role.eq.Admin')
         .order('name');
 
       if (error) throw error;
-      
-      const usersWithDefaults = data?.map(user => ({
-        ...user,
+
+      const transformedUsers: CRMUser[] = (data || []).map(user => ({
+        id: user.id,
+        name: user.name || 'Usuário',
+        email: user.email,
         is_closer: user.is_closer || false,
-        is_onboarding: user.is_onboarding || false
-      })) || [];
-      
-      setUsers(usersWithDefaults);
+        is_onboarding: user.is_onboarding || false,
+        role: user.role || 'Student'
+      }));
+
+      setUsers(transformedUsers);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      console.error('Erro ao buscar usuários CRM:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const searchUsers = (query: string) => {
-    if (!query) return [];
-    
-    return users.filter(user => 
-      user.name.toLowerCase().includes(query.toLowerCase()) ||
-      user.email.toLowerCase().includes(query.toLowerCase())
-    );
-  };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return {
     users,
     loading,
-    searchUsers
+    fetchUsers
   };
 };

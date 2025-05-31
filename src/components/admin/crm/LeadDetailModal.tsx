@@ -6,7 +6,8 @@ import {
   User, 
   FileText, 
   MessageSquare, 
-  Clock
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +16,7 @@ import { LeadDetailOverview } from './lead-detail/LeadDetailOverview';
 import LeadAttachmentsTab from './lead-detail-tabs/LeadAttachmentsTab';
 import LeadCommentsTab from './lead-detail-tabs/LeadCommentsTab';
 import LeadHistoryTab from './lead-detail-tabs/LeadHistoryTab';
+import LeadContactsTab from './lead-detail-tabs/LeadContactsTab';
 
 interface LeadDetailModalProps {
   lead: CRMLead | null;
@@ -52,6 +54,10 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                         <User className="h-4 w-4" />
                         Visão Geral & Dados
                       </TabsTrigger>
+                      <TabsTrigger value="contacts" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        <Calendar className="h-4 w-4" />
+                        Contatos
+                      </TabsTrigger>
                       <TabsTriggerWithBadge 
                         value="attachments" 
                         badgeContent="3"
@@ -78,6 +84,10 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                   <div className="flex-1 overflow-hidden">
                     <TabsContent value="overview" className="h-full mt-0 p-6">
                       <LeadDetailOverview lead={lead} />
+                    </TabsContent>
+                    
+                    <TabsContent value="contacts" className="h-full mt-0">
+                      <LeadContactsTab leadId={lead.id} />
                     </TabsContent>
                     
                     <TabsContent value="attachments" className="h-full mt-0">

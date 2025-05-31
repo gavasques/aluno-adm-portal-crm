@@ -6,8 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign, Eye } from 'lucide-react';
+import { MoreHorizontal, User, Calendar, Phone, Mail, Building, DollarSign, Eye, Clock, AlertTriangle } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
+import { useCRMLeadContacts } from '@/hooks/crm/useCRMLeadContacts';
+import { differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
 
 interface KanbanLeadCardProps {
   lead: CRMLead;
@@ -23,6 +25,8 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
     transition,
     isDragging,
   } = useSortable({ id: lead.id });
+
+  const { contacts } = useCRMLeadContacts(lead.id, { status: 'pending' });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -51,6 +55,57 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onOpenDetail?.(lead);
+  };
+
+  // Buscar próximo contato pendente
+  const nextContact = contacts
+    .filter(contact => contact.status === 'pending')
+    .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0];
+
+  const getContactBadge = () => {
+    if (!nextContact) return null;
+
+    const contactDate = new Date(nextContact.contact_date);
+    const today = new Date();
+    
+    if (isPast(contactDate) && !isToday(contactDate)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 h-5 px-1.5">
+          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+          Atrasado
+        </Badge>
+      );
+    }
+    
+    if (isToday(contactDate)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
+          Hoje
+        </Badge>
+      );
+    }
+    
+    if (isTomorrow(contactDate)) {
+      return (
+        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 h-5 px-1.5">
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
+          Amanhã
+        </Badge>
+      );
+    }
+    
+    const daysDiff = differenceInDays(contactDate, today);
+    if (daysDiff <= 7) {
+      return (
+        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
+          <Calendar className="h-2.5 w-2.5 mr-0.5" />
+          {daysDiff}d
+        </Badge>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -95,6 +150,17 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
             <div className="flex items-center text-xs text-gray-500 mb-2">
               <Phone className="w-3 h-3 mr-1 flex-shrink-0" />
               <span className="text-xs">{lead.phone}</span>
+            </div>
+          )}
+
+          {/* Próximo Contato */}
+          {nextContact && (
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 p-2 bg-gray-50/50 rounded-md">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-2.5 h-2.5" />
+                <span className="text-xs">Próximo: {formatDate(nextContact.contact_date)}</span>
+              </div>
+              {getContactBadge()}
             </div>
           )}
 

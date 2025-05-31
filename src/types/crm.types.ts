@@ -1,4 +1,3 @@
-
 export interface CRMPipeline {
   id: string;
   name: string;
@@ -215,6 +214,40 @@ export interface CRMUser {
   role?: string;
 }
 
+export interface CRMLeadContact {
+  id: string;
+  lead_id: string;
+  contact_date: string;
+  responsible_id: string;
+  contact_type: 'call' | 'email' | 'whatsapp' | 'meeting';
+  contact_reason: string;
+  status: 'pending' | 'completed' | 'overdue';
+  notes?: string;
+  completed_at?: string;
+  completed_by?: string;
+  created_at: string;
+  updated_at: string;
+  responsible?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  completed_by_user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface CRMLeadContactCreate {
+  lead_id: string;
+  contact_date: string;
+  responsible_id: string;
+  contact_type: 'call' | 'email' | 'whatsapp' | 'meeting';
+  contact_reason: string;
+  notes?: string;
+}
+
 export type ViewMode = 'kanban' | 'list';
 
 export interface CRMFilters {
@@ -223,6 +256,15 @@ export interface CRMFilters {
   column_id?: string;
   responsible_id?: string;
   tags?: string[];
+  date_from?: string;
+  date_to?: string;
+  contact_filter?: 'today' | 'tomorrow' | 'overdue' | 'no_contact';
+}
+
+export interface ContactFilters {
+  status?: 'pending' | 'completed' | 'overdue';
+  responsible_id?: string;
+  contact_type?: 'call' | 'email' | 'whatsapp' | 'meeting';
   date_from?: string;
   date_to?: string;
 }

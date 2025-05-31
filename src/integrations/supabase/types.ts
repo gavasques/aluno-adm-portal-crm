@@ -489,6 +489,73 @@ export type Database = {
           },
         ]
       }
+      crm_lead_contacts: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          contact_date: string
+          contact_reason: string
+          contact_type: string
+          created_at: string
+          id: string
+          lead_id: string
+          notes: string | null
+          responsible_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          contact_date: string
+          contact_reason: string
+          contact_type: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          responsible_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          contact_date?: string
+          contact_reason?: string
+          contact_type?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          responsible_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_contacts_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_contacts_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_lead_history: {
         Row: {
           action_type: string
@@ -2326,6 +2393,10 @@ export type Database = {
         Returns: boolean
       }
       renew_monthly_credits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_overdue_contacts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

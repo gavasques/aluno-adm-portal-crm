@@ -1,18 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, X, Check, Tags } from 'lucide-react';
+import { Search, Filter, X, Calendar, Clock, AlertTriangle } from 'lucide-react';
+import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
-import { useCRMTags } from '@/hooks/crm/useCRMTags';
-import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
-import { cn } from '@/lib/utils';
 
 interface CRMFiltersProps {
   filters: CRMFiltersType;
@@ -22,225 +17,214 @@ interface CRMFiltersProps {
 }
 
 const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: CRMFiltersProps) => {
-  const [tagsOpen, setTagsOpen] = useState(false);
-  const { columns, pipelines } = useCRMPipelines();
+  const { pipelines, columns } = useCRMPipelines();
   const { users } = useCRMUsers();
-  const { tags } = useCRMTags();
 
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
-  const handleSearchChange = (value: string) => {
-    onFiltersChange({ ...filters, search: value || undefined });
+  const updateFilter = (key: keyof CRMFiltersType, value: any) => {
+    onFiltersChange({ ...filters, [key]: value });
   };
 
-  const handleColumnChange = (value: string) => {
-    onFiltersChange({ 
-      ...filters, 
-      column_id: value === 'all' ? undefined : value 
-    });
+  const removeFilter = (key: keyof CRMFiltersType) => {
+    const newFilters = { ...filters };
+    delete newFilters[key];
+    onFiltersChange(newFilters);
   };
 
-  const handleResponsibleChange = (value: string) => {
-    onFiltersChange({ 
-      ...filters, 
-      responsible_id: value === 'all' ? undefined : value 
-    });
-  };
-
-  const handleTagToggle = (tagId: string) => {
-    const currentTags = filters.tags || [];
-    const updatedTags = currentTags.includes(tagId)
-      ? currentTags.filter(id => id !== tagId)
-      : [...currentTags, tagId];
-    
-    onFiltersChange({ 
-      ...filters, 
-      tags: updatedTags.length > 0 ? updatedTags : undefined 
-    });
-  };
-
-  const clearFilters = () => {
+  const clearAllFilters = () => {
     onFiltersChange({ pipeline_id: filters.pipeline_id });
   };
 
-  const clearTagsFilter = () => {
-    onFiltersChange({ ...filters, tags: undefined });
+  const getActiveFiltersCount = () => {
+    return Object.keys(filters).filter(key => 
+      key !== 'pipeline_id' && filters[key as keyof CRMFiltersType]
+    ).length;
   };
 
-  const hasActiveFilters = !!(
-    filters.search || 
-    filters.column_id || 
-    filters.responsible_id || 
-    (filters.tags && filters.tags.length > 0)
-  );
+  const getContactFilterLabel = (value: string) => {
+    switch (value) {
+      case 'today': return 'Contatos para Hoje';
+      case 'tomorrow': return 'Contatos para Amanhã';
+      case 'overdue': return 'Contatos Atrasados';
+      case 'no_contact': return 'Sem Contato Agendado';
+      default: return value;
+    }
+  };
 
-  const selectedTags = tags.filter(tag => filters.tags?.includes(tag.id)) || [];
+  const getContactFilterIcon = (value: string) => {
+    switch (value) {
+      case 'today': return <Calendar className="h-3 w-3" />;
+      case 'tomorrow': return <Clock className="h-3 w-3" />;
+      case 'overdue': return <AlertTriangle className="h-3 w-3" />;
+      case 'no_contact': return <X className="h-3 w-3" />;
+      default: return null;
+    }
+  };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome ou email..."
-          value={filters.search || ''}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-10"
-        />
+    <div className="space-y-4">
+      {/* Filtros principais */}
+      <div className="flex flex-wrap gap-3">
+        {/* Pipeline */}
+        <Select value={pipelineId} onValueChange={onPipelineChange}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Selecionar pipeline" />
+          </SelectTrigger>
+          <SelectContent>
+            {pipelines.map(pipeline => (
+              <SelectItem key={pipeline.id} value={pipeline.id}>
+                {pipeline.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Busca */}
+        <div className="relative flex-1 min-w-[250px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar por nome ou email..."
+            value={filters.search || ''}
+            onChange={(e) => updateFilter('search', e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Filtro de contatos */}
+        <Select 
+          value={filters.contact_filter || ''} 
+          onValueChange={(value) => updateFilter('contact_filter', value || undefined)}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrar por contatos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos os contatos</SelectItem>
+            <SelectItem value="today">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-orange-600" />
+                Contatos para Hoje
+              </div>
+            </SelectItem>
+            <SelectItem value="tomorrow">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-yellow-600" />
+                Contatos para Amanhã
+              </div>
+            </SelectItem>
+            <SelectItem value="overdue">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                Contatos Atrasados
+              </div>
+            </SelectItem>
+            <SelectItem value="no_contact">
+              <div className="flex items-center gap-2">
+                <X className="h-4 w-4 text-gray-600" />
+                Sem Contato Agendado
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Coluna */}
+        <Select 
+          value={filters.column_id || ''} 
+          onValueChange={(value) => updateFilter('column_id', value || undefined)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por coluna" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todas as colunas</SelectItem>
+            {pipelineColumns.map(column => (
+              <SelectItem key={column.id} value={column.id}>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: column.color }}
+                  />
+                  {column.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Responsável */}
+        <Select 
+          value={filters.responsible_id || ''} 
+          onValueChange={(value) => updateFilter('responsible_id', value || undefined)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos os responsáveis</SelectItem>
+            {users.map(user => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Tags Multi-Select */}
-      {tags.length > 0 && (
-        <div className="flex items-center gap-2">
-          <Popover open={tagsOpen} onOpenChange={setTagsOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={tagsOpen}
-                className="w-full md:w-48 justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <Tags className="h-4 w-4" />
-                  {selectedTags.length > 0 ? (
-                    <span className="truncate">
-                      {selectedTags.length} tag{selectedTags.length !== 1 ? 's' : ''}
-                    </span>
-                  ) : (
-                    "Filtrar por tags"
-                  )}
-                </div>
-                <Filter className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Buscar tags..." />
-                <CommandList>
-                  <CommandEmpty>Nenhuma tag encontrada.</CommandEmpty>
-                  <CommandGroup>
-                    {tags.map((tag) => {
-                      const isSelected = filters.tags?.includes(tag.id);
-                      return (
-                        <CommandItem
-                          key={tag.id}
-                          value={tag.name}
-                          onSelect={() => handleTagToggle(tag.id)}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => handleTagToggle(tag.id)}
-                            className="mr-2"
-                          />
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: tag.color }}
-                          />
-                          <span className="flex-1">{tag.name}</span>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                  {selectedTags.length > 0 && (
-                    <CommandGroup>
-                      <CommandItem
-                        onSelect={clearTagsFilter}
-                        className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                        <span>Limpar tags selecionadas</span>
-                      </CommandItem>
-                    </CommandGroup>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+      {/* Filtros ativos */}
+      {getActiveFiltersCount() > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 text-sm text-gray-600">
+            <Filter className="h-4 w-4" />
+            Filtros ativos:
+          </div>
           
-          {/* Selected Tags Display */}
-          {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {selectedTags.slice(0, 2).map(tag => (
-                <Badge
-                  key={tag.id}
-                  variant="default"
-                  className="cursor-pointer text-xs px-2 py-1"
-                  style={{
-                    backgroundColor: tag.color,
-                    color: 'white'
-                  }}
-                  onClick={() => handleTagToggle(tag.id)}
-                >
-                  {tag.name}
-                  <X className="h-3 w-3 ml-1" />
-                </Badge>
-              ))}
-              {selectedTags.length > 2 && (
-                <Badge variant="outline" className="text-xs px-2 py-1">
-                  +{selectedTags.length - 2}
-                </Badge>
-              )}
-            </div>
+          {filters.search && (
+            <Badge variant="secondary" className="gap-1">
+              Busca: {filters.search}
+              <button onClick={() => removeFilter('search')}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
           )}
+
+          {filters.contact_filter && (
+            <Badge variant="secondary" className="gap-1">
+              {getContactFilterIcon(filters.contact_filter)}
+              {getContactFilterLabel(filters.contact_filter)}
+              <button onClick={() => removeFilter('contact_filter')}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {filters.column_id && (
+            <Badge variant="secondary" className="gap-1">
+              Coluna: {pipelineColumns.find(c => c.id === filters.column_id)?.name}
+              <button onClick={() => removeFilter('column_id')}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {filters.responsible_id && (
+            <Badge variant="secondary" className="gap-1">
+              Responsável: {users.find(u => u.id === filters.responsible_id)?.name}
+              <button onClick={() => removeFilter('responsible_id')}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            Limpar todos
+          </Button>
         </div>
-      )}
-
-      <Select
-        value={pipelineId || 'all'}
-        onValueChange={(value) => value !== 'all' && onPipelineChange(value)}
-      >
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="Selecionar pipeline" />
-        </SelectTrigger>
-        <SelectContent>
-          {pipelines.map(pipeline => (
-            <SelectItem key={pipeline.id} value={pipeline.id}>
-              {pipeline.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filters.column_id || 'all'}
-        onValueChange={handleColumnChange}
-      >
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="Todas as colunas" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas as colunas</SelectItem>
-          {pipelineColumns.map(column => (
-            <SelectItem key={column.id} value={column.id}>
-              {column.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filters.responsible_id || 'all'}
-        onValueChange={handleResponsibleChange}
-      >
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="Todos os responsáveis" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos os responsáveis</SelectItem>
-          <SelectItem value="unassigned">Sem responsável</SelectItem>
-          {users.map(user => (
-            <SelectItem key={user.id} value={user.id}>
-              {user.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {hasActiveFilters && (
-        <Button variant="outline" onClick={clearFilters}>
-          <X className="h-4 w-4 mr-2" />
-          Limpar
-        </Button>
       )}
     </div>
   );

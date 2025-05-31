@@ -32,7 +32,6 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
       created_by: dbLead.created_by || undefined,
       scheduled_contact_date: dbLead.scheduled_contact_date || undefined,
       notes: dbLead.notes || undefined,
-      // Transformar tags de { tag: CRMTag }[] para CRMTag[]
       tags: dbLead.tags?.map(tagWrapper => tagWrapper.tag) || []
     };
   };
@@ -51,7 +50,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
           )
         `);
 
-      // Aplicar filtros
+      // Aplicar filtros básicos
       if (filters.pipeline_id) {
         query = query.eq('pipeline_id', filters.pipeline_id);
       }
@@ -72,8 +71,67 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
 
       if (error) throw error;
 
-      // Transformar dados
-      const transformedData = (data as CRMLeadFromDB[])?.map(transformLeadData) || [];
+      let transformedData = (data as CRMLeadFromDB[])?.map(transformLeadData) || [];
+
+      // Aplicar filtros de contato se necessário
+      if (filters.contact_filter) {
+        const leadIds = transformedData.map(lead => lead.id);
+        
+        if (leadIds.length > 0) {
+          let contactQuery = supabase
+            .from('crm_lead_contacts')
+            .select('lead_id, contact_date, status')
+            .in('lead_id', leadIds);
+
+          if (filters.contact_filter !== 'no_contact') {
+            contactQuery = contactQuery.eq('status', 'pending');
+          }
+
+          const { data: contactsData } = await contactQuery;
+          const contactsByLead = (contactsData || []).reduce((acc, contact) => {
+            if (!acc[contact.lead_id]) {
+              acc[contact.lead_id] = [];
+            }
+            acc[contact.lead_id].push(contact);
+            return acc;
+          }, {} as Record<string, any[]>);
+
+          const today = new Date();
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+
+          transformedData = transformedData.filter(lead => {
+            const leadContacts = contactsByLead[lead.id] || [];
+            const pendingContacts = leadContacts.filter(c => c.status === 'pending');
+
+            switch (filters.contact_filter) {
+              case 'today':
+                return pendingContacts.some(contact => {
+                  const contactDate = new Date(contact.contact_date);
+                  return contactDate.toDateString() === today.toDateString();
+                });
+              
+              case 'tomorrow':
+                return pendingContacts.some(contact => {
+                  const contactDate = new Date(contact.contact_date);
+                  return contactDate.toDateString() === tomorrow.toDateString();
+                });
+              
+              case 'overdue':
+                return pendingContacts.some(contact => {
+                  const contactDate = new Date(contact.contact_date);
+                  return contactDate < today && contactDate.toDateString() !== today.toDateString();
+                });
+              
+              case 'no_contact':
+                return pendingContacts.length === 0;
+              
+              default:
+                return true;
+            }
+          });
+        }
+      }
 
       setLeads(transformedData);
     } catch (error) {
@@ -205,7 +263,7 @@ export const useCRMLeads = (filters: CRMFilters = {}) => {
     };
 
     loadLeads();
-  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.search]);
+  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.search, filters.contact_filter]);
 
   return {
     leads,

@@ -8,7 +8,8 @@ import {
   User, 
   FileText, 
   MessageSquare, 
-  Clock
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LeadDetailHeader } from '@/components/admin/crm/lead-detail/LeadDetailHeader';
@@ -16,6 +17,7 @@ import { LeadDetailOverview } from '@/components/admin/crm/lead-detail/LeadDetai
 import LeadAttachmentsTab from '@/components/admin/crm/lead-detail-tabs/LeadAttachmentsTab';
 import LeadCommentsTab from '@/components/admin/crm/lead-detail-tabs/LeadCommentsTab';
 import LeadHistoryTab from '@/components/admin/crm/lead-detail-tabs/LeadHistoryTab';
+import LeadContactsTab from '@/components/admin/crm/lead-detail-tabs/LeadContactsTab';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
 
 const LeadDetail = () => {
@@ -101,6 +103,10 @@ const LeadDetail = () => {
                 <User className="h-4 w-4" />
                 Visão Geral & Dados
               </TabsTrigger>
+              <TabsTrigger value="contacts" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Contatos
+              </TabsTrigger>
               <TabsTriggerWithBadge 
                 value="attachments" 
                 badgeContent="3"
@@ -127,6 +133,10 @@ const LeadDetail = () => {
           <div className="p-6">
             <TabsContent value="overview" className="mt-0">
               <LeadDetailOverview lead={lead} />
+            </TabsContent>
+            
+            <TabsContent value="contacts" className="mt-0">
+              <LeadContactsTab leadId={lead.id} />
             </TabsContent>
             
             <TabsContent value="attachments" className="mt-0">
