@@ -121,70 +121,73 @@ export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
             )}
           </div>
 
-          {/* Dados Adicionais */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-gray-600" />
-              Dados Adicionais
-            </h3>
-            <div className="space-y-3">
-              {lead.amazon_store_link && (
-                <div className="p-2 bg-orange-50/50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Link da loja Amazon</p>
-                  <p className="text-sm font-medium break-all">{lead.amazon_store_link}</p>
-                </div>
-              )}
-              {lead.amazon_state && (
-                <div className="p-2 bg-gray-50/50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Estado Amazon</p>
-                  <p className="text-sm font-medium">{lead.amazon_state}</p>
-                </div>
-              )}
-              {lead.amazon_tax_regime && (
-                <div className="p-2 bg-gray-50/50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Regime Tributário</p>
-                  <p className="text-sm font-medium">{lead.amazon_tax_regime}</p>
-                </div>
-              )}
-              {lead.keep_or_new_niches && (
-                <div className="p-2 bg-purple-50/50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Nichos</p>
-                  <p className="text-sm font-medium">{lead.keep_or_new_niches}</p>
-                </div>
-              )}
-              {lead.calendly_link && (
-                <div className="p-2 bg-green-50/50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Link Calendly</p>
-                  <p className="text-sm font-medium break-all">{lead.calendly_link}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Tags */}
-          {lead.tags && lead.tags.length > 0 && (
+          {/* Dados Adicionais e Tags - duas colunas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Dados Adicionais */}
             <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <BadgeIcon className="h-4 w-4 text-purple-600" />
-                Tags
+                <FileText className="h-4 w-4 text-gray-600" />
+                Dados Adicionais
               </h3>
-              <div className="flex flex-wrap gap-2">
-                {lead.tags.map(tag => (
-                  <Badge
-                    key={tag.id}
-                    className="text-xs"
-                    style={{ 
-                      backgroundColor: tag.color + '20', 
-                      color: tag.color,
-                      borderColor: tag.color + '40'
-                    }}
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
+              <div className="space-y-3">
+                {lead.amazon_store_link && (
+                  <div className="p-2 bg-orange-50/50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Link da loja Amazon</p>
+                    <p className="text-sm font-medium break-all">{lead.amazon_store_link}</p>
+                  </div>
+                )}
+                {lead.amazon_state && (
+                  <div className="p-2 bg-gray-50/50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Estado Amazon</p>
+                    <p className="text-sm font-medium">{lead.amazon_state}</p>
+                  </div>
+                )}
+                {lead.amazon_tax_regime && (
+                  <div className="p-2 bg-gray-50/50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Regime Tributário</p>
+                    <p className="text-sm font-medium">{lead.amazon_tax_regime}</p>
+                  </div>
+                )}
+                {lead.keep_or_new_niches && (
+                  <div className="p-2 bg-purple-50/50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Nichos</p>
+                    <p className="text-sm font-medium">{lead.keep_or_new_niches}</p>
+                  </div>
+                )}
+                {lead.calendly_link && (
+                  <div className="p-2 bg-green-50/50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Link Calendly</p>
+                    <p className="text-sm font-medium break-all">{lead.calendly_link}</p>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Tags */}
+            {lead.tags && lead.tags.length > 0 && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <BadgeIcon className="h-4 w-4 text-purple-600" />
+                  Tags
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {lead.tags.map(tag => (
+                    <Badge
+                      key={tag.id}
+                      className="text-xs"
+                      style={{ 
+                        backgroundColor: tag.color + '20', 
+                        color: tag.color,
+                        borderColor: tag.color + '40'
+                      }}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Observações */}
           {(lead.main_doubts || lead.notes) && (
