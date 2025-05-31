@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
-import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
-import { CRMLead, CRMFilters as CRMFiltersType, ViewMode } from '@/types/crm.types';
+import { CRMFilters as CRMFiltersType, ViewMode } from '@/types/crm.types';
 import CRMKanbanBoard from './CRMKanbanBoard';
 import CRMListView from './CRMListView';
 import CRMStatsCards from './CRMStatsCards';
@@ -12,12 +10,11 @@ import CRMPipelineManager from './CRMPipelineManager';
 import { CRMLoadingSkeleton } from './LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, List, Plus } from 'lucide-react';
-import { toast } from 'sonner';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 interface CRMViewProps {
   onNewLead?: () => void;
-  onEditLead?: (lead: CRMLead) => void;
+  onEditLead?: (lead: any) => void;
 }
 
 const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
@@ -27,21 +24,26 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { pipelines, loading: pipelinesLoading, fetchPipelines } = useCRMPipelines();
-  const { moveToColumn } = useCRMLeadUpdate();
 
   // Set default pipeline if none selected
   React.useEffect(() => {
+    console.log('CRMView - pipelines:', pipelines.length, 'pipelineId:', pipelineId);
+    
     if (!pipelineId && pipelines.length > 0) {
-      setPipelineId(pipelines[0].id);
-      setFilters(prev => ({ ...prev, pipeline_id: pipelines[0].id }));
+      const defaultPipeline = pipelines[0];
+      console.log('Setting default pipeline:', defaultPipeline.id);
+      setPipelineId(defaultPipeline.id);
+      setFilters(prev => ({ ...prev, pipeline_id: defaultPipeline.id }));
     }
   }, [pipelineId, pipelines]);
 
   const handleFiltersChange = (newFilters: CRMFiltersType) => {
+    console.log('CRMView - filters changing:', newFilters);
     setFilters(newFilters);
   };
 
   const handlePipelineChange = (newPipelineId: string) => {
+    console.log('CRMView - pipeline changing to:', newPipelineId);
     setPipelineId(newPipelineId);
     setFilters(prev => ({ ...prev, pipeline_id: newPipelineId }));
   };
@@ -53,6 +55,22 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
 
   if (pipelinesLoading) {
     return <CRMLoadingSkeleton />;
+  }
+
+  // Guard: Não renderizar se não há pipelines
+  if (pipelines.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Nenhum pipeline encontrado.</p>
+        <p className="text-sm text-gray-400 mt-2">Configure pipelines para começar a usar o CRM.</p>
+        <div className="mt-4">
+          <CRMPipelineManager 
+            onRefresh={handlePipelineManagerRefresh}
+            onPipelineChange={handlePipelineManagerRefresh}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -109,16 +127,22 @@ const CRMView = ({ onNewLead, onEditLead }: CRMViewProps) => {
         transition={{ duration: 0.3 }}
         className="min-h-[calc(100vh-300px)]"
       >
-        {viewMode === 'kanban' ? (
-          <CRMKanbanBoard
-            filters={filters}
-            pipelineId={pipelineId}
-          />
+        {pipelineId ? (
+          viewMode === 'kanban' ? (
+            <CRMKanbanBoard
+              filters={filters}
+              pipelineId={pipelineId}
+            />
+          ) : (
+            <CRMListView
+              filters={filters}
+              onEditLead={onEditLead}
+            />
+          )
         ) : (
-          <CRMListView
-            filters={filters}
-            onEditLead={onEditLead}
-          />
+          <div className="text-center py-12">
+            <p className="text-gray-500">Carregando pipeline...</p>
+          </div>
         )}
       </motion.div>
     </div>

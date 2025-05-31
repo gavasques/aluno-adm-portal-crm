@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMLeadFromDB, CRMFilters, CRMLeadContact } from '@/types/crm.types';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
   const [leadsWithContacts, setLeadsWithContacts] = useState<LeadWithContacts[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const transformLeadData = (dbLead: CRMLeadFromDB): CRMLead => {
+  const transformLeadData = useCallback((dbLead: CRMLeadFromDB): CRMLead => {
     return {
       ...dbLead,
       has_company: dbLead.has_company ?? false,
@@ -38,10 +38,22 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
       notes: dbLead.notes || undefined,
       tags: dbLead.tags?.map(tagWrapper => tagWrapper.tag) || []
     };
-  };
+  }, []);
 
-  const fetchLeadsWithContacts = async () => {
+  const fetchLeadsWithContacts = useCallback(async () => {
+    console.log('fetchLeadsWithContacts called with filters:', filters);
+
+    // Guard: Não executar sem pipeline_id válido
+    if (!filters.pipeline_id) {
+      console.log('No pipeline_id provided, skipping fetch');
+      setLeadsWithContacts([]);
+      setLoading(false);
+      return;
+    }
+
     try {
+      setLoading(true);
+
       // Buscar leads com filtros
       let leadsQuery = supabase
         .from('crm_leads')
@@ -53,12 +65,9 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
           tags:crm_lead_tags(
             tag:crm_tags(id, name, color)
           )
-        `);
+        `)
+        .eq('pipeline_id', filters.pipeline_id);
 
-      if (filters.pipeline_id) {
-        leadsQuery = leadsQuery.eq('pipeline_id', filters.pipeline_id);
-      }
-      
       if (filters.column_id) {
         leadsQuery = leadsQuery.eq('column_id', filters.column_id);
       }
@@ -73,7 +82,12 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
 
       const { data: leads, error: leadsError } = await leadsQuery.order('created_at', { ascending: false });
 
-      if (leadsError) throw leadsError;
+      if (leadsError) {
+        console.error('Error fetching leads:', leadsError);
+        throw leadsError;
+      }
+
+      console.log('Leads fetched:', leads?.length || 0);
 
       const transformedLeads = (leads as CRMLeadFromDB[])?.map(transformLeadData) || [];
 
@@ -94,7 +108,12 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         .eq('status', 'pending')
         .order('contact_date', { ascending: true });
 
-      if (contactsError) throw contactsError;
+      if (contactsError) {
+        console.error('Error fetching contacts:', contactsError);
+        // Não falhar se contatos não carregarem
+      }
+
+      console.log('Contacts fetched:', contacts?.length || 0);
 
       // Transformar contatos
       const transformedContacts = (contacts || []).map(contact => ({
@@ -118,22 +137,26 @@ export const useCRMLeadsWithContacts = (filters: CRMFilters = {}) => {
         pending_contacts: contactsByLead[lead.id] || []
       }));
 
+      console.log('Final leads with contacts:', leadsWithContactsData.length);
       setLeadsWithContacts(leadsWithContactsData);
     } catch (error) {
       console.error('Erro ao buscar leads com contatos:', error);
       toast.error('Erro ao carregar leads');
+      setLeadsWithContacts([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.search, transformLeadData]);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await fetchLeadsWithContacts();
+    // Guard: Não executar sem pipeline_id
+    if (!filters.pipeline_id) {
       setLoading(false);
-    };
+      return;
+    }
 
-    loadData();
-  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.search]);
+    fetchLeadsWithContacts();
+  }, [fetchLeadsWithContacts]);
 
   return {
     leadsWithContacts,

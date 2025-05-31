@@ -7,7 +7,6 @@ import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMLeadsWithContacts } from '@/hooks/crm/useCRMLeadsWithContacts';
 import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
-import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
 import CRMLeadFormDialog from './CRMLeadFormDialog';
@@ -33,6 +32,15 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
       },
     })
   );
+
+  // Guard: Não renderizar sem pipelineId
+  if (!pipelineId) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Selecione um pipeline para visualizar os leads.</p>
+      </div>
+    );
+  }
 
   const loading = columnsLoading || leadsLoading;
 
@@ -66,9 +74,13 @@ const OptimizedKanbanBoard = ({ filters, pipelineId }: OptimizedKanbanBoardProps
     // Verificar se o lead foi movido para uma coluna diferente
     const lead = leadsWithContacts.find(l => l.id === leadId);
     if (lead && lead.column_id !== newColumnId) {
-      await moveLeadToColumn(leadId, newColumnId);
-      // Recarregar dados após mover
-      await fetchLeadsWithContacts();
+      try {
+        await moveLeadToColumn(leadId, newColumnId);
+        // Recarregar dados após mover
+        await fetchLeadsWithContacts();
+      } catch (error) {
+        console.error('Erro ao mover lead:', error);
+      }
     }
   };
 
