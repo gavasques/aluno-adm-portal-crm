@@ -10,12 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, User, Building2, Globe, DollarSign, Tags } from 'lucide-react';
-import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
+import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLead, CRMLeadInput } from '@/types/crm.types';
 import CRMTagsSelector from './CRMTagsSelector';
 
 interface CRMLeadFormProps {
@@ -29,8 +29,8 @@ interface CRMLeadFormProps {
 const CRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }: CRMLeadFormProps) => {
   const [loading, setLoading] = useState(false);
   const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
-  const { createLead, updateLead } = useCRMLeads();
   const { columns } = useCRMPipelines();
+  const { updateLead, updateLeadTags } = useCRMLeadUpdate();
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
@@ -94,6 +94,47 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }:
     }
   }, [pipelineColumns, setValue, form, initialColumnId, lead]);
 
+  const createLead = async (leadData: CRMLeadInput) => {
+    try {
+      const insertData = {
+        name: leadData.name,
+        email: leadData.email,
+        phone: leadData.phone,
+        has_company: leadData.has_company,
+        what_sells: leadData.what_sells,
+        keep_or_new_niches: leadData.keep_or_new_niches,
+        sells_on_amazon: leadData.sells_on_amazon,
+        amazon_store_link: leadData.amazon_store_link,
+        amazon_state: leadData.amazon_state,
+        amazon_tax_regime: leadData.amazon_tax_regime,
+        works_with_fba: leadData.works_with_fba,
+        had_contact_with_lv: leadData.had_contact_with_lv,
+        seeks_private_label: leadData.seeks_private_label,
+        main_doubts: leadData.main_doubts,
+        ready_to_invest_3k: leadData.ready_to_invest_3k,
+        calendly_scheduled: leadData.calendly_scheduled,
+        calendly_link: leadData.calendly_link,
+        pipeline_id: leadData.pipeline_id,
+        column_id: leadData.column_id,
+        responsible_id: leadData.responsible_id,
+        notes: leadData.notes
+      };
+
+      const { data, error } = await supabase
+        .from('crm_leads')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar lead:', error);
+      throw error;
+    }
+  };
+
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true);
     try {
@@ -107,16 +148,23 @@ const CRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }:
           pipeline_id: pipelineId,
           column_id: columnId,
         });
+        await updateLeadTags(lead.id, data.tags || []);
         toast.success('Lead atualizado com sucesso!');
       } else {
         // Criar novo lead
-        await createLead({
+        const newLead = await createLead({
           ...data,
           pipeline_id: pipelineId,
           column_id: columnId,
           name: data.name!,
           email: data.email!,
         });
+
+        // Adicionar tags se houver
+        if (data.tags && data.tags.length > 0) {
+          await updateLeadTags(newLead.id, data.tags);
+        }
+        
         toast.success('Lead criado com sucesso!');
       }
       onSuccess();

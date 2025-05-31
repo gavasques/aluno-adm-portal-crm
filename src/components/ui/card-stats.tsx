@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -13,7 +14,7 @@ interface CardStatsProps {
   onClick?: () => void;
 }
 
-export function CardStats({
+export const CardStats = React.memo(({
   title,
   value,
   icon,
@@ -22,7 +23,7 @@ export function CardStats({
   trendValue,
   className,
   onClick,
-}: CardStatsProps) {
+}: CardStatsProps) => {
   return (
     <Card 
       className={cn(
@@ -72,4 +73,6 @@ export function CardStats({
       </CardContent>
     </Card>
   );
-}
+});
+
+CardStats.displayName = "CardStats";

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, DollarSign, Clock } from 'lucide-react';
-import { useCRMLeads } from '@/hooks/crm/useCRMLeads';
+import { useCRMData } from '@/hooks/crm/useCRMData';
 import { CRMFilters } from '@/types/crm.types';
 
 interface CRMStatsCardsProps {
@@ -10,24 +10,24 @@ interface CRMStatsCardsProps {
 }
 
 const CRMStatsCards = ({ filters }: CRMStatsCardsProps) => {
-  const { leads, loading } = useCRMLeads(filters);
+  const { leadsWithContacts, loading } = useCRMData(filters);
 
   const stats = React.useMemo(() => {
     if (loading) return { total: 0, qualified: 0, closed: 0, pending: 0 };
 
-    const total = leads.length;
-    const qualified = leads.filter(lead => 
+    const total = leadsWithContacts.length;
+    const qualified = leadsWithContacts.filter(lead => 
       lead.column?.name && !['Novo Lead', 'Perdido'].includes(lead.column.name)
     ).length;
-    const closed = leads.filter(lead => 
+    const closed = leadsWithContacts.filter(lead => 
       lead.column?.name === 'Fechado'
     ).length;
-    const pending = leads.filter(lead => 
+    const pending = leadsWithContacts.filter(lead => 
       !lead.responsible_id
     ).length;
 
     return { total, qualified, closed, pending };
-  }, [leads, loading]);
+  }, [leadsWithContacts, loading]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

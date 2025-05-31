@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMLeadFromDB, CRMFilters, CRMLeadContact } from '@/types/crm.types';
@@ -182,22 +182,25 @@ export const useCRMData = (filters: CRMFilters = {}) => {
     queryFn: fetchLeadsWithContacts,
     enabled: !!filters.pipeline_id,
     staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false,
   });
 
   const moveLeadToColumn = useCallback(async (leadId: string, newColumnId: string) => {
-    const { error } = await supabase
-      .from('crm_leads')
-      .update({ column_id: newColumnId })
-      .eq('id', leadId);
+    try {
+      const { error } = await supabase
+        .from('crm_leads')
+        .update({ column_id: newColumnId })
+        .eq('id', leadId);
 
-    if (error) {
+      if (error) throw error;
+
+      // Invalidar cache para atualizar dados
+      queryClient.invalidateQueries({ queryKey: ['crm-leads-with-contacts'] });
+      toast.success('Lead movido com sucesso');
+    } catch (error) {
       toast.error('Erro ao mover lead');
       throw error;
     }
-
-    // Invalidar cache para atualizar dados
-    queryClient.invalidateQueries({ queryKey: ['crm-leads-with-contacts'] });
-    toast.success('Lead movido com sucesso');
   }, [queryClient]);
 
   const leadsByColumn = useMemo(() => {
