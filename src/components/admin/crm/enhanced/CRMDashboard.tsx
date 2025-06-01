@@ -2,15 +2,15 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Columns3, Tag, Settings } from 'lucide-react';
+import { Columns3, Tag, Settings, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import CRMFilters from '../CRMFilters';
 import CRMPipelineManager from '../CRMPipelineManager';
 import CRMTagsManager from '../CRMTagsManager';
 import CRMReports from '../reports/CRMReports';
 import CRMLeadFormDialog from '../CRMLeadFormDialog';
-import { DashboardHeader } from '../dashboard/DashboardHeader';
 import { DashboardToolbar } from '../dashboard/DashboardToolbar';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { useDashboardState } from '@/hooks/crm/useDashboardState';
@@ -77,90 +77,126 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   return (
     <>
-      <div className="h-full flex flex-col">
-        <DashboardHeader onRefresh={handleRefresh} />
-
-        <div className="flex-1 px-6 pb-6">
-          <Tabs defaultValue="pipeline" className="h-full flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <TabsList>
-                <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-                <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-                <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
-              </TabsList>
+      <div className="h-full flex flex-col bg-gray-50/30">
+        {/* Header Principal */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">CRM</h1>
+              <p className="text-sm text-gray-600 mt-1">Gestão de leads e pipeline de vendas</p>
             </div>
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
+        </div>
 
-            <TabsContent value="pipeline" className="flex-1 flex flex-col space-y-6">
-              <DashboardToolbar
-                activeView={activeView}
-                onViewChange={setActiveView}
-                pipelines={pipelines}
-                selectedPipelineId={selectedPipelineId}
-                onCreateLead={() => handleCreateLead()}
-              />
+        {/* Navegação por Tabs */}
+        <div className="bg-white border-b border-gray-200 px-6">
+          <Tabs defaultValue="pipeline" className="w-full">
+            <TabsList className="grid w-fit grid-cols-3 bg-gray-100/50">
+              <TabsTrigger value="pipeline" className="data-[state=active]:bg-white">
+                Pipeline
+              </TabsTrigger>
+              <TabsTrigger value="relatorios" className="data-[state=active]:bg-white">
+                Relatórios
+              </TabsTrigger>
+              <TabsTrigger value="configuracoes" className="data-[state=active]:bg-white">
+                Configurações
+              </TabsTrigger>
+            </TabsList>
 
-              <CRMFilters
-                pipelineId={selectedPipelineId}
-                onPipelineChange={setSelectedPipelineId}
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-              />
+            <div className="flex-1 pt-6">
+              <TabsContent value="pipeline" className="mt-0 space-y-6">
+                {/* Toolbar com View Toggle e Novo Lead */}
+                <DashboardToolbar
+                  activeView={activeView}
+                  onViewChange={setActiveView}
+                  pipelines={pipelines}
+                  selectedPipelineId={selectedPipelineId}
+                  onCreateLead={() => handleCreateLead()}
+                />
 
-              <DashboardContent
-                activeView={activeView}
-                effectiveFilters={effectiveFilters}
-                selectedPipelineId={selectedPipelineId}
-                onCreateLead={handleCreateLead}
-              />
-            </TabsContent>
+                {/* Área de Filtros Reorganizada */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <CRMFilters
+                    pipelineId={selectedPipelineId}
+                    onPipelineChange={setSelectedPipelineId}
+                    filters={filters}
+                    onFiltersChange={handleFiltersChange}
+                  />
+                </div>
+              </TabsContent>
 
-            <TabsContent value="relatorios" className="flex-1">
-              <CRMReports />
-            </TabsContent>
+              <TabsContent value="relatorios" className="mt-0">
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <CRMReports />
+                </div>
+              </TabsContent>
 
-            <TabsContent value="configuracoes" className="flex-1">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Configurações CRM
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border rounded-lg">
-                      <h3 className="font-medium mb-2 flex items-center gap-2">
-                        <Columns3 className="h-4 w-4" />
-                        Pipelines
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Configure pipelines e colunas do CRM
-                      </p>
-                      <CRMPipelineManager onRefresh={refetch} />
+              <TabsContent value="configuracoes" className="mt-0">
+                <Card className="border-gray-200">
+                  <CardHeader className="border-b border-gray-100">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Settings className="h-5 w-5" />
+                      Configurações CRM
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="p-6 border border-gray-200 rounded-lg bg-gray-50/30">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Columns3 className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Pipelines</h3>
+                            <p className="text-sm text-gray-600">Configure pipelines e colunas do CRM</p>
+                          </div>
+                        </div>
+                        <CRMPipelineManager onRefresh={refetch} />
+                      </div>
+
+                      <div className="p-6 border border-gray-200 rounded-lg bg-gray-50/30">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <Tag className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Tags</h3>
+                            <p className="text-sm text-gray-600">Gerencie as tags para categorizar leads</p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowTagsManager(true)}
+                          className="w-full border-green-200 text-green-700 hover:bg-green-50"
+                        >
+                          <Tag className="h-4 w-4 mr-2" />
+                          Gerenciar Tags
+                        </Button>
+                      </div>
                     </div>
-
-                    <div className="p-4 border rounded-lg">
-                      <h3 className="font-medium mb-2 flex items-center gap-2">
-                        <Tag className="h-4 w-4" />
-                        Tags
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Gerencie as tags para categorizar leads
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowTagsManager(true)}
-                        className="w-full"
-                      >
-                        <Tag className="h-4 w-4 mr-2" />
-                        Gerenciar Tags
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </div>
           </Tabs>
+        </div>
+
+        {/* Conteúdo Principal */}
+        <div className="flex-1 p-6">
+          <DashboardContent
+            activeView={activeView}
+            effectiveFilters={effectiveFilters}
+            selectedPipelineId={selectedPipelineId}
+            onCreateLead={handleCreateLead}
+          />
         </div>
 
         <CRMTagsManager

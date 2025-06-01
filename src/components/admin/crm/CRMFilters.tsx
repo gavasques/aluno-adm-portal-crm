@@ -8,6 +8,7 @@ import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
 import { PrimaryFilters } from './filters/PrimaryFilters';
 import { AdvancedFilters } from './filters/AdvancedFilters';
 import { ActiveFilters } from './filters/ActiveFilters';
+import { Separator } from '@/components/ui/separator';
 
 interface CRMFiltersProps {
   filters: CRMFiltersType;
@@ -48,8 +49,8 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Filtros principais */}
-      <div className="flex flex-wrap gap-3">
+      {/* Linha Principal de Filtros */}
+      <div className="flex flex-wrap items-center gap-4">
         <PrimaryFilters
           pipelineId={pipelineId}
           onPipelineChange={onPipelineChange}
@@ -58,7 +59,9 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
           setSearchValue={setSearchValue}
           isDebouncing={isDebouncing}
         />
-
+        
+        <div className="h-8 w-px bg-gray-200" />
+        
         <AdvancedFilters
           filters={filters}
           updateFilter={updateFilter}
@@ -69,7 +72,7 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
         />
       </div>
 
-      {/* Filtros ativos */}
+      {/* Filtros Ativos */}
       <ActiveFilters
         filters={filters}
         activeFiltersCount={getActiveFiltersCount()}
