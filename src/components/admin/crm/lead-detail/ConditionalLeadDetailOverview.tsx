@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CRMLead } from '@/types/crm.types';
+import { CRMCustomField, CRMCustomFieldValue, CRMCustomFieldGroup } from '@/types/crm-custom-fields.types';
 import { 
   Building2, 
   ShoppingCart, 
@@ -8,15 +9,22 @@ import {
   Target,
   Calendar,
   Globe,
-  FileText
+  FileText,
+  Settings
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useCRMFieldVisibility } from '@/hooks/crm/useCRMFieldVisibility';
+import { CustomFieldRenderer } from './CustomFieldRenderer';
+
+interface LeadDetailData extends CRMLead {
+  customFields?: CRMCustomField[];
+  customFieldValues?: CRMCustomFieldValue[];
+}
 
 interface ConditionalLeadDetailOverviewProps {
-  lead: CRMLead;
+  lead: LeadDetailData;
 }
 
 export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOverviewProps) => {
@@ -59,6 +67,32 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
       {value ? trueText : falseText}
     </span>
   );
+
+  // Agrupar campos customizados por grupo
+  const groupCustomFields = () => {
+    if (!lead.customFields || !lead.customFieldValues) return {};
+
+    const groups: Record<string, { group: CRMCustomFieldGroup; fields: Array<{ field: CRMCustomField; value?: CRMCustomFieldValue }> }> = {};
+
+    lead.customFields.forEach(field => {
+      if (!field.group || !field.group.is_active) return;
+
+      const groupName = field.group.name;
+      if (!groups[groupName]) {
+        groups[groupName] = {
+          group: field.group,
+          fields: []
+        };
+      }
+
+      const fieldValue = lead.customFieldValues?.find(v => v.field_id === field.id);
+      groups[groupName].fields.push({ field, value: fieldValue });
+    });
+
+    return groups;
+  };
+
+  const customFieldGroups = groupCustomFields();
 
   if (loading) {
     return <div className="p-6">Carregando configuração...</div>;
@@ -230,6 +264,27 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
             }
           />
         )}
+
+        {/* Campos Customizados Agrupados */}
+        {Object.entries(customFieldGroups).map(([groupName, groupData]) => (
+          <InfoCard
+            key={groupName}
+            icon={Settings}
+            title={groupData.group.name}
+            color="slate"
+            content={
+              <div className="space-y-3">
+                {groupData.fields.map(({ field, value }) => (
+                  <CustomFieldRenderer
+                    key={field.id}
+                    field={field}
+                    value={value}
+                  />
+                ))}
+              </div>
+            }
+          />
+        ))}
       </div>
 
       {/* Observações */}
