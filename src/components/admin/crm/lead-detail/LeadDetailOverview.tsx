@@ -1,328 +1,280 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { CRMLead, CRMLeadContact } from '@/types/crm.types';
+import { CRMLead } from '@/types/crm.types';
 import { 
-  User, 
   Building2, 
-  FileText, 
-  Mail, 
-  Phone, 
+  ShoppingCart, 
+  Package, 
+  Target,
+  DollarSign,
   Calendar,
   Globe,
-  DollarSign,
-  UserCheck,
-  Badge as BadgeIcon,
-  Clock,
-  CheckCircle
+  MapPin,
+  FileText
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { RecentComments } from './RecentComments';
-import { isToday, isTomorrow, isPast, differenceInDays } from 'date-fns';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface LeadDetailOverviewProps {
-  lead: CRMLead & {
-    pending_contacts?: CRMLeadContact[];
-    last_completed_contact?: CRMLeadContact;
-  };
+  lead: CRMLead;
 }
 
 export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  // Buscar próximo contato pendente
-  const nextContact = lead.pending_contacts && lead.pending_contacts.length > 0
-    ? lead.pending_contacts
-        .filter(contact => contact.status === 'pending')
-        .sort((a, b) => new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime())[0]
-    : null;
-
-  // Último contato realizado
-  const lastCompletedContact = lead.last_completed_contact;
-
-  const getContactBadge = (contactDate: string, isCompleted: boolean = false) => {
-    if (isCompleted) {
-      return (
-        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          Realizado
-        </Badge>
-      );
-    }
-
-    const contactDateObj = new Date(contactDate);
-    
-    if (isPast(contactDateObj) && !isToday(contactDateObj)) {
-      return (
-        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
-          <Clock className="h-3 w-3 mr-1" />
-          Atrasado
-        </Badge>
-      );
-    }
-    
-    if (isToday(contactDateObj)) {
-      return (
-        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
-          <Clock className="h-3 w-3 mr-1" />
-          Hoje
-        </Badge>
-      );
-    }
-    
-    if (isTomorrow(contactDateObj)) {
-      return (
-        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
-          <Clock className="h-3 w-3 mr-1" />
-          Amanhã
-        </Badge>
-      );
-    }
-    
-    const daysDiff = differenceInDays(contactDateObj, new Date());
-    if (daysDiff <= 7) {
-      return (
-        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-          <Calendar className="h-3 w-3 mr-1" />
-          {daysDiff}d
-        </Badge>
-      );
-    }
-
-    return null;
-  };
-
-  return (
+  const InfoCard = ({ 
+    icon: Icon, 
+    title, 
+    content, 
+    color = "blue" 
+  }: { 
+    icon: any; 
+    title: string; 
+    content: React.ReactNode; 
+    color?: string; 
+  }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="h-full overflow-y-auto"
+      className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-        {/* Coluna esquerda - Informações do lead */}
-        <div className="space-y-4">
-          {/* Informações de contato - compactadas */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <User className="h-4 w-4 text-blue-600" />
-              Informações de Contato
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 p-2 bg-gray-50/50 rounded-lg">
-                <Mail className="h-3 w-3 text-blue-600" />
-                <div>
-                  <p className="text-xs text-gray-500">Email</p>
-                  <p className="font-medium text-xs">{lead.email}</p>
-                </div>
-              </div>
-              {lead.phone && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50/50 rounded-lg">
-                  <Phone className="h-3 w-3 text-green-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">Telefone</p>
-                    <p className="font-medium text-xs">{lead.phone}</p>
-                  </div>
-                </div>
-              )}
-              {lead.responsible && (
-                <div className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-lg">
-                  <UserCheck className="h-3 w-3 text-purple-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">Responsável</p>
-                    <p className="font-medium text-xs">{lead.responsible.name}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Informações de Contatos - Nova seção */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              Gestão de Contatos
-            </h3>
-            <div className="space-y-3">
-              {/* Próximo Contato */}
-              <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Próximo Contato</p>
-                    <p className="text-xs text-gray-500">
-                      {nextContact ? formatDate(nextContact.contact_date) : 'Sem contatos agendados'}
-                    </p>
-                  </div>
-                </div>
-                {nextContact && getContactBadge(nextContact.contact_date)}
-              </div>
-
-              {/* Último Contato */}
-              <div className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Último Contato</p>
-                    <p className="text-xs text-gray-500">
-                      {lastCompletedContact && lastCompletedContact.completed_at
-                        ? formatDate(lastCompletedContact.completed_at)
-                        : 'Nenhum contato realizado'
-                      }
-                    </p>
-                  </div>
-                </div>
-                {lastCompletedContact && lastCompletedContact.completed_at && 
-                  getContactBadge(lastCompletedContact.completed_at, true)
-                }
-              </div>
-            </div>
-          </div>
-
-          {/* Informações de negócio - reduzidas com badges */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-orange-600" />
-              Informações de Negócio
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant={lead.has_company ? "default" : "secondary"} className="text-xs">
-                <Building2 className="h-3 w-3 mr-1" />
-                {lead.has_company ? 'Tem empresa' : 'Pessoa física'}
-              </Badge>
-              <Badge variant={lead.sells_on_amazon ? "default" : "secondary"} className="text-xs">
-                <Globe className="h-3 w-3 mr-1" />
-                {lead.sells_on_amazon ? 'Amazon' : 'Não Amazon'}
-              </Badge>
-              <Badge variant={lead.ready_to_invest_3k ? "default" : "secondary"} className="text-xs">
-                <DollarSign className="h-3 w-3 mr-1" />
-                {lead.ready_to_invest_3k ? 'R$ 3k OK' : 'Não qualificado'}
-              </Badge>
-              <Badge variant={lead.works_with_fba ? "default" : "secondary"} className="text-xs">
-                FBA: {lead.works_with_fba ? 'Sim' : 'Não'}
-              </Badge>
-              <Badge variant={lead.seeks_private_label ? "default" : "secondary"} className="text-xs">
-                PL: {lead.seeks_private_label ? 'Sim' : 'Não'}
-              </Badge>
-              <Badge variant={lead.had_contact_with_lv ? "default" : "secondary"} className="text-xs">
-                Contato LV: {lead.had_contact_with_lv ? 'Sim' : 'Não'}
-              </Badge>
-            </div>
-            
-            {lead.what_sells && (
-              <div className="mt-3 p-3 bg-blue-50/50 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">O que vende</p>
-                <p className="text-sm font-medium">{lead.what_sells}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Dados Adicionais e Tags - duas colunas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Dados Adicionais */}
-            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-600" />
-                Dados Adicionais
-              </h3>
-              <div className="space-y-3">
-                {lead.amazon_store_link && (
-                  <div className="p-2 bg-orange-50/50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Link da loja Amazon</p>
-                    <p className="text-sm font-medium break-all">{lead.amazon_store_link}</p>
-                  </div>
-                )}
-                {lead.amazon_state && (
-                  <div className="p-2 bg-gray-50/50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Estado Amazon</p>
-                    <p className="text-sm font-medium">{lead.amazon_state}</p>
-                  </div>
-                )}
-                {lead.amazon_tax_regime && (
-                  <div className="p-2 bg-gray-50/50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Regime Tributário</p>
-                    <p className="text-sm font-medium">{lead.amazon_tax_regime}</p>
-                  </div>
-                )}
-                {lead.keep_or_new_niches && (
-                  <div className="p-2 bg-purple-50/50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Nichos</p>
-                    <p className="text-sm font-medium">{lead.keep_or_new_niches}</p>
-                  </div>
-                )}
-                {lead.calendly_link && (
-                  <div className="p-2 bg-green-50/50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Link Calendly</p>
-                    <p className="text-sm font-medium break-all">{lead.calendly_link}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Tags */}
-            {lead.tags && lead.tags.length > 0 && (
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <BadgeIcon className="h-4 w-4 text-purple-600" />
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {lead.tags.map(tag => (
-                    <Badge
-                      key={tag.id}
-                      className="text-xs"
-                      style={{ 
-                        backgroundColor: tag.color + '20', 
-                        color: tag.color,
-                        borderColor: tag.color + '40'
-                      }}
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Observações */}
-          {(lead.main_doubts || lead.notes) && (
-            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-600" />
-                Observações
-              </h3>
-              <div className="space-y-3">
-                {lead.main_doubts && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">Principais dúvidas:</p>
-                    <p className="text-sm text-gray-600 bg-yellow-50/50 p-3 rounded-lg">{lead.main_doubts}</p>
-                  </div>
-                )}
-                {lead.notes && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">Observações gerais:</p>
-                    <p className="text-sm text-gray-600 bg-gray-50/50 p-3 rounded-lg">{lead.notes}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+      <div className="flex items-start gap-4">
+        <div className={`p-3 rounded-xl bg-${color}-100`}>
+          <Icon className={`h-5 w-5 text-${color}-600`} />
         </div>
-
-        {/* Coluna direita - Comentários expandidos */}
-        <div className="space-y-4">
-          {/* Comentários recentes com editor integrado */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg h-[calc(100vh-300px)] min-h-[500px] flex flex-col">
-            <RecentComments leadId={lead.id} />
-          </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
+          <div className="text-gray-700">{content}</div>
         </div>
       </div>
     </motion.div>
+  );
+
+  const YesNoIndicator = ({ value, trueText = "Sim", falseText = "Não" }: { value: boolean; trueText?: string; falseText?: string }) => (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+      value 
+        ? 'bg-green-100 text-green-800' 
+        : 'bg-gray-100 text-gray-600'
+    }`}>
+      {value ? trueText : falseText}
+    </span>
+  );
+
+  return (
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50/30 to-purple-50/30 p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Informações da Empresa */}
+        <InfoCard
+          icon={Building2}
+          title="Informações da Empresa"
+          color="blue"
+          content={
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Tem empresa:</span>
+                <YesNoIndicator value={lead.has_company} />
+              </div>
+              {lead.amazon_state && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Estado (Amazon):</span>
+                  <span className="font-medium">{lead.amazon_state}</span>
+                </div>
+              )}
+              {lead.amazon_tax_regime && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Regime Tributário:</span>
+                  <span className="font-medium">{lead.amazon_tax_regime}</span>
+                </div>
+              )}
+            </div>
+          }
+        />
+
+        {/* Amazon e E-commerce */}
+        <InfoCard
+          icon={ShoppingCart}
+          title="Amazon e E-commerce"
+          color="orange"
+          content={
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Vende na Amazon:</span>
+                <YesNoIndicator value={lead.sells_on_amazon} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Trabalha com FBA:</span>
+                <YesNoIndicator value={lead.works_with_fba} />
+              </div>
+              {lead.amazon_store_link && (
+                <div>
+                  <span className="text-sm text-gray-600 block mb-1">Link da Loja:</span>
+                  <a 
+                    href={lead.amazon_store_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm break-all"
+                  >
+                    {lead.amazon_store_link}
+                  </a>
+                </div>
+              )}
+            </div>
+          }
+        />
+
+        {/* Produtos e Negócio */}
+        <InfoCard
+          icon={Package}
+          title="Produtos e Negócio"
+          color="green"
+          content={
+            <div className="space-y-3">
+              {lead.what_sells && (
+                <div>
+                  <span className="text-sm text-gray-600 block mb-1">O que vende:</span>
+                  <p className="text-sm">{lead.what_sells}</p>
+                </div>
+              )}
+              {lead.keep_or_new_niches && (
+                <div>
+                  <span className="text-sm text-gray-600 block mb-1">Nichos:</span>
+                  <p className="text-sm">{lead.keep_or_new_niches}</p>
+                </div>
+              )}
+            </div>
+          }
+        />
+
+        {/* Qualificação */}
+        <InfoCard
+          icon={Target}
+          title="Qualificação"
+          color="purple"
+          content={
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Busca marca própria:</span>
+                <YesNoIndicator value={lead.seeks_private_label} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Pronto para investir 3k:</span>
+                <YesNoIndicator value={lead.ready_to_invest_3k} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Teve contato com LV:</span>
+                <YesNoIndicator value={lead.had_contact_with_lv} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Calendly agendado:</span>
+                <YesNoIndicator value={lead.calendly_scheduled} />
+              </div>
+            </div>
+          }
+        />
+
+        {/* Datas Importantes */}
+        {(lead.scheduled_contact_date || lead.created_at) && (
+          <InfoCard
+            icon={Calendar}
+            title="Datas Importantes"
+            color="indigo"
+            content={
+              <div className="space-y-3">
+                {lead.scheduled_contact_date && (
+                  <div>
+                    <span className="text-sm text-gray-600 block mb-1">Próximo contato:</span>
+                    <span className="font-medium">
+                      {format(new Date(lead.scheduled_contact_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-sm text-gray-600 block mb-1">Criado em:</span>
+                  <span className="font-medium">
+                    {format(new Date(lead.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  </span>
+                </div>
+              </div>
+            }
+          />
+        )}
+
+        {/* Links e Calendly */}
+        {lead.calendly_link && (
+          <InfoCard
+            icon={Globe}
+            title="Links"
+            color="teal"
+            content={
+              <div>
+                <span className="text-sm text-gray-600 block mb-1">Link do Calendly:</span>
+                <a 
+                  href={lead.calendly_link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline text-sm break-all"
+                >
+                  {lead.calendly_link}
+                </a>
+              </div>
+            }
+          />
+        )}
+      </div>
+
+      {/* Observações */}
+      {(lead.notes || lead.main_doubts) && (
+        <div className="mt-6 space-y-4">
+          {lead.main_doubts && (
+            <InfoCard
+              icon={FileText}
+              title="Principais Dúvidas"
+              color="amber"
+              content={
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{lead.main_doubts}</p>
+              }
+            />
+          )}
+          
+          {lead.notes && (
+            <InfoCard
+              icon={FileText}
+              title="Observações"
+              color="gray"
+              content={
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
+              }
+            />
+          )}
+        </div>
+      )}
+
+      {/* Tags */}
+      {lead.tags && lead.tags.length > 0 && (
+        <div className="mt-6">
+          <InfoCard
+            icon={Target}
+            title="Tags"
+            color="pink"
+            content={
+              <div className="flex flex-wrap gap-2">
+                {lead.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-3 py-1 rounded-full text-sm font-medium"
+                    style={{ 
+                      backgroundColor: tag.color + '20', 
+                      color: tag.color,
+                      border: `1px solid ${tag.color}40`
+                    }}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            }
+          />
+        </div>
+      )}
+    </div>
   );
 };

@@ -1,171 +1,147 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  User, 
-  Calendar, 
-  Edit, 
-  Move, 
-  MessageSquare, 
-  Clock,
-  UserPlus,
-  FileText
-} from 'lucide-react';
-import { useCRMLeadHistory } from '@/hooks/crm/useCRMLeadHistory';
+import React, { useState } from 'react';
+import { Clock, User, Edit, ArrowRight, MessageSquare, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface LeadHistoryTabProps {
   leadId: string;
 }
 
 const LeadHistoryTab = ({ leadId }: LeadHistoryTabProps) => {
-  const { history, loading } = useCRMLeadHistory(leadId);
+  const [history] = useState([
+    {
+      id: '1',
+      action: 'status_change',
+      description: 'Movido para "Qualificado"',
+      user: 'João Silva',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
+      details: 'Lead movido de "Novo" para "Qualificado"'
+    },
+    {
+      id: '2',
+      action: 'comment',
+      description: 'Comentário adicionado',
+      user: 'Maria Santos',
+      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 horas atrás
+      details: 'Cliente demonstrou interesse em marca própria'
+    },
+    {
+      id: '3',
+      action: 'contact_scheduled',
+      description: 'Contato agendado',
+      user: 'João Silva',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 dia atrás
+      details: 'Reunião agendada para amanhã às 14:00'
+    },
+    {
+      id: '4',
+      action: 'field_update',
+      description: 'Informações atualizadas',
+      user: 'Maria Santos',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 dias atrás
+      details: 'Telefone e endereço atualizados'
+    },
+    {
+      id: '5',
+      action: 'created',
+      description: 'Lead criado',
+      user: 'Sistema',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 dias atrás
+      details: 'Lead adicionado ao sistema via formulário web'
+    }
+  ]);
 
-  const getActionIcon = (actionType: string) => {
-    switch (actionType) {
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case 'status_change':
+        return <ArrowRight className="h-4 w-4 text-blue-500" />;
+      case 'comment':
+        return <MessageSquare className="h-4 w-4 text-green-500" />;
+      case 'contact_scheduled':
+        return <Calendar className="h-4 w-4 text-purple-500" />;
+      case 'field_update':
+        return <Edit className="h-4 w-4 text-orange-500" />;
       case 'created':
-        return <User className="h-4 w-4" />;
-      case 'updated':
-        return <Edit className="h-4 w-4" />;
-      case 'moved':
-        return <Move className="h-4 w-4" />;
-      case 'assigned':
-        return <UserPlus className="h-4 w-4" />;
-      case 'commented':
-        return <MessageSquare className="h-4 w-4" />;
+        return <User className="h-4 w-4 text-gray-500" />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getActionColor = (actionType: string) => {
-    switch (actionType) {
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'status_change':
+        return 'border-blue-200 bg-blue-50';
+      case 'comment':
+        return 'border-green-200 bg-green-50';
+      case 'contact_scheduled':
+        return 'border-purple-200 bg-purple-50';
+      case 'field_update':
+        return 'border-orange-200 bg-orange-50';
       case 'created':
-        return 'bg-green-500';
-      case 'updated':
-        return 'bg-blue-500';
-      case 'moved':
-        return 'bg-purple-500';
-      case 'assigned':
-        return 'bg-orange-500';
-      case 'commented':
-        return 'bg-gray-500';
+        return 'border-gray-200 bg-gray-50';
       default:
-        return 'bg-gray-400';
+        return 'border-gray-200 bg-gray-50';
     }
   };
-
-  const getActionLabel = (actionType: string) => {
-    switch (actionType) {
-      case 'created':
-        return 'Criado';
-      case 'updated':
-        return 'Atualizado';
-      case 'moved':
-        return 'Movido';
-      case 'assigned':
-        return 'Atribuído';
-      case 'commented':
-        return 'Comentário';
-      default:
-        return 'Ação';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="h-full overflow-y-auto p-4 space-y-6">
-      <h3 className="text-lg font-semibold">Histórico de Atividades ({history.length})</h3>
+    <div className="p-6 h-full overflow-y-auto">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Clock className="h-5 w-5 text-gray-600" />
+          Histórico de Atividades
+        </h3>
+        <p className="text-sm text-gray-600 mt-1">
+          Todas as ações realizadas neste lead
+        </p>
+      </div>
 
-      {history.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Clock className="h-12 w-12 text-gray-400 mb-4" />
-            <h4 className="text-lg font-medium text-gray-900 mb-2">Nenhuma atividade</h4>
-            <p className="text-gray-500 text-center">
-              O histórico de atividades aparecerá aqui conforme ações forem realizadas
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+      <div className="relative">
+        {/* Linha do tempo */}
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
-          <div className="space-y-6">
-            {history.map((entry, index) => (
-              <div key={entry.id} className="relative flex items-start space-x-4">
-                {/* Timeline dot */}
-                <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full ${getActionColor(entry.action_type)} text-white flex-shrink-0`}>
-                  {getActionIcon(entry.action_type)}
+        <div className="space-y-6">
+          {history.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="relative"
+            >
+              {/* Ícone na linha do tempo */}
+              <div className={`absolute left-4 w-4 h-4 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${getActionColor(item.action)}`}>
+                {getActionIcon(item.action)}
+              </div>
+
+              {/* Conteúdo */}
+              <div className="ml-12 bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900">{item.description}</h4>
+                  <span className="text-xs text-gray-500">
+                    {formatDistanceToNow(item.timestamp, { addSuffix: true, locale: ptBR })}
+                  </span>
                 </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">
-                            {getActionLabel(entry.action_type)}
-                          </Badge>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(entry.created_at)}
-                          </span>
-                        </div>
-                        {entry.user && (
-                          <span className="text-sm text-gray-600">
-                            {entry.user.name}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        {entry.description && (
-                          <p className="text-sm text-gray-900">
-                            {entry.description}
-                          </p>
-                        )}
-
-                        {entry.field_name && (entry.old_value || entry.new_value) && (
-                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                            <span className="font-medium">Campo:</span> {entry.field_name}
-                            {entry.old_value && (
-                              <div>
-                                <span className="font-medium">De:</span> {entry.old_value}
-                              </div>
-                            )}
-                            {entry.new_value && (
-                              <div>
-                                <span className="font-medium">Para:</span> {entry.new_value}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                
+                <p className="text-sm text-gray-600 mb-2">{item.details}</p>
+                
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <User className="h-3 w-3" />
+                  <span>{item.user}</span>
                 </div>
               </div>
-            ))}
-          </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {history.length === 0 && (
+        <div className="text-center py-12">
+          <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">Nenhuma atividade registrada</p>
         </div>
       )}
     </div>

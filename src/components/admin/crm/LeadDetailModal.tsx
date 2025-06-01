@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabsTriggerWithBadge } from '@/components/ui/tabs';
 import { 
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { CRMLead, CRMLeadContact } from '@/types/crm.types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLeadDetailData } from '@/hooks/crm/useLeadDetailData';
 import { LeadDetailHeader } from './lead-detail/LeadDetailHeader';
 import { LeadDetailOverview } from './lead-detail/LeadDetailOverview';
 import LeadAttachmentsTab from './lead-detail-tabs/LeadAttachmentsTab';
@@ -29,13 +30,17 @@ interface LeadDetailModalProps {
 }
 
 const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailModalProps) => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const {
+    activeTab,
+    setActiveTab,
+    attachmentCount,
+    commentCount,
+    handleLeadUpdate
+  } = useLeadDetailData({ lead });
 
-  const handleLeadUpdate = () => {
-    console.log('🔄 Lead updated in modal, calling parent update...');
-    if (onLeadUpdate) {
-      onLeadUpdate();
-    }
+  const handleUpdate = () => {
+    handleLeadUpdate();
+    onLeadUpdate?.();
   };
 
   if (!lead) return null;
@@ -56,7 +61,7 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
               <LeadDetailHeader 
                 lead={lead} 
                 onClose={() => onOpenChange(false)} 
-                onLeadUpdate={handleLeadUpdate}
+                onLeadUpdate={handleUpdate}
               />
 
               {/* Tabs Container */}
@@ -74,7 +79,7 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                       </TabsTrigger>
                       <TabsTriggerWithBadge 
                         value="attachments" 
-                        badgeContent="3"
+                        badgeContent={attachmentCount}
                         className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                       >
                         <FileText className="h-4 w-4" />
@@ -82,7 +87,7 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                       </TabsTriggerWithBadge>
                       <TabsTriggerWithBadge 
                         value="comments" 
-                        badgeContent="2"
+                        badgeContent={commentCount}
                         className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                       >
                         <MessageSquare className="h-4 w-4" />
