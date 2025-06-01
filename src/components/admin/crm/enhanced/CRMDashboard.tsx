@@ -137,9 +137,10 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex-1">
-              <TabsContent value="pipeline" className="mt-0 space-y-0">
-                {/* Pipeline Header - APENAS na aba Pipeline */}
+            {/* Conteúdo das Tabs */}
+            <div className="flex-1 flex flex-col">
+              <TabsContent value="pipeline" className="mt-0 space-y-0 flex-1 flex flex-col">
+                {/* Pipeline Header */}
                 <div className="py-4 border-b border-gray-200">
                   <DashboardToolbar
                     activeView={activeView}
@@ -150,7 +151,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                   />
                 </div>
 
-                {/* Filtros - APENAS na aba Pipeline */}
+                {/* Filtros */}
                 <div className="py-4 border-b border-gray-100">
                   <CRMFilters
                     pipelineId={selectedPipelineId}
@@ -159,15 +160,28 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                     onFiltersChange={handleFiltersChange}
                   />
                 </div>
+
+                {/* Conteúdo Principal do Pipeline */}
+                <div className="flex-1 overflow-hidden bg-gray-50">
+                  <DashboardContent
+                    activeView={activeView}
+                    effectiveFilters={effectiveFilters}
+                    selectedPipelineId={selectedPipelineId}
+                    onCreateLead={handleCreateLead}
+                  />
+                </div>
+                
+                {/* Stats Footer */}
+                <CRMStatsFooter />
               </TabsContent>
 
-              <TabsContent value="relatorios" className="mt-0">
+              <TabsContent value="relatorios" className="mt-0 flex-1">
                 <div className="p-6">
                   <CRMReports />
                 </div>
               </TabsContent>
 
-              <TabsContent value="configuracoes" className="mt-0">
+              <TabsContent value="configuracoes" className="mt-0 flex-1">
                 <div className="p-6">
                   <Card className="border-gray-200">
                     <CardHeader className="border-b border-gray-100">
@@ -216,34 +230,6 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                 </div>
               </TabsContent>
             </div>
-          </Tabs>
-        </div>
-
-        {/* Conteúdo Principal - APENAS mostrar DashboardContent na aba Pipeline */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs defaultValue="pipeline" className="flex-1 flex flex-col">
-            <TabsContent value="pipeline" className="flex-1 flex flex-col m-0">
-              <div className="flex-1 overflow-hidden">
-                <DashboardContent
-                  activeView={activeView}
-                  effectiveFilters={effectiveFilters}
-                  selectedPipelineId={selectedPipelineId}
-                  onCreateLead={handleCreateLead}
-                />
-              </div>
-              
-              {/* Stats Footer - APENAS na aba Pipeline */}
-              <CRMStatsFooter />
-            </TabsContent>
-            
-            {/* Outras abas não mostram o DashboardContent nem o footer */}
-            <TabsContent value="relatorios" className="flex-1 m-0">
-              {/* Conteúdo já está dentro do TabsContent acima */}
-            </TabsContent>
-            
-            <TabsContent value="configuracoes" className="flex-1 m-0">
-              {/* Conteúdo já está dentro do TabsContent acima */}
-            </TabsContent>
           </Tabs>
         </div>
 
