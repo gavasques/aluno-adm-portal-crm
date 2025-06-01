@@ -3,6 +3,8 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CRMLead, CRMPipelineColumn } from '@/types/crm.types';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +12,7 @@ interface KanbanColumnProps {
   column: CRMPipelineColumn;
   leads: CRMLead[];
   onOpenDetail: (lead: CRMLead) => void;
+  onCreateLead?: (columnId: string) => void;
   isDragOver?: boolean;
 }
 
@@ -17,6 +20,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   column, 
   leads, 
   onOpenDetail,
+  onCreateLead,
   isDragOver = false 
 }) => {
   const { setNodeRef, isOver } = useDroppable({
@@ -49,6 +53,19 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             ({leads.length})
           </span>
         </div>
+        
+        {/* Add Lead Button */}
+        {onCreateLead && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onCreateLead(column.id)}
+            className="h-8 w-8 p-0 hover:bg-white hover:shadow-sm"
+            title={`Adicionar lead em ${column.name}`}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       
       <SortableContext 

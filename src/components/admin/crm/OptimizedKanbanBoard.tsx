@@ -8,23 +8,20 @@ import { useCRMData } from '@/hooks/crm/useCRMData';
 import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
-import CRMLeadFormDialog from './CRMLeadFormDialog';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
   pipelineId: string;
+  onCreateLead?: (columnId?: string) => void;
 }
 
-const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanbanBoardProps) => {
+const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
   const { columns, loading: columnsLoading } = useCRMPipelines();
   const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedColumnId, setSelectedColumnId] = useState<string>('');
 
   console.log('🎯 Kanban Debug - Pipeline ID:', pipelineId);
   console.log('🎯 Kanban Debug - Columns:', columns);
@@ -108,13 +105,6 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
     navigate(`/admin/lead/${lead.id}`);
   }, [navigate]);
 
-  const handleCreateSuccess = useCallback(() => {
-    setShowCreateModal(false);
-    setSelectedColumnId('');
-    refetch();
-    toast.success('Lead criado com sucesso');
-  }, [refetch]);
-
   const loading = columnsLoading || leadsLoading;
 
   if (!pipelineId) {
@@ -139,58 +129,48 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   }
 
   return (
-    <>
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
-          <div className={cn(
-            "flex gap-4 min-w-max h-full px-3 transition-all duration-300",
-            activeLead && "pointer-events-none"
-          )}>
-            {pipelineColumns.map(column => {
-              const columnLeads = leadsByColumn[column.id] || [];
-              const isDragOver = activeColumnId === column.id;
-              
-              console.log(`📋 Column ${column.name} has ${columnLeads.length} leads:`, columnLeads);
-              
-              return (
-                <KanbanColumn
-                  key={column.id}
-                  column={column}
-                  leads={columnLeads}
-                  onOpenDetail={handleOpenDetail}
-                  isDragOver={isDragOver}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <DragOverlay>
-          {activeLead ? (
-            <div className="transform rotate-6 scale-110 transition-transform duration-200">
-              <OptimizedKanbanLeadCard 
-                lead={activeLead} 
-                onOpenDetail={handleOpenDetail} 
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
+        <div className={cn(
+          "flex gap-4 min-w-max h-full px-3 transition-all duration-300",
+          activeLead && "pointer-events-none"
+        )}>
+          {pipelineColumns.map(column => {
+            const columnLeads = leadsByColumn[column.id] || [];
+            const isDragOver = activeColumnId === column.id;
+            
+            console.log(`📋 Column ${column.name} has ${columnLeads.length} leads:`, columnLeads);
+            
+            return (
+              <KanbanColumn
+                key={column.id}
+                column={column}
+                leads={columnLeads}
+                onOpenDetail={handleOpenDetail}
+                onCreateLead={onCreateLead}
+                isDragOver={isDragOver}
               />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+            );
+          })}
+        </div>
+      </div>
 
-      <CRMLeadFormDialog
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-        pipelineId={pipelineId}
-        initialColumnId={selectedColumnId}
-        mode="create"
-        onSuccess={handleCreateSuccess}
-      />
-    </>
+      <DragOverlay>
+        {activeLead ? (
+          <div className="transform rotate-6 scale-110 transition-transform duration-200">
+            <OptimizedKanbanLeadCard 
+              lead={activeLead} 
+              onOpenDetail={handleOpenDetail} 
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 });
 
