@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
-import CRMLeadForm from './CRMLeadForm';
+import CompactCRMLeadForm from './CompactCRMLeadForm';
 import { Loader2 } from 'lucide-react';
 
 interface CRMLeadFormDialogProps {
@@ -34,7 +34,7 @@ const CRMLeadFormDialog = ({
   if (mode === 'edit' && loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] max-h-[95vh] overflow-hidden flex flex-col">
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -48,15 +48,15 @@ const CRMLeadFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-5xl w-[95vw] h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
+          <DialogTitle className="text-xl font-semibold">
             {mode === 'create' ? 'Novo Lead' : `Editar Lead - ${lead?.name}`}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto">
-          <CRMLeadForm
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <CompactCRMLeadForm
             pipelineId={pipelineId || lead?.pipeline_id || ''}
             initialColumnId={initialColumnId || lead?.column_id}
             lead={mode === 'edit' ? lead : undefined}
