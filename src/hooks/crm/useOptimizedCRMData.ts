@@ -1,10 +1,12 @@
+
 import { useCallback, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMFilters, CRMLeadContact } from '@/types/crm.types';
-import { toast } from 'sonner';
-import { isToday, isTomorrow, isPast } from 'date-fns';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useCRMLeadTransformations } from './useCRMLeadTransformations';
+import { useCRMLeadFilters } from './useCRMLeadFilters';
+import { useCRMLeadMovement } from './useCRMLeadMovement';
 
 interface LeadWithContacts extends CRMLead {
   pending_contacts: CRMLeadContact[];
@@ -12,75 +14,14 @@ interface LeadWithContacts extends CRMLead {
 }
 
 export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
-  const queryClient = useQueryClient();
-  
   // Debounce search para evitar queries excessivas
   const [debouncedSearch] = useDebouncedValue(filters.search || '', 300);
   const debouncedFilters = { ...filters, search: debouncedSearch };
 
-  const transformLeadData = useCallback((dbLead: any): CRMLead => {
-    return {
-      ...dbLead,
-      has_company: dbLead.has_company ?? false,
-      sells_on_amazon: dbLead.sells_on_amazon ?? false,
-      works_with_fba: dbLead.works_with_fba ?? false,
-      had_contact_with_lv: dbLead.had_contact_with_lv ?? false,
-      seeks_private_label: dbLead.seeks_private_label ?? false,
-      ready_to_invest_3k: dbLead.ready_to_invest_3k ?? false,
-      calendly_scheduled: dbLead.calendly_scheduled ?? false,
-      phone: dbLead.phone || undefined,
-      what_sells: dbLead.what_sells || undefined,
-      keep_or_new_niches: dbLead.keep_or_new_niches || undefined,
-      amazon_store_link: dbLead.amazon_store_link || undefined,
-      amazon_state: dbLead.amazon_state || undefined,
-      amazon_tax_regime: dbLead.amazon_tax_regime || undefined,
-      main_doubts: dbLead.main_doubts || undefined,
-      calendly_link: dbLead.calendly_link || undefined,
-      pipeline_id: dbLead.pipeline_id || undefined,
-      column_id: dbLead.column_id || undefined,
-      responsible_id: dbLead.responsible_id || undefined,
-      created_by: dbLead.created_by || undefined,
-      notes: dbLead.notes || undefined,
-      tags: dbLead.tags?.map((tagWrapper: any) => tagWrapper.tag) || []
-    };
-  }, []);
-
-  const filterLeadsByContact = useCallback((leadsData: LeadWithContacts[], contactFilter?: string) => {
-    if (!contactFilter) return leadsData;
-
-    return leadsData.filter(lead => {
-      const hasPendingContacts = lead.pending_contacts.length > 0;
-      
-      switch (contactFilter) {
-        case 'today':
-          return hasPendingContacts && lead.pending_contacts.some(contact => 
-            isToday(new Date(contact.contact_date))
-          );
-        case 'tomorrow':
-          return hasPendingContacts && lead.pending_contacts.some(contact => 
-            isTomorrow(new Date(contact.contact_date))
-          );
-        case 'overdue':
-          return hasPendingContacts && lead.pending_contacts.some(contact => {
-            const contactDate = new Date(contact.contact_date);
-            return isPast(contactDate) && !isToday(contactDate);
-          });
-        case 'no_contact':
-          return !hasPendingContacts;
-        default:
-          return true;
-      }
-    });
-  }, []);
-
-  const filterLeadsByTags = useCallback((leadsData: LeadWithContacts[], tagIds?: string[]) => {
-    if (!tagIds || tagIds.length === 0) return leadsData;
-
-    return leadsData.filter(lead => {
-      const leadTagIds = lead.tags?.map(tag => tag.id) || [];
-      return tagIds.some(tagId => leadTagIds.includes(tagId));
-    });
-  }, []);
+  // Hooks separados para diferentes responsabilidades
+  const { transformLeadData } = useCRMLeadTransformations();
+  const { filterLeadsByContact, filterLeadsByTags } = useCRMLeadFilters();
+  const { moveLeadToColumn } = useCRMLeadMovement(debouncedFilters);
 
   const fetchLeadsWithContacts = useCallback(async (): Promise<LeadWithContacts[]> => {
     if (!debouncedFilters.pipeline_id) {
@@ -225,82 +166,6 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
     staleTime: 2 * 60 * 1000, // 2 minutos para dados dinâmicos
     refetchOnWindowFocus: false,
   });
-
-  const moveLeadToColumn = useCallback(async (leadId: string, newColumnId: string) => {
-    const queryKey = ['optimized-crm-leads', debouncedFilters];
-    
-    console.log(`🔄 Iniciando movimento do lead ${leadId} para coluna ${newColumnId}`);
-    
-    // 1. Backup dos dados atuais para rollback
-    const previousData = queryClient.getQueryData<LeadWithContacts[]>(queryKey);
-    
-    if (!previousData) {
-      console.error('❌ Dados anteriores não encontrados no cache');
-      throw new Error('Dados não disponíveis para atualização');
-    }
-
-    // 2. Verificar se o lead existe nos dados atuais
-    const currentLead = previousData.find(lead => lead.id === leadId);
-    if (!currentLead) {
-      console.error('❌ Lead não encontrado nos dados atuais:', leadId);
-      throw new Error('Lead não encontrado');
-    }
-
-    if (currentLead.column_id === newColumnId) {
-      console.log('🔄 Lead já está na coluna correta, nenhuma ação necessária');
-      return;
-    }
-
-    console.log(`🔄 Aplicando atualização otimista: ${currentLead.column_id} → ${newColumnId}`);
-    
-    // 3. Atualização otimista do cache
-    queryClient.setQueryData<LeadWithContacts[]>(queryKey, (oldData) => {
-      if (!oldData) return oldData;
-      
-      return oldData.map(lead => 
-        lead.id === leadId 
-          ? { 
-              ...lead, 
-              column_id: newColumnId,
-              updated_at: new Date().toISOString()
-            }
-          : lead
-      );
-    });
-
-    try {
-      console.log('💾 Persistindo no banco de dados...');
-      
-      const { error } = await supabase
-        .from('crm_leads')
-        .update({ 
-          column_id: newColumnId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', leadId);
-
-      if (error) {
-        console.error('❌ Erro no banco de dados:', error);
-        throw error;
-      }
-
-      console.log('✅ Lead movido com sucesso no banco de dados');
-      
-      // 4. Não fazer invalidação - confiar na atualização otimista
-      // A UI já está atualizada e o banco também, não há necessidade de refetch
-      
-    } catch (error) {
-      console.error('❌ Erro ao persistir movimento, fazendo rollback:', error);
-      
-      // 5. Rollback: restaurar dados anteriores apenas em caso de erro
-      if (previousData) {
-        console.log('🔄 Restaurando estado anterior do cache');
-        queryClient.setQueryData(queryKey, previousData);
-      }
-      
-      throw error;
-    }
-  }, [queryClient, debouncedFilters]);
 
   const leadsByColumn = useMemo(() => {
     const grouped: Record<string, LeadWithContacts[]> = {};
