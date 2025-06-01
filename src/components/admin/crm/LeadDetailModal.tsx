@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabsTriggerWithBadge } from '@/components/ui/tabs';
 import { 
@@ -38,9 +38,30 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
     handleLeadUpdate
   } = useLeadDetailData({ lead });
 
+  // Estados para edição (similar ao LeadDetail.tsx)
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
   const handleUpdate = () => {
     handleLeadUpdate();
     onLeadUpdate?.();
+  };
+
+  const handleToggleEdit = () => {
+    if (isEditing && hasChanges) {
+      const confirm = window.confirm('Você tem alterações não salvas. Deseja cancelar as alterações?');
+      if (!confirm) return;
+    }
+    setIsEditing(!isEditing);
+    setHasChanges(false);
+  };
+
+  const handleSave = async () => {
+    if ((window as any).saveLeadData) {
+      await (window as any).saveLeadData();
+      setIsEditing(false);
+      setHasChanges(false);
+    }
   };
 
   if (!lead) return null;
@@ -62,6 +83,10 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
                 lead={lead} 
                 onClose={() => onOpenChange(false)} 
                 onLeadUpdate={handleUpdate}
+                isEditing={isEditing}
+                onToggleEdit={handleToggleEdit}
+                onSave={handleSave}
+                hasChanges={hasChanges}
               />
 
               {/* Tabs Container */}
