@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +24,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       seeks_private_label: dbLead.seeks_private_label ?? false,
       ready_to_invest_3k: dbLead.ready_to_invest_3k ?? false,
       calendly_scheduled: dbLead.calendly_scheduled ?? false,
+      status: dbLead.status || 'aberto',
       phone: dbLead.phone || undefined,
       what_sells: dbLead.what_sells || undefined,
       keep_or_new_niches: dbLead.keep_or_new_niches || undefined,
@@ -36,6 +38,9 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       responsible_id: dbLead.responsible_id || undefined,
       created_by: dbLead.created_by || undefined,
       notes: dbLead.notes || undefined,
+      status_reason: dbLead.status_reason || undefined,
+      status_changed_at: dbLead.status_changed_at || undefined,
+      status_changed_by: dbLead.status_changed_by || undefined,
       tags: dbLead.tags?.map((tagWrapper: any) => tagWrapper.tag) || []
     };
   }, []);
@@ -78,7 +83,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
     try {
       console.log('📊 Buscando leads para pipeline:', filters.pipeline_id);
 
-      // Buscar leads com filtros
+      // Buscar leads com filtros incluindo status
       let leadsQuery = supabase
         .from('crm_leads')
         .select(`
@@ -98,6 +103,10 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       
       if (filters.responsible_id) {
         leadsQuery = leadsQuery.eq('responsible_id', filters.responsible_id);
+      }
+
+      if (filters.status) {
+        leadsQuery = leadsQuery.eq('status', filters.status);
       }
       
       if (filters.search) {

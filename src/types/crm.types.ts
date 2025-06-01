@@ -35,6 +35,8 @@ export interface CRMUser {
   created_at?: string;
 }
 
+export type LeadStatus = 'aberto' | 'ganho' | 'perdido';
+
 export interface CRMLeadInput {
   name: string;
   email: string;
@@ -58,6 +60,8 @@ export interface CRMLeadInput {
   column_id?: string;
   responsible_id?: string;
   scheduled_contact_date?: string;
+  status?: LeadStatus;
+  status_reason?: string;
 }
 
 export interface CRMLead {
@@ -85,6 +89,10 @@ export interface CRMLead {
   responsible_id?: string;
   created_by?: string;
   scheduled_contact_date?: string;
+  status: LeadStatus;
+  status_reason?: string;
+  status_changed_at?: string;
+  status_changed_by?: string;
   created_at: string;
   updated_at: string;
   tags: CRMTag[];
@@ -206,6 +214,7 @@ export interface CRMFilters {
   search?: string;
   contact_filter?: string;
   tag_ids?: string[];
+  status?: LeadStatus;
 }
 
 export interface LeadWithContacts extends CRMLead {

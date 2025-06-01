@@ -1,88 +1,156 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { X, Search, Users, Calendar } from 'lucide-react';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
-import { useOptimizedCRMTags } from '@/hooks/crm/useOptimizedCRMTags';
-import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
-import { PrimaryFilters } from './filters/PrimaryFilters';
-import { AdvancedFilters } from './filters/AdvancedFilters';
-import { ActiveFilters } from './filters/ActiveFilters';
-import { Separator } from '@/components/ui/separator';
+import StatusFilter from './filters/StatusFilter';
 
 interface CRMFiltersProps {
   filters: CRMFiltersType;
   onFiltersChange: (filters: CRMFiltersType) => void;
-  pipelineId: string;
-  onPipelineChange: (pipelineId: string) => void;
+  pipelineId?: string;
+  onPipelineChange?: (pipelineId: string) => void;
 }
 
 const CRMFilters: React.FC<CRMFiltersProps> = ({ 
   filters, 
   onFiltersChange, 
-  pipelineId, 
+  pipelineId,
   onPipelineChange 
 }) => {
-  const { pipelines, columns } = useCRMPipelines();
+  const { columns } = useCRMPipelines();
   const { users } = useCRMUsers();
-  const { tags } = useOptimizedCRMTags();
-  
-  const {
-    searchValue,
-    setSearchValue,
-    isDebouncing,
-    updateFilter,
-    removeFilter,
-    clearAllFilters,
-    getActiveFiltersCount
-  } = useCRMFiltersState(filters, onFiltersChange);
 
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
-  const handleTagsChange = (tagIds: string[]) => {
-    if (tagIds.length === 0) {
-      removeFilter('tag_ids');
-    } else {
-      updateFilter('tag_ids', tagIds);
-    }
+  const handleFilterChange = (key: keyof CRMFiltersType, value: any) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
   };
+
+  const clearFilters = () => {
+    onFiltersChange({
+      pipeline_id: filters.pipeline_id
+    });
+  };
+
+  const activeFiltersCount = Object.keys(filters).filter(key => 
+    key !== 'pipeline_id' && filters[key as keyof CRMFiltersType]
+  ).length;
 
   return (
     <div className="space-y-4">
-      {/* Linha Principal de Filtros */}
-      <div className="flex flex-wrap items-center gap-4">
-        <PrimaryFilters
-          pipelineId={pipelineId}
-          onPipelineChange={onPipelineChange}
-          pipelines={pipelines}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          isDebouncing={isDebouncing}
-        />
-        
-        <div className="h-8 w-px bg-gray-200" />
-        
-        <AdvancedFilters
-          filters={filters}
-          updateFilter={updateFilter}
-          pipelineColumns={pipelineColumns}
-          users={users}
-          tags={tags}
-          handleTagsChange={handleTagsChange}
-        />
-      </div>
+      {/* Linha principal de filtros */}
+      <div className="flex flex-wrap gap-3 items-center">
+        {/* Busca */}
+        <div className="relative min-w-[300px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar por nome ou email..."
+            value={filters.search || ''}
+            onChange={(e) => handleFilterChange('search', e.target.value || undefined)}
+            className="pl-10"
+          />
+        </div>
 
-      {/* Filtros Ativos */}
-      <ActiveFilters
-        filters={filters}
-        activeFiltersCount={getActiveFiltersCount()}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-        removeFilter={removeFilter}
-        clearAllFilters={clearAllFilters}
-        pipelineColumns={pipelineColumns}
-        users={users}
-      />
+        {/* Filtro por Status */}
+        <StatusFilter
+          value={filters.status}
+          onValueChange={(status) => handleFilterChange('status', status)}
+        />
+
+        {/* Filtro por Coluna/Etapa */}
+        <Select 
+          value={filters.column_id || 'all'} 
+          onValueChange={(value) => handleFilterChange('column_id', value === 'all' ? undefined : value)}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Etapa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as etapas</SelectItem>
+            {pipelineColumns.map((column) => (
+              <SelectItem key={column.id} value={column.id}>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: column.color }}
+                  />
+                  {column.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro por Responsável */}
+        <Select 
+          value={filters.responsible_id || 'all'} 
+          onValueChange={(value) => handleFilterChange('responsible_id', value === 'all' ? undefined : value)}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Todos os responsáveis
+              </div>
+            </SelectItem>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro por Contatos */}
+        <Select 
+          value={filters.contact_filter || 'all'} 
+          onValueChange={(value) => handleFilterChange('contact_filter', value === 'all' ? undefined : value)}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Contatos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Todos os contatos
+              </div>
+            </SelectItem>
+            <SelectItem value="today">Contatos hoje</SelectItem>
+            <SelectItem value="tomorrow">Contatos amanhã</SelectItem>
+            <SelectItem value="overdue">Contatos atrasados</SelectItem>
+            <SelectItem value="no_contact">Sem contatos</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Botão limpar filtros */}
+        {activeFiltersCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearFilters}
+            className="flex items-center gap-2"
+          >
+            <X className="h-4 w-4" />
+            Limpar filtros
+            <Badge variant="secondary" className="ml-1">
+              {activeFiltersCount}
+            </Badge>
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

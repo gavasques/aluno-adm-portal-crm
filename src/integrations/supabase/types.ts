@@ -810,6 +810,10 @@ export type Database = {
           scheduled_contact_date: string | null
           seeks_private_label: boolean | null
           sells_on_amazon: boolean | null
+          status: string
+          status_changed_at: string | null
+          status_changed_by: string | null
+          status_reason: string | null
           updated_at: string | null
           what_sells: string | null
           works_with_fba: boolean | null
@@ -838,6 +842,10 @@ export type Database = {
           scheduled_contact_date?: string | null
           seeks_private_label?: boolean | null
           sells_on_amazon?: boolean | null
+          status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           updated_at?: string | null
           what_sells?: string | null
           works_with_fba?: boolean | null
@@ -866,6 +874,10 @@ export type Database = {
           scheduled_contact_date?: string | null
           seeks_private_label?: boolean | null
           sells_on_amazon?: boolean | null
+          status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           updated_at?: string | null
           what_sells?: string | null
           works_with_fba?: boolean | null
