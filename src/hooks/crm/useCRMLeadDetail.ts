@@ -46,7 +46,10 @@ export const useCRMLeadDetail = (leadId: string) => {
         
         // Transform the data to match CRMLead interface
         const transformedLead: CRMLead = {
-          ...data,
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone || undefined,
           has_company: data.has_company ?? false,
           sells_on_amazon: data.sells_on_amazon ?? false,
           works_with_fba: data.works_with_fba ?? false,
@@ -54,7 +57,6 @@ export const useCRMLeadDetail = (leadId: string) => {
           seeks_private_label: data.seeks_private_label ?? false,
           ready_to_invest_3k: data.ready_to_invest_3k ?? false,
           calendly_scheduled: data.calendly_scheduled ?? false,
-          phone: data.phone || undefined,
           what_sells: data.what_sells || undefined,
           keep_or_new_niches: data.keep_or_new_niches || undefined,
           amazon_store_link: data.amazon_store_link || undefined,
@@ -67,10 +69,17 @@ export const useCRMLeadDetail = (leadId: string) => {
           responsible_id: data.responsible_id || undefined,
           created_by: data.created_by || undefined,
           notes: data.notes || undefined,
-          tags: data.tags?.map((tagWrapper: any) => tagWrapper.tag) || [],
+          scheduled_contact_date: data.scheduled_contact_date || undefined,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          tags: data.tags?.map((tagWrapper: any) => tagWrapper.tag).filter(Boolean) || [],
           pipeline: data.pipeline || undefined,
           column: data.column || undefined,
-          responsible: data.responsible || undefined
+          responsible: data.responsible ? {
+            id: data.responsible.id,
+            name: data.responsible.name,
+            email: data.responsible.email
+          } : undefined
         };
 
         setLead(transformedLead);
