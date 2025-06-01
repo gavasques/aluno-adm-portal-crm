@@ -62,7 +62,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       {/* Main CRM Interface */}
       <div className="flex-1 min-h-0">
         <Tabs defaultValue="pipeline" className="h-full flex flex-col">
-          <div className="flex items-center justify-between mb-3 px-4">
+          <div className="flex items-center justify-between mb-4 px-6">
             <TabsList>
               <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
               <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
@@ -105,16 +105,14 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
             </div>
           </div>
 
-          <TabsContent value="pipeline" className="flex-1 flex flex-col min-h-0 px-4">
+          <TabsContent value="pipeline" className="flex-1 flex flex-col space-y-4 px-6 min-h-0">
             {/* Filters */}
-            <div className="mb-3">
-              <CRMFilters
-                pipelineId={selectedPipelineId}
-                onPipelineChange={setSelectedPipelineId}
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-              />
-            </div>
+            <CRMFilters
+              pipelineId={selectedPipelineId}
+              onPipelineChange={setSelectedPipelineId}
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+            />
 
             {/* Main Content */}
             <Card className="flex-1 min-h-0">
@@ -135,11 +133,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="relatorios" className="flex-1 px-4 min-h-0">
+          <TabsContent value="relatorios" className="flex-1 px-6 min-h-0">
             <CRMReportsOverview />
           </TabsContent>
 
-          <TabsContent value="configuracoes" className="flex-1 px-4">
+          <TabsContent value="configuracoes" className="flex-1 px-6">
             <Card className="h-full">
               <CardContent className="p-6 space-y-6">
                 <div>
