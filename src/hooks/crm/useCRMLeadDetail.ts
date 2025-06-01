@@ -21,14 +21,14 @@ export const useCRMLeadDetail = (leadId: string) => {
       
       console.log('🔍 Fetching lead details for ID:', leadId);
       
-      // Buscar dados do lead com relações usando sintaxe mais simples
+      // Buscar dados do lead com relações especificando explicitamente as colunas
       const { data, error } = await supabase
         .from('crm_leads')
         .select(`
           *,
           pipeline:crm_pipelines(id, name, sort_order, is_active, created_at, updated_at),
           column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
-          responsible:profiles(id, name, email),
+          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           tags:crm_lead_tags(
             tag:crm_tags(id, name, color, created_at)
           )
