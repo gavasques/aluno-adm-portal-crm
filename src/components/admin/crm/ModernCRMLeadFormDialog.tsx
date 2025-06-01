@@ -25,7 +25,7 @@ const ModernCRMLeadFormDialog = ({
   mode, 
   onSuccess 
 }: ModernCRMLeadFormDialogProps) => {
-  console.log('✨ ModernCRMLeadFormDialog: Novo design sendo renderizado!', { open, mode, pipelineId });
+  console.log('✨ ModernCRMLeadFormDialog: Renderizando modal compacto!', { open, mode, pipelineId });
   
   const { lead, loading } = useCRMLeadDetail(leadId || '');
 
@@ -39,11 +39,11 @@ const ModernCRMLeadFormDialog = ({
     return null;
   }
 
-  console.log('🎨 Renderizando modal moderno com glassmorphism!');
+  console.log('🎨 Renderizando modal minimalista compacto!');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[95vw] h-[95vh] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+      <DialogContent className="max-w-4xl w-[90vw] h-[90vh] max-h-[90vh] p-0 overflow-hidden bg-white border border-gray-200 shadow-lg">
         <AnimatePresence mode="wait">
           {loading && mode === 'edit' ? (
             <motion.div
@@ -52,27 +52,21 @@ const ModernCRMLeadFormDialog = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center justify-center h-full bg-white/10 dark:bg-black/10 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-white/10"
+              className="flex items-center justify-center h-full bg-white"
             >
-              <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
-                <Loader2 className="h-6 w-6 animate-spin" />
+              <div className="flex items-center gap-3 text-slate-700">
+                <Loader2 className="h-5 w-5 animate-spin" />
                 <span className="font-medium">Carregando dados do lead...</span>
               </div>
             </motion.div>
           ) : (
             <motion.div
               key="form"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="h-full bg-white/10 dark:bg-black/10 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-              }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="h-full bg-white"
             >
               <ModernCRMLeadForm
                 pipelineId={pipelineId || lead?.pipeline_id || ''}

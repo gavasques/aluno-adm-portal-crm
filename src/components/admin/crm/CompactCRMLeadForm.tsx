@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
 import { CRMLead, CRMLeadInput } from '@/types/crm.types';
-import SimpleCRMTagsSelector from './SimpleCRMTagsSelector';
+import { X, Save, User, Building, Package } from 'lucide-react';
+import ModernTagsSelector from './form-components/ModernTagsSelector';
 
 interface CompactCRMLeadFormProps {
   pipelineId: string;
@@ -23,9 +25,12 @@ interface CompactCRMLeadFormProps {
   lead?: CRMLead | null;
   onSuccess: () => void;
   onCancel: () => void;
+  mode: 'create' | 'edit';
 }
 
-const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel }: CompactCRMLeadFormProps) => {
+const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel, mode }: CompactCRMLeadFormProps) => {
+  console.log('🎯 CompactCRMLeadForm: Renderizando formulário compacto!', { mode, pipelineId });
+  
   const [loading, setLoading] = useState(false);
   const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
   const { columns } = useCRMPipelines();
@@ -60,7 +65,6 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
 
   const { watch, setValue } = form;
 
-  // Buscar responsáveis
   useEffect(() => {
     const fetchResponsibles = async () => {
       try {
@@ -80,10 +84,8 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
     fetchResponsibles();
   }, []);
 
-  // Filtrar colunas do pipeline atual
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
-  // Selecionar primeira coluna por padrão
   useEffect(() => {
     if (pipelineColumns.length > 0 && !form.watch('column_id') && !initialColumnId && !lead) {
       const firstColumn = pipelineColumns.sort((a, b) => a.sort_order - b.sort_order)[0];
@@ -169,205 +171,197 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="space-y-4">
+    <div className="h-full flex flex-col bg-white">
+      {/* Header compacto */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <User className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {mode === 'create' ? 'Novo Lead' : 'Editar Lead'}
+            </h2>
+            <p className="text-sm text-gray-600">
+              {mode === 'create' ? 'Adicione um novo lead ao pipeline' : 'Edite as informações do lead'}
+            </p>
+          </div>
+        </div>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          className="h-8 w-8 p-0 hover:bg-gray-200"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Form Content compacto */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-4">
           {/* Informações Básicas */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Informações Básicas</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Informações Básicas
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="name" className="text-xs">Nome *</Label>
+                  <Label htmlFor="name" className="text-xs font-medium">Nome *</Label>
                   <Input
                     id="name"
                     {...form.register('name')}
+                    className="h-8 text-sm"
                     placeholder="Nome completo"
-                    className="h-8"
                   />
                   {form.formState.errors.name && (
                     <p className="text-xs text-red-600">{form.formState.errors.name.message}</p>
                   )}
                 </div>
-
                 <div className="space-y-1">
-                  <Label htmlFor="email" className="text-xs">Email *</Label>
+                  <Label htmlFor="email" className="text-xs font-medium">Email *</Label>
                   <Input
                     id="email"
                     type="email"
                     {...form.register('email')}
+                    className="h-8 text-sm"
                     placeholder="email@exemplo.com"
-                    className="h-8"
                   />
                   {form.formState.errors.email && (
                     <p className="text-xs text-red-600">{form.formState.errors.email.message}</p>
                   )}
                 </div>
-
                 <div className="space-y-1">
-                  <Label htmlFor="phone" className="text-xs">Telefone</Label>
+                  <Label htmlFor="phone" className="text-xs font-medium">Telefone</Label>
                   <Input
                     id="phone"
                     {...form.register('phone')}
+                    className="h-8 text-sm"
                     placeholder="(11) 99999-9999"
-                    className="h-8"
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Negócio e Amazon */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Negócio e Amazon</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="flex items-center space-x-2">
+          {/* Negócio e Amazon em uma linha */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Negócio
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="has_company" className="text-xs font-medium">Possui empresa</Label>
                   <Switch
                     id="has_company"
                     checked={watch('has_company')}
                     onCheckedChange={(checked) => setValue('has_company', checked)}
                   />
-                  <Label htmlFor="has_company" className="text-xs">Tem empresa</Label>
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="sells_on_amazon"
-                    checked={watch('sells_on_amazon')}
-                    onCheckedChange={(checked) => setValue('sells_on_amazon', checked)}
-                  />
-                  <Label htmlFor="sells_on_amazon" className="text-xs">Vende na Amazon</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="works_with_fba"
-                    checked={watch('works_with_fba')}
-                    onCheckedChange={(checked) => setValue('works_with_fba', checked)}
-                  />
-                  <Label htmlFor="works_with_fba" className="text-xs">Trabalha com FBA</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="seeks_private_label"
-                    checked={watch('seeks_private_label')}
-                    onCheckedChange={(checked) => setValue('seeks_private_label', checked)}
-                  />
-                  <Label htmlFor="seeks_private_label" className="text-xs">Private Label</Label>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="what_sells" className="text-xs">O que vende?</Label>
+                  <Label htmlFor="what_sells" className="text-xs font-medium">O que vende?</Label>
                   <Input
                     id="what_sells"
                     {...form.register('what_sells')}
+                    className="h-8 text-sm"
                     placeholder="Produtos/serviços"
-                    className="h-8"
                   />
                 </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="amazon_store_link" className="text-xs">Link da loja Amazon</Label>
-                  <Input
-                    id="amazon_store_link"
-                    {...form.register('amazon_store_link')}
-                    placeholder="https://amazon.com.br/..."
-                    className="h-8"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Qualificação */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Qualificação</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="had_contact_with_lv"
-                    checked={watch('had_contact_with_lv')}
-                    onCheckedChange={(checked) => setValue('had_contact_with_lv', checked)}
-                  />
-                  <Label htmlFor="had_contact_with_lv" className="text-xs">Contato com LV</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="ready_to_invest_3k"
-                    checked={watch('ready_to_invest_3k')}
-                    onCheckedChange={(checked) => setValue('ready_to_invest_3k', checked)}
-                  />
-                  <Label htmlFor="ready_to_invest_3k" className="text-xs">Investe R$ 3k</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="calendly_scheduled"
-                    checked={watch('calendly_scheduled')}
-                    onCheckedChange={(checked) => setValue('calendly_scheduled', checked)}
-                  />
-                  <Label htmlFor="calendly_scheduled" className="text-xs">Calendly</Label>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="main_doubts" className="text-xs">Principais dúvidas</Label>
-                  <Textarea
-                    id="main_doubts"
-                    {...form.register('main_doubts')}
-                    placeholder="Dúvidas e objeções"
-                    rows={2}
-                    className="text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="calendly_link" className="text-xs">Link do Calendly</Label>
-                  <Input
-                    id="calendly_link"
-                    {...form.register('calendly_link')}
-                    placeholder="https://calendly.com/..."
-                    className="h-8"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tags e Gestão */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Tags</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SimpleCRMTagsSelector
-                  selectedTags={watch('tags') || []}
-                  onTagsChange={(tags) => setValue('tags', tags)}
-                />
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Gestão</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Amazon
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="sells_on_amazon" className="text-xs font-medium">Vende na Amazon</Label>
+                    <Switch
+                      id="sells_on_amazon"
+                      checked={watch('sells_on_amazon')}
+                      onCheckedChange={(checked) => setValue('sells_on_amazon', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="works_with_fba" className="text-xs font-medium">Trabalha com FBA</Label>
+                    <Switch
+                      id="works_with_fba"
+                      checked={watch('works_with_fba')}
+                      onCheckedChange={(checked) => setValue('works_with_fba', checked)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="amazon_store_link" className="text-xs font-medium">Link da loja</Label>
+                  <Input
+                    id="amazon_store_link"
+                    {...form.register('amazon_store_link')}
+                    className="h-8 text-sm"
+                    placeholder="https://amazon.com.br/..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Qualificação e Gestão */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Qualificação</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="ready_to_invest_3k" className="text-xs font-medium">Investe R$ 3k</Label>
+                    <Switch
+                      id="ready_to_invest_3k"
+                      checked={watch('ready_to_invest_3k')}
+                      onCheckedChange={(checked) => setValue('ready_to_invest_3k', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="calendly_scheduled" className="text-xs font-medium">Calendly agendado</Label>
+                    <Switch
+                      id="calendly_scheduled"
+                      checked={watch('calendly_scheduled')}
+                      onCheckedChange={(checked) => setValue('calendly_scheduled', checked)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="main_doubts" className="text-xs font-medium">Principais dúvidas</Label>
+                  <Textarea
+                    id="main_doubts"
+                    {...form.register('main_doubts')}
+                    className="h-16 text-sm resize-none"
+                    placeholder="Dúvidas e objeções do lead"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Gestão</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-1">
-                  <Label htmlFor="column_id" className="text-xs">Coluna</Label>
+                  <Label className="text-xs font-medium">Coluna</Label>
                   <Select 
                     value={form.watch('column_id') || initialColumnId || ''}
                     onValueChange={(value) => setValue('column_id', value)}
@@ -388,10 +382,10 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="responsible_id" className="text-xs">Responsável</Label>
+                  <Label className="text-xs font-medium">Responsável</Label>
                   <Select onValueChange={(value) => setValue('responsible_id', value)} value={watch('responsible_id')}>
                     <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder="Selecione o responsável" />
                     </SelectTrigger>
                     <SelectContent>
                       {responsibles.map((responsible) => (
@@ -402,24 +396,31 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Tags</Label>
+                  <ModernTagsSelector
+                    selectedTags={watch('tags') || []}
+                    onTagsChange={(tags) => setValue('tags', tags)}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Observações */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Observações</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Observações</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
-                <Label htmlFor="notes" className="text-xs">Observações gerais</Label>
+                <Label htmlFor="notes" className="text-xs font-medium">Observações gerais</Label>
                 <Textarea
                   id="notes"
                   {...form.register('notes')}
+                  className="h-16 text-sm resize-none"
                   placeholder="Observações adicionais sobre o lead"
-                  rows={3}
-                  className="text-sm"
                 />
               </div>
             </CardContent>
@@ -427,21 +428,38 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
         </div>
       </form>
 
-      {/* Ações fixas na parte inferior */}
-      <div className="flex justify-end gap-3 px-6 py-4 border-t bg-white">
+      {/* Footer compacto */}
+      <div className="flex justify-end gap-2 p-4 border-t border-gray-200 bg-gray-50">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={loading}
+          className="h-8 px-4 text-sm"
         >
           Cancelar
         </Button>
         <Button 
           onClick={form.handleSubmit(onSubmit)} 
           disabled={loading}
+          className="h-8 px-4 text-sm bg-blue-600 hover:bg-blue-700"
         >
-          {loading ? 'Salvando...' : lead ? 'Atualizar Lead' : 'Salvar Lead'}
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <Save className="h-3 w-3" />
+              </motion.div>
+              Salvando...
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Save className="h-3 w-3" />
+              {lead ? 'Atualizar' : 'Salvar'}
+            </div>
+          )}
         </Button>
       </div>
     </div>
