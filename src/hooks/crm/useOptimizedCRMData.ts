@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +70,15 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
         default:
           return true;
       }
+    });
+  }, []);
+
+  const filterLeadsByTags = useCallback((leadsData: LeadWithContacts[], tagIds?: string[]) => {
+    if (!tagIds || tagIds.length === 0) return leadsData;
+
+    return leadsData.filter(lead => {
+      const leadTagIds = lead.tags?.map(tag => tag.id) || [];
+      return tagIds.some(tagId => leadTagIds.includes(tagId));
     });
   }, []);
 
@@ -191,21 +199,25 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
       }, {} as Record<string, CRMLeadContact>);
 
       // Combinar leads com contatos
-      const leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
+      let leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
         ...lead,
         pending_contacts: pendingContactsByLead[lead.id] || [],
         last_completed_contact: lastCompletedContactsByLead[lead.id]
       }));
 
-      console.log('📊 Leads processados com contatos:', leadsWithContactsData.length);
-      return filterLeadsByContact(leadsWithContactsData, debouncedFilters.contact_filter);
+      // Aplicar filtros
+      leadsWithContactsData = filterLeadsByContact(leadsWithContactsData, debouncedFilters.contact_filter);
+      leadsWithContactsData = filterLeadsByTags(leadsWithContactsData, debouncedFilters.tag_ids);
+
+      console.log('📊 Leads processados com filtros:', leadsWithContactsData.length);
+      return leadsWithContactsData;
 
     } catch (error) {
       console.error('❌ Erro ao buscar dados CRM:', error);
       toast.error('Erro ao carregar dados do CRM');
       return [];
     }
-  }, [debouncedFilters, transformLeadData, filterLeadsByContact]);
+  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags]);
 
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
     queryKey: ['optimized-crm-leads', debouncedFilters],

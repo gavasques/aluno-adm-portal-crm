@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, Calendar, Clock, AlertTriangle } from 'lucide-react';
+import { Search, Filter, X, Calendar, Clock, AlertTriangle, Tag } from 'lucide-react';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
+import { useOptimizedCRMTags } from '@/hooks/crm/useOptimizedCRMTags';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 interface CRMFiltersProps {
@@ -20,6 +21,7 @@ interface CRMFiltersProps {
 const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: CRMFiltersProps) => {
   const { pipelines, columns } = useCRMPipelines();
   const { users } = useCRMUsers();
+  const { tags } = useOptimizedCRMTags();
   
   // Debounce search para evitar queries excessivas
   const [searchValue, setSearchValue] = React.useState(filters.search || '');
@@ -72,6 +74,14 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
       case 'overdue': return <AlertTriangle className="h-3 w-3" />;
       case 'no_contact': return <X className="h-3 w-3" />;
       default: return null;
+    }
+  };
+
+  const handleTagsChange = (tagIds: string[]) => {
+    if (tagIds.length === 0) {
+      removeFilter('tag_ids');
+    } else {
+      updateFilter('tag_ids', tagIds);
     }
   };
 
@@ -187,6 +197,44 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
             ))}
           </SelectContent>
         </Select>
+
+        {/* Filtro por Tags */}
+        <Select 
+          value={filters.tag_ids?.length ? 'selected' : 'all'} 
+          onValueChange={(value) => {
+            if (value === 'all') {
+              handleTagsChange([]);
+            }
+          }}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por tags" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as tags</SelectItem>
+            {tags.map(tag => (
+              <SelectItem 
+                key={tag.id} 
+                value={tag.id}
+                onSelect={() => {
+                  const currentTags = filters.tag_ids || [];
+                  const newTags = currentTags.includes(tag.id) 
+                    ? currentTags.filter(id => id !== tag.id)
+                    : [...currentTags, tag.id];
+                  handleTagsChange(newTags);
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  {tag.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Filtros ativos */}
@@ -229,6 +277,16 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
             <Badge variant="secondary" className="gap-1">
               Responsável: {users.find(u => u.id === filters.responsible_id)?.name}
               <button onClick={() => removeFilter('responsible_id')}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {filters.tag_ids && filters.tag_ids.length > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              <Tag className="h-3 w-3" />
+              Tags ({filters.tag_ids.length})
+              <button onClick={() => removeFilter('tag_ids')}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>

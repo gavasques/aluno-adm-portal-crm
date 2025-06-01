@@ -206,4 +206,5 @@ export interface CRMFilters {
   responsible_id?: string;
   search?: string;
   contact_filter?: string;
+  tag_ids?: string[];
 }

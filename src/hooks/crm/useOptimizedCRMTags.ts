@@ -1,177 +1,129 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMTag } from '@/types/crm.types';
 import { toast } from 'sonner';
 
-interface CRMTagsCache {
-  tags: CRMTag[];
-  timestamp: number;
-  loading: boolean;
-}
-
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-let globalCache: CRMTagsCache | null = null;
-const subscribers = new Set<() => void>();
-
 export const useOptimizedCRMTags = () => {
-  const [tags, setTags] = useState<CRMTag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const notifySubscribers = useCallback(() => {
-    subscribers.forEach(callback => callback());
-  }, []);
-
-  const updateLocalState = useCallback(() => {
-    if (globalCache) {
-      setTags(globalCache.tags);
-      setLoading(globalCache.loading);
-    }
-  }, []);
-
-  useEffect(() => {
-    subscribers.add(updateLocalState);
-    return () => {
-      subscribers.delete(updateLocalState);
-    };
-  }, [updateLocalState]);
-
-  const fetchTags = useCallback(async (forceRefresh = false) => {
-    try {
-      // Verificar cache válido
-      const now = Date.now();
-      if (!forceRefresh && globalCache && (now - globalCache.timestamp) < CACHE_DURATION && !globalCache.loading) {
-        setTags(globalCache.tags);
-        setLoading(false);
-        return globalCache.tags;
-      }
-
-      // Evitar múltiplas chamadas simultâneas
-      if (globalCache?.loading) {
-        return globalCache.tags;
-      }
-
-      console.log('🏷️ Fetching CRM tags from database...');
-      
-      globalCache = { tags: globalCache?.tags || [], timestamp: now, loading: true };
-      setLoading(true);
-      setError(null);
-      notifySubscribers();
-
-      const { data, error: queryError } = await supabase
+  // Query otimizada para tags
+  const { data: tags = [], isLoading: loading, error } = useQuery({
+    queryKey: ['crm-tags'],
+    queryFn: async () => {
+      console.log('🏷️ Fetching CRM tags...');
+      const { data, error } = await supabase
         .from('crm_tags')
         .select('*')
         .order('name');
 
-      if (queryError) {
-        console.error('❌ Error fetching CRM tags:', queryError);
-        throw new Error(`Erro ao carregar tags: ${queryError.message}`);
-      }
+      if (error) throw error;
+      console.log(`✅ Loaded ${data?.length || 0} tags`);
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos - tags são muito estáticas
+    refetchOnWindowFocus: false,
+  });
 
-      const tagsList = data || [];
-      console.log(`✅ Loaded ${tagsList.length} CRM tags successfully`);
-
-      globalCache = {
-        tags: tagsList,
-        timestamp: now,
-        loading: false
-      };
-
-      setTags(tagsList);
-      setLoading(false);
-      notifySubscribers();
-
-      return tagsList;
-    } catch (err) {
-      console.error('❌ CRM Tags fetch error:', err);
-      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido ao carregar tags';
-      
-      setError(errorMsg);
-      setLoading(false);
-      
-      globalCache = {
-        tags: globalCache?.tags || [],
-        timestamp: globalCache?.timestamp || 0,
-        loading: false
-      };
-      
-      notifySubscribers();
-      toast.error(errorMsg);
-      return [];
-    }
-  }, [notifySubscribers]);
-
-  const createTag = useCallback(async (name: string, color: string) => {
+  const createTag = async (tagData: Omit<CRMTag, 'id' | 'created_at'>) => {
     try {
       const { data, error } = await supabase
         .from('crm_tags')
-        .insert({ name: name.trim(), color })
+        .insert(tagData)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Atualizar cache local
-      if (globalCache) {
-        const updatedTags = [...globalCache.tags, data].sort((a, b) => a.name.localeCompare(b.name));
-        globalCache = {
-          ...globalCache,
-          tags: updatedTags,
-          timestamp: Date.now()
-        };
-        
-        setTags(updatedTags);
-        notifySubscribers();
-      }
-
+      queryClient.invalidateQueries({ queryKey: ['crm-tags'] });
+      toast.success('Tag criada com sucesso!');
       return data;
     } catch (error) {
       console.error('Erro ao criar tag:', error);
+      toast.error('Erro ao criar tag');
       throw error;
     }
-  }, [notifySubscribers]);
+  };
 
-  const updateLeadTags = useCallback(async (leadId: string, tagIds: string[]) => {
+  const updateTag = async (id: string, updates: Partial<CRMTag>) => {
     try {
-      // Remover todas as tags do lead
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
+        .from('crm_tags')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['crm-tags'] });
+      toast.success('Tag atualizada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar tag:', error);
+      toast.error('Erro ao atualizar tag');
+      throw error;
+    }
+  };
+
+  const deleteTag = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('crm_tags')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['crm-tags'] });
+      toast.success('Tag removida com sucesso!');
+    } catch (error) {
+      console.error('Erro ao remover tag:', error);
+      toast.error('Erro ao remover tag');
+      throw error;
+    }
+  };
+
+  const updateLeadTags = async (leadId: string, tagIds: string[]) => {
+    try {
+      // Remove todas as tags existentes do lead
+      await supabase
         .from('crm_lead_tags')
         .delete()
         .eq('lead_id', leadId);
 
-      if (deleteError) throw deleteError;
-
-      // Adicionar novas tags
+      // Adiciona as novas tags
       if (tagIds.length > 0) {
-        const { error: insertError } = await supabase
-          .from('crm_lead_tags')
-          .insert(tagIds.map(tagId => ({ lead_id: leadId, tag_id: tagId })));
+        const leadTags = tagIds.map(tagId => ({
+          lead_id: leadId,
+          tag_id: tagId
+        }));
 
-        if (insertError) throw insertError;
+        const { error } = await supabase
+          .from('crm_lead_tags')
+          .insert(leadTags);
+
+        if (error) throw error;
       }
+
+      // Invalidar cache de leads para atualizar as tags
+      queryClient.invalidateQueries({ 
+        queryKey: ['optimized-crm-leads'],
+        exact: false 
+      });
+      
+      toast.success('Tags do lead atualizadas!');
     } catch (error) {
       console.error('Erro ao atualizar tags do lead:', error);
+      toast.error('Erro ao atualizar tags do lead');
       throw error;
     }
-  }, []);
-
-  // Inicializar cache na primeira execução
-  useEffect(() => {
-    if (!globalCache) {
-      fetchTags();
-    } else {
-      updateLocalState();
-    }
-  }, [fetchTags, updateLocalState]);
+  };
 
   return {
     tags,
     loading,
     error,
-    fetchTags,
     createTag,
-    updateLeadTags,
-    refetch: () => fetchTags(true)
+    updateTag,
+    deleteTag,
+    updateLeadTags
   };
 };

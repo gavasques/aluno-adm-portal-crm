@@ -9,6 +9,7 @@ import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -22,17 +23,17 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
   const { leadsByColumn, loading: leadsLoading, moveLeadToColumn } = useOptimizedCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   console.log('🎯 OptimizedKanban Debug - Pipeline ID:', pipelineId);
   console.log('🎯 OptimizedKanban Debug - Columns:', columns);
   console.log('🎯 OptimizedKanban Debug - Leads by Column:', leadsByColumn);
-  console.log('🎯 OptimizedKanban Debug - Loading states:', { columnsLoading, leadsLoading });
 
   // Configurar sensores mais responsivos para drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3,
+        distance: 8,
       },
     }),
     useSensor(TouchSensor, {
@@ -61,6 +62,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
       .find(l => l.id === leadId);
     
     setActiveLead(lead || null);
+    setIsDragging(true);
     
     const currentColumnId = Object.keys(leadsByColumn).find(columnId => 
       leadsByColumn[columnId].some(l => l.id === leadId)
@@ -80,6 +82,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
     
     setActiveLead(null);
     setActiveColumnId(null);
+    setIsDragging(false);
 
     if (!over) return;
 
@@ -94,16 +97,19 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
       try {
         console.log(`🔄 Moving lead ${leadId} to column ${newColumnId}`);
         await moveLeadToColumn(leadId, newColumnId);
+        toast.success('Lead movido com sucesso');
       } catch (error) {
         console.error('❌ Error moving lead:', error);
+        toast.error('Erro ao mover lead. Tente novamente.');
       }
     }
   }, [leadsByColumn, moveLeadToColumn]);
 
   const handleOpenDetail = useCallback((lead: CRMLead) => {
+    if (isDragging) return; // Evitar navegação durante drag
     console.log('🔗 Navigating to modern lead detail page:', lead.id);
     navigate(`/admin/lead/${lead.id}`);
-  }, [navigate]);
+  }, [navigate, isDragging]);
 
   const loading = columnsLoading || leadsLoading;
 
@@ -138,7 +144,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
       <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
         <div className={cn(
           "flex gap-4 min-w-max h-full px-3 transition-all duration-300",
-          activeLead && "pointer-events-none"
+          isDragging && "pointer-events-none select-none"
         )}>
           {pipelineColumns.map(column => {
             const columnLeads = leadsByColumn[column.id] || [];
@@ -162,10 +168,10 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
 
       <DragOverlay>
         {activeLead ? (
-          <div className="transform rotate-6 scale-110 transition-transform duration-200">
+          <div className="transform rotate-6 scale-110 transition-transform duration-200 opacity-90">
             <OptimizedKanbanLeadCard 
               lead={activeLead} 
-              onOpenDetail={handleOpenDetail} 
+              onOpenDetail={() => {}} // Desabilitar durante drag
             />
           </div>
         ) : null}
