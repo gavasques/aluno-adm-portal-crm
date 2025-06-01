@@ -34,7 +34,7 @@ export const useCRMLeadDetail = (leadId: string) => {
           )
         `)
         .eq('id', leadId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('❌ Error fetching lead:', error);
@@ -77,10 +77,12 @@ export const useCRMLeadDetail = (leadId: string) => {
         console.log('✅ Lead transformed and set:', transformedLead);
       } else {
         console.log('⚠️ No lead data returned');
+        setLead(null);
         setError('Lead não encontrado');
       }
     } catch (err) {
       console.error('❌ Error in fetchLead:', err);
+      setLead(null);
       setError(err instanceof Error ? err.message : 'Erro ao carregar lead');
     } finally {
       setLoading(false);
