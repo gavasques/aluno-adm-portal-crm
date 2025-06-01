@@ -8,6 +8,7 @@ import { Search, Filter, X, Calendar, Clock, AlertTriangle } from 'lucide-react'
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 interface CRMFiltersProps {
   filters: CRMFiltersType;
@@ -19,6 +20,17 @@ interface CRMFiltersProps {
 const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: CRMFiltersProps) => {
   const { pipelines, columns } = useCRMPipelines();
   const { users } = useCRMUsers();
+  
+  // Debounce search para evitar queries excessivas
+  const [searchValue, setSearchValue] = React.useState(filters.search || '');
+  const [debouncedSearch, isDebouncing] = useDebouncedValue(searchValue, 300);
+
+  // Sincronizar debounced search com filters
+  React.useEffect(() => {
+    if (debouncedSearch !== filters.search) {
+      onFiltersChange({ ...filters, search: debouncedSearch });
+    }
+  }, [debouncedSearch, filters, onFiltersChange]);
 
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
@@ -33,6 +45,7 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
   };
 
   const clearAllFilters = () => {
+    setSearchValue('');
     onFiltersChange({ pipeline_id: filters.pipeline_id });
   };
 
@@ -80,15 +93,20 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
           </SelectContent>
         </Select>
 
-        {/* Busca */}
+        {/* Busca com debounce */}
         <div className="relative flex-1 min-w-[250px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Buscar por nome ou email..."
-            value={filters.search || ''}
-            onChange={(e) => updateFilter('search', e.target.value)}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
             className="pl-10"
           />
+          {isDebouncing && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            </div>
+          )}
         </div>
 
         {/* Filtro de contatos */}
@@ -179,10 +197,10 @@ const CRMFilters = ({ filters, onFiltersChange, pipelineId, onPipelineChange }: 
             Filtros ativos:
           </div>
           
-          {filters.search && (
+          {searchValue && (
             <Badge variant="secondary" className="gap-1">
-              Busca: {filters.search}
-              <button onClick={() => removeFilter('search')}>
+              Busca: {searchValue}
+              <button onClick={() => setSearchValue('')}>
                 <X className="h-3 w-3" />
               </button>
             </Badge>

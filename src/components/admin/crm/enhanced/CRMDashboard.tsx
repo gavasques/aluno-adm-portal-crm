@@ -50,7 +50,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   const handleRefresh = () => {
     refetch();
-    window.location.reload();
+    toast.success('Dados atualizados');
   };
 
   const handleCreateLead = (columnId?: string) => {

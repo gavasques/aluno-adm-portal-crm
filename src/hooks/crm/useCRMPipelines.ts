@@ -1,16 +1,18 @@
 
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMPipeline, CRMPipelineColumn } from '@/types/crm.types';
 import { toast } from 'sonner';
 
 export const useCRMPipelines = () => {
-  const [pipelines, setPipelines] = useState<CRMPipeline[]>([]);
-  const [columns, setColumns] = useState<CRMPipelineColumn[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchPipelines = async () => {
-    try {
+  // Query otimizada para pipelines
+  const { data: pipelines = [], isLoading: pipelinesLoading } = useQuery({
+    queryKey: ['crm-pipelines'],
+    queryFn: async () => {
+      console.log('🔍 Fetching CRM pipelines...');
       const { data, error } = await supabase
         .from('crm_pipelines')
         .select('*')
@@ -18,40 +20,47 @@ export const useCRMPipelines = () => {
         .order('sort_order');
 
       if (error) throw error;
-      setPipelines(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar pipelines:', error);
-    }
-  };
+      console.log(`✅ Loaded ${data?.length || 0} pipelines`);
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutos - pipelines são muito estáticos
+    refetchOnWindowFocus: false,
+  });
 
-  const fetchColumns = async (pipelineId?: string) => {
-    try {
-      let query = supabase
+  // Query otimizada para colunas
+  const { data: columns = [], isLoading: columnsLoading } = useQuery({
+    queryKey: ['crm-pipeline-columns'],
+    queryFn: async () => {
+      console.log('🔍 Fetching CRM pipeline columns...');
+      const { data, error } = await supabase
         .from('crm_pipeline_columns')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
 
-      if (pipelineId) {
-        query = query.eq('pipeline_id', pipelineId);
-      }
-
-      const { data, error } = await query;
-
       if (error) throw error;
-      setColumns(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar colunas:', error);
-    }
-  };
+      console.log(`✅ Loaded ${data?.length || 0} columns`);
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutos - colunas são muito estáticas
+    refetchOnWindowFocus: false,
+  });
+
+  const loading = pipelinesLoading || columnsLoading;
 
   const refetch = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([fetchPipelines(), fetchColumns()]);
-    } finally {
-      setLoading(false);
-    }
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] }),
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] })
+    ]);
+  };
+
+  const fetchPipelines = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
+  };
+
+  const fetchColumns = async (pipelineId?: string) => {
+    await queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
   };
 
   const createPipeline = async (data: Omit<CRMPipeline, 'id' | 'created_at' | 'updated_at'>) => {
@@ -64,7 +73,8 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
 
-      setPipelines(prev => [...prev, newPipeline].sort((a, b) => a.sort_order - b.sort_order));
+      // Invalidar apenas os pipelines
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
       toast.success('Pipeline criado com sucesso!');
       return newPipeline;
     } catch (error) {
@@ -83,7 +93,7 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
 
-      setPipelines(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
       toast.success('Pipeline atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar pipeline:', error);
@@ -101,7 +111,7 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
 
-      setPipelines(prev => prev.filter(p => p.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
       toast.success('Pipeline removido com sucesso!');
     } catch (error) {
       console.error('Erro ao remover pipeline:', error);
@@ -120,7 +130,7 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
 
-      setColumns(prev => [...prev, newColumn].sort((a, b) => a.sort_order - b.sort_order));
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
       toast.success('Coluna criada com sucesso!');
       return newColumn;
     } catch (error) {
@@ -139,7 +149,7 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
 
-      setColumns(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
       toast.success('Coluna atualizada com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar coluna:', error);
@@ -157,7 +167,7 @@ export const useCRMPipelines = () => {
 
       if (error) throw error;
 
-      setColumns(prev => prev.filter(c => c.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
       toast.success('Coluna removida com sucesso!');
     } catch (error) {
       console.error('Erro ao remover coluna:', error);
@@ -165,10 +175,6 @@ export const useCRMPipelines = () => {
       throw error;
     }
   };
-
-  useEffect(() => {
-    refetch();
-  }, []);
 
   return {
     pipelines,
