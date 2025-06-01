@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Columns3, List, Plus } from 'lucide-react';
+import { Columns3, List, Plus, LayoutGrid } from 'lucide-react';
 import { CRMPipeline } from '@/types/crm.types';
 
 interface DashboardToolbarProps {
@@ -20,12 +20,19 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
   selectedPipelineId,
   onCreateLead
 }) => {
+  const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <Badge variant="outline" className="text-sm font-medium border-blue-200 text-blue-700 bg-blue-50">
-          Pipeline: {pipelines.find(p => p.id === selectedPipelineId)?.name || 'Selecione um pipeline'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+            <LayoutGrid className="h-3 w-3 text-white" />
+          </div>
+          <span className="text-sm font-medium text-blue-700">
+            {selectedPipeline?.name || 'Pipeline de Vendas'}
+          </span>
+        </div>
       </div>
       
       <div className="flex items-center gap-3">
@@ -33,33 +40,35 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
         <Button 
           onClick={onCreateLead}
           disabled={!selectedPipelineId}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 h-9 text-sm font-medium"
         >
           <Plus className="h-4 w-4 mr-2" />
           Novo Lead
         </Button>
 
         {/* View Toggle */}
-        <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
           <Button
-            variant={activeView === 'kanban' ? 'default' : 'ghost'}
+            variant="ghost"
             size="sm"
             onClick={() => onViewChange('kanban')}
-            className={`h-8 px-3 ${activeView === 'kanban' 
-              ? 'bg-white shadow-sm border border-gray-200' 
-              : 'hover:bg-gray-100'
+            className={`h-8 px-3 rounded-none border-r border-gray-300 ${
+              activeView === 'kanban' 
+                ? 'bg-gray-900 text-white hover:bg-gray-800' 
+                : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             <Columns3 className="h-4 w-4 mr-1" />
             Kanban
           </Button>
           <Button
-            variant={activeView === 'list' ? 'default' : 'ghost'}
+            variant="ghost"
             size="sm"
             onClick={() => onViewChange('list')}
-            className={`h-8 px-3 ${activeView === 'list' 
-              ? 'bg-white shadow-sm border border-gray-200' 
-              : 'hover:bg-gray-100'
+            className={`h-8 px-3 rounded-none ${
+              activeView === 'list' 
+                ? 'bg-gray-900 text-white hover:bg-gray-800' 
+                : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             <List className="h-4 w-4 mr-1" />

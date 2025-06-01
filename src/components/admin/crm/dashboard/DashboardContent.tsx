@@ -19,25 +19,25 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
   onCreateLead
 }) => {
   return (
-    <Card className="h-full border-gray-200 shadow-sm">
-      <CardContent className="p-0 h-full">
-        {activeView === 'kanban' ? (
-          <div className="h-full overflow-hidden">
-            <OptimizedKanbanBoard
-              filters={effectiveFilters}
-              pipelineId={selectedPipelineId}
-              onCreateLead={onCreateLead}
-            />
-          </div>
-        ) : (
-          <div className="p-6 h-full overflow-auto">
+    <div className="h-full bg-gray-50">
+      {activeView === 'kanban' ? (
+        <div className="h-full overflow-hidden p-6">
+          <OptimizedKanbanBoard
+            filters={effectiveFilters}
+            pipelineId={selectedPipelineId}
+            onCreateLead={onCreateLead}
+          />
+        </div>
+      ) : (
+        <div className="p-6 h-full overflow-auto">
+          <div className="bg-white rounded-lg border border-gray-200 h-full">
             <CRMListView
               filters={effectiveFilters}
               onCreateLead={() => onCreateLead()}
             />
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 };

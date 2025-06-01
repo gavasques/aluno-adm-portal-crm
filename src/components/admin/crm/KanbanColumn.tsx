@@ -30,8 +30,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     <div 
       ref={setNodeRef}
       className={cn(
-        "w-80 bg-gray-50 rounded-lg p-4 transition-all duration-300 ease-in-out",
-        isOver && "bg-blue-50 ring-2 ring-blue-300 ring-opacity-50 shadow-lg",
+        "w-80 bg-white rounded-lg border border-gray-200 p-4 transition-all duration-300 ease-in-out",
+        isOver && "bg-blue-50 ring-1 ring-blue-300",
         isDragOver && "scale-[1.02]"
       )}
     >
