@@ -12,6 +12,7 @@ import { LeadAmazonSection } from './form-sections/LeadAmazonSection';
 import { LeadQualificationSection } from './form-sections/LeadQualificationSection';
 import { LeadManagementSection } from './form-sections/LeadManagementSection';
 import { LeadNotesSection } from './form-sections/LeadNotesSection';
+import CustomFieldsSection from './form-sections/CustomFieldsSection';
 
 interface CompactCRMLeadFormProps {
   pipelineId: string;
@@ -87,6 +88,9 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
               responsibles={responsibles}
             />
           </div>
+
+          {/* Campos Customizáveis */}
+          <CustomFieldsSection form={form} />
 
           {/* Observações */}
           <LeadNotesSection form={form} />

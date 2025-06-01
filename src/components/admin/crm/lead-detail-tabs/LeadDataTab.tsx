@@ -5,11 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Save, Edit, X } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
+import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
+import { useCustomFieldValues } from '@/hooks/crm/useCustomFieldValues';
 import { toast } from 'sonner';
 
 interface LeadDataTabProps {
@@ -21,6 +24,8 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { tags } = useCRMTags();
   const { updateLead, updateLeadTags, updating } = useCRMLeadUpdate();
+  const { customFields } = useCRMCustomFields();
+  const { fieldValues, getFormValues, prepareFieldValues, saveFieldValues } = useCustomFieldValues(lead.id);
   
   const [formData, setFormData] = useState({
     name: lead.name || '',
@@ -40,7 +45,8 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
     ready_to_invest_3k: lead.ready_to_invest_3k || false,
     calendly_scheduled: lead.calendly_scheduled || false,
     calendly_link: lead.calendly_link || '',
-    notes: lead.notes || ''
+    notes: lead.notes || '',
+    ...getFormValues() // Adicionar valores dos campos customizáveis
   });
 
   const [selectedTags, setSelectedTags] = useState<string[]>(
@@ -49,9 +55,38 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
 
   const handleSave = async () => {
     try {
-      const success = await updateLead(lead.id, formData);
+      // Separar dados padrão dos campos customizáveis
+      const standardData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        has_company: formData.has_company,
+        what_sells: formData.what_sells,
+        keep_or_new_niches: formData.keep_or_new_niches,
+        sells_on_amazon: formData.sells_on_amazon,
+        amazon_store_link: formData.amazon_store_link,
+        amazon_state: formData.amazon_state,
+        amazon_tax_regime: formData.amazon_tax_regime,
+        works_with_fba: formData.works_with_fba,
+        had_contact_with_lv: formData.had_contact_with_lv,
+        seeks_private_label: formData.seeks_private_label,
+        main_doubts: formData.main_doubts,
+        ready_to_invest_3k: formData.ready_to_invest_3k,
+        calendly_scheduled: formData.calendly_scheduled,
+        calendly_link: formData.calendly_link,
+        notes: formData.notes
+      };
+
+      const success = await updateLead(lead.id, standardData);
       if (success) {
         await updateLeadTags(lead.id, selectedTags);
+        
+        // Salvar campos customizáveis
+        if (customFields.length > 0) {
+          const fieldValues = prepareFieldValues(formData, customFields);
+          await saveFieldValues.mutateAsync(fieldValues);
+        }
+        
         setIsEditing(false);
         onUpdate?.();
       }
@@ -80,7 +115,8 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
       ready_to_invest_3k: lead.ready_to_invest_3k || false,
       calendly_scheduled: lead.calendly_scheduled || false,
       calendly_link: lead.calendly_link || '',
-      notes: lead.notes || ''
+      notes: lead.notes || '',
+      ...getFormValues()
     });
     setSelectedTags(lead.tags?.map(tag => tag.id) || []);
     setIsEditing(false);
@@ -92,6 +128,112 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
         ? prev.filter(id => id !== tagId)
         : [...prev, tagId]
     );
+  };
+
+  const renderCustomField = (fieldValue: any) => {
+    const field = fieldValue.field;
+    if (!field) return null;
+
+    const fieldKey = `custom_field_${field.field_key}`;
+    const value = formData[fieldKey];
+
+    if (isEditing) {
+      switch (field.field_type) {
+        case 'text':
+          return (
+            <div key={field.id}>
+              <Label htmlFor={fieldKey}>{field.field_name}</Label>
+              <Input
+                id={fieldKey}
+                value={value || ''}
+                onChange={(e) => setFormData({...formData, [fieldKey]: e.target.value})}
+                placeholder={field.placeholder}
+              />
+            </div>
+          );
+
+        case 'number':
+          return (
+            <div key={field.id}>
+              <Label htmlFor={fieldKey}>{field.field_name}</Label>
+              <Input
+                id={fieldKey}
+                type="number"
+                value={value || ''}
+                onChange={(e) => setFormData({...formData, [fieldKey]: e.target.value})}
+                placeholder={field.placeholder}
+              />
+            </div>
+          );
+
+        case 'phone':
+          return (
+            <div key={field.id}>
+              <Label htmlFor={fieldKey}>{field.field_name}</Label>
+              <Input
+                id={fieldKey}
+                type="tel"
+                value={value || ''}
+                onChange={(e) => setFormData({...formData, [fieldKey]: e.target.value})}
+                placeholder={field.placeholder}
+              />
+            </div>
+          );
+
+        case 'boolean':
+          return (
+            <div key={field.id} className="flex items-center justify-between">
+              <Label htmlFor={fieldKey}>{field.field_name}</Label>
+              <Switch
+                id={fieldKey}
+                checked={value || false}
+                onCheckedChange={(checked) => setFormData({...formData, [fieldKey]: checked})}
+              />
+            </div>
+          );
+
+        case 'select':
+          return (
+            <div key={field.id}>
+              <Label htmlFor={fieldKey}>{field.field_name}</Label>
+              <Select
+                value={value || ''}
+                onValueChange={(selectedValue) => setFormData({...formData, [fieldKey]: selectedValue})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={field.placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {field.options.map((option: string, index: number) => (
+                    <SelectItem key={index} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    } else {
+      // Modo visualização
+      let displayValue = value;
+      
+      if (field.field_type === 'boolean') {
+        displayValue = value ? 'Sim' : 'Não';
+      } else if (!value) {
+        displayValue = 'Não informado';
+      }
+
+      return (
+        <div key={field.id}>
+          <Label>{field.field_name}</Label>
+          <p className="text-sm text-gray-600 mt-1">{displayValue}</p>
+        </div>
+      );
+    }
   };
 
   return (
@@ -281,6 +423,18 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
             )}
           </CardContent>
         </Card>
+
+        {/* Campos Customizáveis */}
+        {fieldValues.length > 0 && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Campos Customizáveis</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {fieldValues.map(renderCustomField)}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Observações */}
         <Card className="lg:col-span-2">

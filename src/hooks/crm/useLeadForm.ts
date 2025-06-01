@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCRMLeadUpdate } from './useCRMLeadUpdate';
 import { useOptimizedCRMTags } from './useOptimizedCRMTags';
+import { useCRMCustomFields } from './useCRMCustomFields';
+import { useCustomFieldValues } from './useCustomFieldValues';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
 import { CRMLead, CRMLeadInput } from '@/types/crm.types';
 
@@ -21,10 +23,12 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
   const [loading, setLoading] = useState(false);
   const { updateLead } = useCRMLeadUpdate();
   const { updateLeadTags } = useOptimizedCRMTags();
+  const { customFields } = useCRMCustomFields();
+  const { getFormValues, prepareFieldValues, saveFieldValues } = useCustomFieldValues(lead?.id);
 
-  const form = useForm<LeadFormData>({
-    resolver: zodResolver(leadFormSchema),
-    defaultValues: {
+  // Valores iniciais incluindo campos customizáveis
+  const getDefaultValues = () => {
+    const baseValues = {
       name: lead?.name || '',
       email: lead?.email || '',
       phone: lead?.phone || '',
@@ -46,7 +50,20 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
       responsible_id: lead?.responsible_id || '',
       notes: lead?.notes || '',
       tags: lead?.tags?.map(tag => tag.id) || [],
+    };
+
+    // Adicionar valores dos campos customizáveis se estiver editando
+    if (mode === 'edit' && lead) {
+      const customFieldValues = getFormValues();
+      return { ...baseValues, ...customFieldValues };
     }
+
+    return baseValues;
+  };
+
+  const form = useForm<LeadFormData>({
+    resolver: zodResolver(leadFormSchema),
+    defaultValues: getDefaultValues()
   });
 
   const createLead = async (leadData: CRMLeadInput) => {
@@ -95,14 +112,23 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
       const columnId = data.column_id || initialColumnId || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
       
       if (lead) {
+        // Atualizar lead existente
         await updateLead(lead.id, {
           ...data,
           pipeline_id: pipelineId,
           column_id: columnId,
         });
         await updateLeadTags(lead.id, data.tags || []);
+
+        // Salvar valores dos campos customizáveis
+        if (customFields.length > 0) {
+          const fieldValues = prepareFieldValues(data, customFields);
+          await saveFieldValues.mutateAsync(fieldValues);
+        }
+
         toast.success('Lead atualizado com sucesso!');
       } else {
+        // Criar novo lead
         const newLead = await createLead({
           ...data,
           pipeline_id: pipelineId,
@@ -111,8 +137,31 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
           email: data.email!,
         });
 
+        // Adicionar tags
         if (data.tags && data.tags.length > 0) {
           await updateLeadTags(newLead.id, data.tags);
+        }
+
+        // Salvar valores dos campos customizáveis
+        if (customFields.length > 0) {
+          const fieldValues = prepareFieldValues(data, customFields);
+          if (fieldValues.length > 0) {
+            // Usar o ID do lead recém-criado
+            const { error } = await supabase
+              .from('crm_custom_field_values')
+              .insert(
+                fieldValues.map(v => ({
+                  lead_id: newLead.id,
+                  field_id: v.field_id,
+                  field_value: v.field_value
+                }))
+              );
+
+            if (error) {
+              console.error('Erro ao salvar campos customizáveis:', error);
+              toast.error('Lead criado, mas houve erro ao salvar campos customizáveis');
+            }
+          }
         }
         
         toast.success('Lead criado com sucesso!');
