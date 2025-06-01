@@ -38,12 +38,13 @@ TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
 interface TabsTriggerWithBadgeProps extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
   badgeContent?: string | number;
+  children: React.ReactNode;
 }
 
 const TabsTriggerWithBadge = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   TabsTriggerWithBadgeProps
->(({ className, children, badgeContent, ...props }, ref) => (
+>(({ className, badgeContent, children, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -52,14 +53,14 @@ const TabsTriggerWithBadge = React.forwardRef<
     )}
     {...props}
   >
-    <div className="flex items-center gap-2">
+    <span className="flex items-center gap-2">
       {children}
       {badgeContent && (
-        <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
+        <Badge variant="secondary" className="text-xs min-w-[20px] h-5 px-1.5">
           {badgeContent}
         </Badge>
       )}
-    </div>
+    </span>
   </TabsPrimitive.Trigger>
 ))
 TabsTriggerWithBadge.displayName = "TabsTriggerWithBadge"

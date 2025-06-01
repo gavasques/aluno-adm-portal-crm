@@ -1,81 +1,218 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger, TabsTriggerWithBadge } from '@/components/ui/tabs';
+import { 
+  User, 
+  FileText, 
+  MessageSquare, 
+  Clock,
+  Calendar
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { DesignCard } from '@/design-system';
+import { LeadDetailHeader } from '@/components/admin/crm/lead-detail/LeadDetailHeader';
+import { LeadDetailOverview } from '@/components/admin/crm/lead-detail/LeadDetailOverview';
+import LeadAttachmentsTab from '@/components/admin/crm/lead-detail-tabs/LeadAttachmentsTab';
+import LeadCommentsTab from '@/components/admin/crm/lead-detail-tabs/LeadCommentsTab';
+import LeadHistoryTab from '@/components/admin/crm/lead-detail-tabs/LeadHistoryTab';
+import LeadContactsTab from '@/components/admin/crm/lead-detail-tabs/LeadContactsTab';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
 
 const CRMLeadDetail = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const { lead, loading } = useCRMLeadDetail(leadId || '');
+  const { lead, loading, error, refetch } = useCRMLeadDetail(leadId || '');
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const handleBack = () => {
+    navigate('/admin/crm');
+  };
+
+  const handleLeadUpdate = () => {
+    console.log('🔄 Lead updated, refetching data...');
+    refetch();
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex items-center gap-3"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="text-slate-600 dark:text-slate-300 font-medium">
+            Carregando detalhes do lead...
+          </span>
+        </motion.div>
       </div>
     );
   }
 
-  if (!lead) {
+  if (error || !lead) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Lead não encontrado</h2>
-          <Button onClick={() => navigate('/admin/crm')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao CRM
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <DesignCard variant="glass" size="lg" className="p-12 max-w-md">
+            <p className="text-red-600 dark:text-red-400 mb-6 font-medium">
+              {error || 'Lead não encontrado'}
+            </p>
+            <Button onClick={handleBack} variant="outline" className="bg-white/60 dark:bg-black/20">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para CRM
+            </Button>
+          </DesignCard>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/admin/crm')}
-          className="mb-4"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
+    >
+      <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+        {/* Breadcrumb e navegação */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex items-center justify-between"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao CRM
-        </Button>
-        
-        <h1 className="text-3xl font-bold text-gray-900">{lead.name}</h1>
-        <p className="text-gray-600">{lead.email}</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Informações Básicas</h3>
-          <div className="space-y-2">
-            <p><strong>Email:</strong> {lead.email}</p>
-            {lead.phone && <p><strong>Telefone:</strong> {lead.phone}</p>}
-            <p><strong>Tem empresa:</strong> {lead.has_company ? 'Sim' : 'Não'}</p>
-            <p><strong>Vende na Amazon:</strong> {lead.sells_on_amazon ? 'Sim' : 'Não'}</p>
+          <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleBack}
+              className="p-0 h-auto hover:bg-transparent hover:text-blue-600 transition-colors"
+            >
+              CRM
+            </Button>
+            <span className="text-slate-400">/</span>
+            <span>Lead</span>
+            <span className="text-slate-400">/</span>
+            <span className="font-medium text-slate-900 dark:text-slate-100">{lead.name}</span>
           </div>
-        </div>
+          
+          <Button 
+            onClick={handleBack} 
+            variant="outline"
+            className="bg-white/60 dark:bg-black/20 border-white/30 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-white/10"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Status do Pipeline</h3>
-          <div className="space-y-2">
-            <p><strong>Pipeline:</strong> {lead.pipeline?.name || 'Não definido'}</p>
-            <p><strong>Estágio:</strong> {lead.column?.name || 'Não definido'}</p>
-            <p><strong>Responsável:</strong> {lead.responsible?.name || 'Não definido'}</p>
-          </div>
-        </div>
+        {/* Header do Lead */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <DesignCard 
+            variant="glass" 
+            size="lg" 
+            className="border-white/30 bg-white/40 dark:bg-black/10 backdrop-blur-xl shadow-2xl overflow-hidden"
+          >
+            <LeadDetailHeader 
+              lead={lead} 
+              onClose={handleBack} 
+              onLeadUpdate={handleLeadUpdate}
+            />
+          </DesignCard>
+        </motion.div>
+
+        {/* Conteúdo Principal */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <DesignCard 
+            variant="glass" 
+            size="lg" 
+            className="border-white/30 bg-white/40 dark:bg-black/10 backdrop-blur-xl shadow-2xl overflow-hidden min-h-[600px]"
+          >
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+              <div className="border-b border-white/20 bg-white/30 dark:bg-black/10 backdrop-blur-sm px-6 py-4">
+                <TabsList className="bg-white/80 dark:bg-black/20 backdrop-blur-sm border border-white/20 shadow-lg">
+                  <TabsTrigger 
+                    value="overview" 
+                    className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <User className="h-4 w-4" />
+                    Visão Geral & Dados
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="contacts" 
+                    className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Contatos
+                  </TabsTrigger>
+                  <TabsTriggerWithBadge 
+                    value="attachments" 
+                    badgeContent="3"
+                    className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Anexos
+                  </TabsTriggerWithBadge>
+                  <TabsTriggerWithBadge 
+                    value="comments" 
+                    badgeContent="2"
+                    className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Comentários
+                  </TabsTriggerWithBadge>
+                  <TabsTrigger 
+                    value="history" 
+                    className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <Clock className="h-4 w-4" />
+                    Histórico
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="flex-1 overflow-hidden">
+                <TabsContent value="overview" className="h-full mt-0 p-6">
+                  <LeadDetailOverview lead={lead} />
+                </TabsContent>
+                
+                <TabsContent value="contacts" className="h-full mt-0">
+                  <LeadContactsTab leadId={lead.id} />
+                </TabsContent>
+                
+                <TabsContent value="attachments" className="h-full mt-0">
+                  <LeadAttachmentsTab leadId={lead.id} />
+                </TabsContent>
+                
+                <TabsContent value="comments" className="h-full mt-0">
+                  <LeadCommentsTab leadId={lead.id} />
+                </TabsContent>
+                
+                <TabsContent value="history" className="h-full mt-0">
+                  <LeadHistoryTab leadId={lead.id} />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </DesignCard>
+        </motion.div>
       </div>
-
-      {lead.notes && (
-        <div className="mt-6 bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Observações</h3>
-          <p className="text-gray-700">{lead.notes}</p>
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 };
 
