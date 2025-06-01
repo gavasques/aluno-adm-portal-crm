@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -229,22 +230,34 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
 
   const moveLeadToColumn = useCallback(async (leadId: string, newColumnId: string) => {
     try {
+      console.log(`🔄 Starting move operation for lead ${leadId} to column ${newColumnId}`);
+      
       const { error } = await supabase
         .from('crm_leads')
-        .update({ column_id: newColumnId })
+        .update({ 
+          column_id: newColumnId,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', leadId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
 
-      // Invalidação seletiva do cache
-      queryClient.invalidateQueries({ 
+      console.log('✅ Database update successful');
+
+      // Invalidação mais específica e forçada do cache
+      await queryClient.invalidateQueries({ 
         queryKey: ['optimized-crm-leads'],
-        exact: false 
+        exact: false,
+        refetchType: 'active'
       });
       
-      toast.success('Lead movido com sucesso');
+      console.log('✅ Cache invalidated successfully');
+      
     } catch (error) {
-      toast.error('Erro ao mover lead');
+      console.error('❌ Error in moveLeadToColumn:', error);
       throw error;
     }
   }, [queryClient]);

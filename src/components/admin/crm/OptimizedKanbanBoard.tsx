@@ -20,7 +20,7 @@ interface OptimizedKanbanBoardProps {
 const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
   const { columns, loading: columnsLoading } = useCRMPipelines();
-  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn } = useOptimizedCRMData(filters);
+  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useOptimizedCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -68,6 +68,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
       leadsByColumn[columnId].some(l => l.id === leadId)
     );
     setActiveColumnId(currentColumnId || null);
+    
+    console.log('🔄 Drag started for lead:', leadId, 'in column:', currentColumnId);
   }, [leadsByColumn]);
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
@@ -84,7 +86,10 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
     setActiveColumnId(null);
     setIsDragging(false);
 
-    if (!over) return;
+    if (!over) {
+      console.log('❌ Drag cancelled - no drop target');
+      return;
+    }
 
     const leadId = active.id as string;
     const newColumnId = over.id as string;
@@ -93,17 +98,37 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
       .flat()
       .find(l => l.id === leadId);
     
-    if (currentLead && currentLead.column_id !== newColumnId) {
-      try {
-        console.log(`🔄 Moving lead ${leadId} to column ${newColumnId}`);
-        await moveLeadToColumn(leadId, newColumnId);
-        toast.success('Lead movido com sucesso');
-      } catch (error) {
-        console.error('❌ Error moving lead:', error);
-        toast.error('Erro ao mover lead. Tente novamente.');
-      }
+    if (!currentLead) {
+      console.error('❌ Lead not found:', leadId);
+      toast.error('Erro: Lead não encontrado');
+      return;
     }
-  }, [leadsByColumn, moveLeadToColumn]);
+
+    if (currentLead.column_id === newColumnId) {
+      console.log('🔄 Same column, no action needed');
+      return;
+    }
+
+    console.log(`🔄 Moving lead ${leadId} from ${currentLead.column_id} to ${newColumnId}`);
+
+    try {
+      await moveLeadToColumn(leadId, newColumnId);
+      console.log('✅ Lead moved successfully');
+      toast.success('Lead movido com sucesso');
+      
+      // Force refetch to ensure data consistency
+      setTimeout(() => {
+        refetch();
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Error moving lead:', error);
+      toast.error('Erro ao mover lead. Atualizando dados...');
+      
+      // Force refetch on error to restore correct state
+      refetch();
+    }
+  }, [leadsByColumn, moveLeadToColumn, refetch]);
 
   const handleOpenDetail = useCallback((lead: CRMLead) => {
     if (isDragging) return; // Evitar navegação durante drag
