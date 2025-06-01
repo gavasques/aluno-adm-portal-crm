@@ -1,5 +1,7 @@
+
 import React from 'react';
 import CompactCRMLeadForm from './CompactCRMLeadForm';
+import { CRMLead } from '@/types/crm.types';
 
 interface ModernCRMLeadFormProps {
   pipelineId: string;
