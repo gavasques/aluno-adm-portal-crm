@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
 import { CRMLead, CRMLeadInput } from '@/types/crm.types';
-import CRMTagsSelector from './CRMTagsSelector';
+import SimpleCRMTagsSelector from './SimpleCRMTagsSelector';
 
 interface CompactCRMLeadFormProps {
   pipelineId: string;
@@ -83,7 +83,7 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
   // Filtrar colunas do pipeline atual
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
-  // Selecionar primeira coluna por padrão se não tiver coluna inicial
+  // Selecionar primeira coluna por padrão
   useEffect(() => {
     if (pipelineColumns.length > 0 && !form.watch('column_id') && !initialColumnId && !lead) {
       const firstColumn = pipelineColumns.sort((a, b) => a.sort_order - b.sort_order)[0];
@@ -124,7 +124,6 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
         .single();
 
       if (error) throw error;
-
       return data;
     } catch (error) {
       console.error('Erro ao criar lead:', error);
@@ -135,11 +134,9 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
   const onSubmit = async (data: LeadFormData) => {
     setLoading(true);
     try {
-      // Garantir que column_id está definido
       const columnId = data.column_id || initialColumnId || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
       
       if (lead) {
-        // Atualizar lead existente
         await updateLead(lead.id, {
           ...data,
           pipeline_id: pipelineId,
@@ -148,7 +145,6 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
         await updateLeadTags(lead.id, data.tags || []);
         toast.success('Lead atualizado com sucesso!');
       } else {
-        // Criar novo lead
         const newLead = await createLead({
           ...data,
           pipeline_id: pipelineId,
@@ -157,7 +153,6 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
           email: data.email!,
         });
 
-        // Adicionar tags se houver
         if (data.tags && data.tags.length > 0) {
           await updateLeadTags(newLead.id, data.tags);
         }
@@ -174,258 +169,266 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      {/* Informações Básicas */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Informações Básicas</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome *</Label>
-            <Input
-              id="name"
-              {...form.register('name')}
-              placeholder="Nome completo"
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
-            )}
-          </div>
+    <div className="h-full flex flex-col">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="space-y-4">
+          {/* Informações Básicas */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Informações Básicas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="name" className="text-xs">Nome *</Label>
+                  <Input
+                    id="name"
+                    {...form.register('name')}
+                    placeholder="Nome completo"
+                    className="h-8"
+                  />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-red-600">{form.formState.errors.name.message}</p>
+                  )}
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              {...form.register('email')}
-              placeholder="email@exemplo.com"
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
-            )}
-          </div>
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-xs">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...form.register('email')}
+                    placeholder="email@exemplo.com"
+                    className="h-8"
+                  />
+                  {form.formState.errors.email && (
+                    <p className="text-xs text-red-600">{form.formState.errors.email.message}</p>
+                  )}
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              {...form.register('phone')}
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-        </CardContent>
-      </Card>
+                <div className="space-y-1">
+                  <Label htmlFor="phone" className="text-xs">Telefone</Label>
+                  <Input
+                    id="phone"
+                    {...form.register('phone')}
+                    placeholder="(11) 99999-9999"
+                    className="h-8"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Empresa e Amazon */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Empresa e Amazon</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="has_company"
-                checked={watch('has_company')}
-                onCheckedChange={(checked) => setValue('has_company', checked)}
-              />
-              <Label htmlFor="has_company">Tem empresa</Label>
-            </div>
+          {/* Negócio e Amazon */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Negócio e Amazon</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="has_company"
+                    checked={watch('has_company')}
+                    onCheckedChange={(checked) => setValue('has_company', checked)}
+                  />
+                  <Label htmlFor="has_company" className="text-xs">Tem empresa</Label>
+                </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="sells_on_amazon"
-                checked={watch('sells_on_amazon')}
-                onCheckedChange={(checked) => setValue('sells_on_amazon', checked)}
-              />
-              <Label htmlFor="sells_on_amazon">Vende na Amazon</Label>
-            </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="sells_on_amazon"
+                    checked={watch('sells_on_amazon')}
+                    onCheckedChange={(checked) => setValue('sells_on_amazon', checked)}
+                  />
+                  <Label htmlFor="sells_on_amazon" className="text-xs">Vende na Amazon</Label>
+                </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="works_with_fba"
-                checked={watch('works_with_fba')}
-                onCheckedChange={(checked) => setValue('works_with_fba', checked)}
-              />
-              <Label htmlFor="works_with_fba">Trabalha com FBA</Label>
-            </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="works_with_fba"
+                    checked={watch('works_with_fba')}
+                    onCheckedChange={(checked) => setValue('works_with_fba', checked)}
+                  />
+                  <Label htmlFor="works_with_fba" className="text-xs">Trabalha com FBA</Label>
+                </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="seeks_private_label"
-                checked={watch('seeks_private_label')}
-                onCheckedChange={(checked) => setValue('seeks_private_label', checked)}
-              />
-              <Label htmlFor="seeks_private_label">Private Label</Label>
-            </div>
-          </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="seeks_private_label"
+                    checked={watch('seeks_private_label')}
+                    onCheckedChange={(checked) => setValue('seeks_private_label', checked)}
+                  />
+                  <Label htmlFor="seeks_private_label" className="text-xs">Private Label</Label>
+                </div>
+              </div>
 
-          {(watch('has_company') || watch('sells_on_amazon')) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {watch('has_company') && (
-                <div className="space-y-2">
-                  <Label htmlFor="what_sells">O que vende?</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="what_sells" className="text-xs">O que vende?</Label>
                   <Input
                     id="what_sells"
                     {...form.register('what_sells')}
                     placeholder="Produtos/serviços"
+                    className="h-8"
                   />
                 </div>
-              )}
 
-              {watch('sells_on_amazon') && (
-                <div className="space-y-2">
-                  <Label htmlFor="amazon_store_link">Link da loja Amazon</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="amazon_store_link" className="text-xs">Link da loja Amazon</Label>
                   <Input
                     id="amazon_store_link"
                     {...form.register('amazon_store_link')}
                     placeholder="https://amazon.com.br/..."
+                    className="h-8"
                   />
                 </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Qualificação */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Qualificação</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="had_contact_with_lv"
-                checked={watch('had_contact_with_lv')}
-                onCheckedChange={(checked) => setValue('had_contact_with_lv', checked)}
-              />
-              <Label htmlFor="had_contact_with_lv">Contato com LV</Label>
-            </div>
+          {/* Qualificação */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Qualificação</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="had_contact_with_lv"
+                    checked={watch('had_contact_with_lv')}
+                    onCheckedChange={(checked) => setValue('had_contact_with_lv', checked)}
+                  />
+                  <Label htmlFor="had_contact_with_lv" className="text-xs">Contato com LV</Label>
+                </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="ready_to_invest_3k"
-                checked={watch('ready_to_invest_3k')}
-                onCheckedChange={(checked) => setValue('ready_to_invest_3k', checked)}
-              />
-              <Label htmlFor="ready_to_invest_3k">Investe R$ 3k</Label>
-            </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="ready_to_invest_3k"
+                    checked={watch('ready_to_invest_3k')}
+                    onCheckedChange={(checked) => setValue('ready_to_invest_3k', checked)}
+                  />
+                  <Label htmlFor="ready_to_invest_3k" className="text-xs">Investe R$ 3k</Label>
+                </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="calendly_scheduled"
-                checked={watch('calendly_scheduled')}
-                onCheckedChange={(checked) => setValue('calendly_scheduled', checked)}
-              />
-              <Label htmlFor="calendly_scheduled">Calendly</Label>
-            </div>
-          </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="calendly_scheduled"
+                    checked={watch('calendly_scheduled')}
+                    onCheckedChange={(checked) => setValue('calendly_scheduled', checked)}
+                  />
+                  <Label htmlFor="calendly_scheduled" className="text-xs">Calendly</Label>
+                </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="main_doubts" className="text-xs">Principais dúvidas</Label>
+                  <Textarea
+                    id="main_doubts"
+                    {...form.register('main_doubts')}
+                    placeholder="Dúvidas e objeções"
+                    rows={2}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="calendly_link" className="text-xs">Link do Calendly</Label>
+                  <Input
+                    id="calendly_link"
+                    {...form.register('calendly_link')}
+                    placeholder="https://calendly.com/..."
+                    className="h-8"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tags e Gestão */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="main_doubts">Principais dúvidas</Label>
-              <Textarea
-                id="main_doubts"
-                {...form.register('main_doubts')}
-                placeholder="Dúvidas e objeções"
-                rows={2}
-              />
-            </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Tags</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SimpleCRMTagsSelector
+                  selectedTags={watch('tags') || []}
+                  onTagsChange={(tags) => setValue('tags', tags)}
+                />
+              </CardContent>
+            </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="calendly_link">Link do Calendly</Label>
-              <Input
-                id="calendly_link"
-                {...form.register('calendly_link')}
-                placeholder="https://calendly.com/..."
-              />
-            </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Gestão</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="column_id" className="text-xs">Coluna</Label>
+                  <Select 
+                    value={form.watch('column_id') || initialColumnId || ''}
+                    onValueChange={(value) => setValue('column_id', value)}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Selecione a coluna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pipelineColumns
+                        .sort((a, b) => a.sort_order - b.sort_order)
+                        .map((column) => (
+                          <SelectItem key={column.id} value={column.id}>
+                            {column.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="responsible_id" className="text-xs">Responsável</Label>
+                  <Select onValueChange={(value) => setValue('responsible_id', value)} value={watch('responsible_id')}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {responsibles.map((responsible) => (
+                        <SelectItem key={responsible.id} value={responsible.id}>
+                          {responsible.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Tags e Gestão */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Tags</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CRMTagsSelector
-              selectedTags={watch('tags') || []}
-              onTagsChange={(tags) => setValue('tags', tags)}
-            />
-          </CardContent>
-        </Card>
+          {/* Observações */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Observações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                <Label htmlFor="notes" className="text-xs">Observações gerais</Label>
+                <Textarea
+                  id="notes"
+                  {...form.register('notes')}
+                  placeholder="Observações adicionais sobre o lead"
+                  rows={3}
+                  className="text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </form>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Gestão</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="column_id">Coluna</Label>
-              <Select 
-                value={form.watch('column_id') || initialColumnId || ''}
-                onValueChange={(value) => setValue('column_id', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a coluna" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pipelineColumns
-                    .sort((a, b) => a.sort_order - b.sort_order)
-                    .map((column) => (
-                      <SelectItem key={column.id} value={column.id}>
-                        {column.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="responsible_id">Responsável</Label>
-              <Select onValueChange={(value) => setValue('responsible_id', value)} value={watch('responsible_id')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {responsibles.map((responsible) => (
-                    <SelectItem key={responsible.id} value={responsible.id}>
-                      {responsible.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Observações */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Observações</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Observações gerais</Label>
-            <Textarea
-              id="notes"
-              {...form.register('notes')}
-              placeholder="Observações adicionais sobre o lead"
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Ações */}
-      <div className="flex justify-end gap-3 pt-4 border-t sticky bottom-0 bg-white">
+      {/* Ações fixas na parte inferior */}
+      <div className="flex justify-end gap-3 px-6 py-4 border-t bg-white">
         <Button
           type="button"
           variant="outline"
@@ -434,11 +437,14 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button 
+          onClick={form.handleSubmit(onSubmit)} 
+          disabled={loading}
+        >
           {loading ? 'Salvando...' : lead ? 'Atualizar Lead' : 'Salvar Lead'}
         </Button>
       </div>
-    </form>
+    </div>
   );
 };
 

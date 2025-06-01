@@ -34,7 +34,7 @@ const CRMLeadFormDialog = ({
   if (mode === 'edit' && loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[95vh] max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl w-[90vw] h-[90vh] max-h-[90vh]">
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -48,14 +48,14 @@ const CRMLeadFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[95vw] h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
+      <DialogContent className="max-w-4xl w-[90vw] h-[90vh] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b bg-white flex-shrink-0">
           <DialogTitle className="text-xl font-semibold">
             {mode === 'create' ? 'Novo Lead' : `Editar Lead - ${lead?.name}`}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-hidden">
           <CompactCRMLeadForm
             pipelineId={pipelineId || lead?.pipeline_id || ''}
             initialColumnId={initialColumnId || lead?.column_id}
