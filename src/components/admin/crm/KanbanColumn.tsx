@@ -27,12 +27,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     <div 
       ref={setNodeRef}
       className={cn(
-        "w-80 bg-gray-50 rounded-lg p-4 transition-all duration-300 ease-in-out",
+        "w-80 h-full bg-gray-50 rounded-lg p-3 flex flex-col transition-all duration-300 ease-in-out",
         isOver && "bg-blue-50 ring-2 ring-blue-300 ring-opacity-50 shadow-lg",
         isDragOver && "scale-[1.02]"
       )}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div 
             className="w-3 h-3 rounded-full transition-all duration-200" 
@@ -56,7 +56,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         strategy={verticalListSortingStrategy}
       >
         <div className={cn(
-          "space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto transition-all duration-300",
+          "flex-1 space-y-3 overflow-y-auto transition-all duration-300",
           isOver && "space-y-4"
         )}>
           {leads.map((lead, index) => (

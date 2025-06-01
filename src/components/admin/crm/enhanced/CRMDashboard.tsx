@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -59,134 +58,133 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Main CRM Interface */}
-      <div className="flex-1 min-h-0">
-        <Tabs defaultValue="pipeline" className="h-full flex flex-col">
-          <div className="flex items-center justify-between mb-4 px-6">
-            <TabsList>
-              <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-              <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-              <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="pipeline" className="h-full flex flex-col">
+        <div className="flex items-center justify-between mb-3 px-3">
+          <TabsList>
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+            <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+          </TabsList>
 
-            {/* View Toggle - Só aparece na aba pipeline */}
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                Pipeline: {pipelines.find(p => p.id === selectedPipelineId)?.name || 'Selecione'}
-              </Badge>
-              <div className="flex rounded-lg border border-gray-200 p-1">
-                <Button
-                  variant={activeView === 'kanban' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveView('kanban')}
-                  className="h-8 px-3"
-                >
-                  <Columns3 className="h-4 w-4 mr-1" />
-                  Kanban
-                </Button>
-                <Button
-                  variant={activeView === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveView('list')}
-                  className="h-8 px-3"
-                >
-                  <List className="h-4 w-4 mr-1" />
-                  Lista
-                </Button>
-              </div>
-              <Button 
-                variant="outline" 
+          {/* View Toggle - Só aparece na aba pipeline */}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              Pipeline: {pipelines.find(p => p.id === selectedPipelineId)?.name || 'Selecione'}
+            </Badge>
+            <div className="flex rounded-lg border border-gray-200 p-1">
+              <Button
+                variant={activeView === 'kanban' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={handleRefresh}
+                onClick={() => setActiveView('kanban')}
+                className="h-8 px-3"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Atualizar
+                <Columns3 className="h-4 w-4 mr-1" />
+                Kanban
+              </Button>
+              <Button
+                variant={activeView === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveView('list')}
+                className="h-8 px-3"
+              >
+                <List className="h-4 w-4 mr-1" />
+                Lista
               </Button>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRefresh}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
           </div>
+        </div>
 
-          <TabsContent value="pipeline" className="flex-1 flex flex-col space-y-4 px-6 min-h-0">
-            {/* Filters */}
+        <TabsContent value="pipeline" className="flex-1 flex flex-col min-h-0 px-3">
+          {/* Filters - Compacto */}
+          <div className="mb-3">
             <CRMFilters
               pipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
               filters={filters}
               onFiltersChange={handleFiltersChange}
             />
+          </div>
 
-            {/* Main Content */}
-            <Card className="flex-1 min-h-0">
-              <CardContent className="p-0 h-full">
-                {activeView === 'kanban' ? (
-                  <OptimizedKanbanBoard
+          {/* Main Content - Ocupa todo espaço restante */}
+          <Card className="flex-1 min-h-0 border-0 shadow-none bg-transparent">
+            <CardContent className="p-0 h-full">
+              {activeView === 'kanban' ? (
+                <OptimizedKanbanBoard
+                  filters={effectiveFilters}
+                  pipelineId={selectedPipelineId}
+                />
+              ) : (
+                <div className="p-4 h-full overflow-auto">
+                  <CRMListView
                     filters={effectiveFilters}
-                    pipelineId={selectedPipelineId}
                   />
-                ) : (
-                  <div className="p-4 h-full overflow-auto">
-                    <CRMListView
-                      filters={effectiveFilters}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="relatorios" className="flex-1 px-6 min-h-0">
-            <CRMReportsOverview />
-          </TabsContent>
+        <TabsContent value="relatorios" className="flex-1 px-6 min-h-0">
+          <CRMReportsOverview />
+        </TabsContent>
 
-          <TabsContent value="configuracoes" className="flex-1 px-6">
-            <Card className="h-full">
-              <CardContent className="p-6 space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Configurações CRM
-                  </h2>
-                  <p className="text-gray-600 mb-6">
-                    Configure pipelines, colunas, tags e outras configurações do sistema CRM
+        <TabsContent value="configuracoes" className="flex-1 px-6">
+          <Card className="h-full">
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Configurações CRM
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  Configure pipelines, colunas, tags e outras configurações do sistema CRM
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Gerenciar Pipelines */}
+                <div className="p-6 border rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2 text-blue-900">
+                    <Columns3 className="h-5 w-5" />
+                    Pipelines & Colunas
+                  </h3>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Configure e organize os pipelines e suas respectivas colunas
                   </p>
+                  <CRMPipelineManager onRefresh={refetch} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Gerenciar Pipelines */}
-                  <div className="p-6 border rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                    <h3 className="font-semibold mb-2 flex items-center gap-2 text-blue-900">
-                      <Columns3 className="h-5 w-5" />
-                      Pipelines & Colunas
-                    </h3>
-                    <p className="text-sm text-blue-700 mb-4">
-                      Configure e organize os pipelines e suas respectivas colunas
-                    </p>
-                    <CRMPipelineManager onRefresh={refetch} />
-                  </div>
-
-                  {/* Gerenciar Tags */}
-                  <div className="p-6 border rounded-lg bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                    <h3 className="font-semibold mb-2 flex items-center gap-2 text-green-900">
-                      <Tag className="h-5 w-5" />
-                      Sistema de Tags
-                    </h3>
-                    <p className="text-sm text-green-700 mb-4">
-                      Gerencie as tags para categorizar e organizar leads
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowTagsManager(true)}
-                      className="w-full border-green-300 text-green-700 hover:bg-green-50"
-                    >
-                      <Tag className="h-4 w-4 mr-2" />
-                      Gerenciar Tags
-                    </Button>
-                  </div>
+                {/* Gerenciar Tags */}
+                <div className="p-6 border rounded-lg bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2 text-green-900">
+                    <Tag className="h-5 w-5" />
+                    Sistema de Tags
+                  </h3>
+                  <p className="text-sm text-green-700 mb-4">
+                    Gerencie as tags para categorizar e organizar leads
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowTagsManager(true)}
+                    className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Tag className="h-4 w-4 mr-2" />
+                    Gerenciar Tags
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Tags Manager Dialog */}
       <CRMTagsManager
