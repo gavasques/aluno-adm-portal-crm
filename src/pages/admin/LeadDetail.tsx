@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LeadDetailHeader } from '@/components/admin/crm/lead-detail/LeadDetailHeader';
-import { LeadDetailOverview } from '@/components/admin/crm/lead-detail/LeadDetailOverview';
+import { ConditionalLeadDetailOverview } from '@/components/admin/crm/lead-detail/ConditionalLeadDetailOverview';
 import LeadAttachmentsTab from '@/components/admin/crm/lead-detail-tabs/LeadAttachmentsTab';
 import LeadCommentsTab from '@/components/admin/crm/lead-detail-tabs/LeadCommentsTab';
 import LeadHistoryTab from '@/components/admin/crm/lead-detail-tabs/LeadHistoryTab';
@@ -165,7 +165,7 @@ const LeadDetail = () => {
 
           <div className="p-6">
             <TabsContent value="overview" className="mt-0">
-              <LeadDetailOverview lead={lead} />
+              <ConditionalLeadDetailOverview lead={lead} />
             </TabsContent>
             
             <TabsContent value="contacts" className="mt-0">

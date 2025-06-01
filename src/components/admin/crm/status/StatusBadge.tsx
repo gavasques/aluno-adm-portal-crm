@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 interface StatusBadgeProps {
   status: LeadStatus;
   className?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className, onClick }) => {
   const getStatusConfig = (status: LeadStatus) => {
     switch (status) {
       case 'ganho':
@@ -43,8 +44,10 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
       className={cn(
         "px-2 py-1 font-medium text-xs flex items-center gap-1",
         config.className,
+        onClick && "cursor-pointer",
         className
       )}
+      onClick={onClick}
     >
       <Icon className="h-3 w-3" />
       {config.label}
