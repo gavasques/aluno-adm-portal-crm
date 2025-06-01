@@ -22,11 +22,11 @@ import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const LeadDetail = () => {
-  const { leadId } = useParams<{ leadId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { lead, loading, error, refetch } = useCRMLeadDetail(leadId || '');
+  const { lead, loading, error, refetch } = useCRMLeadDetail(id || '');
 
-  console.log('🎯 LeadDetail - leadId:', leadId, 'lead:', lead, 'loading:', loading, 'error:', error);
+  console.log('🎯 LeadDetail - id:', id, 'lead:', lead, 'loading:', loading, 'error:', error);
 
   const handleBack = () => {
     navigate('/admin/crm');
@@ -66,7 +66,7 @@ const LeadDetail = () => {
         
         <div className="mt-4">
           <p className="text-sm text-muted-foreground">
-            Lead ID: {leadId}
+            Lead ID: {id}
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ const LeadDetail = () => {
       <div className="container mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">
-            Lead não encontrado (ID: {leadId})
+            Lead não encontrado (ID: {id})
           </p>
           <Button onClick={handleBack} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
