@@ -98,10 +98,10 @@ export function LinkedIdentities() {
         )}
         
         {linkedIdentities.length <= 1 && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200 text-amber-800">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Atenção</AlertTitle>
-            <AlertDescription>
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800">Atenção</AlertTitle>
+            <AlertDescription className="text-amber-700">
               Você precisa manter pelo menos uma forma de login para acessar sua conta.
             </AlertDescription>
           </Alert>

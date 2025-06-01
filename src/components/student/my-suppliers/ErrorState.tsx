@@ -36,7 +36,7 @@ export const ErrorState = ({ error, retryCount, onRetry }: ErrorStateProps) => {
         </div>
       </div>
       
-      <Alert variant={errorColor === 'red' ? 'destructive' : 'warning'} className={`border-${errorColor}-200 bg-${errorColor}-50`}>
+      <Alert variant={errorColor === 'red' ? 'destructive' : 'default'} className={`border-${errorColor}-200 bg-${errorColor}-50`}>
         <ErrorIcon className={`h-6 w-6 text-${errorColor}-600`} />
         <AlertTitle className={`text-${errorColor}-800 font-semibold`}>
           {isNetworkError ? 'Problema de Conexão' : 
