@@ -2,30 +2,19 @@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BASE_URL } from "./constants";
+import { sanitizeError, logSecureError } from "@/utils/security";
 
 export function usePasswordReset() {
-  // Função para recuperação de senha com logging detalhado
+  // Função para recuperação de senha
   const resetPassword = async (email: string) => {
-    console.log("=== usePasswordReset.resetPassword ===");
-    console.log("Email:", email);
-    console.log("BASE_URL:", BASE_URL);
-    
     try {
-      const redirectUrl = `${BASE_URL}/reset-password?type=recovery`;
-      console.log("Redirect URL configurada:", redirectUrl);
-      
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+      // Certificar-se que o link de redefinição contém parâmetros específicos 
+      // Importante: incluir ?type=recovery para facilitar a detecção do fluxo
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${BASE_URL}/reset-password?type=recovery`,
       });
       
-      console.log("Resposta do resetPasswordForEmail:", { data, error });
-      
-      if (error) {
-        console.error("Erro do Supabase:", error);
-        throw error;
-      }
-      
-      console.log("Email de recuperação enviado com sucesso");
+      if (error) throw error;
       
       toast({
         title: "Link de recuperação enviado",
@@ -33,10 +22,12 @@ export function usePasswordReset() {
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao solicitar recuperação de senha:", error);
+      logSecureError(error, "Password Reset");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao solicitar recuperação de senha",
-        description: error.message,
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;
@@ -45,20 +36,15 @@ export function usePasswordReset() {
 
   // Função para atualizar a senha do usuário
   const updateUserPassword = async (newPassword: string): Promise<void> => {
-    console.log("=== updateUserPassword ===");
-    
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (error) {
-        console.error("Erro ao atualizar senha:", error);
         throw error;
       }
 
-      console.log("Senha atualizada com sucesso");
-      
       // Limpar o modo de recuperação ao atualizar a senha com sucesso
       localStorage.removeItem("supabase_recovery_mode");
       localStorage.removeItem("supabase_recovery_expiry");
@@ -68,10 +54,12 @@ export function usePasswordReset() {
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao atualizar senha:", error);
+      logSecureError(error, "Password Update");
+      const sanitizedMessage = sanitizeError(error);
+      
       toast({
         title: "Erro ao atualizar senha",
-        description: error.message || "Ocorreu um erro ao atualizar sua senha.",
+        description: sanitizedMessage,
         variant: "destructive",
       });
       throw error;

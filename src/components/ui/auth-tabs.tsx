@@ -9,9 +9,13 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useAuthRedirect } from "@/hooks/auth/useAuthRedirect";
 
 export function AuthTabs() {
   const { signIn, signUp, resetPassword, signInWithGoogle, sendMagicLink } = useAuth();
+  
+  // Hook para redirecionamento automático
+  useAuthRedirect();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +35,7 @@ export function AuthTabs() {
     
     try {
       await signIn(email, password);
-      // Redirecionamento é tratado dentro do hook useAuth
+      // Redirecionamento é tratado pelo useAuthRedirect hook
     } catch (error) {
       console.error("Erro no login:", error);
     } finally {
@@ -67,6 +71,7 @@ export function AuthTabs() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
+      // Redirecionamento será tratado pelo useAuthRedirect
     } catch (error) {
       console.error("Erro no login com Google:", error);
     } finally {
