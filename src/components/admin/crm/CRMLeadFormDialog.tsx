@@ -13,6 +13,7 @@ interface CRMLeadFormDialogProps {
 }
 
 const CRMLeadFormDialog = (props: CRMLeadFormDialogProps) => {
+  console.log('🚀 CRMLeadFormDialog: Renderizando com o novo design moderno', props);
   return <ModernCRMLeadFormDialog {...props} />;
 };
 

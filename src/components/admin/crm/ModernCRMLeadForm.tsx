@@ -27,6 +27,8 @@ interface ModernCRMLeadFormProps {
 }
 
 const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCancel, mode }: ModernCRMLeadFormProps) => {
+  console.log('🎯 ModernCRMLeadForm: Renderizando formulário moderno!', { mode, pipelineId });
+  
   const [loading, setLoading] = useState(false);
   const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
   const { columns } = useCRMPipelines();
@@ -62,6 +64,7 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
   const { watch, setValue } = form;
 
   useEffect(() => {
+    console.log('🔍 Buscando responsáveis...');
     const fetchResponsibles = async () => {
       try {
         const { data, error } = await supabase
@@ -71,6 +74,7 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
           .order('name');
 
         if (error) throw error;
+        console.log('✅ Responsáveis carregados:', data?.length);
         setResponsibles(data || []);
       } catch (error) {
         console.error('Erro ao buscar responsáveis:', error);
@@ -205,24 +209,26 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
     }
   ];
 
+  console.log('🎨 Renderizando interface moderna com glassmorphism');
+
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-white/10">
+      {/* Header com design moderno */}
+      <div className="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-3"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <User className="h-4 w-4 text-white" />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <User className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-              {mode === 'create' ? 'Novo Lead' : `Editar Lead`}
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              {mode === 'create' ? '✨ Novo Lead' : '🔄 Editar Lead'}
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              {mode === 'create' ? 'Adicione um novo lead ao pipeline' : 'Edite as informações do lead'}
+              {mode === 'create' ? 'Adicione um novo lead ao pipeline com design moderno' : 'Edite as informações do lead'}
             </p>
           </div>
         </motion.div>
@@ -231,13 +237,13 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-600 transition-colors"
+          className="h-10 w-10 p-0 hover:bg-red-500/10 hover:text-red-600 transition-all duration-200 rounded-xl"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Form Content */}
+      {/* Form Content com glassmorphism */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
           {/* Informações Básicas */}
@@ -505,21 +511,21 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
         </div>
       </form>
 
-      {/* Footer */}
-      <div className="flex justify-end gap-3 p-6 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+      {/* Footer com design moderno */}
+      <div className="flex justify-end gap-3 p-6 border-t border-white/10 bg-gradient-to-r from-slate-50/50 to-gray-50/50 dark:from-slate-900/20 dark:to-gray-900/20 backdrop-blur-sm">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={loading}
-          className="bg-white/10 border-white/20 hover:bg-white/20 text-slate-700 dark:text-slate-300"
+          className="bg-white/20 dark:bg-black/20 border-white/30 hover:bg-white/30 text-slate-700 dark:text-slate-300 backdrop-blur-sm"
         >
           Cancelar
         </Button>
         <Button 
           onClick={form.handleSubmit(onSubmit)} 
           disabled={loading}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg"
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
         >
           {loading ? (
             <div className="flex items-center gap-2">
@@ -534,7 +540,7 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
           ) : (
             <div className="flex items-center gap-2">
               <Save className="h-4 w-4" />
-              {lead ? 'Atualizar Lead' : 'Salvar Lead'}
+              {lead ? '✨ Atualizar Lead' : '🚀 Salvar Lead'}
             </div>
           )}
         </Button>
