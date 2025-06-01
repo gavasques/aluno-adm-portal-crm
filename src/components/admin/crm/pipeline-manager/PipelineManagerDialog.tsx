@@ -12,13 +12,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface PipelineManagerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPipelineChange?: () => void; // Novo callback para notificar mudanças
+  onPipelineChange?: () => void;
 }
 
 const PipelineManagerDialog = ({ open, onOpenChange, onPipelineChange }: PipelineManagerDialogProps) => {
   const [selectedPipeline, setSelectedPipeline] = useState<CRMPipeline | null>(null);
   const [activeTab, setActiveTab] = useState('pipelines');
-  const { pipelines, loading, fetchPipelines } = useCRMPipelines();
+  const { pipelines, loading, refetch } = useCRMPipelines();
 
   const handlePipelineSelect = (pipeline: CRMPipeline) => {
     setSelectedPipeline(pipeline);
@@ -26,8 +26,7 @@ const PipelineManagerDialog = ({ open, onOpenChange, onPipelineChange }: Pipelin
   };
 
   const handleRefresh = async () => {
-    await fetchPipelines();
-    // Notificar mudanças para atualizar outros componentes
+    await refetch();
     onPipelineChange?.();
   };
 
@@ -41,7 +40,6 @@ const PipelineManagerDialog = ({ open, onOpenChange, onPipelineChange }: Pipelin
   const handleClose = (open: boolean) => {
     onOpenChange(open);
     if (!open) {
-      // Ao fechar, garantir que atualizações sejam propagadas
       onPipelineChange?.();
     }
   };

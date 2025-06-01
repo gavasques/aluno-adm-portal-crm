@@ -21,23 +21,26 @@ export const useCRMPipelines = () => {
       setPipelines(data || []);
     } catch (error) {
       console.error('Erro ao buscar pipelines:', error);
-      // Removido toast para evitar loop
     }
   };
 
-  const fetchColumns = async () => {
+  const fetchColumns = async (pipelineId?: string) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('crm_pipeline_columns')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
 
+      if (pipelineId) {
+        query = query.eq('pipeline_id', pipelineId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       setColumns(data || []);
     } catch (error) {
       console.error('Erro ao buscar colunas:', error);
-      // Removido toast para evitar loop
     }
   };
 
@@ -50,11 +53,16 @@ export const useCRMPipelines = () => {
     }
   };
 
-  const createPipeline = async (name: string, description?: string) => {
+  const createPipeline = async (pipelineData: { name: string; description?: string; sort_order?: number; is_active?: boolean }) => {
     try {
       const { data, error } = await supabase
         .from('crm_pipelines')
-        .insert({ name, description, is_active: true })
+        .insert({ 
+          name: pipelineData.name,
+          description: pipelineData.description,
+          sort_order: pipelineData.sort_order || pipelines.length,
+          is_active: pipelineData.is_active !== undefined ? pipelineData.is_active : true
+        })
         .select()
         .single();
 
@@ -106,15 +114,16 @@ export const useCRMPipelines = () => {
     }
   };
 
-  const createColumn = async (pipelineId: string, name: string, color: string) => {
+  const createColumn = async (columnData: { pipeline_id: string; name: string; color: string; sort_order?: number; is_active?: boolean }) => {
     try {
       const { data, error } = await supabase
         .from('crm_pipeline_columns')
         .insert({ 
-          pipeline_id: pipelineId, 
-          name, 
-          color, 
-          is_active: true 
+          pipeline_id: columnData.pipeline_id, 
+          name: columnData.name, 
+          color: columnData.color, 
+          sort_order: columnData.sort_order || 0,
+          is_active: columnData.is_active !== undefined ? columnData.is_active : true 
         })
         .select()
         .single();
@@ -176,6 +185,8 @@ export const useCRMPipelines = () => {
     columns,
     loading,
     refetch,
+    fetchPipelines,
+    fetchColumns,
     createPipeline,
     updatePipeline,
     deletePipeline,

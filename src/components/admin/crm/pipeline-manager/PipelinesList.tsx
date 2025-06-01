@@ -25,9 +25,14 @@ const PipelinesList = ({ pipelines, loading, onPipelineSelect, onRefresh }: Pipe
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const { createPipeline, updatePipeline } = useCRMPipelines();
 
-  const handleCreatePipeline = async (data: Omit<CRMPipeline, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleCreatePipeline = async (data: { name: string; description?: string }) => {
     try {
-      await createPipeline(data);
+      await createPipeline({
+        name: data.name,
+        description: data.description,
+        sort_order: pipelines.length,
+        is_active: true
+      });
       setShowCreateForm(false);
       onRefresh();
       toast.success('Pipeline criado com sucesso!', {
@@ -53,13 +58,12 @@ const PipelinesList = ({ pipelines, loading, onPipelineSelect, onRefresh }: Pipe
 
   const handleDuplicatePipeline = async (pipeline: CRMPipeline) => {
     try {
-      const duplicatedData = {
+      await createPipeline({
         name: `${pipeline.name} (Cópia)`,
         description: pipeline.description,
         sort_order: pipelines.length,
         is_active: true
-      };
-      await createPipeline(duplicatedData);
+      });
       onRefresh();
       toast.success('Pipeline duplicado com sucesso!');
     } catch (error) {

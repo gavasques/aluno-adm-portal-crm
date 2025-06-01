@@ -157,9 +157,11 @@ const ColumnsManager = ({ pipeline, onBack, onRefresh }: ColumnsManagerProps) =>
   const handleCreateColumn = async (data: Omit<CRMPipelineColumn, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       await createColumn({
-        ...data,
         pipeline_id: pipeline.id,
-        sort_order: columns.length
+        name: data.name,
+        color: data.color,
+        sort_order: columns.length,
+        is_active: data.is_active
       });
       setShowCreateForm(false);
       await fetchColumns(pipeline.id);
