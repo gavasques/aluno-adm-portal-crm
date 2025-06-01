@@ -2,9 +2,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
+import { motion } from 'framer-motion';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMData } from '@/hooks/crm/useCRMData';
+import { DesignCard } from '@/design-system';
 import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
@@ -118,9 +120,21 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
 
   if (!pipelineId) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-gray-500">Selecione um pipeline para visualizar os leads.</p>
-      </div>
+      <DesignCard 
+        variant="glass" 
+        size="lg" 
+        className="h-full border-white/20 bg-white/30 dark:bg-black/10 backdrop-blur-md flex items-center justify-center"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <p className="text-slate-600 dark:text-slate-300 font-medium">
+            Selecione um pipeline para visualizar os leads.
+          </p>
+        </motion.div>
+      </DesignCard>
     );
   }
 
@@ -130,12 +144,24 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
 
   if (pipelineColumns.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500">Nenhuma coluna encontrada para este pipeline.</p>
-          <p className="text-sm text-gray-400 mt-2">Configure as colunas nas configurações do pipeline.</p>
-        </div>
-      </div>
+      <DesignCard 
+        variant="glass" 
+        size="lg" 
+        className="h-full border-white/20 bg-white/30 dark:bg-black/10 backdrop-blur-md flex items-center justify-center"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <p className="text-slate-600 dark:text-slate-300 font-medium">
+            Nenhuma coluna encontrada para este pipeline.
+          </p>
+          <p className="text-sm text-slate-400 mt-2">
+            Configure as colunas nas configurações do pipeline.
+          </p>
+        </motion.div>
+      </DesignCard>
     );
   }
 
@@ -147,38 +173,64 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="w-full h-full overflow-x-auto overflow-y-hidden">
-          <div className={cn(
-            "flex gap-4 min-w-max h-full transition-all duration-300",
-            activeLead && "pointer-events-none"
-          )}>
-            {pipelineColumns.map(column => {
-              const columnLeads = leadsByColumn[column.id] || [];
-              const isDragOver = activeColumnId === column.id;
-              
-              console.log(`📋 Column ${column.name} has ${columnLeads.length} leads:`, columnLeads);
-              
-              return (
-                <KanbanColumn
-                  key={column.id}
-                  column={column}
-                  leads={columnLeads}
-                  onOpenDetail={handleOpenDetail}
-                  isDragOver={isDragOver}
-                />
-              );
-            })}
+        <DesignCard 
+          variant="glass" 
+          size="md" 
+          className="w-full h-full border-white/20 bg-white/20 dark:bg-black/5 backdrop-blur-md overflow-hidden"
+        >
+          <div className="w-full h-full overflow-x-auto overflow-y-hidden">
+            <motion.div 
+              className={cn(
+                "flex gap-6 min-w-max h-full transition-all duration-300 p-4",
+                activeLead && "pointer-events-none"
+              )}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              {pipelineColumns.map((column, index) => {
+                const columnLeads = leadsByColumn[column.id] || [];
+                const isDragOver = activeColumnId === column.id;
+                
+                console.log(`📋 Column ${column.name} has ${columnLeads.length} leads:`, columnLeads);
+                
+                return (
+                  <motion.div
+                    key={column.id}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ 
+                      delay: index * 0.1, 
+                      duration: 0.4,
+                      ease: "easeOut"
+                    }}
+                  >
+                    <KanbanColumn
+                      column={column}
+                      leads={columnLeads}
+                      onOpenDetail={handleOpenDetail}
+                      isDragOver={isDragOver}
+                    />
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </div>
-        </div>
+        </DesignCard>
 
         <DragOverlay>
           {activeLead ? (
-            <div className="transform rotate-6 scale-110 transition-transform duration-200">
+            <motion.div 
+              className="transform rotate-6 scale-110"
+              initial={{ scale: 1, rotate: 0 }}
+              animate={{ scale: 1.1, rotate: 6 }}
+              transition={{ duration: 0.2 }}
+            >
               <OptimizedKanbanLeadCard 
                 lead={activeLead} 
                 onOpenDetail={handleOpenDetail} 
               />
-            </div>
+            </motion.div>
           ) : null}
         </DragOverlay>
       </DndContext>
