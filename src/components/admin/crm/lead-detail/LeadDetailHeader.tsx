@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CRMLead } from '@/types/crm.types';
 import { motion } from 'framer-motion';
 import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
+import { LeadPipelineControls } from './LeadPipelineControls';
 
 interface LeadDetailHeaderProps {
   lead: CRMLead;
@@ -59,78 +60,83 @@ export const LeadDetailHeader = ({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-purple-50 p-6"
+        className="border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-purple-50"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white rounded-xl shadow-sm border border-white/50">
-              <User className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{lead.name}</h2>
-              <div className="flex items-center gap-3 mt-1">
-                <p className="text-gray-600">{lead.email}</p>
-                {lead.phone && (
-                  <>
-                    <span className="text-gray-300">•</span>
-                    <p className="text-gray-600">{lead.phone}</p>
-                  </>
-                )}
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white rounded-xl shadow-sm border border-white/50">
+                <User className="h-6 w-6 text-blue-600" />
               </div>
-              <div className="flex items-center gap-2 mt-2">
-                {getStatusBadge()}
-                {lead.responsible?.name && (
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    {lead.responsible.name}
-                  </Badge>
-                )}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{lead.name}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-gray-600">{lead.email}</p>
+                  {lead.phone && (
+                    <>
+                      <span className="text-gray-300">•</span>
+                      <p className="text-gray-600">{lead.phone}</p>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  {getStatusBadge()}
+                  {lead.responsible?.name && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {lead.responsible.name}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <>
+            
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    className="bg-white/50 hover:bg-white/80"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleEditClick}
+                    disabled={!hasChanges}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar
+                  </Button>
+                </>
+              ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleCancelEdit}
+                  onClick={handleEditClick}
                   className="bg-white/50 hover:bg-white/80"
                 >
-                  Cancelar
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
                 </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleEditClick}
-                  disabled={!hasChanges}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar
-                </Button>
-              </>
-            ) : (
+              )}
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={handleEditClick}
-                className="bg-white/50 hover:bg-white/80"
+                onClick={onClose}
+                className="h-8 w-8 p-0 rounded-lg hover:bg-white/50"
               >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
+                <X className="h-4 w-4" />
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0 rounded-lg hover:bg-white/50"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
         </div>
+
+        {/* Controles de Pipeline e Status */}
+        <LeadPipelineControls lead={lead} onLeadUpdate={onLeadUpdate} />
       </motion.div>
 
       {/* Modal de edição */}
