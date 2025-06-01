@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@integrations/supabase/client';
 import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
 
 export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {
@@ -18,42 +18,36 @@ export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {
       throw new Error('IDs de lead ou coluna inválidos');
     }
     
-    // 1. Backup dos dados atuais para rollback
+    // 1. Backup dos dados atuais para rollback (opcional)
     const previousData = queryClient.getQueryData<LeadWithContacts[]>(queryKey);
     
-    if (!previousData) {
-      console.error('❌ Dados anteriores não encontrados no cache');
-      throw new Error('Dados não disponíveis para atualização');
+    // 2. Verificar se o lead existe nos dados atuais (se disponível)
+    if (previousData) {
+      const currentLead = previousData.find(lead => lead.id === leadId);
+      if (currentLead && currentLead.column_id === newColumnId) {
+        console.log('🔄 Lead já está na coluna correta, nenhuma ação necessária');
+        return;
+      }
     }
 
-    // 2. Verificar se o lead existe nos dados atuais
-    const currentLead = previousData.find(lead => lead.id === leadId);
-    if (!currentLead) {
-      console.error('❌ Lead não encontrado nos dados atuais:', leadId);
-      throw new Error('Lead não encontrado');
-    }
-
-    if (currentLead.column_id === newColumnId) {
-      console.log('🔄 Lead já está na coluna correta, nenhuma ação necessária');
-      return;
-    }
-
-    console.log(`🔄 Aplicando atualização otimista: ${currentLead.column_id} → ${newColumnId}`);
+    console.log(`🔄 Aplicando atualização otimista...`);
     
-    // 3. Atualização otimista do cache
-    queryClient.setQueryData<LeadWithContacts[]>(queryKey, (oldData) => {
-      if (!oldData) return oldData;
-      
-      return oldData.map(lead => 
-        lead.id === leadId 
-          ? { 
-              ...lead, 
-              column_id: newColumnId,
-              updated_at: new Date().toISOString()
-            }
-          : lead
-      );
-    });
+    // 3. Atualização otimista do cache (se disponível)
+    if (previousData) {
+      queryClient.setQueryData<LeadWithContacts[]>(queryKey, (oldData) => {
+        if (!oldData) return oldData;
+        
+        return oldData.map(lead => 
+          lead.id === leadId 
+            ? { 
+                ...lead, 
+                column_id: newColumnId,
+                updated_at: new Date().toISOString()
+              }
+            : lead
+        );
+      });
+    }
 
     try {
       console.log('💾 Persistindo no banco de dados...');
@@ -86,13 +80,13 @@ export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {
 
       console.log('✅ Lead movido com sucesso no banco de dados');
       
-      // 4. Não fazer invalidação - confiar na atualização otimista
-      // A UI já está atualizada e o banco também, não há necessidade de refetch
+      // 4. Não fazer invalidação para manter performance
+      // A UI já está atualizada e o banco também
       
     } catch (error) {
       console.error('❌ Erro ao persistir movimento, fazendo rollback:', error);
       
-      // 5. Rollback: restaurar dados anteriores apenas em caso de erro
+      // 5. Rollback: restaurar dados anteriores apenas se temos cache e houve erro
       if (previousData) {
         console.log('🔄 Restaurando estado anterior do cache');
         queryClient.setQueryData(queryKey, previousData);

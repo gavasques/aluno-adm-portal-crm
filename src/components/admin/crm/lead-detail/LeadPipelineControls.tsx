@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { CRMLead, LeadStatus } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMLeadMovement } from '@/hooks/crm/useCRMLeadMovement';
+import { useLeadDetailMovement } from '@/hooks/crm/useLeadDetailMovement';
 import { useLeadStatusChange } from '@/hooks/crm/useLeadStatusChange';
 import StatusChangeDialog from '@/components/admin/crm/status/StatusChangeDialog';
 import { useState } from 'react';
@@ -21,9 +21,10 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   onLeadUpdate
 }) => {
   const { pipelines } = useCRMPipelines();
-  const { moveLeadToColumn } = useCRMLeadMovement({});
+  const { moveLeadToColumn } = useLeadDetailMovement({ lead, onLeadUpdate });
   const { changeStatus } = useLeadStatusChange();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   // Encontrar pipeline atual e suas colunas
   const currentPipeline = pipelines.find(p => p.id === lead.pipeline_id);
@@ -34,28 +35,32 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   const canMoveForward = currentColumnIndex < columns.length - 1;
 
   const handleMoveBack = async () => {
-    if (!canMoveBack) return;
+    if (!canMoveBack || isMoving) return;
     
+    setIsMoving(true);
     try {
       const previousColumn = columns[currentColumnIndex - 1];
-      await moveLeadToColumn(lead.id, previousColumn.id);
-      toast.success(`Lead movido para "${previousColumn.name}"`);
-      onLeadUpdate();
+      await moveLeadToColumn(previousColumn.id);
     } catch (error) {
+      console.error('Erro ao mover lead:', error);
       toast.error('Erro ao mover lead');
+    } finally {
+      setIsMoving(false);
     }
   };
 
   const handleMoveForward = async () => {
-    if (!canMoveForward) return;
+    if (!canMoveForward || isMoving) return;
     
+    setIsMoving(true);
     try {
       const nextColumn = columns[currentColumnIndex + 1];
-      await moveLeadToColumn(lead.id, nextColumn.id);
-      toast.success(`Lead movido para "${nextColumn.name}"`);
-      onLeadUpdate();
+      await moveLeadToColumn(nextColumn.id);
     } catch (error) {
+      console.error('Erro ao mover lead:', error);
       toast.error('Erro ao mover lead');
+    } finally {
+      setIsMoving(false);
     }
   };
 
@@ -100,7 +105,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
             variant="outline"
             size="sm"
             onClick={handleMoveBack}
-            disabled={!canMoveBack}
+            disabled={!canMoveBack || isMoving}
             className="h-8 px-2"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -114,7 +119,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
             variant="outline"
             size="sm"
             onClick={handleMoveForward}
-            disabled={!canMoveForward}
+            disabled={!canMoveForward || isMoving}
             className="h-8 px-2"
           >
             <ChevronRight className="h-4 w-4" />
@@ -167,6 +172,14 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Indicador de movimento */}
+        {isMoving && (
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            Movendo...
+          </div>
+        )}
       </div>
 
       <StatusChangeDialog
