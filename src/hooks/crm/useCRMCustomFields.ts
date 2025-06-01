@@ -36,7 +36,14 @@ export const useCRMCustomFields = () => {
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match our types
+      return (data || []).map(field => ({
+        ...field,
+        field_type: field.field_type as 'text' | 'number' | 'phone' | 'boolean' | 'select',
+        options: Array.isArray(field.options) ? field.options as string[] : [],
+        validation_rules: field.validation_rules || {}
+      }));
     }
   });
 

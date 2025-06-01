@@ -94,8 +94,11 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
   const onSubmit = async (data: FieldFormData) => {
     try {
       const payload = {
-        ...data,
+        field_key: data.field_key,
+        field_name: data.field_name,
+        field_type: data.field_type,
         group_id: data.group_id || undefined,
+        is_required: data.is_required,
         placeholder: data.placeholder || undefined,
         help_text: data.help_text || undefined,
         options: data.field_type === 'select' ? data.options : []

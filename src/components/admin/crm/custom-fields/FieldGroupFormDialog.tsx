@@ -69,8 +69,9 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
   const onSubmit = async (data: GroupFormData) => {
     try {
       const payload = {
-        ...data,
+        name: data.name,
         description: data.description || undefined,
+        is_active: data.is_active,
         sort_order: isEditing ? undefined : fieldGroups.length + 1
       };
 
