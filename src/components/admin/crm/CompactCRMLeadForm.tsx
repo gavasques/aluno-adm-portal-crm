@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
+import { useOptimizedCRMTags } from '@/hooks/crm/useOptimizedCRMTags';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
