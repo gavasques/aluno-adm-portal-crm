@@ -830,6 +830,7 @@ export type Database = {
           has_company: boolean | null
           id: string
           keep_or_new_niches: string | null
+          loss_reason_id: string | null
           main_doubts: string | null
           name: string
           notes: string | null
@@ -862,6 +863,7 @@ export type Database = {
           has_company?: boolean | null
           id?: string
           keep_or_new_niches?: string | null
+          loss_reason_id?: string | null
           main_doubts?: string | null
           name: string
           notes?: string | null
@@ -894,6 +896,7 @@ export type Database = {
           has_company?: boolean | null
           id?: string
           keep_or_new_niches?: string | null
+          loss_reason_id?: string | null
           main_doubts?: string | null
           name?: string
           notes?: string | null
@@ -925,6 +928,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_leads_loss_reason_id_fkey"
+            columns: ["loss_reason_id"]
+            isOneToOne: false
+            referencedRelation: "crm_loss_reasons"
             referencedColumns: ["id"]
           },
           {
@@ -1112,6 +1122,41 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      crm_user_card_preferences: {
+        Row: {
+          created_at: string | null
+          field_order: Json | null
+          id: string
+          updated_at: string | null
+          user_id: string
+          visible_fields: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          field_order?: Json | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          visible_fields?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          field_order?: Json | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          visible_fields?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_user_card_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       livi_ai_messages: {
         Row: {

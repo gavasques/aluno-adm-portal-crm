@@ -1,81 +1,143 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Columns3, List, Plus, LayoutGrid } from 'lucide-react';
-import { CRMPipeline } from '@/types/crm.types';
+import { 
+  Grid3X3, 
+  List, 
+  Filter, 
+  Settings,
+  Plus,
+  ChevronDown,
+  BarChart3
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CRMFilters } from '@/types/crm.types';
+import { CRMCardConfigDialog } from '../card-config/CRMCardConfigDialog';
 
 interface DashboardToolbarProps {
   activeView: 'kanban' | 'list';
   onViewChange: (view: 'kanban' | 'list') => void;
-  pipelines: CRMPipeline[];
-  selectedPipelineId: string;
-  onCreateLead: () => void;
+  showFilters: boolean;
+  onToggleFilters: () => void;
+  onCreateLead: (columnId?: string) => void;
+  filters: CRMFilters;
+  onOpenReports?: () => void;
 }
 
 export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
   activeView,
   onViewChange,
-  pipelines,
-  selectedPipelineId,
-  onCreateLead
+  showFilters,
+  onToggleFilters,
+  onCreateLead,
+  filters,
+  onOpenReports
 }) => {
-  const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
+  const [showCardConfig, setShowCardConfig] = useState(false);
+
+  // Contar filtros ativos
+  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
+    if (key === 'pipeline_id') return false; // pipeline não conta como filtro ativo
+    if (Array.isArray(value)) return value.length > 0;
+    return value && value !== '';
+  }).length;
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-            <LayoutGrid className="h-3 w-3 text-white" />
-          </div>
-          <span className="text-sm font-medium text-blue-700">
-            {selectedPipeline?.name || 'Pipeline de Vendas'}
-          </span>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-3">
-        {/* New Lead Button */}
-        <Button 
-          onClick={onCreateLead}
-          disabled={!selectedPipelineId}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 h-9 text-sm font-medium"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Lead
-        </Button>
+    <>
+      <div className="flex items-center justify-between gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
+        <div className="flex items-center gap-3">
+          {/* Botão Novo Lead */}
+          <Button 
+            onClick={() => onCreateLead()} 
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Lead
+          </Button>
 
-        {/* View Toggle */}
-        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+          {/* Botão Configurar Campos - NOVO */}
           <Button
-            variant="ghost"
+            variant="outline"
+            onClick={() => setShowCardConfig(true)}
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Configurar Campos
+          </Button>
+
+          {/* Botão Mostrar Filtros */}
+          <Button 
+            variant="outline" 
+            onClick={onToggleFilters}
+            className="relative"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Mostrar Filtros
+            <AnimatePresence>
+              {activeFiltersCount > 0 && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="absolute -top-2 -right-2"
+                >
+                  <Badge 
+                    variant="destructive" 
+                    className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                  >
+                    {activeFiltersCount}
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <ChevronDown 
+              className={`h-4 w-4 ml-2 transition-transform duration-200 ${
+                showFilters ? 'rotate-180' : ''
+              }`} 
+            />
+          </Button>
+
+          {/* Botão Relatórios */}
+          {onOpenReports && (
+            <Button
+              variant="outline"
+              onClick={onOpenReports}
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Relatórios
+            </Button>
+          )}
+        </div>
+
+        {/* Controles de Visualização */}
+        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+          <Button
+            variant={activeView === 'kanban' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onViewChange('kanban')}
-            className={`h-8 px-3 rounded-none border-r border-gray-300 ${
-              activeView === 'kanban' 
-                ? 'bg-gray-900 text-white hover:bg-gray-800' 
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className="h-8 px-3"
           >
-            <Columns3 className="h-4 w-4 mr-1" />
+            <Grid3X3 className="h-4 w-4 mr-1" />
             Kanban
           </Button>
           <Button
-            variant="ghost"
+            variant={activeView === 'list' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onViewChange('list')}
-            className={`h-8 px-3 rounded-none ${
-              activeView === 'list' 
-                ? 'bg-gray-900 text-white hover:bg-gray-800' 
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+            className="h-8 px-3"
           >
             <List className="h-4 w-4 mr-1" />
             Lista
           </Button>
         </div>
       </div>
-    </div>
+
+      {/* Dialog de Configuração de Campos */}
+      <CRMCardConfigDialog 
+        open={showCardConfig}
+        onOpenChange={setShowCardConfig}
+      />
+    </>
   );
 };

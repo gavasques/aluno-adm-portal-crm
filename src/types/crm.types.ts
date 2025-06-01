@@ -1,3 +1,4 @@
+
 export interface CRMPipeline {
   id: string;
   name: string;
@@ -233,4 +234,80 @@ export interface CRMFilters {
 export interface LeadWithContacts extends CRMLead {
   pending_contacts: CRMLeadContact[];
   last_completed_contact?: CRMLeadContact;
+}
+
+// Novas interfaces para personalização de cards e relatórios
+export interface CRMUserCardPreferences {
+  id: string;
+  user_id: string;
+  visible_fields: string[];
+  field_order: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CRMStatusReport {
+  total_leads: number;
+  aberto: number;
+  ganho: number;
+  perdido: number;
+  conversion_rate: number;
+  loss_rate: number;
+}
+
+export interface CRMResponsiblePerformance {
+  responsible_id: string;
+  responsible_name: string;
+  total_leads: number;
+  ganho: number;
+  perdido: number;
+  aberto: number;
+  conversion_rate: number;
+  win_rate: number;
+}
+
+export interface CRMLossReasonReport {
+  loss_reason_id: string;
+  loss_reason_name: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CRMReportsData {
+  status_report: CRMStatusReport;
+  responsible_performance: CRMResponsiblePerformance[];
+  loss_reasons: CRMLossReasonReport[];
+  period_comparison?: {
+    current_period: CRMStatusReport;
+    previous_period: CRMStatusReport;
+  };
+}
+
+export type CRMLeadCardField = 
+  | 'name' 
+  | 'status' 
+  | 'responsible' 
+  | 'phone' 
+  | 'email' 
+  | 'pipeline' 
+  | 'column' 
+  | 'tags'
+  | 'has_company'
+  | 'sells_on_amazon'
+  | 'works_with_fba'
+  | 'seeks_private_label'
+  | 'ready_to_invest_3k'
+  | 'calendly_scheduled'
+  | 'what_sells'
+  | 'amazon_state'
+  | 'created_at'
+  | 'updated_at'
+  | 'scheduled_contact_date';
+
+export interface CRMLeadCardFieldConfig {
+  key: CRMLeadCardField;
+  label: string;
+  category: 'essencial' | 'contato' | 'qualificacao' | 'amazon' | 'sistema';
+  isRequired?: boolean;
+  description?: string;
 }
