@@ -18,6 +18,9 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
   selectedPipelineId,
   onCreateLead
 }) => {
+  console.log('🎯 DashboardContent: Pipeline selecionado:', selectedPipelineId);
+  console.log('🎯 DashboardContent: Filtros aplicados:', effectiveFilters);
+  
   return (
     <div className="h-full bg-gray-50">
       {activeView === 'kanban' ? (

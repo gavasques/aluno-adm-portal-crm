@@ -24,16 +24,21 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
   const { handleOpenDetail } = useKanbanNavigation();
 
   console.log('🎯 OptimizedKanban Debug - Pipeline ID:', pipelineId);
-  console.log('🎯 OptimizedKanban Debug - Columns:', columns);
+  console.log('🎯 OptimizedKanban Debug - Todas as colunas:', columns);
   console.log('🎯 OptimizedKanban Debug - Leads by Column:', leadsByColumn);
 
   // Filtrar colunas do pipeline atual com memoização
   const pipelineColumns = useMemo(() => {
+    if (!pipelineId) {
+      console.log('🚫 Nenhum pipeline selecionado');
+      return [];
+    }
+    
     const filtered = columns
       .filter(col => col.pipeline_id === pipelineId)
       .sort((a, b) => a.sort_order - b.sort_order);
     
-    console.log('🔍 Filtered columns for pipeline:', pipelineId, filtered);
+    console.log(`🔍 Colunas filtradas para pipeline ${pipelineId}:`, filtered);
     return filtered;
   }, [columns, pipelineId]);
 
@@ -60,8 +65,34 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
     return <KanbanSkeleton />;
   }
 
-  if (!pipelineId || pipelineColumns.length === 0) {
-    return <KanbanEmptyState {...emptyStateProps} />;
+  if (!pipelineId) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Selecione um Pipeline
+          </h3>
+          <p className="text-gray-500">
+            Escolha um pipeline para visualizar os leads
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pipelineColumns.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Pipeline sem colunas
+          </h3>
+          <p className="text-gray-500">
+            Este pipeline não possui colunas configuradas. Configure as colunas nas configurações do CRM.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
