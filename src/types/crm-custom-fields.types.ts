@@ -3,6 +3,7 @@ export interface CRMCustomFieldGroup {
   id: string;
   name: string;
   description?: string;
+  pipeline_id?: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -56,6 +57,7 @@ export interface CRMCustomFieldInput {
 export interface CRMCustomFieldGroupInput {
   name: string;
   description?: string;
+  pipeline_id?: string;
   sort_order?: number;
   is_active?: boolean;
 }

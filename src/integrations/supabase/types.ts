@@ -403,6 +403,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          pipeline_id: string | null
           sort_order: number
           updated_at: string
         }
@@ -412,6 +413,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          pipeline_id?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -421,10 +423,19 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          pipeline_id?: string | null
           sort_order?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_custom_field_groups_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_custom_field_values: {
         Row: {

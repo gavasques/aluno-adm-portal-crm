@@ -5,17 +5,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CRMCustomField, CRMCustomFieldGroup, CRMCustomFieldInput, CRMCustomFieldGroupInput } from '@/types/crm-custom-fields.types';
 
-export const useCRMCustomFields = (pipelineId?: string) => {
+export const useCRMCustomFields = (pipelineId?: string, includeInactive = true) => {
   const queryClient = useQueryClient();
 
-  // Buscar grupos de campos
-  const { data: fieldGroups = [], isLoading: groupsLoading } = useQuery({
-    queryKey: ['crm-custom-field-groups'],
+  // Buscar grupos de campos - buscar todos, filtrar na UI
+  const { data: allFieldGroups = [], isLoading: groupsLoading } = useQuery({
+    queryKey: ['crm-custom-field-groups-all'],
     queryFn: async (): Promise<CRMCustomFieldGroup[]> => {
       const { data, error } = await supabase
         .from('crm_custom_field_groups')
         .select('*')
-        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -23,9 +22,9 @@ export const useCRMCustomFields = (pipelineId?: string) => {
     }
   });
 
-  // Buscar campos customizáveis - sempre buscar todos os campos ativos
-  const { data: customFields = [], isLoading: fieldsLoading } = useQuery({
-    queryKey: ['crm-custom-fields'],
+  // Buscar campos customizáveis - buscar todos, filtrar na UI
+  const { data: allCustomFields = [], isLoading: fieldsLoading } = useQuery({
+    queryKey: ['crm-custom-fields-all'],
     queryFn: async (): Promise<CRMCustomField[]> => {
       const { data, error } = await supabase
         .from('crm_custom_fields')
@@ -33,7 +32,6 @@ export const useCRMCustomFields = (pipelineId?: string) => {
           *,
           group:crm_custom_field_groups(*)
         `)
-        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -50,14 +48,43 @@ export const useCRMCustomFields = (pipelineId?: string) => {
     }
   });
 
-  // Filtrar campos por pipeline se necessário
-  const filteredFields = React.useMemo(() => {
-    if (!pipelineId) return customFields;
+  // Filtrar grupos baseado em pipeline e status ativo
+  const fieldGroups = React.useMemo(() => {
+    let filtered = allFieldGroups;
     
-    return customFields.filter(field => 
-      !field.pipeline_id || field.pipeline_id === pipelineId
-    );
-  }, [customFields, pipelineId]);
+    // Filtrar por status ativo apenas se solicitado
+    if (!includeInactive) {
+      filtered = filtered.filter(group => group.is_active);
+    }
+    
+    // Filtrar por pipeline se especificado
+    if (pipelineId) {
+      filtered = filtered.filter(group => 
+        !group.pipeline_id || group.pipeline_id === pipelineId
+      );
+    }
+    
+    return filtered;
+  }, [allFieldGroups, pipelineId, includeInactive]);
+
+  // Filtrar campos baseado em pipeline e status ativo
+  const customFields = React.useMemo(() => {
+    let filtered = allCustomFields;
+    
+    // Filtrar por status ativo apenas se solicitado
+    if (!includeInactive) {
+      filtered = filtered.filter(field => field.is_active);
+    }
+    
+    // Filtrar por pipeline se especificado
+    if (pipelineId) {
+      filtered = filtered.filter(field => 
+        !field.pipeline_id || field.pipeline_id === pipelineId
+      );
+    }
+    
+    return filtered;
+  }, [allCustomFields, pipelineId, includeInactive]);
 
   // Criar grupo de campos
   const createFieldGroup = useMutation({
@@ -72,7 +99,7 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups-all'] });
       toast.success('Grupo criado com sucesso!');
     },
     onError: (error) => {
@@ -95,7 +122,7 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups-all'] });
       toast.success('Grupo atualizado com sucesso!');
     },
     onError: (error) => {
@@ -107,6 +134,18 @@ export const useCRMCustomFields = (pipelineId?: string) => {
   // Deletar grupo de campos
   const deleteFieldGroup = useMutation({
     mutationFn: async (id: string) => {
+      // Verificar se há campos vinculados ao grupo
+      const { data: linkedFields, error: checkError } = await supabase
+        .from('crm_custom_fields')
+        .select('id')
+        .eq('group_id', id);
+
+      if (checkError) throw checkError;
+
+      if (linkedFields && linkedFields.length > 0) {
+        throw new Error(`Não é possível remover este grupo pois ele possui ${linkedFields.length} campo(s) vinculado(s). Remova primeiro os campos ou mova-os para outro grupo.`);
+      }
+
       const { error } = await supabase
         .from('crm_custom_field_groups')
         .delete()
@@ -115,12 +154,12 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups-all'] });
       toast.success('Grupo removido com sucesso!');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Erro ao remover grupo:', error);
-      toast.error('Erro ao remover grupo');
+      toast.error(error.message || 'Erro ao remover grupo');
     }
   });
 
@@ -137,7 +176,7 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields-all'] });
       toast.success('Campo criado com sucesso!');
     },
     onError: (error) => {
@@ -160,7 +199,7 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields-all'] });
       toast.success('Campo atualizado com sucesso!');
     },
     onError: (error) => {
@@ -180,7 +219,7 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields-all'] });
       toast.success('Campo removido com sucesso!');
     },
     onError: (error) => {
@@ -191,7 +230,9 @@ export const useCRMCustomFields = (pipelineId?: string) => {
 
   return {
     fieldGroups,
-    customFields: filteredFields,
+    customFields,
+    allFieldGroups,
+    allCustomFields,
     isLoading: groupsLoading || fieldsLoading,
     createFieldGroup,
     updateFieldGroup,

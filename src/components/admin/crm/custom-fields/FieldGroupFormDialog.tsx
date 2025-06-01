@@ -6,15 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { CRMCustomFieldGroup } from '@/types/crm-custom-fields.types';
 
 const groupSchema = z.object({
   name: z.string().min(1, 'Nome do grupo é obrigatório'),
   description: z.string().optional(),
+  pipeline_id: z.string().optional(),
   is_active: z.boolean().default(true)
 });
 
@@ -32,6 +35,7 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
   group
 }) => {
   const { fieldGroups, createFieldGroup, updateFieldGroup } = useCRMCustomFields();
+  const { pipelines } = useCRMPipelines();
   const isEditing = !!group;
 
   const {
@@ -46,6 +50,7 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
     defaultValues: {
       name: '',
       description: '',
+      pipeline_id: '',
       is_active: true
     }
   });
@@ -55,12 +60,14 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
       reset({
         name: group.name,
         description: group.description || '',
+        pipeline_id: group.pipeline_id || '',
         is_active: group.is_active
       });
     } else {
       reset({
         name: '',
         description: '',
+        pipeline_id: '',
         is_active: true
       });
     }
@@ -71,6 +78,7 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
       const payload = {
         name: data.name,
         description: data.description || undefined,
+        pipeline_id: data.pipeline_id || undefined,
         is_active: data.is_active,
         sort_order: isEditing ? undefined : fieldGroups.length + 1
       };
@@ -122,6 +130,29 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
               placeholder="Descrição opcional do grupo"
               rows={2}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pipeline_id">Pipeline (Opcional)</Label>
+            <Select
+              value={watch('pipeline_id') || ''}
+              onValueChange={(value) => setValue('pipeline_id', value || '')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um pipeline (ou deixe vazio para todos)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os pipelines</SelectItem>
+                {pipelines.map((pipeline) => (
+                  <SelectItem key={pipeline.id} value={pipeline.id}>
+                    {pipeline.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              Se especificar um pipeline, este grupo aparecerá apenas nesse pipeline
+            </p>
           </div>
 
           <div className="flex items-center space-x-2">

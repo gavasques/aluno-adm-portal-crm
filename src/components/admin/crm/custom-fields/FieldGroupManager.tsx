@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, GripVertical, Layers } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Edit, Trash2, GripVertical, Layers, Eye, EyeOff } from 'lucide-react';
 import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { CRMCustomFieldGroup } from '@/types/crm-custom-fields.types';
 
 interface FieldGroupManagerProps {
@@ -12,10 +14,23 @@ interface FieldGroupManagerProps {
 }
 
 export const FieldGroupManager: React.FC<FieldGroupManagerProps> = ({ onEditGroup }) => {
-  const { fieldGroups, customFields, deleteFieldGroup } = useCRMCustomFields();
+  const [showInactive, setShowInactive] = useState(false);
+  const { allFieldGroups, allCustomFields, deleteFieldGroup } = useCRMCustomFields('', true);
+  const { pipelines } = useCRMPipelines();
+
+  // Filtrar grupos baseado na opção de mostrar inativos
+  const displayGroups = showInactive 
+    ? allFieldGroups 
+    : allFieldGroups.filter(group => group.is_active);
 
   const getFieldCountInGroup = (groupId: string) => {
-    return customFields.filter(field => field.group_id === groupId).length;
+    return allCustomFields.filter(field => field.group_id === groupId).length;
+  };
+
+  const getPipelineName = (pipelineId?: string) => {
+    if (!pipelineId) return 'Todos os pipelines';
+    const pipeline = pipelines.find(p => p.id === pipelineId);
+    return pipeline?.name || 'Pipeline não encontrado';
   };
 
   const handleDelete = async (groupId: string) => {
@@ -33,11 +48,34 @@ export const FieldGroupManager: React.FC<FieldGroupManagerProps> = ({ onEditGrou
 
   return (
     <div className="space-y-4">
-      {fieldGroups.length === 0 ? (
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Switch
+            id="show-inactive"
+            checked={showInactive}
+            onCheckedChange={setShowInactive}
+          />
+          <label htmlFor="show-inactive" className="text-sm font-medium">
+            Mostrar grupos inativos
+          </label>
+        </div>
+        <div className="text-sm text-gray-600">
+          {displayGroups.length} de {allFieldGroups.length} grupos
+        </div>
+      </div>
+
+      {displayGroups.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">Nenhum grupo criado</p>
-          <p className="text-sm">Clique em "Novo Grupo" para adicionar o primeiro grupo</p>
+          <p className="text-lg font-medium">
+            {showInactive ? 'Nenhum grupo encontrado' : 'Nenhum grupo ativo encontrado'}
+          </p>
+          <p className="text-sm">
+            {showInactive 
+              ? 'Clique em "Novo Grupo" para adicionar o primeiro grupo'
+              : 'Ative a opção "Mostrar grupos inativos" ou crie um novo grupo'
+            }
+          </p>
         </div>
       ) : (
         <Table>
@@ -45,6 +83,7 @@ export const FieldGroupManager: React.FC<FieldGroupManagerProps> = ({ onEditGrou
             <TableRow>
               <TableHead className="w-[50px]"></TableHead>
               <TableHead>Nome do Grupo</TableHead>
+              <TableHead>Pipeline</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Campos</TableHead>
               <TableHead>Status</TableHead>
@@ -52,16 +91,27 @@ export const FieldGroupManager: React.FC<FieldGroupManagerProps> = ({ onEditGrou
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fieldGroups.map((group) => (
-              <TableRow key={group.id}>
+            {displayGroups.map((group) => (
+              <TableRow 
+                key={group.id}
+                className={!group.is_active ? 'opacity-60 bg-gray-50' : ''}
+              >
                 <TableCell>
                   <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-blue-600" />
+                    <Layers className={`h-4 w-4 ${group.is_active ? 'text-blue-600' : 'text-gray-400'}`} />
                     <p className="font-medium">{group.name}</p>
+                    {!group.is_active && (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    )}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <p className="text-sm text-gray-600">
+                    {getPipelineName(group.pipeline_id)}
+                  </p>
                 </TableCell>
                 <TableCell>
                   <p className="text-sm text-gray-600">

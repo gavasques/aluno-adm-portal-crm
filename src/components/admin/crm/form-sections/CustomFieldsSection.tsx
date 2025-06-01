@@ -16,7 +16,8 @@ interface CustomFieldsSectionProps {
 }
 
 const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelineId }) => {
-  const { customFields, fieldGroups, isLoading } = useCRMCustomFields(pipelineId);
+  // Buscar apenas campos ativos para o formulário
+  const { customFields, fieldGroups, isLoading } = useCRMCustomFields(pipelineId, false);
 
   if (isLoading) {
     return (
@@ -38,17 +39,26 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelin
     return null;
   }
 
-  // Agrupar campos por grupo
-  const groupedFields = fieldGroups.reduce((acc, group) => {
-    acc[group.id] = {
-      group,
-      fields: customFields.filter(field => field.group_id === group.id)
-    };
-    return acc;
-  }, {} as Record<string, { group: CRMCustomFieldGroup; fields: CRMCustomField[] }>);
+  // Agrupar campos por grupo (apenas ativos)
+  const groupedFields = fieldGroups
+    .filter(group => group.is_active)
+    .reduce((acc, group) => {
+      const groupFields = customFields.filter(field => 
+        field.group_id === group.id && field.is_active
+      );
+      if (groupFields.length > 0) {
+        acc[group.id] = {
+          group,
+          fields: groupFields
+        };
+      }
+      return acc;
+    }, {} as Record<string, { group: CRMCustomFieldGroup; fields: CRMCustomField[] }>);
 
-  // Campos sem grupo
-  const ungroupedFields = customFields.filter(field => !field.group_id);
+  // Campos sem grupo (apenas ativos)
+  const ungroupedFields = customFields.filter(field => 
+    !field.group_id && field.is_active
+  );
 
   const renderField = (field: CRMCustomField) => {
     const fieldKey = `custom_field_${field.field_key}`;
@@ -173,24 +183,22 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelin
 
   return (
     <div className="space-y-6">
-      {/* Campos agrupados */}
+      {/* Campos agrupados (apenas grupos ativos com campos ativos) */}
       {Object.values(groupedFields).map(({ group, fields }) => (
-        fields.length > 0 && (
-          <Card key={group.id}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">{group.name}</CardTitle>
-              {group.description && (
-                <p className="text-xs text-gray-600">{group.description}</p>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {fields.map(renderField)}
-            </CardContent>
-          </Card>
-        )
+        <Card key={group.id}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">{group.name}</CardTitle>
+            {group.description && (
+              <p className="text-xs text-gray-600">{group.description}</p>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {fields.map(renderField)}
+          </CardContent>
+        </Card>
       ))}
 
-      {/* Campos sem grupo */}
+      {/* Campos sem grupo (apenas ativos) */}
       {ungroupedFields.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
