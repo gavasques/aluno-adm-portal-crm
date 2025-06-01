@@ -3,10 +3,13 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Kanban, ListIcon, BarChart3, Settings, LayoutGrid } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Kanban, ListIcon, BarChart3, Settings, LayoutGrid, Filter, Eye } from 'lucide-react';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { CRMSettings } from '../settings/CRMSettings';
+import { CRMFilters } from '../CRMFilters';
 import { usePipelineSelection } from '@/hooks/crm/usePipelineSelection';
+import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 
 interface CRMDashboardProps {
   onOpenLead: (leadId: string) => void;
@@ -16,6 +19,8 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedPipelineId, setSelectedPipelineId] = useState('');
   const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<CRMFiltersType>({});
 
   const { pipelines, pipelinesLoading } = usePipelineSelection(
     selectedPipelineId,
@@ -24,9 +29,23 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
 
   const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
 
+  // Combinar filtros com pipeline selecionado
+  const effectiveFilters: CRMFiltersType = {
+    ...filters,
+    pipeline_id: selectedPipelineId
+  };
+
   const handleCreateLead = () => {
     // Implementar abertura do formulário de lead
     console.log('Criar novo lead no pipeline:', selectedPipelineId);
+  };
+
+  const handleFiltersChange = (newFilters: CRMFiltersType) => {
+    setFilters(newFilters);
+  };
+
+  const clearFilters = () => {
+    setFilters({});
   };
 
   return (
@@ -38,41 +57,90 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
         </p>
       </div>
 
-      {/* Pipeline Selector */}
+      {/* Pipeline Selector e Controles */}
       {activeTab === 'dashboard' && (
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">Pipeline:</span>
+        <div className="mb-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium">Pipeline:</span>
+              </div>
+              <Select 
+                value={selectedPipelineId} 
+                onValueChange={setSelectedPipelineId}
+                disabled={pipelinesLoading}
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue 
+                    placeholder={pipelinesLoading ? "Carregando..." : "Selecione um pipeline"} 
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {pipelines.map((pipeline) => (
+                    <SelectItem key={pipeline.id} value={pipeline.id}>
+                      {pipeline.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select 
-              value={selectedPipelineId} 
-              onValueChange={setSelectedPipelineId}
-              disabled={pipelinesLoading}
-            >
-              <SelectTrigger className="w-64">
-                <SelectValue 
-                  placeholder={pipelinesLoading ? "Carregando..." : "Selecione um pipeline"} 
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {pipelines.map((pipeline) => (
-                  <SelectItem key={pipeline.id} value={pipeline.id}>
-                    {pipeline.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            <div className="flex items-center gap-2">
+              {selectedPipelineId && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="flex items-center gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                  </Button>
+                  
+                  <div className="flex items-center gap-1 border rounded-md">
+                    <Button
+                      variant={activeView === 'kanban' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setActiveView('kanban')}
+                      className="rounded-r-none"
+                    >
+                      <Kanban className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={activeView === 'list' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setActiveView('list')}
+                      className="rounded-l-none"
+                    >
+                      <ListIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              <div className="text-sm text-gray-600">
+                {selectedPipeline && (
+                  <span className="font-medium text-blue-700">
+                    {selectedPipeline.name}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          {selectedPipelineId && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>Pipeline ativo:</span>
-              <span className="font-medium text-blue-700">
-                {selectedPipeline?.name}
-              </span>
-            </div>
+          {/* Filtros */}
+          {showFilters && selectedPipelineId && (
+            <Card>
+              <CardContent className="pt-4">
+                <CRMFilters 
+                  onFiltersChange={handleFiltersChange}
+                  onClearFilters={clearFilters}
+                  initialFilters={filters}
+                />
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
@@ -80,7 +148,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <Kanban className="h-4 w-4" />
+            <Eye className="h-4 w-4" />
             Dashboard
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
@@ -101,7 +169,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
           {selectedPipelineId ? (
             <DashboardContent 
               activeView={activeView}
-              effectiveFilters={{ pipeline_id: selectedPipelineId }}
+              effectiveFilters={effectiveFilters}
               selectedPipelineId={selectedPipelineId}
               onCreateLead={handleCreateLead}
             />

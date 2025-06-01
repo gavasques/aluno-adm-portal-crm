@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Database, Users, Tags } from 'lucide-react';
 import { CRMFieldManager } from '../custom-fields/CRMFieldManager';
+import { PipelineManagerDialog } from '../pipeline-manager/PipelineManagerDialog';
+import { CRMTagsManager } from '../CRMTagsManager';
 
 export const CRMSettings = () => {
   const [activeTab, setActiveTab] = useState('fields');
@@ -50,9 +52,7 @@ export const CRMSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
-                Funcionalidade em desenvolvimento - será implementada em breve
-              </p>
+              <PipelineManagerDialog />
             </CardContent>
           </Card>
         </TabsContent>
@@ -82,9 +82,7 @@ export const CRMSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
-                Funcionalidade em desenvolvimento - será implementada em breve
-              </p>
+              <CRMTagsManager />
             </CardContent>
           </Card>
         </TabsContent>

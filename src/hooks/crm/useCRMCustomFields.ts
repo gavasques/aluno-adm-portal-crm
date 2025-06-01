@@ -37,6 +37,9 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       // Filtrar por pipeline específico ou campos globais (pipeline_id IS NULL)
       if (pipelineId) {
         query = query.or(`pipeline_id.is.null,pipeline_id.eq.${pipelineId}`);
+      } else {
+        // Se não há pipeline selecionado, mostrar apenas campos globais
+        query = query.is('pipeline_id', null);
       }
 
       const { data, error } = await query.order('sort_order', { ascending: true });
