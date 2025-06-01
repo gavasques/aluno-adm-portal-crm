@@ -139,7 +139,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
             <div className="flex-1">
               <TabsContent value="pipeline" className="mt-0 space-y-0">
-                {/* Pipeline Header */}
+                {/* Pipeline Header - APENAS na aba Pipeline */}
                 <div className="py-4 border-b border-gray-200">
                   <DashboardToolbar
                     activeView={activeView}
@@ -150,7 +150,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                   />
                 </div>
 
-                {/* Filtros */}
+                {/* Filtros - APENAS na aba Pipeline */}
                 <div className="py-4 border-b border-gray-100">
                   <CRMFilters
                     pipelineId={selectedPipelineId}
@@ -219,19 +219,32 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </Tabs>
         </div>
 
-        {/* Conteúdo Principal */}
+        {/* Conteúdo Principal - APENAS mostrar DashboardContent na aba Pipeline */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden">
-            <DashboardContent
-              activeView={activeView}
-              effectiveFilters={effectiveFilters}
-              selectedPipelineId={selectedPipelineId}
-              onCreateLead={handleCreateLead}
-            />
-          </div>
-          
-          {/* Stats Footer */}
-          <CRMStatsFooter />
+          <Tabs defaultValue="pipeline" className="flex-1 flex flex-col">
+            <TabsContent value="pipeline" className="flex-1 flex flex-col m-0">
+              <div className="flex-1 overflow-hidden">
+                <DashboardContent
+                  activeView={activeView}
+                  effectiveFilters={effectiveFilters}
+                  selectedPipelineId={selectedPipelineId}
+                  onCreateLead={handleCreateLead}
+                />
+              </div>
+              
+              {/* Stats Footer - APENAS na aba Pipeline */}
+              <CRMStatsFooter />
+            </TabsContent>
+            
+            {/* Outras abas não mostram o DashboardContent nem o footer */}
+            <TabsContent value="relatorios" className="flex-1 m-0">
+              {/* Conteúdo já está dentro do TabsContent acima */}
+            </TabsContent>
+            
+            <TabsContent value="configuracoes" className="flex-1 m-0">
+              {/* Conteúdo já está dentro do TabsContent acima */}
+            </TabsContent>
+          </Tabs>
         </div>
 
         <CRMTagsManager
