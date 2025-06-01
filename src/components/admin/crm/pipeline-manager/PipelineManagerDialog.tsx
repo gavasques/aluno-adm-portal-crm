@@ -18,7 +18,7 @@ interface PipelineManagerDialogProps {
 const PipelineManagerDialog = ({ open, onOpenChange, onPipelineChange }: PipelineManagerDialogProps) => {
   const [selectedPipeline, setSelectedPipeline] = useState<CRMPipeline | null>(null);
   const [activeTab, setActiveTab] = useState('pipelines');
-  const { pipelines, loading, fetchPipelines } = useCRMPipelines();
+  const { pipelines, loading, refetch } = useCRMPipelines();
 
   const handlePipelineSelect = (pipeline: CRMPipeline) => {
     setSelectedPipeline(pipeline);
@@ -26,7 +26,7 @@ const PipelineManagerDialog = ({ open, onOpenChange, onPipelineChange }: Pipelin
   };
 
   const handleRefresh = async () => {
-    await fetchPipelines();
+    await refetch();
     // Notificar mudanças para atualizar outros componentes
     onPipelineChange?.();
   };

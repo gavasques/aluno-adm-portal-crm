@@ -21,23 +21,27 @@ export const useCRMPipelines = () => {
       setPipelines(data || []);
     } catch (error) {
       console.error('Erro ao buscar pipelines:', error);
-      // Removido toast para evitar loop
     }
   };
 
-  const fetchColumns = async () => {
+  const fetchColumns = async (pipelineId?: string) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('crm_pipeline_columns')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
 
+      if (pipelineId) {
+        query = query.eq('pipeline_id', pipelineId);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       setColumns(data || []);
     } catch (error) {
       console.error('Erro ao buscar colunas:', error);
-      // Removido toast para evitar loop
     }
   };
 
@@ -50,19 +54,19 @@ export const useCRMPipelines = () => {
     }
   };
 
-  const createPipeline = async (name: string, description?: string) => {
+  const createPipeline = async (data: Omit<CRMPipeline, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabase
+      const { data: newPipeline, error } = await supabase
         .from('crm_pipelines')
-        .insert({ name, description, is_active: true })
+        .insert(data)
         .select()
         .single();
 
       if (error) throw error;
 
-      setPipelines(prev => [...prev, data].sort((a, b) => a.sort_order - b.sort_order));
+      setPipelines(prev => [...prev, newPipeline].sort((a, b) => a.sort_order - b.sort_order));
       toast.success('Pipeline criado com sucesso!');
-      return data;
+      return newPipeline;
     } catch (error) {
       console.error('Erro ao criar pipeline:', error);
       toast.error('Erro ao criar pipeline');
@@ -106,24 +110,19 @@ export const useCRMPipelines = () => {
     }
   };
 
-  const createColumn = async (pipelineId: string, name: string, color: string) => {
+  const createColumn = async (data: Omit<CRMPipelineColumn, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabase
+      const { data: newColumn, error } = await supabase
         .from('crm_pipeline_columns')
-        .insert({ 
-          pipeline_id: pipelineId, 
-          name, 
-          color, 
-          is_active: true 
-        })
+        .insert(data)
         .select()
         .single();
 
       if (error) throw error;
 
-      setColumns(prev => [...prev, data].sort((a, b) => a.sort_order - b.sort_order));
+      setColumns(prev => [...prev, newColumn].sort((a, b) => a.sort_order - b.sort_order));
       toast.success('Coluna criada com sucesso!');
-      return data;
+      return newColumn;
     } catch (error) {
       console.error('Erro ao criar coluna:', error);
       toast.error('Erro ao criar coluna');
@@ -176,6 +175,8 @@ export const useCRMPipelines = () => {
     columns,
     loading,
     refetch,
+    fetchPipelines,
+    fetchColumns,
     createPipeline,
     updatePipeline,
     deletePipeline,
