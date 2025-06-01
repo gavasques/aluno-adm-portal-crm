@@ -1,74 +1,47 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { 
-  TrendingUp, 
-  Users, 
-  Calendar, 
-  CheckCircle, 
-  AlertTriangle,
-  BarChart3,
-  RefreshCw
-} from 'lucide-react';
-import { useCRMPerformance } from '@/hooks/crm/useCRMPerformance';
-import CRMNotificationCenter from '../CRMNotificationCenter';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Columns3, List, Plus, Refresh } from 'lucide-react';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
+import CRMStatsCards from '../CRMStatsCards';
+import CRMFilters from '../CRMFilters';
+import OptimizedKanbanBoard from '../OptimizedKanbanBoard';
+import CRMListView from '../CRMListView';
+import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
 }
 
 const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
-  const { metrics, insights, isLoading, refetch } = useCRMPerformance();
+  const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
+  const [filters, setFilters] = useState<CRMFiltersType>({});
+  
+  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
 
-  const statsCards = [
-    {
-      title: 'Total de Leads',
-      value: metrics?.totalLeads || 0,
-      icon: Users,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50'
-    },
-    {
-      title: 'Leads Este Mês',
-      value: metrics?.leadsThisMonth || 0,
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bg: 'bg-green-50'
-    },
-    {
-      title: 'Taxa de Conversão',
-      value: `${(metrics?.conversionRate || 0).toFixed(1)}%`,
-      icon: BarChart3,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50'
-    },
-    {
-      title: 'Contatos Agendados',
-      value: metrics?.contactsScheduled || 0,
-      icon: Calendar,
-      color: 'text-orange-600',
-      bg: 'bg-orange-50'
-    },
-    {
-      title: 'Contatos Realizados',
-      value: metrics?.contactsCompleted || 0,
-      icon: CheckCircle,
-      color: 'text-green-600',
-      bg: 'bg-green-50'
-    },
-    {
-      title: 'Contatos em Atraso',
-      value: metrics?.overdueContacts || 0,
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bg: 'bg-red-50'
+  // Auto-select first pipeline if none selected
+  React.useEffect(() => {
+    if (pipelines.length > 0 && !selectedPipelineId) {
+      setSelectedPipelineId(pipelines[0].id);
     }
-  ];
+  }, [pipelines, selectedPipelineId]);
 
-  if (isLoading) {
+  // Update filters when pipeline changes
+  const effectiveFilters = useMemo(() => ({
+    ...filters,
+    pipeline_id: selectedPipelineId
+  }), [filters, selectedPipelineId]);
+
+  const handleFiltersChange = (newFilters: CRMFiltersType) => {
+    setFilters(newFilters);
+  };
+
+  if (pipelinesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -81,119 +54,126 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard CRM</h2>
-          <p className="text-gray-600">Visão geral da performance e métricas</p>
+          <h1 className="text-3xl font-bold text-gray-900">CRM</h1>
+          <p className="text-gray-600">Gestão de leads e pipeline de vendas</p>
         </div>
-        <Button onClick={() => refetch()} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            <Refresh className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statsCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                </div>
-                <div className={cn("p-3 rounded-full", stat.bg)}>
-                  <stat.icon className={cn("h-6 w-6", stat.color)} />
-                </div>
+      {/* Dashboard CRM Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Dashboard CRM</span>
+            <span className="text-sm font-normal text-gray-600">
+              Visão geral da performance e métricas
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CRMStatsCards filters={effectiveFilters} />
+        </CardContent>
+      </Card>
+
+      {/* Main CRM Interface */}
+      <Tabs defaultValue="pipeline" className="space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+            <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+          </TabsList>
+
+          {/* View Toggle */}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              Pipeline: {pipelines.find(p => p.id === selectedPipelineId)?.name || 'Selecione'}
+            </Badge>
+            <div className="flex rounded-lg border border-gray-200 p-1">
+              <Button
+                variant={activeView === 'kanban' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveView('kanban')}
+                className="h-8 px-3"
+              >
+                <Columns3 className="h-4 w-4 mr-1" />
+                Kanban
+              </Button>
+              <Button
+                variant={activeView === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveView('list')}
+                className="h-8 px-3"
+              >
+                <List className="h-4 w-4 mr-1" />
+                Lista
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <TabsContent value="pipeline" className="space-y-6">
+          {/* Filters */}
+          <CRMFilters
+            pipelines={pipelines}
+            selectedPipelineId={selectedPipelineId}
+            onPipelineChange={setSelectedPipelineId}
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+          />
+
+          {/* Main Content */}
+          <Card className="min-h-[600px]">
+            <CardContent className="p-0">
+              {activeView === 'kanban' ? (
+                <OptimizedKanbanBoard
+                  filters={effectiveFilters}
+                  pipelineId={selectedPipelineId}
+                />
+              ) : (
+                <CRMListView
+                  filters={effectiveFilters}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="relatorios">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relatórios CRM</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-gray-500">
+                <p>Módulo de relatórios em desenvolvimento</p>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </TabsContent>
 
-      {/* Insights and Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Performance Insights */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Insights de Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {insights && insights.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
-                Nenhum insight disponível no momento
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {insights && insights.map((insight, index) => (
-                  <div key={index} className="p-3 border rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge 
-                            variant={
-                              insight.type === 'success' ? 'default' :
-                              insight.type === 'warning' ? 'destructive' : 'secondary'
-                            }
-                            className="text-xs"
-                          >
-                            {insight.type === 'success' && 'Positivo'}
-                            {insight.type === 'warning' && 'Atenção'}
-                            {insight.type === 'info' && 'Informação'}
-                          </Badge>
-                        </div>
-                        <h4 className="font-medium text-sm">{insight.title}</h4>
-                        <p className="text-sm text-gray-600">{insight.description}</p>
-                        <p className="text-xs text-blue-600 mt-1">{insight.action}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        <TabsContent value="configuracoes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações CRM</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-gray-500">
+                <p>Configurações do CRM em desenvolvimento</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Notification Center */}
-        <CRMNotificationCenter onOpenLead={onOpenLead} />
-      </div>
-
-      {/* Top Performers */}
-      {metrics?.topPerformers && metrics.topPerformers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Top Performers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {metrics.topPerformers.map((performer, index) => (
-                <div key={performer.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{performer.name}</p>
-                      <p className="text-sm text-gray-600">
-                        {performer.leadsCount} leads atribuídos
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">
-                    {performer.leadsCount} leads
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
