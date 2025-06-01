@@ -12,10 +12,11 @@ import { CRMCustomField, CRMCustomFieldGroup } from '@/types/crm-custom-fields.t
 
 interface CustomFieldsSectionProps {
   form: UseFormReturn<any>;
+  pipelineId?: string;
 }
 
-const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form }) => {
-  const { customFields, fieldGroups, isLoading } = useCRMCustomFields();
+const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelineId }) => {
+  const { customFields, fieldGroups, isLoading } = useCRMCustomFields(pipelineId);
 
   if (isLoading) {
     return (

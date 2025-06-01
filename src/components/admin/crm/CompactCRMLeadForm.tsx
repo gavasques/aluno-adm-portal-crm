@@ -89,8 +89,8 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
             />
           </div>
 
-          {/* Campos Customizáveis */}
-          <CustomFieldsSection form={form} />
+          {/* Campos Customizáveis com pipeline filtrado */}
+          <CustomFieldsSection form={form} pipelineId={pipelineId} />
 
           {/* Observações */}
           <LeadNotesSection form={form} />

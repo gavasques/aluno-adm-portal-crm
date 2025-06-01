@@ -1,9 +1,10 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CRMCustomField, CRMCustomFieldGroup, CRMCustomFieldInput, CRMCustomFieldGroupInput } from '@/types/crm-custom-fields.types';
 
-export const useCRMCustomFields = () => {
+export const useCRMCustomFields = (pipelineId?: string) => {
   const queryClient = useQueryClient();
 
   // Buscar grupos de campos
@@ -21,18 +22,24 @@ export const useCRMCustomFields = () => {
     }
   });
 
-  // Buscar campos customizáveis
+  // Buscar campos customizáveis filtrados por pipeline
   const { data: customFields = [], isLoading: fieldsLoading } = useQuery({
-    queryKey: ['crm-custom-fields'],
+    queryKey: ['crm-custom-fields', pipelineId],
     queryFn: async (): Promise<CRMCustomField[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('crm_custom_fields')
         .select(`
           *,
           group:crm_custom_field_groups(*)
         `)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+        .eq('is_active', true);
+
+      // Filtrar por pipeline específico ou campos globais (pipeline_id IS NULL)
+      if (pipelineId) {
+        query = query.or(`pipeline_id.is.null,pipeline_id.eq.${pipelineId}`);
+      }
+
+      const { data, error } = await query.order('sort_order', { ascending: true });
 
       if (error) throw error;
       
@@ -115,7 +122,7 @@ export const useCRMCustomFields = () => {
 
   // Criar campo customizável
   const createCustomField = useMutation({
-    mutationFn: async (input: CRMCustomFieldInput) => {
+    mutationFn: async (input: CRMCustomFieldInput & { pipeline_id?: string }) => {
       const { data, error } = await supabase
         .from('crm_custom_fields')
         .insert(input)
@@ -137,7 +144,7 @@ export const useCRMCustomFields = () => {
 
   // Atualizar campo customizável
   const updateCustomField = useMutation({
-    mutationFn: async ({ id, input }: { id: string; input: Partial<CRMCustomFieldInput> }) => {
+    mutationFn: async ({ id, input }: { id: string; input: Partial<CRMCustomFieldInput & { pipeline_id?: string }> }) => {
       const { data, error } = await supabase
         .from('crm_custom_fields')
         .update(input)

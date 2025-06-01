@@ -102,19 +102,18 @@ export const useCustomFieldValues = (leadId?: string) => {
   const prepareFieldValues = (formData: Record<string, any>, customFields: Array<{ id: string; field_key: string; field_type: string }>) => {
     return customFields.map(field => {
       const fieldKey = `custom_field_${field.field_key}`;
-      let fieldValue = formData[fieldKey];
+      let fieldValue: string = '';
+      const rawValue = formData[fieldKey];
 
       // Converter para string para armazenamento
-      if (fieldValue !== null && fieldValue !== undefined) {
+      if (rawValue !== null && rawValue !== undefined) {
         if (field.field_type === 'boolean') {
-          fieldValue = String(fieldValue);
+          fieldValue = String(rawValue);
         } else if (field.field_type === 'number') {
-          fieldValue = String(fieldValue);
+          fieldValue = String(rawValue);
         } else {
-          fieldValue = String(fieldValue);
+          fieldValue = String(rawValue);
         }
-      } else {
-        fieldValue = '';
       }
 
       return {

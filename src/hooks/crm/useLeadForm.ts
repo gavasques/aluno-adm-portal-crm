@@ -23,7 +23,7 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
   const [loading, setLoading] = useState(false);
   const { updateLead } = useCRMLeadUpdate();
   const { updateLeadTags } = useOptimizedCRMTags();
-  const { customFields } = useCRMCustomFields();
+  const { customFields } = useCRMCustomFields(pipelineId); // Filtrar por pipeline
   const { getFormValues, prepareFieldValues, saveFieldValues } = useCustomFieldValues(lead?.id);
 
   // Valores iniciais incluindo campos customizáveis
