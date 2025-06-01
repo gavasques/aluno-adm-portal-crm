@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -22,27 +21,18 @@ export const useCRMCustomFields = (pipelineId?: string) => {
     }
   });
 
-  // Buscar campos customizáveis filtrados por pipeline
+  // Buscar campos customizáveis - sempre buscar todos os campos ativos
   const { data: customFields = [], isLoading: fieldsLoading } = useQuery({
-    queryKey: ['crm-custom-fields', pipelineId],
+    queryKey: ['crm-custom-fields'],
     queryFn: async (): Promise<CRMCustomField[]> => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('crm_custom_fields')
         .select(`
           *,
           group:crm_custom_field_groups(*)
         `)
-        .eq('is_active', true);
-
-      // Filtrar por pipeline específico ou campos globais (pipeline_id IS NULL)
-      if (pipelineId) {
-        query = query.or(`pipeline_id.is.null,pipeline_id.eq.${pipelineId}`);
-      } else {
-        // Se não há pipeline selecionado, mostrar apenas campos globais
-        query = query.is('pipeline_id', null);
-      }
-
-      const { data, error } = await query.order('sort_order', { ascending: true });
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
 
       if (error) throw error;
       
@@ -57,6 +47,15 @@ export const useCRMCustomFields = (pipelineId?: string) => {
       }));
     }
   });
+
+  // Filtrar campos por pipeline se necessário
+  const filteredFields = React.useMemo(() => {
+    if (!pipelineId) return customFields;
+    
+    return customFields.filter(field => 
+      !field.pipeline_id || field.pipeline_id === pipelineId
+    );
+  }, [customFields, pipelineId]);
 
   // Criar grupo de campos
   const createFieldGroup = useMutation({
@@ -190,7 +189,7 @@ export const useCRMCustomFields = (pipelineId?: string) => {
 
   return {
     fieldGroups,
-    customFields,
+    customFields: filteredFields,
     isLoading: groupsLoading || fieldsLoading,
     createFieldGroup,
     updateFieldGroup,

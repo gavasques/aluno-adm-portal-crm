@@ -2,16 +2,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Settings, Database, Users, Tags } from 'lucide-react';
 import { CRMFieldManager } from '../custom-fields/CRMFieldManager';
-import PipelineManagerDialog from '../pipeline-manager/PipelineManagerDialog';
-import CRMTagsManager from '../CRMTagsManager';
+import { PipelineManager } from './PipelineManager';
+import { CRMTagsContent } from './CRMTagsContent';
 
 export const CRMSettings = () => {
   const [activeTab, setActiveTab] = useState('fields');
-  const [showPipelineManager, setShowPipelineManager] = useState(false);
-  const [showTagsManager, setShowTagsManager] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -55,10 +52,7 @@ export const CRMSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setShowPipelineManager(true)}>
-                <Settings className="h-4 w-4 mr-2" />
-                Gerenciar Pipelines
-              </Button>
+              <PipelineManager />
             </CardContent>
           </Card>
         </TabsContent>
@@ -88,25 +82,11 @@ export const CRMSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setShowTagsManager(true)}>
-                <Tags className="h-4 w-4 mr-2" />
-                Gerenciar Tags
-              </Button>
+              <CRMTagsContent />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Dialogs */}
-      <PipelineManagerDialog
-        open={showPipelineManager}
-        onOpenChange={setShowPipelineManager}
-      />
-
-      <CRMTagsManager
-        open={showTagsManager}
-        onOpenChange={setShowTagsManager}
-      />
     </div>
   );
 };
