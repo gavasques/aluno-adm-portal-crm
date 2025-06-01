@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -42,7 +41,9 @@ export const useCRMCustomFields = () => {
         ...field,
         field_type: field.field_type as 'text' | 'number' | 'phone' | 'boolean' | 'select',
         options: Array.isArray(field.options) ? field.options as string[] : [],
-        validation_rules: field.validation_rules || {}
+        validation_rules: (field.validation_rules && typeof field.validation_rules === 'object' && !Array.isArray(field.validation_rules)) 
+          ? field.validation_rules as Record<string, any>
+          : {}
       }));
     }
   });
