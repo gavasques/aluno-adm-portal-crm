@@ -44,7 +44,9 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
     setFilters(newFilters);
   };
 
-  const clearFilters = () => {
+  const handlePipelineChange = (pipelineId: string) => {
+    setSelectedPipelineId(pipelineId);
+    // Limpar filtros ao trocar pipeline
     setFilters({});
   };
 
@@ -68,7 +70,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
               </div>
               <Select 
                 value={selectedPipelineId} 
-                onValueChange={setSelectedPipelineId}
+                onValueChange={handlePipelineChange}
                 disabled={pipelinesLoading}
               >
                 <SelectTrigger className="w-64">
@@ -135,9 +137,10 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
             <Card>
               <CardContent className="pt-4">
                 <CRMFilters 
+                  filters={filters}
                   onFiltersChange={handleFiltersChange}
-                  onClearFilters={clearFilters}
-                  initialFilters={filters}
+                  pipelineId={selectedPipelineId}
+                  onPipelineChange={handlePipelineChange}
                 />
               </CardContent>
             </Card>
