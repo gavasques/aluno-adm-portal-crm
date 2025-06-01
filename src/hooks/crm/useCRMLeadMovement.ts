@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
 
 export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {

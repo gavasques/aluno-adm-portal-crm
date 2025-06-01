@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { CRMLead } from '@/types/crm.types';
 import { toast } from 'sonner';
 
