@@ -26,11 +26,7 @@ export const CRMTagsContent = () => {
     if (!newTagName.trim()) return;
     
     try {
-      await createTag({
-        name: newTagName.trim(),
-        color: newTagColor,
-        is_active: true
-      });
+      await createTag(newTagName.trim(), newTagColor);
       setNewTagName('');
       setNewTagColor('#3B82F6');
       setIsCreating(false);
@@ -42,7 +38,7 @@ export const CRMTagsContent = () => {
 
   const handleUpdateTag = async (tagId: string, data: any) => {
     try {
-      await updateTag(tagId, data);
+      await updateTag(tagId, data.name, data.color);
       setEditingTag(null);
       toast.success('Tag atualizada com sucesso!');
     } catch (error) {
@@ -217,9 +213,6 @@ export const CRMTagsContent = () => {
                           style={{ backgroundColor: tag.color }}
                         />
                         <span className="font-medium text-sm truncate">{tag.name}</span>
-                        {!tag.is_active && (
-                          <Badge variant="secondary" className="text-xs">Inativa</Badge>
-                        )}
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
