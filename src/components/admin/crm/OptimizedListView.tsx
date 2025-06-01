@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Eye, Loader2, Clock } from "lucide-react";
+import { Search, Eye, Loader2, Clock, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +19,7 @@ interface OptimizedListViewProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenLeadDetails?: (lead: CRMLead) => void;
+  onCreateLead?: () => void;
 }
 
 const OptimizedListView = React.memo(({ 
@@ -26,7 +27,8 @@ const OptimizedListView = React.memo(({
   columns, 
   searchQuery, 
   onSearchChange, 
-  onOpenLeadDetails 
+  onOpenLeadDetails,
+  onCreateLead
 }: OptimizedListViewProps) => {
   const navigate = useNavigate();
   const [debouncedSearch, isSearching] = useDebouncedValue(searchQuery, 300);
@@ -36,7 +38,7 @@ const OptimizedListView = React.memo(({
   });
 
   const handleOpenLeadDetails = (lead: CRMLead) => {
-    console.log('🔗 OptimizedListView - Navigating to modern lead detail page:', lead.id);
+    console.log('🔗 OptimizedListView - Navigating to lead detail page:', lead.id);
     if (onOpenLeadDetails) {
       onOpenLeadDetails(lead);
     } else {
@@ -58,13 +60,6 @@ const OptimizedListView = React.memo(({
     return column ? { name: column.name, color: column.color } : { name: 'Não definido', color: '#6b7280' };
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
   const getContactInfo = (lead: any) => {
     if (lead.pending_contacts && lead.pending_contacts.length > 0) {
       const nextContact = lead.pending_contacts[0];
@@ -75,6 +70,18 @@ const OptimizedListView = React.memo(({
       if (isToday) return { text: 'Hoje', icon: Clock, color: 'text-red-600' };
       if (isTomorrow) return { text: 'Amanhã', icon: Clock, color: 'text-orange-600' };
       return { text: contactDate.toLocaleDateString('pt-BR'), icon: Clock, color: 'text-gray-600' };
+    }
+    return null;
+  };
+
+  const getLastContactInfo = (lead: any) => {
+    if (lead.last_completed_contact) {
+      const lastContact = lead.last_completed_contact;
+      const contactDate = new Date(lastContact.completed_at || lastContact.contact_date);
+      return {
+        text: contactDate.toLocaleDateString('pt-BR'),
+        type: lastContact.contact_type
+      };
     }
     return null;
   };
@@ -92,8 +99,20 @@ const OptimizedListView = React.memo(({
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Search and Filters Bar */}
-      <div className="border-b border-gray-200 p-4">
+      {/* Header with Title and New Lead Button */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h1 className="text-2xl font-semibold text-gray-900">Lista de Leads</h1>
+        <Button 
+          onClick={onCreateLead}
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Novo Lead
+        </Button>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center gap-4 mb-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -111,13 +130,13 @@ const OptimizedListView = React.memo(({
 
         {/* Active Filters */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
             Contato: Hoje
           </Badge>
-          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
             Responsável: Alex Silva
           </Badge>
-          <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+          <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200 px-3 py-1">
             Tag: Prioridade Alta
           </Badge>
         </div>
@@ -129,38 +148,50 @@ const OptimizedListView = React.memo(({
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
               <tr>
-                <th className="w-8 px-4 py-3">
+                <th className="w-12 px-6 py-4 text-left">
                   <Checkbox />
                 </th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">LEAD</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">STATUS</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">VALOR</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">RESPONSÁVEL</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">CONTATO</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">TAGS</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">AÇÕES</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  LEAD
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  STATUS
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  RESPONSÁVEL
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  ÚLTIMO CONTATO
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  PRÓXIMO CONTATO
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  TAGS
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  AÇÕES
+                </th>
               </tr>
             </thead>
-            <tbody>
-              {leadsWithContacts.map((lead, index) => {
+            <tbody className="bg-white divide-y divide-gray-100">
+              {leadsWithContacts.map((lead) => {
                 const columnInfo = getColumnInfo(lead.column_id);
-                const contactInfo = getContactInfo(lead);
+                const nextContactInfo = getContactInfo(lead);
+                const lastContactInfo = getLastContactInfo(lead);
                 
                 return (
                   <tr 
                     key={lead.id} 
-                    className={cn(
-                      "border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer",
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
-                    )}
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => handleOpenLeadDetails(lead)}
                   >
-                    <td className="px-4 py-4">
+                    <td className="px-6 py-4">
                       <Checkbox onClick={(e) => e.stopPropagation()} />
                     </td>
                     
                     {/* Lead Info */}
-                    <td className="px-4 py-4">
+                    <td className="px-6 py-4">
                       <div>
                         <div className="font-medium text-gray-900">{lead.name}</div>
                         <div className="text-sm text-gray-500">{lead.email}</div>
@@ -168,7 +199,7 @@ const OptimizedListView = React.memo(({
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-4">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-2 h-2 rounded-full" 
@@ -178,15 +209,8 @@ const OptimizedListView = React.memo(({
                       </div>
                     </td>
 
-                    {/* Value */}
-                    <td className="px-4 py-4">
-                      <span className="text-sm font-medium text-gray-900">
-                        R$ 15.000
-                      </span>
-                    </td>
-
                     {/* Responsible */}
-                    <td className="px-4 py-4">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
@@ -199,13 +223,24 @@ const OptimizedListView = React.memo(({
                       </div>
                     </td>
 
-                    {/* Contact */}
-                    <td className="px-4 py-4">
-                      {contactInfo ? (
+                    {/* Last Contact */}
+                    <td className="px-6 py-4">
+                      {lastContactInfo ? (
+                        <div className="text-sm text-gray-600">
+                          {lastContactInfo.text}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+
+                    {/* Next Contact */}
+                    <td className="px-6 py-4">
+                      {nextContactInfo ? (
                         <div className="flex items-center gap-1">
-                          <contactInfo.icon className={cn("h-4 w-4", contactInfo.color)} />
-                          <span className={cn("text-sm", contactInfo.color)}>
-                            {contactInfo.text}
+                          <nextContactInfo.icon className={cn("h-4 w-4", nextContactInfo.color)} />
+                          <span className={cn("text-sm", nextContactInfo.color)}>
+                            {nextContactInfo.text}
                           </span>
                         </div>
                       ) : (
@@ -214,14 +249,14 @@ const OptimizedListView = React.memo(({
                     </td>
 
                     {/* Tags */}
-                    <td className="px-4 py-4">
+                    <td className="px-6 py-4">
                       <div className="flex gap-1">
                         {lead.tags && lead.tags.length > 0 ? (
                           lead.tags.slice(0, 2).map((tag) => (
                             <Badge 
                               key={tag.id}
-                              variant="outline" 
-                              className="text-xs px-2 py-0"
+                              variant="secondary" 
+                              className="text-xs px-2 py-1"
                               style={{ 
                                 backgroundColor: tag.color + '15', 
                                 color: tag.color,
@@ -243,20 +278,18 @@ const OptimizedListView = React.memo(({
                     </td>
 
                     {/* Actions */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenLeadDetails(lead);
-                          }}
-                          className="h-8 w-8 p-0 hover:bg-gray-100"
-                        >
-                          <Eye className="h-4 w-4 text-gray-500" />
-                        </Button>
-                      </div>
+                    <td className="px-6 py-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenLeadDetails(lead);
+                        }}
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -264,6 +297,7 @@ const OptimizedListView = React.memo(({
             </tbody>
           </table>
 
+          {/* Empty State */}
           {leadsWithContacts.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               {debouncedSearch ? 
@@ -273,6 +307,20 @@ const OptimizedListView = React.memo(({
             </div>
           )}
         </ScrollArea>
+      </div>
+
+      {/* Footer Stats */}
+      <div className="border-t border-gray-200 px-6 py-3 bg-gray-50">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center gap-6">
+            <span>Total de leads: <strong>20</strong></span>
+            <span>Valor potencial: <strong>R$ 456.500,00</strong></span>
+            <span>Fechados este mês: <strong>5</strong></span>
+          </div>
+          <div>
+            Última atualização: hoje às 02:33
+          </div>
+        </div>
       </div>
     </div>
   );
