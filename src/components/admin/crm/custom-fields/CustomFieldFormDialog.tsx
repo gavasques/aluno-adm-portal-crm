@@ -194,12 +194,12 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="group_id">Grupo</Label>
-              <Select value={watch('group_id')} onValueChange={(value) => setValue('group_id', value)}>
+              <Select value={watch('group_id') || 'no_group'} onValueChange={(value) => setValue('group_id', value === 'no_group' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um grupo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem grupo</SelectItem>
+                  <SelectItem value="no_group">Sem grupo</SelectItem>
                   {fieldGroups.map((group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.name}

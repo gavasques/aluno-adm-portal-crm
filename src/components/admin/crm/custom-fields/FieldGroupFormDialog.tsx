@@ -135,14 +135,14 @@ export const FieldGroupFormDialog: React.FC<FieldGroupFormDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="pipeline_id">Pipeline (Opcional)</Label>
             <Select
-              value={watch('pipeline_id') || ''}
-              onValueChange={(value) => setValue('pipeline_id', value || '')}
+              value={watch('pipeline_id') || 'all_pipelines'}
+              onValueChange={(value) => setValue('pipeline_id', value === 'all_pipelines' ? '' : value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um pipeline (ou deixe vazio para todos)" />
+                <SelectValue placeholder="Selecione um pipeline" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os pipelines</SelectItem>
+                <SelectItem value="all_pipelines">Todos os pipelines</SelectItem>
                 {pipelines.map((pipeline) => (
                   <SelectItem key={pipeline.id} value={pipeline.id}>
                     {pipeline.name}
