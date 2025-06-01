@@ -43,7 +43,10 @@ const ModernCRMLeadFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[90vw] h-[90vh] max-h-[90vh] p-0 overflow-hidden bg-white border border-gray-200 shadow-lg">
+      <DialogContent 
+        className="max-w-4xl w-[90vw] h-[90vh] max-h-[90vh] p-0 overflow-hidden bg-white border border-gray-200 shadow-lg"
+        hideCloseButton={true}
+      >
         <AnimatePresence mode="wait">
           {loading && mode === 'edit' ? (
             <motion.div
