@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DateRange } from 'react-day-picker';
 import { useCRMReports } from '@/hooks/crm/useCRMReports';
 import CRMReportsOverview from './CRMReportsOverview';
 import PipelineReports from './PipelineReports';
@@ -23,7 +24,7 @@ import ResponsibleReports from './ResponsibleReports';
 import TrendReports from './TrendReports';
 
 const CRMReports: React.FC = () => {
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date()
   });
@@ -79,6 +80,7 @@ const CRMReports: React.FC = () => {
                 onSelect={setDateRange}
                 numberOfMonths={2}
                 locale={ptBR}
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
