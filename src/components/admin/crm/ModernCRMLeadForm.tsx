@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
 import { CRMLead, CRMLeadInput } from '@/types/crm.types';
-import { X, Save, User, Building, Amazon, Target, MessageCircle, Tag } from 'lucide-react';
+import { X, Save, User, Building, Package, Target, MessageCircle, Tag } from 'lucide-react';
 import ModernFloatingInput from './form-components/ModernFloatingInput';
 import ModernFloatingTextarea from './form-components/ModernFloatingTextarea';
 import ModernTagsSelector from './form-components/ModernTagsSelector';
@@ -183,7 +182,7 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
     {
       id: 'amazon',
       title: 'Amazon',
-      icon: Amazon,
+      icon: Package,
       color: 'from-orange-500/20 to-yellow-500/20'
     },
     {
@@ -315,7 +314,7 @@ const ModernCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCan
             className={`p-6 rounded-2xl bg-gradient-to-br ${formSections[2].color} backdrop-blur-sm border border-white/20`}
           >
             <div className="flex items-center gap-3 mb-4">
-              <Amazon className="h-5 w-5 text-orange-600" />
+              <Package className="h-5 w-5 text-orange-600" />
               <h3 className="font-semibold text-slate-800 dark:text-slate-100">Amazon</h3>
             </div>
             <div className="space-y-4">
