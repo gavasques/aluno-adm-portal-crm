@@ -396,6 +396,137 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_custom_field_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_custom_field_values: {
+        Row: {
+          created_at: string
+          field_id: string
+          field_value: string | null
+          id: string
+          lead_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_id: string
+          field_value?: string | null
+          id?: string
+          lead_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_id?: string
+          field_value?: string | null
+          id?: string
+          lead_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_custom_field_values_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "crm_custom_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_custom_field_values_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_custom_fields: {
+        Row: {
+          created_at: string
+          field_key: string
+          field_name: string
+          field_type: string
+          group_id: string | null
+          help_text: string | null
+          id: string
+          is_active: boolean
+          is_required: boolean
+          options: Json | null
+          placeholder: string | null
+          sort_order: number
+          updated_at: string
+          validation_rules: Json | null
+        }
+        Insert: {
+          created_at?: string
+          field_key: string
+          field_name: string
+          field_type: string
+          group_id?: string | null
+          help_text?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Update: {
+          created_at?: string
+          field_key?: string
+          field_name?: string
+          field_type?: string
+          group_id?: string | null
+          help_text?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number
+          updated_at?: string
+          validation_rules?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_custom_fields_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "crm_custom_field_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_lead_attachments: {
         Row: {
           created_at: string | null
