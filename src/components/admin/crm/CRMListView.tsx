@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -78,7 +77,7 @@ const CRMListView = ({ filters, onEditLead }: CRMListViewProps) => {
   };
 
   const handleViewDetails = (lead: CRMLead) => {
-    navigate(`/admin/crm/lead/${lead.id}`);
+    navigate(`/admin/lead/${lead.id}`);
   };
 
   if (loading) {
