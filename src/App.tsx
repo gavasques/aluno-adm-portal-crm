@@ -18,7 +18,6 @@ import StudentLayout from '@/layout/StudentLayout';
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard';
 import CRM from '@/pages/admin/CRM';
-import CRMLeadDetail from '@/pages/admin/CRMLeadDetail';
 import LeadDetail from '@/pages/admin/LeadDetail';
 import Users from '@/pages/admin/Users';
 import ModernUsers from '@/pages/admin/ModernUsers';
@@ -142,7 +141,6 @@ function App() {
                     <Route path="tarefas" element={<Tasks />} />
                     <Route path="tarefas/:id" element={<TaskDetail />} />
                     <Route path="crm" element={<CRM />} />
-                    <Route path="crm/lead/:leadId" element={<CRMLeadDetail />} />
                     <Route path="lead/:id" element={<LeadDetail />} />
                     
                     {/* Geral ADM */}
