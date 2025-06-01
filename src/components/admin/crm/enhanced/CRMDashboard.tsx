@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -59,7 +60,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   return (
     <div className="h-full flex flex-col">
       <Tabs defaultValue="pipeline" className="h-full flex flex-col">
-        <div className="flex items-center justify-between mb-3 px-3">
+        <div className="flex items-center justify-between mb-4 px-1">
           <TabsList>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
@@ -102,9 +103,9 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </div>
 
-        <TabsContent value="pipeline" className="flex-1 flex flex-col min-h-0 px-3">
+        <TabsContent value="pipeline" className="flex-1 flex flex-col min-h-0 px-1">
           {/* Filters - Compacto */}
-          <div className="mb-3">
+          <div className="mb-4">
             <CRMFilters
               pipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
@@ -114,22 +115,20 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
 
           {/* Main Content - Ocupa todo espaço restante */}
-          <Card className="flex-1 min-h-0 border-0 shadow-none bg-transparent">
-            <CardContent className="p-0 h-full">
-              {activeView === 'kanban' ? (
-                <OptimizedKanbanBoard
+          <div className="flex-1 min-h-0">
+            {activeView === 'kanban' ? (
+              <OptimizedKanbanBoard
+                filters={effectiveFilters}
+                pipelineId={selectedPipelineId}
+              />
+            ) : (
+              <div className="h-full overflow-auto">
+                <CRMListView
                   filters={effectiveFilters}
-                  pipelineId={selectedPipelineId}
                 />
-              ) : (
-                <div className="p-4 h-full overflow-auto">
-                  <CRMListView
-                    filters={effectiveFilters}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="relatorios" className="flex-1 px-6 min-h-0">

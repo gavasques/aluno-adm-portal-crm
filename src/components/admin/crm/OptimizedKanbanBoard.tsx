@@ -149,7 +149,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
       >
         <div className="w-full h-full overflow-x-auto overflow-y-hidden">
           <div className={cn(
-            "flex gap-4 min-w-max h-full p-2 transition-all duration-300",
+            "flex gap-4 min-w-max h-full transition-all duration-300",
             activeLead && "pointer-events-none"
           )}>
             {pipelineColumns.map(column => {

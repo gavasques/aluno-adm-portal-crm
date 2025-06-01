@@ -17,7 +17,7 @@ const CRM = () => {
       transition={{ duration: 0.4 }}
       className="h-full flex flex-col"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">CRM</h1>
           <p className="text-gray-600">Gestão de leads e pipeline de vendas</p>
