@@ -17,13 +17,18 @@ export const useCRMLeadDetail = (leadId: string) => {
 
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('🔍 Fetching lead details for ID:', leadId);
+      
+      // Buscar dados do lead com relações usando sintaxe mais simples
       const { data, error } = await supabase
         .from('crm_leads')
         .select(`
           *,
           pipeline:crm_pipelines(id, name, sort_order, is_active, created_at, updated_at),
           column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
-          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
+          responsible:profiles(id, name, email),
           tags:crm_lead_tags(
             tag:crm_tags(id, name, color, created_at)
           )
@@ -31,9 +36,14 @@ export const useCRMLeadDetail = (leadId: string) => {
         .eq('id', leadId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching lead:', error);
+        throw error;
+      }
 
       if (data) {
+        console.log('✅ Lead data fetched successfully:', data);
+        
         // Transform the data to match CRMLead interface
         const transformedLead: CRMLead = {
           ...data,
@@ -64,10 +74,14 @@ export const useCRMLeadDetail = (leadId: string) => {
         };
 
         setLead(transformedLead);
+        console.log('✅ Lead transformed and set:', transformedLead);
+      } else {
+        console.log('⚠️ No lead data returned');
+        setError('Lead não encontrado');
       }
     } catch (err) {
-      console.error('Erro ao buscar lead:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      console.error('❌ Error in fetchLead:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar lead');
     } finally {
       setLoading(false);
     }
