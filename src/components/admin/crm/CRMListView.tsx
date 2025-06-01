@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import ListView from './ListView';
+import OptimizedListView from './OptimizedListView';
 
 interface CRMListViewProps {
   filters: CRMFilters;
@@ -38,9 +38,9 @@ const CRMListView: React.FC<CRMListViewProps> = ({ filters, onCreateLead }) => {
         )}
       </div>
 
-      {/* ListView Component */}
+      {/* OptimizedListView Component */}
       <div className="flex-1 min-h-0">
-        <ListView
+        <OptimizedListView
           filters={filters}
           columns={columns}
           searchQuery={searchQuery}

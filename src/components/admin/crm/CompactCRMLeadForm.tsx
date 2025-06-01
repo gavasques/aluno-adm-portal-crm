@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,7 @@ import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schema
 import { CRMLead, CRMLeadInput } from '@/types/crm.types';
 import { X, Save, User, Building, Package } from 'lucide-react';
 import ModernTagsSelector from './form-components/ModernTagsSelector';
+import OptimizedTagsSelector from './form-components/OptimizedTagsSelector';
 
 interface CompactCRMLeadFormProps {
   pipelineId: string;
@@ -34,7 +34,8 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
   const [loading, setLoading] = useState(false);
   const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
   const { columns } = useCRMPipelines();
-  const { updateLead, updateLeadTags } = useCRMLeadUpdate();
+  const { updateLead } = useCRMLeadUpdate();
+  const { updateLeadTags } = useOptimizedCRMTags();
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
@@ -399,7 +400,7 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
 
                 <div className="space-y-1">
                   <Label className="text-xs font-medium">Tags</Label>
-                  <ModernTagsSelector
+                  <OptimizedTagsSelector
                     selectedTags={watch('tags') || []}
                     onTagsChange={(tags) => setValue('tags', tags)}
                   />

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMData } from '@/hooks/crm/useCRMData';
+import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
 import KanbanColumn from './KanbanColumn';
 import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
@@ -19,14 +19,14 @@ interface OptimizedKanbanBoardProps {
 const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
   const { columns, loading: columnsLoading } = useCRMPipelines();
-  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
+  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn } = useOptimizedCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
 
-  console.log('🎯 Kanban Debug - Pipeline ID:', pipelineId);
-  console.log('🎯 Kanban Debug - Columns:', columns);
-  console.log('🎯 Kanban Debug - Leads by Column:', leadsByColumn);
-  console.log('🎯 Kanban Debug - Loading states:', { columnsLoading, leadsLoading });
+  console.log('🎯 OptimizedKanban Debug - Pipeline ID:', pipelineId);
+  console.log('🎯 OptimizedKanban Debug - Columns:', columns);
+  console.log('🎯 OptimizedKanban Debug - Leads by Column:', leadsByColumn);
+  console.log('🎯 OptimizedKanban Debug - Loading states:', { columnsLoading, leadsLoading });
 
   // Configurar sensores mais responsivos para drag and drop
   const sensors = useSensors(
