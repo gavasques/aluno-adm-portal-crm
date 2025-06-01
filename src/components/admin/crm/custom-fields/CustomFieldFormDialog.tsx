@@ -13,15 +13,12 @@ import { z } from 'zod';
 import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
 import { CRMCustomField } from '@/types/crm-custom-fields.types';
 import { Plus, Trash2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 const fieldSchema = z.object({
   field_key: z.string().min(1, 'Chave do campo é obrigatória').regex(/^[a-z0-9_]+$/, 'Use apenas letras minúsculas, números e underscore'),
   field_name: z.string().min(1, 'Nome do campo é obrigatório'),
   field_type: z.enum(['text', 'number', 'phone', 'boolean', 'select']),
   group_id: z.string().optional(),
-  pipeline_id: z.string().optional(),
   is_required: z.boolean().default(false),
   placeholder: z.string().optional(),
   help_text: z.string().optional(),
@@ -44,21 +41,6 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
   const { fieldGroups, createCustomField, updateCustomField } = useCRMCustomFields();
   const isEditing = !!field;
 
-  // Buscar pipelines
-  const { data: pipelines = [] } = useQuery({
-    queryKey: ['crm-pipelines'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('crm_pipelines')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('sort_order');
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
   const {
     register,
     handleSubmit,
@@ -73,7 +55,6 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
       field_name: '',
       field_type: 'text',
       group_id: '',
-      pipeline_id: '',
       is_required: false,
       placeholder: '',
       help_text: '',
@@ -91,7 +72,6 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
         field_name: field.field_name,
         field_type: field.field_type,
         group_id: field.group_id || '',
-        pipeline_id: (field as any).pipeline_id || '',
         is_required: field.is_required,
         placeholder: field.placeholder || '',
         help_text: field.help_text || '',
@@ -103,7 +83,6 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
         field_name: '',
         field_type: 'text',
         group_id: '',
-        pipeline_id: '',
         is_required: false,
         placeholder: '',
         help_text: '',
@@ -119,7 +98,6 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
         field_name: data.field_name,
         field_type: data.field_type,
         group_id: data.group_id || undefined,
-        pipeline_id: data.pipeline_id || undefined,
         is_required: data.is_required,
         placeholder: data.placeholder || undefined,
         help_text: data.help_text || undefined,
@@ -229,27 +207,10 @@ export const CustomFieldFormDialog: React.FC<CustomFieldFormDialogProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500">
+                Campos sem grupo aparecerão em todos os pipelines
+              </p>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="pipeline_id">Pipeline</Label>
-            <Select value={watch('pipeline_id')} onValueChange={(value) => setValue('pipeline_id', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os pipelines" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os pipelines</SelectItem>
-                {pipelines.map((pipeline) => (
-                  <SelectItem key={pipeline.id} value={pipeline.id}>
-                    {pipeline.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500">
-              Deixe vazio para aparecer em todos os pipelines
-            </p>
           </div>
 
           <div className="space-y-2">

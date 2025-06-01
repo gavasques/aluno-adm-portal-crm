@@ -29,9 +29,11 @@ export const CustomFieldsList: React.FC<CustomFieldsListProps> = ({ onEditField 
     return group?.name || 'Grupo não encontrado';
   };
 
-  const getPipelineName = (pipelineId?: string) => {
-    if (!pipelineId) return 'Todos os pipelines';
-    const pipeline = pipelines.find(p => p.id === pipelineId);
+  const getPipelineName = (groupId?: string) => {
+    if (!groupId) return 'Todos os pipelines';
+    const group = allFieldGroups.find(g => g.id === groupId);
+    if (!group?.pipeline_id) return 'Todos os pipelines';
+    const pipeline = pipelines.find(p => p.id === group.pipeline_id);
     return pipeline?.name || 'Pipeline não encontrado';
   };
 
@@ -138,7 +140,7 @@ export const CustomFieldsList: React.FC<CustomFieldsListProps> = ({ onEditField 
                 </TableCell>
                 <TableCell>
                   <p className="text-sm text-gray-600">
-                    {getPipelineName(field.pipeline_id)}
+                    {getPipelineName(field.group_id)}
                   </p>
                 </TableCell>
                 <TableCell>

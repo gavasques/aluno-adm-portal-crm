@@ -13,7 +13,6 @@ export interface CRMCustomFieldGroup {
 export interface CRMCustomField {
   id: string;
   group_id?: string;
-  pipeline_id?: string;
   field_key: string;
   field_name: string;
   field_type: 'text' | 'number' | 'phone' | 'boolean' | 'select';
@@ -41,7 +40,6 @@ export interface CRMCustomFieldValue {
 
 export interface CRMCustomFieldInput {
   group_id?: string;
-  pipeline_id?: string;
   field_key: string;
   field_name: string;
   field_type: 'text' | 'number' | 'phone' | 'boolean' | 'select';
