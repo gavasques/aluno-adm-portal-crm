@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
@@ -103,7 +104,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   }, [leadsByColumn, moveLeadToColumn]);
 
   const handleOpenDetail = useCallback((lead: CRMLead) => {
-    navigate(`/admin/lead/${lead.id}`);
+    console.log('🔗 Navigating to lead detail:', lead.id);
+    navigate(`/admin/crm/lead/${lead.id}`);
   }, [navigate]);
 
   const handleCreateSuccess = useCallback(() => {

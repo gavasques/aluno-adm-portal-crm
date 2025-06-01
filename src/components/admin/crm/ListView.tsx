@@ -7,13 +7,14 @@ import { Search, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CRMFilters, CRMLead, CRMPipelineColumn } from "@/types/crm.types";
 import { useCRMData } from "@/hooks/crm/useCRMData";
+import { useNavigate } from "react-router-dom";
 
 interface ListViewProps {
   filters: CRMFilters;
   columns: CRMPipelineColumn[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onOpenLeadDetails: (lead: CRMLead) => void;
+  onOpenLeadDetails?: (lead: CRMLead) => void;
 }
 
 const ListView = React.memo(({ 
@@ -23,7 +24,17 @@ const ListView = React.memo(({
   onSearchChange, 
   onOpenLeadDetails 
 }: ListViewProps) => {
+  const navigate = useNavigate();
   const { leadsWithContacts, loading } = useCRMData(filters);
+
+  const handleOpenLeadDetails = (lead: CRMLead) => {
+    console.log('🔗 ListView - Navigating to lead detail:', lead.id);
+    if (onOpenLeadDetails) {
+      onOpenLeadDetails(lead);
+    } else {
+      navigate(`/admin/crm/lead/${lead.id}`);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -106,7 +117,7 @@ const ListView = React.memo(({
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => onOpenLeadDetails(lead)}
+                          onClick={() => handleOpenLeadDetails(lead)}
                           className="flex items-center gap-1"
                         >
                           <Eye className="h-4 w-4" />

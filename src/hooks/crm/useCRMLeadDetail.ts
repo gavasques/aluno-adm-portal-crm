@@ -10,6 +10,7 @@ export const useCRMLeadDetail = (leadId: string) => {
 
   const fetchLead = async () => {
     if (!leadId) {
+      console.log('⚠️ useCRMLeadDetail: No leadId provided');
       setLead(null);
       setLoading(false);
       return;
@@ -19,7 +20,7 @@ export const useCRMLeadDetail = (leadId: string) => {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 Fetching lead details for ID:', leadId);
+      console.log('🔍 useCRMLeadDetail: Fetching lead details for ID:', leadId);
       
       // Buscar dados do lead com relações usando foreign key específico
       const { data, error: queryError } = await supabase
@@ -36,13 +37,15 @@ export const useCRMLeadDetail = (leadId: string) => {
         .eq('id', leadId)
         .maybeSingle();
 
+      console.log('🔍 useCRMLeadDetail: Raw query result:', { data, queryError });
+
       if (queryError) {
-        console.error('❌ Error fetching lead:', queryError);
+        console.error('❌ useCRMLeadDetail: Query error:', queryError);
         throw queryError;
       }
 
       if (data) {
-        console.log('✅ Lead data fetched successfully:', data);
+        console.log('✅ useCRMLeadDetail: Lead data fetched successfully:', data);
         
         // Transform the data to match CRMLead interface
         const transformedLead: CRMLead = {
@@ -82,15 +85,15 @@ export const useCRMLeadDetail = (leadId: string) => {
           } : undefined
         };
 
+        console.log('✅ useCRMLeadDetail: Lead transformed and set:', transformedLead);
         setLead(transformedLead);
-        console.log('✅ Lead transformed and set:', transformedLead);
       } else {
-        console.log('⚠️ No lead data returned for ID:', leadId);
+        console.log('⚠️ useCRMLeadDetail: No lead data returned for ID:', leadId);
         setLead(null);
         setError('Lead não encontrado');
       }
     } catch (err) {
-      console.error('❌ Error in fetchLead:', err);
+      console.error('❌ useCRMLeadDetail: Error in fetchLead:', err);
       setLead(null);
       setError(err instanceof Error ? err.message : 'Erro ao carregar lead');
     } finally {
@@ -99,6 +102,7 @@ export const useCRMLeadDetail = (leadId: string) => {
   };
 
   useEffect(() => {
+    console.log('🔄 useCRMLeadDetail: Effect triggered with leadId:', leadId);
     fetchLead();
   }, [leadId]);
 
