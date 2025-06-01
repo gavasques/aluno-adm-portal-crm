@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -215,8 +214,7 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
 
     } catch (error) {
       console.error('❌ Erro ao buscar dados CRM:', error);
-      toast.error('Erro ao carregar dados do CRM');
-      return [];
+      throw error;
     }
   }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags]);
 
@@ -229,8 +227,26 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
   });
 
   const moveLeadToColumn = useCallback(async (leadId: string, newColumnId: string) => {
+    const queryKey = ['optimized-crm-leads', debouncedFilters];
+    
+    // 1. Backup dos dados atuais para rollback
+    const previousData = queryClient.getQueryData<LeadWithContacts[]>(queryKey);
+    
+    console.log(`🔄 Iniciando movimento otimista do lead ${leadId} para coluna ${newColumnId}`);
+    
+    // 2. Atualização otimista do cache
+    queryClient.setQueryData<LeadWithContacts[]>(queryKey, (oldData) => {
+      if (!oldData) return oldData;
+      
+      return oldData.map(lead => 
+        lead.id === leadId 
+          ? { ...lead, column_id: newColumnId }
+          : lead
+      );
+    });
+
     try {
-      console.log(`🔄 Starting move operation for lead ${leadId} to column ${newColumnId}`);
+      console.log('🔄 Atualizando no banco de dados...');
       
       const { error } = await supabase
         .from('crm_leads')
@@ -241,26 +257,30 @@ export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
         .eq('id', leadId);
 
       if (error) {
-        console.error('❌ Database error:', error);
+        console.error('❌ Erro no banco:', error);
         throw error;
       }
 
-      console.log('✅ Database update successful');
-
-      // Invalidação mais específica e forçada do cache
-      await queryClient.invalidateQueries({ 
+      console.log('✅ Lead movido com sucesso no banco');
+      
+      // 3. Invalidar cache de forma suave (sem refetch forçado)
+      queryClient.invalidateQueries({ 
         queryKey: ['optimized-crm-leads'],
         exact: false,
-        refetchType: 'active'
+        refetchType: 'none' // Não forçar refetch imediato
       });
       
-      console.log('✅ Cache invalidated successfully');
-      
     } catch (error) {
-      console.error('❌ Error in moveLeadToColumn:', error);
+      console.error('❌ Erro ao mover lead, fazendo rollback:', error);
+      
+      // 4. Rollback: restaurar dados anteriores
+      if (previousData) {
+        queryClient.setQueryData(queryKey, previousData);
+      }
+      
       throw error;
     }
-  }, [queryClient]);
+  }, [queryClient, debouncedFilters]);
 
   const leadsByColumn = useMemo(() => {
     const grouped: Record<string, LeadWithContacts[]> = {};

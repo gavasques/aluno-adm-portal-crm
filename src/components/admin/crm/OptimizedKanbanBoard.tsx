@@ -20,10 +20,11 @@ interface OptimizedKanbanBoardProps {
 const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
   const { columns, loading: columnsLoading } = useCRMPipelines();
-  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useOptimizedCRMData(filters);
+  const { leadsByColumn, loading: leadsLoading, moveLeadToColumn } = useOptimizedCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   console.log('🎯 OptimizedKanban Debug - Pipeline ID:', pipelineId);
   console.log('🎯 OptimizedKanban Debug - Columns:', columns);
@@ -55,6 +56,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
   }, [columns, pipelineId]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    if (isMoving) return; // Prevenir múltiplos drags simultâneos
+    
     const leadId = event.active.id as string;
     
     const lead = Object.values(leadsByColumn)
@@ -70,7 +73,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
     setActiveColumnId(currentColumnId || null);
     
     console.log('🔄 Drag started for lead:', leadId, 'in column:', currentColumnId);
-  }, [leadsByColumn]);
+  }, [leadsByColumn, isMoving]);
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { over } = event;
@@ -86,8 +89,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
     setActiveColumnId(null);
     setIsDragging(false);
 
-    if (!over) {
-      console.log('❌ Drag cancelled - no drop target');
+    if (!over || isMoving) {
+      console.log('❌ Drag cancelled - no drop target or already moving');
       return;
     }
 
@@ -110,31 +113,28 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
     }
 
     console.log(`🔄 Moving lead ${leadId} from ${currentLead.column_id} to ${newColumnId}`);
+    
+    setIsMoving(true);
 
     try {
       await moveLeadToColumn(leadId, newColumnId);
       console.log('✅ Lead moved successfully');
       toast.success('Lead movido com sucesso');
       
-      // Force refetch to ensure data consistency
-      setTimeout(() => {
-        refetch();
-      }, 100);
-      
     } catch (error) {
       console.error('❌ Error moving lead:', error);
-      toast.error('Erro ao mover lead. Atualizando dados...');
+      toast.error('Erro ao mover lead. Operação revertida.');
       
-      // Force refetch on error to restore correct state
-      refetch();
+    } finally {
+      setIsMoving(false);
     }
-  }, [leadsByColumn, moveLeadToColumn, refetch]);
+  }, [leadsByColumn, moveLeadToColumn, isMoving]);
 
   const handleOpenDetail = useCallback((lead: CRMLead) => {
-    if (isDragging) return; // Evitar navegação durante drag
+    if (isDragging || isMoving) return; // Evitar navegação durante drag/move
     console.log('🔗 Navigating to modern lead detail page:', lead.id);
     navigate(`/admin/lead/${lead.id}`);
-  }, [navigate, isDragging]);
+  }, [navigate, isDragging, isMoving]);
 
   const loading = columnsLoading || leadsLoading;
 
@@ -169,7 +169,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
       <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
         <div className={cn(
           "flex gap-4 min-w-max h-full px-3 transition-all duration-300",
-          isDragging && "pointer-events-none select-none"
+          (isDragging || isMoving) && "pointer-events-none select-none"
         )}>
           {pipelineColumns.map(column => {
             const columnLeads = leadsByColumn[column.id] || [];
@@ -189,6 +189,18 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId, onCreateLead }: 
             );
           })}
         </div>
+        
+        {/* Loading overlay durante movimento */}
+        {isMoving && (
+          <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-4 shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm font-medium">Movendo lead...</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <DragOverlay>
