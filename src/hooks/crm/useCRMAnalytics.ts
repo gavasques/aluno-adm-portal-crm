@@ -51,7 +51,7 @@ export const useCRMAnalytics = (dateRange: { from: Date; to: Date }) => {
   const { data: analyticsMetrics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['crm-analytics-metrics', dateRange],
     queryFn: async (): Promise<AnalyticsMetrics> => {
-      // Buscar dados de leads
+      // Buscar dados de leads com join correto para profiles
       const { data: leadsData, error: leadsError } = await supabase
         .from('crm_leads')
         .select(`
@@ -63,7 +63,7 @@ export const useCRMAnalytics = (dateRange: { from: Date; to: Date }) => {
           responsible_id,
           pipeline:crm_pipelines(name),
           column:crm_pipeline_columns(name),
-          responsible:profiles(name)
+          responsible:profiles!crm_leads_responsible_id_fkey(name)
         `)
         .gte('created_at', format(dateRange.from, 'yyyy-MM-dd'))
         .lte('created_at', format(dateRange.to, 'yyyy-MM-dd'));

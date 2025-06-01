@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +40,12 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
   const effectiveFilters: CRMFiltersType = {
     ...filters,
     pipeline_id: selectedPipelineId
+  };
+
+  // Garantir que dateRange sempre tenha from e to definidos para Analytics
+  const safeDateRange = {
+    from: dateRange?.from || subDays(new Date(), 30),
+    to: dateRange?.to || new Date()
   };
 
   const handleCreateLead = () => {
@@ -225,7 +230,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
 
         <TabsContent value="analytics" className="space-y-4">
           <AnalyticsDashboard 
-            dateRange={dateRange || { from: subDays(new Date(), 30), to: new Date() }}
+            dateRange={safeDateRange}
           />
         </TabsContent>
 
