@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { CRMLead } from '@/types/crm.types';
-import { X, Save, User } from 'lucide-react';
+import { Save, User } from 'lucide-react';
 import { useLeadForm } from '@/hooks/crm/useLeadForm';
 import { useLeadFormData } from '@/hooks/crm/useLeadFormData';
 import { LeadBasicInfoSection } from './form-sections/LeadBasicInfoSection';
@@ -49,7 +49,7 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header compacto */}
+      {/* Header compacto sem botão de fechar */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -64,15 +64,6 @@ const CompactCRMLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, onCa
             </p>
           </div>
         </div>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          className="h-8 w-8 p-0 hover:bg-gray-200"
-        >
-          <X className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Form Content compacto */}
