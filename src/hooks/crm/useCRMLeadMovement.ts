@@ -12,6 +12,12 @@ export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {
     
     console.log(`🔄 Iniciando movimento do lead ${leadId} para coluna ${newColumnId}`);
     
+    // Validações iniciais
+    if (!leadId || !newColumnId) {
+      console.error('❌ IDs inválidos:', { leadId, newColumnId });
+      throw new Error('IDs de lead ou coluna inválidos');
+    }
+    
     // 1. Backup dos dados atuais para rollback
     const previousData = queryClient.getQueryData<LeadWithContacts[]>(queryKey);
     
@@ -52,6 +58,19 @@ export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {
     try {
       console.log('💾 Persistindo no banco de dados...');
       
+      // Verificar se a coluna de destino existe
+      const { data: columnExists, error: columnError } = await supabase
+        .from('crm_pipeline_columns')
+        .select('id')
+        .eq('id', newColumnId)
+        .eq('is_active', true)
+        .single();
+
+      if (columnError || !columnExists) {
+        console.error('❌ Coluna de destino não encontrada ou inativa:', columnError);
+        throw new Error('Coluna de destino não encontrada');
+      }
+
       const { error } = await supabase
         .from('crm_leads')
         .update({ 

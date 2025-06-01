@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -234,40 +233,50 @@ const LeadDataTab = ({ lead, onUpdate }: LeadDataTabProps) => {
           </CardContent>
         </Card>
 
-        {/* Tags */}
+        {/* Tags - APENAS SELEÇÃO, SEM OPÇÃO DE CRIAR */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Tags</CardTitle>
           </CardHeader>
           <CardContent>
             {isEditing ? (
-              <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
-                  <Badge
-                    key={tag.id}
-                    variant={selectedTags.includes(tag.id) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    style={{
-                      backgroundColor: selectedTags.includes(tag.id) ? tag.color : 'transparent',
-                      borderColor: tag.color,
-                      color: selectedTags.includes(tag.id) ? 'white' : tag.color
-                    }}
-                    onClick={() => handleTagToggle(tag.id)}
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
+              <div className="space-y-3">
+                <Label className="text-sm text-gray-700">Selecione as tags aplicáveis:</Label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map(tag => (
+                    <Badge
+                      key={tag.id}
+                      variant={selectedTags.includes(tag.id) ? "default" : "outline"}
+                      className="cursor-pointer hover:shadow-sm transition-all"
+                      style={{
+                        backgroundColor: selectedTags.includes(tag.id) ? tag.color : 'transparent',
+                        borderColor: tag.color,
+                        color: selectedTags.includes(tag.id) ? 'white' : tag.color
+                      }}
+                      onClick={() => handleTagToggle(tag.id)}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+                {tags.length === 0 && (
+                  <p className="text-sm text-gray-500">Nenhuma tag disponível. Entre em contato com o administrador para criar tags.</p>
+                )}
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {lead.tags?.map(tag => (
-                  <Badge
-                    key={tag.id}
-                    style={{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color + '40' }}
-                  >
-                    {tag.name}
-                  </Badge>
-                )) || <p className="text-sm text-gray-500">Nenhuma tag adicionada</p>}
+                {lead.tags && lead.tags.length > 0 ? (
+                  lead.tags.map(tag => (
+                    <Badge
+                      key={tag.id}
+                      style={{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color + '40' }}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">Nenhuma tag adicionada</p>
+                )}
               </div>
             )}
           </CardContent>

@@ -31,15 +31,28 @@ export const useDragAndDrop = ({ leadsByColumn, moveLeadToColumn }: UseDragAndDr
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    if (isMoving) return; // Prevenir múltiplos drags simultâneos
+    if (isMoving) {
+      console.log('❌ Drag blocked - already moving a lead');
+      return;
+    }
     
     const leadId = event.active.id as string;
+    
+    if (!leadId) {
+      console.error('❌ No lead ID found in drag event');
+      return;
+    }
     
     const lead = Object.values(leadsByColumn)
       .flat()
       .find(l => l.id === leadId);
     
-    setActiveLead(lead || null);
+    if (!lead) {
+      console.error('❌ Lead not found in leadsByColumn:', leadId);
+      return;
+    }
+    
+    setActiveLead(lead);
     setIsDragging(true);
     
     const currentColumnId = Object.keys(leadsByColumn).find(columnId => 
@@ -52,10 +65,10 @@ export const useDragAndDrop = ({ leadsByColumn, moveLeadToColumn }: UseDragAndDr
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { over } = event;
-    if (over) {
+    if (over && !isMoving) {
       setActiveColumnId(over.id as string);
     }
-  }, []);
+  }, [isMoving]);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -71,6 +84,11 @@ export const useDragAndDrop = ({ leadsByColumn, moveLeadToColumn }: UseDragAndDr
 
     const leadId = active.id as string;
     const newColumnId = over.id as string;
+
+    if (!leadId || !newColumnId) {
+      console.error('❌ Missing leadId or newColumnId:', { leadId, newColumnId });
+      return;
+    }
 
     const currentLead = Object.values(leadsByColumn)
       .flat()
@@ -98,10 +116,13 @@ export const useDragAndDrop = ({ leadsByColumn, moveLeadToColumn }: UseDragAndDr
       
     } catch (error) {
       console.error('❌ Error moving lead:', error);
-      toast.error('Erro ao mover lead. Operação revertida.');
+      toast.error('Erro ao mover lead. Tente novamente.');
       
     } finally {
-      setIsMoving(false);
+      // Pequeno delay para evitar conflitos
+      setTimeout(() => {
+        setIsMoving(false);
+      }, 500);
     }
   }, [leadsByColumn, moveLeadToColumn, isMoving]);
 

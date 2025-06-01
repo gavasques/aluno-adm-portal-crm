@@ -6,11 +6,28 @@ import { CRMLead } from '@/types/crm.types';
 export const useKanbanNavigation = () => {
   const navigate = useNavigate();
 
-  const handleOpenDetail = useCallback((lead: CRMLead, isDragging: boolean, isMoving: boolean) => {
-    if (isDragging || isMoving) return; // Evitar navegação durante drag/move
-    console.log('🔗 Navigating to modern lead detail page:', lead.id);
-    navigate(`/admin/lead/${lead.id}`);
+  const handleOpenDetail = useCallback((lead: CRMLead, isDragging?: boolean, isMoving?: boolean) => {
+    // Prevenir abertura durante drag ou movimento
+    if (isDragging || isMoving) {
+      console.log('🚫 Navigation blocked - drag or move in progress');
+      return;
+    }
+
+    // Verificar se o lead existe e tem ID válido
+    if (!lead || !lead.id) {
+      console.error('❌ Invalid lead data for navigation:', lead);
+      return;
+    }
+
+    try {
+      console.log('🔄 Navigating to lead detail:', lead.id);
+      navigate(`/admin/crm/lead/${lead.id}`);
+    } catch (error) {
+      console.error('❌ Error navigating to lead detail:', error);
+    }
   }, [navigate]);
 
-  return { handleOpenDetail };
+  return {
+    handleOpenDetail
+  };
 };
