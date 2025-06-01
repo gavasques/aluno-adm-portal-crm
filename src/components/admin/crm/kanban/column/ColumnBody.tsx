@@ -33,7 +33,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
           >
             <OptimizedKanbanLeadCard
               lead={lead}
-              onOpenDetail={onOpenDetail}
+              onClick={() => onOpenDetail(lead)}
             />
           </div>
         ))}

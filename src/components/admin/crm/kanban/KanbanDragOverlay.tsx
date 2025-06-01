@@ -15,7 +15,7 @@ export const KanbanDragOverlay: React.FC<KanbanDragOverlayProps> = ({ activeLead
         <div className="transform rotate-6 scale-110 transition-transform duration-200 opacity-90">
           <OptimizedKanbanLeadCard 
             lead={activeLead} 
-            onOpenDetail={() => {}} // Desabilitar durante drag
+            onClick={() => {}} // Desabilitar durante drag
           />
         </div>
       ) : null}
