@@ -16,36 +16,52 @@ const DEFAULT_CONFIG: FieldVisibilityConfig = {
   notes_section: true
 };
 
+// Mapeamento dos nomes dos grupos para as chaves de configuração
+const GROUP_NAME_MAPPING: Record<string, keyof FieldVisibilityConfig> = {
+  'Amazon': 'amazon_section',
+  'Empresa': 'business_section',
+  'Informações da Empresa': 'business_section',
+  'Qualificação': 'qualification_section',
+  'Observações': 'notes_section',
+  'Notas': 'notes_section'
+};
+
 export const useCRMFieldVisibility = () => {
   const [config, setConfig] = useState<FieldVisibilityConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
 
   const fetchConfig = async () => {
     try {
-      const { data, error } = await supabase
-        .from('crm_field_configurations' as any)
-        .select('*')
-        .limit(1)
-        .maybeSingle();
+      const { data: groups, error } = await supabase
+        .from('crm_custom_field_groups')
+        .select('name, is_active')
+        .eq('is_active', true);
 
       if (error) {
-        console.error('Erro ao buscar configuração de campos:', error);
+        console.error('Erro ao buscar grupos de campos:', error);
         setConfig(DEFAULT_CONFIG);
         return;
       }
 
-      if (data) {
-        // Definir explicitamente o tipo para evitar erros de inferência
-        const configData = data as any;
-        setConfig({
-          amazon_section: configData.amazon_section ?? true,
-          business_section: configData.business_section ?? true,
-          qualification_section: configData.qualification_section ?? true,
-          notes_section: configData.notes_section ?? true,
+      // Iniciar com configuração padrão (tudo desabilitado se não encontrar grupos)
+      const newConfig: FieldVisibilityConfig = {
+        amazon_section: false,
+        business_section: false,
+        qualification_section: false,
+        notes_section: false
+      };
+
+      // Ativar seções baseado nos grupos ativos
+      if (groups) {
+        groups.forEach(group => {
+          const configKey = GROUP_NAME_MAPPING[group.name];
+          if (configKey) {
+            newConfig[configKey] = group.is_active;
+          }
         });
-      } else {
-        setConfig(DEFAULT_CONFIG);
       }
+
+      setConfig(newConfig);
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
       setConfig(DEFAULT_CONFIG);
@@ -56,19 +72,29 @@ export const useCRMFieldVisibility = () => {
 
   const updateFieldVisibility = async (field: keyof FieldVisibilityConfig, visible: boolean) => {
     try {
-      const newConfig = { ...config, [field]: visible };
-      
-      // Primeiro tenta atualizar, se não existir, cria
-      const { error: updateError } = await supabase
-        .from('crm_field_configurations' as any)
-        .upsert(newConfig, { onConflict: 'id' });
+      // Encontrar o nome do grupo baseado na chave
+      const groupName = Object.keys(GROUP_NAME_MAPPING).find(
+        name => GROUP_NAME_MAPPING[name] === field
+      );
 
-      if (updateError) {
-        console.error('Erro ao atualizar configuração:', updateError);
+      if (!groupName) {
+        console.error('Grupo não encontrado para o campo:', field);
         return false;
       }
 
-      setConfig(newConfig);
+      // Atualizar o status do grupo
+      const { error } = await supabase
+        .from('crm_custom_field_groups')
+        .update({ is_active: visible })
+        .eq('name', groupName);
+
+      if (error) {
+        console.error('Erro ao atualizar grupo:', error);
+        return false;
+      }
+
+      // Atualizar o estado local
+      setConfig(prev => ({ ...prev, [field]: visible }));
       return true;
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);

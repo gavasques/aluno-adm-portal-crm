@@ -45,7 +45,8 @@ export const FieldVisibilitySettings: React.FC = () => {
       <CardHeader>
         <CardTitle>Visibilidade dos Campos</CardTitle>
         <CardDescription>
-          Configure quais seções devem aparecer nos formulários e detalhes dos leads
+          Configure quais seções devem aparecer nos formulários e detalhes dos leads.
+          Estas configurações são baseadas nos grupos de campos customizados.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -103,6 +104,13 @@ export const FieldVisibilitySettings: React.FC = () => {
             checked={config.notes_section}
             onCheckedChange={(checked) => handleToggle('notes_section', checked)}
           />
+        </div>
+
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Dica:</strong> Você também pode gerenciar a visibilidade dos campos através da 
+            seção "Grupos de Campos" nas configurações do CRM.
+          </p>
         </div>
       </CardContent>
     </Card>
