@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
 import { CRMCustomField, CRMCustomFieldGroup } from '@/types/crm-custom-fields.types';
+import { Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CustomFieldsSectionProps {
   form: UseFormReturn<any>;
@@ -17,26 +19,32 @@ interface CustomFieldsSectionProps {
 
 const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelineId }) => {
   // Buscar apenas campos ativos para o formulário
-  const { customFields, fieldGroups, isLoading } = useCRMCustomFields(pipelineId, false);
+  const { customFields, fieldGroups, isLoading, invalidateAll } = useCRMCustomFields(pipelineId, false);
+
+  // Função para forçar atualização dos dados
+  const handleRefresh = () => {
+    console.log('🔄 Atualizando campos customizados...');
+    invalidateAll();
+  };
+
+  // Log para debug
+  useEffect(() => {
+    console.log('📋 CustomFieldsSection - campos disponíveis:', customFields.length);
+    console.log('📋 CustomFieldsSection - grupos disponíveis:', fieldGroups.length);
+    console.log('📋 CustomFieldsSection - pipelineId:', pipelineId);
+  }, [customFields, fieldGroups, pipelineId]);
 
   if (isLoading) {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="space-y-3">
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-            </div>
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-gray-600">Carregando campos customizados...</span>
           </div>
         </CardContent>
       </Card>
     );
-  }
-
-  if (customFields.length === 0) {
-    return null;
   }
 
   // Agrupar campos por grupo (apenas ativos)
@@ -59,6 +67,36 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelin
   const ungroupedFields = customFields.filter(field => 
     !field.group_id && field.is_active
   );
+
+  const totalFields = Object.values(groupedFields).reduce((total, { fields }) => total + fields.length, 0) + ungroupedFields.length;
+
+  console.log('📋 CustomFieldsSection - total de campos a exibir:', totalFields);
+
+  if (totalFields === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm">Campos Personalizados</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRefresh}
+              className="h-8 w-8 p-0"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="text-center py-6">
+          <p className="text-sm text-gray-500">Nenhum campo personalizado ativo encontrado.</p>
+          <p className="text-xs text-gray-400 mt-1">
+            {pipelineId ? 'Para este pipeline' : 'No sistema'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const renderField = (field: CRMCustomField) => {
     const fieldKey = `custom_field_${field.field_key}`;
@@ -182,15 +220,22 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelin
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Campos agrupados (apenas grupos ativos com campos ativos) */}
       {Object.values(groupedFields).map(({ group, fields }) => (
         <Card key={group.id}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">{group.name}</CardTitle>
-            {group.description && (
-              <p className="text-xs text-gray-600">{group.description}</p>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm">{group.name}</CardTitle>
+                {group.description && (
+                  <p className="text-xs text-gray-600 mt-1">{group.description}</p>
+                )}
+              </div>
+              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                {fields.length} campo{fields.length !== 1 ? 's' : ''}
+              </span>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map(renderField)}
@@ -202,10 +247,28 @@ const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({ form, pipelin
       {ungroupedFields.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Campos Adicionais</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Campos Adicionais</CardTitle>
+              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                {ungroupedFields.length} campo{ungroupedFields.length !== 1 ? 's' : ''}
+              </span>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {ungroupedFields.map(renderField)}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Debug info (apenas em desenvolvimento) */}
+      {process.env.NODE_ENV === 'development' && (
+        <Card className="border-dashed border-gray-300">
+          <CardContent className="p-4">
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>🔧 Debug: {customFields.length} campos total, {totalFields} ativos</p>
+              <p>📁 Grupos: {fieldGroups.length} total, {Object.keys(groupedFields).length} com campos</p>
+              <p>🎯 Pipeline: {pipelineId || 'Todos'}</p>
+            </div>
           </CardContent>
         </Card>
       )}

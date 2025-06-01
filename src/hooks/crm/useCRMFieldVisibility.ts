@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface FieldVisibilityConfig {
   amazon_section: boolean;
@@ -29,9 +30,12 @@ const GROUP_NAME_MAPPING: Record<string, keyof FieldVisibilityConfig> = {
 export const useCRMFieldVisibility = () => {
   const [config, setConfig] = useState<FieldVisibilityConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const fetchConfig = async () => {
     try {
+      console.log('🔍 Carregando configuração de visibilidade dos campos...');
+      
       const { data: groups, error } = await supabase
         .from('crm_custom_field_groups')
         .select('name, is_active')
@@ -61,6 +65,7 @@ export const useCRMFieldVisibility = () => {
         });
       }
 
+      console.log('✅ Configuração carregada:', newConfig);
       setConfig(newConfig);
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
@@ -72,6 +77,8 @@ export const useCRMFieldVisibility = () => {
 
   const updateFieldVisibility = async (field: keyof FieldVisibilityConfig, visible: boolean) => {
     try {
+      console.log(`🔧 Atualizando visibilidade: ${field} = ${visible}`);
+      
       // Encontrar o nome do grupo baseado na chave
       const groupName = Object.keys(GROUP_NAME_MAPPING).find(
         name => GROUP_NAME_MAPPING[name] === field
@@ -95,6 +102,14 @@ export const useCRMFieldVisibility = () => {
 
       // Atualizar o estado local
       setConfig(prev => ({ ...prev, [field]: visible }));
+      
+      // Invalidar cache para forçar atualização dos formulários
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-field-groups-all'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-custom-fields-all'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-lead-detail'] });
+      
+      console.log('✅ Visibilidade atualizada e cache invalidado');
       return true;
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);

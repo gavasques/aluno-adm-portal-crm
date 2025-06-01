@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
+import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
 import ModernCRMLeadForm from './ModernCRMLeadForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
@@ -25,11 +26,22 @@ const ModernCRMLeadFormDialog = ({
   mode, 
   onSuccess 
 }: ModernCRMLeadFormDialogProps) => {
-  console.log('✨ ModernCRMLeadFormDialog: Renderizando modal compacto!', { open, mode, pipelineId });
+  console.log('✨ ModernCRMLeadFormDialog: Renderizando modal!', { open, mode, pipelineId });
   
   const { lead, loading } = useCRMLeadDetail(leadId || '');
+  const { invalidateAll } = useCRMCustomFields(pipelineId);
+
+  // Forçar atualização dos campos quando o modal abrir
+  useEffect(() => {
+    if (open) {
+      console.log('🔄 Modal aberto, invalidando cache dos campos...');
+      invalidateAll();
+    }
+  }, [open, invalidateAll]);
 
   const handleSuccess = () => {
+    console.log('✅ Formulário salvo com sucesso, invalidando cache...');
+    invalidateAll(); // Invalidar cache após salvar
     onSuccess?.();
     onOpenChange(false);
   };
@@ -39,7 +51,7 @@ const ModernCRMLeadFormDialog = ({
     return null;
   }
 
-  console.log('🎨 Renderizando modal minimalista compacto!');
+  console.log('🎨 Renderizando modal!');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
