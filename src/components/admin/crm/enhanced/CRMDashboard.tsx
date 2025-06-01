@@ -4,12 +4,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Kanban, ListIcon, BarChart3, Settings, LayoutGrid, Filter, Eye } from 'lucide-react';
+import { Kanban, ListIcon, BarChart3, Settings, LayoutGrid, Filter, Eye, Target } from 'lucide-react';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { CRMSettings } from '../settings/CRMSettings';
 import CRMFilters from '../CRMFilters';
 import { usePipelineSelection } from '@/hooks/crm/usePipelineSelection';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
+import { ReportsContent } from '../reports/ReportsContent';
+import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
+import { DateRange } from 'react-day-picker';
+import { subDays } from 'date-fns';
 
 interface CRMDashboardProps {
   onOpenLead: (leadId: string) => void;
@@ -21,6 +25,10 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
   const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<CRMFiltersType>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
 
   const { pipelines, pipelinesLoading } = usePipelineSelection(
     selectedPipelineId,
@@ -159,7 +167,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
             Relatórios
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <ListIcon className="h-4 w-4" />
+            <Target className="h-4 w-4" />
             Analytics
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
@@ -209,35 +217,16 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Relatórios do CRM</CardTitle>
-              <CardDescription>
-                Análises detalhadas de performance e conversões
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">
-                Funcionalidade em desenvolvimento - será implementada em breve
-              </p>
-            </CardContent>
-          </Card>
+          <ReportsContent 
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+          />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics Avançado</CardTitle>
-              <CardDescription>
-                Métricas avançadas e insights de dados
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">
-                Funcionalidade em desenvolvimento - será implementada em breve
-              </p>
-            </CardContent>
-          </Card>
+          <AnalyticsDashboard 
+            dateRange={dateRange || { from: subDays(new Date(), 30), to: new Date() }}
+          />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
