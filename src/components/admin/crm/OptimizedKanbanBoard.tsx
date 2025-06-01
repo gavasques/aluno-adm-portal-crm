@@ -10,7 +10,7 @@ import OptimizedKanbanLeadCard from './OptimizedKanbanLeadCard';
 import { KanbanSkeleton } from './LoadingSkeleton';
 import CRMLeadFormDialog from './CRMLeadFormDialog';
 import { cn } from '@/lib/utils';
-import { useToastManager } from '@/hooks/useToastManager';
+import { toast } from 'sonner';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -19,7 +19,6 @@ interface OptimizedKanbanBoardProps {
 
 const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanbanBoardProps) => {
   const navigate = useNavigate();
-  const toast = useToastManager();
   const { columns, loading: columnsLoading } = useCRMPipelines();
   const { leadsByColumn, loading: leadsLoading, moveLeadToColumn, refetch } = useCRMData(filters);
   const [activeLead, setActiveLead] = useState<CRMLead | null>(null);
@@ -113,7 +112,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
     setSelectedColumnId('');
     refetch();
     toast.success('Lead criado com sucesso');
-  }, [refetch, toast]);
+  }, [refetch]);
 
   const loading = columnsLoading || leadsLoading;
 
