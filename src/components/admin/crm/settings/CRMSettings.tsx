@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Database, Users, Tags } from 'lucide-react';
 import { CRMFieldManager } from '../custom-fields/CRMFieldManager';
-import { PipelineManagerDialog } from '../pipeline-manager/PipelineManagerDialog';
-import { CRMTagsManager } from '../CRMTagsManager';
+import PipelineManagerDialog from '../pipeline-manager/PipelineManagerDialog';
+import CRMTagsManager from '../CRMTagsManager';
 
 export const CRMSettings = () => {
   const [activeTab, setActiveTab] = useState('fields');

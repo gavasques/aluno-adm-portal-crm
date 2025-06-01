@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Kanban, ListIcon, BarChart3, Settings, LayoutGrid, Filter, Eye } from 'lucide-react';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { CRMSettings } from '../settings/CRMSettings';
-import { CRMFilters } from '../CRMFilters';
+import CRMFilters from '../CRMFilters';
 import { usePipelineSelection } from '@/hooks/crm/usePipelineSelection';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 
