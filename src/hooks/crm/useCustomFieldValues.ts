@@ -23,7 +23,19 @@ export const useCustomFieldValues = (leadId?: string) => {
         .eq('lead_id', leadId);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform data to match our types
+      return (data || []).map(item => ({
+        ...item,
+        field: item.field ? {
+          ...item.field,
+          field_type: item.field.field_type as 'text' | 'number' | 'phone' | 'boolean' | 'select',
+          options: Array.isArray(item.field.options) ? item.field.options as string[] : [],
+          validation_rules: (item.field.validation_rules && typeof item.field.validation_rules === 'object' && !Array.isArray(item.field.validation_rules)) 
+            ? item.field.validation_rules as Record<string, any>
+            : {}
+        } : undefined
+      }));
     },
     enabled: !!leadId
   });
@@ -95,9 +107,9 @@ export const useCustomFieldValues = (leadId?: string) => {
       // Converter para string para armazenamento
       if (fieldValue !== null && fieldValue !== undefined) {
         if (field.field_type === 'boolean') {
-          fieldValue = fieldValue.toString();
+          fieldValue = String(fieldValue);
         } else if (field.field_type === 'number') {
-          fieldValue = fieldValue.toString();
+          fieldValue = String(fieldValue);
         } else {
           fieldValue = String(fieldValue);
         }
