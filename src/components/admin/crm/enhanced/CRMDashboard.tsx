@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { KanbanBoardIcon, ListIcon, BarChart3, Settings } from 'lucide-react';
+import { Kanban, ListIcon, BarChart3, Settings } from 'lucide-react';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { CRMSettings } from '../settings/CRMSettings';
 
@@ -25,7 +25,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <KanbanBoardIcon className="h-4 w-4" />
+            <Kanban className="h-4 w-4" />
             Dashboard
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
@@ -43,7 +43,7 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
         </TabsList>
 
         <TabsContent value="dashboard" className="flex-1">
-          <DashboardContent onOpenLead={onOpenLead} />
+          <DashboardContent />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">

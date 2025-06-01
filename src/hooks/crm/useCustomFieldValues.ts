@@ -108,9 +108,9 @@ export const useCustomFieldValues = (leadId?: string) => {
       // Converter para string para armazenamento
       if (rawValue !== null && rawValue !== undefined) {
         if (field.field_type === 'boolean') {
-          fieldValue = String(rawValue);
+          fieldValue = rawValue === true ? 'true' : 'false';
         } else if (field.field_type === 'number') {
-          fieldValue = String(rawValue);
+          fieldValue = rawValue !== null && rawValue !== '' ? String(rawValue) : '';
         } else {
           fieldValue = String(rawValue);
         }
