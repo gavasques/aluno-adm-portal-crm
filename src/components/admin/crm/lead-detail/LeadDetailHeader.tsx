@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Edit, User } from 'lucide-react';
+import { X, Edit, User, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CRMLead } from '@/types/crm.types';
@@ -11,9 +11,21 @@ interface LeadDetailHeaderProps {
   lead: CRMLead;
   onClose: () => void;
   onLeadUpdate: () => void;
+  isEditing: boolean;
+  onToggleEdit: () => void;
+  onSave: () => void;
+  hasChanges: boolean;
 }
 
-export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHeaderProps) => {
+export const LeadDetailHeader = ({ 
+  lead, 
+  onClose, 
+  onLeadUpdate, 
+  isEditing, 
+  onToggleEdit, 
+  onSave, 
+  hasChanges 
+}: LeadDetailHeaderProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const getStatusBadge = () => {
@@ -31,14 +43,15 @@ export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHead
   };
 
   const handleEditClick = () => {
-    console.log('🔧 Edit button clicked for lead:', lead.id);
-    setShowEditModal(true);
+    if (isEditing && hasChanges) {
+      onSave();
+    } else {
+      onToggleEdit();
+    }
   };
 
-  const handleEditSuccess = () => {
-    console.log('✅ Lead updated successfully, refreshing data...');
-    setShowEditModal(false);
-    onLeadUpdate();
+  const handleCancelEdit = () => {
+    onToggleEdit();
   };
 
   return (
@@ -76,15 +89,38 @@ export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHead
           </div>
           
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEditClick}
-              className="bg-white/50 hover:bg-white/80"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  className="bg-white/50 hover:bg-white/80"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleEditClick}
+                  disabled={!hasChanges}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEditClick}
+                className="bg-white/50 hover:bg-white/80"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -103,7 +139,7 @@ export const LeadDetailHeader = ({ lead, onClose, onLeadUpdate }: LeadDetailHead
         onOpenChange={setShowEditModal}
         leadId={lead.id}
         mode="edit"
-        onSuccess={handleEditSuccess}
+        onSuccess={onLeadUpdate}
       />
     </>
   );

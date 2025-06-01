@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,16 +25,47 @@ const LeadDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { lead, loading, error, refetch } = useCRMLeadDetail(id || '');
+  
+  // Estados para edição
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   console.log('🎯 LeadDetail - id:', id, 'lead:', lead, 'loading:', loading, 'error:', error);
 
   const handleBack = () => {
+    if (isEditing && hasChanges) {
+      const confirm = window.confirm('Você tem alterações não salvas. Deseja sair mesmo assim?');
+      if (!confirm) return;
+    }
     navigate('/admin/crm');
   };
 
   const handleLeadUpdate = () => {
     console.log('🔄 Lead updated, refetching data...');
     refetch();
+    setIsEditing(false);
+    setHasChanges(false);
+  };
+
+  const handleToggleEdit = () => {
+    if (isEditing && hasChanges) {
+      const confirm = window.confirm('Você tem alterações não salvas. Deseja cancelar as alterações?');
+      if (!confirm) return;
+    }
+    setIsEditing(!isEditing);
+    setHasChanges(false);
+  };
+
+  const handleSave = async () => {
+    if ((window as any).saveLeadData) {
+      await (window as any).saveLeadData();
+      setIsEditing(false);
+      setHasChanges(false);
+    }
+  };
+
+  const handleDataChange = (changes: boolean) => {
+    setHasChanges(changes);
   };
 
   if (loading) {
@@ -103,6 +134,7 @@ const LeadDetail = () => {
             size="sm" 
             onClick={handleBack}
             className="p-0 h-auto hover:bg-transparent hover:text-blue-600"
+            disabled={isEditing && hasChanges}
           >
             CRM
           </Button>
@@ -110,9 +142,19 @@ const LeadDetail = () => {
           <span>Lead</span>
           <span>/</span>
           <span className="font-medium text-gray-900">{lead.name}</span>
+          {isEditing && (
+            <>
+              <span>/</span>
+              <span className="font-medium text-blue-600">Editando</span>
+            </>
+          )}
         </div>
         
-        <Button onClick={handleBack} variant="outline">
+        <Button 
+          onClick={handleBack} 
+          variant="outline"
+          disabled={isEditing && hasChanges}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
@@ -124,6 +166,10 @@ const LeadDetail = () => {
           lead={lead} 
           onClose={handleBack} 
           onLeadUpdate={handleLeadUpdate}
+          isEditing={isEditing}
+          onToggleEdit={handleToggleEdit}
+          onSave={handleSave}
+          hasChanges={hasChanges}
         />
       </div>
 
@@ -132,11 +178,24 @@ const LeadDetail = () => {
         <Tabs defaultValue="overview" className="w-full">
           <div className="border-b border-gray-200/50 bg-gray-50/50 px-6">
             <TabsList className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm">
-              <TabsTrigger value="overview" className="flex items-center gap-2">
+              <TabsTrigger 
+                value="overview" 
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
                 <User className="h-4 w-4" />
                 Visão Geral & Dados
+                {isEditing && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    Editando
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="contacts" className="flex items-center gap-2">
+              <TabsTrigger 
+                value="contacts" 
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
                 <Calendar className="h-4 w-4" />
                 Contatos
               </TabsTrigger>
@@ -144,6 +203,7 @@ const LeadDetail = () => {
                 value="attachments" 
                 badgeContent="3"
                 className="flex items-center gap-2"
+                disabled={isEditing}
               >
                 <FileText className="h-4 w-4" />
                 Anexos
@@ -152,11 +212,16 @@ const LeadDetail = () => {
                 value="comments" 
                 badgeContent="2"
                 className="flex items-center gap-2"
+                disabled={isEditing}
               >
                 <MessageSquare className="h-4 w-4" />
                 Comentários
               </TabsTriggerWithBadge>
-              <TabsTrigger value="history" className="flex items-center gap-2">
+              <TabsTrigger 
+                value="history" 
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
                 <Clock className="h-4 w-4" />
                 Histórico
               </TabsTrigger>
@@ -165,7 +230,12 @@ const LeadDetail = () => {
 
           <div className="p-6">
             <TabsContent value="overview" className="mt-0">
-              <ConditionalLeadDetailOverview lead={lead} />
+              <ConditionalLeadDetailOverview 
+                lead={lead}
+                isEditing={isEditing}
+                onDataChange={handleDataChange}
+                onLeadUpdate={handleLeadUpdate}
+              />
             </TabsContent>
             
             <TabsContent value="contacts" className="mt-0">
@@ -186,6 +256,13 @@ const LeadDetail = () => {
           </div>
         </Tabs>
       </div>
+
+      {/* Indicador de alterações não salvas */}
+      {isEditing && hasChanges && (
+        <div className="fixed bottom-4 right-4 bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg shadow-lg">
+          <p className="text-sm font-medium">Você tem alterações não salvas</p>
+        </div>
+      )}
     </motion.div>
   );
 };

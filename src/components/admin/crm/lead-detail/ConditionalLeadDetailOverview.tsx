@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CRMLead } from '@/types/crm.types';
 import { CRMCustomField, CRMCustomFieldValue, CRMCustomFieldGroup } from '@/types/crm-custom-fields.types';
 import { 
@@ -16,7 +16,11 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useCRMFieldVisibility } from '@/hooks/crm/useCRMFieldVisibility';
+import { useCRMLeadUpdate } from '@/hooks/crm/useCRMLeadUpdate';
+import { useCRMCustomFieldValues } from '@/hooks/crm/useCRMCustomFieldValues';
+import { EditableField } from './EditableField';
 import { CustomFieldRenderer } from './CustomFieldRenderer';
+import { toast } from 'sonner';
 
 interface LeadDetailData extends CRMLead {
   customFields?: CRMCustomField[];
@@ -25,10 +29,130 @@ interface LeadDetailData extends CRMLead {
 
 interface ConditionalLeadDetailOverviewProps {
   lead: LeadDetailData;
+  isEditing: boolean;
+  onDataChange: (hasChanges: boolean) => void;
+  onLeadUpdate: () => void;
 }
 
-export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOverviewProps) => {
+export const ConditionalLeadDetailOverview = ({ 
+  lead, 
+  isEditing, 
+  onDataChange, 
+  onLeadUpdate 
+}: ConditionalLeadDetailOverviewProps) => {
   const { config, loading } = useCRMFieldVisibility();
+  const { updateLead } = useCRMLeadUpdate();
+  const { saveCustomFieldValue } = useCRMCustomFieldValues();
+
+  // Estados para os dados editáveis
+  const [editableData, setEditableData] = useState({
+    // Dados básicos
+    has_company: lead.has_company,
+    sells_on_amazon: lead.sells_on_amazon,
+    works_with_fba: lead.works_with_fba,
+    seeks_private_label: lead.seeks_private_label,
+    ready_to_invest_3k: lead.ready_to_invest_3k,
+    had_contact_with_lv: lead.had_contact_with_lv,
+    calendly_scheduled: lead.calendly_scheduled,
+    
+    // Dados de texto
+    what_sells: lead.what_sells || '',
+    keep_or_new_niches: lead.keep_or_new_niches || '',
+    amazon_store_link: lead.amazon_store_link || '',
+    amazon_state: lead.amazon_state || '',
+    amazon_tax_regime: lead.amazon_tax_regime || '',
+    main_doubts: lead.main_doubts || '',
+    notes: lead.notes || '',
+    calendly_link: lead.calendly_link || ''
+  });
+
+  // Estados para campos customizados
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+
+  // Inicializar valores dos campos customizados
+  useEffect(() => {
+    if (lead.customFieldValues) {
+      const values: Record<string, string> = {};
+      lead.customFieldValues.forEach(value => {
+        if (value.field_value) {
+          values[value.field_id] = value.field_value;
+        }
+      });
+      setCustomFieldValues(values);
+    }
+  }, [lead.customFieldValues]);
+
+  // Verificar se há mudanças
+  useEffect(() => {
+    const hasBasicChanges = JSON.stringify(editableData) !== JSON.stringify({
+      has_company: lead.has_company,
+      sells_on_amazon: lead.sells_on_amazon,
+      works_with_fba: lead.works_with_fba,
+      seeks_private_label: lead.seeks_private_label,
+      ready_to_invest_3k: lead.ready_to_invest_3k,
+      had_contact_with_lv: lead.had_contact_with_lv,
+      calendly_scheduled: lead.calendly_scheduled,
+      what_sells: lead.what_sells || '',
+      keep_or_new_niches: lead.keep_or_new_niches || '',
+      amazon_store_link: lead.amazon_store_link || '',
+      amazon_state: lead.amazon_state || '',
+      amazon_tax_regime: lead.amazon_tax_regime || '',
+      main_doubts: lead.main_doubts || '',
+      notes: lead.notes || '',
+      calendly_link: lead.calendly_link || ''
+    });
+
+    const originalCustomValues: Record<string, string> = {};
+    if (lead.customFieldValues) {
+      lead.customFieldValues.forEach(value => {
+        if (value.field_value) {
+          originalCustomValues[value.field_id] = value.field_value;
+        }
+      });
+    }
+    const hasCustomChanges = JSON.stringify(customFieldValues) !== JSON.stringify(originalCustomValues);
+
+    onDataChange(hasBasicChanges || hasCustomChanges);
+  }, [editableData, customFieldValues, lead, onDataChange]);
+
+  // Função para salvar as alterações
+  const handleSave = async () => {
+    try {
+      // Salvar dados básicos do lead
+      await updateLead(lead.id, editableData);
+
+      // Salvar campos customizados
+      const customPromises = Object.entries(customFieldValues).map(([fieldId, value]) => 
+        saveCustomFieldValue(lead.id, fieldId, value)
+      );
+      
+      await Promise.all(customPromises);
+
+      toast.success('Lead atualizado com sucesso!');
+      onLeadUpdate();
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao salvar as alterações');
+    }
+  };
+
+  // Registrar função de salvar no componente pai
+  useEffect(() => {
+    if (isEditing) {
+      (window as any).saveLeadData = handleSave;
+    }
+    return () => {
+      delete (window as any).saveLeadData;
+    };
+  }, [isEditing, editableData, customFieldValues]);
+
+  const handleFieldChange = (field: string, value: any) => {
+    setEditableData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCustomFieldChange = (fieldId: string, value: string) => {
+    setCustomFieldValues(prev => ({ ...prev, [fieldId]: value }));
+  };
 
   const InfoCard = ({ 
     icon: Icon, 
@@ -44,7 +168,9 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg"
+      className={`bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg ${
+        isEditing ? 'ring-2 ring-blue-200/50' : ''
+      }`}
     >
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-xl bg-${color}-100`}>
@@ -56,16 +182,6 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
         </div>
       </div>
     </motion.div>
-  );
-
-  const YesNoIndicator = ({ value, trueText = "Sim", falseText = "Não" }: { value: boolean; trueText?: string; falseText?: string }) => (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-      value 
-        ? 'bg-green-100 text-green-800' 
-        : 'bg-gray-100 text-gray-600'
-    }`}>
-      {value ? trueText : falseText}
-    </span>
   );
 
   // Agrupar campos customizados por grupo
@@ -111,26 +227,43 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Tem empresa:</span>
-                  <YesNoIndicator value={lead.has_company} />
+                  <EditableField
+                    value={editableData.has_company}
+                    onChange={(value) => handleFieldChange('has_company', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
-                {config.amazon_section && lead.amazon_state && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Estado (Amazon):</span>
-                    <span className="font-medium">{lead.amazon_state}</span>
-                  </div>
-                )}
-                {config.amazon_section && lead.amazon_tax_regime && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Regime Tributário:</span>
-                    <span className="font-medium">{lead.amazon_tax_regime}</span>
-                  </div>
+                {config.amazon_section && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Estado (Amazon):</span>
+                      <EditableField
+                        value={editableData.amazon_state}
+                        onChange={(value) => handleFieldChange('amazon_state', value)}
+                        type="text"
+                        placeholder="Estado"
+                        isEditing={isEditing}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Regime Tributário:</span>
+                      <EditableField
+                        value={editableData.amazon_tax_regime}
+                        onChange={(value) => handleFieldChange('amazon_tax_regime', value)}
+                        type="text"
+                        placeholder="Regime tributário"
+                        isEditing={isEditing}
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             }
           />
         )}
 
-        {/* Amazon e E-commerce - só mostra se a seção Amazon estiver ativa */}
+        {/* Amazon e E-commerce */}
         {config.amazon_section && (
           <InfoCard
             icon={ShoppingCart}
@@ -140,25 +273,44 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Vende na Amazon:</span>
-                  <YesNoIndicator value={lead.sells_on_amazon} />
+                  <EditableField
+                    value={editableData.sells_on_amazon}
+                    onChange={(value) => handleFieldChange('sells_on_amazon', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Trabalha com FBA:</span>
-                  <YesNoIndicator value={lead.works_with_fba} />
+                  <EditableField
+                    value={editableData.works_with_fba}
+                    onChange={(value) => handleFieldChange('works_with_fba', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
-                {lead.amazon_store_link && (
-                  <div>
-                    <span className="text-sm text-gray-600 block mb-1">Link da Loja:</span>
-                    <a 
-                      href={lead.amazon_store_link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm break-all"
-                    >
-                      {lead.amazon_store_link}
-                    </a>
-                  </div>
-                )}
+                <div>
+                  <span className="text-sm text-gray-600 block mb-1">Link da Loja:</span>
+                  <EditableField
+                    value={editableData.amazon_store_link}
+                    onChange={(value) => handleFieldChange('amazon_store_link', value)}
+                    type="text"
+                    placeholder="https://amazon.com/..."
+                    isEditing={isEditing}
+                    renderDisplay={(value) => value ? (
+                      <a 
+                        href={value} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-sm break-all"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 italic">Não informado</span>
+                    )}
+                  />
+                </div>
               </div>
             }
           />
@@ -171,18 +323,26 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
           color="green"
           content={
             <div className="space-y-3">
-              {lead.what_sells && (
-                <div>
-                  <span className="text-sm text-gray-600 block mb-1">O que vende:</span>
-                  <p className="text-sm">{lead.what_sells}</p>
-                </div>
-              )}
-              {lead.keep_or_new_niches && (
-                <div>
-                  <span className="text-sm text-gray-600 block mb-1">Nichos:</span>
-                  <p className="text-sm">{lead.keep_or_new_niches}</p>
-                </div>
-              )}
+              <div>
+                <span className="text-sm text-gray-600 block mb-1">O que vende:</span>
+                <EditableField
+                  value={editableData.what_sells}
+                  onChange={(value) => handleFieldChange('what_sells', value)}
+                  type="textarea"
+                  placeholder="Descreva os produtos vendidos"
+                  isEditing={isEditing}
+                />
+              </div>
+              <div>
+                <span className="text-sm text-gray-600 block mb-1">Nichos:</span>
+                <EditableField
+                  value={editableData.keep_or_new_niches}
+                  onChange={(value) => handleFieldChange('keep_or_new_niches', value)}
+                  type="textarea"
+                  placeholder="Descreva os nichos"
+                  isEditing={isEditing}
+                />
+              </div>
             </div>
           }
         />
@@ -197,19 +357,39 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Busca marca própria:</span>
-                  <YesNoIndicator value={lead.seeks_private_label} />
+                  <EditableField
+                    value={editableData.seeks_private_label}
+                    onChange={(value) => handleFieldChange('seeks_private_label', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Pronto para investir 3k:</span>
-                  <YesNoIndicator value={lead.ready_to_invest_3k} />
+                  <EditableField
+                    value={editableData.ready_to_invest_3k}
+                    onChange={(value) => handleFieldChange('ready_to_invest_3k', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Teve contato com LV:</span>
-                  <YesNoIndicator value={lead.had_contact_with_lv} />
+                  <EditableField
+                    value={editableData.had_contact_with_lv}
+                    onChange={(value) => handleFieldChange('had_contact_with_lv', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Calendly agendado:</span>
-                  <YesNoIndicator value={lead.calendly_scheduled} />
+                  <EditableField
+                    value={editableData.calendly_scheduled}
+                    onChange={(value) => handleFieldChange('calendly_scheduled', value)}
+                    type="boolean"
+                    isEditing={isEditing}
+                  />
                 </div>
               </div>
             }
@@ -244,26 +424,35 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
         )}
 
         {/* Links e Calendly */}
-        {lead.calendly_link && (
-          <InfoCard
-            icon={Globe}
-            title="Links"
-            color="teal"
-            content={
-              <div>
-                <span className="text-sm text-gray-600 block mb-1">Link do Calendly:</span>
-                <a 
-                  href={lead.calendly_link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm break-all"
-                >
-                  {lead.calendly_link}
-                </a>
-              </div>
-            }
-          />
-        )}
+        <InfoCard
+          icon={Globe}
+          title="Links"
+          color="teal"
+          content={
+            <div>
+              <span className="text-sm text-gray-600 block mb-1">Link do Calendly:</span>
+              <EditableField
+                value={editableData.calendly_link}
+                onChange={(value) => handleFieldChange('calendly_link', value)}
+                type="text"
+                placeholder="https://calendly.com/..."
+                isEditing={isEditing}
+                renderDisplay={(value) => value ? (
+                  <a 
+                    href={value} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm break-all"
+                  >
+                    {value}
+                  </a>
+                ) : (
+                  <span className="text-gray-400 italic">Não informado</span>
+                )}
+              />
+            </div>
+          }
+        />
 
         {/* Campos Customizados Agrupados */}
         {Object.entries(customFieldGroups).map(([groupName, groupData]) => (
@@ -275,11 +464,26 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
             content={
               <div className="space-y-3">
                 {groupData.fields.map(({ field, value }) => (
-                  <CustomFieldRenderer
-                    key={field.id}
-                    field={field}
-                    value={value}
-                  />
+                  <div key={field.id}>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <span className="text-sm text-gray-600">{field.field_name}:</span>
+                        <EditableField
+                          value={customFieldValues[field.id] || ''}
+                          onChange={(val) => handleCustomFieldChange(field.id, val)}
+                          type={field.field_type}
+                          options={field.options}
+                          placeholder={field.placeholder}
+                          isEditing={true}
+                        />
+                      </div>
+                    ) : (
+                      <CustomFieldRenderer
+                        field={field}
+                        value={value}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             }
@@ -288,29 +492,37 @@ export const ConditionalLeadDetailOverview = ({ lead }: ConditionalLeadDetailOve
       </div>
 
       {/* Observações */}
-      {config.notes_section && (lead.notes || lead.main_doubts) && (
+      {config.notes_section && (
         <div className="mt-6 space-y-4">
-          {lead.main_doubts && (
-            <InfoCard
-              icon={FileText}
-              title="Principais Dúvidas"
-              color="amber"
-              content={
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{lead.main_doubts}</p>
-              }
-            />
-          )}
+          <InfoCard
+            icon={FileText}
+            title="Principais Dúvidas"
+            color="amber"
+            content={
+              <EditableField
+                value={editableData.main_doubts}
+                onChange={(value) => handleFieldChange('main_doubts', value)}
+                type="textarea"
+                placeholder="Principais dúvidas do lead"
+                isEditing={isEditing}
+              />
+            }
+          />
           
-          {lead.notes && (
-            <InfoCard
-              icon={FileText}
-              title="Observações"
-              color="gray"
-              content={
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
-              }
-            />
-          )}
+          <InfoCard
+            icon={FileText}
+            title="Observações"
+            color="gray"
+            content={
+              <EditableField
+                value={editableData.notes}
+                onChange={(value) => handleFieldChange('notes', value)}
+                type="textarea"
+                placeholder="Observações sobre o lead"
+                isEditing={isEditing}
+              />
+            }
+          />
         </div>
       )}
 
