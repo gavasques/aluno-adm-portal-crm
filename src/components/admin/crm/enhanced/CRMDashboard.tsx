@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Columns3, List, Plus, Refresh } from 'lucide-react';
+import { Columns3, List, Plus, RefreshCw } from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import CRMStatsCards from '../CRMStatsCards';
 import CRMFilters from '../CRMFilters';
@@ -63,7 +63,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
             size="sm"
             onClick={() => window.location.reload()}
           >
-            <Refresh className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
         </div>
@@ -124,8 +124,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         <TabsContent value="pipeline" className="space-y-6">
           {/* Filters */}
           <CRMFilters
-            pipelines={pipelines}
-            selectedPipelineId={selectedPipelineId}
+            pipelineId={selectedPipelineId}
             onPipelineChange={setSelectedPipelineId}
             filters={filters}
             onFiltersChange={handleFiltersChange}
