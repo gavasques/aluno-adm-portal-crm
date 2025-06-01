@@ -15,8 +15,8 @@ const CRMListView: React.FC<CRMListViewProps> = ({ filters }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenLeadDetails = (lead: CRMLead) => {
-    console.log('🔗 CRMListView: Opening lead detail for:', lead.id);
-    navigate(`/admin/crm/lead/${lead.id}`);
+    console.log('🔗 CRMListView: Opening lead detail (new page) for:', lead.id);
+    navigate(`/admin/lead/${lead.id}`);
   };
 
   return (

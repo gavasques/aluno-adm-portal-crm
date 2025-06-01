@@ -104,8 +104,8 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
   }, [leadsByColumn, moveLeadToColumn]);
 
   const handleOpenDetail = useCallback((lead: CRMLead) => {
-    console.log('🔗 Navigating to lead detail:', lead.id);
-    navigate(`/admin/crm/lead/${lead.id}`);
+    console.log('🔗 Navigating to lead detail (new page):', lead.id);
+    navigate(`/admin/lead/${lead.id}`);
   }, [navigate]);
 
   const handleCreateSuccess = useCallback(() => {

@@ -28,11 +28,11 @@ const ListView = React.memo(({
   const { leadsWithContacts, loading } = useCRMData(filters);
 
   const handleOpenLeadDetails = (lead: CRMLead) => {
-    console.log('🔗 ListView - Navigating to lead detail:', lead.id);
+    console.log('🔗 ListView - Navigating to lead detail (new page):', lead.id);
     if (onOpenLeadDetails) {
       onOpenLeadDetails(lead);
     } else {
-      navigate(`/admin/crm/lead/${lead.id}`);
+      navigate(`/admin/lead/${lead.id}`);
     }
   };
 
