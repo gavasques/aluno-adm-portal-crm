@@ -59,9 +59,9 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
     }
   };
 
-  const handleStatusChange = async (status: LeadStatus, reason?: string) => {
+  const handleStatusChange = async (status: LeadStatus, reason?: string, lossReasonId?: string) => {
     try {
-      await changeStatus({ leadId: lead.id, status, reason });
+      await changeStatus({ leadId: lead.id, status, reason, lossReasonId });
       onLeadUpdate();
     } catch (error) {
       toast.error('Erro ao alterar status');

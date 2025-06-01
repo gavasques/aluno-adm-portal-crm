@@ -11,11 +11,13 @@ export const useLeadStatusChange = () => {
     mutationFn: async ({ 
       leadId, 
       status, 
-      reason 
+      reason,
+      lossReasonId 
     }: { 
       leadId: string; 
       status: LeadStatus; 
-      reason?: string; 
+      reason?: string;
+      lossReasonId?: string;
     }) => {
       const updateData: any = {
         status,
@@ -27,6 +29,10 @@ export const useLeadStatusChange = () => {
         updateData.status_reason = reason;
       }
 
+      if (lossReasonId) {
+        updateData.loss_reason_id = lossReasonId;
+      }
+
       const { error } = await supabase
         .from('crm_leads')
         .update(updateData)
@@ -34,7 +40,7 @@ export const useLeadStatusChange = () => {
 
       if (error) throw error;
 
-      return { leadId, status, reason };
+      return { leadId, status, reason, lossReasonId };
     },
     onSuccess: () => {
       // Invalidar todas as queries relacionadas a CRM para atualizar dados

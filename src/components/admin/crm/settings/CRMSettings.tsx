@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Database, Users, Tags } from 'lucide-react';
+import { Settings, Database, Users, Tags, XCircle } from 'lucide-react';
 import { CRMFieldManager } from '../custom-fields/CRMFieldManager';
 import { PipelineManager } from './PipelineManager';
 import { CRMTagsContent } from './CRMTagsContent';
+import { LossReasonsManager } from './LossReasonsManager';
 
 export const CRMSettings = () => {
   const [activeTab, setActiveTab] = useState('fields');
@@ -20,7 +21,7 @@ export const CRMSettings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="fields" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             Campos
@@ -28,6 +29,10 @@ export const CRMSettings = () => {
           <TabsTrigger value="pipelines" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Pipelines
+          </TabsTrigger>
+          <TabsTrigger value="loss-reasons" className="flex items-center gap-2">
+            <XCircle className="h-4 w-4" />
+            Motivos de Perda
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -55,6 +60,10 @@ export const CRMSettings = () => {
               <PipelineManager />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="loss-reasons" className="space-y-4">
+          <LossReasonsManager />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">

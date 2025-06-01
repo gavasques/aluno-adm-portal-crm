@@ -35,6 +35,16 @@ export interface CRMUser {
   created_at?: string;
 }
 
+export interface CRMLossReason {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export type LeadStatus = 'aberto' | 'ganho' | 'perdido';
 
 export interface CRMLeadInput {
@@ -62,6 +72,7 @@ export interface CRMLeadInput {
   scheduled_contact_date?: string;
   status?: LeadStatus;
   status_reason?: string;
+  loss_reason_id?: string;
 }
 
 export interface CRMLead {
@@ -91,6 +102,7 @@ export interface CRMLead {
   scheduled_contact_date?: string;
   status: LeadStatus;
   status_reason?: string;
+  loss_reason_id?: string;
   status_changed_at?: string;
   status_changed_by?: string;
   created_at: string;
@@ -98,6 +110,7 @@ export interface CRMLead {
   tags: CRMTag[];
   pipeline?: CRMPipeline;
   column?: CRMPipelineColumn;
+  loss_reason?: CRMLossReason;
   responsible?: {
     id: string;
     name: string;
