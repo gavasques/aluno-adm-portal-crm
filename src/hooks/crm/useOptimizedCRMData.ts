@@ -1,17 +1,11 @@
-
 import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead, CRMFilters, CRMLeadContact } from '@/types/crm.types';
+import { CRMLead, CRMFilters, CRMLeadContact, LeadWithContacts } from '@/types/crm.types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useCRMLeadTransformations } from './useCRMLeadTransformations';
 import { useCRMLeadFilters } from './useCRMLeadFilters';
 import { useCRMLeadMovement } from './useCRMLeadMovement';
-
-interface LeadWithContacts extends CRMLead {
-  pending_contacts: CRMLeadContact[];
-  last_completed_contact?: CRMLeadContact;
-}
 
 export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
   // Debounce search para evitar queries excessivas

@@ -1,13 +1,6 @@
-
 import { useCallback } from 'react';
 import { isToday, isTomorrow, isPast } from 'date-fns';
-import { CRMLeadContact } from '@/types/crm.types';
-
-interface LeadWithContacts {
-  id: string;
-  pending_contacts: CRMLeadContact[];
-  tags?: { id: string; name: string; color: string }[];
-}
+import { CRMLeadContact, LeadWithContacts } from '@/types/crm.types';
 
 export const useCRMLeadFilters = () => {
   const filterLeadsByContact = useCallback((leadsData: LeadWithContacts[], contactFilter?: string) => {

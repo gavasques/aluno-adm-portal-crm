@@ -1,14 +1,7 @@
-
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMFilters } from '@/types/crm.types';
-
-interface LeadWithContacts {
-  id: string;
-  column_id?: string;
-  updated_at: string;
-}
+import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
 
 export const useCRMLeadMovement = (debouncedFilters: CRMFilters) => {
   const queryClient = useQueryClient();
