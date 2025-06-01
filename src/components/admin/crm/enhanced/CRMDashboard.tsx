@@ -43,7 +43,12 @@ const CRMDashboard = ({ onOpenLead }: CRMDashboardProps) => {
         </TabsList>
 
         <TabsContent value="dashboard" className="flex-1">
-          <DashboardContent />
+          <DashboardContent 
+            activeView="kanban"
+            effectiveFilters={{}}
+            selectedPipelineId=""
+            onCreateLead={() => {}}
+          />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">

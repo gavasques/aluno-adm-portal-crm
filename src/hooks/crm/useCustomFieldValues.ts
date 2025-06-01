@@ -83,13 +83,13 @@ export const useCustomFieldValues = (leadId?: string) => {
     fieldValues.forEach(value => {
       if (value.field?.field_key) {
         const fieldKey = `custom_field_${value.field.field_key}`;
-        let fieldValue = value.field_value;
+        let fieldValue: any = value.field_value;
 
         // Converter para tipos apropriados
         if (value.field.field_type === 'boolean') {
-          fieldValue = fieldValue === 'true';
+          fieldValue = value.field_value === 'true';
         } else if (value.field.field_type === 'number') {
-          fieldValue = fieldValue ? parseFloat(fieldValue) : null;
+          fieldValue = value.field_value ? parseFloat(value.field_value) : null;
         }
 
         formValues[fieldKey] = fieldValue;
@@ -102,8 +102,8 @@ export const useCustomFieldValues = (leadId?: string) => {
   const prepareFieldValues = (formData: Record<string, any>, customFields: Array<{ id: string; field_key: string; field_type: string }>) => {
     return customFields.map(field => {
       const fieldKey = `custom_field_${field.field_key}`;
-      let fieldValue: string = '';
       const rawValue = formData[fieldKey];
+      let fieldValue = '';
 
       // Converter para string para armazenamento
       if (rawValue !== null && rawValue !== undefined) {
