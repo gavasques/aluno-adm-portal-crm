@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLead, LeadStatus } from '@/types/crm.types';
 
 export const useCRMLeadDetail = (leadId: string) => {
   const [lead, setLead] = useState<CRMLead | null>(null);
@@ -73,7 +73,7 @@ export const useCRMLeadDetail = (leadId: string) => {
           created_by: data.created_by || undefined,
           notes: data.notes || undefined,
           scheduled_contact_date: data.scheduled_contact_date || undefined,
-          status: data.status || 'aberto',
+          status: (data.status || 'aberto') as LeadStatus,
           status_reason: data.status_reason || undefined,
           status_changed_at: data.status_changed_at || undefined,
           status_changed_by: data.status_changed_by || undefined,

@@ -538,6 +538,36 @@ export type Database = {
           },
         ]
       }
+      crm_field_configurations: {
+        Row: {
+          amazon_section: boolean
+          business_section: boolean
+          created_at: string
+          id: string
+          notes_section: boolean
+          qualification_section: boolean
+          updated_at: string
+        }
+        Insert: {
+          amazon_section?: boolean
+          business_section?: boolean
+          created_at?: string
+          id?: string
+          notes_section?: boolean
+          qualification_section?: boolean
+          updated_at?: string
+        }
+        Update: {
+          amazon_section?: boolean
+          business_section?: boolean
+          created_at?: string
+          id?: string
+          notes_section?: boolean
+          qualification_section?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_lead_attachments: {
         Row: {
           created_at: string | null

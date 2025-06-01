@@ -23,7 +23,7 @@ export const useCRMFieldVisibility = () => {
   const fetchConfig = async () => {
     try {
       const { data, error } = await supabase
-        .from('crm_field_configurations')
+        .from('crm_field_configurations' as any)
         .select('*')
         .limit(1)
         .maybeSingle();
@@ -58,7 +58,7 @@ export const useCRMFieldVisibility = () => {
       
       // Primeiro tenta atualizar, se não existir, cria
       const { error: updateError } = await supabase
-        .from('crm_field_configurations')
+        .from('crm_field_configurations' as any)
         .upsert(newConfig, { onConflict: 'id' });
 
       if (updateError) {
