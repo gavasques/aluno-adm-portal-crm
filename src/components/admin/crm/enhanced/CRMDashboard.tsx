@@ -12,6 +12,7 @@ import OptimizedKanbanBoard from '../OptimizedKanbanBoard';
 import CRMListView from '../CRMListView';
 import CRMPipelineManager from '../CRMPipelineManager';
 import CRMTagsManager from '../CRMTagsManager';
+import CRMReports from '../reports/CRMReports';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 
 interface CRMDashboardProps {
@@ -86,7 +87,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
             </TabsList>
 
-            {/* View Toggle */}
+            {/* View Toggle - Only show for pipeline tab */}
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 Pipeline: {pipelines.find(p => p.id === selectedPipelineId)?.name || 'Selecione'}
@@ -143,16 +144,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </TabsContent>
 
           <TabsContent value="relatorios" className="flex-1">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Relatórios CRM</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  <p>Módulo de relatórios em desenvolvimento</p>
-                </div>
-              </CardContent>
-            </Card>
+            <CRMReports />
           </TabsContent>
 
           <TabsContent value="configuracoes" className="flex-1">
