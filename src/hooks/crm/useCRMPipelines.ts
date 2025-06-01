@@ -137,19 +137,37 @@ export const useCRMPipelines = () => {
     }
   });
 
+  // Funções wrapper para compatibilidade com os componentes existentes
+  const updatePipeline = (id: string, data: any) => {
+    updatePipelineMutation.mutate({ id, data });
+  };
+
+  const updateColumn = (id: string, data: any) => {
+    updateColumnMutation.mutate({ id, data });
+  };
+
+  const fetchColumns = async (pipelineId?: string) => {
+    // Para compatibilidade, apenas faz refetch
+    await refetch();
+  };
+
+  const fetchPipelines = async () => {
+    await refetch();
+  };
+
   return {
     pipelines,
     columns,
     isLoading,
     loading: isLoading, // Alias para compatibilidade
     refetch,
-    fetchPipelines: refetch, // Alias para compatibilidade
-    fetchColumns: refetch, // Alias para compatibilidade
+    fetchPipelines,
+    fetchColumns,
     createPipeline: createPipelineMutation.mutate,
-    updatePipeline: updatePipelineMutation.mutate,
+    updatePipeline,
     deletePipeline: deletePipelineMutation.mutate,
     createColumn: createColumnMutation.mutate,
-    updateColumn: updateColumnMutation.mutate,
+    updateColumn,
     deleteColumn: deleteColumnMutation.mutate,
   };
 };
