@@ -21,8 +21,8 @@ export const useCRMLeadDetail = (leadId: string) => {
       
       console.log('🔍 Fetching lead details for ID:', leadId);
       
-      // Buscar dados do lead com relações especificando explicitamente as colunas
-      const { data, error } = await supabase
+      // Buscar dados do lead com relações usando foreign key específico
+      const { data, error: queryError } = await supabase
         .from('crm_leads')
         .select(`
           *,
@@ -36,9 +36,9 @@ export const useCRMLeadDetail = (leadId: string) => {
         .eq('id', leadId)
         .maybeSingle();
 
-      if (error) {
-        console.error('❌ Error fetching lead:', error);
-        throw error;
+      if (queryError) {
+        console.error('❌ Error fetching lead:', queryError);
+        throw queryError;
       }
 
       if (data) {
@@ -72,7 +72,7 @@ export const useCRMLeadDetail = (leadId: string) => {
           scheduled_contact_date: data.scheduled_contact_date || undefined,
           created_at: data.created_at,
           updated_at: data.updated_at,
-          tags: data.tags?.map((tagWrapper: any) => tagWrapper.tag).filter(Boolean) || [],
+          tags: Array.isArray(data.tags) ? data.tags.map((tagWrapper: any) => tagWrapper.tag).filter(Boolean) : [],
           pipeline: data.pipeline || undefined,
           column: data.column || undefined,
           responsible: data.responsible ? {
@@ -85,7 +85,7 @@ export const useCRMLeadDetail = (leadId: string) => {
         setLead(transformedLead);
         console.log('✅ Lead transformed and set:', transformedLead);
       } else {
-        console.log('⚠️ No lead data returned');
+        console.log('⚠️ No lead data returned for ID:', leadId);
         setLead(null);
         setError('Lead não encontrado');
       }

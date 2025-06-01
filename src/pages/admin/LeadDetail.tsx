@@ -19,11 +19,14 @@ import LeadCommentsTab from '@/components/admin/crm/lead-detail-tabs/LeadComment
 import LeadHistoryTab from '@/components/admin/crm/lead-detail-tabs/LeadHistoryTab';
 import LeadContactsTab from '@/components/admin/crm/lead-detail-tabs/LeadContactsTab';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const LeadDetail = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const { lead, loading, error, refetch } = useCRMLeadDetail(leadId || '');
+
+  console.log('🎯 LeadDetail - leadId:', leadId, 'lead:', lead, 'loading:', loading, 'error:', error);
 
   const handleBack = () => {
     navigate('/admin/crm');
@@ -45,12 +48,37 @@ const LeadDetail = () => {
     );
   }
 
-  if (error || !lead) {
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <Button onClick={handleBack} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para CRM
+          </Button>
+        </div>
+        
+        <Alert variant="destructive">
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground">
+            Lead ID: {leadId}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!lead) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">
-            {error || 'Lead não encontrado'}
+            Lead não encontrado (ID: {leadId})
           </p>
           <Button onClick={handleBack} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
