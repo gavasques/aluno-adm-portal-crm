@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit, MessageSquare, Calendar, Activity } from 'lucide-react';
 import QuickCommentModal from '../QuickCommentModal';
-import CRMLeadFormDialog from '../CRMLeadFormDialog';
+import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 
 interface LeadDetailQuickActionsProps {
   leadId: string;
@@ -83,7 +83,7 @@ export const LeadDetailQuickActions = ({
         />
 
         {/* Modal de edição de lead */}
-        <CRMLeadFormDialog
+        <ModernCRMLeadFormDialog
           open={showEditModal}
           onOpenChange={setShowEditModal}
           leadId={leadId}
@@ -141,7 +141,7 @@ export const LeadDetailQuickActions = ({
       />
 
       {/* Modal de edição de lead */}
-      <CRMLeadFormDialog
+      <ModernCRMLeadFormDialog
         open={showEditModal}
         onOpenChange={setShowEditModal}
         leadId={leadId}

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,10 @@ const OptimizedTagsSelector = React.memo(({ selectedTags, onTagsChange }: Optimi
       const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-      const newTag = await createTag(newTagName.trim(), randomColor);
+      const newTag = await createTag({
+        name: newTagName.trim(),
+        color: randomColor
+      });
       onTagsChange([...selectedTags, newTag.id]);
       setNewTagName('');
       setShowCreateForm(false);
