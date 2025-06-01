@@ -118,7 +118,7 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
 
   if (!pipelineId) {
     return (
-      <div className="text-center py-12">
+      <div className="flex items-center justify-center h-full">
         <p className="text-gray-500">Selecione um pipeline para visualizar os leads.</p>
       </div>
     );
@@ -130,9 +130,11 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
 
   if (pipelineColumns.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Nenhuma coluna encontrada para este pipeline.</p>
-        <p className="text-sm text-gray-400 mt-2">Configure as colunas nas configurações do pipeline.</p>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-500">Nenhuma coluna encontrada para este pipeline.</p>
+          <p className="text-sm text-gray-400 mt-2">Configure as colunas nas configurações do pipeline.</p>
+        </div>
       </div>
     );
   }
@@ -145,9 +147,9 @@ const OptimizedKanbanBoard = React.memo(({ filters, pipelineId }: OptimizedKanba
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="w-full h-full overflow-x-auto overflow-y-hidden pb-4">
+        <div className="w-full h-full overflow-x-auto overflow-y-hidden">
           <div className={cn(
-            "flex gap-4 min-w-max h-full px-3 transition-all duration-300",
+            "flex gap-4 min-w-max h-full p-2 transition-all duration-300",
             activeLead && "pointer-events-none"
           )}>
             {pipelineColumns.map(column => {
