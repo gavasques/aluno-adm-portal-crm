@@ -35,11 +35,13 @@ export const useCRMFieldVisibility = () => {
       }
 
       if (data) {
+        // Definir explicitamente o tipo para evitar erros de inferência
+        const configData = data as any;
         setConfig({
-          amazon_section: data.amazon_section ?? true,
-          business_section: data.business_section ?? true,
-          qualification_section: data.qualification_section ?? true,
-          notes_section: data.notes_section ?? true,
+          amazon_section: configData.amazon_section ?? true,
+          business_section: configData.business_section ?? true,
+          qualification_section: configData.qualification_section ?? true,
+          notes_section: configData.notes_section ?? true,
         });
       } else {
         setConfig(DEFAULT_CONFIG);
