@@ -10,6 +10,9 @@ import { DashboardToolbar } from '../dashboard/DashboardToolbar';
 import { StatusReports } from '../reports/StatusReports';
 import { CRMFilters } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
+import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
+import { useCRMTags } from '@/hooks/crm/useCRMTags';
+import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 
 interface CRMDashboardProps {
@@ -32,6 +35,18 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   // Hooks
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
+  const { pipelineColumns } = useCRMPipelines();
+  const { tags } = useCRMTags();
+  const { users } = useCRMUsers();
+
+  // Hook para gerenciar filtros
+  const {
+    searchValue,
+    setSearchValue,
+    isDebouncing,
+    updateFilter,
+    clearAllFilters
+  } = useCRMFiltersState(filters, setFilters);
 
   // Handlers
   const handleCreateLead = useCallback((columnId?: string) => {
@@ -51,6 +66,10 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       navigate(`/admin/lead/${leadId}`);
     }
   }, [navigate, onOpenLead]);
+
+  const handleTagsChange = useCallback((tagIds: string[]) => {
+    updateFilter('tag_ids', tagIds);
+  }, [updateFilter]);
 
   // Filtros efetivos
   const effectiveFilters: CRMFilters = {
@@ -95,10 +114,16 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
         <TabsContent value="dashboard" className="flex-1 flex flex-col m-0">
           {/* Filtros Primários */}
-          <PrimaryFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-          />
+          <div className="bg-white border-b border-gray-200 p-4">
+            <PrimaryFilters
+              pipelineId={selectedPipelineId}
+              onPipelineChange={setSelectedPipelineId}
+              pipelines={pipelines}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              isDebouncing={isDebouncing}
+            />
+          </div>
 
           {/* Toolbar */}
           <DashboardToolbar
@@ -118,11 +143,15 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden bg-white border-b border-gray-200"
+                className="overflow-hidden bg-white border-b border-gray-200 p-4"
               >
                 <AdvancedFilters
                   filters={filters}
-                  onFiltersChange={setFilters}
+                  updateFilter={updateFilter}
+                  pipelineColumns={pipelineColumns}
+                  users={users}
+                  tags={tags}
+                  handleTagsChange={handleTagsChange}
                 />
               </motion.div>
             )}
@@ -149,8 +178,9 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         open={showLeadForm}
         onOpenChange={setShowLeadForm}
         onSuccess={handleLeadFormSuccess}
-        initialPipelineId={selectedPipelineId}
+        pipelineId={selectedPipelineId}
         initialColumnId={selectedColumnId}
+        mode="create"
       />
     </div>
   );
