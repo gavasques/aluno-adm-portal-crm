@@ -16,6 +16,11 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
   isOver,
   onOpenDetail
 }) => {
+  const handleLeadClick = (lead: CRMLead) => {
+    console.log('🔗 ColumnBody: Click no lead:', lead.id);
+    onOpenDetail(lead);
+  };
+
   return (
     <SortableContext 
       items={leads.map(lead => lead.id)} 
@@ -33,7 +38,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
           >
             <OptimizedKanbanLeadCard
               lead={lead}
-              onClick={() => onOpenDetail(lead)}
+              onClick={() => handleLeadClick(lead)}
             />
           </div>
         ))}

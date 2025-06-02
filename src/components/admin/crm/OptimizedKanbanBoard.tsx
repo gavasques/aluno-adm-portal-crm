@@ -4,8 +4,8 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
+import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
 import { KanbanGrid } from './kanban/KanbanGrid';
-import KanbanColumn from './KanbanColumn';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
 import { KanbanEmptyState } from './kanban/KanbanEmptyState';
@@ -37,6 +37,8 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     loading: leadsLoading,
     moveLeadToColumn
   } = useOptimizedCRMData(filters);
+
+  const { handleOpenDetail } = useKanbanNavigation();
 
   const activeColumns = columns.filter(col => col.is_active);
   const loading = columnsLoading || leadsLoading;
@@ -78,10 +80,10 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     }
   }, [leadsWithContacts, activeColumns, moveLeadToColumn]);
 
-  const handleOpenDetail = useCallback((lead: LeadWithContacts) => {
-    // TODO: Implementar abertura do detalhe do lead
-    console.log('Abrir detalhe do lead:', lead.id);
-  }, []);
+  const handleLeadClick = useCallback((lead: LeadWithContacts) => {
+    console.log('🔗 OptimizedKanbanBoard: Abrindo lead:', lead.id);
+    handleOpenDetail(lead, !!draggedLead, isProcessingDrop);
+  }, [handleOpenDetail, draggedLead, isProcessingDrop]);
 
   if (loading) {
     return <KanbanLoadingOverlay isVisible={true} />;
@@ -106,7 +108,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
             activeColumnId={draggedLead?.column_id || null}
             isDragging={!!draggedLead}
             isMoving={isProcessingDrop}
-            onOpenDetail={handleOpenDetail}
+            onOpenDetail={handleLeadClick}
             onCreateLead={onCreateLead}
           />
         </SortableContext>
