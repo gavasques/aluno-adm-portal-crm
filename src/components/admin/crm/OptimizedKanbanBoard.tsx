@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
 import { KanbanGrid } from './kanban/KanbanGrid';
-import { KanbanColumn } from './KanbanColumn';
+import KanbanColumn from './KanbanColumn';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
 import { KanbanEmptyState } from './kanban/KanbanEmptyState';
@@ -28,7 +29,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   const {
     columns,
     loading: columnsLoading
-  } = useCRMPipelines(pipelineId);
+  } = useCRMPipelines();
 
   const {
     leadsWithContacts,
@@ -77,15 +78,20 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     }
   }, [leadsWithContacts, activeColumns, moveLeadToColumn]);
 
+  const handleOpenDetail = useCallback((lead: LeadWithContacts) => {
+    // TODO: Implementar abertura do detalhe do lead
+    console.log('Abrir detalhe do lead:', lead.id);
+  }, []);
+
   if (loading) {
-    return <KanbanLoadingOverlay />;
+    return <KanbanLoadingOverlay isVisible={true} />;
   }
 
   if (activeColumns.length === 0) {
     return (
       <KanbanEmptyState 
-        title="Nenhuma coluna encontrada"
-        description="Configure colunas no pipeline para começar a usar o Kanban"
+        pipelineId={pipelineId}
+        hasColumns={false}
       />
     );
   }
@@ -94,17 +100,15 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     <div className="h-full flex flex-col">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext items={activeColumns.map(col => col.id)} strategy={horizontalListSortingStrategy}>
-          <KanbanGrid>
-            {activeColumns.map((column) => (
-              <KanbanColumn
-                key={column.id}
-                column={column}
-                leads={leadsByColumn[column.id] || []}
-                onCreateLead={() => onCreateLead(column.id)}
-                LeadCard={DynamicLeadCard}
-              />
-            ))}
-          </KanbanGrid>
+          <KanbanGrid
+            pipelineColumns={activeColumns}
+            leadsByColumn={leadsByColumn}
+            activeColumnId={draggedLead?.column_id || null}
+            isDragging={!!draggedLead}
+            isMoving={isProcessingDrop}
+            onOpenDetail={handleOpenDetail}
+            onCreateLead={onCreateLead}
+          />
         </SortableContext>
 
         <DragOverlay>

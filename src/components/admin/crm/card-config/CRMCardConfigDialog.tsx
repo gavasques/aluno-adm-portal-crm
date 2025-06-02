@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { DragDropContext, Droppable, Draggable } from '@dnd-kit/sortable';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -239,16 +238,18 @@ export const CRMCardConfigDialog: React.FC<CRMCardConfigDialogProps> = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            {orderedFields.map((field) => (
-              <SortableFieldItem
-                key={field.key}
-                field={field}
-                isVisible={localVisibleFields.includes(field.key)}
-                onToggle={handleToggleField}
-              />
-            ))}
-          </div>
+          <SortableContext items={orderedFields.map(f => f.key)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {orderedFields.map((field) => (
+                <SortableFieldItem
+                  key={field.key}
+                  field={field}
+                  isVisible={localVisibleFields.includes(field.key)}
+                  onToggle={handleToggleField}
+                />
+              ))}
+            </div>
+          </SortableContext>
         </div>
 
         <DialogFooter>

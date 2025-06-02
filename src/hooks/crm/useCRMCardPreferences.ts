@@ -19,9 +19,13 @@ export const useCRMCardPreferences = () => {
   const { data: preferences, isLoading } = useQuery({
     queryKey: ['crm-card-preferences'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('crm_user_card_preferences')
         .select('*')
+        .eq('user_id', user.id)
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = não encontrado
@@ -51,9 +55,13 @@ export const useCRMCardPreferences = () => {
       visible_fields: CRMLeadCardField[]; 
       field_order: CRMLeadCardField[]; 
     }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data: existing } = await supabase
         .from('crm_user_card_preferences')
         .select('id')
+        .eq('user_id', user.id)
         .single();
 
       if (existing) {
@@ -73,6 +81,7 @@ export const useCRMCardPreferences = () => {
         const { error } = await supabase
           .from('crm_user_card_preferences')
           .insert({
+            user_id: user.id,
             visible_fields,
             field_order
           });

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +10,7 @@ import { DashboardToolbar } from '../dashboard/DashboardToolbar';
 import { StatusReports } from '../reports/StatusReports';
 import { CRMFilters } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { ModernCRMLeadFormDialog } from '../ModernCRMLeadFormDialog';
+import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
@@ -95,8 +96,6 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         <TabsContent value="dashboard" className="flex-1 flex flex-col m-0">
           {/* Filtros Primários */}
           <PrimaryFilters
-            selectedPipelineId={selectedPipelineId}
-            onPipelineChange={setSelectedPipelineId}
             filters={filters}
             onFiltersChange={setFilters}
           />
@@ -124,7 +123,6 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                 <AdvancedFilters
                   filters={filters}
                   onFiltersChange={setFilters}
-                  selectedPipelineId={selectedPipelineId}
                 />
               </motion.div>
             )}

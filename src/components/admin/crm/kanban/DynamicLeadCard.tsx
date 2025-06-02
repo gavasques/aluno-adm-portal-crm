@@ -68,7 +68,6 @@ const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead }) => {
         return lead.responsible ? (
           <div className="flex items-center gap-2 text-sm">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={lead.responsible.avatar_url} />
               <AvatarFallback className="text-xs">
                 {lead.responsible.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
