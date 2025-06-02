@@ -35,9 +35,13 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   // Hooks
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
-  const { pipelineColumns } = useCRMPipelines();
   const { tags } = useCRMTags();
   const { users } = useCRMUsers();
+
+  // Get pipeline columns from the selected pipeline
+  const pipelineColumns = selectedPipelineId 
+    ? pipelines.find(p => p.id === selectedPipelineId)?.columns || []
+    : [];
 
   // Hook para gerenciar filtros
   const {
