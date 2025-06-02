@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -120,6 +119,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
         </DragOverlay>
       </DndContext>
 
+      {/* Processing overlay */}
       {isProcessingDrop && (
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
           <div className="bg-white rounded-lg p-4 shadow-lg flex items-center gap-2">

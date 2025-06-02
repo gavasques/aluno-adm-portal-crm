@@ -2,7 +2,7 @@
 import React from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CRMLead } from '@/types/crm.types';
-import OptimizedKanbanLeadCard from '../../OptimizedKanbanLeadCard';
+import { DynamicLeadCard } from '../DynamicLeadCard';
 import { cn } from '@/lib/utils';
 
 interface ColumnBodyProps {
@@ -36,7 +36,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
             className="animate-fade-in"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <OptimizedKanbanLeadCard
+            <DynamicLeadCard
               lead={lead}
               onClick={() => handleLeadClick(lead)}
             />

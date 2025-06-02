@@ -19,6 +19,7 @@ export const useCRMCardPreferences = () => {
   const { data: preferences, isLoading } = useQuery({
     queryKey: ['crm-card-preferences'],
     queryFn: async () => {
+      console.log('🔧 Loading card preferences...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -33,13 +34,14 @@ export const useCRMCardPreferences = () => {
       }
 
       if (!data) {
-        // Retornar configuração padrão se não existir
+        console.log('📝 No preferences found, using defaults');
         return {
           visible_fields: DEFAULT_VISIBLE_FIELDS,
           field_order: DEFAULT_FIELD_ORDER
         };
       }
 
+      console.log('✅ Preferences loaded:', data);
       return {
         visible_fields: data.visible_fields as CRMLeadCardField[],
         field_order: data.field_order as CRMLeadCardField[]
@@ -55,6 +57,8 @@ export const useCRMCardPreferences = () => {
       visible_fields: CRMLeadCardField[]; 
       field_order: CRMLeadCardField[]; 
     }) => {
+      console.log('💾 Saving preferences:', { visible_fields, field_order });
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -91,12 +95,20 @@ export const useCRMCardPreferences = () => {
 
       return { visible_fields, field_order };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Preferences saved successfully:', data);
+      
+      // Invalidar as queries relacionadas para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['crm-card-preferences'] });
+      queryClient.setQueryData(['crm-card-preferences'], {
+        visible_fields: data.visible_fields,
+        field_order: data.field_order
+      });
+      
       toast.success('Preferências de card atualizadas');
     },
     onError: (error) => {
-      console.error('Erro ao salvar preferências:', error);
+      console.error('❌ Erro ao salvar preferências:', error);
       toast.error('Erro ao salvar preferências');
     }
   });

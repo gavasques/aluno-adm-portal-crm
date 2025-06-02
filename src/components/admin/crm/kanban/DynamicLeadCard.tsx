@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { 
   Phone, 
   Mail, 
@@ -249,9 +251,32 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
   onClick,
   isDragging = false
 }) => {
-  const { preferences } = useCRMCardPreferences();
+  const { preferences, isLoading } = useCRMCardPreferences();
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: lead.id });
 
-  // Organizar campos pela ordem preferida
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded mb-1"></div>
+        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+      </div>
+    );
+  }
+
+  // Organizar campos pela ordem preferida do usuário
   const orderedVisibleFields = preferences.field_order.filter(field =>
     preferences.visible_fields.includes(field)
   );
@@ -266,6 +291,10 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
 
   return (
     <motion.div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -275,10 +304,15 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
       className={`
         bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md
         transition-all duration-200 cursor-pointer p-4 space-y-3
-        ${isDragging ? 'rotate-3 shadow-xl' : ''}
+        ${isDragging ? 'rotate-3 shadow-xl opacity-50' : ''}
       `}
       onClick={onClick}
     >
+      {/* Debug info */}
+      <div className="hidden">
+        Campos visíveis: {preferences.visible_fields.join(', ')}
+      </div>
+      
       {/* Seção principal (campos obrigatórios) */}
       <div className="space-y-2">
         {requiredFields.map((field) => (
