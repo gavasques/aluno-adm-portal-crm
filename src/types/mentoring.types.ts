@@ -54,6 +54,8 @@ export interface StudentMentoringEnrollment {
     name: string;
     type: 'Individual' | 'Grupo';
     frequency?: string;
+    durationMonths?: number;
+    extensions?: MentoringExtensionOption[];
   };
   status: 'ativa' | 'concluida' | 'pausada' | 'cancelada';
   startDate: string;
@@ -76,7 +78,7 @@ export interface MentoringSession {
   enrollment_id: string;
   enrollmentId?: string; // Alias para compatibilidade
   type: 'individual' | 'group';
-  status: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento';
+  status: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
   scheduled_date?: string;
   scheduledDate?: string; // Alias para compatibilidade
   scheduled_time?: string;
@@ -94,6 +96,10 @@ export interface MentoringSession {
   mentorNotes?: string;
   transcription?: string;
   recordingLink?: string;
+  calendly_link?: string;
+  calendlyLink?: string; // Alias para compatibilidade
+  student_notes?: text;
+  studentNotes?: string; // Alias para compatibilidade
 }
 
 export interface CreateExtensionData {
@@ -106,9 +112,12 @@ export interface MentoringExtension {
   id: string;
   enrollment_id: string;
   extension_months: number;
+  extensionMonths?: number; // Alias para compatibilidade
   notes?: string;
   created_at: string;
   updated_at: string;
+  applied_date?: string;
+  appliedDate?: string; // Alias para compatibilidade
 }
 
 export interface CheckoutLinks {
@@ -130,6 +139,8 @@ export interface MentoringExtensionOption {
   checkoutLinks?: CheckoutLinks;
 }
 
+export type FrequencyType = 'Semanal' | 'Quinzenal' | 'Mensal';
+
 export interface MentoringCatalog {
   id: string;
   name: string;
@@ -144,11 +155,12 @@ export interface MentoringCatalog {
   category?: string;
   tags?: string[];
   extensions?: MentoringExtensionOption[];
-  status: string;
+  status: 'Ativa' | 'Inativa' | 'Cancelada';
   createdAt: string;
   updatedAt: string;
-  frequency?: string;
+  frequency?: FrequencyType;
   checkoutLinks?: CheckoutLinks;
+  imageUrl?: string;
 }
 
 export interface CreateMentoringCatalogData {
@@ -163,8 +175,9 @@ export interface CreateMentoringCatalogData {
   category?: string;
   tags?: string[];
   extensions?: MentoringExtensionOption[];
-  frequency?: string;
+  frequency?: FrequencyType;
   checkoutLinks?: CheckoutLinks;
+  status?: 'Ativa' | 'Inativa' | 'Cancelada';
 }
 
 export interface MentoringDashboardStats {
@@ -211,7 +224,7 @@ export interface UpdateSessionData {
   durationMinutes?: number;
   meetingLink?: string;
   observations?: string;
-  status?: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento';
+  status?: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
   mentorNotes?: string;
   transcription?: string;
   recordingLink?: string;
@@ -227,7 +240,33 @@ export interface EnrollmentFormData {
   paymentStatus: string;
 }
 
+export interface MentoringMaterial {
+  id: string;
+  enrollment_id?: string;
+  enrollmentId?: string; // Alias para compatibilidade
+  session_id?: string;
+  sessionId?: string; // Alias para compatibilidade
+  file_name: string;
+  fileName?: string; // Alias para compatibilidade
+  file_url: string;
+  fileUrl?: string; // Alias para compatibilidade
+  file_type: string;
+  fileType?: string; // Alias para compatibilidade
+  description?: string;
+  uploader_id?: string;
+  uploaderId?: string; // Alias para compatibilidade
+  uploader_type?: string;
+  uploaderType?: string; // Alias para compatibilidade
+  size_mb?: number;
+  sizeMb?: number; // Alias para compatibilidade
+  tags?: string[];
+  created_at: string;
+  createdAt?: string; // Alias para compatibilidade
+  updated_at: string;
+  updatedAt?: string; // Alias para compatibilidade
+}
+
 export type MentoringStatus = 'ativa' | 'concluida' | 'pausada' | 'cancelada';
-export type SessionStatus = 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento';
+export type SessionStatus = 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
 export type PaymentStatus = 'pago' | 'pendente' | 'atrasado' | 'cancelado';
 export type MentoringType = 'Individual' | 'Grupo';
