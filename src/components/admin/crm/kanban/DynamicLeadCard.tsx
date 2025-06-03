@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -259,11 +258,22 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     setNodeRef,
     transform,
     transition,
-  } = useSortable({ id: lead.id });
+  } = useSortable({ 
+    id: lead.id,
+    data: lead // Passar dados do lead para o sortable
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging && onClick) {
+      onClick();
+    }
   };
 
   if (isLoading) {
@@ -299,20 +309,15 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: isDragging ? 1 : 1.02 }}
       transition={{ duration: 0.2 }}
       className={`
         bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md
         transition-all duration-200 cursor-pointer p-4 space-y-3
-        ${isDragging ? 'rotate-3 shadow-xl opacity-50' : ''}
+        ${isDragging ? 'rotate-3 shadow-xl opacity-50 z-50' : ''}
       `}
-      onClick={onClick}
+      onClick={handleClick}
     >
-      {/* Debug info */}
-      <div className="hidden">
-        Campos visíveis: {preferences.visible_fields.join(', ')}
-      </div>
-      
       {/* Seção principal (campos obrigatórios) */}
       <div className="space-y-2">
         {requiredFields.map((field) => (

@@ -1,16 +1,17 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import React, { useCallback } from 'react';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
+import { useSimplifiedDragAndDrop } from '@/hooks/crm/useSimplifiedDragAndDrop';
+import { useSimplifiedLeadMovement } from '@/hooks/crm/useSimplifiedLeadMovement';
 import { KanbanGrid } from './kanban/KanbanGrid';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
 import { KanbanEmptyState } from './kanban/KanbanEmptyState';
-import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
-import { toast } from 'sonner';
+import { CRMFilters } from '@/types/crm.types';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -23,9 +24,6 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   pipelineId,
   onCreateLead
 }) => {
-  const [draggedLead, setDraggedLead] = useState<LeadWithContacts | null>(null);
-  const [isProcessingDrop, setIsProcessingDrop] = useState(false);
-
   const {
     columns,
     loading: columnsLoading
@@ -34,56 +32,32 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   const {
     leadsWithContacts,
     leadsByColumn,
-    loading: leadsLoading,
-    moveLeadToColumn
+    loading: leadsLoading
   } = useOptimizedCRMData(filters);
 
   const { handleOpenDetail } = useKanbanNavigation();
+  
+  const { moveLeadToColumn } = useSimplifiedLeadMovement(filters);
+
+  const {
+    draggedLead,
+    isMoving,
+    sensors,
+    handleDragStart,
+    handleDragEnd
+  } = useSimplifiedDragAndDrop({
+    onMoveLeadToColumn: moveLeadToColumn
+  });
 
   const activeColumns = columns.filter(col => col.is_active);
   const loading = columnsLoading || leadsLoading;
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const leadId = active.id as string;
-    const lead = leadsWithContacts.find(l => l.id === leadId);
-    setDraggedLead(lead || null);
-  }, [leadsWithContacts]);
-
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleLeadClick = useCallback((lead: any) => {
+    if (isMoving || draggedLead) return; // Bloquear cliques durante drag
     
-    setDraggedLead(null);
-    
-    if (!over || active.id === over.id) return;
-    
-    const leadId = active.id as string;
-    const newColumnId = over.id as string;
-    
-    const lead = leadsWithContacts.find(l => l.id === leadId);
-    if (!lead) return;
-    
-    if (lead.column_id === newColumnId) return;
-    
-    setIsProcessingDrop(true);
-    
-    try {
-      await moveLeadToColumn(leadId, newColumnId);
-      
-      const targetColumn = activeColumns.find(col => col.id === newColumnId);
-      toast.success(`Lead movido para "${targetColumn?.name}"`);
-    } catch (error) {
-      console.error('Erro ao mover lead:', error);
-      toast.error('Erro ao mover lead');
-    } finally {
-      setIsProcessingDrop(false);
-    }
-  }, [leadsWithContacts, activeColumns, moveLeadToColumn]);
-
-  const handleLeadClick = useCallback((lead: LeadWithContacts) => {
     console.log('🔗 OptimizedKanbanBoard: Abrindo lead:', lead.id);
-    handleOpenDetail(lead, !!draggedLead, isProcessingDrop);
-  }, [handleOpenDetail, draggedLead, isProcessingDrop]);
+    handleOpenDetail(lead, false, false);
+  }, [handleOpenDetail, isMoving, draggedLead]);
 
   if (loading) {
     return <KanbanLoadingOverlay isVisible={true} />;
@@ -98,16 +72,25 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     );
   }
 
+  console.log('📊 Renderizando Kanban com', activeColumns.length, 'colunas');
+
   return (
     <div className="h-full w-full flex flex-col p-8">
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <SortableContext items={activeColumns.map(col => col.id)} strategy={horizontalListSortingStrategy}>
+      <DndContext 
+        sensors={sensors}
+        onDragStart={handleDragStart} 
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext 
+          items={activeColumns.map(col => col.id)} 
+          strategy={horizontalListSortingStrategy}
+        >
           <KanbanGrid
             pipelineColumns={activeColumns}
             leadsByColumn={leadsByColumn}
             activeColumnId={draggedLead?.column_id || null}
             isDragging={!!draggedLead}
-            isMoving={isProcessingDrop}
+            isMoving={isMoving}
             onOpenDetail={handleLeadClick}
             onCreateLead={onCreateLead}
           />
@@ -120,15 +103,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
         </DragOverlay>
       </DndContext>
 
-      {/* Processing overlay */}
-      {isProcessingDrop && (
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-4 shadow-lg flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm font-medium">Movendo lead...</span>
-          </div>
-        </div>
-      )}
+      <KanbanLoadingOverlay isVisible={isMoving} />
     </div>
   );
 };

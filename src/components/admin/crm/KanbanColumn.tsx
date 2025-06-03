@@ -2,6 +2,7 @@
 import React from 'react';
 import { CRMLead, CRMPipelineColumn } from '@/types/crm.types';
 import { useColumnOperations } from '@/hooks/crm/useColumnOperations';
+import { useDroppable } from '@dnd-kit/core';
 import { ColumnHeader } from './kanban/column/ColumnHeader';
 import { ColumnBody } from './kanban/column/ColumnBody';
 import { cn } from '@/lib/utils';
@@ -21,9 +22,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onCreateLead,
   isDragOver = false 
 }) => {
-  const { setNodeRef, isOver, handleCreateLead } = useColumnOperations({
+  const { handleCreateLead } = useColumnOperations({
     column,
     onCreateLead
+  });
+
+  // Configurar zona de drop para toda a coluna
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.id,
   });
 
   return (
@@ -31,22 +37,22 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       ref={setNodeRef}
       className={cn(
         "w-80 h-full bg-white rounded-lg border border-gray-200 p-4 flex flex-col transition-all duration-300 ease-in-out",
-        isOver && "bg-blue-50 ring-1 ring-blue-300",
-        isDragOver && "scale-[1.02]"
+        (isOver || isDragOver) && "bg-blue-50 ring-2 ring-blue-300 scale-[1.02]"
       )}
     >
       <ColumnHeader
         column={column}
         leadsCount={leads.length}
-        isOver={isOver}
+        isOver={isOver || isDragOver}
         onCreateLead={onCreateLead ? handleCreateLead : undefined}
       />
       
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 mt-4">
         <ColumnBody
           leads={leads}
-          isOver={isOver}
+          isOver={isOver || isDragOver}
           onOpenDetail={onOpenDetail}
+          columnId={column.id}
         />
       </div>
     </div>
