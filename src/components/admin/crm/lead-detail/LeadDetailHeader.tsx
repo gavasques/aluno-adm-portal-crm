@@ -60,12 +60,12 @@ export const LeadDetailHeader = ({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-purple-50"
+        className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50"
       >
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-white rounded-xl shadow-sm border border-white/50">
+              <div className="p-3 bg-white rounded-xl shadow-sm border border-white">
                 <User className="h-6 w-6 text-blue-600" />
               </div>
               <div>
@@ -97,7 +97,7 @@ export const LeadDetailHeader = ({
                     variant="outline"
                     size="sm"
                     onClick={handleCancelEdit}
-                    className="bg-white/50 hover:bg-white/80"
+                    className="bg-gray-100 hover:bg-gray-50"
                   >
                     Cancelar
                   </Button>
@@ -117,7 +117,7 @@ export const LeadDetailHeader = ({
                   variant="outline"
                   size="sm"
                   onClick={handleEditClick}
-                  className="bg-white/50 hover:bg-white/80"
+                  className="bg-gray-100 hover:bg-gray-50"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Editar
@@ -127,7 +127,7 @@ export const LeadDetailHeader = ({
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="h-8 w-8 p-0 rounded-lg hover:bg-white/50"
+                className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100"
               >
                 <X className="h-4 w-4" />
               </Button>

@@ -97,7 +97,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-4 p-4 bg-gray-50/50 border-t border-gray-200/50">
+      <div className="flex items-center gap-4 p-4 bg-gray-50 border-t border-gray-200">
         {/* Controles de Pipeline */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Pipeline:</span>

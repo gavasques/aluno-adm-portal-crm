@@ -38,7 +38,7 @@ export const LeadDetailQuickActions = ({
   if (compact) {
     return (
       <>
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 shadow-lg">
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
             <Activity className="h-5 w-5 text-purple-600" />
             Ações Rápidas
@@ -47,7 +47,7 @@ export const LeadDetailQuickActions = ({
             <Button 
               variant="outline" 
               size="sm"
-              className="h-12 w-12 p-0 bg-white/50 hover:bg-white/80"
+              className="h-12 w-12 p-0 bg-gray-100 hover:bg-gray-50"
               onClick={handleEditLead}
               title="Editar Lead"
             >
@@ -56,7 +56,7 @@ export const LeadDetailQuickActions = ({
             <Button 
               variant="outline" 
               size="sm"
-              className="h-12 w-12 p-0 bg-white/50 hover:bg-white/80"
+              className="h-12 w-12 p-0 bg-gray-100 hover:bg-gray-50"
               onClick={handleAddComment}
               title="Adicionar Comentário"
             >
@@ -65,7 +65,7 @@ export const LeadDetailQuickActions = ({
             <Button 
               variant="outline" 
               size="sm"
-              className="h-12 w-12 p-0 bg-white/50 hover:bg-white/80"
+              className="h-12 w-12 p-0 bg-gray-100 hover:bg-gray-50"
               onClick={onScheduleContact}
               title="Agendar Contato"
             >
@@ -99,7 +99,7 @@ export const LeadDetailQuickActions = ({
 
   return (
     <>
-      <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg">
+      <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-lg">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Activity className="h-5 w-5 text-purple-600" />
           Ações Rápidas
@@ -107,7 +107,7 @@ export const LeadDetailQuickActions = ({
         <div className="space-y-2">
           <Button 
             variant="outline" 
-            className="w-full justify-start bg-white/50 hover:bg-white/80"
+            className="w-full justify-start bg-gray-100 hover:bg-gray-50"
             onClick={handleEditLead}
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -115,7 +115,7 @@ export const LeadDetailQuickActions = ({
           </Button>
           <Button 
             variant="outline" 
-            className="w-full justify-start bg-white/50 hover:bg-white/80"
+            className="w-full justify-start bg-gray-100 hover:bg-gray-50"
             onClick={handleAddComment}
           >
             <MessageSquare className="h-4 w-4 mr-2" />
@@ -123,7 +123,7 @@ export const LeadDetailQuickActions = ({
           </Button>
           <Button 
             variant="outline" 
-            className="w-full justify-start bg-white/50 hover:bg-white/80"
+            className="w-full justify-start bg-gray-100 hover:bg-gray-50"
             onClick={onScheduleContact}
           >
             <Calendar className="h-4 w-4 mr-2" />

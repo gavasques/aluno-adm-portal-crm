@@ -81,7 +81,7 @@ export const RecentComments = ({ leadId }: RecentCommentsProps) => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-gray-50/50 rounded-lg p-4 border border-gray-200/50"
+              className="bg-gray-50 rounded-lg p-4 border border-gray-200"
             >
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
