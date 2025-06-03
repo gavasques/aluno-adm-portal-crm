@@ -92,8 +92,9 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           onTabChange={handleTabChange}
         />
 
-        {/* Conteúdo das Tabs */}
+        {/* Conteúdo das Tabs - Renderização Condicional Real */}
         <CRMDashboardContent
+          activeTab={activeTab}
           activeView={activeView}
           onViewChange={setActiveView}
           showFilters={showFilters}
