@@ -1,22 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PrimaryFilters } from '../filters/PrimaryFilters';
-import { AdvancedFilters } from '../filters/AdvancedFilters';
-import { DashboardContent } from '../dashboard/DashboardContent';
-import { DashboardToolbar } from '../dashboard/DashboardToolbar';
-import { StatusReports } from '../reports/StatusReports';
-import { CRMSettings } from '../settings/CRMSettings';
-import CRMReports from '../reports/CRMReports';
-import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
-import { CRMFilters } from '@/types/crm.types';
+import { Tabs } from '@/components/ui/tabs';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
 import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
+import { CRMDashboardHeader } from './CRMDashboardHeader';
+import { CRMDashboardContent } from './CRMDashboardContent';
+import { useCRMDashboardState } from './useCRMDashboardState';
 
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
@@ -25,18 +17,31 @@ interface CRMDashboardProps {
 const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const navigate = useNavigate();
   
-  // Estados principais
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'settings'>('dashboard');
-  const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
-  const [showLeadForm, setShowLeadForm] = useState(false);
-  const [selectedColumnId, setSelectedColumnId] = useState<string | undefined>();
+  // Estado do dashboard
+  const {
+    activeTab,
+    setActiveTab,
+    activeView,
+    setActiveView,
+    showFilters,
+    setShowFilters,
+    selectedPipelineId,
+    setSelectedPipelineId,
+    showLeadForm,
+    setShowLeadForm,
+    selectedColumnId,
+    filters,
+    searchValue,
+    setSearchValue,
+    isDebouncing,
+    updateFilter,
+    effectiveFilters,
+    handleCreateLead,
+    handleLeadFormSuccess,
+    handleTagsChange
+  } = useCRMDashboardState();
 
-  // Estados de filtros
-  const [filters, setFilters] = useState<CRMFilters>({});
-
-  // Hooks
+  // Hooks de dados
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
   const { tags } = useCRMTags();
   const { users } = useCRMUsers();
@@ -46,27 +51,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     ? pipelines.find(p => p.id === selectedPipelineId)?.columns || []
     : [];
 
-  // Hook para gerenciar filtros
-  const {
-    searchValue,
-    setSearchValue,
-    isDebouncing,
-    updateFilter,
-    clearAllFilters
-  } = useCRMFiltersState(filters, setFilters);
-
-  // Handlers
-  const handleCreateLead = useCallback((columnId?: string) => {
-    setSelectedColumnId(columnId);
-    setShowLeadForm(true);
-  }, []);
-
-  const handleLeadFormSuccess = useCallback(() => {
-    setShowLeadForm(false);
-    setSelectedColumnId(undefined);
-  }, []);
-
-  const handleOpenLead = useCallback((leadId: string) => {
+  const handleOpenLead = React.useCallback((leadId: string) => {
     if (onOpenLead) {
       onOpenLead(leadId);
     } else {
@@ -74,22 +59,12 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     }
   }, [navigate, onOpenLead]);
 
-  const handleTagsChange = useCallback((tagIds: string[]) => {
-    updateFilter('tag_ids', tagIds);
-  }, [updateFilter]);
-
-  // Filtros efetivos
-  const effectiveFilters: CRMFilters = {
-    ...filters,
-    pipeline_id: selectedPipelineId || filters.pipeline_id
-  };
-
   // Selecionar primeiro pipeline se nenhum estiver selecionado
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
       setSelectedPipelineId(pipelines[0].id);
     }
-  }, [pipelines, selectedPipelineId]);
+  }, [pipelines, selectedPipelineId, setSelectedPipelineId]);
 
   if (pipelinesLoading) {
     return (
@@ -101,102 +76,38 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'dashboard' | 'reports' | 'analytics' | 'settings')} className="flex-1 flex flex-col">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col"
+      >
         {/* Header com Tabs */}
-        <div className="bg-white border-b border-gray-200 flex-shrink-0">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">CRM</h1>
-                <p className="text-gray-600">Gerencie seus leads e oportunidades</p>
-              </div>
-              
-              <TabsList className="grid w-[800px] grid-cols-4">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="reports">Relatórios</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                <TabsTrigger value="settings">Configurações</TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
-        </div>
+        <CRMDashboardHeader
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
-        <TabsContent value="dashboard" className="flex-1 flex flex-col m-0">
-          {/* Filtros Primários */}
-          <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
-            <PrimaryFilters
-              pipelineId={selectedPipelineId}
-              onPipelineChange={setSelectedPipelineId}
-              pipelines={pipelines}
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              isDebouncing={isDebouncing}
-            />
-          </div>
-
-          {/* Toolbar */}
-          <DashboardToolbar
-            activeView={activeView}
-            onViewChange={setActiveView}
-            showFilters={showFilters}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            onCreateLead={handleCreateLead}
-            filters={effectiveFilters}
-          />
-
-          {/* Filtros Avançados */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden bg-white border-b border-gray-200 p-4 flex-shrink-0"
-              >
-                <AdvancedFilters
-                  filters={filters}
-                  updateFilter={updateFilter}
-                  pipelineColumns={pipelineColumns}
-                  users={users}
-                  tags={tags}
-                  handleTagsChange={handleTagsChange}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Conteúdo Principal */}
-          <div className="flex-1 overflow-hidden">
-            <DashboardContent
-              activeView={activeView}
-              effectiveFilters={effectiveFilters}
-              selectedPipelineId={selectedPipelineId}
-              onCreateLead={handleCreateLead}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="reports" className="flex-1 m-0 overflow-hidden">
-          <CRMReports />
-        </TabsContent>
-
-        <TabsContent value="analytics" className="flex-1 m-0 overflow-hidden">
-          <AnalyticsDashboard 
-            dateRange={{
-              from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-              to: new Date()
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="settings" className="flex-1 m-0 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            <div className="p-6">
-              <CRMSettings />
-            </div>
-          </div>
-        </TabsContent>
+        {/* Conteúdo das Tabs */}
+        <CRMDashboardContent
+          activeView={activeView}
+          onViewChange={setActiveView}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          selectedPipelineId={selectedPipelineId}
+          onPipelineChange={setSelectedPipelineId}
+          pipelines={pipelines}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+          isDebouncing={isDebouncing}
+          filters={filters}
+          updateFilter={updateFilter}
+          pipelineColumns={pipelineColumns}
+          users={users}
+          tags={tags}
+          handleTagsChange={handleTagsChange}
+          effectiveFilters={effectiveFilters}
+          onCreateLead={handleCreateLead}
+        />
       </Tabs>
 
       {/* Modal de Lead */}
