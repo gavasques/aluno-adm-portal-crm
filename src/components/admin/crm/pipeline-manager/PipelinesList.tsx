@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Settings, Copy, Workflow, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Settings, Eye, Target } from 'lucide-react';
 import { CRMPipeline } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,27 +22,33 @@ const PipelinesList = ({ pipelines, loading, onPipelineSelect, onRefresh }: Pipe
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPipeline, setEditingPipeline] = useState<CRMPipeline | null>(null);
   const [deletingPipeline, setDeletingPipeline] = useState<CRMPipeline | null>(null);
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const { createPipeline, updatePipeline } = useCRMPipelines();
+  
+  const { createPipeline, updatePipeline, deletePipeline } = useCRMPipelines();
 
-  const handleCreatePipeline = async (data: Omit<CRMPipeline, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleCreatePipeline = async (data: { name: string; description?: string }) => {
     try {
-      await createPipeline(data);
+      await createPipeline({
+        name: data.name,
+        description: data.description,
+        sort_order: pipelines.length,
+        is_active: true
+      });
       setShowCreateForm(false);
       onRefresh();
-      toast.success('Pipeline criado com sucesso!', {
-        description: 'Seu novo pipeline está pronto para uso.'
-      });
+      toast.success('Pipeline criado com sucesso!');
     } catch (error) {
       toast.error('Erro ao criar pipeline');
     }
   };
 
-  const handleUpdatePipeline = async (data: Partial<CRMPipeline>) => {
+  const handleUpdatePipeline = async (data: { name: string; description?: string }) => {
     if (!editingPipeline) return;
     
     try {
-      await updatePipeline(editingPipeline.id, data);
+      await updatePipeline(editingPipeline.id, {
+        name: data.name,
+        description: data.description
+      });
       setEditingPipeline(null);
       onRefresh();
       toast.success('Pipeline atualizado com sucesso!');
@@ -51,205 +57,170 @@ const PipelinesList = ({ pipelines, loading, onPipelineSelect, onRefresh }: Pipe
     }
   };
 
-  const handleDuplicatePipeline = async (pipeline: CRMPipeline) => {
+  const handleCreateDefaultPipeline = async () => {
     try {
-      const duplicatedData = {
-        name: `${pipeline.name} (Cópia)`,
-        description: pipeline.description,
-        sort_order: pipelines.length,
+      await createPipeline({
+        name: 'Pipeline Padrão',
+        description: 'Pipeline inicial do sistema',
+        sort_order: 0,
         is_active: true
-      };
-      await createPipeline(duplicatedData);
+      });
       onRefresh();
-      toast.success('Pipeline duplicado com sucesso!');
+      toast.success('Pipeline padrão criado!');
     } catch (error) {
-      toast.error('Erro ao duplicar pipeline');
+      toast.error('Erro ao criar pipeline padrão');
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"
-        />
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 h-full overflow-auto pb-4">
-      {/* Header Compacto */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-between items-center"
-      >
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">
-            Pipelines ({pipelines.length})
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-600" />
+            Pipelines de Vendas
           </h3>
           <p className="text-gray-600 text-sm">
-            Gerencie seus fluxos de trabalho e processos de vendas
+            {pipelines.length} {pipelines.length === 1 ? 'pipeline' : 'pipelines'}
           </p>
         </div>
+        
         <Button 
           onClick={() => setShowCreateForm(true)}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
-          size="sm"
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
         >
-          <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+          <Plus className="h-4 w-4 mr-2" />
           Novo Pipeline
         </Button>
-      </motion.div>
+      </div>
 
-      {/* Pipelines Grid */}
+      {/* Pipelines List */}
       {pipelines.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="space-y-3">
           <AnimatePresence>
-            {pipelines
-              .sort((a, b) => a.sort_order - b.sort_order)
-              .map((pipeline, index) => (
-                <motion.div
-                  key={pipeline.id}
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  onHoverStart={() => setHoveredCard(pipeline.id)}
-                  onHoverEnd={() => setHoveredCard(null)}
-                >
-                  <Card className="relative overflow-hidden cursor-pointer group bg-white/70 backdrop-blur-sm border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-blue-200">
-                    {/* Gradient Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-purple-50/80 opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    {/* Content */}
-                    <div className="relative z-10">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
-                              <CardTitle className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
-                                {pipeline.name}
-                              </CardTitle>
-                            </div>
-                            {pipeline.description && (
-                              <CardDescription className="text-gray-600 line-clamp-2 text-sm">
-                                {pipeline.description}
-                              </CardDescription>
-                            )}
-                          </div>
-                          <Badge 
-                            variant={pipeline.is_active ? 'default' : 'secondary'}
-                            className={`
-                              font-medium transition-all duration-300 text-xs
-                              ${pipeline.is_active 
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md' 
-                                : 'bg-gray-200 text-gray-600'
-                              }
-                            `}
-                          >
+            {pipelines.map((pipeline, index) => (
+              <motion.div
+                key={pipeline.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+              >
+                <Card className="group hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm border-white/40 hover:border-blue-200 cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1" onClick={() => onPipelineSelect(pipeline)}>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="font-semibold text-gray-900 text-lg">{pipeline.name}</h4>
+                          <Badge variant={pipeline.is_active ? 'default' : 'secondary'}>
                             {pipeline.is_active ? 'Ativo' : 'Inativo'}
                           </Badge>
                         </div>
-                      </CardHeader>
-                      
-                      <CardContent className="pt-0">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Workflow className="h-3 w-3" />
-                            <span>Ordem: {pipeline.sort_order}</span>
-                          </div>
-                          
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onPipelineSelect(pipeline)}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 group/btn text-xs h-7"
-                          >
-                            <span className="mr-1">Configurar</span>
-                            <ChevronRight className="h-3 w-3 group-hover/btn:translate-x-1 transition-transform" />
-                          </Button>
-                        </div>
                         
-                        {/* Action Buttons */}
-                        <div className={`
-                          flex items-center gap-1 transition-all duration-300
-                          ${hoveredCard === pipeline.id ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                        `}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDuplicatePipeline(pipeline);
-                            }}
-                            className="hover:bg-blue-50 hover:text-blue-600 h-7 w-7 p-0"
-                            title="Duplicar Pipeline"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingPipeline(pipeline);
-                            }}
-                            className="hover:bg-yellow-50 hover:text-yellow-600 h-7 w-7 p-0"
-                            title="Editar Pipeline"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeletingPipeline(pipeline);
-                            }}
-                            className="hover:bg-red-50 hover:text-red-600 h-7 w-7 p-0"
-                            title="Excluir Pipeline"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                        {pipeline.description && (
+                          <p className="text-gray-600 text-sm mb-2">{pipeline.description}</p>
+                        )}
+                        
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>Posição: {pipeline.sort_order + 1}</span>
+                          <span>Criado: {new Date(pipeline.created_at).toLocaleDateString('pt-BR')}</span>
                         </div>
-                      </CardContent>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onPipelineSelect(pipeline);
+                          }}
+                          className="hover:bg-blue-50 hover:text-blue-600"
+                          title="Gerenciar Colunas"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPipeline(pipeline);
+                          }}
+                          className="hover:bg-blue-50 hover:text-blue-600"
+                          title="Editar Pipeline"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingPipeline(pipeline);
+                          }}
+                          title="Excluir Pipeline"
+                          className="hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </Card>
-                </motion.div>
-              ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </AnimatePresence>
         </div>
       ) : (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="text-center py-12"
         >
           <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Workflow className="h-8 w-8 text-blue-600" />
+            <Target className="h-8 w-8 text-blue-600" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">
+          <h4 className="text-xl font-semibold text-gray-900 mb-2">
             Nenhum pipeline encontrado
-          </h3>
-          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
-            Crie seu primeiro pipeline para começar a organizar seus leads e processos de vendas.
+          </h4>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Crie seu primeiro pipeline para começar a organizar seus leads em estágios de vendas.
           </p>
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Criar Primeiro Pipeline
-          </Button>
+          <div className="flex gap-3 justify-center">
+            <Button 
+              onClick={handleCreateDefaultPipeline}
+              variant="outline"
+              className="bg-white/80"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              Criar Pipeline Padrão
+            </Button>
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Pipeline
+            </Button>
+          </div>
         </motion.div>
       )}
 

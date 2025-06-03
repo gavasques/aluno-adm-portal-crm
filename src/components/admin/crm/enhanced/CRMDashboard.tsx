@@ -9,6 +9,8 @@ import { DashboardContent } from '../dashboard/DashboardContent';
 import { DashboardToolbar } from '../dashboard/DashboardToolbar';
 import { StatusReports } from '../reports/StatusReports';
 import { CRMSettings } from '../settings/CRMSettings';
+import CRMReports from '../reports/CRMReports';
+import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
 import { CRMFilters } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
@@ -24,7 +26,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const navigate = useNavigate();
   
   // Estados principais
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'settings'>('dashboard');
   const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
@@ -99,7 +101,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'dashboard' | 'reports' | 'settings')} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'dashboard' | 'reports' | 'analytics' | 'settings')} className="flex-1 flex flex-col">
         {/* Header com Tabs */}
         <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-4">
@@ -109,9 +111,10 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                 <p className="text-gray-600">Gerencie seus leads e oportunidades</p>
               </div>
               
-              <TabsList className="grid w-[600px] grid-cols-3">
+              <TabsList className="grid w-[800px] grid-cols-4">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="reports">Relatórios</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="settings">Configurações</TabsTrigger>
               </TabsList>
             </div>
@@ -175,7 +178,16 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         </TabsContent>
 
         <TabsContent value="reports" className="flex-1 m-0 p-6 overflow-y-auto">
-          <StatusReports />
+          <CRMReports />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="flex-1 m-0 p-6 overflow-y-auto">
+          <AnalyticsDashboard 
+            dateRange={{
+              from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              to: new Date()
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="settings" className="flex-1 m-0 p-6 overflow-y-auto">

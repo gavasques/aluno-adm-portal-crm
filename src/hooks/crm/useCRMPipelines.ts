@@ -45,10 +45,10 @@ export const useCRMPipelines = () => {
   });
 
   const createPipelineMutation = useMutation({
-    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+    mutationFn: async (pipelineData: { name: string; description?: string; sort_order?: number; is_active?: boolean }) => {
       const { data, error } = await supabase
         .from('crm_pipelines')
-        .insert({ name, description })
+        .insert(pipelineData)
         .select()
         .single();
 
@@ -66,10 +66,10 @@ export const useCRMPipelines = () => {
   });
 
   const updatePipelineMutation = useMutation({
-    mutationFn: async ({ id, name, description }: { id: string; name: string; description?: string }) => {
+    mutationFn: async ({ id, ...updateData }: { id: string } & Partial<CRMPipeline>) => {
       const { error } = await supabase
         .from('crm_pipelines')
-        .update({ name, description })
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
@@ -103,21 +103,102 @@ export const useCRMPipelines = () => {
     }
   });
 
+  // Column mutations
+  const createColumnMutation = useMutation({
+    mutationFn: async (columnData: Omit<CRMPipelineColumn, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('crm_pipeline_columns')
+        .insert(columnData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
+      toast.success('Coluna criada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao criar coluna:', error);
+      toast.error('Erro ao criar coluna');
+    }
+  });
+
+  const updateColumnMutation = useMutation({
+    mutationFn: async ({ id, ...updateData }: { id: string } & Partial<CRMPipelineColumn>) => {
+      const { error } = await supabase
+        .from('crm_pipeline_columns')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
+      toast.success('Coluna atualizada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar coluna:', error);
+      toast.error('Erro ao atualizar coluna');
+    }
+  });
+
+  const deleteColumnMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('crm_pipeline_columns')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
+      toast.success('Coluna desativada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao desativar coluna:', error);
+      toast.error('Erro ao desativar coluna');
+    }
+  });
+
   // Método para buscar pipelines manualmente
   const fetchPipelines = () => {
     refetch();
   };
 
-  const createPipeline = (name: string, description?: string) => {
-    return createPipelineMutation.mutateAsync({ name, description });
+  // Método para buscar colunas de um pipeline específico
+  const fetchColumns = async (pipelineId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
+    queryClient.invalidateQueries({ queryKey: ['crm-pipeline-columns'] });
   };
 
-  const updatePipeline = (id: string, name: string, description?: string) => {
-    return updatePipelineMutation.mutateAsync({ id, name, description });
+  const createPipeline = (pipelineData: { name: string; description?: string; sort_order?: number; is_active?: boolean }) => {
+    return createPipelineMutation.mutateAsync(pipelineData);
+  };
+
+  const updatePipeline = (id: string, updateData: Partial<CRMPipeline>) => {
+    return updatePipelineMutation.mutateAsync({ id, ...updateData });
   };
 
   const deletePipeline = (id: string) => {
     return deletePipelineMutation.mutateAsync(id);
+  };
+
+  const createColumn = (columnData: Omit<CRMPipelineColumn, 'id' | 'created_at' | 'updated_at'>) => {
+    return createColumnMutation.mutateAsync(columnData);
+  };
+
+  const updateColumn = (id: string, updateData: Partial<CRMPipelineColumn>) => {
+    return updateColumnMutation.mutateAsync({ id, ...updateData });
+  };
+
+  const deleteColumn = (id: string) => {
+    return deleteColumnMutation.mutateAsync(id);
   };
 
   return {
@@ -126,8 +207,12 @@ export const useCRMPipelines = () => {
     loading,
     refetch,
     fetchPipelines,
+    fetchColumns,
     createPipeline,
     updatePipeline,
-    deletePipeline
+    deletePipeline,
+    createColumn,
+    updateColumn,
+    deleteColumn
   };
 };
