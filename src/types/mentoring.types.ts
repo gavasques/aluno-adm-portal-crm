@@ -230,7 +230,7 @@ export interface CreateSessionData {
   durationMinutes: number;
   meetingLink?: string;
   observations?: string;
-  sessionNumber: number;
+  sessionNumber?: number; // Made optional since it should be auto-generated
   type: 'individual' | 'group';
   status?: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
   groupId?: string; // Added for compatibility

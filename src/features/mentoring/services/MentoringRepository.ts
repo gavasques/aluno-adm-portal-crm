@@ -1,4 +1,3 @@
-
 import { IMentoringRepository } from '../types/contracts.types';
 import { 
   MentoringCatalog, 
@@ -86,11 +85,16 @@ export class MentoringRepository implements IMentoringRepository {
 
     const extension: MentoringExtension = {
       id: `ext-${Date.now()}`,
+      enrollment_id: data.enrollmentId,
       enrollmentId: data.enrollmentId,
+      extension_months: data.extensionMonths,
       extensionMonths: data.extensionMonths,
+      applied_date: new Date().toISOString(),
       appliedDate: new Date().toISOString(),
       notes: data.notes,
+      admin_id: 'current-admin-id',
       adminId: 'current-admin-id',
+      created_at: new Date().toISOString(),
       createdAt: new Date().toISOString()
     };
 
@@ -117,12 +121,30 @@ export class MentoringRepository implements IMentoringRepository {
   }
 
   async createSession(data: CreateSessionData): Promise<MentoringSession> {
+    const sessionNumber = data.sessionNumber || this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1;
+    
     const newSession: MentoringSession = {
       id: `session-${Date.now()}`,
-      ...data,
-      sessionNumber: this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1,
-      status: 'agendada',
+      enrollment_id: data.enrollmentId,
+      enrollmentId: data.enrollmentId,
+      type: data.type,
+      title: data.title,
+      scheduled_date: data.scheduledDate,
+      scheduledDate: data.scheduledDate,
+      scheduled_time: data.scheduledTime,
+      duration_minutes: data.durationMinutes,
+      durationMinutes: data.durationMinutes,
+      meeting_link: data.meetingLink,
+      meetingLink: data.meetingLink,
+      observations: data.observations,
+      session_number: sessionNumber,
+      sessionNumber: sessionNumber,
+      status: data.status || 'agendada',
+      group_id: data.groupId,
+      groupId: data.groupId,
+      created_at: new Date().toISOString(),
       createdAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     
