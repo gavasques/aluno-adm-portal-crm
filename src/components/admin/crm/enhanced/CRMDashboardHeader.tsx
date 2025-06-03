@@ -21,7 +21,7 @@ export const CRMDashboardHeader: React.FC<CRMDashboardHeaderProps> = ({
   ];
 
   return (
-    <div className="bg-gradient-to-r from-white via-blue-50/30 to-white border-b border-gray-200/50 flex-shrink-0">
+    <div className="bg-white border-b border-gray-200 flex-shrink-0">
       <div className="px-8 py-6">
         <div className="flex items-center justify-between">
           <motion.div
@@ -29,10 +29,10 @@ export const CRMDashboardHeader: React.FC<CRMDashboardHeaderProps> = ({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-gray-900">
               CRM
             </h1>
-            <p className="text-gray-600 mt-1 font-medium">
+            <p className="text-gray-600 mt-1">
               Gerencie seus leads e oportunidades de vendas
             </p>
           </motion.div>
@@ -42,19 +42,24 @@ export const CRMDashboardHeader: React.FC<CRMDashboardHeaderProps> = ({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <TabsList className="grid w-[600px] grid-cols-4 bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-sm">
+            <div className="flex bg-gray-100 rounded-lg p-1">
               {tabsData.map((tab) => (
-                <TabsTrigger 
+                <button
                   key={tab.value}
-                  value={tab.value}
                   onClick={() => onTabChange(tab.value)}
-                  className="flex items-center gap-2 px-4 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                    ${activeTab === tab.value 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                    }
+                  `}
                 >
                   <tab.icon className="h-4 w-4" />
-                  <span className="font-medium">{tab.label}</span>
-                </TabsTrigger>
+                  <span>{tab.label}</span>
+                </button>
               ))}
-            </TabsList>
+            </div>
           </motion.div>
         </div>
       </div>
