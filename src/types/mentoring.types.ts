@@ -1,5 +1,6 @@
 
 
+
 export interface GroupEnrollment {
   id: string;
   groupName: string;
@@ -101,12 +102,16 @@ export interface MentoringSession {
   updated_at: string;
   updatedAt?: string; // Alias para compatibilidade
   mentorNotes?: string;
+  mentor_notes?: string; // Database field
   transcription?: string;
   recordingLink?: string;
+  recording_link?: string; // Database field
   calendly_link?: string;
   calendlyLink?: string; // Alias para compatibilidade
   student_notes?: string;
   studentNotes?: string; // Alias para compatibilidade
+  group_id?: string;
+  groupId?: string; // Alias para compatibilidade
 }
 
 export interface CreateExtensionData {
@@ -124,10 +129,12 @@ export interface MentoringExtension {
   notes?: string;
   created_at: string;
   createdAt?: string; // Alias para compatibilidade
-  updated_at: string;
+  updated_at?: string;
   updatedAt?: string; // Alias para compatibilidade
   applied_date?: string;
   appliedDate?: string; // Alias para compatibilidade
+  admin_id?: string; // Database field
+  adminId?: string; // Alias para compatibilidade
 }
 
 export interface CheckoutLinks {
@@ -240,6 +247,8 @@ export interface UpdateSessionData {
   mentorNotes?: string;
   transcription?: string;
   recordingLink?: string;
+  calendlyLink?: string; // Added missing property
+  studentNotes?: string; // Added missing property
 }
 
 export interface EnrollmentFormData {
@@ -284,4 +293,5 @@ export type MentoringStatus = 'ativa' | 'concluida' | 'pausada' | 'cancelada';
 export type SessionStatus = 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
 export type PaymentStatus = 'pago' | 'pendente' | 'atrasado' | 'cancelado';
 export type MentoringType = 'Individual' | 'Grupo';
+
 
