@@ -14,8 +14,8 @@ import { mockGroupEnrollments } from '@/data/mockGroupEnrollments';
 
 const AdminGroupEnrollments = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
 
@@ -35,8 +35,8 @@ const AdminGroupEnrollments = () => {
         group.groupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.responsibleMentor.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = !statusFilter || group.status === statusFilter;
-      const matchesType = !typeFilter || group.mentoring.type === typeFilter;
+      const matchesStatus = statusFilter === 'all' || group.status === statusFilter;
+      const matchesType = typeFilter === 'all' || group.mentoring.type === typeFilter;
       
       return matchesSearch && matchesStatus && matchesType;
     });
@@ -106,8 +106,8 @@ const AdminGroupEnrollments = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
-    setTypeFilter('');
+    setStatusFilter('all');
+    setTypeFilter('all');
   };
 
   return (
@@ -187,7 +187,7 @@ const AdminGroupEnrollments = () => {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os status</SelectItem>
+              <SelectItem value="all">Todos os status</SelectItem>
               <SelectItem value="ativa">Ativa</SelectItem>
               <SelectItem value="concluida">Concluída</SelectItem>
               <SelectItem value="pausada">Pausada</SelectItem>
@@ -199,12 +199,12 @@ const AdminGroupEnrollments = () => {
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os tipos</SelectItem>
+              <SelectItem value="all">Todos os tipos</SelectItem>
               <SelectItem value="Individual">Individual</SelectItem>
               <SelectItem value="Grupo">Grupo</SelectItem>
             </SelectContent>
           </Select>
-          {(searchTerm || statusFilter || typeFilter) && (
+          {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all') && (
             <Button variant="outline" onClick={clearFilters}>
               Limpar Filtros
             </Button>

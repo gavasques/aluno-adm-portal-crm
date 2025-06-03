@@ -1,197 +1,42 @@
-export interface MentoringCatalog {
-  id: string;
-  name: string;
-  type: 'Individual' | 'Grupo';
-  instructor: string;
-  durationMonths: number;
-  frequency: 'Semanal' | 'Quinzenal' | 'Mensal';
-  numberOfSessions: number;
-  totalSessions: number;
-  price: number;
-  description: string;
-  tags: string[];
-  imageUrl?: string;
-  active: boolean;
-  status: 'Ativa' | 'Inativa' | 'Cancelada';
-  createdAt: string;
-  updatedAt: string;
-  extensions?: MentoringExtensionOption[];
-  checkoutLinks?: CheckoutLinks;
-}
-
-export interface CheckoutLinks {
-  mercadoPago?: string;
-  hubla?: string;
-  hotmart?: string;
-}
-
-export interface MentoringExtensionOption {
-  id: string;
-  months: number;
-  price: number;
-  totalSessions: number;
-  description?: string;
-  checkoutLinks?: CheckoutLinks;
-}
-
-export interface MentoringExtension {
-  id: string;
-  enrollmentId: string;
-  extensionMonths: number;
-  appliedDate: string;
-  notes?: string;
-  adminId: string;
-  createdAt: string;
-}
-
-export interface StudentMentoringEnrollment {
-  id: string;
-  studentId: string;
-  mentoringId: string;
-  mentoring: MentoringCatalog;
-  status: 'ativa' | 'concluida' | 'cancelada' | 'pausada';
-  enrollmentDate: string;
-  startDate: string;
-  endDate: string;
-  originalEndDate?: string;
-  sessionsUsed: number;
-  totalSessions: number;
-  responsibleMentor: string;
-  paymentStatus: string;
-  observations?: string;
-  extensions?: MentoringExtension[];
-  hasExtension?: boolean;
-  createdAt: string;
-  updatedAt: string;
-  groupId?: string;
-}
 
 export interface GroupEnrollment {
   id: string;
   groupName: string;
-  mentoring: MentoringCatalog;
-  status: 'ativa' | 'concluida' | 'cancelada' | 'pausada';
   responsibleMentor: string;
+  status: 'ativa' | 'concluida' | 'pausada' | 'cancelada';
+  mentoring: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  participants: Array<{
+    id: string;
+    name: string;
+    email: string;
+  }>;
   startDate: string;
   endDate: string;
+  sessionsCompleted: number;
   totalSessions: number;
-  participants: StudentMentoringEnrollment[];
   createdAt: string;
-  updatedAt: string;
 }
 
-export interface MentoringSession {
+export interface MentoringEnrollment {
   id: string;
-  enrollmentId: string;
-  enrollment?: StudentMentoringEnrollment;
-  sessionNumber: number;
-  type: 'individual' | 'grupo';
-  title: string;
-  scheduledDate?: string;
-  durationMinutes: number;
-  status: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
-  calendlyLink?: string;
-  meetingLink?: string;
-  recordingLink?: string;
-  mentorNotes?: string;
-  studentNotes?: string;
+  student_id: string;
+  mentoring_id: string;
+  status: string;
+  enrollment_date: string;
+  start_date: string;
+  end_date: string;
+  payment_status: string;
+  responsible_mentor: string;
   observations?: string;
-  transcription?: string;
-  createdAt: string;
-  updatedAt: string;
-  groupId?: string;
+  total_sessions: number;
+  sessions_used: number;
+  has_extension: boolean;
+  original_end_date?: string;
+  created_at: string;
+  updated_at: string;
+  group_id?: string;
 }
-
-export interface MentoringMaterial {
-  id: string;
-  sessionId?: string;
-  enrollmentId?: string;
-  session?: MentoringSession;
-  enrollment?: StudentMentoringEnrollment;
-  fileName: string;
-  fileUrl: string;
-  type: string;
-  description?: string;
-  storagePath?: string;
-  fileType?: string;
-  sizeMB?: number;
-  uploaderId?: string;
-  uploaderType?: 'admin' | 'mentor' | 'aluno';
-  tags?: string[];
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface MentoringStats {
-  totalEnrollments: number;
-  activeEnrollments: number;
-  completedSessions: number;
-  upcomingSessions: number;
-  totalMaterials: number;
-  averageRating: number;
-}
-
-export interface CreateMentoringCatalogData {
-  name: string;
-  type: 'Individual' | 'Grupo';
-  instructor: string;
-  durationMonths: number;
-  frequency: 'Semanal' | 'Quinzenal' | 'Mensal';
-  numberOfSessions?: number; // Agora será calculado automaticamente
-  price: number;
-  description: string;
-  active?: boolean;
-  status?: 'Ativa' | 'Inativa' | 'Cancelada';
-  extensions?: MentoringExtensionOption[];
-  checkoutLinks?: CheckoutLinks;
-}
-
-export interface CreateSessionData {
-  enrollmentId: string;
-  type: 'individual' | 'grupo';
-  title: string;
-  scheduledDate?: string;
-  durationMinutes: number;
-  meetingLink?: string;
-  groupId?: string;
-  status?: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
-  observations?: string;
-}
-
-export interface UpdateSessionData extends Partial<CreateSessionData> {
-  status?: 'aguardando_agendamento' | 'agendada' | 'concluida' | 'cancelada' | 'reagendada' | 'no_show_aluno' | 'no_show_mentor';
-  mentorNotes?: string;
-  studentNotes?: string;
-  observations?: string;
-  transcription?: string;
-  recordingLink?: string;
-  calendlyLink?: string;
-  meetingLink?: string;
-}
-
-export interface CreateExtensionData {
-  enrollmentId: string;
-  extensionMonths: number;
-  notes?: string;
-}
-
-export interface ScheduleSessionData {
-  sessionId: string;
-  scheduledDate: string;
-  meetingLink?: string;
-}
-
-export interface EnrollmentProgress {
-  completedSessions: number;
-  sessionsUsed: number;
-  totalSessions: number;
-  pendingSessions: number;
-  scheduledSessions: number;
-  percentage: number;
-  daysRemaining: number;
-  isExpired: boolean;
-  isCompleted: boolean;
-}
-
-// Session Status Types for UI components
-export type SessionStatusFilter = 'cancelada' | 'agendada' | 'realizada' | 'reagendada' | 'ausente_aluno' | 'ausente_mentor' | 'aguardando_agendamento';
