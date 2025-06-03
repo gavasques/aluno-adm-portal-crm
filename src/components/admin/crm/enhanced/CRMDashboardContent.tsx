@@ -111,23 +111,25 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
       </TabsContent>
 
       <TabsContent value="reports" className="flex-1 m-0 overflow-hidden">
-        <CRMReports />
+        <div className="h-full">
+          <CRMReports />
+        </div>
       </TabsContent>
 
       <TabsContent value="analytics" className="flex-1 m-0 overflow-hidden">
-        <AnalyticsDashboard 
-          dateRange={{
-            from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-            to: new Date()
-          }}
-        />
+        <div className="h-full">
+          <AnalyticsDashboard 
+            dateRange={{
+              from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              to: new Date()
+            }}
+          />
+        </div>
       </TabsContent>
 
       <TabsContent value="settings" className="flex-1 m-0 overflow-hidden">
         <div className="h-full overflow-y-auto">
-          <div className="p-6">
-            <CRMSettings />
-          </div>
+          <CRMSettings />
         </div>
       </TabsContent>
     </>

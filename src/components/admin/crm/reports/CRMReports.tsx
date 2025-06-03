@@ -25,7 +25,7 @@ const CRMReports: React.FC = () => {
 
   return (
     <div className="h-full bg-gray-50 overflow-y-auto">
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4">
         <CRMReportsHeader
           dateRange={dateRange}
           onDateRangeChange={setDateRange}

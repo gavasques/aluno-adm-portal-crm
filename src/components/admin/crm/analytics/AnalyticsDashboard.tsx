@@ -15,8 +15,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ dateRang
   if (isLoading) {
     return (
       <div className="h-full bg-gray-50 overflow-y-auto">
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="h-20 bg-gray-200 rounded"></div>
@@ -30,7 +30,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ dateRang
 
   return (
     <div className="h-full bg-gray-50 overflow-y-auto">
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4">
         <AnalyticsDashboardHeader />
         
         <AnalyticsOverviewCards analyticsMetrics={analyticsMetrics} />
