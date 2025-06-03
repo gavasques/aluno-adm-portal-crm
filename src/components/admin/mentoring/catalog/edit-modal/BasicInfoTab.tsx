@@ -61,26 +61,13 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onInputChange }) 
                 <Users className="h-4 w-4 text-gray-500" />
                 Tipo *
               </Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: "Individual" | "Grupo") => onInputChange('type', value)}
-              >
-                <SelectTrigger className="border-gray-200 focus:border-blue-500 h-10 text-sm transition-all duration-200 shadow-sm">
-                  <SelectValue />
+              <Select value={formData.type} onValueChange={(value) => onInputChange('type', value)}>
+                <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm">
+                  <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                  <SelectItem value="Individual">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Individual
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="Grupo">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Grupo
-                    </div>
-                  </SelectItem>
+                <SelectContent>
+                  <SelectItem value="Individual">Individual</SelectItem>
+                  <SelectItem value="Grupo">Grupo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -93,8 +80,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onInputChange }) 
               <Input
                 id="durationMonths"
                 type="number"
+                min="1"
+                max="24"
                 value={formData.durationMonths}
-                onChange={(e) => onInputChange('durationMonths', Number(e.target.value))}
+                onChange={(e) => onInputChange('durationMonths', parseInt(e.target.value))}
                 placeholder="3"
                 className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
               />
@@ -108,8 +97,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onInputChange }) 
               <Input
                 id="numberOfSessions"
                 type="number"
+                min="1"
+                max="50"
                 value={formData.numberOfSessions}
-                onChange={(e) => onInputChange('numberOfSessions', Number(e.target.value))}
+                onChange={(e) => onInputChange('numberOfSessions', parseInt(e.target.value))}
                 placeholder="12"
                 className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
               />
@@ -123,9 +114,11 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onInputChange }) 
               <Input
                 id="price"
                 type="number"
+                min="0"
+                step="0.01"
                 value={formData.price}
-                onChange={(e) => onInputChange('price', Number(e.target.value))}
-                placeholder="299"
+                onChange={(e) => onInputChange('price', parseFloat(e.target.value))}
+                placeholder="1200.00"
                 className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10 text-sm transition-all duration-200 shadow-sm"
               />
             </div>
@@ -133,43 +126,31 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onInputChange }) 
 
           <Separator className="my-4" />
 
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${formData.active ? 'bg-green-500' : 'bg-gray-400'} transition-colors duration-200`}></div>
-              <Label htmlFor="active" className="text-sm font-medium text-gray-700">
-                Status da Mentoria
-              </Label>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">{formData.active ? 'Ativa' : 'Inativa'}</span>
-              <Switch
-                id="active"
-                checked={formData.active}
-                onCheckedChange={(checked) => onInputChange('active', checked)}
-                className="data-[state=checked]:bg-green-500"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <Edit className="h-4 w-4 text-gray-500" />
+              Descrição *
+            </Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => onInputChange('description', e.target.value)}
+              placeholder="Descreva a mentoria..."
+              rows={4}
+              className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-sm transition-all duration-200 shadow-sm resize-none"
+            />
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Card de Descrição */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300 border-l-4 border-l-purple-500">
-        <CardHeader className="pb-4 bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Edit className="h-5 w-5 text-purple-500" />
-            📝 Descrição da Mentoria
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => onInputChange('description', e.target.value)}
-            placeholder="Descreva os objetivos e conteúdo da mentoria..."
-            rows={4}
-            className="border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-sm resize-none transition-all duration-200 shadow-sm"
-          />
+          <div className="flex items-center justify-between pt-2">
+            <Label htmlFor="active" className="text-sm font-medium text-gray-700">
+              Mentoria Ativa
+            </Label>
+            <Switch
+              id="active"
+              checked={formData.active}
+              onCheckedChange={(checked) => onInputChange('active', checked)}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
