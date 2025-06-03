@@ -124,9 +124,7 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
       </TabsContent>
 
       <TabsContent value="settings" className="flex-1 m-0 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          <CRMSettings />
-        </div>
+        <CRMSettings />
       </TabsContent>
     </>
   );
