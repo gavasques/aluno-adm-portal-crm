@@ -16,14 +16,14 @@ import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
 import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
-
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
 }
-
-const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
+const CRMDashboard: React.FC<CRMDashboardProps> = ({
+  onOpenLead
+}) => {
   const navigate = useNavigate();
-  
+
   // Estados principais
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'settings'>('dashboard');
   const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
@@ -36,14 +36,19 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const [filters, setFilters] = useState<CRMFilters>({});
 
   // Hooks
-  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
-  const { tags } = useCRMTags();
-  const { users } = useCRMUsers();
+  const {
+    pipelines,
+    loading: pipelinesLoading
+  } = useCRMPipelines();
+  const {
+    tags
+  } = useCRMTags();
+  const {
+    users
+  } = useCRMUsers();
 
   // Get pipeline columns from the selected pipeline
-  const pipelineColumns = selectedPipelineId 
-    ? pipelines.find(p => p.id === selectedPipelineId)?.columns || []
-    : [];
+  const pipelineColumns = selectedPipelineId ? pipelines.find(p => p.id === selectedPipelineId)?.columns || [] : [];
 
   // Hook para gerenciar filtros
   const {
@@ -59,12 +64,10 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     setSelectedColumnId(columnId);
     setShowLeadForm(true);
   }, []);
-
   const handleLeadFormSuccess = useCallback(() => {
     setShowLeadForm(false);
     setSelectedColumnId(undefined);
   }, []);
-
   const handleOpenLead = useCallback((leadId: string) => {
     if (onOpenLead) {
       onOpenLead(leadId);
@@ -72,7 +75,6 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       navigate(`/admin/lead/${leadId}`);
     }
   }, [navigate, onOpenLead]);
-
   const handleTagsChange = useCallback((tagIds: string[]) => {
     updateFilter('tag_ids', tagIds);
   }, [updateFilter]);
@@ -89,18 +91,13 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       setSelectedPipelineId(pipelines[0].id);
     }
   }, [pipelines, selectedPipelineId]);
-
   if (pipelinesLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
+    return <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'dashboard' | 'reports' | 'analytics' | 'settings')} className="flex-1 flex flex-col">
+  return <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+      <Tabs value={activeTab} onValueChange={value => setActiveTab(value as 'dashboard' | 'reports' | 'analytics' | 'settings')} className="flex-1 flex flex-col">
         {/* Header com Tabs */}
         <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-4">
@@ -120,73 +117,17 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </div>
 
-        <TabsContent value="dashboard" className="flex-1 flex flex-col m-0">
-          {/* Filtros Primários */}
-          <div className="bg-white border-b border-gray-200 p-4">
-            <PrimaryFilters
-              pipelineId={selectedPipelineId}
-              onPipelineChange={setSelectedPipelineId}
-              pipelines={pipelines}
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              isDebouncing={isDebouncing}
-            />
-          </div>
-
-          {/* Toolbar */}
-          <DashboardToolbar
-            activeView={activeView}
-            onViewChange={setActiveView}
-            showFilters={showFilters}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            onCreateLead={handleCreateLead}
-            filters={effectiveFilters}
-          />
-
-          {/* Filtros Avançados */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden bg-white border-b border-gray-200 p-4"
-              >
-                <AdvancedFilters
-                  filters={filters}
-                  updateFilter={updateFilter}
-                  pipelineColumns={pipelineColumns}
-                  users={users}
-                  tags={tags}
-                  handleTagsChange={handleTagsChange}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Conteúdo Principal */}
-          <div className="flex-1 overflow-hidden">
-            <DashboardContent
-              activeView={activeView}
-              effectiveFilters={effectiveFilters}
-              selectedPipelineId={selectedPipelineId}
-              onCreateLead={handleCreateLead}
-            />
-          </div>
-        </TabsContent>
+        
 
         <TabsContent value="reports" className="flex-1 m-0 overflow-y-auto bg-gray-50">
           <CRMReports />
         </TabsContent>
 
         <TabsContent value="analytics" className="flex-1 m-0 overflow-y-auto bg-gray-50">
-          <AnalyticsDashboard 
-            dateRange={{
-              from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-              to: new Date()
-            }}
-          />
+          <AnalyticsDashboard dateRange={{
+          from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          to: new Date()
+        }} />
         </TabsContent>
 
         <TabsContent value="settings" className="flex-1 m-0 p-6 overflow-y-auto bg-gray-50">
@@ -195,16 +136,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       </Tabs>
 
       {/* Modal de Lead */}
-      <ModernCRMLeadFormDialog
-        open={showLeadForm}
-        onOpenChange={setShowLeadForm}
-        onSuccess={handleLeadFormSuccess}
-        pipelineId={selectedPipelineId}
-        initialColumnId={selectedColumnId}
-        mode="create"
-      />
-    </div>
-  );
+      <ModernCRMLeadFormDialog open={showLeadForm} onOpenChange={setShowLeadForm} onSuccess={handleLeadFormSuccess} pipelineId={selectedPipelineId} initialColumnId={selectedColumnId} mode="create" />
+    </div>;
 };
-
 export default CRMDashboard;
