@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PrimaryFilters } from '../filters/PrimaryFilters';
 import { AdvancedFilters } from '../filters/AdvancedFilters';
 import { DashboardContent } from '../dashboard/DashboardContent';
-import { DashboardToolbar } from '../dashboard/DashboardToolbar';
+import { ModernDashboardToolbar } from '../dashboard/ModernDashboardToolbar';
+import { CRMMetricsCards } from '../dashboard/CRMMetricsCards';
 import CRMReports from '../reports/CRMReports';
 import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
 import { CRMSettings } from '../settings/CRMSettings';
@@ -58,28 +58,33 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
     switch (activeTab) {
       case 'dashboard':
         return (
-          <div className="h-full w-full flex flex-col">
-            {/* Filtros Primários */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
-              <PrimaryFilters
-                pipelineId={selectedPipelineId}
-                onPipelineChange={onPipelineChange}
-                pipelines={pipelines}
-                searchValue={searchValue}
-                setSearchValue={setSearchValue}
-                isDebouncing={isDebouncing}
-              />
+          <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100/50">
+            {/* Métricas/KPIs */}
+            <div className="bg-white/60 backdrop-blur-sm px-8 py-6 border-b border-gray-200/50 flex-shrink-0">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <CRMMetricsCards />
+              </motion.div>
             </div>
 
-            {/* Toolbar */}
+            {/* Toolbar Integrada com Filtros Primários */}
             <div className="flex-shrink-0">
-              <DashboardToolbar
+              <ModernDashboardToolbar
                 activeView={activeView}
                 onViewChange={onViewChange}
                 showFilters={showFilters}
                 onToggleFilters={onToggleFilters}
                 onCreateLead={onCreateLead}
                 filters={effectiveFilters}
+                pipelineId={selectedPipelineId}
+                onPipelineChange={onPipelineChange}
+                pipelines={pipelines}
+                searchValue={searchValue}
+                setSearchValue={setSearchValue}
+                isDebouncing={isDebouncing}
               />
             </div>
 
@@ -90,8 +95,8 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0"
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden bg-white/90 backdrop-blur-sm border-b border-gray-200/50 px-8 py-4 flex-shrink-0"
                 >
                   <AdvancedFilters
                     filters={filters}
@@ -119,27 +124,48 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
 
       case 'reports':
         return (
-          <div className="h-full w-full">
-            <CRMReports />
+          <div className="h-full w-full bg-gradient-to-br from-gray-50 to-gray-100/50">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="h-full"
+            >
+              <CRMReports />
+            </motion.div>
           </div>
         );
 
       case 'analytics':
         return (
-          <div className="h-full w-full">
-            <AnalyticsDashboard 
-              dateRange={{
-                from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-                to: new Date()
-              }}
-            />
+          <div className="h-full w-full bg-gradient-to-br from-gray-50 to-gray-100/50">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="h-full"
+            >
+              <AnalyticsDashboard 
+                dateRange={{
+                  from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                  to: new Date()
+                }}
+              />
+            </motion.div>
           </div>
         );
 
       case 'settings':
         return (
-          <div className="h-full w-full">
-            <CRMSettings />
+          <div className="h-full w-full bg-gradient-to-br from-gray-50 to-gray-100/50">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="h-full"
+            >
+              <CRMSettings />
+            </motion.div>
           </div>
         );
 

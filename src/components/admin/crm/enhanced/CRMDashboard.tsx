@@ -9,6 +9,7 @@ import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 import { CRMDashboardHeader } from './CRMDashboardHeader';
 import { CRMDashboardContent } from './CRMDashboardContent';
 import { useCRMDashboardState } from './useCRMDashboardState';
+import { motion } from 'framer-motion';
 
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
@@ -73,18 +74,27 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   if (pipelinesLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="rounded-full h-8 w-8 border-b-2 border-blue-600"
+        />
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] pointer-events-none" />
+      </div>
+
       <Tabs 
         value={activeTab} 
         onValueChange={handleTabChange}
-        className="h-full w-full flex flex-col"
+        className="h-full w-full flex flex-col relative z-10"
       >
         {/* Header com Tabs */}
         <CRMDashboardHeader
