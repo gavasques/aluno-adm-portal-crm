@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,7 +121,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </div>
 
-        <TabsContent value="dashboard" className="flex-1 flex flex-col m-0">
+        <TabsContent value="dashboard" className="flex-1 flex flex-col mt-0">
           {/* Filtros Primários */}
           <div className="bg-white border-b border-gray-200 p-4">
             <PrimaryFilters
@@ -176,11 +177,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </TabsContent>
 
-        <TabsContent value="reports" className="flex-1 m-0 overflow-y-auto bg-gray-50">
+        <TabsContent value="reports" className="flex-1 mt-0 overflow-y-auto">
           <CRMReports />
         </TabsContent>
 
-        <TabsContent value="analytics" className="flex-1 m-0 overflow-y-auto bg-gray-50">
+        <TabsContent value="analytics" className="flex-1 mt-0 overflow-y-auto">
           <AnalyticsDashboard 
             dateRange={{
               from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -189,7 +190,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           />
         </TabsContent>
 
-        <TabsContent value="settings" className="flex-1 m-0 p-6 overflow-y-auto bg-gray-50">
+        <TabsContent value="settings" className="flex-1 mt-0 p-6 overflow-y-auto">
           <CRMSettings />
         </TabsContent>
       </Tabs>

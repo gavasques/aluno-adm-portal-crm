@@ -24,24 +24,26 @@ const CRMReports: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header com filtros */}
-      <CRMReportsHeader
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        onExport={handleExportReport}
-      />
+    <div className="h-full bg-gray-50">
+      <div className="space-y-6 p-6">
+        {/* Header com filtros */}
+        <CRMReportsHeader
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          onExport={handleExportReport}
+        />
 
-      {/* Overview Cards */}
-      <CRMReportsOverview metrics={metrics} loading={loading} />
+        {/* Overview Cards */}
+        <CRMReportsOverview metrics={metrics} loading={loading} />
 
-      {/* Tabs de Relatórios */}
-      <CRMReportsTabsContainer
-        pipelineMetrics={pipelineMetrics}
-        responsibleMetrics={responsibleMetrics}
-        periodData={periodData}
-        loading={loading}
-      />
+        {/* Tabs de Relatórios */}
+        <CRMReportsTabsContainer
+          pipelineMetrics={pipelineMetrics}
+          responsibleMetrics={responsibleMetrics}
+          periodData={periodData}
+          loading={loading}
+        />
+      </div>
     </div>
   );
 };
