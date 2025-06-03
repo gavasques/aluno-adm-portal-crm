@@ -5,7 +5,7 @@ import { GraduationCap, Calendar, Users, BookOpen } from 'lucide-react';
 
 const AdminMentoring = () => {
   return (
-    <div className="h-full w-full">
+    <div className="p-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard Mentorias</h1>
         <p className="text-muted-foreground">
@@ -13,7 +13,7 @@ const AdminMentoring = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -75,7 +75,7 @@ const AdminMentoring = () => {
         </Card>
       </div>
 
-      <Card className="mt-6">
+      <Card>
         <CardHeader>
           <CardTitle>Sistema de Mentorias</CardTitle>
           <CardDescription>

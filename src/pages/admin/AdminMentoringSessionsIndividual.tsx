@@ -13,10 +13,10 @@ const AdminMentoringSessionsIndividual = () => {
   ];
 
   return (
-    <div className="h-full w-full">
+    <div className="p-8 space-y-6">
       <BreadcrumbNav items={breadcrumbItems} showBackButton={true} />
       
-      <div className="flex items-center justify-between mt-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sessões Individuais</h1>
           <p className="text-gray-600 mt-1">Gerencie as sessões individuais de mentoria</p>
@@ -27,7 +27,7 @@ const AdminMentoringSessionsIndividual = () => {
         </Button>
       </div>
 
-      <Card className="mt-6">
+      <Card>
         <CardContent className="p-8 text-center">
           <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma sessão individual encontrada</h3>

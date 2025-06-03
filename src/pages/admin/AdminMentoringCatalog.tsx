@@ -4,7 +4,7 @@ import CatalogContent from "@/components/admin/mentoring/catalog/CatalogContent"
 
 const AdminMentoringCatalog = () => {
   return (
-    <div className="p-8 space-y-4">
+    <div className="p-8 space-y-6">
       <CatalogContent />
     </div>
   );
