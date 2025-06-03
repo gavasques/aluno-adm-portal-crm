@@ -15,6 +15,7 @@ interface VirtualizedLeadsListProps {
 
 const ITEM_HEIGHT = 120; // Altura fixa para cada card
 const OVERSCAN_COUNT = 5; // Itens extras para renderizar fora da viewport
+const LIST_WIDTH = 320; // Largura fixa para a lista
 
 interface ListItemProps {
   index: number;
@@ -22,12 +23,11 @@ interface ListItemProps {
   data: {
     leads: LeadWithContacts[];
     onOpenDetail: (lead: LeadWithContacts) => void;
-    isOver: boolean;
   };
 }
 
 const ListItem = React.memo<ListItemProps>(({ index, style, data }) => {
-  const { leads, onOpenDetail, isOver } = data;
+  const { leads, onOpenDetail } = data;
   const lead = leads[index];
 
   if (!lead) {
@@ -40,7 +40,6 @@ const ListItem = React.memo<ListItemProps>(({ index, style, data }) => {
         lead={lead}
         onClick={() => onOpenDetail(lead)}
         isDragging={false}
-        isOver={isOver}
       />
     </div>
   );
@@ -60,9 +59,8 @@ export const VirtualizedLeadsList: React.FC<VirtualizedLeadsListProps> = ({
   // Dados memoizados para evitar re-criações desnecessárias
   const itemData = useMemo(() => ({
     leads,
-    onOpenDetail,
-    isOver
-  }), [leads, onOpenDetail, isOver]);
+    onOpenDetail
+  }), [leads, onOpenDetail]);
 
   // Callback otimizado para renderização de itens
   const itemRenderer = useCallback((props: ListItemProps) => {
@@ -102,9 +100,10 @@ export const VirtualizedLeadsList: React.FC<VirtualizedLeadsListProps> = ({
   }
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${isOver ? 'bg-blue-50' : ''}`}>
       <List
         height={totalHeight}
+        width={LIST_WIDTH}
         itemCount={leads.length}
         itemSize={ITEM_HEIGHT}
         itemData={itemData}

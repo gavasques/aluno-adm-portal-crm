@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
 
@@ -136,7 +136,7 @@ export const useIntelligentCache = () => {
     
     const metrics = {
       totalQueries: queries.length,
-      activeQueries: queries.filter(q => q.state.status === 'loading').length,
+      activeQueries: queries.filter(q => q.state.status === 'pending').length,
       staleQueries: queries.filter(q => q.isStale()).length,
       errorQueries: queries.filter(q => q.state.status === 'error').length,
       memoryUsage: JSON.stringify(cache).length, // Aproximação

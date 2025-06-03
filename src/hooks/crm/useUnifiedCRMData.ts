@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMLead, CRMFilters, CRMLeadContact, LeadWithContacts } from '@/types/crm.types';
@@ -118,8 +118,8 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
         const leadIds = transformedLeads.map(lead => lead.id);
 
         // Processar contatos de forma otimizada
-        const pendingContacts = pendingContactsResult.status === 'fulfilled' ? 
-          (pendingContactsResult.value.data || [])
+        const pendingContacts = pendingContactsResult.status === 'fulfilled' && pendingContactsResult.value.data ? 
+          pendingContactsResult.value.data
             .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'pending')
             .map(contact => ({
               ...contact,
@@ -127,8 +127,8 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
               status: contact.status as 'pending' | 'completed' | 'overdue'
             })) : [];
 
-        const completedContacts = completedContactsResult.status === 'fulfilled' ? 
-          (completedContactsResult.value.data || [])
+        const completedContacts = completedContactsResult.status === 'fulfilled' && completedContactsResult.value.data ? 
+          completedContactsResult.value.data
             .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'completed' && contact.completed_at)
             .map(contact => ({
               ...contact,
