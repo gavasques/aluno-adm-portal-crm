@@ -20,14 +20,16 @@ interface UsersCardProps {
 
 const UsersCard: React.FC<UsersCardProps> = (props) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Usuários</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <UsersList {...props} />
-      </CardContent>
-    </Card>
+    <div className="p-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Usuários</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UsersList {...props} />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

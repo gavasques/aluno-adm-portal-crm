@@ -34,7 +34,7 @@ export const ModernDashboard: React.FC<ModernDashboardProps> = ({
   };
 
   const content = (
-    <div className="space-y-8">
+    <div className="p-8 space-y-8">
       {/* Header with title */}
       {(title || subtitle) && (
         <motion.div

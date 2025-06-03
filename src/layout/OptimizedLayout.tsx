@@ -64,7 +64,7 @@ const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
         className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}
         style={isAdmin ? mainContentStyles : undefined}
       >
-        <main className="p-6 w-full">
+        <main className="w-full">
           <div className="max-w-full">
             {children}
           </div>

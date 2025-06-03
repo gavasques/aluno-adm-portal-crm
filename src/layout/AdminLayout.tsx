@@ -6,7 +6,9 @@ import Layout from './Layout';
 const AdminLayout: React.FC = () => {
   return (
     <Layout isAdmin={true}>
-      <Outlet />
+      <div className="h-full w-full">
+        <Outlet />
+      </div>
     </Layout>
   );
 };

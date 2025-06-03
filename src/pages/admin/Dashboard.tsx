@@ -15,8 +15,6 @@ const AdminDashboard = () => {
   const { feedback } = useUXFeedback();
   const isMobile = useIsMobile();
 
-  // Removido o useEffect que chamava feedback.systemReady() para evitar notificações duplicadas
-
   const handleRefresh = async () => {
     const loadingId = feedback.loading("Atualizando dashboard...");
     
@@ -31,7 +29,7 @@ const AdminDashboard = () => {
   };
 
   const content = (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="p-8 space-y-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

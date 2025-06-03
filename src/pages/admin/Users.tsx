@@ -5,9 +5,11 @@ import ModernUnifiedUserPage from '@/features/users/components/ModernUnifiedUser
 
 const Users = () => {
   return (
-    <PerformanceOptimizedUserProvider>
-      <ModernUnifiedUserPage />
-    </PerformanceOptimizedUserProvider>
+    <div className="p-8">
+      <PerformanceOptimizedUserProvider>
+        <ModernUnifiedUserPage />
+      </PerformanceOptimizedUserProvider>
+    </div>
   );
 };
 
