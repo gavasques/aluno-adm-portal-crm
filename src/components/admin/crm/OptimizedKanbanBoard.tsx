@@ -2,10 +2,10 @@
 import React, { useCallback } from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
+import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
-import { useSimplifiedDragAndDrop } from '@/hooks/crm/useSimplifiedDragAndDrop';
-import { useSimplifiedLeadMovement } from '@/hooks/crm/useSimplifiedLeadMovement';
+import { useUnifiedDragAndDrop } from '@/hooks/crm/useUnifiedDragAndDrop';
+import { useUnifiedLeadMovement } from '@/hooks/crm/useUnifiedLeadMovement';
 import { KanbanGrid } from './kanban/KanbanGrid';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
@@ -34,19 +34,21 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     leadsWithContacts,
     leadsByColumn,
     loading: leadsLoading
-  } = useOptimizedCRMData(filters);
+  } = useUnifiedCRMData(filters);
 
   const { handleOpenDetail } = useKanbanNavigation();
   
-  const { moveLeadToColumn } = useSimplifiedLeadMovement(filters);
+  const { moveLeadToColumn } = useUnifiedLeadMovement(filters);
 
   const {
     draggedLead,
     isMoving,
     sensors,
     handleDragStart,
-    handleDragEnd
-  } = useSimplifiedDragAndDrop({
+    handleDragEnd,
+    isDragging,
+    canDrag
+  } = useUnifiedDragAndDrop({
     onMoveLeadToColumn: moveLeadToColumn
   });
 
@@ -55,10 +57,10 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
 
   const handleLeadClick = useCallback((lead: any) => {
     // Prevenir clicks durante drag ou movimento
-    if (isMoving || draggedLead) {
+    if (isMoving || isDragging) {
       console.log('🚫 [KANBAN] Click bloqueado durante operação:', {
         isMoving,
-        hasDraggedLead: !!draggedLead,
+        isDragging,
         leadId: lead.id
       });
       return;
@@ -70,7 +72,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
       column: lead.column_id
     });
     handleOpenDetail(lead, false, false);
-  }, [handleOpenDetail, isMoving, draggedLead]);
+  }, [handleOpenDetail, isMoving, isDragging]);
 
   // Estados de loading
   if (loading) {
@@ -96,7 +98,9 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
       leadsCount: leads.length
     })),
     draggedLead: draggedLead?.id,
-    isMoving
+    isMoving,
+    isDragging,
+    canDrag
   });
 
   return (
@@ -110,7 +114,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
           pipelineColumns={activeColumns}
           leadsByColumn={leadsByColumn}
           activeColumnId={draggedLead?.column_id || null}
-          isDragging={!!draggedLead}
+          isDragging={isDragging}
           isMoving={isMoving}
           onOpenDetail={handleLeadClick}
           onCreateLead={onCreateLead}
