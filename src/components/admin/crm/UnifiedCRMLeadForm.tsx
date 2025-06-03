@@ -2,7 +2,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -16,36 +15,7 @@ import { LeadNotesSection } from './form-sections/LeadNotesSection';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import { CRMLead } from '@/types/crm.types';
-
-const leadFormSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
-  email: z.string().email('Email inválido'),
-  phone: z.string().optional(),
-  pipeline_id: z.string().min(1, 'Pipeline é obrigatório'),
-  column_id: z.string().optional(),
-  responsible_id: z.string().optional(),
-  has_company: z.boolean().default(false),
-  sells_on_amazon: z.boolean().default(false),
-  works_with_fba: z.boolean().default(false),
-  seeks_private_label: z.boolean().default(false),
-  ready_to_invest_3k: z.boolean().default(false),
-  calendly_scheduled: z.boolean().default(false),
-  what_sells: z.string().optional(),
-  keep_or_new_niches: z.string().optional(),
-  amazon_store_link: z.string().optional(),
-  amazon_state: z.string().optional(),
-  amazon_tax_regime: z.string().optional(),
-  main_doubts: z.string().optional(),
-  calendly_link: z.string().optional(),
-  notes: z.string().optional(),
-  tags: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    color: z.string()
-  })).default([])
-});
-
-type LeadFormData = z.infer<typeof leadFormSchema>;
+import { leadFormSchema, LeadFormData } from '@/utils/crm-validation-schemas';
 
 interface UnifiedCRMLeadFormProps {
   pipelineId: string;
@@ -87,7 +57,6 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
       name: lead?.name || '',
       email: lead?.email || '',
       phone: lead?.phone || '',
-      pipeline_id: pipelineId,
       column_id: initialColumnId || lead?.column_id || '',
       responsible_id: lead?.responsible_id || '',
       has_company: lead?.has_company || false,
@@ -104,7 +73,7 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
       main_doubts: lead?.main_doubts || '',
       calendly_link: lead?.calendly_link || '',
       notes: lead?.notes || '',
-      tags: lead?.tags || []
+      tags: lead?.tags?.map(tag => tag.id) || []
     }
   });
 
