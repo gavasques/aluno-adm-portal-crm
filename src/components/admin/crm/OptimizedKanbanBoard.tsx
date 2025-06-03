@@ -4,13 +4,15 @@ import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
-import { useUnifiedDragAndDrop } from '@/hooks/crm/useUnifiedDragAndDrop';
+import { useOptimizedDragAndDrop } from '@/hooks/crm/useOptimizedDragAndDrop';
 import { useUnifiedLeadMovement } from '@/hooks/crm/useUnifiedLeadMovement';
+import { useIntelligentCache } from '@/hooks/crm/useIntelligentCache';
 import { KanbanGrid } from './kanban/KanbanGrid';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
 import { KanbanEmptyState } from './kanban/KanbanEmptyState';
 import { CRMFilters } from '@/types/crm.types';
+import { usePerformanceTracking } from '@/utils/performanceMonitor';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -18,12 +20,15 @@ interface OptimizedKanbanBoardProps {
   onCreateLead: (columnId?: string) => void;
 }
 
-const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
+const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   filters,
   pipelineId,
   onCreateLead
 }) => {
-  console.log('🎯 [KANBAN] Renderizando com pipeline:', pipelineId);
+  const { startTiming } = usePerformanceTracking('OptimizedKanbanBoard');
+  const endTiming = startTiming();
+
+  console.log('🎯 [OPTIMIZED_KANBAN] Renderizando com pipeline:', pipelineId);
 
   const {
     columns,
@@ -37,8 +42,8 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   } = useUnifiedCRMData(filters);
 
   const { handleOpenDetail } = useKanbanNavigation();
-  
   const { moveLeadToColumn } = useUnifiedLeadMovement(filters);
+  const { optimizeCache, getCacheMetrics } = useIntelligentCache();
 
   const {
     draggedLead,
@@ -47,41 +52,70 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     handleDragStart,
     handleDragEnd,
     isDragging,
-    canDrag
-  } = useUnifiedDragAndDrop({
+    canDrag,
+    pendingOperations
+  } = useOptimizedDragAndDrop({
     onMoveLeadToColumn: moveLeadToColumn
   });
 
   const activeColumns = columns.filter(col => col.is_active);
   const loading = columnsLoading || leadsLoading;
 
+  // Otimizar cache quando os dados mudarem
+  React.useEffect(() => {
+    if (leadsWithContacts.length > 0) {
+      optimizeCache(leadsWithContacts);
+    }
+  }, [leadsWithContacts, optimizeCache]);
+
+  // Log de métricas de performance
+  React.useEffect(() => {
+    if (!loading) {
+      const metrics = getCacheMetrics();
+      console.log('📊 [PERFORMANCE_METRICS]', {
+        totalLeads: leadsWithContacts.length,
+        columnsCount: activeColumns.length,
+        pendingOperations,
+        cache: metrics
+      });
+    }
+  }, [loading, leadsWithContacts.length, activeColumns.length, pendingOperations, getCacheMetrics]);
+
   const handleLeadClick = useCallback((lead: any) => {
-    // Prevenir clicks durante drag ou movimento
-    if (isMoving || isDragging) {
-      console.log('🚫 [KANBAN] Click bloqueado durante operação:', {
+    // Prevenir clicks durante operações
+    if (isMoving || isDragging || pendingOperations > 0) {
+      console.log('🚫 [OPTIMIZED_KANBAN] Click bloqueado durante operação:', {
         isMoving,
         isDragging,
+        pendingOperations,
         leadId: lead.id
       });
       return;
     }
     
-    console.log('🔗 [KANBAN] Abrindo lead:', {
+    console.log('🔗 [OPTIMIZED_KANBAN] Abrindo lead:', {
       id: lead.id,
       name: lead.name,
       column: lead.column_id
     });
     handleOpenDetail(lead, false, false);
-  }, [handleOpenDetail, isMoving, isDragging]);
+  }, [handleOpenDetail, isMoving, isDragging, pendingOperations]);
 
-  // Estados de loading
+  // Finalizar medição de performance
+  React.useEffect(() => {
+    if (!loading) {
+      endTiming();
+    }
+  }, [loading, endTiming]);
+
+  // Estados de loading otimizados
   if (loading) {
-    console.log('⏳ [KANBAN] Carregando dados...');
+    console.log('⏳ [OPTIMIZED_KANBAN] Carregando dados...');
     return <KanbanLoadingOverlay isVisible={true} />;
   }
 
   if (activeColumns.length === 0) {
-    console.log('📋 [KANBAN] Nenhuma coluna ativa encontrada');
+    console.log('📋 [OPTIMIZED_KANBAN] Nenhuma coluna ativa encontrada');
     return (
       <KanbanEmptyState 
         pipelineId={pipelineId}
@@ -90,7 +124,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     );
   }
 
-  console.log('📊 [KANBAN] Renderizando com dados:', {
+  console.log('📊 [OPTIMIZED_KANBAN] Renderizando com dados otimizados:', {
     columns: activeColumns.length,
     totalLeads: leadsWithContacts.length,
     leadsByColumn: Object.entries(leadsByColumn).map(([columnId, leads]) => ({
@@ -100,7 +134,8 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     draggedLead: draggedLead?.id,
     isMoving,
     isDragging,
-    canDrag
+    canDrag,
+    pendingOperations
   });
 
   return (
@@ -118,6 +153,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
           isMoving={isMoving}
           onOpenDetail={handleLeadClick}
           onCreateLead={onCreateLead}
+          useVirtualization={leadsWithContacts.length > 50} // Usar virtualização para muitos leads
         />
 
         <DragOverlay>
@@ -133,10 +169,19 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
         </DragOverlay>
       </DndContext>
 
-      {/* Overlay de loading para movimento */}
-      <KanbanLoadingOverlay isVisible={isMoving} />
+      {/* Overlay de loading para movimentos */}
+      <KanbanLoadingOverlay isVisible={isMoving || pendingOperations > 0} />
+      
+      {/* Indicador de operações pendentes */}
+      {pendingOperations > 0 && (
+        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+          {pendingOperations} operação(ões) em andamento...
+        </div>
+      )}
     </div>
   );
-};
+});
+
+OptimizedKanbanBoard.displayName = 'OptimizedKanbanBoard';
 
 export default OptimizedKanbanBoard;
