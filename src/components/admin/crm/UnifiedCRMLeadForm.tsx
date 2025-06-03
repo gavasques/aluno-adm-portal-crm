@@ -13,6 +13,8 @@ import { LeadQualificationSection } from './form-sections/LeadQualificationSecti
 import { ConditionalLeadAmazonSection } from './form-sections/ConditionalLeadAmazonSection';
 import { LeadManagementSection } from './form-sections/LeadManagementSection';
 import { LeadNotesSection } from './form-sections/LeadNotesSection';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
+import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import { CRMLead } from '@/types/crm.types';
 
 const leadFormSchema = z.object({
@@ -36,7 +38,11 @@ const leadFormSchema = z.object({
   main_doubts: z.string().optional(),
   calendly_link: z.string().optional(),
   notes: z.string().optional(),
-  tag_ids: z.array(z.string()).default([])
+  tags: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string()
+  })).default([])
 });
 
 type LeadFormData = z.infer<typeof leadFormSchema>;
@@ -60,6 +66,21 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
   mode,
   isOpen = true
 }) => {
+  // Buscar dados necessários
+  const { columns } = useCRMPipelines();
+  const { users } = useCRMUsers();
+
+  // Filtrar colunas do pipeline específico
+  const pipelineColumns = columns.filter(col => 
+    col.pipeline_id === pipelineId && col.is_active
+  ).sort((a, b) => a.sort_order - b.sort_order);
+
+  // Converter users para o formato esperado
+  const responsibles = users.map(user => ({
+    id: user.id,
+    name: user.name || user.email
+  }));
+
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
@@ -83,7 +104,7 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
       main_doubts: lead?.main_doubts || '',
       calendly_link: lead?.calendly_link || '',
       notes: lead?.notes || '',
-      tag_ids: lead?.tags?.map(tag => tag.id) || []
+      tags: lead?.tags || []
     }
   });
 
@@ -146,8 +167,8 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
             {/* Seção de Gestão */}
             <LeadManagementSection 
               form={form}
-              pipelineId={pipelineId}
-              initialColumnId={initialColumnId}
+              pipelineColumns={pipelineColumns}
+              responsibles={responsibles}
             />
             
             <Separator />
