@@ -24,8 +24,8 @@ const CRMReports: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="space-y-6 p-6">
+    <div className="h-full bg-gray-50 overflow-y-auto">
+      <div className="p-6 space-y-6">
         {/* Header com filtros */}
         <CRMReportsHeader
           dateRange={dateRange}

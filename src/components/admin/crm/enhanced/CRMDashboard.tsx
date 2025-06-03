@@ -103,7 +103,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'dashboard' | 'reports' | 'analytics' | 'settings')} className="flex-1 flex flex-col">
         {/* Header com Tabs */}
-        <div className="bg-white border-b border-gray-200">
+        <div className="bg-white border-b border-gray-200 flex-shrink-0">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -121,9 +121,9 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </div>
 
-        <TabsContent value="dashboard" className="flex-1 flex flex-col mt-0">
+        <TabsContent value="dashboard" className="flex-1 flex flex-col m-0">
           {/* Filtros Primários */}
-          <div className="bg-white border-b border-gray-200 p-4">
+          <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
             <PrimaryFilters
               pipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
@@ -152,7 +152,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden bg-white border-b border-gray-200 p-4"
+                className="overflow-hidden bg-white border-b border-gray-200 p-4 flex-shrink-0"
               >
                 <AdvancedFilters
                   filters={filters}
@@ -177,11 +177,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </TabsContent>
 
-        <TabsContent value="reports" className="flex-1 mt-0 overflow-y-auto">
+        <TabsContent value="reports" className="flex-1 m-0 overflow-hidden">
           <CRMReports />
         </TabsContent>
 
-        <TabsContent value="analytics" className="flex-1 mt-0 overflow-y-auto">
+        <TabsContent value="analytics" className="flex-1 m-0 overflow-hidden">
           <AnalyticsDashboard 
             dateRange={{
               from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -190,8 +190,12 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           />
         </TabsContent>
 
-        <TabsContent value="settings" className="flex-1 mt-0 p-6 overflow-y-auto">
-          <CRMSettings />
+        <TabsContent value="settings" className="flex-1 m-0 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <div className="p-6">
+              <CRMSettings />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
