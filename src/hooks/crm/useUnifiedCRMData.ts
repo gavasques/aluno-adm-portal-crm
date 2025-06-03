@@ -118,7 +118,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
         const leadIds = transformedLeads.map(lead => lead.id);
 
         // Processar contatos de forma otimizada
-        const pendingContacts = pendingContactsResult.status === 'fulfilled' && pendingContactsResult.value.data ? 
+        const pendingContacts = pendingContactsResult.status === 'fulfilled' && pendingContactsResult.value?.data ? 
           pendingContactsResult.value.data
             .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'pending')
             .map(contact => ({
@@ -127,7 +127,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
               status: contact.status as 'pending' | 'completed' | 'overdue'
             })) : [];
 
-        const completedContacts = completedContactsResult.status === 'fulfilled' && completedContactsResult.value.data ? 
+        const completedContacts = completedContactsResult.status === 'fulfilled' && completedContactsResult.value?.data ? 
           completedContactsResult.value.data
             .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'completed' && contact.completed_at)
             .map(contact => ({

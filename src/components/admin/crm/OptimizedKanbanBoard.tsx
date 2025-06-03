@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
@@ -35,6 +35,22 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     loading: columnsLoading
   } = useCRMPipelines();
 
+  // Filtrar colunas APENAS do pipeline selecionado
+  const activeColumns = useMemo(() => {
+    const filteredColumns = columns.filter(col => 
+      col.is_active && col.pipeline_id === pipelineId
+    );
+    
+    console.log('📋 [OPTIMIZED_KANBAN] Colunas filtradas para pipeline:', {
+      pipelineId,
+      totalColumns: columns.length,
+      filteredColumns: filteredColumns.length,
+      columnNames: filteredColumns.map(col => col.name)
+    });
+    
+    return filteredColumns;
+  }, [columns, pipelineId]);
+
   const {
     leadsWithContacts,
     leadsByColumn,
@@ -58,7 +74,6 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     onMoveLeadToColumn: moveLeadToColumn
   });
 
-  const activeColumns = columns.filter(col => col.is_active);
   const loading = columnsLoading || leadsLoading;
 
   // Otimizar cache quando os dados mudarem
@@ -115,7 +130,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   }
 
   if (activeColumns.length === 0) {
-    console.log('📋 [OPTIMIZED_KANBAN] Nenhuma coluna ativa encontrada');
+    console.log('📋 [OPTIMIZED_KANBAN] Nenhuma coluna ativa encontrada para pipeline:', pipelineId);
     return (
       <KanbanEmptyState 
         pipelineId={pipelineId}
