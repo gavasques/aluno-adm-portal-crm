@@ -260,7 +260,7 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     transition,
   } = useSortable({ 
     id: lead.id,
-    data: lead // Passar dados do lead para o sortable
+    data: lead // Passar dados completos do lead
   });
 
   const style = {
@@ -272,6 +272,7 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!isDragging && onClick) {
+      console.log('🔗 [CARD] Click no lead:', lead.id);
       onClick();
     }
   };
@@ -314,7 +315,7 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
       className={`
         bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md
         transition-all duration-200 cursor-pointer p-4 space-y-3
-        ${isDragging ? 'rotate-3 shadow-xl opacity-50 z-50' : ''}
+        ${isDragging ? 'rotate-3 shadow-xl opacity-70 z-50' : ''}
       `}
       onClick={handleClick}
     >

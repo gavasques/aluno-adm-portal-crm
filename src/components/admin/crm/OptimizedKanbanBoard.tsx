@@ -1,7 +1,6 @@
 
 import React, { useCallback } from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
@@ -24,6 +23,8 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   pipelineId,
   onCreateLead
 }) => {
+  console.log('🎯 [KANBAN] Renderizando com pipeline:', pipelineId);
+
   const {
     columns,
     loading: columnsLoading
@@ -53,9 +54,12 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   const loading = columnsLoading || leadsLoading;
 
   const handleLeadClick = useCallback((lead: any) => {
-    if (isMoving || draggedLead) return; // Bloquear cliques durante drag
+    if (isMoving || draggedLead) {
+      console.log('🚫 [KANBAN] Click bloqueado durante drag');
+      return;
+    }
     
-    console.log('🔗 OptimizedKanbanBoard: Abrindo lead:', lead.id);
+    console.log('🔗 [KANBAN] Abrindo lead:', lead.id);
     handleOpenDetail(lead, false, false);
   }, [handleOpenDetail, isMoving, draggedLead]);
 
@@ -72,7 +76,11 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     );
   }
 
-  console.log('📊 Renderizando Kanban com', activeColumns.length, 'colunas');
+  console.log('📊 [KANBAN] Renderizando com:', {
+    columns: activeColumns.length,
+    totalLeads: leadsWithContacts.length,
+    leadsByColumn: Object.keys(leadsByColumn).length
+  });
 
   return (
     <div className="h-full w-full flex flex-col p-8">
@@ -81,24 +89,21 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
       >
-        <SortableContext 
-          items={activeColumns.map(col => col.id)} 
-          strategy={horizontalListSortingStrategy}
-        >
-          <KanbanGrid
-            pipelineColumns={activeColumns}
-            leadsByColumn={leadsByColumn}
-            activeColumnId={draggedLead?.column_id || null}
-            isDragging={!!draggedLead}
-            isMoving={isMoving}
-            onOpenDetail={handleLeadClick}
-            onCreateLead={onCreateLead}
-          />
-        </SortableContext>
+        <KanbanGrid
+          pipelineColumns={activeColumns}
+          leadsByColumn={leadsByColumn}
+          activeColumnId={draggedLead?.column_id || null}
+          isDragging={!!draggedLead}
+          isMoving={isMoving}
+          onOpenDetail={handleLeadClick}
+          onCreateLead={onCreateLead}
+        />
 
         <DragOverlay>
           {draggedLead && (
-            <DynamicLeadCard lead={draggedLead} isDragging />
+            <div className="rotate-3 scale-105 opacity-90">
+              <DynamicLeadCard lead={draggedLead} isDragging />
+            </div>
           )}
         </DragOverlay>
       </DndContext>

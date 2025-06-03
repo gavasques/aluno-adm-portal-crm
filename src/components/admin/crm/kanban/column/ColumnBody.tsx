@@ -25,9 +25,15 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
   });
 
   const handleLeadClick = (lead: CRMLead) => {
-    console.log('🔗 ColumnBody: Click no lead:', lead.id);
+    console.log('🔗 [COLUMN] Click no lead:', {
+      id: lead.id,
+      name: lead.name,
+      column: columnId
+    });
     onOpenDetail(lead);
   };
+
+  console.log(`📋 [COLUMN] ${columnId} renderizando com ${leads.length} leads`);
 
   return (
     <div 
@@ -45,18 +51,26 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
           "space-y-3 p-2 min-h-20",
           isOver && "space-y-4"
         )}>
-          {leads.map((lead, index) => (
-            <div
-              key={lead.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <DynamicLeadCard
-                lead={lead}
-                onClick={() => handleLeadClick(lead)}
-              />
-            </div>
-          ))}
+          {leads.map((lead, index) => {
+            console.log(`📋 [COLUMN] Renderizando lead ${index + 1}:`, {
+              id: lead.id,
+              name: lead.name,
+              columnId: lead.column_id
+            });
+            
+            return (
+              <div
+                key={lead.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <DynamicLeadCard
+                  lead={lead}
+                  onClick={() => handleLeadClick(lead)}
+                />
+              </div>
+            );
+          })}
           
           {/* Drop zone indicator quando arrastrando sobre coluna vazia */}
           {isOver && leads.length === 0 && (

@@ -32,6 +32,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     id: column.id,
   });
 
+  console.log(`📋 [KANBAN_COLUMN] ${column.name}:`, {
+    leadsCount: leads.length,
+    isOver: isOver || isDragOver,
+    columnId: column.id
+  });
+
   return (
     <div 
       ref={setNodeRef}
