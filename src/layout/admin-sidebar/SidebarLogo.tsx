@@ -6,7 +6,7 @@ import { Shield } from "lucide-react";
 export const SidebarLogo: React.FC = () => {
   return (
     <motion.div 
-      className="p-6 border-b border-gray-100 flex items-center justify-center"
+      className="p-6 border-b border-gray-800 flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.2 }}
@@ -16,10 +16,10 @@ export const SidebarLogo: React.FC = () => {
           <Shield className="h-6 w-6 text-white" />
         </div>
         <div className="flex flex-col">
-          <span className="text-xl font-bold text-gray-900">
+          <span className="text-xl font-bold text-white">
             Admin
           </span>
-          <span className="text-xs text-gray-500 font-medium">
+          <span className="text-xs text-gray-400 font-medium">
             Dashboard
           </span>
         </div>

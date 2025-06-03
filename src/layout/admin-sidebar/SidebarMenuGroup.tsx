@@ -18,7 +18,7 @@ export const SidebarMenuGroup: React.FC<SidebarMenuGroupProps> = ({ title, items
       transition={{ duration: 0.3 }}
     >
       <div className="px-6 mb-4">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
           {title}
         </h3>
       </div>
@@ -35,8 +35,8 @@ export const SidebarMenuGroup: React.FC<SidebarMenuGroupProps> = ({ title, items
               className={({ isActive }) =>
                 `group flex items-center space-x-3 px-3 py-3 mx-1 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 shadow-sm"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-gray-800 text-blue-400 shadow-sm border-l-2 border-blue-400"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
                 }`
               }
             >
