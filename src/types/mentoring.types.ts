@@ -1,4 +1,5 @@
 
+
 export interface GroupEnrollment {
   id: string;
   groupName: string;
@@ -49,6 +50,8 @@ export interface MentoringEnrollment {
 export interface StudentMentoringEnrollment {
   id: string;
   studentId: string;
+  mentoring_id?: string; // Added for compatibility
+  mentoringId?: string; // Added for compatibility
   mentoring: {
     id: string;
     name: string;
@@ -56,6 +59,7 @@ export interface StudentMentoringEnrollment {
     frequency?: string;
     durationMonths?: number;
     extensions?: MentoringExtensionOption[];
+    description?: string; // Added for compatibility
   };
   status: 'ativa' | 'concluida' | 'pausada' | 'cancelada';
   startDate: string;
@@ -71,6 +75,7 @@ export interface StudentMentoringEnrollment {
   createdAt: string;
   updatedAt: string;
   groupId?: string;
+  extensions?: MentoringExtension[]; // Added for compatibility
 }
 
 export interface MentoringSession {
@@ -92,13 +97,15 @@ export interface MentoringSession {
   sessionNumber?: number; // Alias para compatibilidade
   completed_at?: string;
   created_at: string;
+  createdAt?: string; // Alias para compatibilidade
   updated_at: string;
+  updatedAt?: string; // Alias para compatibilidade
   mentorNotes?: string;
   transcription?: string;
   recordingLink?: string;
   calendly_link?: string;
   calendlyLink?: string; // Alias para compatibilidade
-  student_notes?: text;
+  student_notes?: string;
   studentNotes?: string; // Alias para compatibilidade
 }
 
@@ -111,11 +118,14 @@ export interface CreateExtensionData {
 export interface MentoringExtension {
   id: string;
   enrollment_id: string;
+  enrollmentId?: string; // Alias para compatibilidade
   extension_months: number;
   extensionMonths?: number; // Alias para compatibilidade
   notes?: string;
   created_at: string;
+  createdAt?: string; // Alias para compatibilidade
   updated_at: string;
+  updatedAt?: string; // Alias para compatibilidade
   applied_date?: string;
   appliedDate?: string; // Alias para compatibilidade
 }
@@ -215,6 +225,8 @@ export interface CreateSessionData {
   observations?: string;
   sessionNumber: number;
   type: 'individual' | 'group';
+  status?: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
+  groupId?: string; // Added for compatibility
 }
 
 export interface UpdateSessionData {
@@ -252,6 +264,7 @@ export interface MentoringMaterial {
   fileUrl?: string; // Alias para compatibilidade
   file_type: string;
   fileType?: string; // Alias para compatibilidade
+  type?: string; // Added for compatibility
   description?: string;
   uploader_id?: string;
   uploaderId?: string; // Alias para compatibilidade
@@ -259,6 +272,7 @@ export interface MentoringMaterial {
   uploaderType?: string; // Alias para compatibilidade
   size_mb?: number;
   sizeMb?: number; // Alias para compatibilidade
+  sizeMB?: number; // Alias para compatibility with existing code
   tags?: string[];
   created_at: string;
   createdAt?: string; // Alias para compatibilidade
@@ -270,3 +284,4 @@ export type MentoringStatus = 'ativa' | 'concluida' | 'pausada' | 'cancelada';
 export type SessionStatus = 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada';
 export type PaymentStatus = 'pago' | 'pendente' | 'atrasado' | 'cancelado';
 export type MentoringType = 'Individual' | 'Grupo';
+
