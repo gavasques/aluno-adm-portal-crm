@@ -70,7 +70,7 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
     <AnimatePresence>
       {open && (
         <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl">
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-white border border-gray-200 shadow-2xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -92,8 +92,8 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
               {/* Tabs Container */}
               <div className="flex-1 overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                  <div className="border-b border-gray-200/50 bg-white/50 backdrop-blur-sm px-6">
-                    <TabsList className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm">
+                  <div className="border-b border-gray-200 bg-gray-50 px-6">
+                    <TabsList className="bg-white border border-gray-200 shadow-sm">
                       <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                         <User className="h-4 w-4" />
                         Visão Geral & Dados

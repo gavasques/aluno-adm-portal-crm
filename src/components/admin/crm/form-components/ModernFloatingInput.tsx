@@ -38,8 +38,8 @@ const ModernFloatingInput = forwardRef<HTMLInputElement, ModernFloatingInputProp
             onChange={handleChange}
             className={cn(
               "w-full h-12 px-4 pt-6 pb-2 text-sm transition-all duration-200",
-              "bg-white/20 dark:bg-black/20 backdrop-blur-sm",
-              "border border-white/30 dark:border-white/20 rounded-xl",
+              "bg-gray-100",
+              "border border-gray-300 rounded-xl",
               "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50",
               "placeholder-transparent",
               error && "border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50",
@@ -58,10 +58,10 @@ const ModernFloatingInput = forwardRef<HTMLInputElement, ModernFloatingInputProp
             className={cn(
               "absolute left-4 pointer-events-none transition-colors duration-200",
               isFocused 
-                ? "text-blue-600 dark:text-blue-400" 
+                ? "text-blue-600" 
                 : error 
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-slate-600 dark:text-slate-400"
+                  ? "text-red-600"
+                  : "text-slate-600"
             )}
           >
             {label}
@@ -72,7 +72,7 @@ const ModernFloatingInput = forwardRef<HTMLInputElement, ModernFloatingInputProp
           <motion.p
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-xs text-red-600 dark:text-red-400 mt-1 ml-1"
+            className="text-xs text-red-600 mt-1 ml-1"
           >
             {error}
           </motion.p>

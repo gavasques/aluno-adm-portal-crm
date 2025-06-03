@@ -60,7 +60,7 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
         return (
           <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100/50">
             {/* Métricas/KPIs */}
-            <div className="bg-white/60 backdrop-blur-sm px-8 py-6 border-b border-gray-200/50 flex-shrink-0">
+            <div className="bg-gray-50 px-8 py-6 border-b border-gray-200 flex-shrink-0">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -96,7 +96,7 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="overflow-hidden bg-white/90 backdrop-blur-sm border-b border-gray-200/50 px-8 py-4 flex-shrink-0"
+                  className="overflow-hidden bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0"
                 >
                   <AdvancedFilters
                     filters={filters}

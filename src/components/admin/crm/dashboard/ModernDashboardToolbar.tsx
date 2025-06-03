@@ -62,7 +62,7 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
 
   return (
     <>
-      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 px-8 py-4 flex-shrink-0">
+      <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0">
         <div className="flex items-center justify-between gap-6">
           {/* Lado Esquerdo - Ações principais e filtros primários */}
           <div className="flex items-center gap-4 flex-1">

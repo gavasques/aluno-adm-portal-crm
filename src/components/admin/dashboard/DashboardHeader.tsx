@@ -24,7 +24,7 @@ export function DashboardHeader() {
   });
 
   return (
-    <Card className="p-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+    <Card className="p-6 border-0 shadow-lg bg-white">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="flex-1">
           <motion.h1 
