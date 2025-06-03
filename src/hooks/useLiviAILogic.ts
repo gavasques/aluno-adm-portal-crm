@@ -59,6 +59,47 @@ export const useLiviAILogic = () => {
     toast.success("Sessão do Livi AI encerrada com sucesso!");
   };
 
+  // Função para processar e formatar a resposta da IA
+  const processAIResponse = (rawResponse: string): string => {
+    try {
+      // Tenta fazer parse como JSON
+      const parsed = JSON.parse(rawResponse);
+      
+      // Se for um array, pega o primeiro item
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const firstItem = parsed[0];
+        if (firstItem.resposta) {
+          return firstItem.resposta;
+        }
+        if (typeof firstItem === 'string') {
+          return firstItem;
+        }
+        return JSON.stringify(firstItem);
+      }
+      
+      // Se for um objeto com a propriedade 'resposta'
+      if (parsed.resposta) {
+        return parsed.resposta;
+      }
+      
+      // Se for um objeto com a propriedade 'data'
+      if (parsed.data && typeof parsed.data === 'string') {
+        return parsed.data;
+      }
+      
+      // Se for apenas um texto em JSON
+      if (typeof parsed === 'string') {
+        return parsed;
+      }
+      
+      // Se for um objeto, converte para string formatada
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      // Se não for JSON válido, retorna como está
+      return rawResponse;
+    }
+  };
+
   // Enviar mensagem
   const sendMessage = async () => {
     if (!message.trim() || !user) return;
@@ -106,8 +147,6 @@ export const useLiviAILogic = () => {
       };
       console.log('📦 Payload da requisição:', requestPayload);
 
-      toast.info(`Debug: Enviando para webhook ${webhookUrl.substring(0, 50)}...`);
-
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -131,29 +170,31 @@ export const useLiviAILogic = () => {
       const contentType = response.headers.get('content-type');
       console.log('📝 Tipo de conteúdo:', contentType);
 
-      let aiResponse;
+      let rawResponse;
       try {
         if (contentType && contentType.includes('application/json')) {
           const jsonResponse = await response.json();
           console.log('📄 Resposta JSON completa:', jsonResponse);
-          aiResponse = jsonResponse.response || jsonResponse.message || jsonResponse.reply || JSON.stringify(jsonResponse);
+          rawResponse = JSON.stringify(jsonResponse);
         } else {
-          aiResponse = await response.text();
-          console.log('📄 Resposta em texto:', aiResponse);
+          rawResponse = await response.text();
+          console.log('📄 Resposta em texto:', rawResponse);
         }
       } catch (parseError) {
         console.error('❌ Erro ao processar resposta:', parseError);
         const rawText = await response.text();
         console.log('📄 Texto bruto da resposta:', rawText);
-        aiResponse = rawText || 'Resposta recebida mas não foi possível processar o conteúdo.';
+        rawResponse = rawText || 'Resposta recebida mas não foi possível processar o conteúdo.';
       }
 
-      if (!aiResponse || aiResponse.trim() === '') {
+      if (!rawResponse || rawResponse.trim() === '') {
         console.warn('⚠️ Resposta vazia do webhook');
-        aiResponse = 'Mensagem processada, mas resposta vazia recebida do servidor.';
+        rawResponse = 'Mensagem processada, mas resposta vazia recebida do servidor.';
       }
 
-      console.log('✅ Resposta final da IA:', aiResponse);
+      // Processar a resposta para extrair o conteúdo formatado
+      const aiResponse = processAIResponse(rawResponse);
+      console.log('✅ Resposta processada da IA:', aiResponse);
 
       // Salvar apenas UMA vez - a conversa completa (pergunta + resposta)
       await saveMessage(session.id, userMessage, aiResponse, 1, responseTime);
