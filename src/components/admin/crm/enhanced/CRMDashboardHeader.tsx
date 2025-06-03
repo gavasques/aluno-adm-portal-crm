@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CRMDashboardHeaderProps {
   activeTab: 'dashboard' | 'reports' | 'analytics' | 'settings';
-  onTabChange: (tab: 'dashboard' | 'reports' | 'analytics' | 'settings') => void;
+  onTabChange: (tab: string) => void;
 }
 
 export const CRMDashboardHeader: React.FC<CRMDashboardHeaderProps> = ({

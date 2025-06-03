@@ -59,6 +59,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     }
   }, [navigate, onOpenLead]);
 
+  // Função wrapper para corrigir o tipo do setActiveTab
+  const handleTabChange = React.useCallback((tab: string) => {
+    setActiveTab(tab as 'dashboard' | 'reports' | 'analytics' | 'settings');
+  }, [setActiveTab]);
+
   // Selecionar primeiro pipeline se nenhum estiver selecionado
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
@@ -78,13 +83,13 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Tabs 
         value={activeTab} 
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
         className="flex-1 flex flex-col"
       >
         {/* Header com Tabs */}
         <CRMDashboardHeader
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
         />
 
         {/* Conteúdo das Tabs */}
