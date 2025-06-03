@@ -1,12 +1,17 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { CRMPipeline, CRMPipelineColumn } from '@/types/crm.types';
 import { toast } from 'sonner';
+
+export interface PipelineWithColumns extends CRMPipeline {
+  columns: CRMPipelineColumn[];
+}
 
 export const useCRMPipelines = () => {
   const queryClient = useQueryClient();
 
-  const { data: pipelines = [], isLoading, refetch } = useQuery({
+  const { data: pipelines = [], isLoading: loading, refetch } = useQuery({
     queryKey: ['crm-pipelines'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -15,56 +20,66 @@ export const useCRMPipelines = () => {
           *,
           columns:crm_pipeline_columns(*)
         `)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+        .order('sort_order');
 
       if (error) throw error;
 
-      return (data || []).map(pipeline => ({
+      return data.map(pipeline => ({
         ...pipeline,
-        columns: (pipeline.columns || []).sort((a: any, b: any) => a.sort_order - b.sort_order)
-      }));
+        columns: (pipeline.columns || []).sort((a, b) => a.sort_order - b.sort_order)
+      })) as PipelineWithColumns[];
     }
   });
 
-  // Extrair todas as colunas de todos os pipelines
-  const columns = pipelines.flatMap(pipeline => 
-    (pipeline.columns || []).map(column => ({
-      ...column,
-      pipeline_id: pipeline.id
-    }))
-  );
+  const { data: columns = [] } = useQuery({
+    queryKey: ['crm-pipeline-columns'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('crm_pipeline_columns')
+        .select('*')
+        .order('sort_order');
 
-  // Mutations para pipelines
-  const createPipelineMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const { error } = await supabase
-        .from('crm_pipelines')
-        .insert(data);
       if (error) throw error;
+      return data as CRMPipelineColumn[];
+    }
+  });
+
+  const createPipelineMutation = useMutation({
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      const { data, error } = await supabase
+        .from('crm_pipelines')
+        .insert({ name, description })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
-      toast.success('Pipeline criado com sucesso');
+      toast.success('Pipeline criado com sucesso!');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao criar pipeline:', error);
       toast.error('Erro ao criar pipeline');
     }
   });
 
   const updatePipelineMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, name, description }: { id: string; name: string; description?: string }) => {
       const { error } = await supabase
         .from('crm_pipelines')
-        .update(data)
+        .update({ name, description })
         .eq('id', id);
+
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
-      toast.success('Pipeline atualizado com sucesso');
+      toast.success('Pipeline atualizado com sucesso!');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao atualizar pipeline:', error);
       toast.error('Erro ao atualizar pipeline');
     }
   });
@@ -73,101 +88,46 @@ export const useCRMPipelines = () => {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('crm_pipelines')
-        .update({ is_active: false })
+        .delete()
         .eq('id', id);
+
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
-      toast.success('Pipeline excluído com sucesso');
+      toast.success('Pipeline excluído com sucesso!');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao excluir pipeline:', error);
       toast.error('Erro ao excluir pipeline');
     }
   });
 
-  // Mutations para colunas
-  const createColumnMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const { error } = await supabase
-        .from('crm_pipeline_columns')
-        .insert(data);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
-      toast.success('Coluna criada com sucesso');
-    },
-    onError: () => {
-      toast.error('Erro ao criar coluna');
-    }
-  });
-
-  const updateColumnMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const { error } = await supabase
-        .from('crm_pipeline_columns')
-        .update(data)
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
-      toast.success('Coluna atualizada com sucesso');
-    },
-    onError: () => {
-      toast.error('Erro ao atualizar coluna');
-    }
-  });
-
-  const deleteColumnMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('crm_pipeline_columns')
-        .update({ is_active: false })
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-pipelines'] });
-      toast.success('Coluna excluída com sucesso');
-    },
-    onError: () => {
-      toast.error('Erro ao excluir coluna');
-    }
-  });
-
-  // Funções wrapper para compatibilidade com os componentes existentes
-  const updatePipeline = (id: string, data: any) => {
-    updatePipelineMutation.mutate({ id, data });
+  // Método para buscar pipelines manualmente
+  const fetchPipelines = () => {
+    refetch();
   };
 
-  const updateColumn = (id: string, data: any) => {
-    updateColumnMutation.mutate({ id, data });
+  const createPipeline = (name: string, description?: string) => {
+    return createPipelineMutation.mutateAsync({ name, description });
   };
 
-  const fetchColumns = async (pipelineId?: string) => {
-    // Para compatibilidade, apenas faz refetch
-    await refetch();
+  const updatePipeline = (id: string, name: string, description?: string) => {
+    return updatePipelineMutation.mutateAsync({ id, name, description });
   };
 
-  const fetchPipelines = async () => {
-    await refetch();
+  const deletePipeline = (id: string) => {
+    return deletePipelineMutation.mutateAsync(id);
   };
 
   return {
     pipelines,
     columns,
-    isLoading,
-    loading: isLoading, // Alias para compatibilidade
+    loading,
     refetch,
     fetchPipelines,
-    fetchColumns,
-    createPipeline: createPipelineMutation.mutate,
+    createPipeline,
     updatePipeline,
-    deletePipeline: deletePipelineMutation.mutate,
-    createColumn: createColumnMutation.mutate,
-    updateColumn,
-    deleteColumn: deleteColumnMutation.mutate,
+    deletePipeline
   };
 };

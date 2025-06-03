@@ -7,7 +7,7 @@ import { CRMPipeline } from '@/types/crm.types';
 
 export const PipelineManager = () => {
   const [selectedPipeline, setSelectedPipeline] = useState<CRMPipeline | null>(null);
-  const { pipelines, loading, fetchPipelines } = useCRMPipelines();
+  const { pipelines, loading, refetch } = useCRMPipelines();
 
   const handlePipelineSelect = (pipeline: CRMPipeline) => {
     setSelectedPipeline(pipeline);
@@ -18,7 +18,7 @@ export const PipelineManager = () => {
   };
 
   const handleRefresh = () => {
-    fetchPipelines();
+    refetch();
   };
 
   if (selectedPipeline) {
