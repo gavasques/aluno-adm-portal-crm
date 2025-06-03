@@ -80,7 +80,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 p-2">
       <Tabs 
         value={activeTab} 
         onValueChange={handleTabChange}
