@@ -131,7 +131,7 @@ export const useSimplifiedLeadMovement = (filters: CRMFilters) => {
     });
 
     try {
-      // 5. Atualizar no banco de dados
+      // 5. Atualizar no banco de dados sem FULL JOIN
       console.log(`💾 [MOVEMENT_${operationId}] Persistindo no banco de dados...`);
       
       const updateData = {

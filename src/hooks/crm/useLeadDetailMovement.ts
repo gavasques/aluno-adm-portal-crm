@@ -44,10 +44,7 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
           updated_at: new Date().toISOString()
         })
         .eq('id', lead.id)
-        .select(`
-          id, name, column_id, updated_at,
-          column:crm_pipeline_columns(id, name, color)
-        `)
+        .select('id, name, column_id, updated_at')
         .single();
 
       if (error) {
@@ -61,8 +58,7 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
 
       console.log(`✅ [LEAD_DETAIL_MOVEMENT_${operationId}] Lead atualizado com sucesso:`, {
         leadId: updatedLead.id,
-        newColumn: updatedLead.column_id,
-        columnName: updatedLead.column?.name
+        newColumn: updatedLead.column_id
       });
       
       // Invalidar queries relacionadas
@@ -78,7 +74,14 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
       // Chamar callback para atualizar a UI
       onLeadUpdate();
       
-      toast.success(`Lead movido para "${updatedLead.column?.name || 'Nova coluna'}"`);
+      // Buscar nome da nova coluna para o toast
+      const { data: columnData } = await supabase
+        .from('crm_pipeline_columns')
+        .select('name')
+        .eq('id', newColumnId)
+        .single();
+      
+      toast.success(`Lead movido para "${columnData?.name || 'Nova coluna'}"`);
       
     } catch (error) {
       console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Erro:`, error);
