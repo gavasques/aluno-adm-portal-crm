@@ -15,7 +15,7 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
 
   const moveLeadToColumn = useCallback(async (newColumnId: string) => {
     const operationId = `move_detail_${lead.id}_${Date.now()}`;
-    console.log(`🔄 [LEAD_DETAIL_MOVEMENT_${operationId}] Movendo lead para coluna:`, {
+    console.log(`🔄 [LEAD_DETAIL_MOVEMENT_${operationId}] Iniciando movimento:`, {
       leadId: lead.id,
       leadName: lead.name,
       currentColumn: lead.column_id,
@@ -24,7 +24,7 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
     
     // Validações iniciais
     if (!lead || !newColumnId) {
-      console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Lead ou nova coluna não definidos`);
+      console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Parâmetros inválidos`);
       throw new Error('Parâmetros inválidos');
     }
     
@@ -34,28 +34,7 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
     }
 
     try {
-      // Verificar se a coluna de destino existe - query simples
-      console.log(`🔍 [LEAD_DETAIL_MOVEMENT_${operationId}] Validando coluna de destino...`);
-      
-      const { data: column, error: columnError } = await supabase
-        .from('crm_pipeline_columns')
-        .select('id, name, pipeline_id')
-        .eq('id', newColumnId)
-        .eq('is_active', true)
-        .single();
-
-      if (columnError || !column) {
-        console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Coluna de destino não encontrada:`, columnError);
-        throw new Error('Coluna de destino não encontrada ou inativa');
-      }
-
-      console.log(`✅ [LEAD_DETAIL_MOVEMENT_${operationId}] Coluna válida:`, {
-        columnId: column.id,
-        columnName: column.name,
-        pipelineId: column.pipeline_id
-      });
-
-      // Atualizar no banco de dados
+      // Atualizar diretamente no banco de dados
       console.log(`💾 [LEAD_DETAIL_MOVEMENT_${operationId}] Atualizando lead no banco...`);
       
       const { data: updatedLead, error } = await supabase
@@ -65,11 +44,14 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
           updated_at: new Date().toISOString()
         })
         .eq('id', lead.id)
-        .select('id, name, column_id, updated_at')
+        .select(`
+          id, name, column_id, updated_at,
+          column:crm_pipeline_columns(id, name, color)
+        `)
         .single();
 
       if (error) {
-        console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Erro no banco de dados:`, error);
+        console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Erro no banco:`, error);
         throw new Error(`Erro ao atualizar lead: ${error.message}`);
       }
 
@@ -79,24 +61,27 @@ export const useLeadDetailMovement = ({ lead, onLeadUpdate }: UseLeadDetailMovem
 
       console.log(`✅ [LEAD_DETAIL_MOVEMENT_${operationId}] Lead atualizado com sucesso:`, {
         leadId: updatedLead.id,
-        newColumn: updatedLead.column_id
+        newColumn: updatedLead.column_id,
+        columnName: updatedLead.column?.name
       });
       
-      // Invalidar queries relacionadas para forçar refetch
+      // Invalidar queries relacionadas
       console.log(`🔄 [LEAD_DETAIL_MOVEMENT_${operationId}] Invalidando queries...`);
       
-      queryClient.invalidateQueries({ queryKey: ['crm-lead-detail', lead.id] });
-      queryClient.invalidateQueries({ queryKey: ['unified-crm-leads'] });
-      queryClient.invalidateQueries({ queryKey: ['optimized-crm-leads'] });
-      queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['crm-lead-detail', lead.id] }),
+        queryClient.invalidateQueries({ queryKey: ['unified-crm-leads'] }),
+        queryClient.invalidateQueries({ queryKey: ['optimized-crm-leads'] }),
+        queryClient.invalidateQueries({ queryKey: ['crm-leads'] })
+      ]);
       
       // Chamar callback para atualizar a UI
       onLeadUpdate();
       
-      toast.success(`Lead movido para "${column.name}"`);
+      toast.success(`Lead movido para "${updatedLead.column?.name || 'Nova coluna'}"`);
       
     } catch (error) {
-      console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Erro ao mover lead:`, error);
+      console.error(`❌ [LEAD_DETAIL_MOVEMENT_${operationId}] Erro:`, error);
       
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error(`Erro ao mover lead: ${errorMessage}`);
