@@ -13,10 +13,10 @@ const AdminMentoringSessionsGroup = () => {
   ];
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="h-full w-full">
       <BreadcrumbNav items={breadcrumbItems} showBackButton={true} />
       
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sessões em Grupo</h1>
           <p className="text-gray-600 mt-1">Gerencie as sessões em grupo de mentoria</p>
@@ -27,7 +27,7 @@ const AdminMentoringSessionsGroup = () => {
         </Button>
       </div>
 
-      <Card>
+      <Card className="mt-6">
         <CardContent className="p-8 text-center">
           <Users2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma sessão em grupo encontrada</h3>

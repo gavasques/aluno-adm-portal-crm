@@ -99,7 +99,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   }
 
   return (
-    <div className="h-full w-full flex flex-col">
+    <div className="h-full w-full flex flex-col p-8">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext items={activeColumns.map(col => col.id)} strategy={horizontalListSortingStrategy}>
           <KanbanGrid

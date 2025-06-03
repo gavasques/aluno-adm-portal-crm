@@ -32,7 +32,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
           />
         </div>
       ) : (
-        <div className="px-6 py-4 h-full w-full">
+        <div className="h-full w-full p-6">
           <div className="bg-white rounded-lg border border-gray-200 h-full w-full">
             <CRMListView
               filters={effectiveFilters}
