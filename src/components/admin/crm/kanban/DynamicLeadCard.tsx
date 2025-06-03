@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,12 +17,19 @@ import {
   Tag,
   User,
   Clock,
-  MapPin
+  MapPin,
+  MoreVertical
 } from 'lucide-react';
-import { CRMLead, CRMLeadCardField } from '@/types/crm.types';
+import { CRMLead, CRMLeadCardField, LeadStatus } from '@/types/crm.types';
 import { useCRMCardPreferences } from '@/hooks/crm/useCRMCardPreferences';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import StatusChangeDialog from '../status/StatusChangeDialog';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface DynamicLeadCardProps {
   lead: CRMLead;
@@ -252,6 +258,8 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
   isDragging = false
 }) => {
   const { preferences, isLoading } = useCRMCardPreferences();
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const queryClient = useQueryClient();
   
   const {
     attributes,
@@ -262,14 +270,9 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
   } = useSortable({ 
     id: lead.id,
     data: {
-      ...lead,
-      // Garantir que todos os dados necessários estão presentes
       type: 'lead',
-      sortable: {
-        containerId: lead.column_id,
-        items: [lead.id],
-        index: 0
-      }
+      lead: lead,
+      column_id: lead.column_id
     }
   });
 
@@ -282,13 +285,10 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Log detalhado do click
     console.log('🔗 [DYNAMIC_CARD] Click no lead:', {
       leadId: lead.id,
       leadName: lead.name,
-      isDragging,
-      hasOnClick: !!onClick,
-      timestamp: new Date().toISOString()
+      isDragging
     });
     
     if (!isDragging && onClick) {
@@ -296,13 +296,49 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     }
   };
 
-  // Log da renderização do card
+  const handleStatusChange = async (status: LeadStatus, reason?: string, lossReasonId?: string) => {
+    try {
+      const updateData: any = {
+        status,
+        status_changed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (reason) {
+        updateData.status_reason = reason;
+      }
+
+      if (lossReasonId) {
+        updateData.loss_reason_id = lossReasonId;
+      }
+
+      const { error } = await supabase
+        .from('crm_leads')
+        .update(updateData)
+        .eq('id', lead.id);
+
+      if (error) throw error;
+
+      // Invalidar queries para atualizar os dados
+      queryClient.invalidateQueries({ queryKey: ['unified-crm-leads'] });
+      
+      toast.success(`Status alterado para "${status}"`);
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+      throw error;
+    }
+  };
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   console.log('🎯 [DYNAMIC_CARD] Renderizando card:', {
     leadId: lead.id,
     leadName: lead.name,
     columnId: lead.column_id,
-    isDragging,
-    hasRequiredData: !!(lead.id && lead.name && lead.column_id)
+    isDragging
   });
 
   if (isLoading) {
@@ -320,53 +356,80 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     preferences.visible_fields.includes(field)
   );
 
-  // Separar campos obrigatórios dos opcionais para layout
-  const requiredFields = orderedVisibleFields.filter(field => 
-    ['name', 'status', 'responsible'].includes(field)
-  );
-  const optionalFields = orderedVisibleFields.filter(field => 
-    !['name', 'status', 'responsible'].includes(field)
-  );
-
   return (
-    <motion.div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ scale: isDragging ? 1 : 1.02 }}
-      transition={{ duration: 0.2 }}
-      className={`
-        bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md
-        transition-all duration-200 cursor-pointer p-4 space-y-3
-        ${isDragging ? 'rotate-3 shadow-xl opacity-70 z-50 ring-2 ring-blue-300' : ''}
-      `}
-      onClick={handleClick}
-    >
-      {/* Seção principal (campos obrigatórios) */}
-      <div className="space-y-2">
-        {requiredFields.map((field) => (
-          <FieldRenderer key={field} field={field} lead={lead} />
-        ))}
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        onClick={handleClick}
+        className={`
+          group relative bg-white rounded-lg border border-gray-200 p-4 shadow-sm
+          hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer
+          ${isDragging ? 'opacity-50 rotate-3 scale-105' : ''}
+        `}
+      >
+        {/* Header com nome e menu */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <FieldRenderer field="name" lead={lead} />
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={handleMenuClick}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowStatusDialog(true)}>
+                Alterar Status
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onClick}>
+                Ver Detalhes
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Status */}
+        <div className="mb-2">
+          <FieldRenderer field="status" lead={lead} />
+        </div>
+
+        {/* Outros campos */}
+        <div className="space-y-2">
+          {orderedVisibleFields
+            .filter(field => !['name', 'status'].includes(field))
+            .slice(0, 4) // Limitar campos exibidos
+            .map((field) => (
+              <FieldRenderer key={field} field={field} lead={lead} />
+            ))}
+        </div>
+
+        {/* Tags se existirem */}
+        {lead.tags && lead.tags.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-100">
+            <FieldRenderer field="tags" lead={lead} />
+          </div>
+        )}
       </div>
 
-      {/* Separador se há campos opcionais */}
-      {optionalFields.length > 0 && requiredFields.length > 0 && (
-        <Separator className="my-3" />
-      )}
-
-      {/* Seção de campos opcionais */}
-      {optionalFields.length > 0 && (
-        <div className="space-y-2">
-          {optionalFields.map((field) => (
-            <FieldRenderer key={field} field={field} lead={lead} />
-          ))}
-        </div>
-      )}
-    </motion.div>
+      {/* Dialog de mudança de status */}
+      <StatusChangeDialog
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        leadName={lead.name}
+        currentStatus={lead.status}
+        onStatusChange={handleStatusChange}
+      />
+    </>
   );
 };
+
+export default DynamicLeadCard;

@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo } from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
@@ -168,7 +167,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
           isMoving={isMoving}
           onOpenDetail={handleLeadClick}
           onCreateLead={onCreateLead}
-          useVirtualization={leadsWithContacts.length > 50} // Usar virtualização para muitos leads
+          useVirtualization={leadsWithContacts.length > 50}
         />
 
         <DragOverlay>
@@ -177,7 +176,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
               <DynamicLeadCard 
                 lead={draggedLead} 
                 isDragging 
-                onClick={() => {}} // Desabilitar click durante drag
+                onClick={() => {}}
               />
             </div>
           )}
