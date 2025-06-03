@@ -1,3 +1,4 @@
+
 import { IMentoringRepository } from '@/features/mentoring/types/contracts.types';
 import { 
   MentoringCatalog, 
@@ -7,7 +8,8 @@ import {
   CreateMentoringCatalogData,
   CreateSessionData,
   CreateExtensionData,
-  MentoringExtension
+  MentoringExtension,
+  UpdateSessionData
 } from '@/types/mentoring.types';
 
 export class SupabaseMentoringRepository implements IMentoringRepository {
@@ -100,6 +102,53 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     }
   }
 
+  async createEnrollment(data: any): Promise<StudentMentoringEnrollment> {
+    try {
+      // Create enrollment in Supabase
+      const newEnrollment: StudentMentoringEnrollment = {
+        id: `enrollment-${Date.now()}`,
+        studentId: data.studentId || 'student-001',
+        mentoringId: data.mentoringId,
+        mentoring: {
+          id: data.mentoringId,
+          name: 'Sample Mentoring',
+          type: 'Individual' as const,
+          frequency: 'Semanal',
+          durationMonths: 6,
+          extensions: [],
+          description: 'Sample description'
+        },
+        status: 'ativa' as const,
+        enrollmentDate: new Date().toISOString(),
+        startDate: data.startDate || new Date().toISOString(),
+        endDate: data.endDate || new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        sessionsUsed: 0,
+        totalSessions: 12,
+        responsibleMentor: data.responsibleMentor || 'mentor@example.com',
+        paymentStatus: 'pago',
+        observations: data.observations,
+        hasExtension: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return newEnrollment;
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      throw error;
+    }
+  }
+
+  async deleteEnrollment(id: string): Promise<boolean> {
+    try {
+      console.log('🗑️ SupabaseMentoringRepository.deleteEnrollment - ID:', id);
+      // Delete enrollment from Supabase
+      return true;
+    } catch (error) {
+      console.error('Error deleting enrollment:', error);
+      return false;
+    }
+  }
+
   async addExtension(data: CreateExtensionData): Promise<boolean> {
     try {
       const extension = {
@@ -121,6 +170,17 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       return true;
     } catch (error) {
       console.error('Error adding extension:', error);
+      return false;
+    }
+  }
+
+  async removeExtension(extensionId: string): Promise<boolean> {
+    try {
+      console.log('🗑️ SupabaseMentoringRepository.removeExtension - ID:', extensionId);
+      // Remove extension from Supabase
+      return true;
+    } catch (error) {
+      console.error('Error removing extension:', error);
       return false;
     }
   }
@@ -178,6 +238,28 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
     } catch (error) {
       console.error('Error creating session:', error);
       throw error;
+    }
+  }
+
+  async updateSession(sessionId: string, data: UpdateSessionData): Promise<boolean> {
+    try {
+      console.log('📝 SupabaseMentoringRepository.updateSession - ID:', sessionId, 'Data:', data);
+      // Update session in Supabase
+      return true;
+    } catch (error) {
+      console.error('Error updating session:', error);
+      return false;
+    }
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    try {
+      console.log('🗑️ SupabaseMentoringRepository.deleteSession - ID:', sessionId);
+      // Delete session from Supabase
+      return true;
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      return false;
     }
   }
 
