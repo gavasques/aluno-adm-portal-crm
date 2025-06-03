@@ -13,6 +13,10 @@ export interface GroupEnrollment {
     id: string;
     name: string;
     email: string;
+    studentId?: string;
+    sessionsUsed?: number;
+    totalSessions?: number;
+    status?: string;
   }>;
   startDate: string;
   endDate: string;
@@ -49,6 +53,7 @@ export interface StudentMentoringEnrollment {
     id: string;
     name: string;
     type: 'Individual' | 'Grupo';
+    frequency?: string;
   };
   status: 'ativa' | 'concluida' | 'pausada' | 'cancelada';
   startDate: string;
@@ -69,18 +74,26 @@ export interface StudentMentoringEnrollment {
 export interface MentoringSession {
   id: string;
   enrollment_id: string;
+  enrollmentId?: string; // Alias para compatibilidade
   type: 'individual' | 'group';
   status: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento';
   scheduled_date?: string;
+  scheduledDate?: string; // Alias para compatibilidade
   scheduled_time?: string;
   duration_minutes: number;
+  durationMinutes?: number; // Alias para compatibilidade
   meeting_link?: string;
+  meetingLink?: string; // Alias para compatibilidade
   title: string;
   observations?: string;
   session_number: number;
+  sessionNumber?: number; // Alias para compatibilidade
   completed_at?: string;
   created_at: string;
   updated_at: string;
+  mentorNotes?: string;
+  transcription?: string;
+  recordingLink?: string;
 }
 
 export interface CreateExtensionData {
@@ -98,12 +111,23 @@ export interface MentoringExtension {
   updated_at: string;
 }
 
+export interface CheckoutLinks {
+  individual?: string;
+  group?: string;
+  extension?: string;
+  mercadoPago?: string;
+  hubla?: string;
+  hotmart?: string;
+}
+
 export interface MentoringExtensionOption {
   id: string;
   months: number;
   price: number;
   description: string;
-  isActive: boolean;
+  isActive?: boolean;
+  totalSessions?: number;
+  checkoutLinks?: CheckoutLinks;
 }
 
 export interface MentoringCatalog {
@@ -123,6 +147,8 @@ export interface MentoringCatalog {
   status: string;
   createdAt: string;
   updatedAt: string;
+  frequency?: string;
+  checkoutLinks?: CheckoutLinks;
 }
 
 export interface CreateMentoringCatalogData {
@@ -137,12 +163,8 @@ export interface CreateMentoringCatalogData {
   category?: string;
   tags?: string[];
   extensions?: MentoringExtensionOption[];
-}
-
-export interface CheckoutLinks {
-  individual?: string;
-  group?: string;
-  extension?: string;
+  frequency?: string;
+  checkoutLinks?: CheckoutLinks;
 }
 
 export interface MentoringDashboardStats {
@@ -168,6 +190,31 @@ export interface SessionFormData {
   durationMinutes: number;
   meetingLink?: string;
   observations?: string;
+}
+
+export interface CreateSessionData {
+  enrollmentId: string;
+  title: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  durationMinutes: number;
+  meetingLink?: string;
+  observations?: string;
+  sessionNumber: number;
+  type: 'individual' | 'group';
+}
+
+export interface UpdateSessionData {
+  title?: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  durationMinutes?: number;
+  meetingLink?: string;
+  observations?: string;
+  status?: 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento';
+  mentorNotes?: string;
+  transcription?: string;
+  recordingLink?: string;
 }
 
 export interface EnrollmentFormData {
