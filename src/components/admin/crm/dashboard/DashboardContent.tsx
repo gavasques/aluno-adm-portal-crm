@@ -24,7 +24,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
   return (
     <div className="h-full bg-gray-50">
       {activeView === 'kanban' ? (
-        <div className="h-full overflow-hidden p-6">
+        <div className="h-full">
           <OptimizedKanbanBoard
             filters={effectiveFilters}
             pipelineId={selectedPipelineId}
@@ -32,7 +32,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
           />
         </div>
       ) : (
-        <div className="p-6 h-full overflow-auto">
+        <div className="p-6 h-full">
           <div className="bg-white rounded-lg border border-gray-200 h-full">
             <CRMListView
               filters={effectiveFilters}

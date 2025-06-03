@@ -73,18 +73,18 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   if (pipelinesLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Tabs 
         value={activeTab} 
         onValueChange={handleTabChange}
-        className="flex-1 flex flex-col"
+        className="h-full flex flex-col"
       >
         {/* Header com Tabs */}
         <CRMDashboardHeader

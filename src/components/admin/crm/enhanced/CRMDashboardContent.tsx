@@ -58,7 +58,7 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
     switch (activeTab) {
       case 'dashboard':
         return (
-          <div className="flex-1 flex flex-col">
+          <div className="h-full flex flex-col">
             {/* Filtros Primários */}
             <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
               <PrimaryFilters
@@ -72,14 +72,16 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
             </div>
 
             {/* Toolbar */}
-            <DashboardToolbar
-              activeView={activeView}
-              onViewChange={onViewChange}
-              showFilters={showFilters}
-              onToggleFilters={onToggleFilters}
-              onCreateLead={onCreateLead}
-              filters={effectiveFilters}
-            />
+            <div className="flex-shrink-0">
+              <DashboardToolbar
+                activeView={activeView}
+                onViewChange={onViewChange}
+                showFilters={showFilters}
+                onToggleFilters={onToggleFilters}
+                onCreateLead={onCreateLead}
+                filters={effectiveFilters}
+              />
+            </div>
 
             {/* Filtros Avançados */}
             <AnimatePresence>
@@ -103,8 +105,8 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
               )}
             </AnimatePresence>
 
-            {/* Conteúdo Principal */}
-            <div className="flex-1 overflow-hidden">
+            {/* Conteúdo Principal - Usar toda altura restante */}
+            <div className="flex-1 min-h-0">
               <DashboardContent
                 activeView={activeView}
                 effectiveFilters={effectiveFilters}
@@ -117,14 +119,14 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
 
       case 'reports':
         return (
-          <div className="flex-1 overflow-hidden">
+          <div className="h-full">
             <CRMReports />
           </div>
         );
 
       case 'analytics':
         return (
-          <div className="flex-1 overflow-hidden">
+          <div className="h-full">
             <AnalyticsDashboard 
               dateRange={{
                 from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -136,7 +138,7 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
 
       case 'settings':
         return (
-          <div className="flex-1 overflow-hidden">
+          <div className="h-full">
             <CRMSettings />
           </div>
         );
@@ -147,7 +149,7 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 min-h-0">
       {renderActiveTabContent()}
     </div>
   );

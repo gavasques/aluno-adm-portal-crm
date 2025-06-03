@@ -30,7 +30,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     <div 
       ref={setNodeRef}
       className={cn(
-        "w-80 bg-white rounded-lg border border-gray-200 p-4 transition-all duration-300 ease-in-out",
+        "w-80 h-full bg-white rounded-lg border border-gray-200 p-4 flex flex-col transition-all duration-300 ease-in-out",
         isOver && "bg-blue-50 ring-1 ring-blue-300",
         isDragOver && "scale-[1.02]"
       )}
@@ -42,11 +42,13 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         onCreateLead={onCreateLead ? handleCreateLead : undefined}
       />
       
-      <ColumnBody
-        leads={leads}
-        isOver={isOver}
-        onOpenDetail={onOpenDetail}
-      />
+      <div className="flex-1 min-h-0">
+        <ColumnBody
+          leads={leads}
+          isOver={isOver}
+          onOpenDetail={onOpenDetail}
+        />
+      </div>
     </div>
   );
 };

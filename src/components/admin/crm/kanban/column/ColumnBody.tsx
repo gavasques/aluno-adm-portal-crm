@@ -27,7 +27,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
       strategy={verticalListSortingStrategy}
     >
       <div className={cn(
-        "space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto transition-all duration-300",
+        "space-y-3 h-full overflow-y-auto transition-all duration-300 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
         isOver && "space-y-4"
       )}>
         {leads.map((lead, index) => (
