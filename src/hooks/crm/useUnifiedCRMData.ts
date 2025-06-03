@@ -70,12 +70,13 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
         // Executar queries em paralelo para melhor performance
         const [leadsResult, pendingContactsResult, completedContactsResult] = await Promise.allSettled([
-          measureAsyncOperation('fetch_leads', () => 
-            leadsQuery.order('created_at', { ascending: false })
-          ),
+          measureAsyncOperation('fetch_leads', async () => {
+            const result = await leadsQuery.order('created_at', { ascending: false });
+            return result;
+          }),
           
-          measureAsyncOperation('fetch_pending_contacts', () =>
-            supabase
+          measureAsyncOperation('fetch_pending_contacts', async () => {
+            const result = await supabase
               .from('crm_lead_contacts')
               .select(`
                 id, lead_id, contact_type, contact_reason, contact_date, status,
@@ -83,11 +84,12 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
                 responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
               `)
               .eq('status', 'pending')
-              .order('contact_date', { ascending: true })
-          ),
+              .order('contact_date', { ascending: true });
+            return result;
+          }),
           
-          measureAsyncOperation('fetch_completed_contacts', () =>
-            supabase
+          measureAsyncOperation('fetch_completed_contacts', async () => {
+            const result = await supabase
               .from('crm_lead_contacts')
               .select(`
                 id, lead_id, contact_type, contact_reason, contact_date, status,
@@ -96,17 +98,20 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
               `)
               .eq('status', 'completed')
               .not('completed_at', 'is', null)
-              .order('completed_at', { ascending: false })
-          )
+              .order('completed_at', { ascending: false });
+            return result;
+          })
         ]);
 
         if (leadsResult.status === 'rejected') {
           throw leadsResult.reason;
         }
 
-        const { data: leads, error: leadsError } = leadsResult.value;
-        if (leadsError) throw leadsError;
+        // Verificar se leadsResult.value tem a estrutura esperada
+        const leadsResponse = leadsResult.value as { data: any[] | null; error: any };
+        if (leadsResponse.error) throw leadsResponse.error;
 
+        const leads = leadsResponse.data;
         console.log('📊 [UNIFIED_CRM] Leads encontrados:', leads?.length || 0);
 
         if (!leads || leads.length === 0) {
@@ -118,8 +123,9 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
         const leadIds = transformedLeads.map(lead => lead.id);
 
         // Processar contatos de forma otimizada
-        const pendingContacts = pendingContactsResult.status === 'fulfilled' && pendingContactsResult.value?.data ? 
-          pendingContactsResult.value.data
+        const pendingContacts = pendingContactsResult.status === 'fulfilled' && 
+          (pendingContactsResult.value as { data: any[] | null })?.data ? 
+          (pendingContactsResult.value as { data: any[] }).data
             .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'pending')
             .map(contact => ({
               ...contact,
@@ -127,8 +133,9 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
               status: contact.status as 'pending' | 'completed' | 'overdue'
             })) : [];
 
-        const completedContacts = completedContactsResult.status === 'fulfilled' && completedContactsResult.value?.data ? 
-          completedContactsResult.value.data
+        const completedContacts = completedContactsResult.status === 'fulfilled' && 
+          (completedContactsResult.value as { data: any[] | null })?.data ? 
+          (completedContactsResult.value as { data: any[] }).data
             .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'completed' && contact.completed_at)
             .map(contact => ({
               ...contact,
