@@ -39,9 +39,9 @@ const PipelineReports: React.FC<PipelineReportsProps> = ({ pipelineMetrics, load
         <Card key={index}>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Pipeline: {pipeline.pipelineName}</span>
+              <span>Pipeline: {pipeline.pipeline_name}</span>
               <span className="text-sm font-normal text-gray-500">
-                {pipeline.totalLeads} leads total
+                {pipeline.total_leads} leads total
               </span>
             </CardTitle>
           </CardHeader>

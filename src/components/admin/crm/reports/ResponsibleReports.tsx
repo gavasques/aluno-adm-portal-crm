@@ -36,7 +36,7 @@ const ResponsibleReports: React.FC<ResponsibleReportsProps> = ({ responsibleMetr
   }
 
   // Ordenar por total de leads
-  const sortedMetrics = [...responsibleMetrics].sort((a, b) => b.totalLeads - a.totalLeads);
+  const sortedMetrics = [...responsibleMetrics].sort((a, b) => b.total_leads - a.total_leads);
 
   return (
     <Card>
@@ -53,15 +53,15 @@ const ResponsibleReports: React.FC<ResponsibleReportsProps> = ({ responsibleMetr
               <div className="flex items-center space-x-4">
                 <Avatar>
                   <AvatarFallback>
-                    {responsible.responsibleName.charAt(0).toUpperCase()}
+                    {responsible.responsible_name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium text-gray-900">
-                    {responsible.responsibleName}
+                    {responsible.responsible_name}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {responsible.totalLeads} leads atribuídos
+                    {responsible.total_leads} leads atribuídos
                   </p>
                 </div>
               </div>
@@ -69,13 +69,13 @@ const ResponsibleReports: React.FC<ResponsibleReportsProps> = ({ responsibleMetr
               <div className="flex items-center space-x-4">
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">
-                    {responsible.convertedLeads} convertidos
+                    {responsible.converted_leads} convertidos
                   </p>
                   <Badge 
-                    variant={responsible.conversionRate >= 20 ? "default" : "secondary"}
+                    variant={responsible.conversion_rate >= 20 ? "default" : "secondary"}
                     className="text-xs"
                   >
-                    {responsible.conversionRate.toFixed(1)}% conversão
+                    {responsible.conversion_rate.toFixed(1)}% conversão
                   </Badge>
                 </div>
 
@@ -83,7 +83,7 @@ const ResponsibleReports: React.FC<ResponsibleReportsProps> = ({ responsibleMetr
                   <div className="w-24 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${Math.min(responsible.conversionRate, 100)}%` }}
+                      style={{ width: `${Math.min(responsible.conversion_rate, 100)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -97,20 +97,20 @@ const ResponsibleReports: React.FC<ResponsibleReportsProps> = ({ responsibleMetr
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {sortedMetrics.reduce((acc, curr) => acc + curr.totalLeads, 0)}
+                {sortedMetrics.reduce((acc, curr) => acc + curr.total_leads, 0)}
               </p>
               <p className="text-sm text-gray-500">Total de Leads</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {sortedMetrics.reduce((acc, curr) => acc + curr.convertedLeads, 0)}
+                {sortedMetrics.reduce((acc, curr) => acc + curr.converted_leads, 0)}
               </p>
               <p className="text-sm text-gray-500">Total Convertidos</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">
                 {(sortedMetrics.reduce((acc, curr, _, arr) => 
-                  acc + curr.conversionRate, 0) / sortedMetrics.length).toFixed(1)}%
+                  acc + curr.conversion_rate, 0) / sortedMetrics.length).toFixed(1)}%
               </p>
               <p className="text-sm text-gray-500">Conversão Média</p>
             </div>

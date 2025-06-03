@@ -39,7 +39,9 @@ const TrendReports: React.FC<TrendReportsProps> = ({ periodData, loading }) => {
   // Formatar dados para os gráficos
   const chartData = periodData.map(item => ({
     ...item,
-    month: format(parseISO(`${item.period}-01`), 'MMM/yy', { locale: ptBR })
+    month: format(parseISO(`${item.period}-01`), 'MMM/yy', { locale: ptBR }),
+    leads: item.new_leads,
+    converted: item.converted_leads
   }));
 
   return (
@@ -138,27 +140,27 @@ const TrendReports: React.FC<TrendReportsProps> = ({ periodData, loading }) => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">
-                {periodData.reduce((acc, curr) => acc + curr.leads, 0)}
+                {periodData.reduce((acc, curr) => acc + curr.new_leads, 0)}
               </p>
               <p className="text-sm text-blue-700">Total de Leads</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">
-                {periodData.reduce((acc, curr) => acc + curr.converted, 0)}
+                {periodData.reduce((acc, curr) => acc + curr.converted_leads, 0)}
               </p>
               <p className="text-sm text-green-700">Total Convertidos</p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <p className="text-2xl font-bold text-purple-600">
-                {(periodData.reduce((acc, curr) => acc + curr.leads, 0) / periodData.length).toFixed(0)}
+                {(periodData.reduce((acc, curr) => acc + curr.new_leads, 0) / periodData.length).toFixed(0)}
               </p>
               <p className="text-sm text-purple-700">Média Mensal</p>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <p className="text-2xl font-bold text-orange-600">
                 {periodData.length > 1 ? 
-                  ((periodData[periodData.length - 1].leads - periodData[periodData.length - 2].leads) / 
-                   periodData[periodData.length - 2].leads * 100).toFixed(1) : 0}%
+                  ((periodData[periodData.length - 1].new_leads - periodData[periodData.length - 2].new_leads) / 
+                   periodData[periodData.length - 2].new_leads * 100).toFixed(1) : 0}%
               </p>
               <p className="text-sm text-orange-700">Crescimento</p>
             </div>

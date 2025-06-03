@@ -34,31 +34,33 @@ const CRMReportsOverview: React.FC<CRMReportsOverviewProps> = ({ metrics, loadin
 
   if (!metrics) return null;
 
+  const convertedLeads = Math.round(metrics.total_leads * (metrics.conversion_rate / 100));
+
   const cards = [
     {
       title: 'Total de Leads',
-      value: metrics.totalLeads,
+      value: metrics.total_leads,
       icon: Users,
       color: 'blue',
-      subtitle: `${metrics.leadsThisMonth} este mês`
+      subtitle: `${metrics.new_leads_this_month} este mês`
     },
     {
       title: 'Taxa de Conversão',
-      value: `${metrics.conversionRate.toFixed(1)}%`,
+      value: `${metrics.conversion_rate.toFixed(1)}%`,
       icon: Target,
       color: 'green',
-      subtitle: `${metrics.convertedLeads} convertidos`
+      subtitle: `${convertedLeads} convertidos`
     },
     {
       title: 'Crescimento Mensal',
-      value: `${metrics.monthlyGrowth > 0 ? '+' : ''}${metrics.monthlyGrowth.toFixed(1)}%`,
-      icon: metrics.monthlyGrowth >= 0 ? ArrowUpIcon : ArrowDownIcon,
-      color: metrics.monthlyGrowth >= 0 ? 'green' : 'red',
+      value: `${metrics.monthly_growth > 0 ? '+' : ''}${metrics.monthly_growth.toFixed(1)}%`,
+      icon: metrics.monthly_growth >= 0 ? ArrowUpIcon : ArrowDownIcon,
+      color: metrics.monthly_growth >= 0 ? 'green' : 'red',
       subtitle: 'vs. mês anterior'
     },
     {
       title: 'Leads Ativos',
-      value: metrics.totalLeads - metrics.convertedLeads,
+      value: metrics.total_leads - convertedLeads,
       icon: Clock,
       color: 'orange',
       subtitle: 'em andamento'

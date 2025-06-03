@@ -1,5 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { DateRange } from './useCRMReportsFilters';
 
 export interface PipelineMetrics {
   pipeline_id: string;
@@ -8,6 +9,12 @@ export interface PipelineMetrics {
   converted_leads: number;
   conversion_rate: number;
   avg_time_to_convert: number;
+  columnBreakdown: Array<{
+    columnName: string;
+    count: number;
+    percentage: number;
+    color: string;
+  }>;
 }
 
 export interface ResponsibleMetrics {
@@ -33,6 +40,7 @@ export interface CRMMetrics {
   conversion_rate: number;
   avg_deal_size: number;
   total_revenue: number;
+  monthly_growth: number;
   leads_by_status: {
     aberto: number;
     ganho: number;
@@ -40,7 +48,7 @@ export interface CRMMetrics {
   };
 }
 
-export const useCRMReports = (dateRange: { from: Date; to: Date }) => {
+export const useCRMReports = (dateRange: DateRange) => {
   const { data: metrics, isLoading: loading } = useQuery({
     queryKey: ['crm-reports-metrics', dateRange],
     queryFn: async (): Promise<CRMMetrics> => {
@@ -51,6 +59,7 @@ export const useCRMReports = (dateRange: { from: Date; to: Date }) => {
         conversion_rate: 24.5,
         avg_deal_size: 3500,
         total_revenue: 85000,
+        monthly_growth: 12.5,
         leads_by_status: {
           aberto: 120,
           ganho: 60,
@@ -70,7 +79,13 @@ export const useCRMReports = (dateRange: { from: Date; to: Date }) => {
           total_leads: 120,
           converted_leads: 30,
           conversion_rate: 25.0,
-          avg_time_to_convert: 15
+          avg_time_to_convert: 15,
+          columnBreakdown: [
+            { columnName: 'Prospect', count: 40, percentage: 33.3, color: '#3b82f6' },
+            { columnName: 'Qualificado', count: 35, percentage: 29.2, color: '#10b981' },
+            { columnName: 'Proposta', count: 25, percentage: 20.8, color: '#f59e0b' },
+            { columnName: 'Fechado', count: 20, percentage: 16.7, color: '#ef4444' }
+          ]
         },
         {
           pipeline_id: '2',
@@ -78,7 +93,13 @@ export const useCRMReports = (dateRange: { from: Date; to: Date }) => {
           total_leads: 85,
           converted_leads: 25,
           conversion_rate: 29.4,
-          avg_time_to_convert: 12
+          avg_time_to_convert: 12,
+          columnBreakdown: [
+            { columnName: 'Contato Inicial', count: 30, percentage: 35.3, color: '#3b82f6' },
+            { columnName: 'Demo', count: 25, percentage: 29.4, color: '#10b981' },
+            { columnName: 'Negociação', count: 20, percentage: 23.5, color: '#f59e0b' },
+            { columnName: 'Fechado', count: 10, percentage: 11.8, color: '#ef4444' }
+          ]
         }
       ];
     }
@@ -113,21 +134,21 @@ export const useCRMReports = (dateRange: { from: Date; to: Date }) => {
     queryFn: async (): Promise<LeadsByPeriod[]> => {
       return [
         {
-          period: 'Janeiro',
+          period: '2024-01',
           new_leads: 45,
           converted_leads: 12,
           lost_leads: 8,
           active_leads: 25
         },
         {
-          period: 'Fevereiro',
+          period: '2024-02',
           new_leads: 52,
           converted_leads: 15,
           lost_leads: 10,
           active_leads: 27
         },
         {
-          period: 'Março',
+          period: '2024-03',
           new_leads: 38,
           converted_leads: 18,
           lost_leads: 6,
