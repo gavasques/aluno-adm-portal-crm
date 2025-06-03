@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +45,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
+      <div className="flex items-center justify-between gap-4 px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
         <div className="flex items-center gap-3">
           {/* Botão Novo Lead */}
           <Button 

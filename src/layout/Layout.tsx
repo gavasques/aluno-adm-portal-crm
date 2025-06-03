@@ -74,7 +74,7 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin, children }) => {
     );
   }
 
-  // Layout desktop
+  // Layout desktop - Removendo max-width e padding para CRM ocupar toda largura
   return (
     <NotificationsProvider>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -83,15 +83,15 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin, children }) => {
           {isAdmin ? <ModernAdminSidebar /> : <StudentSidebar />}
         </div>
         
-        {/* Main Content */}
+        {/* Main Content - Sem padding para CRM ocupar toda largura */}
         <div className="ml-64 min-h-screen">
           <motion.main 
-            className="p-6 lg:p-8"
+            className="w-full h-screen"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <div className="max-w-7xl mx-auto">
+            <div className="w-full h-full">
               {children || <Outlet />}
             </div>
           </motion.main>

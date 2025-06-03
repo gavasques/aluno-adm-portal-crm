@@ -25,7 +25,7 @@ export const KanbanGrid: React.FC<KanbanGridProps> = ({
   onCreateLead
 }) => {
   return (
-    <div className="h-full overflow-x-auto overflow-y-hidden">
+    <div className="h-full w-full overflow-x-auto overflow-y-hidden px-4 py-4">
       <div className={cn(
         "flex gap-4 min-w-max h-full transition-all duration-300",
         (isDragging || isMoving) && "pointer-events-none select-none"

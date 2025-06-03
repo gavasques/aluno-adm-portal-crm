@@ -80,11 +80,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Tabs 
         value={activeTab} 
         onValueChange={handleTabChange}
-        className="h-full flex flex-col"
+        className="h-full w-full flex flex-col"
       >
         {/* Header com Tabs */}
         <CRMDashboardHeader
@@ -92,28 +92,30 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           onTabChange={handleTabChange}
         />
 
-        {/* Conteúdo das Tabs - Renderização Condicional Real */}
-        <CRMDashboardContent
-          activeTab={activeTab}
-          activeView={activeView}
-          onViewChange={setActiveView}
-          showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
-          selectedPipelineId={selectedPipelineId}
-          onPipelineChange={setSelectedPipelineId}
-          pipelines={pipelines}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          isDebouncing={isDebouncing}
-          filters={filters}
-          updateFilter={updateFilter}
-          pipelineColumns={pipelineColumns}
-          users={users}
-          tags={tags}
-          handleTagsChange={handleTagsChange}
-          effectiveFilters={effectiveFilters}
-          onCreateLead={handleCreateLead}
-        />
+        {/* Conteúdo das Tabs - Ocupando toda largura disponível */}
+        <div className="flex-1 w-full">
+          <CRMDashboardContent
+            activeTab={activeTab}
+            activeView={activeView}
+            onViewChange={setActiveView}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            selectedPipelineId={selectedPipelineId}
+            onPipelineChange={setSelectedPipelineId}
+            pipelines={pipelines}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+            isDebouncing={isDebouncing}
+            filters={filters}
+            updateFilter={updateFilter}
+            pipelineColumns={pipelineColumns}
+            users={users}
+            tags={tags}
+            handleTagsChange={handleTagsChange}
+            effectiveFilters={effectiveFilters}
+            onCreateLead={handleCreateLead}
+          />
+        </div>
       </Tabs>
 
       {/* Modal de Lead */}
