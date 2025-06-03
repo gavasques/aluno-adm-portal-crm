@@ -26,17 +26,14 @@ const CRMReports: React.FC = () => {
   return (
     <div className="h-full bg-gray-50 overflow-y-auto">
       <div className="p-6 space-y-6">
-        {/* Header com filtros */}
         <CRMReportsHeader
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
           onExport={handleExportReport}
         />
 
-        {/* Overview Cards */}
         <CRMReportsOverview metrics={metrics} loading={loading} />
 
-        {/* Tabs de Relatórios */}
         <CRMReportsTabsContainer
           pipelineMetrics={pipelineMetrics}
           responsibleMetrics={responsibleMetrics}
