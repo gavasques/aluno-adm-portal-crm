@@ -100,7 +100,7 @@
   @apply transform translate-x-1;
 }
 
-/* Scrollbar customizada */
+/* Scrollbar customizada - padrão */
 .custom-scrollbar::-webkit-scrollbar {
   @apply w-2;
 }
@@ -111,4 +111,21 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+
+/* Scrollbar dark para sidebar admin */
+.scrollbar-dark::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+  @apply bg-gray-800 rounded-full;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full hover:bg-gray-500;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:active {
+  @apply bg-gray-500;
 }
