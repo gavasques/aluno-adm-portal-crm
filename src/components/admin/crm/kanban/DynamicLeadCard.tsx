@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -260,7 +261,16 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     transition,
   } = useSortable({ 
     id: lead.id,
-    data: lead // Passar dados completos do lead
+    data: {
+      ...lead,
+      // Garantir que todos os dados necessários estão presentes
+      type: 'lead',
+      sortable: {
+        containerId: lead.column_id,
+        items: [lead.id],
+        index: 0
+      }
+    }
   });
 
   const style = {
@@ -271,11 +281,29 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Log detalhado do click
+    console.log('🔗 [DYNAMIC_CARD] Click no lead:', {
+      leadId: lead.id,
+      leadName: lead.name,
+      isDragging,
+      hasOnClick: !!onClick,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!isDragging && onClick) {
-      console.log('🔗 [CARD] Click no lead:', lead.id);
       onClick();
     }
   };
+
+  // Log da renderização do card
+  console.log('🎯 [DYNAMIC_CARD] Renderizando card:', {
+    leadId: lead.id,
+    leadName: lead.name,
+    columnId: lead.column_id,
+    isDragging,
+    hasRequiredData: !!(lead.id && lead.name && lead.column_id)
+  });
 
   if (isLoading) {
     return (
@@ -315,7 +343,7 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
       className={`
         bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md
         transition-all duration-200 cursor-pointer p-4 space-y-3
-        ${isDragging ? 'rotate-3 shadow-xl opacity-70 z-50' : ''}
+        ${isDragging ? 'rotate-3 shadow-xl opacity-70 z-50 ring-2 ring-blue-300' : ''}
       `}
       onClick={handleClick}
     >

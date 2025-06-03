@@ -25,15 +25,24 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
   });
 
   const handleLeadClick = (lead: CRMLead) => {
-    console.log('🔗 [COLUMN] Click no lead:', {
+    console.log('🔗 [COLUMN_BODY] Click no lead:', {
       id: lead.id,
       name: lead.name,
-      column: columnId
+      column: columnId,
+      timestamp: new Date().toISOString()
     });
     onOpenDetail(lead);
   };
 
-  console.log(`📋 [COLUMN] ${columnId} renderizando com ${leads.length} leads`);
+  console.log(`📋 [COLUMN_BODY] ${columnId} renderizando:`, {
+    leadsCount: leads.length,
+    isOver,
+    leadsData: leads.map(lead => ({
+      id: lead.id,
+      name: lead.name,
+      column_id: lead.column_id
+    }))
+  });
 
   return (
     <div 
@@ -52,10 +61,11 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
           isOver && "space-y-4"
         )}>
           {leads.map((lead, index) => {
-            console.log(`📋 [COLUMN] Renderizando lead ${index + 1}:`, {
+            console.log(`📋 [COLUMN_BODY] Renderizando lead ${index + 1}:`, {
               id: lead.id,
               name: lead.name,
-              columnId: lead.column_id
+              columnId: lead.column_id,
+              hasRequiredData: !!(lead.id && lead.name && lead.column_id)
             });
             
             return (

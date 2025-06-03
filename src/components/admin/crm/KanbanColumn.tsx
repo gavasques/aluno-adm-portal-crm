@@ -32,10 +32,21 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     id: column.id,
   });
 
-  console.log(`📋 [KANBAN_COLUMN] ${column.name}:`, {
+  const isDropZoneActive = isOver || isDragOver;
+
+  // Log da renderização da coluna
+  console.log(`📋 [KANBAN_COLUMN] ${column.name} renderizando:`, {
+    columnId: column.id,
     leadsCount: leads.length,
-    isOver: isOver || isDragOver,
-    columnId: column.id
+    isOver,
+    isDragOver,
+    isDropZoneActive,
+    pipelineId: column.pipeline_id,
+    leads: leads.map(lead => ({
+      id: lead.id,
+      name: lead.name,
+      column_id: lead.column_id
+    }))
   });
 
   return (
@@ -43,20 +54,20 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       ref={setNodeRef}
       className={cn(
         "w-80 h-full bg-white rounded-lg border border-gray-200 p-4 flex flex-col transition-all duration-300 ease-in-out",
-        (isOver || isDragOver) && "bg-blue-50 ring-2 ring-blue-300 scale-[1.02]"
+        isDropZoneActive && "bg-blue-50 ring-2 ring-blue-300 scale-[1.02] shadow-lg"
       )}
     >
       <ColumnHeader
         column={column}
         leadsCount={leads.length}
-        isOver={isOver || isDragOver}
+        isOver={isDropZoneActive}
         onCreateLead={onCreateLead ? handleCreateLead : undefined}
       />
       
       <div className="flex-1 min-h-0 mt-4">
         <ColumnBody
           leads={leads}
-          isOver={isOver || isDragOver}
+          isOver={isDropZoneActive}
           onOpenDetail={onOpenDetail}
           columnId={column.id}
         />

@@ -54,20 +54,32 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
   const loading = columnsLoading || leadsLoading;
 
   const handleLeadClick = useCallback((lead: any) => {
+    // Prevenir clicks durante drag ou movimento
     if (isMoving || draggedLead) {
-      console.log('🚫 [KANBAN] Click bloqueado durante drag');
+      console.log('🚫 [KANBAN] Click bloqueado durante operação:', {
+        isMoving,
+        hasDraggedLead: !!draggedLead,
+        leadId: lead.id
+      });
       return;
     }
     
-    console.log('🔗 [KANBAN] Abrindo lead:', lead.id);
+    console.log('🔗 [KANBAN] Abrindo lead:', {
+      id: lead.id,
+      name: lead.name,
+      column: lead.column_id
+    });
     handleOpenDetail(lead, false, false);
   }, [handleOpenDetail, isMoving, draggedLead]);
 
+  // Estados de loading
   if (loading) {
+    console.log('⏳ [KANBAN] Carregando dados...');
     return <KanbanLoadingOverlay isVisible={true} />;
   }
 
   if (activeColumns.length === 0) {
+    console.log('📋 [KANBAN] Nenhuma coluna ativa encontrada');
     return (
       <KanbanEmptyState 
         pipelineId={pipelineId}
@@ -76,10 +88,15 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     );
   }
 
-  console.log('📊 [KANBAN] Renderizando com:', {
+  console.log('📊 [KANBAN] Renderizando com dados:', {
     columns: activeColumns.length,
     totalLeads: leadsWithContacts.length,
-    leadsByColumn: Object.keys(leadsByColumn).length
+    leadsByColumn: Object.entries(leadsByColumn).map(([columnId, leads]) => ({
+      columnId,
+      leadsCount: leads.length
+    })),
+    draggedLead: draggedLead?.id,
+    isMoving
   });
 
   return (
@@ -101,13 +118,18 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
 
         <DragOverlay>
           {draggedLead && (
-            <div className="rotate-3 scale-105 opacity-90">
-              <DynamicLeadCard lead={draggedLead} isDragging />
+            <div className="rotate-3 scale-105 opacity-90 z-50">
+              <DynamicLeadCard 
+                lead={draggedLead} 
+                isDragging 
+                onClick={() => {}} // Desabilitar click durante drag
+              />
             </div>
           )}
         </DragOverlay>
       </DndContext>
 
+      {/* Overlay de loading para movimento */}
       <KanbanLoadingOverlay isVisible={isMoving} />
     </div>
   );
