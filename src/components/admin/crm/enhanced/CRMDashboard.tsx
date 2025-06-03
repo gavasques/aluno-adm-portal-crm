@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -177,11 +176,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           </div>
         </TabsContent>
 
-        <TabsContent value="reports" className="flex-1 m-0 p-6 overflow-y-auto">
+        <TabsContent value="reports" className="flex-1 m-0 overflow-y-auto bg-gray-50">
           <CRMReports />
         </TabsContent>
 
-        <TabsContent value="analytics" className="flex-1 m-0 p-6 overflow-y-auto">
+        <TabsContent value="analytics" className="flex-1 m-0 overflow-y-auto bg-gray-50">
           <AnalyticsDashboard 
             dateRange={{
               from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -190,7 +189,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
           />
         </TabsContent>
 
-        <TabsContent value="settings" className="flex-1 m-0 p-6 overflow-y-auto">
+        <TabsContent value="settings" className="flex-1 m-0 p-6 overflow-y-auto bg-gray-50">
           <CRMSettings />
         </TabsContent>
       </Tabs>

@@ -17,14 +17,14 @@ const CRMReports: React.FC = () => {
     responsibleMetrics, 
     periodData, 
     loading 
-  } = useCRMReports(dateRange as { from: Date; to: Date });
+  } = useCRMReports(dateRange);
 
   const handleExportReport = () => {
     exportReport(metrics, pipelineMetrics, responsibleMetrics, periodData);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header com filtros */}
       <CRMReportsHeader
         dateRange={dateRange}

@@ -31,7 +31,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ dateRang
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -81,7 +81,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ dateRang
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
