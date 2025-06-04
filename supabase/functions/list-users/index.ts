@@ -1,7 +1,7 @@
 
-import { CORS_CONFIG, CORS_LOGGER } from "./cors-config.ts";
 import { createSupabaseAdminClient } from "./utils.ts";
 import { handleGetRequest, handlePostRequest } from "./handlers.ts";
+import { CORS_CONFIG, CORS_LOGGER } from "../../../src/config/cors.ts";
 
 console.log("🚀 [EDGE FUNCTION] list-users iniciada");
 console.log("🚀 [EDGE FUNCTION] Timestamp:", new Date().toISOString());
@@ -10,6 +10,7 @@ Deno.serve(async (req) => {
   const method = req.method;
   const url = new URL(req.url);
   const headers = Object.fromEntries(req.headers.entries());
+  const origin = headers.origin || headers.referer?.split('/').slice(0, 3).join('/');
   
   // Log da requisição com informações CORS
   CORS_LOGGER.logRequest(method, url.pathname, headers);
@@ -17,8 +18,8 @@ Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (method === 'OPTIONS') {
     console.log("⚙️ [EDGE FUNCTION] Processando requisição OPTIONS (CORS)");
-    const response = CORS_CONFIG.createOptionsResponse();
-    CORS_LOGGER.logResponse(200, CORS_CONFIG.headers);
+    const response = CORS_CONFIG.createOptionsResponse(origin);
+    CORS_LOGGER.logResponse(200, CORS_CONFIG.getHeaders(origin));
     return response;
   }
 
@@ -32,20 +33,22 @@ Deno.serve(async (req) => {
     
     if (method === 'GET') {
       console.log("📖 [EDGE FUNCTION] Processando GET request...");
-      result = await handleGetRequest(supabaseAdmin);
+      const data = await handleGetRequest(supabaseAdmin);
+      result = CORS_CONFIG.createResponse(data, 200, origin);
     } 
     else if (method === 'POST') {
       console.log("📝 [EDGE FUNCTION] Processando POST request...");
       console.log("🗑️ [EDGE FUNCTION] Esta é provavelmente uma operação de DELETE");
-      result = await handlePostRequest(req, supabaseAdmin);
+      const data = await handlePostRequest(req, supabaseAdmin);
+      result = CORS_CONFIG.createResponse(data, 200, origin);
     } 
     else {
       console.error(`❌ [EDGE FUNCTION] Método não suportado: ${method}`);
-      return CORS_CONFIG.createErrorResponse(`Método ${method} não suportado`, 405);
+      return CORS_CONFIG.createErrorResponse(`Método ${method} não suportado`, 405, origin);
     }
     
     // Log da resposta bem-sucedida
-    CORS_LOGGER.logResponse(result.status, CORS_CONFIG.headers);
+    CORS_LOGGER.logResponse(result.status, CORS_CONFIG.getHeaders(origin));
     return result;
     
   } catch (error: any) {
@@ -56,6 +59,6 @@ Deno.serve(async (req) => {
     });
     
     CORS_LOGGER.logError(error, "função principal");
-    return CORS_CONFIG.createErrorResponse("Erro interno do servidor: " + error.message, 500);
+    return CORS_CONFIG.createErrorResponse("Erro interno do servidor: " + error.message, 500, origin);
   }
 });

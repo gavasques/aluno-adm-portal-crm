@@ -1,5 +1,5 @@
 
-import { CORS_CONFIG, CORS_LOGGER } from "./cors-config.ts";
+import { CORS_CONFIG, CORS_LOGGER } from "../../../src/config/cors.ts";
 
 export async function handleGetRequest(supabaseAdmin: any) {
   try {
@@ -27,16 +27,16 @@ export async function handleGetRequest(supabaseAdmin: any) {
     if (error) {
       console.error("❌ [HANDLER] Erro ao buscar usuários:", error);
       CORS_LOGGER.logError(error, "busca de usuários");
-      return CORS_CONFIG.createErrorResponse(`Erro ao buscar usuários: ${error.message}`, 400);
+      throw new Error(`Erro ao buscar usuários: ${error.message}`);
     }
 
     console.log(`✅ [HANDLER] ${users?.length || 0} usuários encontrados`);
-    return CORS_CONFIG.createSuccessResponse({ users: users || [] });
+    return { users: users || [] };
     
   } catch (error: any) {
     console.error("💥 [HANDLER] Erro crítico no GET:", error);
     CORS_LOGGER.logError(error, "GET handler");
-    return CORS_CONFIG.createErrorResponse(`Erro interno: ${error.message}`, 500);
+    throw error;
   }
 }
 
@@ -55,22 +55,22 @@ export async function handlePostRequest(req: Request, supabaseAdmin: any) {
       if (error) {
         console.error("❌ [HANDLER] Erro ao deletar usuário:", error);
         CORS_LOGGER.logError(error, "deleção de usuário");
-        return CORS_CONFIG.createErrorResponse(`Erro ao deletar usuário: ${error.message}`, 400);
+        throw new Error(`Erro ao deletar usuário: ${error.message}`);
       }
       
       console.log("✅ [HANDLER] Usuário deletado com sucesso");
-      return CORS_CONFIG.createSuccessResponse({ 
+      return { 
         success: true, 
         message: "Usuário deletado com sucesso" 
-      });
+      };
     }
     
     console.error("❌ [HANDLER] Ação não reconhecida no POST:", body);
-    return CORS_CONFIG.createErrorResponse("Ação não reconhecida", 400);
+    throw new Error("Ação não reconhecida");
     
   } catch (error: any) {
     console.error("💥 [HANDLER] Erro crítico no POST:", error);
     CORS_LOGGER.logError(error, "POST handler");
-    return CORS_CONFIG.createErrorResponse(`Erro interno: ${error.message}`, 500);
+    throw error;
   }
 }

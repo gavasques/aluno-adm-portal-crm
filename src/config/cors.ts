@@ -1,47 +1,77 @@
 
 // Configuração centralizada de CORS para todo o projeto
 export const CORS_CONFIG = {
-  headers: {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, cache-control, x-timestamp, x-application-name, x-lovable-origin',
-    'Access-Control-Max-Age': '86400', // 24 horas
+  // Origins específicos permitidos (mais seguro que '*')
+  allowedOrigins: [
+    'https://lovable.dev',
+    'https://lovable.app',
+    'https://id-preview--615752d4-0ad0-4fbd-9977-45d5385af67b.lovable.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173'
+  ],
+
+  // Headers CORS otimizados
+  getHeaders: (origin?: string) => {
+    const allowedOrigin = CORS_CONFIG.isOriginAllowed(origin) ? origin : CORS_CONFIG.allowedOrigins[0];
+    
+    return {
+      'Access-Control-Allow-Origin': allowedOrigin,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, cache-control, x-timestamp, x-application-name, x-lovable-origin',
+      'Access-Control-Max-Age': '86400',
+      'Access-Control-Allow-Credentials': 'true',
+      'Vary': 'Origin'
+    };
   },
-  
+
+  // Verificar se origin é permitido
+  isOriginAllowed: (origin?: string) => {
+    if (!origin) return false;
+    return CORS_CONFIG.allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace('*', '.*');
+        return new RegExp(`^${pattern}$`).test(origin);
+      }
+      return allowed === origin;
+    });
+  },
+
   // Headers específicos para o ambiente Lovable
   getLovableHeaders: (origin?: string) => ({
     'x-lovable-origin': origin || (typeof window !== 'undefined' ? window.location.origin : ''),
     'x-client-info': 'lovable-crm-client',
     'x-application-name': 'crm-lead-management',
   }),
-  
+
   // Headers completos para Edge Functions
   getEdgeFunctionHeaders: (origin?: string) => ({
-    ...CORS_CONFIG.headers,
+    ...CORS_CONFIG.getHeaders(origin),
     ...CORS_CONFIG.getLovableHeaders(origin),
   }),
-  
+
   // Resposta padronizada para OPTIONS
-  createOptionsResponse: () => new Response(null, {
+  createOptionsResponse: (origin?: string) => new Response(null, {
     status: 200,
-    headers: CORS_CONFIG.headers
+    headers: CORS_CONFIG.getHeaders(origin)
   }),
-  
+
   // Resposta com CORS para dados
-  createResponse: (data: any, status = 200, additionalHeaders = {}) => new Response(
+  createResponse: (data: any, status = 200, origin?: string, additionalHeaders = {}) => new Response(
     JSON.stringify(data),
     {
       status,
       headers: {
-        ...CORS_CONFIG.headers,
+        ...CORS_CONFIG.getHeaders(origin),
         'Content-Type': 'application/json',
         ...additionalHeaders
       }
     }
   ),
-  
+
   // Resposta de erro com CORS
-  createErrorResponse: (error: string | any, status = 500) => {
+  createErrorResponse: (error: string | any, status = 500, origin?: string) => {
     const errorMessage = typeof error === 'string' ? error : error.message || 'Erro interno';
     return new Response(
       JSON.stringify({ 
@@ -51,7 +81,7 @@ export const CORS_CONFIG = {
       {
         status,
         headers: {
-          ...CORS_CONFIG.headers,
+          ...CORS_CONFIG.getHeaders(origin),
           'Content-Type': 'application/json'
         }
       }
@@ -84,17 +114,7 @@ export const ENVIRONMENT = {
   getOrigin: () => typeof window !== 'undefined' ? window.location.origin : '',
   
   // URLs permitidas para CORS - incluindo mais variações do Lovable
-  getAllowedOrigins: () => [
-    'https://lovable.dev',
-    'https://lovable.app',
-    'https://*.lovable.dev',
-    'https://*.lovable.app',
-    'https://id-preview--615752d4-0ad0-4fbd-9977-45d5385af67b.lovable.app',
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173'
-  ]
+  getAllowedOrigins: () => CORS_CONFIG.allowedOrigins
 };
 
 // Log centralizado para debug CORS
@@ -105,6 +125,7 @@ export const CORS_LOGGER = {
       referer: headers.referer || 'no-referer',
       userAgent: headers['user-agent']?.substring(0, 50) || 'unknown',
       lovableOrigin: headers['x-lovable-origin'] || 'not-set',
+      isAllowed: CORS_CONFIG.isOriginAllowed(headers.origin),
       timestamp: new Date().toISOString()
     });
   },

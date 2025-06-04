@@ -23,7 +23,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   global: {
     headers: {
       'x-application-name': 'crm-lead-management',
-      'x-client-info': 'lovable-crm-client'
+      'x-client-info': 'lovable-crm-client',
+      'x-lovable-origin': ENVIRONMENT.getOrigin()
     }
   },
   realtime: {
@@ -51,32 +52,56 @@ const setupSupabaseMonitoring = () => {
     }
   });
 
-  // Global error handler for Supabase operations
+  // Global error handler for Supabase operations with retry logic
   const originalFrom = supabase.from;
   supabase.from = function(table: string) {
     const query = originalFrom.call(this, table);
     
-    // Wrap common operations to log CORS errors
+    // Wrap common operations to log CORS errors and implement retry
     const wrapOperation = (operation: any, operationName: string) => {
       return async (...args: any[]) => {
-        try {
-          const result = await operation.apply(query, args);
-          
-          if (result.error) {
-            CORS_LOGGER.logError(result.error, `${operationName} on ${table}`);
+        let attempt = 0;
+        const maxRetries = 2;
+        
+        while (attempt <= maxRetries) {
+          try {
+            const result = await operation.apply(query, args);
             
-            // Check if it's a CORS-related error
-            if (result.error.message?.includes('CORS') || 
-                result.error.message?.includes('cross-origin') ||
-                result.error.message?.includes('Access-Control-Allow-Origin')) {
-              console.error(`🚫 [CORS_ERROR] ${operationName} on ${table} failed due to CORS`);
+            if (result.error) {
+              // Check if it's a CORS-related error
+              if (result.error.message?.includes('CORS') || 
+                  result.error.message?.includes('cross-origin') ||
+                  result.error.message?.includes('Access-Control-Allow-Origin')) {
+                
+                console.error(`🚫 [CORS_ERROR] ${operationName} on ${table} failed due to CORS (attempt ${attempt + 1})`);
+                
+                if (attempt < maxRetries) {
+                  attempt++;
+                  await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                  continue;
+                }
+              }
+              
+              CORS_LOGGER.logError(result.error, `${operationName} on ${table}`);
             }
+            
+            return result;
+          } catch (error: any) {
+            console.error(`🚫 [NETWORK_ERROR] ${operationName} on ${table} (attempt ${attempt + 1}):`, error);
+            
+            if (attempt < maxRetries && (
+              error.message?.includes('fetch') || 
+              error.message?.includes('network') ||
+              error.message?.includes('CORS')
+            )) {
+              attempt++;
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              continue;
+            }
+            
+            CORS_LOGGER.logError(error, `${operationName} on ${table} (catch)`);
+            throw error;
           }
-          
-          return result;
-        } catch (error: any) {
-          CORS_LOGGER.logError(error, `${operationName} on ${table} (catch)`);
-          throw error;
         }
       };
     };

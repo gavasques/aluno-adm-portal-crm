@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import { CORS_CONFIG, CORS_LOGGER } from './cors-config.ts';
+import { CORS_CONFIG, CORS_LOGGER } from "../../../src/config/cors.ts";
 import { validateAuthToken, checkAdminPermissions } from './auth.ts';
 import { parseRequestBody, handleUserCreation } from './request-handler.ts';
 
@@ -13,6 +13,7 @@ serve(async (req) => {
   const method = req.method;
   const url = new URL(req.url);
   const headers = Object.fromEntries(req.headers.entries());
+  const origin = headers.origin || headers.referer?.split('/').slice(0, 3).join('/');
   
   // Log da requisição com informações CORS
   CORS_LOGGER.logRequest(method, url.pathname, headers);
@@ -20,8 +21,8 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (method === 'OPTIONS') {
     console.log("⚙️ [EDGE FUNCTION] Processando requisição OPTIONS (CORS)");
-    const response = CORS_CONFIG.createOptionsResponse();
-    CORS_LOGGER.logResponse(200, CORS_CONFIG.headers);
+    const response = CORS_CONFIG.createOptionsResponse(origin);
+    CORS_LOGGER.logResponse(200, CORS_CONFIG.getHeaders(origin));
     return response;
   }
 
@@ -32,7 +33,7 @@ serve(async (req) => {
 
     if (method !== 'POST') {
       console.error("❌ Método não permitido:", method);
-      return CORS_CONFIG.createErrorResponse('Método não permitido', 405);
+      return CORS_CONFIG.createErrorResponse('Método não permitido', 405, origin);
     }
 
     // Criar cliente Supabase com service_role para admin operations
@@ -61,8 +62,8 @@ serve(async (req) => {
     console.log("✅ Resultado da criação:", result);
     console.log("=== FIM CRIAÇÃO DE USUÁRIO ===");
     
-    CORS_LOGGER.logResponse(200, CORS_CONFIG.headers);
-    return CORS_CONFIG.createSuccessResponse(result);
+    CORS_LOGGER.logResponse(200, CORS_CONFIG.getHeaders(origin));
+    return CORS_CONFIG.createResponse(result, 200, origin);
 
   } catch (error: any) {
     console.error("=== ERRO NA CRIAÇÃO DE USUÁRIO ===");
@@ -74,7 +75,8 @@ serve(async (req) => {
     CORS_LOGGER.logError(error, "criação de usuário");
     return CORS_CONFIG.createErrorResponse(
       error.message || 'Erro interno do servidor',
-      500
+      500,
+      origin
     );
   }
 });
