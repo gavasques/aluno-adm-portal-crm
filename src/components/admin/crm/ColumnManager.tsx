@@ -16,17 +16,11 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Save, GripVertical, Trash2 } from "lucide-react";
 import { CRMPipelineColumn } from "@/types/crm.types";
+import { useCRMPipelines } from "@/hooks/crm/useCRMPipelines";
 
 interface ColumnManagerProps {
-  isOpen: boolean;
-  columns: CRMPipelineColumn[];
-  leads: any[];
-  onOpenChange: (open: boolean) => void;
-  onAddColumn: (name: string) => void;
-  onRemoveColumn: (column: CRMPipelineColumn) => void;
-  onReorderColumns: (event: any) => void;
-  onSave: () => void;
-  onCancel: () => void;
+  pipelineId: string;
+  onRefresh?: () => void;
 }
 
 interface SortableColumnItemProps {
@@ -91,18 +85,9 @@ const SortableColumnItem = ({ column, leadCount, onRemove }: SortableColumnItemP
   );
 };
 
-const ColumnManager = ({ 
-  isOpen, 
-  columns, 
-  leads, 
-  onOpenChange, 
-  onAddColumn, 
-  onRemoveColumn, 
-  onReorderColumns, 
-  onSave, 
-  onCancel 
-}: ColumnManagerProps) => {
+const ColumnManager = ({ pipelineId, onRefresh }: ColumnManagerProps) => {
   const [newColumnName, setNewColumnName] = useState("");
+  const { columns, leads, addColumn, removeColumn, reorderColumns, saveChanges } = useCRMPipelines();
   
   // Configure DND sensors
   const sensors = useSensors(
@@ -115,71 +100,82 @@ const ColumnManager = ({
   
   const handleAddColumn = () => {
     if (newColumnName.trim()) {
-      onAddColumn(newColumnName);
+      addColumn(pipelineId, newColumnName);
       setNewColumnName("");
     }
   };
 
+  const handleReorderColumns = (event: any) => {
+    reorderColumns(event);
+  };
+
+  const handleSave = () => {
+    saveChanges();
+    onRefresh?.();
+  };
+
+  const handleCancel = () => {
+    onRefresh?.();
+  };
+
+  // Filter columns and leads for the current pipeline
+  const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
+  const pipelineLeads = leads.filter(lead => lead.pipeline_id === pipelineId);
+
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[400px]">
-        <SheetHeader>
-          <SheetTitle>Gerenciar Colunas</SheetTitle>
-        </SheetHeader>
-        <div className="py-6 space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-base font-medium">Adicionar Nova Coluna</h3>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="Nome da coluna" 
-                value={newColumnName} 
-                onChange={e => setNewColumnName(e.target.value)} 
-              />
-              <Button onClick={handleAddColumn}>Adicionar</Button>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-base font-medium">Ordenar e Excluir Colunas</h3>
-            <p className="text-sm text-muted-foreground">
-              Arraste para reordenar ou clique no ícone de lixeira para excluir.
-            </p>
-            
-            <DndContext 
-              sensors={sensors} 
-              collisionDetection={closestCenter} 
-              onDragEnd={onReorderColumns}
-            >
-              <SortableContext 
-                items={columns.map(col => col.id)} 
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-2">
-                  {columns.map(column => {
-                    const leadCount = leads.filter(lead => lead.column === column.id).length;
-                    return (
-                      <SortableColumnItem 
-                        key={column.id} 
-                        column={column} 
-                        leadCount={leadCount} 
-                        onRemove={onRemoveColumn} 
-                      />
-                    );
-                  })}
-                </div>
-              </SortableContext>
-            </DndContext>
-          </div>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h3 className="text-base font-medium">Adicionar Nova Coluna</h3>
+        <div className="flex gap-2">
+          <Input 
+            placeholder="Nome da coluna" 
+            value={newColumnName} 
+            onChange={e => setNewColumnName(e.target.value)} 
+          />
+          <Button onClick={handleAddColumn}>Adicionar</Button>
         </div>
-        <SheetFooter className="flex flex-row justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onCancel}>Cancelar</Button>
-          <Button onClick={onSave} className="flex gap-2">
-            <Save size={16} />
-            Salvar
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      </div>
+      
+      <div className="space-y-2">
+        <h3 className="text-base font-medium">Ordenar e Excluir Colunas</h3>
+        <p className="text-sm text-muted-foreground">
+          Arraste para reordenar ou clique no ícone de lixeira para excluir.
+        </p>
+        
+        <DndContext 
+          sensors={sensors} 
+          collisionDetection={closestCenter} 
+          onDragEnd={handleReorderColumns}
+        >
+          <SortableContext 
+            items={pipelineColumns.map(col => col.id)} 
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {pipelineColumns.map(column => {
+                const leadCount = pipelineLeads.filter(lead => lead.column_id === column.id).length;
+                return (
+                  <SortableColumnItem 
+                    key={column.id} 
+                    column={column} 
+                    leadCount={leadCount} 
+                    onRemove={removeColumn} 
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      <div className="flex flex-row justify-end gap-2 pt-4 border-t">
+        <Button variant="outline" onClick={handleCancel}>Cancelar</Button>
+        <Button onClick={handleSave} className="flex gap-2">
+          <Save size={16} />
+          Salvar
+        </Button>
+      </div>
+    </div>
   );
 };
 

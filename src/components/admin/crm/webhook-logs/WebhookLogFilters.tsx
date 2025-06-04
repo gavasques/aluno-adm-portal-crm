@@ -5,7 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import type { WebhookLogFilters } from '@/hooks/crm/useCRMWebhookLogs';
+
+interface WebhookLogFilters {
+  pipeline_id?: string;
+  success?: boolean;
+  date_from?: string;
+  date_to?: string;
+  ip_address?: string;
+}
 
 interface WebhookLogFiltersProps {
   filters: WebhookLogFilters;

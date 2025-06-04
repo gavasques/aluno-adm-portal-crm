@@ -116,6 +116,7 @@ function App() {
                 <Route path="tasks" element={<Tasks />} />
                 <Route path="crm" element={<CRM />} />
                 <Route path="crm/lead/:id" element={<CRMLeadDetail />} />
+                <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
                 <Route path="mentoring" element={<Mentoring />} />
                 <Route path="mentoring/:id" element={<MentoringDetail />} />
                 <Route path="mentoring-catalog" element={<AdminMentoringCatalog />} />
