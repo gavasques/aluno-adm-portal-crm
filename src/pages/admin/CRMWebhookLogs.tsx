@@ -1,15 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { WebhookLogsList } from '@/components/admin/crm/webhook-logs/WebhookLogsList';
 import { WebhookStatsCards } from '@/components/admin/crm/webhook-logs/WebhookStatsCards';
 import { WebhookTestButton } from '@/components/admin/crm/webhook-logs/WebhookTestButton';
 import { WebhookUrlsCard } from '@/components/admin/crm/webhook-logs/WebhookUrlsCard';
 import { WebhookFieldMappingsCard } from '@/components/admin/crm/webhook-logs/WebhookFieldMappingsCard';
 import { Activity, BarChart3, TestTube, Globe, Settings } from 'lucide-react';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 const CRMWebhookLogs = () => {
+  const { pipelines } = useCRMPipelines();
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
+
+  // Usar o primeiro pipeline como padrão se disponível
+  React.useEffect(() => {
+    if (pipelines.length > 0 && !selectedPipelineId) {
+      setSelectedPipelineId(pipelines[0].id);
+    }
+  }, [pipelines, selectedPipelineId]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -24,54 +36,92 @@ const CRMWebhookLogs = () => {
         <WebhookTestButton />
       </div>
 
-      {/* URLs e Configurações dos Webhooks */}
-      <div className="grid grid-cols-1 gap-6">
-        <WebhookUrlsCard />
-      </div>
+      {/* Pipeline Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configuração do Pipeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-md">
+            <label htmlFor="pipeline-select" className="block text-sm font-medium mb-2">
+              Selecione o Pipeline
+            </label>
+            <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha um pipeline..." />
+              </SelectTrigger>
+              <SelectContent>
+                {pipelines.map((pipeline) => (
+                  <SelectItem key={pipeline.id} value={pipeline.id}>
+                    {pipeline.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {pipelines.length === 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                Nenhum pipeline encontrado. Crie um pipeline primeiro.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Mapeamento de Campos */}
-      <div className="grid grid-cols-1 gap-6">
-        <WebhookFieldMappingsCard />
-      </div>
+      {selectedPipelineId && (
+        <>
+          {/* URLs e Configurações dos Webhooks */}
+          <div className="grid grid-cols-1 gap-6">
+            <WebhookUrlsCard />
+          </div>
 
-      {/* Estatísticas */}
-      <WebhookStatsCards />
+          {/* Mapeamento de Campos */}
+          <div className="grid grid-cols-1 gap-6">
+            <WebhookFieldMappingsCard pipelineId={selectedPipelineId} />
+          </div>
 
-      {/* Conteúdo Principal */}
-      <Tabs defaultValue="logs" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="logs" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Logs Recentes
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
+          {/* Estatísticas */}
+          <WebhookStatsCards />
 
-        <TabsContent value="logs" className="space-y-4">
-          <WebhookLogsList />
-        </TabsContent>
+          {/* Conteúdo Principal */}
+          <Tabs defaultValue="logs" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="logs" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Logs Recentes
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Analytics Avançado
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                <p>Analytics avançado será implementado em breve</p>
-                <p className="text-sm">Gráficos de tendência, origem de IPs, e muito mais</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="logs" className="space-y-4">
+              <WebhookLogsList />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Analytics Avançado
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-gray-500">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4" />
+                    <p>Analytics avançado será implementado em breve</p>
+                    <p className="text-sm">Gráficos de tendência, origem de IPs, e muito mais</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   );
 };
