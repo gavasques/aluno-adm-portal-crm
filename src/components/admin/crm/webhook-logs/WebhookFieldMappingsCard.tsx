@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, AlertCircle, Settings } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, AlertCircle, Settings, FileType } from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
 import { ManualFieldMappingDialog } from './ManualFieldMappingDialog';
@@ -13,11 +14,15 @@ import { toast } from 'sonner';
 
 export const WebhookFieldMappingsCard = () => {
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
+  const [typeformJson, setTypeformJson] = useState<string>('');
+  const [showTypeformImport, setShowTypeformImport] = useState(false);
+
   const { pipelines } = useCRMPipelines();
   const { 
     mappings, 
     isLoading, 
     syncStandardMappings, 
+    syncTypeformMappings,
     deleteMapping,
     updateMapping 
   } = useCRMWebhookFieldMappings(selectedPipelineId);
@@ -32,6 +37,39 @@ export const WebhookFieldMappingsCard = () => {
       await syncStandardMappings.mutateAsync(selectedPipelineId);
     } catch (error) {
       console.error('Erro ao sincronizar mapeamentos:', error);
+    }
+  };
+
+  const handleSyncTypeformMappings = async () => {
+    if (!selectedPipelineId) {
+      toast.error('Selecione um pipeline primeiro');
+      return;
+    }
+
+    if (!typeformJson.trim()) {
+      toast.error('Cole o JSON do Typeform primeiro');
+      return;
+    }
+
+    try {
+      const parsedJson = JSON.parse(typeformJson);
+      
+      if (!parsedJson.form_response?.definition?.fields) {
+        toast.error('JSON inválido: estrutura do Typeform não encontrada');
+        return;
+      }
+
+      const fields = parsedJson.form_response.definition.fields;
+      await syncTypeformMappings.mutateAsync({
+        pipelineId: selectedPipelineId,
+        typeformFields: fields
+      });
+
+      setTypeformJson('');
+      setShowTypeformImport(false);
+    } catch (error) {
+      console.error('Erro ao sincronizar campos do Typeform:', error);
+      toast.error('Erro ao processar JSON do Typeform');
     }
   };
 
@@ -111,6 +149,16 @@ export const WebhookFieldMappingsCard = () => {
             Sincronizar Campo Obrigatório
           </Button>
 
+          <Button
+            variant="outline"
+            onClick={() => setShowTypeformImport(!showTypeformImport)}
+            disabled={!selectedPipelineId}
+            className="gap-2"
+          >
+            <FileType className="h-4 w-4" />
+            Importar Typeform
+          </Button>
+
           <ManualFieldMappingDialog 
             pipelineId={selectedPipelineId}
             trigger={
@@ -126,6 +174,42 @@ export const WebhookFieldMappingsCard = () => {
           />
         </div>
 
+        {/* Importação de Typeform */}
+        {showTypeformImport && (
+          <div className="border rounded-lg p-4 bg-blue-50">
+            <h4 className="font-medium mb-2">Importar Campos do Typeform</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Cole o JSON de exemplo de webhook do Typeform para importar automaticamente os campos:
+            </p>
+            <Textarea
+              placeholder='Cole aqui o JSON do webhook do Typeform...'
+              value={typeformJson}
+              onChange={(e) => setTypeformJson(e.target.value)}
+              rows={6}
+              className="mb-3"
+            />
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSyncTypeformMappings}
+                disabled={syncTypeformMappings.isPending || !typeformJson.trim()}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncTypeformMappings.isPending ? 'animate-spin' : ''}`} />
+                Importar Campos
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowTypeformImport(false);
+                  setTypeformJson('');
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Lista de Mapeamentos */}
         {selectedPipelineId && (
           <div className="space-y-2">
@@ -138,7 +222,7 @@ export const WebhookFieldMappingsCard = () => {
                 <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">Nenhum mapeamento encontrado</p>
                 <p className="text-sm">
-                  Clique em "Sincronizar Campo Obrigatório" para criar o mapeamento básico do campo Nome
+                  Use as opções acima para sincronizar campos ou criar mapeamentos manualmente
                 </p>
               </div>
             ) : (

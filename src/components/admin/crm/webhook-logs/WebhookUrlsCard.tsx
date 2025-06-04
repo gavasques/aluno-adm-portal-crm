@@ -2,346 +2,250 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Copy, Plus, Trash2, Globe, Key, AlertCircle, CheckCircle } from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMWebhookTokens } from '@/hooks/crm/useCRMWebhookTokens';
-import { Globe, Plus, Key, RotateCcw, Trash2, Copy, Clock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-
-// Componente para exibir histórico de tokens
-const TokenHistory = ({ pipelineId, pipelineName }: { pipelineId: string; pipelineName: string }) => {
-  const { tokens } = useCRMWebhookTokens(pipelineId);
-  
-  return (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-600">
-        Pipeline: <strong>{pipelineName}</strong>
-      </div>
-      
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Token</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Criado em</TableHead>
-            <TableHead>Expira em</TableHead>
-            <TableHead>Motivo</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tokens.map((token) => (
-            <TableRow key={token.id}>
-              <TableCell className="font-mono text-sm">
-                {token.token.substring(0, 8)}...{token.token.substring(token.token.length - 4)}
-              </TableCell>
-              <TableCell>
-                {token.is_active ? (
-                  <Badge variant="default">Ativo</Badge>
-                ) : (
-                  <Badge variant="secondary">Inativo</Badge>
-                )}
-              </TableCell>
-              <TableCell>{new Date(token.created_at).toLocaleString()}</TableCell>
-              <TableCell>
-                {token.expires_at ? new Date(token.expires_at).toLocaleString() : 'Nunca'}
-              </TableCell>
-              <TableCell className="text-sm text-gray-500">
-                {token.reason || '-'}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      
-      {tokens.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <Key className="h-12 w-12 mx-auto mb-4" />
-          <p>Nenhum token encontrado para este pipeline</p>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export const WebhookUrlsCard = () => {
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
-  const [showTokenDialog, setShowTokenDialog] = useState(false);
-  const [showActionDialog, setShowActionDialog] = useState(false);
-  const [actionType, setActionType] = useState<'deactivate' | 'renew'>('deactivate');
-  const [reason, setReason] = useState('');
-  const [activeTokenId, setActiveTokenId] = useState<string>('');
+  const [newTokenExpiry, setNewTokenExpiry] = useState<string>('');
+  const [newTokenReason, setNewTokenReason] = useState<string>('');
 
   const { pipelines } = useCRMPipelines();
-  const { tokens, generateToken, deactivateToken, renewToken, getActiveToken } = useCRMWebhookTokens(selectedPipelineId);
+  const { 
+    tokens, 
+    isLoading, 
+    createToken, 
+    deactivateToken 
+  } = useCRMWebhookTokens(selectedPipelineId);
 
-  const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
-  const activeToken = selectedPipelineId ? getActiveToken(selectedPipelineId) : null;
-
-  const webhookUrl = selectedPipelineId && activeToken 
-    ? `${window.location.origin}/webhook/crm/${selectedPipelineId}?token=${activeToken.token}`
-    : '';
-
-  const handleGenerateToken = async () => {
+  const handleCreateToken = async () => {
     if (!selectedPipelineId) {
       toast.error('Selecione um pipeline primeiro');
       return;
     }
-    
+
     try {
-      await generateToken.mutateAsync({
+      await createToken.mutateAsync({
         pipeline_id: selectedPipelineId,
-        reason: reason || 'Token gerado pelo admin'
+        expires_at: newTokenExpiry || undefined,
+        reason: newTokenReason || 'Token criado via interface'
       });
-      setShowTokenDialog(false);
-      setReason('');
-    } catch (error) {
-      console.error('Erro ao gerar token:', error);
-    }
-  };
-
-  const handleTokenAction = async () => {
-    if (!selectedPipelineId || !reason.trim()) {
-      toast.error('Preencha o motivo da ação');
-      return;
-    }
-
-    try {
-      if (actionType === 'deactivate' && activeToken) {
-        await deactivateToken.mutateAsync({
-          tokenId: activeToken.id,
-          reason: reason
-        });
-      } else if (actionType === 'renew') {
-        await renewToken.mutateAsync({
-          pipelineId: selectedPipelineId,
-          reason: reason
-        });
-      }
       
-      setShowActionDialog(false);
-      setReason('');
+      setNewTokenExpiry('');
+      setNewTokenReason('');
     } catch (error) {
-      console.error('Erro na ação do token:', error);
+      console.error('Erro ao criar token:', error);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('URL copiada para a área de transferência!');
+  const handleDeactivateToken = async (tokenId: string) => {
+    if (confirm('Tem certeza que deseja desativar este token? Esta ação não pode ser desfeita.')) {
+      try {
+        await deactivateToken.mutateAsync({
+          tokenId,
+          reason: 'Desativado via interface'
+        });
+      } catch (error) {
+        console.error('Erro ao desativar token:', error);
+      }
+    }
   };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado para a área de transferência!`);
+  };
+
+  const getWebhookUrl = (token: string) => {
+    const baseUrl = 'https://qflmguzmticupqtnlirf.supabase.co/functions/v1/crm-webhook';
+    return `${baseUrl}?pipeline_id=${selectedPipelineId}&token=${token}`;
+  };
+
+  const activeTokens = tokens.filter(token => token.is_active);
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            URLs e Tokens dos Webhooks
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Seletor de Pipeline */}
-          <div className="flex items-center gap-4">
-            <select
-              value={selectedPipelineId}
-              onChange={(e) => setSelectedPipelineId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-            >
-              <option value="">Selecione um pipeline</option>
-              {pipelines.map((pipeline) => (
-                <option key={pipeline.id} value={pipeline.id}>
-                  {pipeline.name}
-                </option>
-              ))}
-            </select>
-            
-            {selectedPipelineId && (
-              <Button 
-                onClick={() => setShowTokenDialog(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Gerar Token
-              </Button>
-            )}
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              URLs e Tokens do Webhook
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Gerencie URLs e tokens de segurança para recebimento de webhooks
+            </p>
           </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Seletor de Pipeline */}
+        <div className="space-y-3">
+          <label className="text-sm font-medium">Pipeline:</label>
+          <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um pipeline" />
+            </SelectTrigger>
+            <SelectContent>
+              {pipelines.map(pipeline => (
+                <SelectItem key={pipeline.id} value={pipeline.id}>
+                  {pipeline.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          {selectedPipelineId && (
-            <Tabs defaultValue="current" className="w-full">
-              <TabsList>
-                <TabsTrigger value="current">Token Atual</TabsTrigger>
-                <TabsTrigger value="history">Histórico de Tokens</TabsTrigger>
-              </TabsList>
+        {/* Informações sobre suporte a webhooks */}
+        {selectedPipelineId && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">Formatos de Webhook Suportados</h4>
+            <div className="space-y-2 text-sm text-blue-800">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span><strong>Typeform:</strong> Detecção automática e transformação de dados</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span><strong>Generic:</strong> Formato JSON simples com mapeamento manual</span>
+              </div>
+            </div>
+          </div>
+        )}
 
-              <TabsContent value="current" className="space-y-4">
-                {activeToken ? (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-green-800">Token Ativo</h4>
-                        <div className="flex gap-2">
+        {/* Criação de Novo Token */}
+        {selectedPipelineId && (
+          <div className="border rounded-lg p-4 bg-gray-50">
+            <h4 className="font-medium mb-3">Criar Novo Token</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="text-sm text-gray-600">Data de Expiração (opcional):</label>
+                <Input
+                  type="datetime-local"
+                  value={newTokenExpiry}
+                  onChange={(e) => setNewTokenExpiry(e.target.value)}
+                  placeholder="Deixe vazio para não expirar"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">Motivo/Descrição:</label>
+                <Input
+                  value={newTokenReason}
+                  onChange={(e) => setNewTokenReason(e.target.value)}
+                  placeholder="Ex: Token para Typeform X"
+                />
+              </div>
+            </div>
+            <Button 
+              onClick={handleCreateToken}
+              disabled={createToken.isPending}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              {createToken.isPending ? 'Criando...' : 'Criar Token'}
+            </Button>
+          </div>
+        )}
+
+        {/* Lista de Tokens Ativos */}
+        {selectedPipelineId && (
+          <div className="space-y-3">
+            <h4 className="font-medium">Tokens Ativos ({activeTokens.length})</h4>
+            
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : activeTokens.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">Nenhum token ativo</p>
+                <p className="text-sm">Crie um token para começar a receber webhooks</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeTokens.map(token => (
+                  <div key={token.id} className="border rounded-lg p-4 bg-white">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Key className="h-4 w-4 text-gray-500" />
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                            {token.token}
+                          </code>
                           <Button
+                            variant="ghost"
                             size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setActionType('deactivate');
-                              setActiveTokenId(activeToken.id);
-                              setShowActionDialog(true);
-                            }}
+                            onClick={() => copyToClipboard(token.token, 'Token')}
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Desativar
+                            <Copy className="h-4 w-4" />
                           </Button>
+                        </div>
+                        
+                        {token.reason && (
+                          <p className="text-sm text-gray-600 mb-2">
+                            <strong>Motivo:</strong> {token.reason}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>Criado: {new Date(token.created_at).toLocaleString('pt-BR')}</span>
+                          {token.expires_at && (
+                            <span className="flex items-center gap-1">
+                              Expira: {new Date(token.expires_at).toLocaleString('pt-BR')}
+                              {new Date(token.expires_at) < new Date() && (
+                                <Badge variant="destructive" className="text-xs">Expirado</Badge>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeactivateToken(token.id)}
+                        disabled={deactivateToken.isPending}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">URL do Webhook:</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="flex-1 text-sm bg-gray-100 px-3 py-2 rounded border">
+                            {getWebhookUrl(token.token)}
+                          </code>
                           <Button
-                            size="sm"
                             variant="outline"
-                            onClick={() => {
-                              setActionType('renew');
-                              setShowActionDialog(true);
-                            }}
+                            size="sm"
+                            onClick={() => copyToClipboard(getWebhookUrl(token.token), 'URL')}
                           >
-                            <RotateCcw className="h-4 w-4 mr-1" />
-                            Renovar
+                            <Copy className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                       
-                      <div className="text-sm text-green-700 space-y-2">
-                        <p><strong>Token:</strong> <span className="font-mono">{activeToken.token.substring(0, 16)}...</span></p>
-                        <p><strong>Criado em:</strong> {new Date(activeToken.created_at).toLocaleString()}</p>
-                        {activeToken.expires_at && (
-                          <p><strong>Expira em:</strong> {new Date(activeToken.expires_at).toLocaleString()}</p>
-                        )}
+                      <div className="text-xs text-gray-500 mt-2">
+                        <p><strong>Para Typeform:</strong> Use esta URL como webhook endpoint. O sistema detectará automaticamente o formato.</p>
+                        <p><strong>Para outros sistemas:</strong> Envie dados no formato JSON com os campos mapeados.</p>
                       </div>
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">URL do Webhook:</label>
-                      <div className="flex gap-2">
-                        <Input
-                          readOnly
-                          value={webhookUrl}
-                          className="font-mono text-sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(webhookUrl)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        Use esta URL como endpoint para receber leads via webhook
-                      </p>
-                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Shield className="h-12 w-12 mx-auto mb-4" />
-                    <p>Nenhum token ativo para este pipeline</p>
-                    <p className="text-sm">Gere um novo token para começar a receber webhooks</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-4">
-                <TokenHistory 
-                  pipelineId={selectedPipelineId} 
-                  pipelineName={selectedPipeline?.name || ''} 
-                />
-              </TabsContent>
-            </Tabs>
-          )}
-
-          {!selectedPipelineId && (
-            <div className="text-center py-8 text-gray-500">
-              <Globe className="h-12 w-12 mx-auto mb-4" />
-              <p>Selecione um pipeline para gerenciar tokens e URLs de webhook</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Dialog para gerar token */}
-      <Dialog open={showTokenDialog} onOpenChange={setShowTokenDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Gerar Novo Token</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Pipeline:</label>
-              <p className="text-sm text-gray-600">{selectedPipeline?.name}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Motivo (opcional):</label>
-              <Textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Descreva o motivo para gerar este token..."
-                className="mt-1"
-              />
-            </div>
+                ))}
+              </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTokenDialog(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleGenerateToken}
-              disabled={generateToken.isPending}
-            >
-              {generateToken.isPending ? 'Gerando...' : 'Gerar Token'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog para ações do token */}
-      <Dialog open={showActionDialog} onOpenChange={setShowActionDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {actionType === 'deactivate' ? 'Desativar Token' : 'Renovar Token'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Pipeline:</label>
-              <p className="text-sm text-gray-600">{selectedPipeline?.name}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Motivo *:</label>
-              <Textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={`Descreva o motivo para ${actionType === 'deactivate' ? 'desativar' : 'renovar'} este token...`}
-                className="mt-1"
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowActionDialog(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleTokenAction}
-              disabled={deactivateToken.isPending || renewToken.isPending}
-              variant={actionType === 'deactivate' ? 'destructive' : 'default'}
-            >
-              {(deactivateToken.isPending || renewToken.isPending) ? 'Processando...' : 
-               (actionType === 'deactivate' ? 'Desativar' : 'Renovar')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </CardContent>
+    </Card>
   );
 };
