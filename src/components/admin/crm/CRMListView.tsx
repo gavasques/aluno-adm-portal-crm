@@ -19,10 +19,6 @@ const CRMListView: React.FC<CRMListViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { handleOpenDetail } = useKanbanNavigation();
-  const {
-    columns
-  } = useCRMPipelines();
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenLeadDetails = (lead: CRMLead) => {
     console.log('🔗 CRMListView: Abrindo detalhes do lead:', lead.id);
@@ -34,11 +30,8 @@ const CRMListView: React.FC<CRMListViewProps> = ({
       {/* OptimizedListView Component */}
       <div className="flex-1 min-h-0">
         <OptimizedListView 
-          filters={filters} 
-          columns={columns} 
-          searchQuery={searchQuery} 
-          onSearchChange={setSearchQuery} 
-          onOpenLeadDetails={handleOpenLeadDetails} 
+          filters={filters}
+          onCreateLead={onCreateLead || (() => {})}
         />
       </div>
     </div>
