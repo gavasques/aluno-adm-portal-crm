@@ -16,8 +16,8 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
       leadId,
       newColumnId,
       timestamp: new Date().toISOString(),
-      supabaseUrl: supabase.supabaseUrl,
-      supabaseKey: supabase.supabaseKey ? 'configured' : 'missing'
+      supabaseUrl: 'https://qflmguzmticupqtnlirf.supabase.co',
+      supabaseKey: 'configured'
     });
     
     try {
@@ -168,8 +168,8 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
         leadId,
         newColumnId,
         supabaseConfig: {
-          url: supabase.supabaseUrl,
-          hasKey: !!supabase.supabaseKey
+          url: 'https://qflmguzmticupqtnlirf.supabase.co',
+          hasKey: true
         }
       });
       
