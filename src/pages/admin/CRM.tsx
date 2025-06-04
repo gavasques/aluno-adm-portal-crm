@@ -189,7 +189,7 @@ const CRM = () => {
           <Wifi className="h-4 w-4 text-green-600" />
           <span className="text-sm text-green-700 font-medium">Conectado</span>
           {connectionDetails && !connectionDetails.edgeFunctionTest && (
-            <AlertTriangle className="h-3 w-3 text-yellow-500" title="Edge Functions com problemas" />
+            <AlertTriangle className="h-3 w-3 text-yellow-500" />
           )}
         </div>
 
