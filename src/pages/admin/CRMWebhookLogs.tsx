@@ -4,18 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WebhookLogsList } from '@/components/admin/crm/webhook-logs/WebhookLogsList';
 import { WebhookStatsCards } from '@/components/admin/crm/webhook-logs/WebhookStatsCards';
-import { Activity, BarChart3 } from 'lucide-react';
+import { WebhookTestButton } from '@/components/admin/crm/webhook-logs/WebhookTestButton';
+import { WebhookUrlsCard } from '@/components/admin/crm/webhook-logs/WebhookUrlsCard';
+import { Activity, BarChart3, TestTube, Globe } from 'lucide-react';
 
 const CRMWebhookLogs = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Logs do Webhook CRM</h1>
-        <p className="text-muted-foreground">
-          Monitore todas as requisições de webhook recebidas pelos pipelines
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Logs do Webhook CRM</h1>
+          <p className="text-muted-foreground">
+            Monitore todas as requisições de webhook recebidas pelos pipelines
+          </p>
+        </div>
+        
+        <WebhookTestButton />
       </div>
+
+      {/* URLs dos Webhooks */}
+      <WebhookUrlsCard />
 
       {/* Estatísticas */}
       <WebhookStatsCards />
@@ -40,7 +49,10 @@ const CRMWebhookLogs = () => {
         <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Analytics Avançado</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Analytics Avançado
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-gray-500">

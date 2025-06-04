@@ -22,7 +22,8 @@ import {
   ClipboardCheck,
   Database,
   Cog,
-  Newspaper
+  Newspaper,
+  Activity
 } from "lucide-react";
 import { MenuItem, MenuGroup } from "./types";
 
@@ -44,6 +45,12 @@ export const mainMenuItems: MenuItem[] = [
     href: "/admin/crm",
     icon: BarChart,
     gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+  },
+  {
+    title: "Logs Webhook CRM",
+    href: "/admin/crm-webhook-logs",
+    icon: Activity,
+    gradient: "bg-gradient-to-br from-indigo-500 to-indigo-600",
   },
   {
     title: "Lista de Tarefas",

@@ -20,6 +20,7 @@ import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { WebhookLogDetail } from './WebhookLogDetail';
 import { WebhookLogFilters as WebhookLogFiltersComponent } from './WebhookLogFilters';
+import { WebhookEmptyState } from './WebhookEmptyState';
 
 interface WebhookLogsListProps {
   pipelineId?: string;
@@ -127,17 +128,7 @@ export const WebhookLogsList = ({ pipelineId }: WebhookLogsListProps) => {
       {/* Lista de logs */}
       <div className="space-y-3">
         {logs.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Globe className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
-                Nenhum log encontrado
-              </h4>
-              <p className="text-gray-600">
-                Não há registros de webhook para os filtros selecionados.
-              </p>
-            </CardContent>
-          </Card>
+          <WebhookEmptyState />
         ) : (
           logs.map((log, index) => (
             <motion.div
