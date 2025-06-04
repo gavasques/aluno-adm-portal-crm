@@ -9,6 +9,13 @@ interface UseLeadDetailDataProps {
 export const useLeadDetailData = ({ lead }: UseLeadDetailDataProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'attachments' | 'comments' | 'history'>('overview');
 
+  // Função wrapper para compatibilidade com o componente Tabs
+  const handleTabChange = useCallback((value: string) => {
+    if (value === 'overview' || value === 'contacts' || value === 'attachments' || value === 'comments' || value === 'history') {
+      setActiveTab(value);
+    }
+  }, []);
+
   // Mock data para contadores - em um cenário real, estes viriam de hooks específicos
   const attachmentCount = useMemo(() => {
     // Aqui você faria uma query para contar anexos do lead
@@ -27,7 +34,7 @@ export const useLeadDetailData = ({ lead }: UseLeadDetailDataProps) => {
 
   return {
     activeTab,
-    setActiveTab,
+    setActiveTab: handleTabChange,
     attachmentCount,
     commentCount,
     handleLeadUpdate
