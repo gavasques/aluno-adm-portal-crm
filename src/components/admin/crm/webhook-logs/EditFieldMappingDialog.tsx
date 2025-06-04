@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Save, X } from 'lucide-react';
+import { Edit, Save, X } from 'lucide-react';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
 import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
+import { CRMWebhookFieldMapping } from '@/types/crm-webhook.types';
 import { toast } from 'sonner';
 
-interface ManualFieldMappingDialogProps {
+interface EditFieldMappingDialogProps {
+  mapping: CRMWebhookFieldMapping;
   pipelineId: string;
   trigger?: React.ReactNode;
 }
@@ -38,38 +40,52 @@ const standardFields = [
   { key: 'calendly_link', name: 'Link do Calendly', type: 'text' },
 ];
 
-export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMappingDialogProps) => {
+export const EditFieldMappingDialog = ({ mapping, pipelineId, trigger }: EditFieldMappingDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    webhookFieldName: '',
-    crmFieldName: '',
-    crmFieldType: 'standard' as 'standard' | 'custom',
-    customFieldId: '',
-    fieldType: 'text' as 'text' | 'number' | 'phone' | 'boolean' | 'select' | 'email',
-    isRequired: false,
-    isActive: true,
-    transformationRules: '{}'
+    webhookFieldName: mapping.webhook_field_name,
+    crmFieldName: mapping.crm_field_name,
+    crmFieldType: mapping.crm_field_type,
+    customFieldId: mapping.custom_field_id || '',
+    fieldType: mapping.field_type,
+    isRequired: mapping.is_required,
+    isActive: mapping.is_active,
+    transformationRules: JSON.stringify(mapping.transformation_rules || {}, null, 2)
   });
 
-  const { mappings, createMapping } = useCRMWebhookFieldMappings(pipelineId);
+  const { mappings, updateMapping } = useCRMWebhookFieldMappings(pipelineId);
   const { customFields } = useCRMCustomFields(pipelineId);
 
-  // Filtrar campos já mapeados
+  // Reset form when mapping changes
+  useEffect(() => {
+    setFormData({
+      webhookFieldName: mapping.webhook_field_name,
+      crmFieldName: mapping.crm_field_name,
+      crmFieldType: mapping.crm_field_type,
+      customFieldId: mapping.custom_field_id || '',
+      fieldType: mapping.field_type,
+      isRequired: mapping.is_required,
+      isActive: mapping.is_active,
+      transformationRules: JSON.stringify(mapping.transformation_rules || {}, null, 2)
+    });
+  }, [mapping]);
+
+  // Filtrar campos já mapeados (exceto o atual)
   const mappedStandardFields = mappings
-    .filter(m => m.crm_field_type === 'standard')
+    .filter(m => m.id !== mapping.id && m.crm_field_type === 'standard')
     .map(m => m.crm_field_name);
   
   const mappedCustomFields = mappings
-    .filter(m => m.crm_field_type === 'custom')
+    .filter(m => m.id !== mapping.id && m.crm_field_type === 'custom')
     .map(m => m.custom_field_id)
     .filter(Boolean);
 
   const availableStandardFields = standardFields.filter(
-    field => !mappedStandardFields.includes(field.key)
+    field => !mappedStandardFields.includes(field.key) || field.key === mapping.crm_field_name
   );
 
   const availableCustomFields = customFields.filter(
-    field => !mappedCustomFields.includes(field.id)
+    field => !mappedCustomFields.includes(field.id) || field.id === mapping.custom_field_id
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,38 +96,34 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
       return;
     }
 
-    // Verificar se o campo do webhook já está mapeado
-    if (mappings.some(m => m.webhook_field_name === formData.webhookFieldName)) {
+    // Verificar se o campo do webhook já está mapeado por outro mapeamento
+    const duplicateWebhookField = mappings.find(m => 
+      m.id !== mapping.id && m.webhook_field_name === formData.webhookFieldName
+    );
+    
+    if (duplicateWebhookField) {
       toast.error('Este campo do webhook já está mapeado');
       return;
     }
 
     try {
-      await createMapping.mutateAsync({
-        pipeline_id: pipelineId,
-        webhook_field_name: formData.webhookFieldName,
-        crm_field_name: formData.crmFieldName,
-        crm_field_type: formData.crmFieldType,
-        custom_field_id: formData.crmFieldType === 'custom' ? formData.customFieldId : undefined,
-        field_type: formData.fieldType,
-        is_required: formData.isRequired,
-        is_active: formData.isActive,
-        transformation_rules: JSON.parse(formData.transformationRules)
+      await updateMapping.mutateAsync({
+        id: mapping.id,
+        input: {
+          webhook_field_name: formData.webhookFieldName,
+          crm_field_name: formData.crmFieldName,
+          crm_field_type: formData.crmFieldType,
+          custom_field_id: formData.crmFieldType === 'custom' ? formData.customFieldId : undefined,
+          field_type: formData.fieldType,
+          is_required: formData.isRequired,
+          is_active: formData.isActive,
+          transformation_rules: JSON.parse(formData.transformationRules)
+        }
       });
 
       setOpen(false);
-      setFormData({
-        webhookFieldName: '',
-        crmFieldName: '',
-        crmFieldType: 'standard',
-        customFieldId: '',
-        fieldType: 'text',
-        isRequired: false,
-        isActive: true,
-        transformationRules: '{}'
-      });
     } catch (error) {
-      console.error('Erro ao criar mapeamento:', error);
+      console.error('Erro ao atualizar mapeamento:', error);
     }
   };
 
@@ -138,19 +150,20 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
     }
   };
 
+  const isNameField = mapping.crm_field_name === 'name';
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Adicionar Mapeamento
+          <Button variant="ghost" size="sm">
+            <Edit className="h-4 w-4" />
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Mapear Novo Campo</DialogTitle>
+          <DialogTitle>Editar Mapeamento de Campo</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -199,29 +212,17 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
               </SelectTrigger>
               <SelectContent>
                 {formData.crmFieldType === 'standard' ? (
-                  <>
-                    {availableStandardFields.length === 0 ? (
-                      <SelectItem value="none" disabled>Todos os campos padrão já estão mapeados</SelectItem>
-                    ) : (
-                      availableStandardFields.map(field => (
-                        <SelectItem key={field.key} value={field.key}>
-                          {field.name} ({field.type})
-                        </SelectItem>
-                      ))
-                    )}
-                  </>
+                  availableStandardFields.map(field => (
+                    <SelectItem key={field.key} value={field.key}>
+                      {field.name} ({field.type})
+                    </SelectItem>
+                  ))
                 ) : (
-                  <>
-                    {availableCustomFields.length === 0 ? (
-                      <SelectItem value="none" disabled>Todos os campos customizados já estão mapeados</SelectItem>
-                    ) : (
-                      availableCustomFields.map(field => (
-                        <SelectItem key={field.id} value={field.id}>
-                          {field.field_name} ({field.field_type})
-                        </SelectItem>
-                      ))
-                    )}
-                  </>
+                  availableCustomFields.map(field => (
+                    <SelectItem key={field.id} value={field.id}>
+                      {field.field_name} ({field.field_type})
+                    </SelectItem>
+                  ))
                 )}
               </SelectContent>
             </Select>
@@ -232,8 +233,12 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
               id="required"
               checked={formData.isRequired}
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isRequired: checked }))}
+              disabled={isNameField} // Nome sempre obrigatório
             />
-            <Label htmlFor="required">Campo obrigatório</Label>
+            <Label htmlFor="required">
+              Campo obrigatório
+              {isNameField && <span className="text-xs text-muted-foreground ml-1">(sempre obrigatório)</span>}
+            </Label>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -261,9 +266,9 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
-            <Button type="submit" disabled={createMapping.isPending}>
+            <Button type="submit" disabled={updateMapping.isPending}>
               <Save className="h-4 w-4 mr-2" />
-              {createMapping.isPending ? 'Salvando...' : 'Salvar Mapeamento'}
+              {updateMapping.isPending ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </div>
         </form>

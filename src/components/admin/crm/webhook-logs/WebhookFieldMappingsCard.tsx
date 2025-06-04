@@ -1,334 +1,297 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { 
+  Settings, 
+  Sync, 
+  Plus, 
+  Eye, 
+  EyeOff, 
+  Edit,
+  Trash2,
+  AlertCircle 
+} from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
-import { useCRMCustomFields } from '@/hooks/crm/useCRMCustomFields';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ManualFieldMappingDialog } from './ManualFieldMappingDialog';
-import { RefreshCw, Settings, Eye, EyeOff, Plus, Edit, Trash2 } from 'lucide-react';
+import { EditFieldMappingDialog } from './EditFieldMappingDialog';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 export const WebhookFieldMappingsCard = () => {
-  const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
   const { pipelines } = useCRMPipelines();
-  const { mappings, isLoading: mappingsLoading, syncStandardMappings, deleteMapping, updateMapping } = useCRMWebhookFieldMappings(selectedPipelineId);
-  const { customFields } = useCRMCustomFields();
+  const [selectedPipelineId, setSelectedPipelineId] = React.useState<string>('');
+  
+  const { 
+    mappings, 
+    isLoading, 
+    syncStandardMappings, 
+    updateMapping, 
+    deleteMapping 
+  } = useCRMWebhookFieldMappings(selectedPipelineId);
 
-  const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
-
-  const handleSyncMappings = () => {
-    if (selectedPipelineId) {
-      syncStandardMappings.mutate(selectedPipelineId);
+  const handleSync = async () => {
+    if (!selectedPipelineId) {
+      toast.error('Selecione um pipeline primeiro');
+      return;
     }
+    
+    await syncStandardMappings.mutateAsync(selectedPipelineId);
   };
 
-  const handleToggleMapping = (mappingId: string, currentStatus: boolean) => {
-    updateMapping.mutate({
+  const handleToggleActive = async (mappingId: string, currentActive: boolean) => {
+    await updateMapping.mutateAsync({
       id: mappingId,
-      input: { is_active: !currentStatus }
+      input: { is_active: !currentActive }
     });
   };
 
-  const handleDeleteMapping = (mappingId: string) => {
-    deleteMapping.mutate(mappingId);
+  const handleDelete = async (mappingId: string, fieldName: string) => {
+    if (fieldName === 'name') {
+      toast.error('O campo nome é obrigatório e não pode ser removido');
+      return;
+    }
+    
+    if (confirm('Tem certeza que deseja remover este mapeamento?')) {
+      await deleteMapping.mutateAsync(mappingId);
+    }
   };
 
-  // Separar campos obrigatórios (automáticos) dos opcionais (manuais)
-  const requiredMappings = mappings.filter(m => 
-    ['name', 'email', 'phone'].includes(m.crm_field_name) && m.crm_field_type === 'standard'
-  );
-  
-  const optionalMappings = mappings.filter(m => 
-    !['name', 'email', 'phone'].includes(m.crm_field_name) || m.crm_field_type === 'custom'
-  );
+  const requiredMappings = mappings.filter(m => m.is_required);
+  const optionalMappings = mappings.filter(m => !m.is_required);
+  const activePipeline = pipelines.find(p => p.id === selectedPipelineId);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
-          Mapeamentos de Campos do Webhook
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Seletor de Pipeline */}
-        <div className="flex items-center gap-4">
-          <select
-            value={selectedPipelineId}
-            onChange={(e) => setSelectedPipelineId(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-          >
-            <option value="">Selecione um pipeline</option>
-            {pipelines.map((pipeline) => (
-              <option key={pipeline.id} value={pipeline.id}>
-                {pipeline.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            <CardTitle>Mapeamento de Campos do Webhook</CardTitle>
+          </div>
           
-          {selectedPipelineId && (
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSyncMappings}
-                disabled={syncStandardMappings.isPending}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${syncStandardMappings.isPending ? 'animate-spin' : ''}`} />
-                Sincronizar Obrigatórios
-              </Button>
-              
-              <ManualFieldMappingDialog pipelineId={selectedPipelineId} />
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Selecione um pipeline" />
+              </SelectTrigger>
+              <SelectContent>
+                {pipelines.map(pipeline => (
+                  <SelectItem key={pipeline.id} value={pipeline.id}>
+                    {pipeline.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {selectedPipelineId && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSync}
+                  disabled={syncStandardMappings.isPending}
+                >
+                  <Sync className="h-4 w-4 mr-2" />
+                  Sincronizar Campo Obrigatório
+                </Button>
+                
+                <ManualFieldMappingDialog 
+                  pipelineId={selectedPipelineId}
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Mapeamento
+                    </Button>
+                  }
+                />
+              </>
+            )}
+          </div>
         </div>
-
-        {selectedPipelineId && (
-          <Tabs defaultValue="required" className="w-full">
-            <TabsList>
-              <TabsTrigger value="required">Campos Obrigatórios ({requiredMappings.length})</TabsTrigger>
-              <TabsTrigger value="optional">Campos Opcionais ({optionalMappings.filter(m => m.is_active).length})</TabsTrigger>
-              <TabsTrigger value="inactive">Campos Inativos ({mappings.filter(m => !m.is_active).length})</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="required" className="space-y-4">
-              <div className="text-sm text-gray-600 mb-4">
-                Pipeline: <strong>{selectedPipeline?.name}</strong>
-                <div className="text-xs text-gray-500 mt-1">
-                  Campos obrigatórios são mapeados automaticamente e não podem ser removidos.
-                </div>
-              </div>
-              
-              {mappingsLoading ? (
-                <div className="text-center py-4">Carregando mapeamentos...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Campo do Webhook</TableHead>
-                      <TableHead>Campo do CRM</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requiredMappings.map((mapping) => (
-                      <TableRow key={mapping.id}>
-                        <TableCell className="font-mono text-sm">
-                          {mapping.webhook_field_name}
-                        </TableCell>
-                        <TableCell>
-                          {mapping.crm_field_name}
-                          <Badge variant="destructive" className="ml-2 text-xs">
-                            Obrigatório
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {mapping.field_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {mapping.is_active ? (
-                              <>
-                                <Eye className="h-4 w-4 text-green-600" />
-                                <span className="text-sm text-green-600">Ativo</span>
-                              </>
-                            ) : (
-                              <>
-                                <EyeOff className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-400">Inativo</span>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleMapping(mapping.id, mapping.is_active)}
-                          >
-                            {mapping.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-              
-              {requiredMappings.length === 0 && !mappingsLoading && (
-                <div className="text-center py-8 text-gray-500">
-                  <Settings className="h-12 w-12 mx-auto mb-4" />
-                  <p>Nenhum campo obrigatório encontrado</p>
-                  <p className="text-sm">Use o botão "Sincronizar Obrigatórios" para criar os mapeamentos básicos</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="optional" className="space-y-4">
-              <div className="text-sm text-gray-600 mb-4">
-                Campos opcionais mapeados manualmente para facilitar a integração.
-              </div>
-              
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Campo do Webhook</TableHead>
-                    <TableHead>Campo do CRM</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {optionalMappings
-                    .filter(mapping => mapping.is_active)
-                    .map((mapping) => (
-                      <TableRow key={mapping.id}>
-                        <TableCell className="font-mono text-sm">
-                          {mapping.webhook_field_name}
-                        </TableCell>
-                        <TableCell>
-                          {mapping.crm_field_name}
-                          {mapping.custom_field && (
-                            <div className="text-xs text-gray-500">
-                              ({mapping.custom_field.field_name})
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {mapping.field_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={mapping.crm_field_type === 'custom' ? 'secondary' : 'default'}>
-                            {mapping.crm_field_type === 'custom' ? 'Customizado' : 'Padrão'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleToggleMapping(mapping.id, mapping.is_active)}
-                            >
-                              <EyeOff className="h-4 w-4" />
-                            </Button>
-                            
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Remover Mapeamento</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja remover o mapeamento do campo "{mapping.webhook_field_name}"?
-                                    Esta ação não pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteMapping(mapping.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Remover
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-              
-              {optionalMappings.filter(m => m.is_active).length === 0 && !mappingsLoading && (
-                <div className="text-center py-8 text-gray-500">
-                  <Plus className="h-12 w-12 mx-auto mb-4" />
-                  <p>Nenhum campo opcional mapeado</p>
-                  <p className="text-sm">Use o botão "Adicionar Mapeamento" para mapear campos manualmente</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="inactive" className="space-y-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Campo do Webhook</TableHead>
-                    <TableHead>Campo do CRM</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mappings
-                    .filter(mapping => !mapping.is_active)
-                    .map((mapping) => (
-                      <TableRow key={mapping.id} className="opacity-60">
-                        <TableCell className="font-mono text-sm">
-                          {mapping.webhook_field_name}
-                        </TableCell>
-                        <TableCell>
-                          {mapping.crm_field_name}
-                          {mapping.custom_field && (
-                            <div className="text-xs text-gray-500">
-                              ({mapping.custom_field.field_name})
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {mapping.field_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={mapping.crm_field_type === 'custom' ? 'secondary' : 'default'}>
-                            {mapping.crm_field_type === 'custom' ? 'Customizado' : 'Padrão'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleMapping(mapping.id, mapping.is_active)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-              
-              {mappings.filter(m => !m.is_active).length === 0 && !mappingsLoading && (
-                <div className="text-center py-8 text-gray-500">
-                  <EyeOff className="h-12 w-12 mx-auto mb-4" />
-                  <p>Nenhum mapeamento inativo encontrado</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        )}
-
-        {!selectedPipelineId && (
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        {!selectedPipelineId ? (
           <div className="text-center py-8 text-gray-500">
-            <Settings className="h-12 w-12 mx-auto mb-4" />
+            <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Selecione um pipeline para visualizar os mapeamentos</p>
+          </div>
+        ) : isLoading ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* URL do Webhook */}
+            {activePipeline && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">URL do Webhook</h4>
+                <code className="text-sm bg-white p-2 rounded border block break-all">
+                  {`${window.location.origin}/api/webhook/crm/${activePipeline.id}`}
+                </code>
+              </div>
+            )}
+
+            {/* Campos Obrigatórios */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <h4 className="font-medium text-gray-900">Campos Obrigatórios</h4>
+                <Badge variant="secondary" className="text-xs">
+                  {requiredMappings.length}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                {requiredMappings.length === 0 ? (
+                  <div className="text-sm text-gray-500 italic">
+                    Nenhum campo obrigatório mapeado. Clique em "Sincronizar Campo Obrigatório" para adicionar o campo nome.
+                  </div>
+                ) : (
+                  requiredMappings.map((mapping, index) => (
+                    <motion.div
+                      key={mapping.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Badge variant="destructive" className="text-xs">
+                          Obrigatório
+                        </Badge>
+                        <div>
+                          <div className="font-medium text-sm">
+                            {mapping.webhook_field_name} → {mapping.crm_field_name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Tipo: {mapping.field_type} | 
+                            Status: {mapping.is_active ? 'Ativo' : 'Inativo'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <EditFieldMappingDialog 
+                          mapping={mapping}
+                          pipelineId={selectedPipelineId}
+                          trigger={
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          }
+                        />
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleToggleActive(mapping.id, mapping.is_active)}
+                        >
+                          {mapping.is_active ? (
+                            <Eye className="h-3 w-3" />
+                          ) : (
+                            <EyeOff className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Campos Opcionais */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Settings className="h-4 w-4 text-blue-500" />
+                <h4 className="font-medium text-gray-900">Campos Opcionais</h4>
+                <Badge variant="secondary" className="text-xs">
+                  {optionalMappings.length}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                {optionalMappings.length === 0 ? (
+                  <div className="text-sm text-gray-500 italic">
+                    Nenhum campo opcional mapeado. Use "Adicionar Mapeamento" para mapear campos como email, telefone, etc.
+                  </div>
+                ) : (
+                  optionalMappings.map((mapping, index) => (
+                    <motion.div
+                      key={mapping.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="text-xs">
+                          Opcional
+                        </Badge>
+                        <div>
+                          <div className="font-medium text-sm">
+                            {mapping.webhook_field_name} → {mapping.crm_field_name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Tipo: {mapping.field_type} | 
+                            Status: {mapping.is_active ? 'Ativo' : 'Inativo'} |
+                            Campo: {mapping.crm_field_type === 'custom' ? 'Customizado' : 'Padrão'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <EditFieldMappingDialog 
+                          mapping={mapping}
+                          pipelineId={selectedPipelineId}
+                          trigger={
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          }
+                        />
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleToggleActive(mapping.id, mapping.is_active)}
+                        >
+                          {mapping.is_active ? (
+                            <Eye className="h-3 w-3" />
+                          ) : (
+                            <EyeOff className="h-3 w-3" />
+                          )}
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                          onClick={() => handleDelete(mapping.id, mapping.crm_field_name)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Resumo */}
+            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+              <p><strong>Resumo:</strong> {mappings.length} campo(s) mapeado(s) para este pipeline.</p>
+              <p><strong>Obrigatórios:</strong> {requiredMappings.length} | <strong>Opcionais:</strong> {optionalMappings.length}</p>
+              <p><strong>Ativos:</strong> {mappings.filter(m => m.is_active).length} | <strong>Inativos:</strong> {mappings.filter(m => !m.is_active).length}</p>
+            </div>
           </div>
         )}
       </CardContent>

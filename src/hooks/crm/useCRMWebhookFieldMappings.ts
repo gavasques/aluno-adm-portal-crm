@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -104,13 +103,11 @@ export const useCRMWebhookFieldMappings = (pipelineId?: string) => {
     }
   });
 
-  // Sincronizar APENAS campos obrigatórios (name, email, phone)
+  // Sincronizar APENAS campo obrigatório (name)
   const syncStandardMappings = useMutation({
     mutationFn: async (targetPipelineId: string) => {
       const requiredFields = [
-        { webhook_field_name: 'name', crm_field_name: 'name', field_type: 'text', is_required: true },
-        { webhook_field_name: 'email', crm_field_name: 'email', field_type: 'email', is_required: true },
-        { webhook_field_name: 'phone', crm_field_name: 'phone', field_type: 'phone', is_required: true }
+        { webhook_field_name: 'name', crm_field_name: 'name', field_type: 'text', is_required: true }
       ];
 
       const mappingsToCreate = requiredFields.map(field => ({
@@ -132,11 +129,11 @@ export const useCRMWebhookFieldMappings = (pipelineId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-webhook-field-mappings'] });
-      toast.success('Campos obrigatórios sincronizados! Para mapear outros campos, use "Adicionar Mapeamento"');
+      toast.success('Campo obrigatório sincronizado! Para mapear outros campos, use "Adicionar Mapeamento"');
     },
     onError: (error) => {
-      console.error('Erro ao sincronizar mapeamentos:', error);
-      toast.error('Erro ao sincronizar campos obrigatórios');
+      console.error('Erro ao sincronizar mapeamento:', error);
+      toast.error('Erro ao sincronizar campo obrigatório');
     }
   });
 
