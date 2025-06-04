@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Plus } from 'lucide-react';
 import { CRMFilters, CRMLead } from '@/types/crm.types';
 import { useCRMData } from '@/hooks/crm/useCRMData';
+import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
 import { motion } from 'framer-motion';
 
 interface OptimizedListViewProps {
@@ -19,6 +20,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
   onCreateLead 
 }) => {
   const { leadsWithContacts, loading, error } = useCRMData(filters);
+  const { handleOpenDetail } = useKanbanNavigation();
   const [searchTerm, setSearchTerm] = React.useState('');
 
   console.log('🔍 OptimizedListView: Loading state:', loading);
@@ -54,7 +56,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
 
   const handleLeadClick = (lead: CRMLead) => {
     console.log('🔗 OptimizedListView: Lead clicked:', lead.id);
-    // Aqui você pode adicionar navegação para detalhes do lead
+    handleOpenDetail(lead);
   };
 
   if (loading) {
@@ -135,7 +137,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleLeadClick(lead)}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -170,7 +172,10 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleLeadClick(lead)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLeadClick(lead);
+                            }}
                             className="text-blue-600 hover:text-blue-700"
                           >
                             <Eye className="h-4 w-4 mr-1" />
