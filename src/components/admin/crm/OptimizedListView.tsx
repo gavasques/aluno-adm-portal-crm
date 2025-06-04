@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -23,41 +23,50 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
   const { handleOpenDetail } = useKanbanNavigation();
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  console.log('🔍 OptimizedListView: Loading state:', loading);
-  console.log('🔍 OptimizedListView: Error state:', error);
-  console.log('🔍 OptimizedListView: Leads count:', leadsWithContacts?.length || 0);
+  console.log('🔍 [OPTIMIZED_LIST_VIEW] Estado:', {
+    loading,
+    error: error?.message,
+    leadsCount: leadsWithContacts?.length || 0,
+    filters,
+    searchTerm
+  });
 
-  // Filtrar leads baseado no termo de busca
+  // Filtrar leads baseado no termo de busca - memoizado para evitar recálculos
   const filteredLeads = React.useMemo(() => {
     if (!searchTerm.trim()) return leadsWithContacts;
     
+    const normalizedSearch = searchTerm.toLowerCase();
     return leadsWithContacts.filter(lead => 
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.name.toLowerCase().includes(normalizedSearch) ||
+      lead.email.toLowerCase().includes(normalizedSearch) ||
       (lead.phone && lead.phone.includes(searchTerm))
     );
   }, [leadsWithContacts, searchTerm]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
-  };
+  }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = React.useCallback((status: string) => {
     switch (status) {
       case 'ganho': return 'bg-green-100 text-green-800';
       case 'perdido': return 'bg-red-100 text-red-800';
       default: return 'bg-blue-100 text-blue-800';
     }
-  };
+  }, []);
 
-  const handleLeadClick = (lead: CRMLead) => {
-    console.log('🔗 OptimizedListView: Lead clicked:', lead.id);
+  const handleLeadClick = React.useCallback((lead: CRMLead) => {
+    console.log('🔗 [OPTIMIZED_LIST_VIEW] Lead clicked:', lead.id);
     handleOpenDetail(lead);
-  };
+  }, [handleOpenDetail]);
+
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
 
   if (loading) {
     return (
@@ -95,7 +104,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
               <Input
                 placeholder="Buscar por nome, email ou telefone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10"
               />
             </div>
@@ -137,7 +146,10 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleLeadClick(lead)}>
+                  <Card 
+                    className="hover:shadow-md transition-shadow cursor-pointer" 
+                    onClick={() => handleLeadClick(lead)}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">

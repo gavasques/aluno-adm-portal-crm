@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs } from '@/components/ui/tabs';
@@ -22,7 +23,6 @@ interface CRMDashboardProps {
 
 const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const navigate = useNavigate();
-  const [loadingSequence, setLoadingSequence] = React.useState<'pipelines' | 'users' | 'tags' | 'complete'>('pipelines');
   const [hasError, setHasError] = React.useState(false);
   const [showDiagnostics, setShowDiagnostics] = React.useState(false);
   
@@ -58,20 +58,48 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     handleTagsChange
   } = useCRMDashboardState();
 
-  // Carregar estado persistido na inicialização
+  // Hooks de dados
+  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
+  const { users, loading: usersLoading } = useCRMUsers();
+  const { tags, loading: tagsLoading } = useOptimizedCRMTags({
+    enabled: !pipelinesLoading && !usersLoading
+  });
+
+  // Verificar se há dados básicos
+  const isLoading = pipelinesLoading || usersLoading || tagsLoading;
+  const hasData = pipelines.length > 0;
+
+  console.log('🎯 [CRM_DASHBOARD] Estado atual:', {
+    isLoading,
+    hasData,
+    selectedPipelineId,
+    pipelinesCount: pipelines.length,
+    effectiveFilters
+  });
+
+  // Carregar estado persistido apenas uma vez na inicialização
   React.useEffect(() => {
-    const persistedState = loadKanbanState();
-    if (persistedState.selectedPipelineId && !selectedPipelineId) {
-      setSelectedPipelineId(persistedState.selectedPipelineId);
+    if (!isLoading && hasData && !selectedPipelineId) {
+      const persistedState = loadKanbanState();
+      
+      if (persistedState.selectedPipelineId) {
+        console.log('📂 [CRM_DASHBOARD] Carregando estado persistido:', persistedState.selectedPipelineId);
+        setSelectedPipelineId(persistedState.selectedPipelineId);
+      } else if (pipelines.length > 0) {
+        console.log('📂 [CRM_DASHBOARD] Selecionando primeiro pipeline:', pipelines[0].id);
+        setSelectedPipelineId(pipelines[0].id);
+      }
     }
-    if (persistedState.viewMode !== activeView) {
-      setActiveView(persistedState.viewMode);
-    }
-  }, [loadKanbanState, selectedPipelineId, setSelectedPipelineId, activeView, setActiveView]);
+  }, [isLoading, hasData, selectedPipelineId, pipelines, loadKanbanState, setSelectedPipelineId]);
 
   // Salvar estado quando mudanças importantes acontecem
   React.useEffect(() => {
-    if (selectedPipelineId) {
+    if (selectedPipelineId && !isLoading) {
+      console.log('💾 [CRM_DASHBOARD] Salvando estado:', {
+        selectedPipelineId,
+        viewMode: activeView
+      });
+      
       saveKanbanState({
         selectedPipelineId,
         filters,
@@ -81,45 +109,19 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       // Prefetch dados críticos
       prefetchCriticalData(selectedPipelineId);
     }
-  }, [selectedPipelineId, filters, activeView, saveKanbanState, prefetchCriticalData]);
-
-  // Hooks de dados com loading sequencial
-  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
-  
-  // Carregar usuários após os pipelines
-  const { users, loading: usersLoading } = useCRMUsers();
-  
-  // Carregar tags com opção de enabled
-  const { tags, loading: tagsLoading } = useOptimizedCRMTags({
-    enabled: !pipelinesLoading && !usersLoading
-  });
-
-  // Gerenciar sequência de loading
-  React.useEffect(() => {
-    if (pipelinesLoading) {
-      setLoadingSequence('pipelines');
-    } else if (pipelinesLoading === false && usersLoading === false && tagsLoading === false) {
-      if (pipelines.length === 0) {
-        setHasError(true);
-        console.error('❌ [CRM_DASHBOARD] Erro ao carregar dados: Nenhum pipeline encontrado');
-      } else {
-        setLoadingSequence('users');
-        setTimeout(() => {
-          setLoadingSequence('tags');
-          setTimeout(() => {
-            setLoadingSequence('complete');
-          }, 300);
-        }, 300);
-      }
-    }
-  }, [pipelinesLoading, usersLoading, tagsLoading, pipelines.length]);
+  }, [selectedPipelineId, activeView, filters, isLoading, saveKanbanState, prefetchCriticalData]);
 
   // Get pipeline columns from the selected pipeline
-  const pipelineColumns = selectedPipelineId 
-    ? pipelines.find(p => p.id === selectedPipelineId)?.columns || []
-    : [];
+  const pipelineColumns = React.useMemo(() => {
+    if (!selectedPipelineId || !pipelines.length) return [];
+    
+    const pipeline = pipelines.find(p => p.id === selectedPipelineId);
+    return pipeline?.columns || [];
+  }, [selectedPipelineId, pipelines]);
 
   const handleOpenLead = React.useCallback((leadId: string) => {
+    console.log('🔗 [CRM_DASHBOARD] Opening lead:', leadId);
+    
     if (onOpenLead) {
       onOpenLead(leadId);
     } else {
@@ -129,18 +131,12 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   // Função wrapper para corrigir o tipo do setActiveTab
   const handleTabChange = React.useCallback((tab: string) => {
+    console.log('📋 [CRM_DASHBOARD] Tab change:', tab);
     setActiveTab(tab as 'dashboard' | 'reports' | 'analytics' | 'settings');
   }, [setActiveTab]);
 
-  // Selecionar primeiro pipeline se nenhum estiver selecionado
-  React.useEffect(() => {
-    if (pipelines.length > 0 && !selectedPipelineId) {
-      setSelectedPipelineId(pipelines[0].id);
-    }
-  }, [pipelines, selectedPipelineId, setSelectedPipelineId]);
-
   // Renderizar erro se houver problemas
-  if (hasError) {
+  if (!isLoading && !hasData) {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100">
         <motion.div
@@ -180,14 +176,8 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     );
   }
 
-  // Renderizar loading sequencial
-  if (loadingSequence !== 'complete') {
-    const loadingMessages = {
-      pipelines: 'Carregando pipelines...',
-      users: 'Carregando usuários...',
-      tags: 'Carregando tags...'
-    };
-
+  // Renderizar loading
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100">
         <motion.div 
@@ -197,7 +187,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         >
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           <span className="text-gray-600 font-medium">
-            {loadingMessages[loadingSequence]}
+            Carregando CRM...
           </span>
         </motion.div>
       </div>
@@ -221,7 +211,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         onValueChange={handleTabChange}
         className="h-full w-full flex flex-col relative z-10"
       >
-        {/* Header com Tabs e botão de teste */}
+        {/* Header com Tabs */}
         <CRMDashboardHeader
           activeTab={activeTab}
           onTabChange={handleTabChange}

@@ -14,6 +14,11 @@ interface LeadWithContacts extends CRMLead {
 export const useCRMData = (filters: CRMFilters = {}) => {
   const queryClient = useQueryClient();
 
+  // Estabilizar a key de query
+  const queryKey = useMemo(() => {
+    return ['crm-leads-with-contacts', JSON.stringify(filters)];
+  }, [filters]);
+
   const transformLeadData = useCallback((dbLead: any): CRMLead => {
     return {
       ...dbLead,
@@ -73,16 +78,17 @@ export const useCRMData = (filters: CRMFilters = {}) => {
     });
   }, []);
 
+  // Função de fetch estabilizada
   const fetchLeadsWithContacts = useCallback(async (): Promise<LeadWithContacts[]> => {
+    console.log('🔍 [CRM_DATA] Iniciando busca de leads com filtros:', filters);
+    
     // Se não há pipeline_id, retornar array vazio mas continuar tentando
     if (!filters.pipeline_id) {
-      console.log('⚠️ Nenhum pipeline_id fornecido, aguardando seleção...');
+      console.log('⚠️ [CRM_DATA] Nenhum pipeline_id fornecido, retornando array vazio');
       return [];
     }
 
     try {
-      console.log('📊 Buscando leads para pipeline:', filters.pipeline_id);
-
       // Buscar leads com filtros incluindo status
       let leadsQuery = supabase
         .from('crm_leads')
@@ -117,7 +123,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
 
       if (leadsError) throw leadsError;
 
-      console.log('📊 Leads encontrados:', leads?.length || 0);
+      console.log('📊 [CRM_DATA] Leads encontrados:', leads?.length || 0);
 
       if (!leads || leads.length === 0) {
         return [];
@@ -192,22 +198,24 @@ export const useCRMData = (filters: CRMFilters = {}) => {
         last_completed_contact: lastCompletedContactsByLead[lead.id]
       }));
 
-      console.log('📊 Leads processados com contatos:', leadsWithContactsData.length);
+      console.log('📊 [CRM_DATA] Leads processados com contatos:', leadsWithContactsData.length);
       return filterLeadsByContact(leadsWithContactsData, filters.contact_filter);
 
     } catch (error) {
-      console.error('❌ Erro ao buscar dados CRM:', error);
+      console.error('❌ [CRM_DATA] Erro ao buscar dados CRM:', error);
       toast.error('Erro ao carregar dados do CRM');
       return [];
     }
   }, [filters, transformLeadData, filterLeadsByContact]);
 
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['crm-leads-with-contacts', filters],
+    queryKey,
     queryFn: fetchLeadsWithContacts,
     enabled: true,
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const moveLeadToColumn = useCallback(async (leadId: string, newColumnId: string) => {
@@ -236,6 +244,8 @@ export const useCRMData = (filters: CRMFilters = {}) => {
         grouped[lead.column_id].push(lead);
       }
     });
+    
+    console.log('📊 [CRM_DATA] Leads agrupados por coluna:', Object.keys(grouped).length);
     return grouped;
   }, [leadsWithContacts]);
 

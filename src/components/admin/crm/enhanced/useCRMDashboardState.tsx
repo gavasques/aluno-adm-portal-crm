@@ -22,37 +22,70 @@ export const useCRMDashboardState = () => {
     clearAllFilters
   } = useCRMFiltersState(filters, setFilters);
 
-  // Filtros efetivos
-  const effectiveFilters: CRMFilters = useMemo(() => ({
-    ...filters,
-    pipeline_id: selectedPipelineId || filters.pipeline_id
-  }), [filters, selectedPipelineId]);
+  // Filtros efetivos - memoizado com dependências estáveis
+  const effectiveFilters: CRMFilters = useMemo(() => {
+    const result = {
+      ...filters,
+      pipeline_id: selectedPipelineId || filters.pipeline_id
+    };
+    
+    console.log('🔧 [DASHBOARD_STATE] EffectiveFilters recalculado:', {
+      selectedPipelineId,
+      filters,
+      result
+    });
+    
+    return result;
+  }, [filters, selectedPipelineId]);
 
-  // Handlers
+  // Handlers estabilizados com useCallback
   const handleCreateLead = useCallback((columnId?: string) => {
+    console.log('🆕 [DASHBOARD_STATE] Creating lead for column:', columnId);
     setSelectedColumnId(columnId);
     setShowLeadForm(true);
   }, []);
 
   const handleLeadFormSuccess = useCallback(() => {
+    console.log('✅ [DASHBOARD_STATE] Lead form success');
     setShowLeadForm(false);
     setSelectedColumnId(undefined);
   }, []);
 
   const handleTagsChange = useCallback((tagIds: string[]) => {
+    console.log('🏷️ [DASHBOARD_STATE] Tags changed:', tagIds);
     updateFilter('tag_ids', tagIds);
   }, [updateFilter]);
+
+  // Handler para mudança de pipeline com validação
+  const handlePipelineChange = useCallback((pipelineId: string) => {
+    console.log('📋 [DASHBOARD_STATE] Pipeline changing:', { from: selectedPipelineId, to: pipelineId });
+    
+    // Só atualizar se realmente mudou
+    if (selectedPipelineId !== pipelineId) {
+      setSelectedPipelineId(pipelineId);
+    }
+  }, [selectedPipelineId]);
+
+  // Handler para mudança de view estabilizado
+  const handleViewChange = useCallback((view: 'kanban' | 'list') => {
+    console.log('👀 [DASHBOARD_STATE] View changing:', { from: activeView, to: view });
+    
+    // Só atualizar se realmente mudou
+    if (activeView !== view) {
+      setActiveView(view);
+    }
+  }, [activeView]);
 
   return {
     // Estados
     activeTab,
     setActiveTab,
     activeView,
-    setActiveView,
+    setActiveView: handleViewChange,
     showFilters,
     setShowFilters,
     selectedPipelineId,
-    setSelectedPipelineId,
+    setSelectedPipelineId: handlePipelineChange,
     showLeadForm,
     setShowLeadForm,
     selectedColumnId,
