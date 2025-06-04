@@ -28,8 +28,9 @@ export const useSimplifiedDragAndDrop = ({ onMoveLeadToColumn }: UseSimplifiedDr
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    console.log('🎯 [DRAG_START] Iniciando drag:', {
+    console.log('🎯 [DRAG_START] Event completo:', {
       activeId: event.active.id,
+      activeData: event.active.data?.current,
       hasData: !!event.active.data?.current
     });
     
@@ -38,17 +39,27 @@ export const useSimplifiedDragAndDrop = ({ onMoveLeadToColumn }: UseSimplifiedDr
       return;
     }
     
-    const leadData = event.active.data?.current as CRMLead;
+    // Extrair dados do lead corretamente
+    const dragData = event.active.data?.current;
+    console.log('📦 [DRAG_START] Dados extraídos:', dragData);
     
-    if (!leadData || !leadData.id || !leadData.name || !leadData.column_id) {
-      console.error('❌ [DRAG_START] Dados do lead inválidos:', leadData);
+    if (!dragData || dragData.type !== 'lead' || !dragData.lead) {
+      console.error('❌ [DRAG_START] Dados do drag inválidos:', dragData);
       toast.error('Erro: Dados do lead inválidos para movimentação');
+      return;
+    }
+    
+    const leadData = dragData.lead as CRMLead;
+    
+    if (!leadData.id || !leadData.name || !leadData.column_id) {
+      console.error('❌ [DRAG_START] Lead com dados incompletos:', leadData);
+      toast.error('Erro: Lead com dados incompletos');
       return;
     }
     
     setDraggedLead(leadData);
     
-    console.log('✅ [DRAG_START] Drag iniciado:', {
+    console.log('✅ [DRAG_START] Drag iniciado com sucesso:', {
       leadId: leadData.id,
       leadName: leadData.name,
       currentColumn: leadData.column_id
@@ -56,33 +67,35 @@ export const useSimplifiedDragAndDrop = ({ onMoveLeadToColumn }: UseSimplifiedDr
   }, [isMoving]);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    console.log('🎯 [DRAG_END] Finalizando drag:', {
+    console.log('🎯 [DRAG_END] Event completo:', {
       activeId: event.active.id,
       overId: event.over?.id,
-      draggedLead: draggedLead?.id
+      draggedLeadId: draggedLead?.id,
+      overData: event.over?.data?.current
     });
     
     // Limpar estado
+    const currentDraggedLead = draggedLead;
     setDraggedLead(null);
 
-    if (!event.over || !draggedLead) {
+    if (!event.over || !currentDraggedLead) {
       console.log('📋 [DRAG_END] Drag cancelado - sem destino ou lead');
       return;
     }
 
     const newColumnId = event.over.id as string;
 
-    // Validações
-    if (!draggedLead.id || !newColumnId) {
+    // Validações básicas
+    if (!currentDraggedLead.id || !newColumnId) {
       console.error('❌ [DRAG_END] IDs inválidos:', {
-        leadId: draggedLead.id,
+        leadId: currentDraggedLead.id,
         newColumnId
       });
       toast.error('Erro: Identificadores inválidos');
       return;
     }
 
-    if (draggedLead.column_id === newColumnId) {
+    if (currentDraggedLead.column_id === newColumnId) {
       console.log('📋 [DRAG_END] Mesmo destino - nenhuma ação necessária');
       return;
     }
@@ -93,17 +106,19 @@ export const useSimplifiedDragAndDrop = ({ onMoveLeadToColumn }: UseSimplifiedDr
       return;
     }
 
-    console.log('🚀 [DRAG_END] Iniciando movimento:', {
-      leadName: draggedLead.name,
-      fromColumn: draggedLead.column_id,
+    console.log('🚀 [DRAG_END] Iniciando movimento do lead:', {
+      leadId: currentDraggedLead.id,
+      leadName: currentDraggedLead.name,
+      fromColumn: currentDraggedLead.column_id,
       toColumn: newColumnId
     });
     
     setIsMoving(true);
 
     try {
-      await onMoveLeadToColumn(draggedLead.id, newColumnId);
+      await onMoveLeadToColumn(currentDraggedLead.id, newColumnId);
       console.log('✅ [DRAG_END] Lead movido com sucesso');
+      toast.success(`Lead "${currentDraggedLead.name}" movido com sucesso`);
       
     } catch (error) {
       console.error('❌ [DRAG_END] Erro ao mover lead:', error);

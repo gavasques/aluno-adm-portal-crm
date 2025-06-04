@@ -1,6 +1,6 @@
 
 import React, { useCallback, useMemo } from 'react';
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
@@ -105,12 +105,13 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     );
   }
 
-  console.log('📊 [OPTIMIZED_KANBAN] Renderizando kanban:', {
+  console.log('📊 [OPTIMIZED_KANBAN] Dados do Kanban:', {
     columns: activeColumns.length,
     totalLeads: leadsWithContacts.length,
     leadsByColumn: Object.entries(leadsByColumn).map(([columnId, leads]) => ({
       columnId,
-      leadsCount: leads.length
+      leadsCount: leads.length,
+      leadIds: leads.map(l => l.id)
     })),
     draggedLead: draggedLead?.id,
     isMoving,
@@ -124,6 +125,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
         sensors={sensors}
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
+        collisionDetection={closestCenter}
       >
         <KanbanGrid
           pipelineColumns={activeColumns}

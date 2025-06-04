@@ -25,7 +25,10 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     isDragging: isSortableDragging,
   } = useSortable({
     id: lead.id,
-    data: lead, // Passa os dados do lead diretamente
+    data: {
+      type: 'lead',
+      lead: lead // Passa o objeto lead completo
+    }
   });
 
   const style = {
@@ -38,7 +41,11 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     leadName: lead.name,
     columnId: lead.column_id,
     isDragging: isDragging || isSortableDragging,
-    hasTransform: !!transform
+    hasTransform: !!transform,
+    sortableData: {
+      type: 'lead',
+      lead: lead
+    }
   });
 
   return (

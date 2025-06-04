@@ -53,7 +53,7 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
     });
 
     try {
-      // Validar coluna de destino com query simples
+      // Validar coluna de destino com query simples - SEM JOINs
       const { data: column, error: columnError } = await supabase
         .from('crm_pipeline_columns')
         .select('id, name, pipeline_id, is_active')
@@ -62,8 +62,15 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
         .single();
 
       if (columnError || !column) {
+        console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro na coluna:`, columnError);
         throw new Error('Coluna de destino não encontrada ou inativa');
       }
+
+      console.log(`✅ [UNIFIED_MOVEMENT_${operationId}] Coluna validada:`, {
+        columnId: column.id,
+        columnName: column.name,
+        pipelineId: column.pipeline_id
+      });
 
       // Atualização otimista em todas as queries
       queryKeys.forEach(key => {
@@ -84,7 +91,7 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
 
       console.log(`💾 [UNIFIED_MOVEMENT_${operationId}] Persistindo no banco...`);
       
-      // Atualizar no banco de dados com UPDATE simples
+      // UPDATE SIMPLES - SEM JOINs, SEM FULL JOIN
       const { data: updatedLead, error } = await supabase
         .from('crm_leads')
         .update({
@@ -96,7 +103,11 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
         .single();
 
       if (error) {
-        console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro no banco:`, error);
+        console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro no banco:`, {
+          error: error.message,
+          code: error.code,
+          details: error.details
+        });
         throw new Error(`Erro no banco: ${error.message}`);
       }
 
@@ -109,8 +120,6 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
         newColumn: updatedLead.column_id,
         columnName: column.name
       });
-      
-      toast.success(`Lead "${currentLead.name}" movido para "${column.name}"`);
       
       // Invalidar queries após delay para evitar conflitos
       setTimeout(() => {
@@ -130,7 +139,6 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
       });
       
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Erro ao mover lead: ${errorMessage}`);
       
       throw error;
     }

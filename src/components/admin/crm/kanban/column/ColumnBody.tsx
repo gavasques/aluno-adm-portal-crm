@@ -22,6 +22,10 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
   // Configurar a zona de drop para a coluna
   const { setNodeRef } = useDroppable({
     id: columnId,
+    data: {
+      type: 'column',
+      columnId: columnId
+    }
   });
 
   const handleLeadClick = (lead: CRMLead) => {
