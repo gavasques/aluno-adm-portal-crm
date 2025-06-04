@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 interface TimeSeriesData {
   date: string;
@@ -14,46 +15,99 @@ interface TimeSeriesChartProps {
   data: TimeSeriesData[];
 }
 
+const chartConfig = {
+  new_leads: {
+    label: "Novos Leads",
+    color: "#3b82f6",
+  },
+  converted_leads: {
+    label: "Convertidos",
+    color: "#10b981",
+  },
+  active_leads: {
+    label: "Ativos",
+    color: "#f59e0b",
+  },
+};
+
 export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data }) => {
+  const formattedData = useMemo(() => {
+    return data.map(item => ({
+      ...item,
+      date: new Date(item.date).toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit' 
+      })
+    }));
+  }, [data]);
+
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Tendência Temporal</CardTitle>
+          <CardDescription>Nenhum dado disponível</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center text-gray-500">
+            Sem dados para exibir
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Tendência Temporal</CardTitle>
         <CardDescription>
-          Evolução de leads nos últimos 30 dias
+          Evolução de leads nos últimos 7 dias
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="new_leads" 
-              stroke="#3b82f6" 
-              strokeWidth={2}
-              name="Novos Leads"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="converted_leads" 
-              stroke="#10b981" 
-              strokeWidth={2}
-              name="Convertidos"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="active_leads" 
-              stroke="#f59e0b" 
-              strokeWidth={2}
-              name="Ativos"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <ChartContainer config={chartConfig} className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={formattedData}>
+              <XAxis 
+                dataKey="date" 
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis 
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line 
+                type="monotone" 
+                dataKey="new_leads" 
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+                stroke="var(--color-new_leads)"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="converted_leads" 
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+                stroke="var(--color-converted_leads)"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="active_leads" 
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+                stroke="var(--color-active_leads)"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
