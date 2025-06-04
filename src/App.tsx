@@ -1,3 +1,4 @@
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from "@/components/ui/toaster";
@@ -30,6 +31,7 @@ import Credits from "./pages/admin/Credits";
 import Tasks from "./pages/admin/Tasks";
 import CRM from "./pages/admin/CRM";
 import CRMLeadDetail from "./pages/admin/CRMLeadDetail";
+import CRMWebhookLogs from "./pages/admin/CRMWebhookLogs";
 import Mentoring from "./pages/admin/Mentoring";
 import MentoringDetail from "./pages/admin/MentoringDetail";
 import AdminMentoringCatalog from "./pages/admin/AdminMentoringCatalog";

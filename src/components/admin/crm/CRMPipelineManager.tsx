@@ -3,23 +3,19 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import PipelineManagerDialog from './pipeline-manager/PipelineManagerDialog';
+import { CRMPipeline } from '@/types/crm.types';
 
 interface CRMPipelineManagerProps {
   onRefresh?: () => void;
-  onPipelineChange?: () => void; // Novo prop para mudanças de pipeline
 }
 
-const CRMPipelineManager = ({ onRefresh, onPipelineChange }: CRMPipelineManagerProps) => {
+const CRMPipelineManager = ({ onRefresh }: CRMPipelineManagerProps) => {
   const [showManager, setShowManager] = useState(false);
+  const [selectedPipeline, setSelectedPipeline] = useState<CRMPipeline | null>(null);
 
   const handleClose = () => {
     setShowManager(false);
-    onRefresh?.();
-  };
-
-  const handlePipelineChange = () => {
-    // Notificar mudanças nos pipelines
-    onPipelineChange?.();
+    setSelectedPipeline(null);
     onRefresh?.();
   };
 
@@ -31,9 +27,9 @@ const CRMPipelineManager = ({ onRefresh, onPipelineChange }: CRMPipelineManagerP
       </Button>
 
       <PipelineManagerDialog
+        pipeline={selectedPipeline}
         open={showManager}
         onOpenChange={handleClose}
-        onPipelineChange={handlePipelineChange}
       />
     </>
   );

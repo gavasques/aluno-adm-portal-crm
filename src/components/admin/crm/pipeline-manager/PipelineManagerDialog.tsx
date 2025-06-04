@@ -59,7 +59,7 @@ const PipelineManagerDialog = ({ pipeline, open, onOpenChange }: PipelineManager
           <div className="flex-1 overflow-y-auto">
             <TabsContent value="columns" className="mt-4">
               <ColumnManager 
-                pipeline={pipeline} 
+                pipelineId={pipeline.id}
                 onRefresh={handleRefresh} 
               />
             </TabsContent>
