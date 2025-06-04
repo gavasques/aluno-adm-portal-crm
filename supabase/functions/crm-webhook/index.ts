@@ -38,12 +38,30 @@ Deno.serve(async (req) => {
   let errorMessage: string | null = null;
   let success = false;
 
-  // Capturar informações da requisição
-  const clientIP = req.headers.get('x-forwarded-for') || 
+  // Capturar informações da requisição com fallbacks seguros
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                    req.headers.get('x-real-ip') || 
-                   'unknown';
+                   req.headers.get('cf-connecting-ip') ||
+                   '127.0.0.1';
   const userAgent = req.headers.get('user-agent') || 'unknown';
   const webhookUrl = req.url;
+
+  // Função para validar e formatar IP
+  const formatIPAddress = (ip: string): string => {
+    // Remove espaços e pega apenas o primeiro IP se houver múltiplos
+    const cleanIP = ip.trim().split(',')[0].trim();
+    
+    // Validação básica de IPv4
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (ipv4Regex.test(cleanIP)) {
+      return cleanIP;
+    }
+    
+    // Se não for um IP válido, retorna localhost
+    return '127.0.0.1';
+  };
+
+  const formattedIP = formatIPAddress(clientIP);
 
   try {
     // Handle CORS preflight requests
@@ -82,10 +100,23 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    payload = await req.json();
+    try {
+      payload = await req.json();
+    } catch (parseError) {
+      responseStatus = 400;
+      errorMessage = 'Invalid JSON payload.';
+      responseBody = { error: errorMessage };
+      return new Response(
+        JSON.stringify(responseBody),
+        { 
+          status: responseStatus, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     
     // Validate required fields
-    if (!payload.name || !payload.email) {
+    if (!payload || !payload.name || !payload.email) {
       responseStatus = 400;
       errorMessage = 'Name and email are required fields.';
       responseBody = { error: errorMessage };
@@ -311,24 +342,48 @@ Deno.serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       );
 
-      await supabase
+      console.log('💾 Saving webhook log:', {
+        pipeline_id: pipelineId,
+        success,
+        status: responseStatus,
+        ip: formattedIP,
+        processing_time: processingTime
+      });
+
+      const logData = {
+        pipeline_id: pipelineId,
+        payload_received: payload || {},
+        response_status: responseStatus,
+        response_body: responseBody,
+        ip_address: formattedIP,
+        user_agent: userAgent || 'unknown',
+        lead_created_id: leadCreatedId,
+        processing_time_ms: processingTime,
+        error_message: errorMessage,
+        success: success,
+        webhook_url: webhookUrl || ''
+      };
+
+      const { error: logError } = await supabase
         .from('crm_webhook_logs')
-        .insert({
-          pipeline_id: pipelineId,
-          payload_received: payload || {},
-          response_status: responseStatus,
-          response_body: responseBody,
-          ip_address: clientIP,
-          user_agent: userAgent,
-          lead_created_id: leadCreatedId,
-          processing_time_ms: processingTime,
-          error_message: errorMessage,
-          success: success,
-          webhook_url: webhookUrl
-        });
+        .insert(logData);
+
+      if (logError) {
+        console.error('❌ Error saving webhook log:', logError);
+        console.error('❌ Log data that failed:', JSON.stringify(logData, null, 2));
+      } else {
+        console.log('✅ Webhook log saved successfully');
+      }
     } catch (logError) {
-      console.error('❌ Error saving webhook log:', logError);
-      // Não interferir na resposta principal mesmo se o log falhar
+      console.error('❌ Critical error in logging block:', logError);
+      console.error('❌ Variables at error time:', {
+        pipelineId,
+        success,
+        responseStatus,
+        formattedIP,
+        processingTime,
+        errorMessage
+      });
     }
   }
 });
