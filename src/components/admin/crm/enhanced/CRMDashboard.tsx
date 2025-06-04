@@ -1,174 +1,268 @@
-
-import React, { useState, useMemo } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Plus, BarChart3, Table } from 'lucide-react';
-import { CRMFilters } from '@/types/crm.types';
-import { DashboardContent } from '../dashboard/DashboardContent';
-import CRMLeadForm from '../CRMLeadForm';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Tabs } from '@/components/ui/tabs';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
+import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
+import { useOptimizedCRMTags } from '@/hooks/crm/useOptimizedCRMTags';
+import { useIntelligentCRMCache } from '@/hooks/crm/useIntelligentCRMCache';
+import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
+import { CRMDashboardHeader } from './CRMDashboardHeader';
+import { CRMDashboardContent } from './CRMDashboardContent';
+import { CacheStatusIndicator } from '../cache/CacheStatusIndicator';
+import { useCRMDashboardState } from './useCRMDashboardState';
+import { motion } from 'framer-motion';
+import { CORSDebugSection } from '@/components/admin/dashboard/CORSDebugSection';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
 }
 
 const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
-  const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
-  const [filters, setFilters] = useState<CRMFilters>({});
-  const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedColumnId, setSelectedColumnId] = useState<string>();
-
-  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
+  const navigate = useNavigate();
+  const [loadingSequence, setLoadingSequence] = React.useState<'pipelines' | 'users' | 'tags' | 'complete'>('pipelines');
+  const [hasError, setHasError] = React.useState(false);
+  const [showDiagnostics, setShowDiagnostics] = React.useState(false);
   
-  // Use o hook de filtros
+  // Cache inteligente
   const {
+    saveKanbanState,
+    loadKanbanState,
+    prefetchCriticalData,
+    getCacheStats
+  } = useIntelligentCRMCache();
+  
+  // Estado do dashboard
+  const {
+    activeTab,
+    setActiveTab,
+    activeView,
+    setActiveView,
+    showFilters,
+    setShowFilters,
+    selectedPipelineId,
+    setSelectedPipelineId,
+    showLeadForm,
+    setShowLeadForm,
+    selectedColumnId,
+    filters,
     searchValue,
     setSearchValue,
-    isDebouncing
-  } = useCRMFiltersState(filters, setFilters);
+    isDebouncing,
+    updateFilter,
+    effectiveFilters,
+    handleCreateLead,
+    handleLeadFormSuccess,
+    handleTagsChange
+  } = useCRMDashboardState();
 
-  // Configurar pipeline padrão sem animação
+  // Carregar estado persistido na inicialização
+  React.useEffect(() => {
+    const persistedState = loadKanbanState();
+    if (persistedState.selectedPipelineId && !selectedPipelineId) {
+      setSelectedPipelineId(persistedState.selectedPipelineId);
+    }
+    if (persistedState.viewMode !== activeView) {
+      setActiveView(persistedState.viewMode);
+    }
+  }, [loadKanbanState, selectedPipelineId, setSelectedPipelineId, activeView, setActiveView]);
+
+  // Salvar estado quando mudanças importantes acontecem
+  React.useEffect(() => {
+    if (selectedPipelineId) {
+      saveKanbanState({
+        selectedPipelineId,
+        filters,
+        viewMode: activeView
+      });
+      
+      // Prefetch dados críticos
+      prefetchCriticalData(selectedPipelineId);
+    }
+  }, [selectedPipelineId, filters, activeView, saveKanbanState, prefetchCriticalData]);
+
+  // Hooks de dados com loading sequencial
+  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
+  
+  // Carregar usuários após os pipelines
+  const { users, loading: usersLoading } = useCRMUsers();
+  
+  // Carregar tags com opção de enabled
+  const { tags, loading: tagsLoading } = useOptimizedCRMTags({
+    enabled: !pipelinesLoading && !usersLoading
+  });
+
+  // Gerenciar sequência de loading
+  React.useEffect(() => {
+    if (pipelinesLoading) {
+      setLoadingSequence('pipelines');
+    } else if (pipelinesLoading === false && usersLoading === false && tagsLoading === false) {
+      if (pipelines.length === 0) {
+        setHasError(true);
+        console.error('❌ [CRM_DASHBOARD] Erro ao carregar dados: Nenhum pipeline encontrado');
+      } else {
+        setLoadingSequence('users');
+        setTimeout(() => {
+          setLoadingSequence('tags');
+          setTimeout(() => {
+            setLoadingSequence('complete');
+          }, 300);
+        }, 300);
+      }
+    }
+  }, [pipelinesLoading, usersLoading, tagsLoading, pipelines.length]);
+
+  // Get pipeline columns from the selected pipeline
+  const pipelineColumns = selectedPipelineId 
+    ? pipelines.find(p => p.id === selectedPipelineId)?.columns || []
+    : [];
+
+  const handleOpenLead = React.useCallback((leadId: string) => {
+    if (onOpenLead) {
+      onOpenLead(leadId);
+    } else {
+      navigate(`/admin/lead/${leadId}`);
+    }
+  }, [navigate, onOpenLead]);
+
+  // Função wrapper para corrigir o tipo do setActiveTab
+  const handleTabChange = React.useCallback((tab: string) => {
+    setActiveTab(tab as 'dashboard' | 'reports' | 'analytics' | 'settings');
+  }, [setActiveTab]);
+
+  // Selecionar primeiro pipeline se nenhum estiver selecionado
   React.useEffect(() => {
     if (pipelines.length > 0 && !selectedPipelineId) {
-      const firstPipeline = pipelines[0];
-      setSelectedPipelineId(firstPipeline.id);
-      setFilters(prev => ({ ...prev, pipeline_id: firstPipeline.id }));
+      setSelectedPipelineId(pipelines[0].id);
     }
-  }, [pipelines, selectedPipelineId]);
+  }, [pipelines, selectedPipelineId, setSelectedPipelineId]);
 
-  const effectiveFilters = useMemo(() => ({
-    ...filters,
-    pipeline_id: selectedPipelineId || undefined
-  }), [filters, selectedPipelineId]);
-
-  const handleCreateLead = (columnId?: string) => {
-    setSelectedColumnId(columnId);
-    setIsFormOpen(true);
-  };
-
-  const handleFormSuccess = () => {
-    setIsFormOpen(false);
-    setSelectedColumnId(undefined);
-  };
-
-  const handleFormCancel = () => {
-    setIsFormOpen(false);
-    setSelectedColumnId(undefined);
-  };
-
-  const handlePipelineChange = (pipelineId: string) => {
-    setSelectedPipelineId(pipelineId);
-    setFilters(prev => ({ ...prev, pipeline_id: pipelineId }));
-  };
-
-  if (pipelinesLoading) {
+  // Renderizar erro se houver problemas
+  if (hasError) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando CRM...</p>
-        </div>
+      <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl w-full space-y-6"
+        >
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-orange-600" />
+                <h2 className="text-lg font-semibold text-orange-800">
+                  Erro ao Carregar Dados do CRM
+                </h2>
+              </div>
+              <p className="text-orange-700 mb-4">
+                Houve um problema ao carregar os dados do CRM. Isso pode ser relacionado 
+                a conectividade ou configuração.
+              </p>
+              <div className="flex gap-3">
+                <Button onClick={() => window.location.reload()} variant="outline">
+                  Recarregar Página
+                </Button>
+                <Button 
+                  onClick={() => setShowDiagnostics(!showDiagnostics)} 
+                  variant="secondary"
+                >
+                  {showDiagnostics ? 'Ocultar' : 'Mostrar'} Diagnóstico
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {showDiagnostics && <CORSDebugSection />}
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Renderizar loading sequencial
+  if (loadingSequence !== 'complete') {
+    const loadingMessages = {
+      pipelines: 'Carregando pipelines...',
+      users: 'Carregando usuários...',
+      tags: 'Carregando tags...'
+    };
+
+    return (
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-3"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="text-gray-600 font-medium">
+            {loadingMessages[loadingSequence]}
+          </span>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Header otimizado */}
-      <div className="flex-none border-b border-gray-200 bg-white p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">CRM</h1>
-          <Button onClick={() => handleCreateLead()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Lead
-          </Button>
-        </div>
-
-        {/* Filtros sem animação */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 flex-1">
-            {/* Pipeline Selection */}
-            <div className="flex items-center gap-2 min-w-[200px]">
-              <select 
-                value={selectedPipelineId} 
-                onChange={(e) => handlePipelineChange(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Selecione um Pipeline</option>
-                {pipelines.map(pipeline => (
-                  <option key={pipeline.id} value={pipeline.id}>
-                    {pipeline.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
-              <input
-                type="text"
-                placeholder="Buscar leads..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                🔍
-              </div>
-              {isDebouncing && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Controles de visualização */}
-          <div className="flex items-center justify-between">
-            <Tabs value={activeView} onValueChange={(value) => setActiveView(value as 'kanban' | 'list')}>
-              <TabsList className="grid w-auto grid-cols-2">
-                <TabsTrigger value="kanban" className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Kanban
-                </TabsTrigger>
-                <TabsTrigger value="list" className="flex items-center gap-2">
-                  <Table className="h-4 w-4" />
-                  Lista
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </div>
+    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] pointer-events-none" />
       </div>
 
-      {/* Conteúdo principal sem animações */}
-      <div className="flex-1 min-h-0">
-        <DashboardContent
-          activeView={activeView}
-          effectiveFilters={effectiveFilters}
+      {/* Indicador de Cache - Fixo no canto superior direito */}
+      <div className="absolute top-4 right-4 z-50">
+        <CacheStatusIndicator />
+      </div>
+
+      <Tabs 
+        value={activeTab} 
+        onValueChange={handleTabChange}
+        className="h-full w-full flex flex-col relative z-10"
+      >
+        {/* Header com Tabs e botão de teste */}
+        <CRMDashboardHeader
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
           selectedPipelineId={selectedPipelineId}
-          onCreateLead={handleCreateLead}
         />
-      </div>
 
-      {/* Modal do formulário */}
-      {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Novo Lead</h2>
-              <CRMLeadForm
-                pipelineId={selectedPipelineId}
-                initialColumnId={selectedColumnId}
-                onSuccess={handleFormSuccess}
-                onCancel={handleFormCancel}
-              />
-            </div>
-          </div>
+        {/* Conteúdo das Tabs - Ocupando toda largura disponível */}
+        <div className="flex-1 w-full">
+          <CRMDashboardContent
+            activeTab={activeTab}
+            activeView={activeView}
+            onViewChange={setActiveView}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            selectedPipelineId={selectedPipelineId}
+            onPipelineChange={setSelectedPipelineId}
+            pipelines={pipelines}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+            isDebouncing={isDebouncing}
+            filters={filters}
+            updateFilter={updateFilter}
+            pipelineColumns={pipelineColumns}
+            users={users}
+            tags={tags}
+            handleTagsChange={handleTagsChange}
+            effectiveFilters={effectiveFilters}
+            onCreateLead={handleCreateLead}
+          />
         </div>
-      )}
+      </Tabs>
+
+      {/* Modal de Lead */}
+      <ModernCRMLeadFormDialog
+        open={showLeadForm}
+        onOpenChange={setShowLeadForm}
+        onSuccess={handleLeadFormSuccess}
+        pipelineId={selectedPipelineId}
+        initialColumnId={selectedColumnId}
+        mode="create"
+      />
     </div>
   );
 };
