@@ -30,25 +30,12 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
     return await measureAsyncOperation('fetch_unified_leads_data', async () => {
       try {
-        console.log('📊 [UNIFIED_CRM] Buscando leads com cache otimizado para pipeline:', debouncedFilters.pipeline_id);
+        console.log('📊 [UNIFIED_CRM] Buscando leads simplificado para pipeline:', debouncedFilters.pipeline_id);
 
-        // Query otimizada para leads com joins necessários
+        // Query SUPER SIMPLIFICADA - apenas a tabela de leads
         let leadsQuery = supabase
           .from('crm_leads')
-          .select(`
-            id, name, email, phone, has_company, sells_on_amazon, works_with_fba,
-            had_contact_with_lv, seeks_private_label, ready_to_invest_3k,
-            calendly_scheduled, what_sells, keep_or_new_niches, amazon_store_link,
-            amazon_state, amazon_tax_regime, main_doubts, calendly_link,
-            pipeline_id, column_id, responsible_id, created_by, notes, status,
-            scheduled_contact_date, created_at, updated_at,
-            pipeline:crm_pipelines(id, name),
-            column:crm_pipeline_columns(id, name, color),
-            responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-            tags:crm_lead_tags(
-              tag:crm_tags(id, name, color, created_at)
-            )
-          `)
+          .select('*')
           .eq('pipeline_id', debouncedFilters.pipeline_id);
 
         // Aplicar filtros condicionalmente
@@ -68,109 +55,125 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           leadsQuery = leadsQuery.or(`name.ilike.%${debouncedFilters.search}%,email.ilike.%${debouncedFilters.search}%`);
         }
 
-        // Executar queries em paralelo para melhor performance
-        const [leadsResult, pendingContactsResult, completedContactsResult] = await Promise.allSettled([
-          measureAsyncOperation('fetch_leads', async () => {
-            const result = await leadsQuery.order('created_at', { ascending: false });
-            return result;
-          }),
-          
-          measureAsyncOperation('fetch_pending_contacts', async () => {
-            const result = await supabase
-              .from('crm_lead_contacts')
-              .select(`
-                id, lead_id, contact_type, contact_reason, contact_date, status,
-                notes, responsible_id, completed_by, completed_at, created_at, updated_at,
-                responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-              `)
-              .eq('status', 'pending')
-              .order('contact_date', { ascending: true });
-            return result;
-          }),
-          
-          measureAsyncOperation('fetch_completed_contacts', async () => {
-            const result = await supabase
-              .from('crm_lead_contacts')
-              .select(`
-                id, lead_id, contact_type, contact_reason, contact_date, status,
-                notes, responsible_id, completed_by, completed_at, created_at, updated_at,
-                responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-              `)
-              .eq('status', 'completed')
-              .not('completed_at', 'is', null)
-              .order('completed_at', { ascending: false });
-            return result;
-          })
-        ]);
+        console.log('🔍 [UNIFIED_CRM] Executando query simplificada...');
 
-        if (leadsResult.status === 'rejected') {
-          throw leadsResult.reason;
+        const { data: leads, error: leadsError } = await leadsQuery
+          .order('created_at', { ascending: false });
+
+        if (leadsError) {
+          console.error('❌ [UNIFIED_CRM] Erro na query de leads:', leadsError);
+          throw leadsError;
         }
 
-        // Verificar se leadsResult.value tem a estrutura esperada
-        const leadsResponse = leadsResult.value as { data: any[] | null; error: any };
-        if (leadsResponse.error) throw leadsResponse.error;
-
-        const leads = leadsResponse.data;
         console.log('📊 [UNIFIED_CRM] Leads encontrados:', leads?.length || 0);
 
         if (!leads || leads.length === 0) {
           return [];
         }
 
-        // Transformar leads usando service centralizado
-        const transformedLeads = leads.map(transformLeadData);
-        const leadIds = transformedLeads.map(lead => lead.id);
+        // Buscar dados relacionados SEPARADAMENTE para evitar JOINs
+        const leadIds = leads.map(lead => lead.id);
 
-        // Processar contatos de forma otimizada
-        const pendingContacts = pendingContactsResult.status === 'fulfilled' && 
-          (pendingContactsResult.value as { data: any[] | null })?.data ? 
-          (pendingContactsResult.value as { data: any[] }).data
-            .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'pending')
-            .map(contact => ({
-              ...contact,
-              contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-              status: contact.status as 'pending' | 'completed' | 'overdue'
-            })) : [];
+        // Buscar pipelines
+        const { data: pipelines } = await supabase
+          .from('crm_pipelines')
+          .select('*');
 
-        const completedContacts = completedContactsResult.status === 'fulfilled' && 
-          (completedContactsResult.value as { data: any[] | null })?.data ? 
-          (completedContactsResult.value as { data: any[] }).data
-            .filter(contact => leadIds.includes(contact.lead_id) && contact.status === 'completed' && contact.completed_at)
-            .map(contact => ({
-              ...contact,
-              contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-              status: contact.status as 'pending' | 'completed' | 'overdue'
-            })) : [];
+        // Buscar colunas
+        const { data: columns } = await supabase
+          .from('crm_pipeline_columns')
+          .select('*');
 
-        // Agrupar contatos por lead de forma eficiente usando Map para melhor performance
-        const pendingContactsByLead = pendingContacts.reduce((acc, contact) => {
-          if (!acc[contact.lead_id]) acc[contact.lead_id] = [];
-          acc[contact.lead_id].push(contact);
+        // Buscar responsáveis
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, email');
+
+        // Buscar tags dos leads
+        const { data: leadTags } = await supabase
+          .from('crm_lead_tags')
+          .select(`
+            lead_id,
+            tag:crm_tags(id, name, color, created_at)
+          `)
+          .in('lead_id', leadIds);
+
+        // Buscar contatos pendentes
+        const { data: pendingContacts } = await supabase
+          .from('crm_lead_contacts')
+          .select('*')
+          .in('lead_id', leadIds)
+          .eq('status', 'pending')
+          .order('contact_date', { ascending: true });
+
+        // Buscar último contato completado
+        const { data: completedContacts } = await supabase
+          .from('crm_lead_contacts')
+          .select('*')
+          .in('lead_id', leadIds)
+          .eq('status', 'completed')
+          .not('completed_at', 'is', null)
+          .order('completed_at', { ascending: false });
+
+        console.log('🔗 [UNIFIED_CRM] Dados relacionados carregados:', {
+          pipelines: pipelines?.length || 0,
+          columns: columns?.length || 0,
+          profiles: profiles?.length || 0,
+          leadTags: leadTags?.length || 0,
+          pendingContacts: pendingContacts?.length || 0,
+          completedContacts: completedContacts?.length || 0
+        });
+
+        // Criar mapas para facilitar a busca
+        const pipelinesMap = new Map(pipelines?.map(p => [p.id, p]) || []);
+        const columnsMap = new Map(columns?.map(c => [c.id, c]) || []);
+        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        
+        // Agrupar tags por lead
+        const tagsByLead = leadTags?.reduce((acc, item) => {
+          if (!acc[item.lead_id]) acc[item.lead_id] = [];
+          acc[item.lead_id].push(item.tag);
           return acc;
-        }, {} as Record<string, CRMLeadContact[]>);
+        }, {} as Record<string, any[]>) || {};
 
-        const lastCompletedContactsByLead = completedContacts.reduce((acc, contact) => {
+        // Agrupar contatos por lead
+        const pendingContactsByLead = pendingContacts?.reduce((acc, contact) => {
+          if (!acc[contact.lead_id]) acc[contact.lead_id] = [];
+          acc[contact.lead_id].push({
+            ...contact,
+            responsible: profilesMap.get(contact.responsible_id)
+          });
+          return acc;
+        }, {} as Record<string, any[]>) || {};
+
+        const lastCompletedContactsByLead = completedContacts?.reduce((acc, contact) => {
           if (!acc[contact.lead_id]) {
-            acc[contact.lead_id] = contact;
+            acc[contact.lead_id] = {
+              ...contact,
+              responsible: profilesMap.get(contact.responsible_id)
+            };
           }
           return acc;
-        }, {} as Record<string, CRMLeadContact>);
+        }, {} as Record<string, any>) || {};
 
-        // Combinar leads com contatos
-        let leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
+        // Montar leads com dados relacionados
+        const leadsWithContactsData: LeadWithContacts[] = leads.map(lead => ({
           ...lead,
+          pipeline: pipelinesMap.get(lead.pipeline_id),
+          column: columnsMap.get(lead.column_id),
+          responsible: profilesMap.get(lead.responsible_id),
+          tags: tagsByLead[lead.id] || [],
           pending_contacts: pendingContactsByLead[lead.id] || [],
           last_completed_contact: lastCompletedContactsByLead[lead.id]
         }));
 
         // Aplicar filtros usando services
-        leadsWithContactsData = filterLeadsByContact(leadsWithContactsData, debouncedFilters.contact_filter);
-        leadsWithContactsData = filterLeadsByTags(leadsWithContactsData, debouncedFilters.tag_ids);
+        let filteredLeads = filterLeadsByContact(leadsWithContactsData, debouncedFilters.contact_filter);
+        filteredLeads = filterLeadsByTags(filteredLeads, debouncedFilters.tag_ids);
 
-        console.log('📊 [UNIFIED_CRM] Leads processados com filtros e cache otimizado:', leadsWithContactsData.length);
+        console.log('✅ [UNIFIED_CRM] Leads processados com sucesso:', filteredLeads.length);
         
-        return leadsWithContactsData;
+        return filteredLeads;
 
       } catch (error) {
         console.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM:', error);
@@ -183,14 +186,13 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
     queryKey: ['unified-crm-leads', debouncedFilters],
     queryFn: fetchUnifiedLeadsData,
     enabled: true,
-    ...cacheStrategy, // Aplicar estratégia de cache inteligente
+    ...cacheStrategy,
   });
 
   // Agrupar leads por coluna de forma memoizada com otimização
   const leadsByColumn = useMemo(() => {
     const grouped: Record<string, LeadWithContacts[]> = {};
     
-    // Usar forEach para melhor performance em arrays grandes
     leadsWithContacts.forEach(lead => {
       if (lead.column_id) {
         if (!grouped[lead.column_id]) grouped[lead.column_id] = [];
