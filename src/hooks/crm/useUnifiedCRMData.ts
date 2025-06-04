@@ -1,269 +1,129 @@
 
-import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead, CRMFilters, CRMLeadContact, LeadWithContacts, LeadStatus } from '@/types/crm.types';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useCRMDataTransformService } from './services/useCRMDataTransformService';
-import { useCRMLeadFilters } from './useCRMLeadFilters';
-import { useIntelligentCache } from './useIntelligentCache';
-import { useIntelligentCRMCache } from './useIntelligentCRMCache';
-import { measureAsyncOperation } from '@/utils/performanceMonitor';
-import { debugLogger } from '@/utils/debug-logger';
+import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
+import { useMemo } from 'react';
 
-export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
-  // Debounce search para evitar queries excessivas
-  const [debouncedSearch] = useDebouncedValue(filters.search || '', 300);
-  const debouncedFilters = { ...filters, search: debouncedSearch };
-
-  // Services para transformação e filtros
-  const { transformLeadData } = useCRMDataTransformService();
-  const { filterLeadsByContact, filterLeadsByTags } = useCRMLeadFilters();
-  const { getCacheStrategy, optimizeCache } = useIntelligentCache();
+export const useUnifiedCRMData = (filters: CRMFilters) => {
+  const queryKey = ['unified-crm-leads', filters];
   
-  // Cache inteligente
   const {
-    getCachedLeadsByColumn,
-    cacheLeadsByColumn,
-    addOfflineOperation
-  } = useIntelligentCRMCache();
+    data: leadsWithContacts = [],
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      console.log('🔍 [UNIFIED_CRM_DATA] Buscando leads com filtros:', filters);
+      
+      // Query simplificada sem FULL JOIN
+      let query = supabase
+        .from('crm_leads')
+        .select(`
+          *,
+          pipeline:crm_pipelines(id, name),
+          column:crm_pipeline_columns(id, name, color),
+          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
+          loss_reason:crm_loss_reasons(id, name),
+          tags:crm_lead_tags(
+            tag:crm_tags(id, name, color)
+          )
+        `);
 
-  // Estratégia de cache inteligente
-  const cacheStrategy = getCacheStrategy('unified-crm-leads', debouncedFilters);
+      // Aplicar filtros
+      if (filters.pipeline_id) {
+        query = query.eq('pipeline_id', filters.pipeline_id);
+      }
+      
+      if (filters.column_id) {
+        query = query.eq('column_id', filters.column_id);
+      }
+      
+      if (filters.responsible_id) {
+        query = query.eq('responsible_id', filters.responsible_id);
+      }
+      
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+      
+      if (filters.search) {
+        query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+      }
 
-  // Função para validar e converter status
-  const validateLeadStatus = (status: string): LeadStatus => {
-    const validStatuses: LeadStatus[] = ['aberto', 'ganho', 'perdido'];
-    return validStatuses.includes(status as LeadStatus) ? (status as LeadStatus) : 'aberto';
-  };
+      const { data: leads, error: leadsError } = await query.order('created_at', { ascending: false });
+      
+      if (leadsError) {
+        console.error('❌ [UNIFIED_CRM_DATA] Erro ao buscar leads:', leadsError);
+        throw leadsError;
+      }
 
-  const fetchUnifiedLeadsData = useCallback(async (): Promise<LeadWithContacts[]> => {
-    if (!debouncedFilters.pipeline_id) {
-      debugLogger.info('⚠️ [UNIFIED_CRM] Nenhum pipeline_id fornecido, aguardando seleção...', {
-        component: 'useUnifiedCRMData',
-        operation: 'fetchUnifiedLeadsData'
+      console.log(`✅ [UNIFIED_CRM_DATA] ${leads?.length || 0} leads encontrados`);
+
+      // Buscar contatos pendentes para cada lead (query separada para evitar joins complexos)
+      const leadIds = leads?.map(lead => lead.id) || [];
+      
+      let contactsData = [];
+      if (leadIds.length > 0) {
+        const { data: contacts } = await supabase
+          .from('crm_lead_contacts')
+          .select(`
+            *,
+            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+          `)
+          .in('lead_id', leadIds)
+          .eq('status', 'pending')
+          .order('contact_date', { ascending: true });
+        
+        contactsData = contacts || [];
+      }
+
+      // Processar dados para incluir contatos
+      const processedLeads: LeadWithContacts[] = (leads || []).map(lead => ({
+        ...lead,
+        tags: lead.tags?.map((tagWrapper: any) => tagWrapper.tag).filter(Boolean) || [],
+        pending_contacts: contactsData.filter(contact => contact.lead_id === lead.id),
+        last_completed_contact: undefined // Pode ser implementado depois se necessário
+      }));
+
+      console.log('🎯 [UNIFIED_CRM_DATA] Leads processados:', {
+        totalLeads: processedLeads.length,
+        leadsWithContacts: processedLeads.filter(l => l.pending_contacts.length > 0).length
       });
-      return [];
-    }
 
-    // Tentar cache primeiro quando offline
-    if (!navigator.onLine) {
-      const cached = getCachedLeadsByColumn(debouncedFilters.pipeline_id);
-      if (cached) {
-        debugLogger.info('📱 [UNIFIED_CRM] Usando dados em cache (modo offline)', {
-          component: 'useUnifiedCRMData',
-          operation: 'fetchFromCache',
-          pipelineId: debouncedFilters.pipeline_id
-        });
-        
-        // Converter para array simples
-        const leadsArray: LeadWithContacts[] = [];
-        Object.values(cached).forEach(columnLeads => {
-          leadsArray.push(...columnLeads);
-        });
-        return leadsArray;
-      }
-    }
-
-    return await measureAsyncOperation('fetch_unified_leads_data', async () => {
-      try {
-        debugLogger.info('📊 [UNIFIED_CRM] Buscando leads SIMPLIFICADO para pipeline', {
-          component: 'useUnifiedCRMData',
-          operation: 'fetchUnifiedLeadsData',
-          pipelineId: debouncedFilters.pipeline_id
-        });
-
-        // QUERY ULTRA SIMPLIFICADA - apenas leads básicos
-        let leadsQuery = supabase
-          .from('crm_leads')
-          .select('*')
-          .eq('pipeline_id', debouncedFilters.pipeline_id);
-
-        // Aplicar filtros condicionalmente
-        if (debouncedFilters.column_id) {
-          leadsQuery = leadsQuery.eq('column_id', debouncedFilters.column_id);
-        }
-        
-        if (debouncedFilters.responsible_id) {
-          leadsQuery = leadsQuery.eq('responsible_id', debouncedFilters.responsible_id);
-        }
-
-        if (debouncedFilters.status) {
-          leadsQuery = leadsQuery.eq('status', debouncedFilters.status);
-        }
-        
-        if (debouncedFilters.search) {
-          leadsQuery = leadsQuery.or(`name.ilike.%${debouncedFilters.search}%,email.ilike.%${debouncedFilters.search}%`);
-        }
-
-        debugLogger.info('🔍 [UNIFIED_CRM] Executando query simplificada...', {
-          component: 'useUnifiedCRMData',
-          operation: 'executeQuery'
-        });
-
-        const { data: leads, error: leadsError } = await leadsQuery
-          .order('created_at', { ascending: false });
-
-        if (leadsError) {
-          debugLogger.error('❌ [UNIFIED_CRM] Erro na query de leads', {
-            component: 'useUnifiedCRMData',
-            operation: 'fetchLeads',
-            error: leadsError
-          });
-          throw leadsError;
-        }
-
-        debugLogger.info('📊 [UNIFIED_CRM] Leads encontrados', {
-          component: 'useUnifiedCRMData',
-          operation: 'fetchLeads',
-          leadsCount: leads?.length || 0
-        });
-
-        if (!leads || leads.length === 0) {
-          return [];
-        }
-
-        // Buscar dados relacionados SEPARADAMENTE - SEM JOINS COMPLEXOS
-        debugLogger.info('🔗 [UNIFIED_CRM] Buscando dados relacionados separadamente...', {
-          component: 'useUnifiedCRMData',
-          operation: 'fetchRelatedData'
-        });
-
-        // Buscar pipelines
-        const { data: pipelines } = await supabase
-          .from('crm_pipelines')
-          .select('id, name, description, is_active, sort_order, created_at, updated_at');
-
-        // Buscar colunas
-        const { data: columns } = await supabase
-          .from('crm_pipeline_columns')
-          .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at');
-
-        // Buscar responsáveis
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, name, email');
-
-        debugLogger.info('✅ [UNIFIED_CRM] Dados relacionados carregados', {
-          component: 'useUnifiedCRMData',
-          operation: 'fetchRelatedData',
-          pipelines: pipelines?.length || 0,
-          columns: columns?.length || 0,
-          profiles: profiles?.length || 0
-        });
-
-        // Criar mapas para facilitar a busca
-        const pipelinesMap = new Map(pipelines?.map(p => [p.id, p]) || []);
-        const columnsMap = new Map(columns?.map(c => [c.id, c]) || []);
-        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-        // Montar leads com dados relacionados
-        const leadsWithContactsData: LeadWithContacts[] = leads.map(lead => ({
-          ...lead,
-          status: validateLeadStatus(lead.status),
-          pipeline: pipelinesMap.get(lead.pipeline_id),
-          column: columnsMap.get(lead.column_id),
-          responsible: profilesMap.get(lead.responsible_id),
-          tags: [], // Simplificado - buscar separadamente se necessário
-          pending_contacts: [], // Simplificado - buscar separadamente se necessário
-          last_completed_contact: undefined // Simplificado
-        }));
-
-        debugLogger.info('✅ [UNIFIED_CRM] Leads processados com sucesso', {
-          component: 'useUnifiedCRMData',
-          operation: 'processLeads',
-          finalCount: leadsWithContactsData.length
-        });
-        
-        return leadsWithContactsData;
-
-      } catch (error) {
-        debugLogger.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM', {
-          component: 'useUnifiedCRMData',
-          operation: 'fetchUnifiedLeadsData',
-          error: error instanceof Error ? error.message : String(error)
-        });
-        
-        // Em caso de erro, tentar usar cache como fallback
-        if (debouncedFilters.pipeline_id) {
-          const cached = getCachedLeadsByColumn(debouncedFilters.pipeline_id);
-          if (cached) {
-            debugLogger.info('🔄 [UNIFIED_CRM] Usando cache como fallback após erro', {
-              component: 'useUnifiedCRMData',
-              operation: 'fallbackToCache'
-            });
-            
-            const leadsArray: LeadWithContacts[] = [];
-            Object.values(cached).forEach(columnLeads => {
-              leadsArray.push(...columnLeads);
-            });
-            return leadsArray;
-          }
-        }
-        
-        throw error;
-      }
-    });
-  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags, validateLeadStatus, getCachedLeadsByColumn]);
-
-  const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['unified-crm-leads', debouncedFilters],
-    queryFn: fetchUnifiedLeadsData,
-    enabled: true,
-    ...cacheStrategy,
+      return processedLeads;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  // Agrupar leads por coluna de forma memoizada
+  // Agrupar leads por coluna
   const leadsByColumn = useMemo(() => {
-    const grouped: Record<string, LeadWithContacts[]> = {};
-    
-    leadsWithContacts.forEach(lead => {
-      if (lead.column_id) {
-        if (!grouped[lead.column_id]) grouped[lead.column_id] = [];
-        grouped[lead.column_id].push(lead);
+    const grouped = leadsWithContacts.reduce((acc, lead) => {
+      const columnId = lead.column_id || 'sem-coluna';
+      if (!acc[columnId]) {
+        acc[columnId] = [];
       }
-    });
-    
-    // Cache dos dados agrupados
-    if (debouncedFilters.pipeline_id && Object.keys(grouped).length > 0) {
-      cacheLeadsByColumn(debouncedFilters.pipeline_id, grouped);
-    }
-    
-    debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna', {
-      component: 'useUnifiedCRMData',
-      operation: 'groupLeadsByColumn',
-      totalColumns: Object.keys(grouped).length,
-      distribution: Object.entries(grouped).map(([columnId, leads]) => ({
-        columnId,
-        count: leads.length
+      acc[columnId].push(lead);
+      return acc;
+    }, {} as Record<string, LeadWithContacts[]>);
+
+    console.log('📊 [UNIFIED_CRM_DATA] Leads agrupados por coluna:', {
+      colunas: Object.keys(grouped).length,
+      distribuicao: Object.entries(grouped).map(([col, leads]) => ({
+        coluna: col,
+        quantidade: leads.length
       }))
     });
-    
+
     return grouped;
-  }, [leadsWithContacts, debouncedFilters.pipeline_id, cacheLeadsByColumn]);
-
-  // Otimizar cache quando os dados estiverem prontos
-  React.useEffect(() => {
-    if (leadsWithContacts.length > 0 && !isLoading) {
-      optimizeCache(leadsWithContacts);
-    }
-  }, [leadsWithContacts, isLoading, optimizeCache]);
-
-  // Salvar operações em queue quando offline
-  React.useEffect(() => {
-    if (!navigator.onLine && error) {
-      // Adicionar uma operação de retry para quando voltar online
-      addOfflineOperation({
-        type: 'move_lead', // Tipo genérico para refetch
-        data: { filters: debouncedFilters }
-      });
-    }
-  }, [error, debouncedFilters, addOfflineOperation]);
+  }, [leadsWithContacts]);
 
   return {
     leadsWithContacts,
     leadsByColumn,
-    loading: isLoading,
+    loading,
     error,
     refetch
   };
