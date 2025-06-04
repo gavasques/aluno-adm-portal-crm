@@ -15,7 +15,7 @@ export const useLeadFormData = (pipelineId: string) => {
   // Converter users para o formato esperado
   const responsibles = users.map(user => ({
     id: user.id,
-    name: user.name || user.email
+    name: user.name || user.email || 'Usuário sem nome'
   }));
 
   const loading = pipelinesLoading || usersLoading;
@@ -31,10 +31,23 @@ export const useLeadFormData = (pipelineId: string) => {
     usersLoading
   });
 
+  // Validação adicional
+  if (!loading && pipelineColumns.length === 0) {
+    debugLogger.warn('⚠️ [LEAD_FORM_DATA] Nenhuma coluna encontrada para o pipeline', {
+      component: 'useLeadFormData',
+      pipelineId,
+      totalColumns: columns.length,
+      allColumns: columns.map(c => ({ id: c.id, pipeline_id: c.pipeline_id, name: c.name }))
+    });
+  }
+
   return {
     pipelines,
     pipelineColumns,
     responsibles,
-    loading
+    loading,
+    // Dados de depuração
+    hasValidPipeline: pipelineColumns.length > 0,
+    hasResponsibles: responsibles.length > 0
   };
 };

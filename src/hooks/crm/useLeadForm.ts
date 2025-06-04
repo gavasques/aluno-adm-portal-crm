@@ -80,34 +80,51 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
         }
       });
 
+      // Validar campos obrigatórios
+      if (!leadData.name || !leadData.email) {
+        throw new Error('Nome e email são obrigatórios');
+      }
+
+      if (!leadData.pipeline_id) {
+        throw new Error('Pipeline é obrigatório');
+      }
+
+      if (!leadData.column_id) {
+        throw new Error('Coluna é obrigatória');
+      }
+
       const insertData = {
-        name: leadData.name,
-        email: leadData.email,
-        phone: leadData.phone,
-        has_company: leadData.has_company,
-        what_sells: leadData.what_sells,
-        keep_or_new_niches: leadData.keep_or_new_niches,
-        sells_on_amazon: leadData.sells_on_amazon,
-        amazon_store_link: leadData.amazon_store_link,
-        amazon_state: leadData.amazon_state,
-        amazon_tax_regime: leadData.amazon_tax_regime,
-        works_with_fba: leadData.works_with_fba,
-        had_contact_with_lv: leadData.had_contact_with_lv,
-        seeks_private_label: leadData.seeks_private_label,
-        main_doubts: leadData.main_doubts,
-        ready_to_invest_3k: leadData.ready_to_invest_3k,
-        calendly_scheduled: leadData.calendly_scheduled,
-        calendly_link: leadData.calendly_link,
+        name: leadData.name.trim(),
+        email: leadData.email.trim().toLowerCase(),
+        phone: leadData.phone?.trim() || null,
+        has_company: Boolean(leadData.has_company),
+        what_sells: leadData.what_sells?.trim() || null,
+        keep_or_new_niches: leadData.keep_or_new_niches?.trim() || null,
+        sells_on_amazon: Boolean(leadData.sells_on_amazon),
+        amazon_store_link: leadData.amazon_store_link?.trim() || null,
+        amazon_state: leadData.amazon_state?.trim() || null,
+        amazon_tax_regime: leadData.amazon_tax_regime?.trim() || null,
+        works_with_fba: Boolean(leadData.works_with_fba),
+        had_contact_with_lv: Boolean(leadData.had_contact_with_lv),
+        seeks_private_label: Boolean(leadData.seeks_private_label),
+        main_doubts: leadData.main_doubts?.trim() || null,
+        ready_to_invest_3k: Boolean(leadData.ready_to_invest_3k),
+        calendly_scheduled: Boolean(leadData.calendly_scheduled),
+        calendly_link: leadData.calendly_link?.trim() || null,
         pipeline_id: leadData.pipeline_id,
         column_id: leadData.column_id,
-        responsible_id: leadData.responsible_id,
-        notes: leadData.notes
+        responsible_id: leadData.responsible_id || null,
+        notes: leadData.notes?.trim() || null,
+        status: 'aberto' as const
       };
 
       debugLogger.info('📤 [LEAD_FORM] Inserindo no Supabase', {
         component: 'useLeadForm',
         operation: 'supabaseInsert',
-        insertData
+        insertData: {
+          ...insertData,
+          email: '***@***', // Ocultar email nos logs
+        }
       });
 
       const { data, error } = await supabase
@@ -122,9 +139,24 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
           operation: 'supabaseInsert',
           error: error.message,
           code: error.code,
-          details: error.details
+          details: error.details,
+          hint: error.hint
         });
-        throw error;
+        
+        // Tratamento específico de erros
+        if (error.code === '23505') {
+          throw new Error('Já existe um lead com este email');
+        } else if (error.code === '23503') {
+          throw new Error('Pipeline ou coluna inválida');
+        } else if (error.code === '23514') {
+          throw new Error('Dados inválidos fornecidos');
+        } else {
+          throw new Error(`Erro ao criar lead: ${error.message}`);
+        }
+      }
+
+      if (!data) {
+        throw new Error('Nenhum dado retornado após criação do lead');
       }
 
       debugLogger.info('✅ [LEAD_FORM] Lead criado com sucesso', {
@@ -160,6 +192,21 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
           responsible_id: data.responsible_id
         }
       });
+
+      // Validação de campos obrigatórios
+      if (!data.name?.trim()) {
+        throw new Error('Nome é obrigatório');
+      }
+
+      if (!data.email?.trim()) {
+        throw new Error('Email é obrigatório');
+      }
+
+      // Validação de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email.trim())) {
+        throw new Error('Email inválido');
+      }
 
       const columnId = data.column_id || initialColumnId || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
       
@@ -203,8 +250,8 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
           ...data,
           pipeline_id: pipelineId,
           column_id: columnId,
-          name: data.name!,
-          email: data.email!,
+          name: data.name.trim(),
+          email: data.email.trim(),
         });
 
         // Adicionar tags
@@ -259,7 +306,9 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
         operation: 'onSubmit',
         error: error instanceof Error ? error.message : String(error)
       });
-      toast.error(`Erro ao ${mode === 'create' ? 'criar' : 'atualizar'} lead: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao ${mode === 'create' ? 'criar' : 'atualizar'} lead: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
