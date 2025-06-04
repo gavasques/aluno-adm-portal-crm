@@ -1,47 +1,40 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useCRMPipelines } from './useCRMPipelines';
+import { useCRMUsers } from './useCRMUsers';
+import { debugLogger } from '@/utils/debug-logger';
 
-interface FormDataHook {
-  responsibles: Array<{id: string, name: string}>;
-  pipelineColumns: Array<{id: string, name: string, sort_order: number}>;
-  loading: boolean;
-}
+export const useLeadFormData = (pipelineId: string) => {
+  const { pipelines, columns, loading: pipelinesLoading } = useCRMPipelines();
+  const { users, loading: usersLoading } = useCRMUsers();
 
-export const useLeadFormData = (pipelineId: string): FormDataHook => {
-  const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
-  const [loading, setLoading] = useState(true);
-  const { columns } = useCRMPipelines();
+  // Filtrar colunas do pipeline específico
+  const pipelineColumns = columns.filter(col => 
+    col.pipeline_id === pipelineId && col.is_active
+  ).sort((a, b) => a.sort_order - b.sort_order);
 
-  const pipelineColumns = columns
-    .filter(col => col.pipeline_id === pipelineId)
-    .sort((a, b) => a.sort_order - b.sort_order);
+  // Converter users para o formato esperado
+  const responsibles = users.map(user => ({
+    id: user.id,
+    name: user.name || user.email
+  }));
 
-  useEffect(() => {
-    const fetchResponsibles = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, name')
-          .eq('role', 'Admin')
-          .order('name');
+  const loading = pipelinesLoading || usersLoading;
 
-        if (error) throw error;
-        setResponsibles(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar responsáveis:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResponsibles();
-  }, []);
+  debugLogger.info('📊 [LEAD_FORM_DATA] Dados carregados', {
+    component: 'useLeadFormData',
+    pipelineId,
+    loading,
+    pipelinesCount: pipelines.length,
+    pipelineColumnsCount: pipelineColumns.length,
+    responsiblesCount: responsibles.length,
+    pipelinesLoading,
+    usersLoading
+  });
 
   return {
-    responsibles,
+    pipelines,
     pipelineColumns,
+    responsibles,
     loading
   };
 };

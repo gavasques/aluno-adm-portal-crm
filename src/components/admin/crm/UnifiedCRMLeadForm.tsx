@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -12,10 +10,10 @@ import { LeadQualificationSection } from './form-sections/LeadQualificationSecti
 import { ConditionalLeadAmazonSection } from './form-sections/ConditionalLeadAmazonSection';
 import { LeadManagementSection } from './form-sections/LeadManagementSection';
 import { LeadNotesSection } from './form-sections/LeadNotesSection';
-import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
+import { useLeadForm } from '@/hooks/crm/useLeadForm';
+import { useLeadFormData } from '@/hooks/crm/useLeadFormData';
 import { CRMLead } from '@/types/crm.types';
-import { leadFormSchema, LeadFormData } from '@/utils/crm-validation-schemas';
+import { debugLogger } from '@/utils/debug-logger';
 
 interface UnifiedCRMLeadFormProps {
   pipelineId: string;
@@ -36,68 +34,83 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
   mode,
   isOpen = true
 }) => {
-  // Buscar dados necessários
-  const { columns } = useCRMPipelines();
-  const { users } = useCRMUsers();
-
-  // Filtrar colunas do pipeline específico
-  const pipelineColumns = columns.filter(col => 
-    col.pipeline_id === pipelineId && col.is_active
-  ).sort((a, b) => a.sort_order - b.sort_order);
-
-  // Converter users para o formato esperado
-  const responsibles = users.map(user => ({
-    id: user.id,
-    name: user.name || user.email
-  }));
-
-  const form = useForm<LeadFormData>({
-    resolver: zodResolver(leadFormSchema),
-    defaultValues: {
-      name: lead?.name || '',
-      email: lead?.email || '',
-      phone: lead?.phone || '',
-      column_id: initialColumnId || lead?.column_id || '',
-      responsible_id: lead?.responsible_id || '',
-      has_company: lead?.has_company || false,
-      sells_on_amazon: lead?.sells_on_amazon || false,
-      works_with_fba: lead?.works_with_fba || false,
-      seeks_private_label: lead?.seeks_private_label || false,
-      ready_to_invest_3k: lead?.ready_to_invest_3k || false,
-      calendly_scheduled: lead?.calendly_scheduled || false,
-      what_sells: lead?.what_sells || '',
-      keep_or_new_niches: lead?.keep_or_new_niches || '',
-      amazon_store_link: lead?.amazon_store_link || '',
-      amazon_state: lead?.amazon_state || '',
-      amazon_tax_regime: lead?.amazon_tax_regime || '',
-      main_doubts: lead?.main_doubts || '',
-      calendly_link: lead?.calendly_link || '',
-      notes: lead?.notes || '',
-      tags: lead?.tags?.map(tag => tag.id) || []
-    }
+  debugLogger.info('🎯 [UNIFIED_FORM] Inicializando formulário', {
+    component: 'UnifiedCRMLeadForm',
+    mode,
+    pipelineId,
+    initialColumnId,
+    leadId: lead?.id
   });
 
-  const onSubmit = async (data: LeadFormData) => {
-    try {
-      console.log('🔄 [UNIFIED_FORM] Submetendo formulário:', {
-        mode,
-        leadId: lead?.id,
-        data
-      });
-
-      // Aqui integraria com o hook de submissão unificado
-      // Por agora, simular sucesso
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('✅ [UNIFIED_FORM] Lead salvo com sucesso');
-      onSuccess();
-      
-    } catch (error) {
-      console.error('❌ [UNIFIED_FORM] Erro ao salvar lead:', error);
-    }
-  };
+  // Buscar dados necessários para o formulário
+  const { responsibles, pipelineColumns, loading: dataLoading } = useLeadFormData(pipelineId);
+  
+  // Hook principal do formulário com lógica de salvamento
+  const { form, loading: formLoading, onSubmit } = useLeadForm({
+    pipelineId,
+    initialColumnId,
+    lead,
+    onSuccess,
+    mode
+  });
 
   const sellsOnAmazon = form.watch('sells_on_amazon');
+  const isLoading = dataLoading || formLoading;
+
+  debugLogger.info('📊 [UNIFIED_FORM] Estado do formulário', {
+    component: 'UnifiedCRMLeadForm',
+    dataLoading,
+    formLoading,
+    pipelineColumnsCount: pipelineColumns.length,
+    responsiblesCount: responsibles.length,
+    sellsOnAmazon
+  });
+
+  const handleSubmit = () => {
+    debugLogger.info('🚀 [UNIFIED_FORM] Iniciando submissão do formulário', {
+      component: 'UnifiedCRMLeadForm',
+      mode,
+      pipelineId
+    });
+
+    form.handleSubmit((data) => {
+      debugLogger.info('📤 [UNIFIED_FORM] Dados do formulário para submissão', {
+        component: 'UnifiedCRMLeadForm',
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          column_id: data.column_id,
+          responsible_id: data.responsible_id,
+          pipelineId
+        }
+      });
+      
+      onSubmit(data, pipelineColumns);
+    })();
+  };
+
+  if (dataLoading) {
+    debugLogger.info('⏳ [UNIFIED_FORM] Carregando dados do formulário...', {
+      component: 'UnifiedCRMLeadForm'
+    });
+    
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {mode === 'create' ? 'Novo Lead' : 'Editar Lead'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3">Carregando dados do formulário...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
@@ -109,7 +122,7 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Seção de Informações Básicas */}
             <LeadBasicInfoSection form={form} />
             
@@ -147,11 +160,19 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
 
             {/* Botões de Ação */}
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onCancel}
+                disabled={formLoading}
+              >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting 
+              <Button 
+                type="submit" 
+                disabled={formLoading}
+              >
+                {formLoading 
                   ? (mode === 'create' ? 'Criando...' : 'Salvando...') 
                   : (mode === 'create' ? 'Criar Lead' : 'Salvar Alterações')
                 }
