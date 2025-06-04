@@ -2,12 +2,11 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { LeadStatus } from '@/types/crm.types';
 import { toast } from 'sonner';
 
 interface StatusChangeParams {
   leadId: string;
-  status: LeadStatus;
+  status: 'aberto' | 'ganho' | 'perdido';
   reason?: string;
   lossReasonId?: string;
 }
@@ -17,17 +16,23 @@ export const useLeadStatusChange = () => {
 
   const changeStatus = useCallback(async ({ leadId, status, reason, lossReasonId }: StatusChangeParams) => {
     const operationId = `status_change_${leadId}_${Date.now()}`;
-    console.log(`🔄 [STATUS_CHANGE_${operationId}] Alterando status:`, {
+    console.log(`🔄 [STATUS_CHANGE_${operationId}] Iniciando alteração:`, {
       leadId,
-      newStatus: status,
+      status,
       reason,
       lossReasonId
     });
 
+    if (!leadId || !status) {
+      throw new Error('Parâmetros inválidos para alteração de status');
+    }
+
     try {
+      // Preparar dados de atualização
       const updateData: any = {
         status,
         status_changed_at: new Date().toISOString(),
+        status_changed_by: (await supabase.auth.getUser()).data.user?.id,
         updated_at: new Date().toISOString()
       };
 
@@ -35,20 +40,27 @@ export const useLeadStatusChange = () => {
         updateData.status_reason = reason;
       }
 
-      if (lossReasonId) {
+      if (status === 'perdido' && lossReasonId) {
         updateData.loss_reason_id = lossReasonId;
       }
 
+      console.log(`💾 [STATUS_CHANGE_${operationId}] Atualizando no banco:`, updateData);
+
+      // Atualizar no banco
       const { data: updatedLead, error } = await supabase
         .from('crm_leads')
         .update(updateData)
         .eq('id', leadId)
-        .select('id, name, status')
+        .select('id, name, status, status_reason')
         .single();
 
       if (error) {
         console.error(`❌ [STATUS_CHANGE_${operationId}] Erro no banco:`, error);
-        throw new Error(`Erro ao alterar status: ${error.message}`);
+        throw new Error(`Erro ao atualizar status: ${error.message}`);
+      }
+
+      if (!updatedLead) {
+        throw new Error('Nenhum lead foi atualizado');
       }
 
       console.log(`✅ [STATUS_CHANGE_${operationId}] Status alterado com sucesso:`, {
@@ -57,19 +69,25 @@ export const useLeadStatusChange = () => {
       });
 
       // Invalidar queries relacionadas
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['crm-lead-detail', leadId] }),
-        queryClient.invalidateQueries({ queryKey: ['unified-crm-leads'] }),
-        queryClient.invalidateQueries({ queryKey: ['optimized-crm-leads'] }),
-        queryClient.invalidateQueries({ queryKey: ['crm-leads'] })
-      ]);
+      const queryKeys = [
+        ['unified-crm-leads'],
+        ['optimized-crm-leads'], 
+        ['crm-leads'],
+        ['crm-lead-detail', leadId]
+      ];
 
-      toast.success(`Status alterado para "${status}"`);
+      queryKeys.forEach(key => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
+
+      toast.success(`Status do lead "${updatedLead.name}" alterado para "${status}"`);
 
     } catch (error) {
       console.error(`❌ [STATUS_CHANGE_${operationId}] Erro:`, error);
+      
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error(`Erro ao alterar status: ${errorMessage}`);
+      
       throw error;
     }
   }, [queryClient]);

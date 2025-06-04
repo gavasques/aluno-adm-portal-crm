@@ -3,63 +3,46 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
+import { toast } from 'sonner';
 
 export const useUnifiedLeadMovement = (filters: CRMFilters) => {
   const queryClient = useQueryClient();
 
-  const validateTargetColumn = useCallback(async (columnId: string): Promise<boolean> => {
-    try {
-      console.log('🔍 [UNIFIED_MOVEMENT] Validando coluna de destino:', columnId);
-
-      const { data: column, error } = await supabase
-        .from('crm_pipeline_columns')
-        .select('id, name, pipeline_id, is_active')
-        .eq('id', columnId)
-        .eq('is_active', true)
-        .single();
-
-      if (error || !column) {
-        console.error('❌ [UNIFIED_MOVEMENT] Coluna não encontrada:', error);
-        return false;
-      }
-
-      console.log('✅ [UNIFIED_MOVEMENT] Coluna válida:', column.name);
-      return true;
-    } catch (error) {
-      console.error('❌ [UNIFIED_MOVEMENT] Erro na validação:', error);
-      return false;
-    }
-  }, []);
-
   const moveLeadToColumn = useCallback(async (leadId: string, newColumnId: string) => {
-    const operationId = `move_${leadId}_${Date.now()}`;
-    console.log(`🚀 [UNIFIED_MOVEMENT_${operationId}] Iniciando movimento do lead:`, {
+    const operationId = `unified_move_${leadId}_${Date.now()}`;
+    console.log(`🚀 [UNIFIED_MOVEMENT_${operationId}] Iniciando movimento:`, {
       leadId,
       newColumnId
     });
     
     // Validações iniciais
     if (!leadId || !newColumnId) {
-      const error = new Error('IDs de lead ou coluna inválidos');
-      console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Validação inicial falhou`);
-      throw error;
+      throw new Error('IDs de lead ou coluna inválidos');
     }
 
-    const queryKey = ['unified-crm-leads', filters];
+    const queryKeys = [
+      ['unified-crm-leads', filters],
+      ['optimized-crm-leads', filters],
+      ['crm-leads']
+    ];
     
-    // 1. Backup dos dados atuais para possível rollback
-    const previousData = queryClient.getQueryData<LeadWithContacts[]>(queryKey);
-    console.log(`📊 [UNIFIED_MOVEMENT_${operationId}] Dados anteriores obtidos:`, {
-      hasData: !!previousData,
-      totalLeads: previousData?.length || 0
-    });
+    // Backup dos dados para rollback
+    const backups = queryKeys.map(key => ({
+      key,
+      data: queryClient.getQueryData(key)
+    }));
     
-    // 2. Validar se o lead existe
-    const currentLead = previousData?.find(lead => lead.id === leadId);
+    // Validar se lead existe nos dados locais
+    const currentData = queryClient.getQueryData<LeadWithContacts[]>(['unified-crm-leads', filters]);
+    const currentLead = currentData?.find(lead => lead.id === leadId);
+    
     if (!currentLead) {
-      const error = new Error('Lead não encontrado nos dados locais');
-      console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Lead não encontrado:`, leadId);
-      throw error;
+      throw new Error('Lead não encontrado nos dados locais');
+    }
+
+    if (currentLead.column_id === newColumnId) {
+      console.log(`📋 [UNIFIED_MOVEMENT_${operationId}] Lead já está na coluna correta`);
+      return;
     }
 
     console.log(`📋 [UNIFIED_MOVEMENT_${operationId}] Lead encontrado:`, {
@@ -69,32 +52,39 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
       targetColumn: newColumnId
     });
 
-    // 3. Validar coluna de destino
-    const isValidColumn = await validateTargetColumn(newColumnId);
-    if (!isValidColumn) {
-      throw new Error('Coluna de destino inválida');
-    }
-
-    // 4. Atualização otimista
-    console.log(`🔄 [UNIFIED_MOVEMENT_${operationId}] Aplicando atualização otimista...`);
-    queryClient.setQueryData<LeadWithContacts[]>(queryKey, (oldData) => {
-      if (!oldData) return oldData;
-      
-      return oldData.map(lead => 
-        lead.id === leadId 
-          ? { 
-              ...lead, 
-              column_id: newColumnId,
-              updated_at: new Date().toISOString()
-            }
-          : lead
-      );
-    });
-
     try {
-      // 5. Atualizar no banco de dados
-      console.log(`💾 [UNIFIED_MOVEMENT_${operationId}] Persistindo no banco de dados...`);
+      // Validar coluna de destino
+      const { data: column, error: columnError } = await supabase
+        .from('crm_pipeline_columns')
+        .select('id, name, pipeline_id, is_active')
+        .eq('id', newColumnId)
+        .eq('is_active', true)
+        .single();
+
+      if (columnError || !column) {
+        throw new Error('Coluna de destino não encontrada ou inativa');
+      }
+
+      // Atualização otimista em todas as queries
+      queryKeys.forEach(key => {
+        queryClient.setQueryData<LeadWithContacts[]>(key, (oldData) => {
+          if (!oldData) return oldData;
+          
+          return oldData.map(lead => 
+            lead.id === leadId 
+              ? { 
+                  ...lead, 
+                  column_id: newColumnId,
+                  updated_at: new Date().toISOString()
+                }
+              : lead
+          );
+        });
+      });
+
+      console.log(`💾 [UNIFIED_MOVEMENT_${operationId}] Persistindo no banco...`);
       
+      // Atualizar no banco de dados
       const { data: updatedLead, error } = await supabase
         .from('crm_leads')
         .update({
@@ -106,7 +96,7 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
         .single();
 
       if (error) {
-        console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro no banco de dados:`, error);
+        console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro no banco:`, error);
         throw new Error(`Erro no banco: ${error.message}`);
       }
 
@@ -114,31 +104,37 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
         throw new Error('Nenhum lead foi atualizado');
       }
 
-      console.log(`✅ [UNIFIED_MOVEMENT_${operationId}] Lead atualizado com sucesso:`, {
+      console.log(`✅ [UNIFIED_MOVEMENT_${operationId}] Lead movido com sucesso:`, {
         leadId: updatedLead.id,
-        newColumn: updatedLead.column_id
+        newColumn: updatedLead.column_id,
+        columnName: column.name
       });
       
-      // 6. Invalidar queries relacionadas após delay
+      toast.success(`Lead "${currentLead.name}" movido para "${column.name}"`);
+      
+      // Invalidar queries após delay para evitar conflitos
       setTimeout(() => {
-        console.log(`🔄 [UNIFIED_MOVEMENT_${operationId}] Invalidando queries para sincronização`);
-        queryClient.invalidateQueries({ 
-          queryKey: ['unified-crm-leads'] 
+        queryKeys.forEach(key => {
+          queryClient.invalidateQueries({ queryKey: key });
         });
       }, 500);
       
     } catch (error) {
-      console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro ao persistir movimento:`, error);
+      console.error(`❌ [UNIFIED_MOVEMENT_${operationId}] Erro:`, error);
       
-      // 7. Rollback da atualização otimista
-      if (previousData) {
-        console.log(`🔄 [UNIFIED_MOVEMENT_${operationId}] Restaurando estado anterior`);
-        queryClient.setQueryData(queryKey, previousData);
-      }
+      // Rollback das atualizações otimistas
+      backups.forEach(({ key, data }) => {
+        if (data) {
+          queryClient.setQueryData(key, data);
+        }
+      });
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao mover lead: ${errorMessage}`);
       
       throw error;
     }
-  }, [queryClient, filters, validateTargetColumn]);
+  }, [queryClient, filters]);
 
   return { moveLeadToColumn };
 };

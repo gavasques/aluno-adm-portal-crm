@@ -28,8 +28,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
     console.log('🔗 [COLUMN_BODY] Click no lead:', {
       id: lead.id,
       name: lead.name,
-      column: columnId,
-      timestamp: new Date().toISOString()
+      column: columnId
     });
     onOpenDetail(lead);
   };
@@ -37,7 +36,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
   console.log(`📋 [COLUMN_BODY] ${columnId} renderizando:`, {
     leadsCount: leads.length,
     isOver,
-    leadsData: leads.map(lead => ({
+    leads: leads.map(lead => ({
       id: lead.id,
       name: lead.name,
       column_id: lead.column_id
@@ -48,7 +47,7 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
     <div 
       ref={setNodeRef}
       className={cn(
-        "h-full overflow-y-auto transition-all duration-300 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
+        "h-full overflow-y-auto transition-all duration-200 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
         isOver && "bg-blue-50 ring-2 ring-blue-300 ring-inset rounded-lg"
       )}
     >
@@ -60,27 +59,17 @@ export const ColumnBody: React.FC<ColumnBodyProps> = ({
           "space-y-3 p-2 min-h-20",
           isOver && "space-y-4"
         )}>
-          {leads.map((lead, index) => {
-            console.log(`📋 [COLUMN_BODY] Renderizando lead ${index + 1}:`, {
-              id: lead.id,
-              name: lead.name,
-              columnId: lead.column_id,
-              hasRequiredData: !!(lead.id && lead.name && lead.column_id)
-            });
-            
-            return (
-              <div
-                key={lead.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <DynamicLeadCard
-                  lead={lead}
-                  onClick={() => handleLeadClick(lead)}
-                />
-              </div>
-            );
-          })}
+          {leads.map((lead) => (
+            <div
+              key={lead.id}
+              className="animate-fade-in"
+            >
+              <DynamicLeadCard
+                lead={lead}
+                onClick={() => handleLeadClick(lead)}
+              />
+            </div>
+          ))}
           
           {/* Drop zone indicator quando arrastrando sobre coluna vazia */}
           {isOver && leads.length === 0 && (
