@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
 import { ManualFieldMappingDialog } from './ManualFieldMappingDialog';
 import { EditFieldMappingDialog } from './EditFieldMappingDialog';
-import { ImportFieldsDialog } from './ImportFieldsDialog';
 import { toast } from 'sonner';
 
 export const WebhookFieldMappingsCard = () => {
@@ -110,20 +110,6 @@ export const WebhookFieldMappingsCard = () => {
             <RefreshCw className={`h-4 w-4 ${syncStandardMappings.isPending ? 'animate-spin' : ''}`} />
             Sincronizar Campo Obrigatório
           </Button>
-
-          <ImportFieldsDialog 
-            pipelineId={selectedPipelineId}
-            trigger={
-              <Button
-                variant="secondary"
-                disabled={!selectedPipelineId}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Importar do JSON
-              </Button>
-            }
-          />
 
           <ManualFieldMappingDialog 
             pipelineId={selectedPipelineId}
