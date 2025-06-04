@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { KanbanTestButton } from '../testing/KanbanTestButton';
 import { motion } from 'framer-motion';
 
 interface CRMDashboardHeaderProps {
@@ -27,58 +26,42 @@ export const CRMDashboardHeader: React.FC<CRMDashboardHeaderProps> = ({
           <p className="text-gray-600 mt-1">Gerencie seus leads e pipeline de vendas</p>
         </motion.div>
 
-        <div className="flex items-center gap-4">
-          {/* Botão de Teste do Kanban */}
-          {selectedPipelineId && activeTab === 'dashboard' && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <TabsList className="grid w-auto grid-cols-4 bg-gray-100 p-1">
+            <TabsTrigger 
+              value="dashboard" 
+              className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              onClick={() => onTabChange('dashboard')}
             >
-              <KanbanTestButton 
-                pipelineId={selectedPipelineId}
-                className="bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
-              />
-            </motion.div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <TabsList className="grid w-auto grid-cols-4 bg-gray-100 p-1">
-              <TabsTrigger 
-                value="dashboard" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('dashboard')}
-              >
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger 
-                value="reports" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('reports')}
-              >
-                Relatórios
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('analytics')}
-              >
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('settings')}
-              >
-                Configurações
-              </TabsTrigger>
-            </TabsList>
-          </motion.div>
-        </div>
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reports" 
+              className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              onClick={() => onTabChange('reports')}
+            >
+              Relatórios
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analytics" 
+              className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              onClick={() => onTabChange('analytics')}
+            >
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              onClick={() => onTabChange('settings')}
+            >
+              Configurações
+            </TabsTrigger>
+          </TabsList>
+        </motion.div>
       </div>
     </div>
   );
