@@ -64,7 +64,8 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
-    defaultValues: getDefaultValues()
+    defaultValues: getDefaultValues(),
+    mode: 'onChange'
   });
 
   const createLead = async (leadData: CRMLeadInput) => {
@@ -81,8 +82,12 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
       });
 
       // Validar campos obrigatórios
-      if (!leadData.name || !leadData.email) {
-        throw new Error('Nome e email são obrigatórios');
+      if (!leadData.name?.trim()) {
+        throw new Error('Nome é obrigatório');
+      }
+
+      if (!leadData.email?.trim()) {
+        throw new Error('Email é obrigatório');
       }
 
       if (!leadData.pipeline_id) {
@@ -177,6 +182,8 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
   };
 
   const onSubmit = async (data: LeadFormData, pipelineColumns: Array<{id: string}>) => {
+    console.log('🚀 [LEAD_FORM] onSubmit chamado com dados:', data);
+    
     setLoading(true);
     
     try {
@@ -294,7 +301,7 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
       }
       
       debugLogger.info('✅ [LEAD_FORM] Salvamento concluído com sucesso', {
-        component: 'useLeadForm',
+        component: 'UnifiedCRMLeadForm',
         operation: 'onSubmit',
         mode
       });

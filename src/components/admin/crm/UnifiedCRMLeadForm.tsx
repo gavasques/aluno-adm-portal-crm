@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -57,13 +57,27 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
   const sellsOnAmazon = form.watch('sells_on_amazon');
   const isLoading = dataLoading || formLoading;
 
+  // Auto-selecionar primeira coluna se necessário
+  useEffect(() => {
+    if (pipelineColumns.length > 0 && !form.getValues('column_id') && !initialColumnId && !lead) {
+      const firstColumn = pipelineColumns[0];
+      form.setValue('column_id', firstColumn.id);
+      debugLogger.info('🎯 [UNIFIED_FORM] Auto-selecionando primeira coluna', {
+        component: 'UnifiedCRMLeadForm',
+        columnId: firstColumn.id,
+        columnName: firstColumn.name
+      });
+    }
+  }, [pipelineColumns, form, initialColumnId, lead]);
+
   debugLogger.info('📊 [UNIFIED_FORM] Estado do formulário', {
     component: 'UnifiedCRMLeadForm',
     dataLoading,
     formLoading,
     pipelineColumnsCount: pipelineColumns.length,
     responsiblesCount: responsibles.length,
-    sellsOnAmazon
+    sellsOnAmazon,
+    hasValidColumn: !!form.getValues('column_id')
   });
 
   if (dataLoading) {
@@ -88,29 +102,19 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
     );
   }
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = (data: any) => {
     debugLogger.info('🚀 [UNIFIED_FORM] Form submit iniciado', {
       component: 'UnifiedCRMLeadForm',
       mode,
-      pipelineId
+      pipelineId,
+      formData: {
+        name: data.name,
+        email: data.email,
+        column_id: data.column_id
+      }
     });
 
-    form.handleSubmit((data) => {
-      debugLogger.info('📤 [UNIFIED_FORM] Dados do formulário para submissão', {
-        component: 'UnifiedCRMLeadForm',
-        data: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          column_id: data.column_id,
-          responsible_id: data.responsible_id,
-          pipelineId
-        }
-      });
-      
-      onSubmit(data, pipelineColumns);
-    })(e);
+    onSubmit(data, pipelineColumns);
   };
 
   return (
@@ -123,7 +127,7 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
             {/* Seção de Informações Básicas */}
             <LeadBasicInfoSection form={form} />
             
@@ -171,7 +175,7 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
               </Button>
               <Button 
                 type="submit" 
-                disabled={formLoading}
+                disabled={formLoading || !form.formState.isValid}
               >
                 {formLoading 
                   ? (mode === 'create' ? 'Criando...' : 'Salvando...') 
