@@ -1,3 +1,4 @@
+
 import { MentoringCatalog, CreateMentoringCatalogData, MentoringExtensionOption, StudentMentoringEnrollment, MentoringSession, MentoringMaterial, CreateSessionData, UpdateSessionData, CreateExtensionData, MentoringExtension } from '@/types/mentoring.types';
 import { expandedMentoringCatalog, expandedStudentEnrollments, expandedMentoringSessions, expandedMentoringMaterials } from '@/data/expandedMentoringData';
 import { calculateSessionsFromFrequency } from '@/utils/mentoringCalculations';
@@ -118,7 +119,6 @@ export class MentoringDataService {
       responsibleMentor: enrollmentData.responsibleMentor || mentoring.instructor,
       paymentStatus: 'pago',
       observations: enrollmentData.observations,
-      hasExtension: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -133,16 +133,11 @@ export class MentoringDataService {
 
     const extension: MentoringExtension = {
       id: `ext-${Date.now()}`,
-      enrollment_id: data.enrollmentId,
       enrollmentId: data.enrollmentId,
-      extension_months: data.extensionMonths,
       extensionMonths: data.extensionMonths,
-      applied_date: new Date().toISOString(),
       appliedDate: new Date().toISOString(),
       notes: data.notes,
-      admin_id: 'current-admin-id',
       adminId: 'current-admin-id',
-      created_at: new Date().toISOString(),
       createdAt: new Date().toISOString()
     };
 
@@ -220,30 +215,12 @@ export class MentoringDataService {
   }
 
   createSession(data: CreateSessionData): MentoringSession {
-    const sessionNumber = data.sessionNumber || this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1;
-    
     const newSession: MentoringSession = {
       id: `session-${Date.now()}`,
-      enrollment_id: data.enrollmentId,
-      enrollmentId: data.enrollmentId,
-      type: data.type,
-      title: data.title,
-      scheduled_date: data.scheduledDate,
-      scheduledDate: data.scheduledDate,
-      scheduled_time: data.scheduledTime,
-      duration_minutes: data.durationMinutes,
-      durationMinutes: data.durationMinutes,
-      meeting_link: data.meetingLink,
-      meetingLink: data.meetingLink,
-      observations: data.observations,
-      session_number: sessionNumber,
-      sessionNumber: sessionNumber,
+      ...data,
+      sessionNumber: this.sessions.filter(s => s.enrollmentId === data.enrollmentId).length + 1,
       status: data.status || 'aguardando_agendamento',
-      group_id: data.groupId,
-      groupId: data.groupId,
-      created_at: new Date().toISOString(),
       createdAt: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     
@@ -258,7 +235,6 @@ export class MentoringDataService {
     this.sessions[index] = {
       ...this.sessions[index],
       ...data,
-      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     return true;
@@ -278,12 +254,9 @@ export class MentoringDataService {
 
     this.sessions[index] = {
       ...this.sessions[index],
-      scheduled_date: scheduledDate,
       scheduledDate,
-      meeting_link: meetingLink,
       meetingLink,
       status: 'agendada',
-      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     return true;

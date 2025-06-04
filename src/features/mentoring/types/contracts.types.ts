@@ -6,8 +6,7 @@ import {
   MentoringMaterial,
   CreateMentoringCatalogData,
   CreateSessionData,
-  CreateExtensionData,
-  UpdateSessionData
+  CreateExtensionData
 } from '@/types/mentoring.types';
 
 export interface IMentoringRepository {
@@ -21,23 +20,17 @@ export interface IMentoringRepository {
   // Enrollment operations
   getEnrollments(): Promise<StudentMentoringEnrollment[]>;
   getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]>;
-  createEnrollment(data: any): Promise<StudentMentoringEnrollment>;
-  deleteEnrollment(id: string): Promise<boolean>;
   addExtension(data: CreateExtensionData): Promise<boolean>;
-  removeExtension(extensionId: string): Promise<boolean>;
 
   // Session operations
   getSessions(): Promise<MentoringSession[]>;
   getEnrollmentSessions(enrollmentId: string): Promise<MentoringSession[]>;
   createSession(data: CreateSessionData): Promise<MentoringSession>;
-  updateSession(sessionId: string, data: UpdateSessionData): Promise<boolean>;
-  deleteSession(sessionId: string): Promise<boolean>;
 
   // Material operations
   getMaterials(): Promise<MentoringMaterial[]>;
   getEnrollmentMaterials(enrollmentId: string): Promise<MentoringMaterial[]>;
   getSessionMaterials(sessionId: string): Promise<MentoringMaterial[]>;
-  uploadMaterial(file: File, enrollmentId?: string, sessionId?: string): Promise<MentoringMaterial>;
 }
 
 export interface IMentoringService {

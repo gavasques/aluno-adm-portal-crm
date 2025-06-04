@@ -1,40 +1,47 @@
 
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useCRMPipelines } from './useCRMPipelines';
-import { useCRMUsers } from './useCRMUsers';
-import { debugLogger } from '@/utils/debug-logger';
 
-export const useLeadFormData = (pipelineId: string) => {
-  const { pipelines, columns, loading: pipelinesLoading } = useCRMPipelines();
-  const { users, loading: usersLoading } = useCRMUsers();
+interface FormDataHook {
+  responsibles: Array<{id: string, name: string}>;
+  pipelineColumns: Array<{id: string, name: string, sort_order: number}>;
+  loading: boolean;
+}
 
-  // Filtrar colunas do pipeline específico
-  const pipelineColumns = columns.filter(col => 
-    col.pipeline_id === pipelineId && col.is_active
-  ).sort((a, b) => a.sort_order - b.sort_order);
+export const useLeadFormData = (pipelineId: string): FormDataHook => {
+  const [responsibles, setResponsibles] = useState<Array<{id: string, name: string}>>([]);
+  const [loading, setLoading] = useState(true);
+  const { columns } = useCRMPipelines();
 
-  // Converter users para o formato esperado
-  const responsibles = users.map(user => ({
-    id: user.id,
-    name: user.name || user.email
-  }));
+  const pipelineColumns = columns
+    .filter(col => col.pipeline_id === pipelineId)
+    .sort((a, b) => a.sort_order - b.sort_order);
 
-  const loading = pipelinesLoading || usersLoading;
+  useEffect(() => {
+    const fetchResponsibles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .eq('role', 'Admin')
+          .order('name');
 
-  debugLogger.info('📊 [LEAD_FORM_DATA] Dados carregados', {
-    component: 'useLeadFormData',
-    pipelineId,
-    loading,
-    pipelinesCount: pipelines.length,
-    pipelineColumnsCount: pipelineColumns.length,
-    responsiblesCount: responsibles.length,
-    pipelinesLoading,
-    usersLoading
-  });
+        if (error) throw error;
+        setResponsibles(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar responsáveis:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResponsibles();
+  }, []);
 
   return {
-    pipelines,
-    pipelineColumns,
     responsibles,
+    pipelineColumns,
     loading
   };
 };

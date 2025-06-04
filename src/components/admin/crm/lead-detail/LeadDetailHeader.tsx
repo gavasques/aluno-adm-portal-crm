@@ -143,8 +143,7 @@ export const LeadDetailHeader = ({
       <ModernCRMLeadFormDialog
         open={showEditModal}
         onOpenChange={setShowEditModal}
-        pipelineId={lead.pipeline_id || ''}
-        lead={lead}
+        leadId={lead.id}
         mode="edit"
         onSuccess={onLeadUpdate}
       />

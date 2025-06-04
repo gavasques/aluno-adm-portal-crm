@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, MoreVertical } from 'lucide-react';
+import { Calendar, Clock, MoreVertical } from 'lucide-react';
 import { CRMLead } from '@/types/crm.types';
 import { cn } from '@/lib/utils';
 import StatusBadge from './status/StatusBadge';
@@ -29,18 +30,12 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = ({
   const leadValue = "R$ 15.000";
 
   const handleStatusChange = async (status: any, reason?: string) => {
-    try {
-      await changeStatus({ leadId: lead.id, status, reason });
-      setStatusDialogOpen(false);
-    } catch (error) {
-      console.error('Erro ao alterar status:', error);
-    }
+    await changeStatus({ leadId: lead.id, status, reason });
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent card click when clicking on dropdown or status badge
-    if ((e.target as HTMLElement).closest('[data-dropdown-trigger]') || 
-        (e.target as HTMLElement).closest('[data-status-badge]')) {
+    // Prevent card click when clicking on dropdown
+    if ((e.target as HTMLElement).closest('[data-dropdown-trigger]')) {
       return;
     }
     onClick();
@@ -51,19 +46,12 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = ({
     setStatusDialogOpen(true);
   };
   
-  console.log('🃏 [KANBAN_LEAD_CARD] Renderizando card:', {
-    leadId: lead.id,
-    leadName: lead.name,
-    status: lead.status,
-    isDragging
-  });
-  
   return (
     <>
       <Card 
         className={cn(
           "p-4 cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:shadow-md",
-          isDragging && "opacity-70 rotate-2 shadow-lg scale-105"
+          isDragging && "opacity-50 rotate-2 shadow-lg"
         )}
         onClick={handleCardClick}
       >
@@ -97,7 +85,6 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = ({
             status={lead.status} 
             className="cursor-pointer" 
             onClick={handleStatusClick}
-            data-status-badge="true"
           />
         </div>
 

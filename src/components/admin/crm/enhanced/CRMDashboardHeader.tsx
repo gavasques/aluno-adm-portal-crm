@@ -1,82 +1,65 @@
 
 import React from 'react';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { KanbanTestButton } from '../testing/KanbanTestButton';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart3, Settings, PieChart, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface CRMDashboardHeaderProps {
-  activeTab: string;
+  activeTab: 'dashboard' | 'reports' | 'analytics' | 'settings';
   onTabChange: (tab: string) => void;
-  selectedPipelineId?: string;
 }
 
 export const CRMDashboardHeader: React.FC<CRMDashboardHeaderProps> = ({
   activeTab,
-  onTabChange,
-  selectedPipelineId
+  onTabChange
 }) => {
+  const tabsData = [
+    { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { value: 'reports', label: 'Relatórios', icon: BarChart3 },
+    { value: 'analytics', label: 'Analytics', icon: PieChart },
+    { value: 'settings', label: 'Configurações', icon: Settings }
+  ];
+
   return (
-    <div className="flex-shrink-0 bg-white border-b border-gray-200 px-8 py-6">
-      <div className="flex items-center justify-between">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h1 className="text-2xl font-bold text-gray-900">CRM Dashboard</h1>
-          <p className="text-gray-600 mt-1">Gerencie seus leads e pipeline de vendas</p>
-        </motion.div>
-
-        <div className="flex items-center gap-4">
-          {/* Botão de Teste do Kanban */}
-          {selectedPipelineId && activeTab === 'dashboard' && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
-              <KanbanTestButton 
-                pipelineId={selectedPipelineId}
-                className="bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
-              />
-            </motion.div>
-          )}
-
+    <div className="bg-white border-b border-gray-200 flex-shrink-0">
+      <div className="px-8 py-6">
+        <div className="flex items-center justify-between">
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <TabsList className="grid w-auto grid-cols-4 bg-gray-100 p-1">
-              <TabsTrigger 
-                value="dashboard" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('dashboard')}
-              >
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger 
-                value="reports" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('reports')}
-              >
-                Relatórios
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('analytics')}
-              >
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => onTabChange('settings')}
-              >
-                Configurações
-              </TabsTrigger>
-            </TabsList>
+            <h1 className="text-2xl font-bold text-gray-900">
+              CRM
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Gerencie seus leads e oportunidades de vendas
+            </p>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              {tabsData.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => onTabChange(tab.value)}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                    ${activeTab === tab.value 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                    }
+                  `}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </motion.div>
         </div>
       </div>

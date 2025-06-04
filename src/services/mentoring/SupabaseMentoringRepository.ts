@@ -1,324 +1,679 @@
-
-import { IMentoringRepository } from '@/features/mentoring/types/contracts.types';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   MentoringCatalog, 
   StudentMentoringEnrollment, 
   MentoringSession, 
   MentoringMaterial,
+  MentoringExtension,
   CreateMentoringCatalogData,
   CreateSessionData,
   CreateExtensionData,
-  MentoringExtension,
   UpdateSessionData
 } from '@/types/mentoring.types';
 
-export class SupabaseMentoringRepository implements IMentoringRepository {
+export class SupabaseMentoringRepository {
+  // Helper method to map database catalog to TypeScript interface
+  private mapCatalogFromDB(dbCatalog: any): MentoringCatalog {
+    return {
+      id: dbCatalog.id,
+      name: dbCatalog.name,
+      type: dbCatalog.type,
+      instructor: dbCatalog.instructor,
+      durationMonths: dbCatalog.duration_months,
+      frequency: dbCatalog.frequency || 'Mensal',
+      numberOfSessions: dbCatalog.number_of_sessions,
+      totalSessions: dbCatalog.total_sessions,
+      price: dbCatalog.price,
+      description: dbCatalog.description,
+      tags: dbCatalog.tags || [],
+      imageUrl: dbCatalog.image_url,
+      active: dbCatalog.active,
+      status: dbCatalog.status,
+      createdAt: dbCatalog.created_at,
+      updatedAt: dbCatalog.updated_at,
+      extensions: dbCatalog.extensions || []
+    };
+  }
+
+  // Helper method to map extension from database
+  private mapExtensionFromDB(dbExtension: any): MentoringExtension {
+    return {
+      id: dbExtension.id,
+      enrollmentId: dbExtension.enrollment_id,
+      extensionMonths: dbExtension.extension_months,
+      appliedDate: dbExtension.applied_date,
+      notes: dbExtension.notes,
+      adminId: dbExtension.admin_id,
+      createdAt: dbExtension.created_at
+    };
+  }
+
+  // Helper method to map enrollment from database
+  private mapEnrollmentFromDB(dbEnrollment: any): StudentMentoringEnrollment {
+    return {
+      id: dbEnrollment.id,
+      studentId: dbEnrollment.student_id,
+      mentoringId: dbEnrollment.mentoring_id,
+      mentoring: dbEnrollment.mentoring ? this.mapCatalogFromDB(dbEnrollment.mentoring) : {} as MentoringCatalog,
+      status: dbEnrollment.status,
+      enrollmentDate: dbEnrollment.enrollment_date,
+      startDate: dbEnrollment.start_date,
+      endDate: dbEnrollment.end_date,
+      originalEndDate: dbEnrollment.original_end_date,
+      sessionsUsed: dbEnrollment.sessions_used,
+      totalSessions: dbEnrollment.total_sessions,
+      responsibleMentor: dbEnrollment.responsible_mentor,
+      paymentStatus: dbEnrollment.payment_status,
+      observations: dbEnrollment.observations,
+      extensions: dbEnrollment.extensions ? dbEnrollment.extensions.map((ext: any) => this.mapExtensionFromDB(ext)) : [],
+      hasExtension: dbEnrollment.has_extension || false,
+      createdAt: dbEnrollment.created_at,
+      updatedAt: dbEnrollment.updated_at,
+      groupId: dbEnrollment.group_id
+    };
+  }
+
+  // Helper method to map session from database
+  private mapSessionFromDB(dbSession: any): MentoringSession {
+    return {
+      id: dbSession.id,
+      enrollmentId: dbSession.enrollment_id,
+      enrollment: dbSession.enrollment ? this.mapEnrollmentFromDB(dbSession.enrollment) : undefined,
+      sessionNumber: dbSession.session_number,
+      type: dbSession.type,
+      title: dbSession.title,
+      scheduledDate: dbSession.scheduled_date,
+      durationMinutes: dbSession.duration_minutes,
+      status: dbSession.status,
+      calendlyLink: dbSession.calendly_link,
+      meetingLink: dbSession.meeting_link,
+      recordingLink: dbSession.recording_link,
+      mentorNotes: dbSession.mentor_notes,
+      studentNotes: dbSession.student_notes,
+      observations: dbSession.observations,
+      transcription: dbSession.transcription,
+      createdAt: dbSession.created_at,
+      updatedAt: dbSession.updated_at,
+      groupId: dbSession.group_id
+    };
+  }
+
+  // Helper method to map material from database
+  private mapMaterialFromDB(dbMaterial: any): MentoringMaterial {
+    return {
+      id: dbMaterial.id,
+      sessionId: dbMaterial.session_id,
+      enrollmentId: dbMaterial.enrollment_id,
+      session: dbMaterial.session ? this.mapSessionFromDB(dbMaterial.session) : undefined,
+      enrollment: dbMaterial.enrollment ? this.mapEnrollmentFromDB(dbMaterial.enrollment) : undefined,
+      fileName: dbMaterial.file_name,
+      fileUrl: dbMaterial.file_url,
+      type: dbMaterial.file_type,
+      description: dbMaterial.description,
+      storagePath: dbMaterial.storage_path,
+      fileType: dbMaterial.file_type,
+      sizeMB: dbMaterial.size_mb,
+      uploaderId: dbMaterial.uploader_id,
+      uploaderType: dbMaterial.uploader_type,
+      tags: dbMaterial.tags || [],
+      createdAt: dbMaterial.created_at,
+      updatedAt: dbMaterial.updated_at
+    };
+  }
+
+  // Catalog methods
   async getCatalogs(): Promise<MentoringCatalog[]> {
-    try {
-      // Fetch catalogs from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching catalogs:', error);
+    console.log('🔄 Iniciando busca de catálogos...');
+    
+    // Buscar catálogos primeiro
+    const { data: catalogsData, error: catalogsError } = await supabase
+      .from('mentoring_catalogs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (catalogsError) {
+      console.error('❌ Erro ao buscar catálogos:', catalogsError);
+      throw catalogsError;
+    }
+
+    console.log('📚 Catálogos encontrados:', catalogsData?.length || 0);
+
+    if (!catalogsData || catalogsData.length === 0) {
       return [];
     }
-  }
 
-  async getCatalogById(id: string): Promise<MentoringCatalog | null> {
-    try {
-      // Fetch catalog by ID from Supabase
-      return null; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching catalog by ID:', error);
-      return null;
-    }
-  }
+    // Para cada catálogo, buscar suas extensões separadamente
+    const catalogsWithExtensions: MentoringCatalog[] = [];
 
-  async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
-    try {
-      // Create catalog in Supabase
-      const newCatalog: MentoringCatalog = {
-        id: `catalog-${Date.now()}`,
-        name: data.name,
-        type: data.type,
-        instructor: data.instructor,
-        durationMonths: data.durationMonths,
-        frequency: data.frequency || 'Semanal',
-        numberOfSessions: data.numberOfSessions || 0,
-        totalSessions: data.numberOfSessions || 0,
-        price: data.price,
-        description: data.description,
-        tags: [],
-        active: data.active ?? true,
-        status: data.status ?? 'Ativa',
-        extensions: data.extensions || [],
-        checkoutLinks: data.checkoutLinks,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+    for (const catalog of catalogsData) {
+      const { data: extensionsData, error: extensionsError } = await supabase
+        .from('mentoring_extensions')
+        .select('*')
+        .eq('catalog_id', catalog.id)
+        .order('months', { ascending: true });
+
+      if (extensionsError) {
+        console.error('❌ Erro ao buscar extensões para catálogo', catalog.id, ':', extensionsError);
+      }
+
+      const extensions = (extensionsData || []).map((ext: any) => ({
+        id: ext.id,
+        months: ext.months,
+        price: ext.price,
+        totalSessions: this.calculateTotalSessions(ext.months, 'Semanal'),
+        description: ext.description || ''
+      }));
+
+      const catalogWithExtensions = {
+        ...this.mapCatalogFromDB(catalog),
+        extensions
       };
-      return newCatalog;
-    } catch (error) {
-      console.error('Error creating catalog:', error);
-      throw error;
+
+      catalogsWithExtensions.push(catalogWithExtensions);
     }
+
+    console.log('✅ Catálogos com extensões mapeados:', catalogsWithExtensions.length);
+    return catalogsWithExtensions;
   }
 
-  async updateCatalog(id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> {
-    try {
-      // Update catalog in Supabase
-      return true;
-    } catch (error) {
-      console.error('Error updating catalog:', error);
-      return false;
+  async createCatalog(catalogData: CreateMentoringCatalogData): Promise<MentoringCatalog> {
+    // Calculate total sessions based on duration and frequency
+    const totalSessions = this.calculateTotalSessions(
+      catalogData.durationMonths, 
+      catalogData.frequency
+    );
+
+    const { data, error } = await supabase
+      .from('mentoring_catalogs')
+      .insert({
+        name: catalogData.name,
+        type: catalogData.type,
+        instructor: catalogData.instructor,
+        duration_months: catalogData.durationMonths,
+        frequency: catalogData.frequency,
+        number_of_sessions: totalSessions,
+        total_sessions: totalSessions,
+        price: catalogData.price,
+        description: catalogData.description,
+        active: catalogData.active ?? true,
+        status: catalogData.status ?? 'Ativa'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return this.mapCatalogFromDB(data);
+  }
+
+  async updateCatalog(id: string, catalogData: Partial<CreateMentoringCatalogData>): Promise<boolean> {
+    const updateData: any = {};
+    
+    // Map camelCase to snake_case
+    if (catalogData.name) updateData.name = catalogData.name;
+    if (catalogData.type) updateData.type = catalogData.type;
+    if (catalogData.instructor) updateData.instructor = catalogData.instructor;
+    if (catalogData.durationMonths) updateData.duration_months = catalogData.durationMonths;
+    if (catalogData.frequency) updateData.frequency = catalogData.frequency;
+    if (catalogData.price) updateData.price = catalogData.price;
+    if (catalogData.description) updateData.description = catalogData.description;
+    if (catalogData.active !== undefined) updateData.active = catalogData.active;
+    if (catalogData.status) updateData.status = catalogData.status;
+    
+    // Recalculate total sessions if duration or frequency changed
+    if (catalogData.durationMonths || catalogData.frequency) {
+      const current = await this.getCatalogById(id);
+      if (current) {
+        const duration = catalogData.durationMonths ?? current.durationMonths;
+        const frequency = catalogData.frequency ?? current.frequency;
+        const totalSessions = this.calculateTotalSessions(duration, frequency);
+        updateData.number_of_sessions = totalSessions;
+        updateData.total_sessions = totalSessions;
+      }
     }
+
+    const { error } = await supabase
+      .from('mentoring_catalogs')
+      .update(updateData)
+      .eq('id', id);
+
+    return !error;
   }
 
   async deleteCatalog(id: string): Promise<boolean> {
-    try {
-      // Delete catalog from Supabase
-      return true;
-    } catch (error) {
-      console.error('Error deleting catalog:', error);
-      return false;
-    }
+    const { error } = await supabase
+      .from('mentoring_catalogs')
+      .delete()
+      .eq('id', id);
+
+    return !error;
   }
 
+  async getCatalogById(id: string): Promise<MentoringCatalog | null> {
+    const { data, error } = await supabase
+      .from('mentoring_catalogs')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) return null;
+    return this.mapCatalogFromDB(data);
+  }
+
+  private calculateTotalSessions(durationMonths: number, frequency: string): number {
+    const sessionsPerMonth = {
+      'Semanal': 4,
+      'Quinzenal': 2,
+      'Mensal': 1
+    };
+    return durationMonths * (sessionsPerMonth[frequency as keyof typeof sessionsPerMonth] || 1);
+  }
+
+  // Enrollment methods
   async getEnrollments(): Promise<StudentMentoringEnrollment[]> {
+    console.log('🔄 Iniciando busca de inscrições...');
+    
+    const { data, error } = await supabase
+      .from('mentoring_enrollments')
+      .select(`
+        *,
+        mentoring:mentoring_catalogs(*),
+        extensions:mentoring_enrollment_extensions(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Erro ao buscar inscrições:', error);
+      throw error;
+    }
+    
+    console.log('📊 Inscrições encontradas:', data?.length || 0);
+    return (data || []).map(enrollment => this.mapEnrollmentFromDB(enrollment));
+  }
+
+  async createEnrollment(enrollmentData: {
+    studentId: string;
+    mentoringId: string;
+    status: string;
+    enrollmentDate: string;
+    startDate: string;
+    endDate: string;
+    totalSessions: number;
+    responsibleMentor: string;
+    paymentStatus: string;
+    observations?: string;
+  }): Promise<StudentMentoringEnrollment> {
+    const { data, error } = await supabase
+      .from('mentoring_enrollments')
+      .insert({
+        student_id: enrollmentData.studentId,
+        mentoring_id: enrollmentData.mentoringId,
+        status: enrollmentData.status,
+        enrollment_date: enrollmentData.enrollmentDate,
+        start_date: enrollmentData.startDate,
+        end_date: enrollmentData.endDate,
+        sessions_used: 0,
+        total_sessions: enrollmentData.totalSessions,
+        responsible_mentor: enrollmentData.responsibleMentor,
+        payment_status: enrollmentData.paymentStatus,
+        observations: enrollmentData.observations || null,
+        has_extension: false
+      })
+      .select(`
+        *,
+        mentoring:mentoring_catalogs(*),
+        extensions:mentoring_enrollment_extensions(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return this.mapEnrollmentFromDB(data);
+  }
+
+  async deleteEnrollment(id: string): Promise<boolean> {
+    console.log('🗑️ SupabaseMentoringRepository.deleteEnrollment - ID:', id);
+    
     try {
-      // Fetch enrollments from Supabase
-      return []; // Replace with actual data
+      // Verificar se a inscrição existe antes de deletar
+      console.log('🔍 Verificando se a inscrição existe...');
+      const { data: existingEnrollment, error: checkError } = await supabase
+        .from('mentoring_enrollments')
+        .select('id, student_id, mentoring_id')
+        .eq('id', id)
+        .single();
+
+      if (checkError) {
+        console.error('❌ Erro ao verificar inscrição:', checkError);
+        return false;
+      }
+
+      if (!existingEnrollment) {
+        console.error('❌ Inscrição não encontrada:', id);
+        return false;
+      }
+
+      console.log('✅ Inscrição encontrada:', existingEnrollment);
+
+      // 1. Deletar materiais relacionados primeiro
+      console.log('🗑️ Deletando materiais relacionados...');
+      const { error: materialsError } = await supabase
+        .from('mentoring_materials')
+        .delete()
+        .eq('enrollment_id', id);
+
+      if (materialsError) {
+        console.error('❌ Erro ao deletar materiais:', materialsError);
+      } else {
+        console.log('✅ Materiais deletados com sucesso');
+      }
+
+      // 2. Deletar sessões relacionadas
+      console.log('🗑️ Deletando sessões relacionadas...');
+      const { error: sessionsError } = await supabase
+        .from('mentoring_sessions')
+        .delete()
+        .eq('enrollment_id', id);
+
+      if (sessionsError) {
+        console.error('❌ Erro ao deletar sessões:', sessionsError);
+        return false;
+      }
+
+      console.log('✅ Sessões deletadas com sucesso');
+
+      // 3. Deletar extensões relacionadas
+      console.log('🗑️ Deletando extensões relacionadas...');
+      const { error: extensionsError } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .delete()
+        .eq('enrollment_id', id);
+
+      if (extensionsError) {
+        console.error('❌ Erro ao deletar extensões:', extensionsError);
+      } else {
+        console.log('✅ Extensões deletadas com sucesso');
+      }
+
+      // 4. Finalmente, deletar a inscrição
+      console.log('🗑️ Executando delete da inscrição...');
+      const { error: deleteError } = await supabase
+        .from('mentoring_enrollments')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error('❌ Erro ao deletar inscrição:', deleteError);
+        console.error('❌ Código do erro:', deleteError.code);
+        console.error('❌ Mensagem do erro:', deleteError.message);
+        console.error('❌ Detalhes do erro:', deleteError.details);
+        return false;
+      }
+
+      console.log('✅ Inscrição deletada com sucesso');
+      return true;
+
     } catch (error) {
-      console.error('Error fetching enrollments:', error);
-      return [];
+      console.error('❌ Erro geral no deleteEnrollment:', error);
+      console.error('❌ Stack trace:', error?.stack);
+      return false;
     }
   }
 
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {
-    try {
-      // Fetch student enrollments from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching student enrollments:', error);
-      return [];
-    }
+    const { data, error } = await supabase
+      .from('mentoring_enrollments')
+      .select(`
+        *,
+        mentoring:mentoring_catalogs(*),
+        extensions:mentoring_enrollment_extensions(*)
+      `)
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return (data || []).map(enrollment => this.mapEnrollmentFromDB(enrollment));
   }
 
-  async createEnrollment(data: any): Promise<StudentMentoringEnrollment> {
-    try {
-      // Create enrollment in Supabase
-      const newEnrollment: StudentMentoringEnrollment = {
-        id: `enrollment-${Date.now()}`,
-        studentId: data.studentId || 'student-001',
-        mentoringId: data.mentoringId,
-        mentoring: {
-          id: data.mentoringId,
-          name: 'Sample Mentoring',
-          type: 'Individual' as const,
-          frequency: 'Semanal',
-          durationMonths: 6,
-          extensions: [],
-          description: 'Sample description'
-        },
-        status: 'ativa' as const,
-        enrollmentDate: new Date().toISOString(),
-        startDate: data.startDate || new Date().toISOString(),
-        endDate: data.endDate || new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        sessionsUsed: 0,
-        totalSessions: 12,
-        responsibleMentor: data.responsibleMentor || 'mentor@example.com',
-        paymentStatus: 'pago',
-        observations: data.observations,
-        hasExtension: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      return newEnrollment;
-    } catch (error) {
-      console.error('Error creating enrollment:', error);
-      throw error;
-    }
-  }
+  async addExtension(extensionData: CreateExtensionData): Promise<boolean> {
+    const { error } = await supabase
+      .from('mentoring_enrollment_extensions')
+      .insert({
+        enrollment_id: extensionData.enrollmentId,
+        extension_months: extensionData.extensionMonths,
+        notes: extensionData.notes
+      });
 
-  async deleteEnrollment(id: string): Promise<boolean> {
-    try {
-      console.log('🗑️ SupabaseMentoringRepository.deleteEnrollment - ID:', id);
-      // Delete enrollment from Supabase
-      return true;
-    } catch (error) {
-      console.error('Error deleting enrollment:', error);
-      return false;
-    }
-  }
+    if (!error) {
+      // Update enrollment end date
+      const { data: enrollment } = await supabase
+        .from('mentoring_enrollments')
+        .select('end_date')
+        .eq('id', extensionData.enrollmentId)
+        .single();
 
-  async addExtension(data: CreateExtensionData): Promise<boolean> {
-    try {
-      const extension = {
-        id: `ext-${Date.now()}`,
-        enrollment_id: data.enrollmentId,
-        enrollmentId: data.enrollmentId,
-        extension_months: data.extensionMonths,
-        extensionMonths: data.extensionMonths,
-        applied_date: new Date().toISOString(),
-        appliedDate: new Date().toISOString(),
-        notes: data.notes,
-        admin_id: 'current-admin-id',
-        adminId: 'current-admin-id',
-        created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
+      if (enrollment) {
+        const currentEndDate = new Date(enrollment.end_date);
+        const newEndDate = new Date(currentEndDate);
+        newEndDate.setMonth(newEndDate.getMonth() + extensionData.extensionMonths);
 
-      // Logic to update enrollment and add extension
-      return true;
-    } catch (error) {
-      console.error('Error adding extension:', error);
-      return false;
+        await supabase
+          .from('mentoring_enrollments')
+          .update({ 
+            end_date: newEndDate.toISOString().split('T')[0],
+            has_extension: true
+          })
+          .eq('id', extensionData.enrollmentId);
+      }
     }
+
+    return !error;
   }
 
   async removeExtension(extensionId: string): Promise<boolean> {
+    console.log('🗑️ Removendo extensão:', extensionId);
+    
     try {
-      console.log('🗑️ SupabaseMentoringRepository.removeExtension - ID:', extensionId);
-      // Remove extension from Supabase
+      // Buscar a extensão para obter dados antes da remoção
+      const { data: extension, error: fetchError } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .select('enrollment_id, extension_months')
+        .eq('id', extensionId)
+        .single();
+
+      if (fetchError || !extension) {
+        console.error('❌ Erro ao buscar extensão:', fetchError);
+        return false;
+      }
+
+      // Remover a extensão
+      const { error: deleteError } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .delete()
+        .eq('id', extensionId);
+
+      if (deleteError) {
+        console.error('❌ Erro ao remover extensão:', deleteError);
+        return false;
+      }
+
+      // Buscar dados atuais da inscrição
+      const { data: enrollment, error: enrollmentError } = await supabase
+        .from('mentoring_enrollments')
+        .select('end_date, original_end_date')
+        .eq('id', extension.enrollment_id)
+        .single();
+
+      if (enrollmentError || !enrollment) {
+        console.error('❌ Erro ao buscar inscrição:', enrollmentError);
+        return false;
+      }
+
+      // Calcular nova data de término
+      const currentEndDate = new Date(enrollment.end_date);
+      const newEndDate = new Date(currentEndDate);
+      newEndDate.setMonth(newEndDate.getMonth() - extension.extension_months);
+
+      // Verificar se ainda há outras extensões
+      const { data: remainingExtensions } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .select('id')
+        .eq('enrollment_id', extension.enrollment_id);
+
+      const hasExtensions = remainingExtensions && remainingExtensions.length > 0;
+
+      // Atualizar a inscrição
+      const { error: updateError } = await supabase
+        .from('mentoring_enrollments')
+        .update({
+          end_date: newEndDate.toISOString().split('T')[0],
+          has_extension: hasExtensions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', extension.enrollment_id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar inscrição:', updateError);
+        return false;
+      }
+
+      console.log('✅ Extensão removida com sucesso');
       return true;
+
     } catch (error) {
-      console.error('Error removing extension:', error);
+      console.error('❌ Erro geral ao remover extensão:', error);
       return false;
     }
   }
 
+  // Session methods
   async getSessions(): Promise<MentoringSession[]> {
-    try {
-      // Fetch sessions from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-      return [];
-    }
+    const { data, error } = await supabase
+      .from('mentoring_sessions')
+      .select(`
+        *,
+        enrollment:mentoring_enrollments(
+          *,
+          mentoring:mentoring_catalogs(*)
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(session => this.mapSessionFromDB(session));
   }
 
   async getEnrollmentSessions(enrollmentId: string): Promise<MentoringSession[]> {
-    try {
-      // Fetch enrollment sessions from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching enrollment sessions:', error);
-      return [];
-    }
+    const { data, error } = await supabase
+      .from('mentoring_sessions')
+      .select('*')
+      .eq('enrollment_id', enrollmentId)
+      .order('session_number', { ascending: true });
+
+    if (error) throw error;
+    return (data || []).map(session => this.mapSessionFromDB(session));
   }
 
-  async createSession(data: CreateSessionData): Promise<MentoringSession> {
-    try {
-      const sessionNumber = data.sessionNumber || 1; // Auto-generate if not provided
-      
-      const newSession: MentoringSession = {
-        id: `session-${Date.now()}`,
-        enrollment_id: data.enrollmentId,
-        enrollmentId: data.enrollmentId,
-        type: data.type,
-        title: data.title,
-        scheduled_date: data.scheduledDate,
-        scheduledDate: data.scheduledDate,
-        scheduled_time: data.scheduledTime,
-        duration_minutes: data.durationMinutes,
-        durationMinutes: data.durationMinutes,
-        meeting_link: data.meetingLink,
-        meetingLink: data.meetingLink,
-        observations: data.observations,
-        session_number: sessionNumber,
-        sessionNumber: sessionNumber,
-        status: data.status || 'aguardando_agendamento',
-        group_id: data.groupId,
-        groupId: data.groupId,
-        created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+  async createSession(sessionData: CreateSessionData): Promise<MentoringSession> {
+    // Get current session count for this enrollment
+    const { data: existingSessions } = await supabase
+      .from('mentoring_sessions')
+      .select('session_number')
+      .eq('enrollment_id', sessionData.enrollmentId)
+      .order('session_number', { ascending: false })
+      .limit(1);
 
-      return newSession;
-    } catch (error) {
-      console.error('Error creating session:', error);
-      throw error;
-    }
+    const nextSessionNumber = existingSessions && existingSessions.length > 0 
+      ? existingSessions[0].session_number + 1 
+      : 1;
+
+    const { data, error } = await supabase
+      .from('mentoring_sessions')
+      .insert({
+        enrollment_id: sessionData.enrollmentId,
+        session_number: nextSessionNumber,
+        type: sessionData.type,
+        title: sessionData.title,
+        scheduled_date: sessionData.scheduledDate,
+        duration_minutes: sessionData.durationMinutes,
+        meeting_link: sessionData.meetingLink,
+        group_id: sessionData.groupId,
+        status: sessionData.status || 'aguardando_agendamento',
+        observations: sessionData.observations
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return this.mapSessionFromDB(data);
   }
 
-  async updateSession(sessionId: string, data: UpdateSessionData): Promise<boolean> {
-    try {
-      console.log('📝 SupabaseMentoringRepository.updateSession - ID:', sessionId, 'Data:', data);
-      // Update session in Supabase
-      return true;
-    } catch (error) {
-      console.error('Error updating session:', error);
-      return false;
-    }
+  async updateSession(sessionId: string, sessionData: UpdateSessionData): Promise<boolean> {
+    const updateData: any = {};
+    
+    // Map camelCase to snake_case
+    if (sessionData.title) updateData.title = sessionData.title;
+    if (sessionData.scheduledDate) updateData.scheduled_date = sessionData.scheduledDate;
+    if (sessionData.durationMinutes) updateData.duration_minutes = sessionData.durationMinutes;
+    if (sessionData.status) updateData.status = sessionData.status;
+    if (sessionData.meetingLink) updateData.meeting_link = sessionData.meetingLink;
+    if (sessionData.calendlyLink) updateData.calendly_link = sessionData.calendlyLink;
+    if (sessionData.recordingLink) updateData.recording_link = sessionData.recordingLink;
+    if (sessionData.mentorNotes) updateData.mentor_notes = sessionData.mentorNotes;
+    if (sessionData.studentNotes) updateData.student_notes = sessionData.studentNotes;
+    if (sessionData.observations) updateData.observations = sessionData.observations;
+    if (sessionData.transcription) updateData.transcription = sessionData.transcription;
+
+    const { error } = await supabase
+      .from('mentoring_sessions')
+      .update(updateData)
+      .eq('id', sessionId);
+
+    return !error;
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
-    try {
-      console.log('🗑️ SupabaseMentoringRepository.deleteSession - ID:', sessionId);
-      // Delete session from Supabase
-      return true;
-    } catch (error) {
-      console.error('Error deleting session:', error);
-      return false;
-    }
+    const { error } = await supabase
+      .from('mentoring_sessions')
+      .delete()
+      .eq('id', sessionId);
+
+    return !error;
   }
 
+  // Material methods
   async getMaterials(): Promise<MentoringMaterial[]> {
-    try {
-      // Fetch materials from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching materials:', error);
-      return [];
-    }
+    const { data, error } = await supabase
+      .from('mentoring_materials')
+      .select(`
+        *,
+        session:mentoring_sessions(*),
+        enrollment:mentoring_enrollments(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(material => this.mapMaterialFromDB(material));
   }
 
   async getEnrollmentMaterials(enrollmentId: string): Promise<MentoringMaterial[]> {
-    try {
-      // Fetch enrollment materials from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching enrollment materials:', error);
-      return [];
-    }
+    const { data, error } = await supabase
+      .from('mentoring_materials')
+      .select('*')
+      .eq('enrollment_id', enrollmentId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(material => this.mapMaterialFromDB(material));
   }
 
   async getSessionMaterials(sessionId: string): Promise<MentoringMaterial[]> {
-    try {
-      // Fetch session materials from Supabase
-      return []; // Replace with actual data
-    } catch (error) {
-      console.error('Error fetching session materials:', error);
-      return [];
-    }
-  }
+    const { data, error } = await supabase
+      .from('mentoring_materials')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false });
 
-  async uploadMaterial(file: File, enrollmentId?: string, sessionId?: string): Promise<MentoringMaterial> {
-    try {
-      const material: MentoringMaterial = {
-        id: `material-${Date.now()}`,
-        enrollment_id: enrollmentId,
-        enrollmentId: enrollmentId,
-        session_id: sessionId,
-        sessionId: sessionId,
-        file_name: file.name,
-        fileName: file.name,
-        file_url: `fake-url/${file.name}`,
-        fileUrl: `fake-url/${file.name}`,
-        file_type: file.type,
-        fileType: file.type,
-        size_mb: file.size / (1024 * 1024),
-        sizeMb: file.size / (1024 * 1024),
-        created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      return material;
-    } catch (error) {
-      console.error('Error uploading material:', error);
-      throw error;
-    }
+    if (error) throw error;
+    return (data || []).map(material => this.mapMaterialFromDB(material));
   }
 }
