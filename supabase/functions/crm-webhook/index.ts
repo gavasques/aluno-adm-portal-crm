@@ -1,168 +1,40 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface TypeformField {
-  id: string;
-  ref: string;
-  type: string;
-  title: string;
 }
 
-interface TypeformAnswer {
-  type: string;
-  field: TypeformField;
-  text?: string;
-  email?: string;
-  phone_number?: string;
-  boolean?: boolean;
-  choice?: {
-    id: string;
-    ref: string;
-    label: string;
-  };
-  url?: string;
+interface WebhookPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  has_company?: boolean;
+  sells_on_amazon?: boolean;
+  works_with_fba?: boolean;
+  had_contact_with_lv?: boolean;
+  seeks_private_label?: boolean;
+  ready_to_invest_3k?: boolean;
+  calendly_scheduled?: boolean;
+  what_sells?: string;
+  keep_or_new_niches?: string;
+  amazon_store_link?: string;
+  amazon_state?: string;
+  amazon_tax_regime?: string;
+  main_doubts?: string;
+  calendly_link?: string;
+  notes?: string;
+  status_reason?: string;
 }
 
-interface TypeformPayload {
-  event_type: string;
-  form_response: {
-    form_id: string;
-    token: string;
-    answers: TypeformAnswer[];
-    definition: {
-      fields: TypeformField[];
-    };
-    submitted_at: string;
-  };
-}
-
-// Função para detectar se é webhook do Typeform
-function isTypeformWebhook(payload: any): payload is TypeformPayload {
-  return payload && 
-         payload.event_type && 
-         payload.form_response && 
-         Array.isArray(payload.form_response.answers);
-}
-
-// Função para transformar dados do Typeform para formato CRM
-function transformTypeformToCRM(typeformPayload: TypeformPayload, mappings: any[]): any {
-  console.log('🔄 Transforming Typeform data to CRM format');
-  
-  const crmData: any = {};
-  const answers = typeformPayload.form_response.answers;
-
-  // Iterar sobre cada resposta do Typeform
-  answers.forEach(answer => {
-    const field = answer.field;
-    
-    // Tentar encontrar mapeamento por ref, id ou title
-    const mapping = mappings.find(m => 
-      m.webhook_field_name === field.ref ||
-      m.webhook_field_name === field.id ||
-      m.webhook_field_name === field.title ||
-      m.webhook_field_name === `field_${field.ref}` ||
-      m.webhook_field_name === `field_${field.id}`
-    );
-
-    if (!mapping || !mapping.is_active) {
-      console.log(`⚠️ No mapping found for field: ${field.ref} (${field.title})`);
-      return;
-    }
-
-    let value: any = null;
-
-    // Extrair valor baseado no tipo da resposta
-    switch (answer.type) {
-      case 'text':
-        value = answer.text;
-        break;
-      case 'email':
-        value = answer.email;
-        break;
-      case 'phone_number':
-        value = answer.phone_number;
-        break;
-      case 'boolean':
-        value = answer.boolean;
-        break;
-      case 'choice':
-        value = answer.choice?.label;
-        break;
-      case 'url':
-        value = answer.url;
-        break;
-      default:
-        console.log(`⚠️ Unknown answer type: ${answer.type}`);
-        return;
-    }
-
-    // Aplicar transformações se necessário
-    if (mapping.transformation_rules && Object.keys(mapping.transformation_rules).length > 0) {
-      value = applyTransformationRules(value, mapping.transformation_rules);
-    }
-
-    // Mapear para o campo CRM
-    if (mapping.crm_field_type === 'custom') {
-      // Para campos customizados, armazenar em estrutura separada
-      if (!crmData.custom_fields) {
-        crmData.custom_fields = {};
-      }
-      crmData.custom_fields[mapping.custom_field_id] = value;
-    } else {
-      // Para campos padrão
-      crmData[mapping.crm_field_name] = value;
-    }
-
-    console.log(`✅ Mapped ${field.ref} -> ${mapping.crm_field_name}: ${value}`);
-  });
-
-  return crmData;
-}
-
-// Função para aplicar regras de transformação
-function applyTransformationRules(value: any, rules: Record<string, any>): any {
-  if (!value || !rules) return value;
-
-  // Aplicar valor padrão se vazio
-  if (rules.default && (!value || value === '')) {
-    return rules.default;
-  }
-
-  // Transformar texto
-  if (typeof value === 'string') {
-    if (rules.toLowerCase) {
-      value = value.toLowerCase();
-    }
-    if (rules.toUpperCase) {
-      value = value.toUpperCase();
-    }
-    if (rules.trim) {
-      value = value.trim();
-    }
-  }
-
-  // Mapear valores específicos
-  if (rules.valueMap && rules.valueMap[value]) {
-    return rules.valueMap[value];
-  }
-
-  return value;
-}
-
-serve(async (req) => {
+Deno.serve(async (req) => {
   const startTime = Date.now();
+  let payload: WebhookPayload | null = null;
   let pipelineId: string | null = null;
-  let payload: any = null;
   let responseStatus = 200;
-  let responseBody: any = { message: 'Webhook processed successfully' };
+  let responseBody: any = { success: false };
   let leadCreatedId: string | null = null;
-  let processingTime = 0;
   let errorMessage: string | null = null;
   let success = false;
 
@@ -176,11 +48,16 @@ serve(async (req) => {
 
   // Função para validar e formatar IP
   const formatIPAddress = (ip: string): string => {
+    // Remove espaços e pega apenas o primeiro IP se houver múltiplos
     const cleanIP = ip.trim().split(',')[0].trim();
+    
+    // Validação básica de IPv4
     const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
     if (ipv4Regex.test(cleanIP)) {
       return cleanIP;
     }
+    
+    // Se não for um IP válido, retorna localhost
     return '127.0.0.1';
   };
 
@@ -189,13 +66,12 @@ serve(async (req) => {
   try {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
-      return new Response('ok', { headers: corsHeaders });
+      return new Response(null, { headers: corsHeaders });
     }
 
-    // Only allow POST requests
     if (req.method !== 'POST') {
       responseStatus = 405;
-      errorMessage = 'Method not allowed. Only POST requests are accepted.';
+      errorMessage = 'Method not allowed. Use POST.';
       responseBody = { error: errorMessage };
       return new Response(
         JSON.stringify(responseBody),
@@ -206,16 +82,13 @@ serve(async (req) => {
       );
     }
 
-    console.log('🚀 Webhook received');
-
-    // Get pipeline ID and token from URL parameters
+    // Get pipeline_id from URL parameters
     const url = new URL(req.url);
     pipelineId = url.searchParams.get('pipeline_id');
-    const token = url.searchParams.get('token');
-
-    if (!pipelineId || !token) {
+    
+    if (!pipelineId) {
       responseStatus = 400;
-      errorMessage = 'Pipeline ID and token are required in URL parameters.';
+      errorMessage = 'Pipeline ID is required. Use ?pipeline_id=xxx in the URL.';
       responseBody = { error: errorMessage };
       return new Response(
         JSON.stringify(responseBody),
@@ -241,8 +114,35 @@ serve(async (req) => {
         }
       );
     }
+    
+    // Validate required fields
+    if (!payload || !payload.name || !payload.email) {
+      responseStatus = 400;
+      errorMessage = 'Name and email are required fields.';
+      responseBody = { error: errorMessage };
+      return new Response(
+        JSON.stringify(responseBody),
+        { 
+          status: responseStatus, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
-    console.log('📝 Received payload:', JSON.stringify(payload, null, 2));
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(payload.email)) {
+      responseStatus = 400;
+      errorMessage = 'Invalid email format.';
+      responseBody = { error: errorMessage };
+      return new Response(
+        JSON.stringify(responseBody),
+        { 
+          status: responseStatus, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -250,18 +150,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Validate token
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('crm_webhook_tokens')
-      .select('*')
-      .eq('pipeline_id', pipelineId)
-      .eq('token', token)
+    console.log('🔗 Webhook received for pipeline:', pipelineId);
+    console.log('📝 Lead data:', { name: payload.name, email: payload.email });
+
+    // Verify pipeline exists and is active
+    const { data: pipeline, error: pipelineError } = await supabase
+      .from('crm_pipelines')
+      .select('id, name, is_active')
+      .eq('id', pipelineId)
       .eq('is_active', true)
       .single();
 
-    if (tokenError || !tokenData) {
-      responseStatus = 401;
-      errorMessage = 'Invalid or inactive token.';
+    if (pipelineError || !pipeline) {
+      console.error('❌ Pipeline not found or inactive:', pipelineError);
+      responseStatus = 404;
+      errorMessage = 'Pipeline not found or inactive.';
       responseBody = { error: errorMessage };
       return new Response(
         JSON.stringify(responseBody),
@@ -272,121 +175,20 @@ serve(async (req) => {
       );
     }
 
-    // Check token expiration
-    if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-      responseStatus = 401;
-      errorMessage = 'Token has expired.';
-      responseBody = { error: errorMessage };
-      return new Response(
-        JSON.stringify(responseBody),
-        { 
-          status: responseStatus, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Get field mappings for this pipeline
-    const { data: mappings, error: mappingsError } = await supabase
-      .from('crm_webhook_field_mappings')
-      .select(`
-        *,
-        custom_field:crm_custom_fields(id, field_name, field_key)
-      `)
+    // Get the first active column of the pipeline
+    const { data: firstColumn, error: columnError } = await supabase
+      .from('crm_pipeline_columns')
+      .select('id, name')
       .eq('pipeline_id', pipelineId)
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .order('sort_order')
+      .limit(1)
+      .single();
 
-    if (mappingsError) {
-      console.error('❌ Error fetching mappings:', mappingsError);
-      responseStatus = 500;
-      errorMessage = 'Error fetching field mappings.';
-      responseBody = { error: errorMessage };
-      return new Response(
-        JSON.stringify(responseBody),
-        { 
-          status: responseStatus, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    console.log(`📋 Found ${mappings?.length || 0} field mappings for pipeline ${pipelineId}`);
-
-    let leadData: any = {};
-
-    // Detectar e transformar dados do Typeform
-    if (isTypeformWebhook(payload)) {
-      console.log('🎯 Detected Typeform webhook');
-      leadData = transformTypeformToCRM(payload, mappings || []);
-      
-      // Verificar se temos pelo menos o campo obrigatório 'name'
-      if (!leadData.name) {
-        // Tentar encontrar nome em outros campos comuns
-        const possibleNameFields = ['first_name', 'nome', 'name'];
-        for (const field of possibleNameFields) {
-          if (leadData[field]) {
-            leadData.name = leadData[field];
-            break;
-          }
-        }
-      }
-    } else {
-      console.log('📝 Processing generic webhook format');
-      // Processar formato genérico (código existente)
-      if (!payload || !payload.name || !payload.email) {
-        responseStatus = 400;
-        errorMessage = 'Name and email are required fields.';
-        responseBody = { error: errorMessage };
-        return new Response(
-          JSON.stringify(responseBody),
-          { 
-            status: responseStatus, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      // Transform payload based on mappings
-      for (const mapping of mappings || []) {
-        if (!mapping.is_active) continue;
-
-        const webhookValue = payload[mapping.webhook_field_name];
-        
-        if (webhookValue !== undefined && webhookValue !== null) {
-          let transformedValue = webhookValue;
-
-          // Apply transformation rules if they exist
-          if (mapping.transformation_rules && Object.keys(mapping.transformation_rules).length > 0) {
-            transformedValue = applyTransformationRules(webhookValue, mapping.transformation_rules);
-          }
-
-          if (mapping.crm_field_type === 'custom') {
-            if (!leadData.custom_fields) {
-              leadData.custom_fields = {};
-            }
-            leadData.custom_fields[mapping.custom_field_id] = transformedValue;
-          } else {
-            leadData[mapping.crm_field_name] = transformedValue;
-          }
-        } else if (mapping.is_required) {
-          responseStatus = 400;
-          errorMessage = `Required field '${mapping.webhook_field_name}' is missing.`;
-          responseBody = { error: errorMessage };
-          return new Response(
-            JSON.stringify(responseBody),
-            { 
-              status: responseStatus, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          );
-        }
-      }
-    }
-
-    // Validar campos obrigatórios após transformação
-    if (!leadData.name) {
+    if (columnError || !firstColumn) {
+      console.error('❌ No active columns found for pipeline:', columnError);
       responseStatus = 400;
-      errorMessage = 'Name field is required but not found in mapped data.';
+      errorMessage = 'No active columns found for this pipeline.';
       responseBody = { error: errorMessage };
       return new Response(
         JSON.stringify(responseBody),
@@ -397,37 +199,70 @@ serve(async (req) => {
       );
     }
 
-    // Set default pipeline and column if not provided
-    leadData.pipeline_id = leadData.pipeline_id || pipelineId;
+    // Check if lead with this email already exists
+    const { data: existingLead } = await supabase
+      .from('crm_leads')
+      .select('id, name, email')
+      .eq('email', payload.email)
+      .single();
 
-    if (!leadData.column_id) {
-      // Get the first column of the pipeline as default
-      const { data: columns } = await supabase
-        .from('crm_pipeline_columns')
-        .select('id')
-        .eq('pipeline_id', pipelineId)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .limit(1);
-
-      if (columns && columns.length > 0) {
-        leadData.column_id = columns[0].id;
-      }
+    if (existingLead) {
+      console.log('⚠️ Lead already exists:', existingLead.id);
+      leadCreatedId = existingLead.id;
+      success = true;
+      responseBody = { 
+        message: 'Lead already exists',
+        lead_id: existingLead.id,
+        existing: true
+      };
+      return new Response(
+        JSON.stringify(responseBody),
+        { 
+          status: responseStatus, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    console.log('💾 Creating lead with data:', JSON.stringify(leadData, null, 2));
+    // Prepare lead data
+    const leadData = {
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone || null,
+      has_company: payload.has_company || false,
+      sells_on_amazon: payload.sells_on_amazon || false,
+      works_with_fba: payload.works_with_fba || false,
+      had_contact_with_lv: payload.had_contact_with_lv || false,
+      seeks_private_label: payload.seeks_private_label || false,
+      ready_to_invest_3k: payload.ready_to_invest_3k || false,
+      calendly_scheduled: payload.calendly_scheduled || false,
+      what_sells: payload.what_sells || null,
+      keep_or_new_niches: payload.keep_or_new_niches || null,
+      amazon_store_link: payload.amazon_store_link || null,
+      amazon_state: payload.amazon_state || null,
+      amazon_tax_regime: payload.amazon_tax_regime || null,
+      main_doubts: payload.main_doubts || null,
+      calendly_link: payload.calendly_link || null,
+      notes: payload.notes || null,
+      status_reason: payload.status_reason || null,
+      pipeline_id: pipelineId,
+      column_id: firstColumn.id,
+      status: 'aberto' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
     // Create the lead
     const { data: newLead, error: leadError } = await supabase
       .from('crm_leads')
       .insert(leadData)
-      .select()
+      .select('id, name, email, pipeline_id, column_id')
       .single();
 
     if (leadError) {
       console.error('❌ Error creating lead:', leadError);
       responseStatus = 500;
-      errorMessage = `Error creating lead: ${leadError.message}`;
+      errorMessage = 'Failed to create lead: ' + leadError.message;
       responseBody = { error: errorMessage };
       return new Response(
         JSON.stringify(responseBody),
@@ -438,15 +273,43 @@ serve(async (req) => {
       );
     }
 
+    console.log('✅ Lead created successfully:', newLead.id);
     leadCreatedId = newLead.id;
     success = true;
-    responseBody = { 
-      message: 'Lead created successfully', 
-      lead_id: newLead.id,
-      source: isTypeformWebhook(payload) ? 'typeform' : 'generic'
-    };
 
-    console.log(`✅ Lead created successfully with ID: ${newLead.id}`);
+    // Log the webhook activity for audit (existing audit log)
+    await supabase
+      .from('audit_logs')
+      .insert({
+        event_type: 'crm_webhook_received',
+        event_category: 'crm',
+        action: 'create_lead',
+        description: `Lead criado via webhook para pipeline ${pipeline.name}`,
+        entity_type: 'crm_lead',
+        entity_id: newLead.id,
+        metadata: {
+          pipeline_id: pipelineId,
+          pipeline_name: pipeline.name,
+          column_id: firstColumn.id,
+          column_name: firstColumn.name,
+          webhook_source: 'external'
+        },
+        risk_level: 'low'
+      });
+
+    responseBody = {
+      success: true,
+      message: 'Lead created successfully',
+      lead_id: newLead.id,
+      pipeline: {
+        id: pipeline.id,
+        name: pipeline.name
+      },
+      column: {
+        id: firstColumn.id,
+        name: firstColumn.name
+      }
+    };
 
     return new Response(
       JSON.stringify(responseBody),
@@ -457,9 +320,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
+    console.error('❌ Webhook error:', error);
     responseStatus = 500;
-    errorMessage = `Internal server error: ${error.message}`;
+    errorMessage = 'Internal server error: ' + (error as Error).message;
     responseBody = { error: errorMessage };
     
     return new Response(
@@ -470,9 +333,9 @@ serve(async (req) => {
       }
     );
   } finally {
-    processingTime = Date.now() - startTime;
+    // SEMPRE salvar log detalhado do webhook, independente de sucesso ou erro
+    const processingTime = Date.now() - startTime;
     
-    // Log the webhook request
     try {
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
