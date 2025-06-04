@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs } from '@/components/ui/tabs';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import { useOptimizedCRMTags } from '@/hooks/crm/useOptimizedCRMTags';
+import { useIntelligentCRMCache } from '@/hooks/crm/useIntelligentCRMCache';
 import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 import { CRMDashboardHeader } from './CRMDashboardHeader';
 import { CRMDashboardContent } from './CRMDashboardContent';
+import { CacheStatusIndicator } from '../cache/CacheStatusIndicator';
 import { useCRMDashboardState } from './useCRMDashboardState';
 import { motion } from 'framer-motion';
 import { CORSDebugSection } from '@/components/admin/dashboard/CORSDebugSection';
@@ -23,6 +26,14 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const [loadingSequence, setLoadingSequence] = React.useState<'pipelines' | 'users' | 'tags' | 'complete'>('pipelines');
   const [hasError, setHasError] = React.useState(false);
   const [showDiagnostics, setShowDiagnostics] = React.useState(false);
+  
+  // Cache inteligente
+  const {
+    saveKanbanState,
+    loadKanbanState,
+    prefetchCriticalData,
+    getCacheStats
+  } = useIntelligentCRMCache();
   
   // Estado do dashboard
   const {
@@ -47,6 +58,31 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     handleLeadFormSuccess,
     handleTagsChange
   } = useCRMDashboardState();
+
+  // Carregar estado persistido na inicialização
+  React.useEffect(() => {
+    const persistedState = loadKanbanState();
+    if (persistedState.selectedPipelineId && !selectedPipelineId) {
+      setSelectedPipelineId(persistedState.selectedPipelineId);
+    }
+    if (persistedState.viewMode !== activeView) {
+      setActiveView(persistedState.viewMode);
+    }
+  }, [loadKanbanState, selectedPipelineId, setSelectedPipelineId, activeView, setActiveView]);
+
+  // Salvar estado quando mudanças importantes acontecem
+  React.useEffect(() => {
+    if (selectedPipelineId) {
+      saveKanbanState({
+        selectedPipelineId,
+        filters,
+        viewMode: activeView
+      });
+      
+      // Prefetch dados críticos
+      prefetchCriticalData(selectedPipelineId);
+    }
+  }, [selectedPipelineId, filters, activeView, saveKanbanState, prefetchCriticalData]);
 
   // Hooks de dados com loading sequencial
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
@@ -174,6 +210,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] pointer-events-none" />
+      </div>
+
+      {/* Indicador de Cache - Fixo no canto superior direito */}
+      <div className="absolute top-4 right-4 z-50">
+        <CacheStatusIndicator />
       </div>
 
       <Tabs 

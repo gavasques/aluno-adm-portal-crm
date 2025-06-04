@@ -7,6 +7,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useCRMDataTransformService } from './services/useCRMDataTransformService';
 import { useCRMLeadFilters } from './useCRMLeadFilters';
 import { useIntelligentCache } from './useIntelligentCache';
+import { useIntelligentCRMCache } from './useIntelligentCRMCache';
 import { measureAsyncOperation } from '@/utils/performanceMonitor';
 import { debugLogger } from '@/utils/debug-logger';
 
@@ -19,6 +20,13 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
   const { transformLeadData } = useCRMDataTransformService();
   const { filterLeadsByContact, filterLeadsByTags } = useCRMLeadFilters();
   const { getCacheStrategy, optimizeCache } = useIntelligentCache();
+  
+  // Cache inteligente
+  const {
+    getCachedLeadsByColumn,
+    cacheLeadsByColumn,
+    addOfflineOperation
+  } = useIntelligentCRMCache();
 
   // Estratégia de cache inteligente
   const cacheStrategy = getCacheStrategy('unified-crm-leads', debouncedFilters);
@@ -36,6 +44,25 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
         operation: 'fetchUnifiedLeadsData'
       });
       return [];
+    }
+
+    // Tentar cache primeiro quando offline
+    if (!navigator.onLine) {
+      const cached = getCachedLeadsByColumn(debouncedFilters.pipeline_id);
+      if (cached) {
+        debugLogger.info('📱 [UNIFIED_CRM] Usando dados em cache (modo offline)', {
+          component: 'useUnifiedCRMData',
+          operation: 'fetchFromCache',
+          pipelineId: debouncedFilters.pipeline_id
+        });
+        
+        // Converter para array simples
+        const leadsArray: LeadWithContacts[] = [];
+        Object.values(cached).forEach(columnLeads => {
+          leadsArray.push(...columnLeads);
+        });
+        return leadsArray;
+      }
     }
 
     return await measureAsyncOperation('fetch_unified_leads_data', async () => {
@@ -160,10 +187,28 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           operation: 'fetchUnifiedLeadsData',
           error: error instanceof Error ? error.message : String(error)
         });
+        
+        // Em caso de erro, tentar usar cache como fallback
+        if (debouncedFilters.pipeline_id) {
+          const cached = getCachedLeadsByColumn(debouncedFilters.pipeline_id);
+          if (cached) {
+            debugLogger.info('🔄 [UNIFIED_CRM] Usando cache como fallback após erro', {
+              component: 'useUnifiedCRMData',
+              operation: 'fallbackToCache'
+            });
+            
+            const leadsArray: LeadWithContacts[] = [];
+            Object.values(cached).forEach(columnLeads => {
+              leadsArray.push(...columnLeads);
+            });
+            return leadsArray;
+          }
+        }
+        
         throw error;
       }
     });
-  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags, validateLeadStatus]);
+  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags, validateLeadStatus, getCachedLeadsByColumn]);
 
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
     queryKey: ['unified-crm-leads', debouncedFilters],
@@ -183,6 +228,11 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
       }
     });
     
+    // Cache dos dados agrupados
+    if (debouncedFilters.pipeline_id && Object.keys(grouped).length > 0) {
+      cacheLeadsByColumn(debouncedFilters.pipeline_id, grouped);
+    }
+    
     debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna (simplificado)', {
       component: 'useUnifiedCRMData',
       operation: 'groupLeadsByColumn',
@@ -194,7 +244,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
     });
     
     return grouped;
-  }, [leadsWithContacts]);
+  }, [leadsWithContacts, debouncedFilters.pipeline_id, cacheLeadsByColumn]);
 
   // Otimizar cache quando os dados estiverem prontos
   React.useEffect(() => {
@@ -202,6 +252,17 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
       optimizeCache(leadsWithContacts);
     }
   }, [leadsWithContacts, isLoading, optimizeCache]);
+
+  // Salvar operações em queue quando offline
+  React.useEffect(() => {
+    if (!navigator.onLine && error) {
+      // Adicionar uma operação de retry para quando voltar online
+      addOfflineOperation({
+        type: 'move_lead', // Tipo genérico para refetch
+        data: { filters: debouncedFilters }
+      });
+    }
+  }, [error, debouncedFilters, addOfflineOperation]);
 
   return {
     leadsWithContacts,
