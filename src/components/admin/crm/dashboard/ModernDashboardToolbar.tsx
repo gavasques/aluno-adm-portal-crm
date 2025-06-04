@@ -171,22 +171,30 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
             )}
           </div>
 
-          {/* Lado Direito - Controles de Visualização */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+          {/* Lado Direito - Controles de Visualização - CORRIGIDO */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
-              variant={activeView === 'kanban' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onViewChange('kanban')}
-              className={`h-9 px-4 ${activeView === 'kanban' ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
+              className={`h-9 px-4 rounded-md transition-all duration-200 ${
+                activeView === 'kanban' 
+                  ? 'bg-white text-gray-900 shadow-sm font-medium' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+              }`}
             >
               <Grid3X3 className="h-4 w-4 mr-2" />
               Kanban
             </Button>
             <Button
-              variant={activeView === 'list' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onViewChange('list')}
-              className={`h-9 px-4 ${activeView === 'list' ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
+              className={`h-9 px-4 rounded-md transition-all duration-200 ${
+                activeView === 'list' 
+                  ? 'bg-white text-gray-900 shadow-sm font-medium' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+              }`}
             >
               <List className="h-4 w-4 mr-2" />
               Lista
