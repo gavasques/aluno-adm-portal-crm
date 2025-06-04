@@ -1,12 +1,5 @@
 
 import React, { useState } from "react";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetFooter 
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +80,13 @@ const SortableColumnItem = ({ column, leadCount, onRemove }: SortableColumnItemP
 
 const ColumnManager = ({ pipelineId, onRefresh }: ColumnManagerProps) => {
   const [newColumnName, setNewColumnName] = useState("");
-  const { columns, leads, addColumn, removeColumn, reorderColumns, saveChanges } = useCRMPipelines();
+  const { 
+    columns, 
+    createColumn, 
+    deleteColumn, 
+    updateColumn,
+    refetch 
+  } = useCRMPipelines();
   
   // Configure DND sensors
   const sensors = useSensors(
@@ -98,19 +97,72 @@ const ColumnManager = ({ pipelineId, onRefresh }: ColumnManagerProps) => {
     })
   );
   
-  const handleAddColumn = () => {
+  const handleAddColumn = async () => {
     if (newColumnName.trim()) {
-      addColumn(pipelineId, newColumnName);
-      setNewColumnName("");
+      try {
+        // Get the next sort order
+        const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
+        const nextSortOrder = pipelineColumns.length > 0 
+          ? Math.max(...pipelineColumns.map(col => col.sort_order)) + 1 
+          : 0;
+
+        await createColumn({
+          name: newColumnName,
+          pipeline_id: pipelineId,
+          sort_order: nextSortOrder,
+          is_active: true,
+          color: '#6b7280'
+        });
+        
+        setNewColumnName("");
+        onRefresh?.();
+      } catch (error) {
+        console.error('Error creating column:', error);
+      }
     }
   };
 
-  const handleReorderColumns = (event: any) => {
-    reorderColumns(event);
+  const handleReorderColumns = async (event: any) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
+    const oldIndex = pipelineColumns.findIndex(col => col.id === active.id);
+    const newIndex = pipelineColumns.findIndex(col => col.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reorderedColumns = [...pipelineColumns];
+    const [movedColumn] = reorderedColumns.splice(oldIndex, 1);
+    reorderedColumns.splice(newIndex, 0, movedColumn);
+
+    // Update sort orders
+    try {
+      for (let i = 0; i < reorderedColumns.length; i++) {
+        if (reorderedColumns[i].sort_order !== i) {
+          await updateColumn(reorderedColumns[i].id, { sort_order: i });
+        }
+      }
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error reordering columns:', error);
+    }
+  };
+
+  const handleRemoveColumn = async (column: CRMPipelineColumn) => {
+    try {
+      await deleteColumn(column.id);
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error removing column:', error);
+    }
   };
 
   const handleSave = () => {
-    saveChanges();
+    refetch();
     onRefresh?.();
   };
 
@@ -118,9 +170,8 @@ const ColumnManager = ({ pipelineId, onRefresh }: ColumnManagerProps) => {
     onRefresh?.();
   };
 
-  // Filter columns and leads for the current pipeline
+  // Filter columns for the current pipeline
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
-  const pipelineLeads = leads.filter(lead => lead.pipeline_id === pipelineId);
 
   return (
     <div className="space-y-6">
@@ -152,17 +203,14 @@ const ColumnManager = ({ pipelineId, onRefresh }: ColumnManagerProps) => {
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-2">
-              {pipelineColumns.map(column => {
-                const leadCount = pipelineLeads.filter(lead => lead.column_id === column.id).length;
-                return (
-                  <SortableColumnItem 
-                    key={column.id} 
-                    column={column} 
-                    leadCount={leadCount} 
-                    onRemove={removeColumn} 
-                  />
-                );
-              })}
+              {pipelineColumns.map(column => (
+                <SortableColumnItem 
+                  key={column.id} 
+                  column={column} 
+                  leadCount={0} // We don't have leads data here, so showing 0
+                  onRemove={handleRemoveColumn} 
+                />
+              ))}
             </div>
           </SortableContext>
         </DndContext>
