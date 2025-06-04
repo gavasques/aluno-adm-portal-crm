@@ -31,40 +31,60 @@ export const useCRMLeadDetail = (leadId: string) => {
       // Buscar dados relacionados separadamente para evitar JOINs complexos
       const [pipelineData, columnData, responsibleData, lossReasonData, tagsData] = await Promise.all([
         // Pipeline
-        lead.pipeline_id ? supabase
-          .from('crm_pipelines')
-          .select('id, name, description, sort_order, is_active, created_at, updated_at')
-          .eq('id', lead.pipeline_id)
-          .single()
-          .then(res => res.data)
-          .catch(() => null) : null,
+        lead.pipeline_id ? 
+          supabase
+            .from('crm_pipelines')
+            .select('id, name, description, sort_order, is_active, created_at, updated_at')
+            .eq('id', lead.pipeline_id)
+            .single()
+            .then(res => res.data)
+            .catch(err => {
+              console.warn('Pipeline not found:', err);
+              return null;
+            }) : 
+          Promise.resolve(null),
         
         // Column
-        lead.column_id ? supabase
-          .from('crm_pipeline_columns')
-          .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
-          .eq('id', lead.column_id)
-          .single()
-          .then(res => res.data)
-          .catch(() => null) : null,
+        lead.column_id ? 
+          supabase
+            .from('crm_pipeline_columns')
+            .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
+            .eq('id', lead.column_id)
+            .single()
+            .then(res => res.data)
+            .catch(err => {
+              console.warn('Column not found:', err);
+              return null;
+            }) : 
+          Promise.resolve(null),
         
         // Responsible
-        lead.responsible_id ? supabase
-          .from('profiles')
-          .select('id, name, email')
-          .eq('id', lead.responsible_id)
-          .single()
-          .then(res => res.data)
-          .catch(() => null) : null,
+        lead.responsible_id ? 
+          supabase
+            .from('profiles')
+            .select('id, name, email')
+            .eq('id', lead.responsible_id)
+            .single()
+            .then(res => res.data)
+            .catch(err => {
+              console.warn('Responsible not found:', err);
+              return null;
+            }) : 
+          Promise.resolve(null),
         
         // Loss Reason
-        lead.loss_reason_id ? supabase
-          .from('crm_loss_reasons')
-          .select('id, name, description, sort_order, is_active, created_at, updated_at')
-          .eq('id', lead.loss_reason_id)
-          .single()
-          .then(res => res.data)
-          .catch(() => null) : null,
+        lead.loss_reason_id ? 
+          supabase
+            .from('crm_loss_reasons')
+            .select('id, name, description, sort_order, is_active, created_at, updated_at')
+            .eq('id', lead.loss_reason_id)
+            .single()
+            .then(res => res.data)
+            .catch(err => {
+              console.warn('Loss reason not found:', err);
+              return null;
+            }) : 
+          Promise.resolve(null),
         
         // Tags
         supabase
@@ -74,16 +94,19 @@ export const useCRMLeadDetail = (leadId: string) => {
           `)
           .eq('lead_id', leadId)
           .then(res => res.data?.map(item => item.crm_tags).filter(Boolean) || [])
-          .catch(() => [])
+          .catch(err => {
+            console.warn('Tags not found:', err);
+            return [];
+          })
       ]);
 
       const processedLead: CRMLead = {
         ...lead,
         status: lead.status as LeadStatus,
-        pipeline: pipelineData,
-        column: columnData,
-        responsible: responsibleData,
-        loss_reason: lossReasonData,
+        pipeline: pipelineData || undefined,
+        column: columnData || undefined,
+        responsible: responsibleData || undefined,
+        loss_reason: lossReasonData || undefined,
         tags: tagsData
       };
 
