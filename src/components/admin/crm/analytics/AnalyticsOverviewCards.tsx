@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Users, Target, Clock } from 'lucide-react';
+import { useCRMAnalytics } from '@/hooks/crm/useCRMAnalytics';
 
 interface OverviewCard {
   title: string;
@@ -13,49 +14,65 @@ interface OverviewCard {
 }
 
 interface AnalyticsOverviewCardsProps {
-  analyticsMetrics?: {
-    totalLeads?: number;
-    leadsThisWeek?: number;
-    conversionRate?: number;
-    averageTimeInPipeline?: number;
-  };
+  dateRange?: { from: Date; to: Date };
 }
 
 export const AnalyticsOverviewCards: React.FC<AnalyticsOverviewCardsProps> = ({
-  analyticsMetrics
+  dateRange = {
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    to: new Date()
+  }
 }) => {
+  const { analyticsMetrics, isLoading } = useCRMAnalytics(dateRange);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!analyticsMetrics) return null;
+
   const overviewCards: OverviewCard[] = [
     {
       title: 'Total de Leads',
-      value: analyticsMetrics?.totalLeads || 0,
-      subtitle: `${analyticsMetrics?.leadsThisWeek || 0} esta semana`,
+      value: analyticsMetrics.totalLeads,
+      subtitle: `${analyticsMetrics.leadsThisWeek} esta semana`,
       icon: Users,
       color: 'blue',
-      trend: '+12%'
+      trend: analyticsMetrics.leadsThisWeek > 0 ? '+' + analyticsMetrics.leadsThisWeek.toString() : '0'
     },
     {
       title: 'Taxa de Conversão',
-      value: `${analyticsMetrics?.conversionRate || 0}%`,
+      value: `${analyticsMetrics.conversionRate.toFixed(1)}%`,
       subtitle: 'Média do período',
       icon: Target,
       color: 'green',
-      trend: '+3.2%'
+      trend: analyticsMetrics.conversionRate > 20 ? '+Boa' : 'Baixa'
     },
     {
-      title: 'Tempo Médio',
-      value: `${analyticsMetrics?.averageTimeInPipeline || 0} dias`,
-      subtitle: 'No pipeline',
+      title: 'Tempo Médio no Pipeline',
+      value: `${analyticsMetrics.averageTimeInPipeline} dias`,
+      subtitle: 'Para conversão',
       icon: Clock,
       color: 'orange',
-      trend: '-2 dias'
+      trend: analyticsMetrics.averageTimeInPipeline < 30 ? 'Rápido' : 'Lento'
     },
     {
-      title: 'Performance',
-      value: '85%',
-      subtitle: 'Meta atingida',
+      title: 'Performance Geral',
+      value: analyticsMetrics.conversionRate > 15 ? 'Boa' : 'Regular',
+      subtitle: 'Baseado na conversão',
       icon: TrendingUp,
       color: 'purple',
-      trend: '+5%'
+      trend: analyticsMetrics.conversionRate > 15 ? '+5%' : 'Estável'
     }
   ];
 
@@ -63,7 +80,7 @@ export const AnalyticsOverviewCards: React.FC<AnalyticsOverviewCardsProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {overviewCards.map((card, index) => {
         const Icon = card.icon;
-        const isPositive = card.trend.startsWith('+');
+        const isPositive = card.trend.startsWith('+') || card.trend === 'Boa' || card.trend === 'Rápido';
         const TrendIcon = isPositive ? TrendingUp : TrendingDown;
         
         return (

@@ -36,6 +36,12 @@ export const useCRMPerformance = () => {
       .select('*', { count: 'exact', head: true })
       .gte('created_at', startOfMonth.toISOString());
 
+    // Leads convertidos (ganho)
+    const { count: convertedLeads } = await supabase
+      .from('crm_leads')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'ganho');
+
     // Contatos agendados
     const { count: contactsScheduled } = await supabase
       .from('crm_lead_contacts')
@@ -54,11 +60,12 @@ export const useCRMPerformance = () => {
       .select('*', { count: 'exact', head: true })
       .eq('status', 'overdue');
 
-    // Top performers
+    // Top performers - buscar responsáveis com mais leads e suas conversões
     const { data: topPerformersData } = await supabase
       .from('crm_leads')
       .select(`
         responsible_id,
+        status,
         responsible:profiles!crm_leads_responsible_id_fkey(id, name)
       `)
       .not('responsible_id', 'is', null);
@@ -69,30 +76,56 @@ export const useCRMPerformance = () => {
       if (lead.responsible) {
         const id = lead.responsible.id;
         if (performersMap.has(id)) {
+          const current = performersMap.get(id);
           performersMap.set(id, {
-            ...performersMap.get(id),
-            leadsCount: performersMap.get(id).leadsCount + 1
+            ...current,
+            leadsCount: current.leadsCount + 1,
+            convertedCount: current.convertedCount + (lead.status === 'ganho' ? 1 : 0)
           });
         } else {
           performersMap.set(id, {
             id: lead.responsible.id,
-            name: lead.responsible.name,
+            name: lead.responsible.name || 'Sem nome',
             leadsCount: 1,
-            conversionRate: 0 // Calcular posteriormente
+            convertedCount: lead.status === 'ganho' ? 1 : 0
           });
         }
       }
     });
 
     const topPerformers = Array.from(performersMap.values())
+      .map(performer => ({
+        ...performer,
+        conversionRate: performer.leadsCount > 0 ? 
+          (performer.convertedCount / performer.leadsCount) * 100 : 0
+      }))
       .sort((a, b) => b.leadsCount - a.leadsCount)
       .slice(0, 5);
+
+    // Calcular tempo médio de resposta (simplificado)
+    const { data: contactsWithTimes } = await supabase
+      .from('crm_lead_contacts')
+      .select('created_at, contact_date')
+      .eq('status', 'completed')
+      .limit(100);
+
+    let averageResponseTime = 0;
+    if (contactsWithTimes && contactsWithTimes.length > 0) {
+      const totalHours = contactsWithTimes.reduce((sum, contact) => {
+        const created = new Date(contact.created_at);
+        const contacted = new Date(contact.contact_date);
+        const hoursDiff = (contacted.getTime() - created.getTime()) / (1000 * 60 * 60);
+        return sum + Math.max(0, hoursDiff);
+      }, 0);
+      averageResponseTime = Math.round(totalHours / contactsWithTimes.length);
+    }
 
     return {
       totalLeads: totalLeads || 0,
       leadsThisMonth: leadsThisMonth || 0,
-      conversionRate: totalLeads ? ((contactsCompleted || 0) / totalLeads) * 100 : 0,
-      averageResponseTime: 24, // Simulated - implementar cálculo real
+      conversionRate: totalLeads && totalLeads > 0 ? 
+        ((convertedLeads || 0) / totalLeads) * 100 : 0,
+      averageResponseTime,
       contactsScheduled: contactsScheduled || 0,
       contactsCompleted: contactsCompleted || 0,
       overdueContacts: overdueContacts || 0,

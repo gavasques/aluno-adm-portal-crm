@@ -17,13 +17,13 @@ const CRMStatsCards = React.memo(({ filters }: CRMStatsCardsProps) => {
 
     const total = leadsWithContacts.length;
     const qualified = leadsWithContacts.filter(lead => 
-      lead.column?.name && !['Novo Lead', 'Perdido'].includes(lead.column.name)
+      lead.status === 'aberto' && lead.responsible_id
     ).length;
     const closed = leadsWithContacts.filter(lead => 
-      lead.column?.name === 'Fechado'
+      lead.status === 'ganho'
     ).length;
     const pending = leadsWithContacts.filter(lead => 
-      !lead.responsible_id
+      !lead.responsible_id || lead.status === 'aberto'
     ).length;
 
     return { total, qualified, closed, pending };
@@ -34,27 +34,27 @@ const CRMStatsCards = React.memo(({ filters }: CRMStatsCardsProps) => {
       title: "Total de Leads",
       value: stats.total,
       icon: <Users className="h-4 w-4" />,
-      description: "No pipeline atual"
+      description: loading ? "Carregando..." : "No pipeline atual"
     },
     {
-      title: "Qualificados",
+      title: "Leads Qualificados",
       value: stats.qualified,
       icon: <TrendingUp className="h-4 w-4" />,
-      description: "Em processo de venda"
+      description: loading ? "Carregando..." : "Com responsável definido"
     },
     {
-      title: "Fechados",
+      title: "Leads Convertidos",
       value: stats.closed,
       icon: <DollarSign className="h-4 w-4" />,
-      description: "Vendas concluídas"
+      description: loading ? "Carregando..." : "Status: Ganho"
     },
     {
-      title: "Sem Responsável",
+      title: "Leads Pendentes",
       value: stats.pending,
       icon: <Clock className="h-4 w-4" />,
-      description: "Aguardando atribuição"
+      description: loading ? "Carregando..." : "Sem responsável ou em aberto"
     }
-  ], [stats]);
+  ], [stats, loading]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -62,7 +62,7 @@ const CRMStatsCards = React.memo(({ filters }: CRMStatsCardsProps) => {
         <CardStats
           key={index}
           title={stat.title}
-          value={stat.value}
+          value={loading ? 0 : stat.value}
           icon={stat.icon}
           description={stat.description}
         />

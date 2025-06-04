@@ -3,21 +3,37 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, Users, DollarSign, Target, Activity, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCRMPerformance } from '@/hooks/crm/useCRMPerformance';
 
 interface MetricCardProps {
   title: string;
   value: string | number;
-  change: string;
-  changeType: 'positive' | 'negative' | 'neutral';
+  change?: string;
+  changeType?: 'positive' | 'negative' | 'neutral';
   icon: React.ReactNode;
+  loading?: boolean;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, changeType, icon }) => {
-  const changeColor = {
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, changeType, icon, loading }) => {
+  const changeColor = changeType ? {
     positive: 'text-green-600',
     negative: 'text-red-600',
     neutral: 'text-gray-600'
-  }[changeType];
+  }[changeType] : 'text-gray-600';
+
+  if (loading) {
+    return (
+      <Card className="relative overflow-hidden border-0 shadow-md">
+        <CardContent className="p-6">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="h-8 bg-gray-200 rounded mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <motion.div
@@ -31,10 +47,12 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, changeTyp
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
               <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
-              <p className={`text-xs font-medium ${changeColor} flex items-center gap-1`}>
-                {changeType === 'positive' && <TrendingUp className="h-3 w-3" />}
-                {change}
-              </p>
+              {change && (
+                <p className={`text-xs font-medium ${changeColor} flex items-center gap-1`}>
+                  {changeType === 'positive' && <TrendingUp className="h-3 w-3" />}
+                  {change}
+                </p>
+              )}
             </div>
             <div className="flex-shrink-0 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
               {icon}
@@ -48,41 +66,43 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, changeTyp
 };
 
 export const CRMMetricsCards: React.FC = () => {
-  const metrics = [
+  const { metrics, isLoading } = useCRMPerformance();
+
+  const metricsData = [
     {
       title: 'Total de Leads',
-      value: '1,234',
-      change: '+12% este mês',
-      changeType: 'positive' as const,
+      value: metrics?.totalLeads || 0,
+      change: `${metrics?.leadsThisMonth || 0} este mês`,
+      changeType: 'neutral' as const,
       icon: <Users className="h-6 w-6 text-blue-600" />
     },
     {
       title: 'Taxa de Conversão',
-      value: '24.5%',
-      change: '+3.2% vs último mês',
-      changeType: 'positive' as const,
+      value: `${(metrics?.conversionRate || 0).toFixed(1)}%`,
+      change: metrics?.conversionRate && metrics.conversionRate > 15 ? 'Acima da média' : 'Abaixo da média',
+      changeType: metrics?.conversionRate && metrics.conversionRate > 15 ? 'positive' : 'negative' as const,
       icon: <Target className="h-6 w-6 text-green-600" />
     },
     {
-      title: 'Valor em Pipeline',
-      value: 'R$ 2.4M',
-      change: '+8.5% este mês',
-      changeType: 'positive' as const,
-      icon: <DollarSign className="h-6 w-6 text-emerald-600" />
+      title: 'Contatos Agendados',
+      value: metrics?.contactsScheduled || 0,
+      change: `${metrics?.contactsCompleted || 0} realizados`,
+      changeType: 'neutral' as const,
+      icon: <Clock className="h-6 w-6 text-orange-600" />
     },
     {
-      title: 'Atividade Hoje',
-      value: '47',
-      change: '12 pendentes',
-      changeType: 'neutral' as const,
-      icon: <Activity className="h-6 w-6 text-orange-600" />
+      title: 'Atividades Pendentes',
+      value: (metrics?.contactsScheduled || 0) + (metrics?.overdueContacts || 0),
+      change: `${metrics?.overdueContacts || 0} em atraso`,
+      changeType: metrics?.overdueContacts && metrics.overdueContacts > 0 ? 'negative' : 'positive' as const,
+      icon: <Activity className="h-6 w-6 text-purple-600" />
     }
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {metrics.map((metric, index) => (
-        <MetricCard key={index} {...metric} />
+      {metricsData.map((metric, index) => (
+        <MetricCard key={index} {...metric} loading={isLoading} />
       ))}
     </div>
   );
