@@ -44,7 +44,7 @@ export const useFastCRMData = (filters: CRMFilters) => {
           updated_at,
           responsible:profiles!crm_leads_responsible_id_fkey(id, name),
           column:crm_pipeline_columns!crm_leads_column_id_fkey(id, name, color),
-          pipeline:crm_pipelines!crm_leads_pipeline_id_fkey(id, name)
+          pipeline:crm_pipelines!crm_leads_pipeline_id_fkey(id, name, sort_order, is_active, created_at, updated_at)
         `)
         .order('created_at', { ascending: false });
 
