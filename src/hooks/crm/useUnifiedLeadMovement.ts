@@ -53,7 +53,7 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
     });
 
     try {
-      // Validar coluna de destino
+      // Validar coluna de destino com query simples
       const { data: column, error: columnError } = await supabase
         .from('crm_pipeline_columns')
         .select('id, name, pipeline_id, is_active')
@@ -84,7 +84,7 @@ export const useUnifiedLeadMovement = (filters: CRMFilters) => {
 
       console.log(`💾 [UNIFIED_MOVEMENT_${operationId}] Persistindo no banco...`);
       
-      // Atualizar no banco de dados
+      // Atualizar no banco de dados com UPDATE simples
       const { data: updatedLead, error } = await supabase
         .from('crm_leads')
         .update({

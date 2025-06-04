@@ -32,9 +32,14 @@ export const useLeadStatusChange = () => {
       const updateData: any = {
         status,
         status_changed_at: new Date().toISOString(),
-        status_changed_by: (await supabase.auth.getUser()).data.user?.id,
         updated_at: new Date().toISOString()
       };
+
+      // Buscar usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        updateData.status_changed_by = user.id;
+      }
 
       if (reason) {
         updateData.status_reason = reason;
@@ -46,7 +51,7 @@ export const useLeadStatusChange = () => {
 
       console.log(`💾 [STATUS_CHANGE_${operationId}] Atualizando no banco:`, updateData);
 
-      // Atualizar no banco
+      // UPDATE simples sem JOINs
       const { data: updatedLead, error } = await supabase
         .from('crm_leads')
         .update(updateData)
