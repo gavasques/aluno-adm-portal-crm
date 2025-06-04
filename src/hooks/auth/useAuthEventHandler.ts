@@ -1,11 +1,10 @@
 
 import React, { useState, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { recoveryModeUtils } from "./useRecoveryMode";
 
 /**
- * Hook for handling authentication events
+ * Hook otimizado para handling de eventos de auth
  */
 export const useAuthEventHandler = () => {
   const [user, setUser] = React.useState<User | null>(null);
@@ -16,42 +15,33 @@ export const useAuthEventHandler = () => {
   const isResetPasswordPage = window.location.pathname === "/reset-password";
 
   const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
-    console.log("=== AUTH EVENT DEBUG ===");
-    console.log("Event:", event);
-    console.log("Path:", window.location.pathname);
-    console.log("User email:", currentSession?.user?.email);
-    console.log("User ID:", currentSession?.user?.id);
-    console.log("Session exists:", !!currentSession);
-    console.log("User audience:", currentSession?.user?.aud);
-    console.log("========================");
+    console.log("🔄 Auth event:", event, "User:", currentSession?.user?.email);
     
     // Tratamento especial para logout
     if (event === "SIGNED_OUT") {
-      console.log("=== PROCESSANDO LOGOUT ===");
+      console.log("🚪 Processando logout...");
       
-      // Limpar completamente o estado
       setSession(null);
       setUser(null);
       setLoading(false);
       
-      // Limpar modo de recuperação e qualquer estado local
       recoveryModeUtils.clearAllRecoveryData();
       
-      console.log("Estado limpo, redirecionando para home");
-      
-      // Forçar redirecionamento para a página inicial
+      // Redirecionamento mais suave
       setTimeout(() => {
-        window.location.href = "/";
+        if (window.location.pathname !== "/") {
+          window.location.href = "/";
+        }
       }, 100);
       
       return;
     }
     
-    // Detectar o máximo possível de indicadores de recuperação de senha
+    // Detectar recuperação de senha
     if (event === "PASSWORD_RECOVERY" || 
         (event === "SIGNED_IN" && currentSession?.user?.aud === "recovery") ||
         recoveryModeUtils.detectRecoveryFlow(currentSession, window.location.pathname)) {
-      console.log("Evento de recuperação de senha detectado");
+      console.log("🔑 Modo recuperação ativo");
       recoveryModeUtils.setRecoveryMode(true);
       setSession(currentSession);
       setLoading(false);
@@ -60,17 +50,16 @@ export const useAuthEventHandler = () => {
     
     // Se estiver em modo de recuperação, não fazer login automático
     if (isResetPasswordPage || recoveryModeUtils.isInRecoveryMode()) {
-      console.log("Em modo de recuperação ou na página de reset - não fazendo login automático");
+      console.log("🔄 Em modo recuperação - sem login automático");
       setSession(currentSession);
       setLoading(false);
       return;
     }
 
-    // Comportamento normal quando não está em recuperação de senha
-    console.log("Atualizando estado de autenticação:", {
+    // Comportamento normal
+    console.log("✅ Atualizando estado normal:", {
       hasSession: !!currentSession,
-      userEmail: currentSession?.user?.email,
-      userId: currentSession?.user?.id
+      userEmail: currentSession?.user?.email
     });
     
     setSession(currentSession);

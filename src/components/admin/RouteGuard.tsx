@@ -1,8 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/hooks/auth";
+import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
 import AccessDenied from "./AccessDenied";
 
 interface RouteGuardProps {
@@ -16,78 +15,63 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   requiredMenuKey, 
   requireAdminAccess = true 
 }) => {
-  const { user, loading: authLoading } = useAuth();
-  const { permissions, loading: permissionsLoading } = usePermissions();
+  const { user, loading, isAdmin, canAccessMenu } = useOptimizedAuth();
   const navigate = useNavigate();
-  const hasRedirectedRef = useRef(false);
   const [showAccessDenied, setShowAccessDenied] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  // Evitar múltiplos redirecionamentos
+  const hasRedirectedRef = useRef(false);
+  const lastUserRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Reset redirect flag when dependencies change
-    hasRedirectedRef.current = false;
-    setShowAccessDenied(false);
-  }, [user?.id, permissions.hasAdminAccess, requiredMenuKey]);
-
-  useEffect(() => {
-    // Mark as not initial load after first permissions check
-    if (!permissionsLoading && isInitialLoad) {
-      setIsInitialLoad(false);
+    // Reset quando usuário muda
+    if (lastUserRef.current !== user?.id) {
+      hasRedirectedRef.current = false;
+      setShowAccessDenied(false);
+      lastUserRef.current = user?.id || null;
     }
-  }, [permissionsLoading, isInitialLoad]);
+  }, [user?.id]);
 
   useEffect(() => {
-    if (authLoading || permissionsLoading || hasRedirectedRef.current) return;
+    // Aguardar carregamento
+    if (loading || hasRedirectedRef.current) return;
+
+    console.log("🛡️ RouteGuard check:", {
+      hasUser: !!user,
+      isAdmin,
+      requiredMenuKey,
+      requireAdminAccess
+    });
 
     // Se não está autenticado, redirecionar para home
     if (!user) {
+      console.log("❌ Usuário não autenticado, redirecionando...");
       hasRedirectedRef.current = true;
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
 
-    // Aguardar um ciclo após o carregamento inicial para evitar flash
-    if (isInitialLoad) {
-      return;
-    }
-
-    console.log("DEBUG - RouteGuard Admin:", {
-      email: user.email,
-      hasAdminAccess: permissions.hasAdminAccess,
-      requireAdminAccess,
-      requiredMenuKey,
-      allowedMenus: permissions.allowedMenus
-    });
-
-    // Se requer acesso admin e usuário não tem
-    if (requireAdminAccess && !permissions.hasAdminAccess) {
-      console.log("Acesso negado: usuário não tem permissão admin");
+    // Verificar permissões de admin
+    if (requireAdminAccess && !isAdmin) {
+      console.log("❌ Acesso admin negado");
       hasRedirectedRef.current = true;
       setShowAccessDenied(true);
       return;
     }
 
-    // Se requer menu específico e usuário não tem acesso
-    if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
-      console.log(`Acesso negado: usuário não tem acesso ao menu ${requiredMenuKey}`);
+    // Verificar menu específico (só para não-admins)
+    if (requiredMenuKey && !isAdmin && !canAccessMenu(requiredMenuKey)) {
+      console.log(`❌ Acesso negado ao menu: ${requiredMenuKey}`);
       hasRedirectedRef.current = true;
       setShowAccessDenied(true);
       return;
     }
-  }, [
-    user, 
-    permissions.hasAdminAccess,
-    permissions.allowedMenus,
-    authLoading, 
-    permissionsLoading, 
-    navigate, 
-    requiredMenuKey, 
-    requireAdminAccess,
-    isInitialLoad
-  ]);
 
-  // Mostrar loading enquanto verifica permissões ou durante carregamento inicial
-  if (authLoading || permissionsLoading || isInitialLoad) {
+    console.log("✅ Acesso permitido");
+  }, [user, loading, isAdmin, canAccessMenu, navigate, requiredMenuKey, requireAdminAccess]);
+
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -95,20 +79,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  // Se deve mostrar tela de acesso negado
+  // Access denied
   if (showAccessDenied) {
     return <AccessDenied />;
   }
 
-  // Se não tem permissão, não renderizar nada (já mostrou acesso negado)
-  if (requireAdminAccess && !permissions.hasAdminAccess) {
-    return null;
-  }
-
-  if (requiredMenuKey && permissions.allowedMenus.length > 0 && !permissions.allowedMenus.includes(requiredMenuKey)) {
-    return null;
-  }
-
+  // Renderizar conteúdo se tudo OK
   return <>{children}</>;
 };
 
