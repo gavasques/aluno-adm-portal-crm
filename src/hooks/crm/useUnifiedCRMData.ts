@@ -31,13 +31,20 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
   const fetchUnifiedLeadsData = useCallback(async (): Promise<LeadWithContacts[]> => {
     if (!debouncedFilters.pipeline_id) {
-      debugLogger.info('⚠️ [UNIFIED_CRM] Nenhum pipeline_id fornecido, aguardando seleção...');
+      debugLogger.info('⚠️ [UNIFIED_CRM] Nenhum pipeline_id fornecido, aguardando seleção...', {
+        component: 'useUnifiedCRMData',
+        operation: 'fetchUnifiedLeadsData'
+      });
       return [];
     }
 
     return await measureAsyncOperation('fetch_unified_leads_data', async () => {
       try {
-        debugLogger.info('📊 [UNIFIED_CRM] Buscando leads ULTRA SIMPLIFICADO para pipeline:', debouncedFilters.pipeline_id);
+        debugLogger.info('📊 [UNIFIED_CRM] Buscando leads ULTRA SIMPLIFICADO para pipeline', {
+          component: 'useUnifiedCRMData',
+          operation: 'fetchUnifiedLeadsData',
+          pipelineId: debouncedFilters.pipeline_id
+        });
 
         // QUERY ULTRA SIMPLIFICADA - apenas leads básicos
         let leadsQuery = supabase
@@ -62,17 +69,28 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           leadsQuery = leadsQuery.or(`name.ilike.%${debouncedFilters.search}%,email.ilike.%${debouncedFilters.search}%`);
         }
 
-        debugLogger.info('🔍 [UNIFIED_CRM] Executando query ultra simplificada...');
+        debugLogger.info('🔍 [UNIFIED_CRM] Executando query ultra simplificada...', {
+          component: 'useUnifiedCRMData',
+          operation: 'executeQuery'
+        });
 
         const { data: leads, error: leadsError } = await leadsQuery
           .order('created_at', { ascending: false });
 
         if (leadsError) {
-          debugLogger.error('❌ [UNIFIED_CRM] Erro na query de leads:', leadsError);
+          debugLogger.error('❌ [UNIFIED_CRM] Erro na query de leads', {
+            component: 'useUnifiedCRMData',
+            operation: 'fetchLeads',
+            error: leadsError
+          });
           throw leadsError;
         }
 
-        debugLogger.info('📊 [UNIFIED_CRM] Leads encontrados:', leads?.length || 0);
+        debugLogger.info('📊 [UNIFIED_CRM] Leads encontrados', {
+          component: 'useUnifiedCRMData',
+          operation: 'fetchLeads',
+          leadsCount: leads?.length || 0
+        });
 
         if (!leads || leads.length === 0) {
           return [];
@@ -84,19 +102,21 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
         // Buscar pipelines simples
         const { data: pipelines } = await supabase
           .from('crm_pipelines')
-          .select('id, name, description, is_active');
+          .select('id, name, description, is_active, sort_order, created_at, updated_at');
 
         // Buscar colunas simples
         const { data: columns } = await supabase
           .from('crm_pipeline_columns')
-          .select('id, name, color, pipeline_id, sort_order, is_active');
+          .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at');
 
         // Buscar responsáveis simples
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, name, email');
 
-        debugLogger.info('🔗 [UNIFIED_CRM] Dados relacionados simples carregados:', {
+        debugLogger.info('🔗 [UNIFIED_CRM] Dados relacionados simples carregados', {
+          component: 'useUnifiedCRMData',
+          operation: 'fetchRelatedData',
           pipelines: pipelines?.length || 0,
           columns: columns?.length || 0,
           profiles: profiles?.length || 0
@@ -126,12 +146,20 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           filteredLeads = leadsWithContactsData;
         }
 
-        debugLogger.info('✅ [UNIFIED_CRM] Leads processados com sucesso (simplificado):', filteredLeads.length);
+        debugLogger.info('✅ [UNIFIED_CRM] Leads processados com sucesso (simplificado)', {
+          component: 'useUnifiedCRMData',
+          operation: 'processLeads',
+          filteredCount: filteredLeads.length
+        });
         
         return filteredLeads;
 
       } catch (error) {
-        debugLogger.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM:', error);
+        debugLogger.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM', {
+          component: 'useUnifiedCRMData',
+          operation: 'fetchUnifiedLeadsData',
+          error: error instanceof Error ? error.message : String(error)
+        });
         throw error;
       }
     });
@@ -155,7 +183,9 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
       }
     });
     
-    debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna (simplificado):', {
+    debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna (simplificado)', {
+      component: 'useUnifiedCRMData',
+      operation: 'groupLeadsByColumn',
       totalColumns: Object.keys(grouped).length,
       distribution: Object.entries(grouped).map(([columnId, leads]) => ({
         columnId,

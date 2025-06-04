@@ -1,3 +1,4 @@
+
 interface LogContext {
   component?: string;
   operation?: string;
@@ -265,7 +266,7 @@ export const logLeadMovement = (
   });
 };
 
-// Verificação de integridade do sistema ultra-detalhada
+// Verificação de integridade do sistema
 export const checkSystemIntegrity = () => {
-  return debugLogger.checkSystemIntegrity();
+  return debugLogger.getDiagnostics();
 };
