@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { useOptimizedCRMData } from "@/hooks/crm/useOptimizedCRMData";
 import { useNavigate } from "react-router-dom";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { cn } from "@/lib/utils";
+
 interface OptimizedListViewProps {
   filters: CRMFilters;
   columns: CRMPipelineColumn[];
@@ -19,6 +21,7 @@ interface OptimizedListViewProps {
   onOpenLeadDetails?: (lead: CRMLead) => void;
   onCreateLead?: () => void;
 }
+
 const OptimizedListView = React.memo(({
   filters,
   columns,
@@ -29,6 +32,7 @@ const OptimizedListView = React.memo(({
 }: OptimizedListViewProps) => {
   const navigate = useNavigate();
   const [debouncedSearch, isSearching] = useDebouncedValue(searchQuery, 300);
+
   const {
     leadsWithContacts,
     loading
@@ -36,6 +40,7 @@ const OptimizedListView = React.memo(({
     ...filters,
     search: debouncedSearch
   });
+
   const handleOpenLeadDetails = (lead: CRMLead) => {
     console.log('🔗 OptimizedListView - Navigating to lead detail page:', lead.id);
     if (onOpenLeadDetails) {
@@ -44,6 +49,7 @@ const OptimizedListView = React.memo(({
       navigate(`/admin/lead/${lead.id}`);
     }
   };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -51,6 +57,7 @@ const OptimizedListView = React.memo(({
       year: 'numeric'
     });
   };
+
   const getColumnInfo = (columnId?: string) => {
     if (!columnId) return {
       name: 'Não definido',
@@ -65,12 +72,14 @@ const OptimizedListView = React.memo(({
       color: '#6b7280'
     };
   };
+
   const getContactInfo = (lead: any) => {
     if (lead.pending_contacts && lead.pending_contacts.length > 0) {
       const nextContact = lead.pending_contacts[0];
       const contactDate = new Date(nextContact.contact_date);
       const isToday = contactDate.toDateString() === new Date().toDateString();
       const isTomorrow = contactDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+
       if (isToday) return {
         text: 'Hoje',
         icon: Clock,
@@ -89,6 +98,7 @@ const OptimizedListView = React.memo(({
     }
     return null;
   };
+
   const getLastContactInfo = (lead: any) => {
     if (lead.last_completed_contact) {
       const lastContact = lead.last_completed_contact;
@@ -100,20 +110,48 @@ const OptimizedListView = React.memo(({
     }
     return null;
   };
+
   if (loading) {
-    return <div className="flex items-center justify-center py-12">
+    return (
+      <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
           <span className="text-gray-600">Carregando leads...</span>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="h-full flex flex-col bg-white">
-      {/* Header with Title and New Lead Button */}
-      
 
-      {/* Search and Filters */}
-      
+  return (
+    <div className="h-full flex flex-col bg-white">
+      {/* Header with Search */}
+      <div className="p-6 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <h2 className="text-xl font-semibold text-gray-900">Lista de Leads</h2>
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar leads..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          {onCreateLead && (
+            <Button onClick={onCreateLead} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Lead
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Table */}
       <div className="flex-1 overflow-hidden">
@@ -149,10 +187,12 @@ const OptimizedListView = React.memo(({
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {leadsWithContacts.map(lead => {
-              const columnInfo = getColumnInfo(lead.column_id);
-              const nextContactInfo = getContactInfo(lead);
-              const lastContactInfo = getLastContactInfo(lead);
-              return <tr key={lead.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleOpenLeadDetails(lead)}>
+                const columnInfo = getColumnInfo(lead.column_id);
+                const nextContactInfo = getContactInfo(lead);
+                const lastContactInfo = getLastContactInfo(lead);
+
+                return (
+                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleOpenLeadDetails(lead)}>
                     <td className="px-6 py-4">
                       <Checkbox onClick={e => e.stopPropagation()} />
                     </td>
@@ -168,9 +208,10 @@ const OptimizedListView = React.memo(({
                     {/* Status */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{
-                      backgroundColor: columnInfo.color
-                    }} />
+                        <div 
+                          className="w-2 h-2 rounded-full" 
+                          style={{ backgroundColor: columnInfo.color }}
+                        />
                         <span className="text-sm text-gray-700">{columnInfo.name}</span>
                       </div>
                     </td>
@@ -191,61 +232,97 @@ const OptimizedListView = React.memo(({
 
                     {/* Last Contact */}
                     <td className="px-6 py-4">
-                      {lastContactInfo ? <div className="text-sm text-gray-600">
+                      {lastContactInfo ? (
+                        <div className="text-sm text-gray-600">
                           {lastContactInfo.text}
-                        </div> : <span className="text-sm text-gray-400">-</span>}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
 
                     {/* Next Contact */}
                     <td className="px-6 py-4">
-                      {nextContactInfo ? <div className="flex items-center gap-1">
+                      {nextContactInfo ? (
+                        <div className="flex items-center gap-1">
                           <nextContactInfo.icon className={cn("h-4 w-4", nextContactInfo.color)} />
                           <span className={cn("text-sm", nextContactInfo.color)}>
                             {nextContactInfo.text}
                           </span>
-                        </div> : <span className="text-sm text-gray-400">-</span>}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
 
                     {/* Tags */}
                     <td className="px-6 py-4">
                       <div className="flex gap-1">
-                        {lead.tags && lead.tags.length > 0 ? lead.tags.slice(0, 2).map(tag => <Badge key={tag.id} variant="secondary" className="text-xs px-2 py-1" style={{
-                      backgroundColor: tag.color + '15',
-                      color: tag.color,
-                      borderColor: tag.color + '30'
-                    }}>
+                        {lead.tags && lead.tags.length > 0 ? (
+                          lead.tags.slice(0, 2).map(tag => (
+                            <Badge 
+                              key={tag.id} 
+                              variant="secondary" 
+                              className="text-xs px-2 py-1"
+                              style={{
+                                backgroundColor: tag.color + '15',
+                                color: tag.color,
+                                borderColor: tag.color + '30'
+                              }}
+                            >
                               {tag.name}
-                            </Badge>) : <span className="text-sm text-gray-400">-</span>}
-                        {lead.tags && lead.tags.length > 2 && <Badge variant="secondary" className="text-xs">
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                        {lead.tags && lead.tags.length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
                             +{lead.tags.length - 2}
-                          </Badge>}
+                          </Badge>
+                        )}
                       </div>
                     </td>
 
                     {/* Actions */}
                     <td className="px-6 py-4">
-                      <Button variant="ghost" size="sm" onClick={e => {
-                    e.stopPropagation();
-                    handleOpenLeadDetails(lead);
-                  }} className="h-8 w-8 p-0 hover:bg-gray-100">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleOpenLeadDetails(lead);
+                        }} 
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
                         <Eye className="h-4 w-4 text-gray-500" />
                       </Button>
                     </td>
-                  </tr>;
-            })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
           {/* Empty State */}
-          {leadsWithContacts.length === 0 && <div className="text-center py-12 text-gray-500">
+          {leadsWithContacts.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
               {debouncedSearch ? `Nenhum lead encontrado para "${debouncedSearch}"` : 'Nenhum lead encontrado com os critérios de busca.'}
-            </div>}
+            </div>
+          )}
         </ScrollArea>
       </div>
 
       {/* Footer Stats */}
-      
-    </div>;
+      <div className="border-t border-gray-200 px-6 py-3 bg-gray-50">
+        <div className="text-sm text-gray-600">
+          Total: {leadsWithContacts.length} leads
+        </div>
+      </div>
+    </div>
+  );
 });
+
 OptimizedListView.displayName = 'OptimizedListView';
+
 export default OptimizedListView;

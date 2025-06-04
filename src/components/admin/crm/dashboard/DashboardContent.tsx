@@ -22,6 +22,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
 }) => {
   console.log('🎯 DashboardContent: Pipeline selecionado:', selectedPipelineId);
   console.log('🎯 DashboardContent: Filtros aplicados:', effectiveFilters);
+  console.log('🎯 DashboardContent: View ativa:', activeView);
   
   // Verificar se temos um pipeline selecionado
   if (!selectedPipelineId) {
@@ -80,20 +81,18 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
-          className="h-full w-full p-6"
+          className="h-full w-full"
         >
-          <div className="bg-white rounded-lg border border-gray-200 h-full w-full">
-            <React.Suspense fallback={
-              <div className="h-full w-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            }>
-              <CRMListView
-                filters={effectiveFilters}
-                onCreateLead={() => onCreateLead()}
-              />
-            </React.Suspense>
-          </div>
+          <React.Suspense fallback={
+            <div className="h-full w-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          }>
+            <CRMListView
+              filters={effectiveFilters}
+              onCreateLead={() => onCreateLead()}
+            />
+          </React.Suspense>
         </motion.div>
       )}
     </div>
