@@ -26,7 +26,16 @@ export const useCRMWebhookFieldMappings = (pipelineId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform data to match our types, ensuring type safety
+      return (data || []).map(item => ({
+        ...item,
+        crm_field_type: item.crm_field_type as 'standard' | 'custom',
+        field_type: item.field_type as 'text' | 'number' | 'phone' | 'boolean' | 'select' | 'email',
+        transformation_rules: (item.transformation_rules && typeof item.transformation_rules === 'object' && !Array.isArray(item.transformation_rules)) 
+          ? item.transformation_rules as Record<string, any>
+          : {}
+      })) as CRMWebhookFieldMapping[];
     },
   });
 
