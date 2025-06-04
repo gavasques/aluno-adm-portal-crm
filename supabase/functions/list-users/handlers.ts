@@ -10,7 +10,7 @@ export async function handleGetRequest(supabaseAdmin: any) {
         email,
         name,
         role,
-        is_banned,
+        status,
         is_mentor,
         is_onboarding,
         is_closer,

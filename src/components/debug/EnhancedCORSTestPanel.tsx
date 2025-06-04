@@ -185,10 +185,10 @@ export const EnhancedCORSTestPanel: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Globe className="h-5 w-5" />
-          Diagnóstico Avançado de CORS
+          Diagnóstico de Conectividade
         </CardTitle>
         <CardDescription>
-          Testes completos de conectividade, autenticação e edge functions
+          Testes de conectividade, autenticação e edge functions
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -238,7 +238,7 @@ export const EnhancedCORSTestPanel: React.FC = () => {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            {isRunning ? 'Executando Testes...' : 'Executar Testes Completos'}
+            {isRunning ? 'Executando Testes...' : 'Executar Testes'}
           </Button>
         </div>
 
@@ -265,17 +265,6 @@ export const EnhancedCORSTestPanel: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Dicas de solução */}
-        <div className="text-xs text-gray-500 space-y-2 mt-6 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-medium text-blue-800">💡 Dicas de Solução:</h4>
-          <div className="space-y-1">
-            <p><strong>CORS Errors:</strong> Configurações atualizadas automaticamente no código</p>
-            <p><strong>Auth Errors:</strong> Verifique se está logado ou se a sessão expirou</p>
-            <p><strong>Edge Functions:</strong> Logs disponíveis no dashboard do Supabase</p>
-            <p><strong>Network:</strong> Verifique conexão de internet e firewall</p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
