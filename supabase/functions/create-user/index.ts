@@ -2,31 +2,37 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-
-import { corsHeaders, handleCorsRequest } from './cors.ts';
+import { CORS_CONFIG, CORS_LOGGER } from './cors-config.ts';
 import { validateAuthToken, checkAdminPermissions } from './auth.ts';
 import { parseRequestBody, handleUserCreation } from './request-handler.ts';
-import { CreateUserResponse } from './types.ts';
 
-console.log("Edge Function create-user inicializada");
+console.log("🚀 [EDGE FUNCTION] create-user iniciada");
+console.log("🚀 [EDGE FUNCTION] Timestamp:", new Date().toISOString());
 
 serve(async (req) => {
+  const method = req.method;
+  const url = new URL(req.url);
+  const headers = Object.fromEntries(req.headers.entries());
+  
+  // Log da requisição com informações CORS
+  CORS_LOGGER.logRequest(method, url.pathname, headers);
+  
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return handleCorsRequest();
+  if (method === 'OPTIONS') {
+    console.log("⚙️ [EDGE FUNCTION] Processando requisição OPTIONS (CORS)");
+    const response = CORS_CONFIG.createOptionsResponse();
+    CORS_LOGGER.logResponse(200, CORS_CONFIG.headers);
+    return response;
   }
 
   try {
     console.log("=== INÍCIO CRIAÇÃO DE USUÁRIO ===");
-    console.log(`Método: ${req.method}`);
-    console.log(`URL: ${req.url}`);
+    console.log(`Método: ${method}`);
+    console.log(`URL: ${url}`);
 
-    if (req.method !== 'POST') {
-      console.error("❌ Método não permitido:", req.method);
-      return new Response(
-        JSON.stringify({ error: 'Método não permitido' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (method !== 'POST') {
+      console.error("❌ Método não permitido:", method);
+      return CORS_CONFIG.createErrorResponse('Método não permitido', 405);
     }
 
     // Criar cliente Supabase com service_role para admin operations
@@ -55,10 +61,8 @@ serve(async (req) => {
     console.log("✅ Resultado da criação:", result);
     console.log("=== FIM CRIAÇÃO DE USUÁRIO ===");
     
-    return new Response(
-      JSON.stringify(result),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    CORS_LOGGER.logResponse(200, CORS_CONFIG.headers);
+    return CORS_CONFIG.createSuccessResponse(result);
 
   } catch (error: any) {
     console.error("=== ERRO NA CRIAÇÃO DE USUÁRIO ===");
@@ -67,12 +71,10 @@ serve(async (req) => {
     console.error("Stack:", error.stack);
     console.error("===================================");
     
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Erro interno do servidor',
-        details: error.stack ? error.stack.substring(0, 500) : 'Sem stack trace'
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    CORS_LOGGER.logError(error, "criação de usuário");
+    return CORS_CONFIG.createErrorResponse(
+      error.message || 'Erro interno do servidor',
+      500
     );
   }
 });
