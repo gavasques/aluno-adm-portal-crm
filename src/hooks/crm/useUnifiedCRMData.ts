@@ -17,15 +17,15 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
     queryFn: async () => {
       console.log('🔍 [UNIFIED_CRM_DATA] Buscando leads com filtros:', filters);
       
-      // Query simplificada sem FULL JOIN
+      // Query with complete field selection for all related tables
       let query = supabase
         .from('crm_leads')
         .select(`
           *,
-          pipeline:crm_pipelines(id, name),
-          column:crm_pipeline_columns(id, name, color),
+          pipeline:crm_pipelines(id, name, description, sort_order, is_active, created_at, updated_at),
+          column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-          loss_reason:crm_loss_reasons(id, name),
+          loss_reason:crm_loss_reasons(id, name, description, sort_order, is_active, created_at, updated_at),
           tags:crm_lead_tags(
             tag:crm_tags(id, name, color, created_at)
           )

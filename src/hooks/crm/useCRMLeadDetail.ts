@@ -11,15 +11,15 @@ export const useCRMLeadDetail = (leadId: string) => {
 
       console.log('🔍 [CRM_LEAD_DETAIL] Buscando detalhes do lead:', leadId);
 
-      // Query simplificada sem FULL JOIN
+      // Query with complete field selection for all related tables
       const { data: lead, error } = await supabase
         .from('crm_leads')
         .select(`
           *,
-          pipeline:crm_pipelines(id, name),
-          column:crm_pipeline_columns(id, name, color),
+          pipeline:crm_pipelines(id, name, description, sort_order, is_active, created_at, updated_at),
+          column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-          loss_reason:crm_loss_reasons(id, name)
+          loss_reason:crm_loss_reasons(id, name, description, sort_order, is_active, created_at, updated_at)
         `)
         .eq('id', leadId)
         .maybeSingle();
