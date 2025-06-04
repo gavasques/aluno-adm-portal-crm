@@ -19,7 +19,7 @@ export const WebhookUrlsCard = () => {
   const { 
     tokens, 
     isLoading, 
-    createToken, 
+    generateToken, 
     deactivateToken 
   } = useCRMWebhookTokens(selectedPipelineId);
 
@@ -30,7 +30,7 @@ export const WebhookUrlsCard = () => {
     }
 
     try {
-      await createToken.mutateAsync({
+      await generateToken.mutateAsync({
         pipeline_id: selectedPipelineId,
         expires_at: newTokenExpiry || undefined,
         reason: newTokenReason || 'Token criado via interface'
@@ -143,11 +143,11 @@ export const WebhookUrlsCard = () => {
             </div>
             <Button 
               onClick={handleCreateToken}
-              disabled={createToken.isPending}
+              disabled={generateToken.isPending}
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              {createToken.isPending ? 'Criando...' : 'Criar Token'}
+              {generateToken.isPending ? 'Criando...' : 'Criar Token'}
             </Button>
           </div>
         )}
