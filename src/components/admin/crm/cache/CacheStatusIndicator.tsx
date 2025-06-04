@@ -5,15 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Database, 
-  Wifi, 
-  WifiOff, 
   RefreshCw, 
   BarChart3,
-  Trash2,
-  Download
+  Trash2
 } from 'lucide-react';
 import { useIntelligentCRMCache } from '@/hooks/crm/useIntelligentCRMCache';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface CacheStatusIndicatorProps {
   showDetails?: boolean;
@@ -31,23 +28,8 @@ export const CacheStatusIndicator: React.FC<CacheStatusIndicatorProps> = ({
     processOfflineQueue
   } = useIntelligentCRMCache();
 
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [stats, setStats] = useState(getCacheStats());
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Atualizar status da rede
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   // Atualizar estatísticas periodicamente
   useEffect(() => {
@@ -82,44 +64,10 @@ export const CacheStatusIndicator: React.FC<CacheStatusIndicatorProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const getConnectionStatus = () => {
-    if (isOnline) {
-      return {
-        icon: Wifi,
-        text: 'Online',
-        color: 'bg-green-500',
-        variant: 'default' as const
-      };
-    } else {
-      return {
-        icon: WifiOff,
-        text: 'Offline',
-        color: 'bg-red-500',
-        variant: 'destructive' as const
-      };
-    }
-  };
-
-  const connectionStatus = getConnectionStatus();
-
   if (!showDetails) {
-    // Versão compacta para header
+    // Versão compacta para header - removido indicadores de conexão
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <motion.div
-          initial={false}
-          animate={{ 
-            scale: isOnline ? 1 : 1.1,
-            opacity: isOnline ? 1 : 0.8
-          }}
-          transition={{ duration: 0.2 }}
-        >
-          <Badge variant={connectionStatus.variant} className="flex items-center gap-1">
-            <connectionStatus.icon className="h-3 w-3" />
-            {connectionStatus.text}
-          </Badge>
-        </motion.div>
-
         <Badge variant="outline" className="flex items-center gap-1">
           <Database className="h-3 w-3" />
           {stats.totalEntries}
@@ -167,16 +115,6 @@ export const CacheStatusIndicator: React.FC<CacheStatusIndicatorProps> = ({
             </div>
           </div>
 
-          {/* Status da Conexão */}
-          <div className="flex items-center gap-2">
-            <motion.div
-              className={`w-2 h-2 rounded-full ${connectionStatus.color}`}
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <span className="text-sm font-medium">{connectionStatus.text}</span>
-          </div>
-
           {/* Estatísticas */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -217,26 +155,6 @@ export const CacheStatusIndicator: React.FC<CacheStatusIndicatorProps> = ({
               />
             </div>
           </div>
-
-          {/* Modo Offline */}
-          <AnimatePresence>
-            {!isOnline && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="bg-orange-50 border border-orange-200 rounded-md p-3"
-              >
-                <div className="flex items-center gap-2 text-orange-800">
-                  <Download className="h-4 w-4" />
-                  <span className="text-sm font-medium">Modo Offline Ativo</span>
-                </div>
-                <p className="text-xs text-orange-600 mt-1">
-                  As operações estão sendo salvas localmente e serão sincronizadas quando a conexão retornar.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </CardContent>
     </Card>
