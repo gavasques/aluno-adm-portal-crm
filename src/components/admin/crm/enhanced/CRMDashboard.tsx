@@ -50,39 +50,37 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   } = useCRMDashboardState();
 
   // Hooks de dados com loading sequencial
-  const { pipelines, loading: pipelinesLoading, error: pipelinesError } = useCRMPipelines();
+  const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
   
   // Carregar usuários só depois dos pipelines
-  const { users, error: usersError } = useCRMUsers({
-    enabled: !pipelinesLoading && !pipelinesError
+  const { users, loading: usersLoading } = useCRMUsers({
+    enabled: !pipelinesLoading
   });
   
   // Carregar tags só depois dos usuários
-  const { tags, error: tagsError } = useCRMTags({
-    enabled: !pipelinesLoading && !pipelinesError && !usersError
+  const { tags, loading: tagsLoading } = useCRMTags({
+    enabled: !pipelinesLoading && !usersLoading
   });
 
   // Gerenciar sequência de loading
   React.useEffect(() => {
     if (pipelinesLoading) {
       setLoadingSequence('pipelines');
-    } else if (pipelinesError || usersError || tagsError) {
-      setHasError(true);
-      console.error('❌ [CRM_DASHBOARD] Erro ao carregar dados:', {
-        pipelinesError,
-        usersError,
-        tagsError
-      });
-    } else if (pipelines.length > 0) {
-      setLoadingSequence('users');
-      setTimeout(() => {
-        setLoadingSequence('tags');
+    } else if (pipelinesLoading === false && usersLoading === false && tagsLoading === false) {
+      if (pipelines.length === 0) {
+        setHasError(true);
+        console.error('❌ [CRM_DASHBOARD] Erro ao carregar dados: Nenhum pipeline encontrado');
+      } else {
+        setLoadingSequence('users');
         setTimeout(() => {
-          setLoadingSequence('complete');
+          setLoadingSequence('tags');
+          setTimeout(() => {
+            setLoadingSequence('complete');
+          }, 300);
         }, 300);
-      }, 300);
+      }
     }
-  }, [pipelinesLoading, pipelinesError, usersError, tagsError, pipelines.length]);
+  }, [pipelinesLoading, usersLoading, tagsLoading, pipelines.length]);
 
   // Get pipeline columns from the selected pipeline
   const pipelineColumns = selectedPipelineId 

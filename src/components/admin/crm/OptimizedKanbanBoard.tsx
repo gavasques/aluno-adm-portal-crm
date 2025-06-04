@@ -42,7 +42,6 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   const {
     columns,
     loading: columnsLoading,
-    error: columnsError
   } = useCRMPipelines();
 
   const activeColumns = useMemo(() => {
@@ -73,8 +72,8 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
 
   // Verificar erros de conectividade
   React.useEffect(() => {
-    if (columnsError || leadsError) {
-      const errorMessage = columnsError?.message || leadsError?.message || '';
+    if (leadsError) {
+      const errorMessage = leadsError?.message || '';
       if (errorMessage.includes('CORS') || errorMessage.includes('cross-origin')) {
         setConnectionError('Erro de CORS detectado. Verifique as configurações do Supabase.');
       } else {
@@ -83,7 +82,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     } else {
       setConnectionError(null);
     }
-  }, [columnsError, leadsError]);
+  }, [leadsError]);
 
   debugLogger.info('📊 [ULTRA_SIMPLE_KANBAN] Dados dos leads (refatorado):', {
     totalLeads: leadsWithContacts.length,

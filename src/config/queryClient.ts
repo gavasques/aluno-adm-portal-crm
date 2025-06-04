@@ -149,19 +149,25 @@ export const invalidateQueries = {
 export const addCORSDiagnostics = (queryClient: QueryClient) => {
   // Add global error handler for CORS detection
   queryClient.getQueryCache().subscribe((event) => {
-    if (event.type === 'queryRemoved' && event.query.state.error) {
-      const error = event.query.state.error as any;
-      if (error?.message?.includes('CORS')) {
-        console.warn('🚫 [QUERY_CACHE] CORS error detected in query cache');
+    if (event.type === 'removed') {
+      const queryData = event as any; // Cast to any to access error property
+      if (queryData.query?.state?.error) {
+        const error = queryData.query.state.error;
+        if (error?.message?.includes('CORS')) {
+          console.warn('🚫 [QUERY_CACHE] CORS error detected in query cache');
+        }
       }
     }
   });
 
   queryClient.getMutationCache().subscribe((event) => {
-    if (event.type === 'mutationRemoved' && event.mutation.state.error) {
-      const error = event.mutation.state.error as any;
-      if (error?.message?.includes('CORS')) {
-        console.warn('🚫 [MUTATION_CACHE] CORS error detected in mutation cache');
+    if (event.type === 'removed') {
+      const mutationData = event as any; // Cast to any to access error property
+      if (mutationData.mutation?.state?.error) {
+        const error = mutationData.mutation.state.error;
+        if (error?.message?.includes('CORS')) {
+          console.warn('🚫 [MUTATION_CACHE] CORS error detected in mutation cache');
+        }
       }
     }
   });
