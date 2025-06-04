@@ -80,7 +80,7 @@ export const CRMMetricsCards: React.FC = () => {
       title: 'Taxa de Conversão',
       value: `${(metrics?.conversionRate || 0).toFixed(1)}%`,
       change: metrics?.conversionRate && metrics.conversionRate > 15 ? 'Acima da média' : 'Abaixo da média',
-      changeType: (metrics?.conversionRate && metrics.conversionRate > 15 ? 'positive' : 'negative') as const,
+      changeType: (metrics?.conversionRate && metrics.conversionRate > 15) ? 'positive' as const : 'negative' as const,
       icon: <Target className="h-6 w-6 text-green-600" />
     },
     {
@@ -94,7 +94,7 @@ export const CRMMetricsCards: React.FC = () => {
       title: 'Atividades Pendentes',
       value: (metrics?.contactsScheduled || 0) + (metrics?.overdueContacts || 0),
       change: `${metrics?.overdueContacts || 0} em atraso`,
-      changeType: (metrics?.overdueContacts && metrics.overdueContacts > 0 ? 'negative' : 'positive') as const,
+      changeType: (metrics?.overdueContacts && metrics.overdueContacts > 0) ? 'negative' as const : 'positive' as const,
       icon: <Activity className="h-6 w-6 text-purple-600" />
     }
   ];
