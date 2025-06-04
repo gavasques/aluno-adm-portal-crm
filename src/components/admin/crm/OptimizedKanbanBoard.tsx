@@ -4,13 +4,14 @@ import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
-import { useSimplifiedDragAndDrop } from '@/hooks/crm/useSimplifiedDragAndDrop';
-import { useUnifiedLeadMovement } from '@/hooks/crm/useUnifiedLeadMovement';
+import { useUltraSimplifiedDragAndDrop } from '@/hooks/crm/useUltraSimplifiedDragAndDrop';
+import { useUltraSimplifiedLeadMovement } from '@/hooks/crm/useUltraSimplifiedLeadMovement';
 import { KanbanGrid } from './kanban/KanbanGrid';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
 import { KanbanEmptyState } from './kanban/KanbanEmptyState';
 import { CRMFilters } from '@/types/crm.types';
+import { debugLogger } from '@/utils/debug-logger';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -23,10 +24,9 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   pipelineId,
   onCreateLead
 }) => {
-  const kanbanBoardId = `kanban_board_${Date.now()}`;
+  const kanbanBoardId = `ultra_simple_kanban_board_${Date.now()}`;
   
-  console.group(`🎯 [KANBAN_BOARD_${kanbanBoardId}] RENDERIZAÇÃO`);
-  console.log('📋 Props recebidas:', {
+  debugLogger.info(`🎯 [ULTRA_SIMPLE_KANBAN_BOARD_${kanbanBoardId}] RENDERIZAÇÃO`, {
     filters,
     pipelineId,
     timestamp: new Date().toISOString()
@@ -42,7 +42,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
       col.is_active && col.pipeline_id === pipelineId
     );
     
-    console.log('📋 [KANBAN_BOARD] Colunas processadas:', {
+    debugLogger.info('📋 [ULTRA_SIMPLE_KANBAN] Colunas processadas:', {
       pipelineId,
       totalColumns: columns.length,
       filteredColumns: filteredColumns.length,
@@ -62,7 +62,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     loading: leadsLoading
   } = useUnifiedCRMData(filters);
 
-  console.log('📊 [KANBAN_BOARD] Dados dos leads:', {
+  debugLogger.info('📊 [ULTRA_SIMPLE_KANBAN] Dados dos leads:', {
     totalLeads: leadsWithContacts.length,
     leadsByColumnCount: Object.entries(leadsByColumn).map(([columnId, leads]) => ({
       columnId,
@@ -72,7 +72,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   });
 
   const { handleOpenDetail } = useKanbanNavigation();
-  const { moveLeadToColumn } = useUnifiedLeadMovement(filters);
+  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement(filters);
 
   const {
     draggedLead,
@@ -82,14 +82,14 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     handleDragEnd,
     isDragging,
     canDrag
-  } = useSimplifiedDragAndDrop({
+  } = useUltraSimplifiedDragAndDrop({
     onMoveLeadToColumn: moveLeadToColumn
   });
 
   const loading = columnsLoading || leadsLoading;
 
   const handleLeadClick = useCallback((lead: any) => {
-    console.log('🔗 [KANBAN_BOARD] Click no lead:', {
+    debugLogger.info('🔗 [ULTRA_SIMPLE_KANBAN] Click no lead:', {
       leadId: lead.id,
       leadName: lead.name,
       columnId: lead.column_id,
@@ -97,7 +97,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     });
     
     if (isMoving || isDragging || !canDrag) {
-      console.log('🚫 [KANBAN_BOARD] Click bloqueado durante operação');
+      debugLogger.info('🚫 [ULTRA_SIMPLE_KANBAN] Click bloqueado durante operação');
       return;
     }
     
@@ -105,14 +105,12 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   }, [handleOpenDetail, isMoving, isDragging, canDrag]);
 
   if (loading) {
-    console.log('⏳ [KANBAN_BOARD] Estado de carregamento');
-    console.groupEnd();
+    debugLogger.info('⏳ [ULTRA_SIMPLE_KANBAN] Estado de carregamento');
     return <KanbanLoadingOverlay isVisible={true} />;
   }
 
   if (activeColumns.length === 0) {
-    console.log('📋 [KANBAN_BOARD] Nenhuma coluna ativa encontrada');
-    console.groupEnd();
+    debugLogger.info('📋 [ULTRA_SIMPLE_KANBAN] Nenhuma coluna ativa encontrada');
     return (
       <KanbanEmptyState 
         pipelineId={pipelineId}
@@ -121,7 +119,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     );
   }
 
-  console.log('🎮 [KANBAN_BOARD] Estado final do Kanban:', {
+  debugLogger.info('🎮 [ULTRA_SIMPLE_KANBAN] Estado final do Kanban:', {
     columns: activeColumns.length,
     totalLeads: leadsWithContacts.length,
     draggedLead: draggedLead?.id,
@@ -130,7 +128,6 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
     canDrag,
     sensorsConfigured: !!sensors
   });
-  console.groupEnd();
 
   return (
     <div className="h-full w-full flex flex-col p-8">
@@ -170,7 +167,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
         <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
           <div className="flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            Movendo lead...
+            Movendo lead... (Ultra Simplificado)
           </div>
         </div>
       )}

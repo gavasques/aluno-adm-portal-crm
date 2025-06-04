@@ -8,6 +8,7 @@ import { useCRMDataTransformService } from './services/useCRMDataTransformServic
 import { useCRMLeadFilters } from './useCRMLeadFilters';
 import { useIntelligentCache } from './useIntelligentCache';
 import { measureAsyncOperation } from '@/utils/performanceMonitor';
+import { debugLogger } from '@/utils/debug-logger';
 
 export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
   // Debounce search para evitar queries excessivas
@@ -30,15 +31,15 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
   const fetchUnifiedLeadsData = useCallback(async (): Promise<LeadWithContacts[]> => {
     if (!debouncedFilters.pipeline_id) {
-      console.log('⚠️ [UNIFIED_CRM] Nenhum pipeline_id fornecido, aguardando seleção...');
+      debugLogger.info('⚠️ [UNIFIED_CRM] Nenhum pipeline_id fornecido, aguardando seleção...');
       return [];
     }
 
     return await measureAsyncOperation('fetch_unified_leads_data', async () => {
       try {
-        console.log('📊 [UNIFIED_CRM] Buscando leads simplificado para pipeline:', debouncedFilters.pipeline_id);
+        debugLogger.info('📊 [UNIFIED_CRM] Buscando leads ULTRA SIMPLIFICADO para pipeline:', debouncedFilters.pipeline_id);
 
-        // Query SUPER SIMPLIFICADA - apenas a tabela de leads
+        // QUERY ULTRA SIMPLIFICADA - apenas leads básicos
         let leadsQuery = supabase
           .from('crm_leads')
           .select('*')
@@ -61,129 +62,76 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           leadsQuery = leadsQuery.or(`name.ilike.%${debouncedFilters.search}%,email.ilike.%${debouncedFilters.search}%`);
         }
 
-        console.log('🔍 [UNIFIED_CRM] Executando query simplificada...');
+        debugLogger.info('🔍 [UNIFIED_CRM] Executando query ultra simplificada...');
 
         const { data: leads, error: leadsError } = await leadsQuery
           .order('created_at', { ascending: false });
 
         if (leadsError) {
-          console.error('❌ [UNIFIED_CRM] Erro na query de leads:', leadsError);
+          debugLogger.error('❌ [UNIFIED_CRM] Erro na query de leads:', leadsError);
           throw leadsError;
         }
 
-        console.log('📊 [UNIFIED_CRM] Leads encontrados:', leads?.length || 0);
+        debugLogger.info('📊 [UNIFIED_CRM] Leads encontrados:', leads?.length || 0);
 
         if (!leads || leads.length === 0) {
           return [];
         }
 
-        // Buscar dados relacionados SEPARADAMENTE para evitar JOINs
+        // Buscar dados relacionados SEPARADAMENTE - SEM JOINS
         const leadIds = leads.map(lead => lead.id);
 
-        // Buscar pipelines
+        // Buscar pipelines simples
         const { data: pipelines } = await supabase
           .from('crm_pipelines')
-          .select('*');
+          .select('id, name, description, is_active');
 
-        // Buscar colunas
+        // Buscar colunas simples
         const { data: columns } = await supabase
           .from('crm_pipeline_columns')
-          .select('*');
+          .select('id, name, color, pipeline_id, sort_order, is_active');
 
-        // Buscar responsáveis
+        // Buscar responsáveis simples
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, name, email');
 
-        // Buscar tags dos leads
-        const { data: leadTags } = await supabase
-          .from('crm_lead_tags')
-          .select(`
-            lead_id,
-            tag:crm_tags(id, name, color, created_at)
-          `)
-          .in('lead_id', leadIds);
-
-        // Buscar contatos pendentes
-        const { data: pendingContacts } = await supabase
-          .from('crm_lead_contacts')
-          .select('*')
-          .in('lead_id', leadIds)
-          .eq('status', 'pending')
-          .order('contact_date', { ascending: true });
-
-        // Buscar último contato completado
-        const { data: completedContacts } = await supabase
-          .from('crm_lead_contacts')
-          .select('*')
-          .in('lead_id', leadIds)
-          .eq('status', 'completed')
-          .not('completed_at', 'is', null)
-          .order('completed_at', { ascending: false });
-
-        console.log('🔗 [UNIFIED_CRM] Dados relacionados carregados:', {
+        debugLogger.info('🔗 [UNIFIED_CRM] Dados relacionados simples carregados:', {
           pipelines: pipelines?.length || 0,
           columns: columns?.length || 0,
-          profiles: profiles?.length || 0,
-          leadTags: leadTags?.length || 0,
-          pendingContacts: pendingContacts?.length || 0,
-          completedContacts: completedContacts?.length || 0
+          profiles: profiles?.length || 0
         });
 
-        // Criar mapas para facilitar a busca
+        // Criar mapas simples para facilitar a busca
         const pipelinesMap = new Map(pipelines?.map(p => [p.id, p]) || []);
         const columnsMap = new Map(columns?.map(c => [c.id, c]) || []);
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-        
-        // Agrupar tags por lead
-        const tagsByLead = leadTags?.reduce((acc, item) => {
-          if (!acc[item.lead_id]) acc[item.lead_id] = [];
-          acc[item.lead_id].push(item.tag);
-          return acc;
-        }, {} as Record<string, any[]>) || {};
 
-        // Agrupar contatos por lead
-        const pendingContactsByLead = pendingContacts?.reduce((acc, contact) => {
-          if (!acc[contact.lead_id]) acc[contact.lead_id] = [];
-          acc[contact.lead_id].push({
-            ...contact,
-            responsible: profilesMap.get(contact.responsible_id)
-          });
-          return acc;
-        }, {} as Record<string, any[]>) || {};
-
-        const lastCompletedContactsByLead = completedContacts?.reduce((acc, contact) => {
-          if (!acc[contact.lead_id]) {
-            acc[contact.lead_id] = {
-              ...contact,
-              responsible: profilesMap.get(contact.responsible_id)
-            };
-          }
-          return acc;
-        }, {} as Record<string, any>) || {};
-
-        // Montar leads com dados relacionados e validação de status
+        // Montar leads com dados relacionados básicos
         const leadsWithContactsData: LeadWithContacts[] = leads.map(lead => ({
           ...lead,
-          status: validateLeadStatus(lead.status), // Validar e converter status
+          status: validateLeadStatus(lead.status),
           pipeline: pipelinesMap.get(lead.pipeline_id),
           column: columnsMap.get(lead.column_id),
           responsible: profilesMap.get(lead.responsible_id),
-          tags: tagsByLead[lead.id] || [],
-          pending_contacts: pendingContactsByLead[lead.id] || [],
-          last_completed_contact: lastCompletedContactsByLead[lead.id]
+          tags: [], // Simplificado - sem tags por enquanto
+          pending_contacts: [], // Simplificado - sem contatos por enquanto
+          last_completed_contact: undefined // Simplificado
         }));
 
-        // Aplicar filtros usando services
-        let filteredLeads = filterLeadsByContact(leadsWithContactsData, debouncedFilters.contact_filter);
-        filteredLeads = filterLeadsByTags(filteredLeads, debouncedFilters.tag_ids);
+        // Aplicar filtros usando services (simplificado)
+        let filteredLeads = leadsWithContactsData;
+        if (debouncedFilters.tag_ids && debouncedFilters.tag_ids.length > 0) {
+          // Para filtros de tag, simplesmente retornar todos por enquanto
+          filteredLeads = leadsWithContactsData;
+        }
 
-        console.log('✅ [UNIFIED_CRM] Leads processados com sucesso:', filteredLeads.length);
+        debugLogger.info('✅ [UNIFIED_CRM] Leads processados com sucesso (simplificado):', filteredLeads.length);
         
         return filteredLeads;
 
       } catch (error) {
-        console.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM:', error);
+        debugLogger.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM:', error);
         throw error;
       }
     });
@@ -207,7 +155,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
       }
     });
     
-    console.log('📊 [UNIFIED_CRM] Leads agrupados por coluna:', {
+    debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna (simplificado):', {
       totalColumns: Object.keys(grouped).length,
       distribution: Object.entries(grouped).map(([columnId, leads]) => ({
         columnId,

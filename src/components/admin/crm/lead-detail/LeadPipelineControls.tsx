@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { CRMLead, LeadStatus } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useUnifiedLeadMovement } from '@/hooks/crm/useUnifiedLeadMovement';
+import { useUltraSimplifiedLeadMovement } from '@/hooks/crm/useUltraSimplifiedLeadMovement';
 import { useLeadStatusChange } from '@/hooks/crm/useLeadStatusChange';
 import StatusChangeDialog from '@/components/admin/crm/status/StatusChangeDialog';
 import { toast } from 'sonner';
@@ -19,7 +20,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   onLeadUpdate
 }) => {
   const { pipelines } = useCRMPipelines();
-  const { moveLeadToColumn } = useUnifiedLeadMovement({ 
+  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement({ 
     pipeline_id: lead.pipeline_id || '',
     responsible_id: '',
     tag_ids: [],
@@ -108,7 +109,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   return (
     <>
       <div className="flex items-center gap-4 p-4 bg-gray-50 border-t border-gray-200">
-        {/* Controles de Pipeline */}
+        {/* Controles de Pipeline - Ultra Simplificados */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Pipeline:</span>
           <Button

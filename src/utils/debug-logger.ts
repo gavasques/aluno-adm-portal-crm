@@ -1,4 +1,3 @@
-
 interface LogContext {
   component?: string;
   operation?: string;
@@ -134,11 +133,19 @@ class DebugLogger {
     console.log('🧹 [DEBUG_LOGGER] Logs limpos');
   }
 
-  // Diagnóstico do sistema
+  // Diagnóstico do sistema melhorado
   getDiagnostics() {
     const recent = this.logs.slice(-50);
     const errors = recent.filter(l => l.level === 'error');
     const leadMovementLogs = this.getLeadMovementLogs();
+    
+    // Verificar problemas específicos
+    const hasFullJoinErrors = errors.some(e => e.message.includes('FULL JOIN'));
+    const hasCorsErrors = errors.some(e => e.message.includes('CORS') || e.message.includes('cross-origin'));
+    const hasExternalUrlErrors = errors.some(e => 
+      e.message.includes('lovable.dev') || 
+      e.context.supabaseUrl?.includes('lovable.dev')
+    );
     
     return {
       totalLogs: this.logs.length,
@@ -147,6 +154,11 @@ class DebugLogger {
       leadMovementLogs: leadMovementLogs.length,
       lastError: errors[errors.length - 1] || null,
       systemHealth: errors.length === 0 ? 'healthy' : 'issues',
+      specificIssues: {
+        hasFullJoinErrors,
+        hasCorsErrors,
+        hasExternalUrlErrors
+      },
       recommendations: this.getRecommendations(errors)
     };
   }
@@ -159,11 +171,19 @@ class DebugLogger {
     }
     
     if (errors.some(e => e.message.includes('FULL JOIN'))) {
-      recommendations.push('Simplificar queries do banco de dados');
+      recommendations.push('Simplificar queries do banco de dados - remover FULL JOINs');
     }
     
     if (errors.some(e => e.message.includes('Lead não encontrado'))) {
       recommendations.push('Verificar sincronização de dados');
+    }
+
+    if (errors.some(e => e.message.includes('lovable.dev'))) {
+      recommendations.push('Corrigir redirecionamentos para URLs externas - usar cliente Supabase local');
+    }
+
+    if (errors.some(e => e.message.includes('CORS'))) {
+      recommendations.push('Verificar configuração CORS do Supabase');
     }
     
     return recommendations;
@@ -229,7 +249,7 @@ export const logLeadMovement = (
   status: 'start' | 'success' | 'error', 
   error?: any
 ) => {
-  debugLogger.info(`Lead Movement ${status}`, {
+  debugLogger.info(`Lead Movement ${status} (Ultra Simplificado)`, {
     component: 'LeadMovement',
     operation: 'moveLeadToColumn',
     leadId,
@@ -245,10 +265,7 @@ export const logLeadMovement = (
   });
 };
 
-// Verificação de integridade do sistema
+// Verificação de integridade do sistema ultra-detalhada
 export const checkSystemIntegrity = () => {
-  debugLogger.info('🔍 Verificação de integridade do sistema', {
-    component: 'SystemCheck',
-    diagnostics: debugLogger.getDiagnostics()
-  });
+  return debugLogger.checkSystemIntegrity();
 };
