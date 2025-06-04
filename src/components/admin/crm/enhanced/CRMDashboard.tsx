@@ -6,8 +6,8 @@ import { Plus, BarChart3, Table } from 'lucide-react';
 import { CRMFilters } from '@/types/crm.types';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import CRMLeadForm from '../CRMLeadForm';
-import { PrimaryFilters } from '../filters/PrimaryFilters';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
+import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
 
 interface CRMDashboardProps {
   onOpenLead?: (leadId: string) => void;
@@ -21,6 +21,13 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const [selectedColumnId, setSelectedColumnId] = useState<string>();
 
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
+  
+  // Use o hook de filtros
+  const {
+    searchValue,
+    setSearchValue,
+    isDebouncing
+  } = useCRMFiltersState(filters, setFilters);
 
   // Configurar pipeline padrão sem animação
   React.useEffect(() => {
@@ -51,6 +58,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     setSelectedColumnId(undefined);
   };
 
+  const handlePipelineChange = (pipelineId: string) => {
+    setSelectedPipelineId(pipelineId);
+    setFilters(prev => ({ ...prev, pipeline_id: pipelineId }));
+  };
+
   if (pipelinesLoading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -76,13 +88,42 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
         {/* Filtros sem animação */}
         <div className="space-y-4">
-          <PrimaryFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            selectedPipelineId={selectedPipelineId}
-            onPipelineChange={setSelectedPipelineId}
-            pipelines={pipelines}
-          />
+          <div className="flex items-center gap-4 flex-1">
+            {/* Pipeline Selection */}
+            <div className="flex items-center gap-2 min-w-[200px]">
+              <select 
+                value={selectedPipelineId} 
+                onChange={(e) => handlePipelineChange(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecione um Pipeline</option>
+                {pipelines.map(pipeline => (
+                  <option key={pipeline.id} value={pipeline.id}>
+                    {pipeline.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                placeholder="Buscar leads..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                🔍
+              </div>
+              {isDebouncing && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Controles de visualização */}
           <div className="flex items-center justify-between">

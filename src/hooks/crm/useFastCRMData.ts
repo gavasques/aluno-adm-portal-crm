@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
+import { CRMFilters, LeadWithContacts, LeadStatus } from '@/types/crm.types';
 import { useMemo } from 'react';
 
 export const useFastCRMData = (filters: CRMFilters) => {
@@ -79,6 +79,7 @@ export const useFastCRMData = (filters: CRMFilters) => {
       // Transformar os dados para incluir as propriedades necessárias
       const leadsWithContacts: LeadWithContacts[] = (data || []).map(lead => ({
         ...lead,
+        status: lead.status as LeadStatus, // Fazer cast explícito para LeadStatus
         tags: [], // Inicializar como array vazio por enquanto
         pending_contacts: [], // Inicializar como array vazio por enquanto
         last_completed_contact: undefined, // Pode ser undefined
