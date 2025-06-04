@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { CRMLead, LeadStatus } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useLeadDetailMovement } from '@/hooks/crm/useLeadDetailMovement';
+import { useUnifiedLeadMovement } from '@/hooks/crm/useUnifiedLeadMovement';
 import { useLeadStatusChange } from '@/hooks/crm/useLeadStatusChange';
 import StatusChangeDialog from '@/components/admin/crm/status/StatusChangeDialog';
 import { toast } from 'sonner';
@@ -20,7 +20,13 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   onLeadUpdate
 }) => {
   const { pipelines } = useCRMPipelines();
-  const { moveLeadToColumn } = useLeadDetailMovement({ lead, onLeadUpdate });
+  const { moveLeadToColumn } = useUnifiedLeadMovement({ 
+    selectedPipelineId: lead.pipeline_id || '',
+    responsible: '',
+    tags: [],
+    searchTerm: '',
+    status: 'aberto'
+  });
   const { changeStatus } = useLeadStatusChange();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
@@ -40,9 +46,11 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
     setIsMoving(true);
     try {
       const previousColumn = columns[currentColumnIndex - 1];
-      await moveLeadToColumn(previousColumn.id);
+      await moveLeadToColumn(lead.id, previousColumn.id);
+      onLeadUpdate();
     } catch (error) {
       console.error('Erro ao mover lead para trás:', error);
+      toast.error('Erro ao mover lead');
     } finally {
       setIsMoving(false);
     }
@@ -54,9 +62,11 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
     setIsMoving(true);
     try {
       const nextColumn = columns[currentColumnIndex + 1];
-      await moveLeadToColumn(nextColumn.id);
+      await moveLeadToColumn(lead.id, nextColumn.id);
+      onLeadUpdate();
     } catch (error) {
       console.error('Erro ao mover lead para frente:', error);
+      toast.error('Erro ao mover lead');
     } finally {
       setIsMoving(false);
     }
