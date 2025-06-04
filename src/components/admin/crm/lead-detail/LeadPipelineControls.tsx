@@ -1,14 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { CRMLead, LeadStatus } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useLeadDetailMovement } from '@/hooks/crm/useLeadDetailMovement';
+import { useUltraSimplifiedLeadMovement } from '@/hooks/crm/useUltraSimplifiedLeadMovement';
 import { useLeadStatusChange } from '@/hooks/crm/useLeadStatusChange';
 import StatusChangeDialog from '@/components/admin/crm/status/StatusChangeDialog';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface LeadPipelineControlsProps {
@@ -21,10 +20,17 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   onLeadUpdate
 }) => {
   const { pipelines } = useCRMPipelines();
-  const { moveLeadToColumn } = useLeadDetailMovement({ lead, onLeadUpdate });
+  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement({ 
+    pipeline_id: lead.pipeline_id || '',
+    responsible_id: '',
+    tag_ids: [],
+    search: '',
+    status: 'aberto'
+  });
   const { changeStatus } = useLeadStatusChange();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   // Encontrar pipeline atual e suas colunas
   const currentPipeline = pipelines.find(p => p.id === lead.pipeline_id);
@@ -40,9 +46,10 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
     setIsMoving(true);
     try {
       const previousColumn = columns[currentColumnIndex - 1];
-      await moveLeadToColumn(previousColumn.id);
+      await moveLeadToColumn(lead.id, previousColumn.id);
+      onLeadUpdate();
     } catch (error) {
-      console.error('Erro ao mover lead:', error);
+      console.error('Erro ao mover lead para trás:', error);
       toast.error('Erro ao mover lead');
     } finally {
       setIsMoving(false);
@@ -55,9 +62,10 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
     setIsMoving(true);
     try {
       const nextColumn = columns[currentColumnIndex + 1];
-      await moveLeadToColumn(nextColumn.id);
+      await moveLeadToColumn(lead.id, nextColumn.id);
+      onLeadUpdate();
     } catch (error) {
-      console.error('Erro ao mover lead:', error);
+      console.error('Erro ao mover lead para frente:', error);
       toast.error('Erro ao mover lead');
     } finally {
       setIsMoving(false);
@@ -65,11 +73,14 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   };
 
   const handleStatusChange = async (status: LeadStatus, reason?: string, lossReasonId?: string) => {
+    setIsChangingStatus(true);
     try {
       await changeStatus({ leadId: lead.id, status, reason, lossReasonId });
       onLeadUpdate();
     } catch (error) {
-      toast.error('Erro ao alterar status');
+      console.error('Erro ao alterar status:', error);
+    } finally {
+      setIsChangingStatus(false);
     }
   };
 
@@ -98,7 +109,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   return (
     <>
       <div className="flex items-center gap-4 p-4 bg-gray-50 border-t border-gray-200">
-        {/* Controles de Pipeline */}
+        {/* Controles de Pipeline - Ultra Simplificados */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Pipeline:</span>
           <Button
@@ -108,11 +119,12 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
             disabled={!canMoveBack || isMoving}
             className="h-8 px-2"
           >
-            <ChevronLeft className="h-4 w-4" />
+            {isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
           
           <span className="text-sm text-gray-600 min-w-[120px] text-center">
             {lead.column?.name || 'Sem estágio'}
+            {currentColumnIndex >= 0 && ` (${currentColumnIndex + 1}/${columns.length})`}
           </span>
           
           <Button
@@ -122,7 +134,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
             disabled={!canMoveForward || isMoving}
             className="h-8 px-2"
           >
-            <ChevronRight className="h-4 w-4" />
+            {isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -141,11 +153,16 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
                 handleStatusChange(status);
               }
             }}
+            disabled={isChangingStatus}
           >
             <SelectTrigger className="w-[140px] h-8">
               <SelectValue>
                 <div className="flex items-center gap-2">
-                  {getStatusIcon(lead.status)}
+                  {isChangingStatus ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    getStatusIcon(lead.status)
+                  )}
                   <span className="text-sm">{getStatusLabel(lead.status)}</span>
                 </div>
               </SelectValue>
@@ -172,14 +189,6 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
             </SelectContent>
           </Select>
         </div>
-
-        {/* Indicador de movimento */}
-        {isMoving && (
-          <div className="flex items-center gap-2 text-sm text-blue-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            Movendo...
-          </div>
-        )}
       </div>
 
       <StatusChangeDialog

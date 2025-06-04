@@ -1,55 +1,74 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { CRMLossReason } from '@/types/crm.types';
+import { toast } from 'sonner';
 
 export const useCRMLossReasons = () => {
   const queryClient = useQueryClient();
 
-  const { data: lossReasons = [], isLoading, refetch } = useQuery({
-    queryKey: ['crm-loss-reasons'],
-    queryFn: async () => {
+  const { data: lossReasons = [], isLoading, error } = useQuery({
+    queryKey: ['crm', 'loss-reasons'],
+    queryFn: async (): Promise<CRMLossReason[]> => {
+      console.log('📋 [LOSS_REASONS] Buscando motivos de perda...');
+      
       const { data, error } = await supabase
         .from('crm_loss_reasons')
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-      if (error) throw error;
-      return data as CRMLossReason[];
-    }
+      if (error) {
+        console.error('❌ [LOSS_REASONS] Erro ao buscar motivos de perda:', error);
+        throw error;
+      }
+
+      console.log('📋 [LOSS_REASONS] Motivos de perda carregados:', data.length);
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutos
+    gcTime: 30 * 60 * 1000, // 30 minutos
   });
 
   const createLossReasonMutation = useMutation({
     mutationFn: async (data: Omit<CRMLossReason, 'id' | 'created_at' | 'updated_at'>) => {
-      const { error } = await supabase
+      const { data: result, error } = await supabase
         .from('crm_loss_reasons')
-        .insert(data);
+        .insert(data)
+        .select()
+        .single();
+
       if (error) throw error;
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-loss-reasons'] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'loss-reasons'] });
       toast.success('Motivo de perda criado com sucesso');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao criar motivo de perda:', error);
       toast.error('Erro ao criar motivo de perda');
     }
   });
 
   const updateLossReasonMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CRMLossReason> }) => {
-      const { error } = await supabase
+      const { data: result, error } = await supabase
         .from('crm_loss_reasons')
         .update(data)
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
+
       if (error) throw error;
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-loss-reasons'] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'loss-reasons'] });
       toast.success('Motivo de perda atualizado com sucesso');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao atualizar motivo de perda:', error);
       toast.error('Erro ao atualizar motivo de perda');
     }
   });
@@ -60,46 +79,52 @@ export const useCRMLossReasons = () => {
         .from('crm_loss_reasons')
         .update({ is_active: false })
         .eq('id', id);
+
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-loss-reasons'] });
-      toast.success('Motivo de perda excluído com sucesso');
+      queryClient.invalidateQueries({ queryKey: ['crm', 'loss-reasons'] });
+      toast.success('Motivo de perda removido com sucesso');
     },
-    onError: () => {
-      toast.error('Erro ao excluir motivo de perda');
+    onError: (error) => {
+      console.error('Erro ao remover motivo de perda:', error);
+      toast.error('Erro ao remover motivo de perda');
     }
   });
 
   const updateSortOrderMutation = useMutation({
     mutationFn: async (reasons: { id: string; sort_order: number }[]) => {
-      for (const reason of reasons) {
-        const { error } = await supabase
+      const updates = reasons.map(reason => 
+        supabase
           .from('crm_loss_reasons')
           .update({ sort_order: reason.sort_order })
-          .eq('id', reason.id);
-        if (error) throw error;
+          .eq('id', reason.id)
+      );
+
+      const results = await Promise.all(updates);
+      
+      for (const result of results) {
+        if (result.error) throw result.error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crm-loss-reasons'] });
-      toast.success('Ordem dos motivos atualizada');
+      queryClient.invalidateQueries({ queryKey: ['crm', 'loss-reasons'] });
+      toast.success('Ordem atualizada com sucesso');
     },
-    onError: () => {
-      toast.error('Erro ao atualizar ordem dos motivos');
+    onError: (error) => {
+      console.error('Erro ao atualizar ordem:', error);
+      toast.error('Erro ao atualizar ordem');
     }
   });
 
   return {
     lossReasons,
+    loading: isLoading,
+    error,
     isLoading,
-    refetch,
     createLossReason: createLossReasonMutation.mutate,
     updateLossReason: updateLossReasonMutation.mutate,
     deleteLossReason: deleteLossReasonMutation.mutate,
     updateSortOrder: updateSortOrderMutation.mutate,
-    isCreating: createLossReasonMutation.isPending,
-    isUpdating: updateLossReasonMutation.isPending,
-    isDeleting: deleteLossReasonMutation.isPending,
   };
 };

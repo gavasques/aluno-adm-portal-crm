@@ -1,16 +1,22 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import React, { useCallback, useMemo } from 'react';
+import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useOptimizedCRMData } from '@/hooks/crm/useOptimizedCRMData';
+import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
 import { useKanbanNavigation } from '@/hooks/crm/useKanbanNavigation';
+import { useUltraSimplifiedDragAndDrop } from '@/hooks/crm/useUltraSimplifiedDragAndDrop';
+import { useUltraSimplifiedLeadMovement } from '@/hooks/crm/useUltraSimplifiedLeadMovement';
 import { KanbanGrid } from './kanban/KanbanGrid';
 import { DynamicLeadCard } from './kanban/DynamicLeadCard';
 import { KanbanLoadingOverlay } from './kanban/KanbanLoadingOverlay';
 import { KanbanEmptyState } from './kanban/KanbanEmptyState';
-import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
-import { toast } from 'sonner';
+import { CRMFilters } from '@/types/crm.types';
+import { debugLogger } from '@/utils/debug-logger';
+import { runCORSDiagnostics } from '@/utils/cors-diagnostics';
+import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle, Wifi } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface OptimizedKanbanBoardProps {
   filters: CRMFilters;
@@ -18,78 +24,166 @@ interface OptimizedKanbanBoardProps {
   onCreateLead: (columnId?: string) => void;
 }
 
-const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
+const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   filters,
   pipelineId,
   onCreateLead
 }) => {
-  const [draggedLead, setDraggedLead] = useState<LeadWithContacts | null>(null);
-  const [isProcessingDrop, setIsProcessingDrop] = useState(false);
+  const kanbanBoardId = `ultra_simple_kanban_board_${Date.now()}`;
+  const [connectionError, setConnectionError] = React.useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = React.useState(false);
+  
+  debugLogger.info(`🎯 [ULTRA_SIMPLE_KANBAN_BOARD_${kanbanBoardId}] RENDERIZAÇÃO (REFATORADO)`, {
+    filters,
+    pipelineId,
+    timestamp: new Date().toISOString()
+  });
 
   const {
     columns,
-    loading: columnsLoading
+    loading: columnsLoading,
   } = useCRMPipelines();
+
+  const activeColumns = useMemo(() => {
+    const filteredColumns = columns.filter(col => 
+      col.is_active && col.pipeline_id === pipelineId
+    );
+    
+    debugLogger.info('📋 [ULTRA_SIMPLE_KANBAN] Colunas processadas (refatorado):', {
+      pipelineId,
+      totalColumns: columns.length,
+      filteredColumns: filteredColumns.length,
+      columnDetails: filteredColumns.map(col => ({
+        id: col.id,
+        name: col.name,
+        sort_order: col.sort_order
+      }))
+    });
+    
+    return filteredColumns;
+  }, [columns, pipelineId]);
 
   const {
     leadsWithContacts,
     leadsByColumn,
     loading: leadsLoading,
-    moveLeadToColumn
-  } = useOptimizedCRMData(filters);
+    error: leadsError
+  } = useUnifiedCRMData(filters);
+
+  // Verificar erros de conectividade
+  React.useEffect(() => {
+    if (leadsError) {
+      const errorMessage = leadsError?.message || '';
+      if (errorMessage.includes('CORS') || errorMessage.includes('cross-origin')) {
+        setConnectionError('Erro de CORS detectado. Verifique as configurações do Supabase.');
+      } else {
+        setConnectionError(`Erro de conectividade: ${errorMessage}`);
+      }
+    } else {
+      setConnectionError(null);
+    }
+  }, [leadsError]);
+
+  debugLogger.info('📊 [ULTRA_SIMPLE_KANBAN] Dados dos leads (refatorado):', {
+    totalLeads: leadsWithContacts.length,
+    leadsByColumnCount: Object.entries(leadsByColumn).map(([columnId, leads]) => ({
+      columnId,
+      leadsCount: leads.length,
+      leadNames: leads.map(l => l.name)
+    })),
+    hasConnectionError: !!connectionError
+  });
 
   const { handleOpenDetail } = useKanbanNavigation();
+  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement(filters);
 
-  const activeColumns = columns.filter(col => col.is_active);
+  const {
+    draggedLead,
+    isMoving,
+    sensors,
+    handleDragStart,
+    handleDragEnd,
+    isDragging,
+    canDrag
+  } = useUltraSimplifiedDragAndDrop({
+    onMoveLeadToColumn: moveLeadToColumn
+  });
+
   const loading = columnsLoading || leadsLoading;
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const leadId = active.id as string;
-    const lead = leadsWithContacts.find(l => l.id === leadId);
-    setDraggedLead(lead || null);
-  }, [leadsWithContacts]);
-
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleLeadClick = useCallback((lead: any) => {
+    debugLogger.info('🔗 [ULTRA_SIMPLE_KANBAN] Click no lead (refatorado):', {
+      leadId: lead.id,
+      leadName: lead.name,
+      columnId: lead.column_id,
+      canInteract: !isMoving && !isDragging && canDrag
+    });
     
-    setDraggedLead(null);
-    
-    if (!over || active.id === over.id) return;
-    
-    const leadId = active.id as string;
-    const newColumnId = over.id as string;
-    
-    const lead = leadsWithContacts.find(l => l.id === leadId);
-    if (!lead) return;
-    
-    if (lead.column_id === newColumnId) return;
-    
-    setIsProcessingDrop(true);
-    
-    try {
-      await moveLeadToColumn(leadId, newColumnId);
-      
-      const targetColumn = activeColumns.find(col => col.id === newColumnId);
-      toast.success(`Lead movido para "${targetColumn?.name}"`);
-    } catch (error) {
-      console.error('Erro ao mover lead:', error);
-      toast.error('Erro ao mover lead');
-    } finally {
-      setIsProcessingDrop(false);
+    if (isMoving || isDragging || !canDrag) {
+      debugLogger.info('🚫 [ULTRA_SIMPLE_KANBAN] Click bloqueado durante operação');
+      return;
     }
-  }, [leadsWithContacts, activeColumns, moveLeadToColumn]);
+    
+    handleOpenDetail(lead, false, false);
+  }, [handleOpenDetail, isMoving, isDragging, canDrag]);
 
-  const handleLeadClick = useCallback((lead: LeadWithContacts) => {
-    console.log('🔗 OptimizedKanbanBoard: Abrindo lead:', lead.id);
-    handleOpenDetail(lead, !!draggedLead, isProcessingDrop);
-  }, [handleOpenDetail, draggedLead, isProcessingDrop]);
+  const handleRetryConnection = async () => {
+    setIsRetrying(true);
+    try {
+      const diagnostics = await runCORSDiagnostics();
+      if (diagnostics.canConnect && !diagnostics.corsError) {
+        setConnectionError(null);
+        window.location.reload(); // Recarregar para tentar novamente
+      }
+    } catch (error) {
+      console.error('Erro ao testar conectividade:', error);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  // Renderizar erro de conectividade
+  if (connectionError) {
+    return (
+      <div className="h-full w-full flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <h3 className="text-lg font-semibold text-red-800">
+                  Erro de Conectividade
+                </h3>
+              </div>
+              <p className="text-red-700 mb-4 text-sm">
+                {connectionError}
+              </p>
+              <Button 
+                onClick={handleRetryConnection} 
+                disabled={isRetrying}
+                size="sm"
+                className="w-full"
+              >
+                {isRetrying ? 'Testando...' : 'Testar Conectividade'}
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) {
+    debugLogger.info('⏳ [ULTRA_SIMPLE_KANBAN] Estado de carregamento (refatorado)');
     return <KanbanLoadingOverlay isVisible={true} />;
   }
 
   if (activeColumns.length === 0) {
+    debugLogger.info('📋 [ULTRA_SIMPLE_KANBAN] Nenhuma coluna ativa encontrada (refatorado)');
     return (
       <KanbanEmptyState 
         pipelineId={pipelineId}
@@ -98,39 +192,74 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = ({
     );
   }
 
+  debugLogger.info('🎮 [ULTRA_SIMPLE_KANBAN] Estado final do Kanban (refatorado):', {
+    columns: activeColumns.length,
+    totalLeads: leadsWithContacts.length,
+    draggedLead: draggedLead?.id,
+    isMoving,
+    isDragging,
+    canDrag,
+    sensorsConfigured: !!sensors
+  });
+
   return (
     <div className="h-full w-full flex flex-col p-8">
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <SortableContext items={activeColumns.map(col => col.id)} strategy={horizontalListSortingStrategy}>
-          <KanbanGrid
-            pipelineColumns={activeColumns}
-            leadsByColumn={leadsByColumn}
-            activeColumnId={draggedLead?.column_id || null}
-            isDragging={!!draggedLead}
-            isMoving={isProcessingDrop}
-            onOpenDetail={handleLeadClick}
-            onCreateLead={onCreateLead}
-          />
-        </SortableContext>
+      {/* Indicador de status */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Wifi className="h-4 w-4 text-green-600" />
+          <span>Conectado - {activeColumns.length} colunas, {leadsWithContacts.length} leads</span>
+        </div>
+      </div>
+
+      <DndContext 
+        sensors={sensors}
+        onDragStart={handleDragStart} 
+        onDragEnd={handleDragEnd}
+        collisionDetection={closestCenter}
+      >
+        <KanbanGrid
+          pipelineColumns={activeColumns}
+          leadsByColumn={leadsByColumn}
+          activeColumnId={draggedLead?.column_id || null}
+          isDragging={isDragging}
+          isMoving={isMoving}
+          onOpenDetail={handleLeadClick}
+          onCreateLead={onCreateLead}
+          useVirtualization={leadsWithContacts.length > 50}
+        />
 
         <DragOverlay>
           {draggedLead && (
-            <DynamicLeadCard lead={draggedLead} isDragging />
+            <div className="rotate-3 scale-105 opacity-90 z-50">
+              <DynamicLeadCard 
+                lead={draggedLead} 
+                isDragging 
+                onClick={() => {}}
+              />
+            </div>
           )}
         </DragOverlay>
       </DndContext>
 
-      {/* Processing overlay */}
-      {isProcessingDrop && (
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-4 shadow-lg flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm font-medium">Movendo lead...</span>
+      <KanbanLoadingOverlay isVisible={isMoving} />
+      
+      {isMoving && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-50"
+        >
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            Movendo lead... (Ultra Simplificado)
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
-};
+});
+
+OptimizedKanbanBoard.displayName = 'OptimizedKanbanBoard';
 
 export default OptimizedKanbanBoard;

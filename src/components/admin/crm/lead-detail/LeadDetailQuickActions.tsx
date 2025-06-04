@@ -8,6 +8,7 @@ import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 interface LeadDetailQuickActionsProps {
   leadId: string;
   leadName: string;
+  lead?: any; // Adicionando para compatibilidade
   onEdit?: () => void;
   onAddComment?: () => void;
   onScheduleContact?: () => void;
@@ -17,6 +18,7 @@ interface LeadDetailQuickActionsProps {
 export const LeadDetailQuickActions = ({ 
   leadId,
   leadName,
+  lead,
   onEdit, 
   onAddComment, 
   onScheduleContact,
@@ -83,16 +85,19 @@ export const LeadDetailQuickActions = ({
         />
 
         {/* Modal de edição de lead */}
-        <ModernCRMLeadFormDialog
-          open={showEditModal}
-          onOpenChange={setShowEditModal}
-          leadId={leadId}
-          mode="edit"
-          onSuccess={() => {
-            setShowEditModal(false);
-            // O hook useCRMLeadDetail vai refetch automaticamente
-          }}
-        />
+        {lead && (
+          <ModernCRMLeadFormDialog
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+            pipelineId={lead.pipeline_id || ''}
+            lead={lead}
+            mode="edit"
+            onSuccess={() => {
+              setShowEditModal(false);
+              // O hook useCRMLeadDetail vai refetch automaticamente
+            }}
+          />
+        )}
       </>
     );
   }
@@ -141,16 +146,19 @@ export const LeadDetailQuickActions = ({
       />
 
       {/* Modal de edição de lead */}
-      <ModernCRMLeadFormDialog
-        open={showEditModal}
-        onOpenChange={setShowEditModal}
-        leadId={leadId}
-        mode="edit"
-        onSuccess={() => {
-          setShowEditModal(false);
-          // O hook useCRMLeadDetail vai refetch automaticamente
-        }}
-      />
+      {lead && (
+        <ModernCRMLeadFormDialog
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          pipelineId={lead.pipeline_id || ''}
+          lead={lead}
+          mode="edit"
+          onSuccess={() => {
+            setShowEditModal(false);
+            // O hook useCRMLeadDetail vai refetch automaticamente
+          }}
+        />
+      )}
     </>
   );
 };

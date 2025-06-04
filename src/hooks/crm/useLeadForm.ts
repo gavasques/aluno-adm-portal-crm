@@ -10,6 +10,7 @@ import { useCRMCustomFields } from './useCRMCustomFields';
 import { useCustomFieldValues } from './useCustomFieldValues';
 import { leadFormSchema, type LeadFormData } from '@/utils/crm-validation-schemas';
 import { CRMLead, CRMLeadInput } from '@/types/crm.types';
+import { debugLogger } from '@/utils/debug-logger';
 
 interface UseLeadFormProps {
   pipelineId: string;
@@ -23,7 +24,7 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
   const [loading, setLoading] = useState(false);
   const { updateLead } = useCRMLeadUpdate();
   const { updateLeadTags } = useOptimizedCRMTags();
-  const { customFields } = useCRMCustomFields(pipelineId); // Filtrar por pipeline
+  const { customFields } = useCRMCustomFields(pipelineId);
   const { getFormValues, prepareFieldValues, saveFieldValues } = useCustomFieldValues(lead?.id);
 
   // Valores iniciais incluindo campos customizáveis
@@ -68,6 +69,17 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
 
   const createLead = async (leadData: CRMLeadInput) => {
     try {
+      debugLogger.info('🔄 [LEAD_FORM] Criando lead no banco', {
+        component: 'useLeadForm',
+        operation: 'createLead',
+        leadData: {
+          name: leadData.name,
+          email: leadData.email,
+          pipeline_id: leadData.pipeline_id,
+          column_id: leadData.column_id
+        }
+      });
+
       const insertData = {
         name: leadData.name,
         email: leadData.email,
@@ -92,32 +104,83 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
         notes: leadData.notes
       };
 
+      debugLogger.info('📤 [LEAD_FORM] Inserindo no Supabase', {
+        component: 'useLeadForm',
+        operation: 'supabaseInsert',
+        insertData
+      });
+
       const { data, error } = await supabase
         .from('crm_leads')
         .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        debugLogger.error('❌ [LEAD_FORM] Erro ao inserir lead', {
+          component: 'useLeadForm',
+          operation: 'supabaseInsert',
+          error: error.message,
+          code: error.code,
+          details: error.details
+        });
+        throw error;
+      }
+
+      debugLogger.info('✅ [LEAD_FORM] Lead criado com sucesso', {
+        component: 'useLeadForm',
+        operation: 'createLead',
+        leadId: data.id
+      });
+
       return data;
     } catch (error) {
-      console.error('Erro ao criar lead:', error);
+      debugLogger.error('❌ [LEAD_FORM] Erro geral ao criar lead', {
+        component: 'useLeadForm',
+        operation: 'createLead',
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   };
 
   const onSubmit = async (data: LeadFormData, pipelineColumns: Array<{id: string}>) => {
     setLoading(true);
+    
     try {
+      debugLogger.info('🚀 [LEAD_FORM] Iniciando salvamento', {
+        component: 'useLeadForm',
+        operation: 'onSubmit',
+        mode,
+        pipelineId,
+        formData: {
+          name: data.name,
+          email: data.email,
+          column_id: data.column_id,
+          responsible_id: data.responsible_id
+        }
+      });
+
       const columnId = data.column_id || initialColumnId || (pipelineColumns.length > 0 ? pipelineColumns[0].id : '');
       
+      if (!columnId) {
+        throw new Error('Nenhuma coluna disponível para criar o lead');
+      }
+
       if (lead) {
         // Atualizar lead existente
+        debugLogger.info('🔄 [LEAD_FORM] Atualizando lead existente', {
+          component: 'useLeadForm',
+          operation: 'updateLead',
+          leadId: lead.id
+        });
+
         await updateLead(lead.id, {
           ...data,
           pipeline_id: pipelineId,
           column_id: columnId,
         });
+        
         await updateLeadTags(lead.id, data.tags || []);
 
         // Salvar valores dos campos customizáveis
@@ -129,6 +192,13 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
         toast.success('Lead atualizado com sucesso!');
       } else {
         // Criar novo lead
+        debugLogger.info('➕ [LEAD_FORM] Criando novo lead', {
+          component: 'useLeadForm',
+          operation: 'createNewLead',
+          pipelineId,
+          columnId
+        });
+
         const newLead = await createLead({
           ...data,
           pipeline_id: pipelineId,
@@ -139,6 +209,12 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
 
         // Adicionar tags
         if (data.tags && data.tags.length > 0) {
+          debugLogger.info('🏷️ [LEAD_FORM] Adicionando tags ao lead', {
+            component: 'useLeadForm',
+            operation: 'addTags',
+            leadId: newLead.id,
+            tagsCount: data.tags.length
+          });
           await updateLeadTags(newLead.id, data.tags);
         }
 
@@ -146,7 +222,6 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
         if (customFields.length > 0) {
           const fieldValues = prepareFieldValues(data, customFields);
           if (fieldValues.length > 0) {
-            // Usar o ID do lead recém-criado
             const { error } = await supabase
               .from('crm_custom_field_values')
               .insert(
@@ -158,7 +233,11 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
               );
 
             if (error) {
-              console.error('Erro ao salvar campos customizáveis:', error);
+              debugLogger.error('❌ [LEAD_FORM] Erro ao salvar campos customizáveis', {
+                component: 'useLeadForm',
+                operation: 'saveCustomFields',
+                error: error.message
+              });
               toast.error('Lead criado, mas houve erro ao salvar campos customizáveis');
             }
           }
@@ -166,10 +245,21 @@ export const useLeadForm = ({ pipelineId, initialColumnId, lead, onSuccess, mode
         
         toast.success('Lead criado com sucesso!');
       }
+      
+      debugLogger.info('✅ [LEAD_FORM] Salvamento concluído com sucesso', {
+        component: 'useLeadForm',
+        operation: 'onSubmit',
+        mode
+      });
+
       onSuccess();
     } catch (error) {
-      console.error('Erro ao salvar lead:', error);
-      toast.error('Erro ao salvar lead');
+      debugLogger.error('❌ [LEAD_FORM] Erro ao salvar lead', {
+        component: 'useLeadForm',
+        operation: 'onSubmit',
+        error: error instanceof Error ? error.message : String(error)
+      });
+      toast.error(`Erro ao ${mode === 'create' ? 'criar' : 'atualizar'} lead: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }

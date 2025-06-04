@@ -1,184 +1,249 @@
-
-import { useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead, CRMFilters, CRMLeadContact, LeadWithContacts } from '@/types/crm.types';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useCRMLeadTransformations } from './useCRMLeadTransformations';
-import { useCRMLeadFilters } from './useCRMLeadFilters';
-import { useCRMLeadMovement } from './useCRMLeadMovement';
+import { usePerformanceTracking } from '@/utils/performanceMonitor';
+import { CRMFilters, LeadWithContacts, CRMPipelineColumn } from '@/types/crm.types';
+import { useUnifiedCRMData } from './useUnifiedCRMData';
+import { useUnifiedLeadMovement } from './useUnifiedLeadMovement';
 
-export const useOptimizedCRMData = (filters: CRMFilters = {}) => {
-  // Debounce search para evitar queries excessivas
-  const [debouncedSearch] = useDebouncedValue(filters.search || '', 300);
-  const debouncedFilters = { ...filters, search: debouncedSearch };
+interface UseOptimizedCRMDataOptions {
+  enableRealtime?: boolean;
+  enableVirtualization?: boolean;
+  cacheTimeout?: number;
+  prefetchRelated?: boolean;
+}
 
-  // Hooks separados para diferentes responsabilidades
-  const { transformLeadData } = useCRMLeadTransformations();
-  const { filterLeadsByContact, filterLeadsByTags } = useCRMLeadFilters();
-  const { moveLeadToColumn } = useCRMLeadMovement(debouncedFilters);
+export const useOptimizedCRMData = (
+  filters: CRMFilters,
+  options: UseOptimizedCRMDataOptions = {}
+) => {
+  const {
+    enableRealtime = true,
+    enableVirtualization = true,
+    cacheTimeout = 5 * 60 * 1000, // 5 minutos
+    prefetchRelated = true
+  } = options;
 
-  const fetchLeadsWithContacts = useCallback(async (): Promise<LeadWithContacts[]> => {
-    if (!debouncedFilters.pipeline_id) {
-      console.log('⚠️ Nenhum pipeline_id fornecido, aguardando seleção...');
-      return [];
+  const queryClient = useQueryClient();
+  const { startTiming } = usePerformanceTracking('OptimizedCRMData');
+  
+  // Estados para otimizações
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [virtualizedRange, setVirtualizedRange] = useState({ start: 0, end: 50 });
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+
+  // Hook base para dados
+  const {
+    leadsWithContacts: allLeads,
+    leadsByColumn,
+    loading,
+    error,
+    refetch
+  } = useUnifiedCRMData(filters);
+
+  // Hook para movimentação
+  const { moveLeadToColumn } = useUnifiedLeadMovement(filters);
+
+  // Dados virtualizados para performance
+  const virtualizedLeads = useMemo(() => {
+    if (!enableVirtualization || allLeads.length <= 100) {
+      return allLeads;
     }
 
-    try {
-      console.log('📊 Buscando leads otimizado para pipeline:', debouncedFilters.pipeline_id);
+    const endTiming = startTiming();
+    const result = allLeads.slice(virtualizedRange.start, virtualizedRange.end);
+    endTiming();
+    
+    return result;
+  }, [allLeads, virtualizedRange, enableVirtualization, startTiming]);
 
-      // Query otimizada para leads
-      let leadsQuery = supabase
-        .from('crm_leads')
-        .select(`
-          id, name, email, phone, has_company, sells_on_amazon, works_with_fba,
-          had_contact_with_lv, seeks_private_label, ready_to_invest_3k,
-          calendly_scheduled, what_sells, keep_or_new_niches, amazon_store_link,
-          amazon_state, amazon_tax_regime, main_doubts, calendly_link,
-          pipeline_id, column_id, responsible_id, created_by, notes,
-          scheduled_contact_date, created_at, updated_at,
-          pipeline:crm_pipelines(id, name),
-          column:crm_pipeline_columns(id, name, color),
-          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-          tags:crm_lead_tags(
-            tag:crm_tags(id, name, color, created_at)
-          )
-        `)
-        .eq('pipeline_id', debouncedFilters.pipeline_id);
-
-      if (debouncedFilters.column_id) {
-        leadsQuery = leadsQuery.eq('column_id', debouncedFilters.column_id);
-      }
-      
-      if (debouncedFilters.responsible_id) {
-        leadsQuery = leadsQuery.eq('responsible_id', debouncedFilters.responsible_id);
-      }
-      
-      if (debouncedFilters.search) {
-        leadsQuery = leadsQuery.or(`name.ilike.%${debouncedFilters.search}%,email.ilike.%${debouncedFilters.search}%`);
-      }
-
-      // Executar queries em paralelo
-      const [leadsResult, pendingContactsResult, completedContactsResult] = await Promise.allSettled([
-        leadsQuery.order('created_at', { ascending: false }),
-        
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            id, lead_id, contact_type, contact_reason, contact_date, status,
-            notes, responsible_id, completed_by, completed_at, created_at, updated_at,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .eq('status', 'pending')
-          .order('contact_date', { ascending: true }),
-        
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            id, lead_id, contact_type, contact_reason, contact_date, status,
-            notes, responsible_id, completed_by, completed_at, created_at, updated_at,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .eq('status', 'completed')
-          .not('completed_at', 'is', null)
-          .order('completed_at', { ascending: false })
-      ]);
-
-      if (leadsResult.status === 'rejected') {
-        throw leadsResult.reason;
-      }
-
-      const { data: leads, error: leadsError } = leadsResult.value;
-      if (leadsError) throw leadsError;
-
-      console.log('📊 Leads encontrados:', leads?.length || 0);
-
-      if (!leads || leads.length === 0) {
-        return [];
-      }
-
-      // Transformar leads
-      const transformedLeads = leads.map(transformLeadData);
-      const leadIds = transformedLeads.map(lead => lead.id);
-
-      // Processar contatos
-      const pendingContacts = pendingContactsResult.status === 'fulfilled' ? 
-        (pendingContactsResult.value.data || []).filter(contact => 
-          leadIds.includes(contact.lead_id) && contact.status === 'pending'
-        ).map(contact => ({
-          ...contact,
-          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-          status: contact.status as 'pending' | 'completed' | 'overdue'
-        })) : [];
-
-      const completedContacts = completedContactsResult.status === 'fulfilled' ? 
-        (completedContactsResult.value.data || []).filter(contact => 
-          leadIds.includes(contact.lead_id) && contact.status === 'completed' && contact.completed_at
-        ).map(contact => ({
-          ...contact,
-          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-          status: contact.status as 'pending' | 'completed' | 'overdue'
-        })) : [];
-
-      // Agrupar contatos por lead
-      const pendingContactsByLead = pendingContacts.reduce((acc, contact) => {
-        if (!acc[contact.lead_id]) acc[contact.lead_id] = [];
-        acc[contact.lead_id].push(contact);
-        return acc;
-      }, {} as Record<string, CRMLeadContact[]>);
-
-      const lastCompletedContactsByLead = completedContacts.reduce((acc, contact) => {
-        if (!acc[contact.lead_id]) {
-          acc[contact.lead_id] = contact;
-        }
-        return acc;
-      }, {} as Record<string, CRMLeadContact>);
-
-      // Combinar leads com contatos
-      let leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
-        ...lead,
-        pending_contacts: pendingContactsByLead[lead.id] || [],
-        last_completed_contact: lastCompletedContactsByLead[lead.id]
-      }));
-
-      // Aplicar filtros
-      leadsWithContactsData = filterLeadsByContact(leadsWithContactsData, debouncedFilters.contact_filter);
-      leadsWithContactsData = filterLeadsByTags(leadsWithContactsData, debouncedFilters.tag_ids);
-
-      console.log('📊 Leads processados com filtros:', leadsWithContactsData.length);
-      return leadsWithContactsData;
-
-    } catch (error) {
-      console.error('❌ Erro ao buscar dados CRM:', error);
-      throw error;
+  // Leads por coluna virtualizados
+  const virtualizedLeadsByColumn = useMemo(() => {
+    if (!enableVirtualization) {
+      return leadsByColumn;
     }
-  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags]);
 
-  const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['optimized-crm-leads', debouncedFilters],
-    queryFn: fetchLeadsWithContacts,
-    enabled: true,
-    staleTime: 2 * 60 * 1000, // 2 minutos para dados dinâmicos
-    refetchOnWindowFocus: false,
-  });
-
-  const leadsByColumn = useMemo(() => {
-    const grouped: Record<string, LeadWithContacts[]> = {};
-    leadsWithContacts.forEach(lead => {
-      if (lead.column_id) {
-        if (!grouped[lead.column_id]) grouped[lead.column_id] = [];
-        grouped[lead.column_id].push(lead);
+    const result: Record<string, LeadWithContacts[]> = {};
+    
+    Object.entries(leadsByColumn).forEach(([columnId, leads]) => {
+      if (leads.length <= 50) {
+        result[columnId] = leads;
+      } else {
+        // Para colunas com muitos leads, aplicar virtualização
+        result[columnId] = leads.slice(0, 50);
       }
     });
-    return grouped;
-  }, [leadsWithContacts]);
+
+    return result;
+  }, [leadsByColumn, enableVirtualization]);
+
+  // Prefetch de dados relacionados
+  const prefetchRelatedData = useCallback(async (leadIds: string[]) => {
+    if (!prefetchRelated || leadIds.length === 0) return;
+
+    const prefetchOperations = leadIds.map(leadId => 
+      queryClient.prefetchQuery({
+        queryKey: ['crm-lead-detail', leadId],
+        queryFn: async () => {
+          const { data } = await supabase
+            .from('crm_leads')
+            .select(`
+              *,
+              responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
+              column:crm_pipeline_columns!crm_leads_column_id_fkey(id, name, color),
+              pipeline:crm_pipelines!crm_leads_pipeline_id_fkey(id, name),
+              tags:crm_lead_tags(crm_tags(id, name, color)),
+              comments:crm_lead_comments(id, content, created_at, user:profiles(name)),
+              contacts:crm_lead_contacts(id, contact_type, contact_date, status)
+            `)
+            .eq('id', leadId)
+            .single();
+          return data;
+        },
+        staleTime: cacheTimeout
+      })
+    );
+
+    await Promise.allSettled(prefetchOperations);
+  }, [queryClient, prefetchRelated, cacheTimeout]);
+
+  // Real-time subscriptions otimizadas
+  useEffect(() => {
+    if (!enableRealtime) return;
+
+    console.log('🔄 [OPTIMIZED_CRM] Configurando real-time...');
+
+    const channel = supabase
+      .channel('optimized-crm-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'crm_leads',
+          filter: filters.pipeline_id 
+            ? `pipeline_id=eq.${filters.pipeline_id}`
+            : undefined
+        },
+        async (payload) => {
+          console.log('📡 [OPTIMIZED_CRM] Real-time update:', payload);
+          
+          // Throttle para evitar muitas atualizações
+          const now = Date.now();
+          if (now - lastFetchTime < 1000) return; // 1 segundo de throttle
+          
+          setLastFetchTime(now);
+          
+          // Invalidar cache e refetch
+          await queryClient.invalidateQueries({ 
+            queryKey: ['unified-crm-leads'] 
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enableRealtime, filters.pipeline_id, queryClient, lastFetchTime]);
+
+  // Atualizar range de virtualização
+  const updateVirtualizedRange = useCallback((start: number, end: number) => {
+    setVirtualizedRange({ start, end });
+  }, []);
+
+  // Otimizar cache
+  const optimizeCache = useCallback(async () => {
+    setIsOptimizing(true);
+    
+    try {
+      // Limpar queries antigas
+      queryClient.removeQueries({
+        queryKey: ['crm'],
+        predicate: (query) => {
+          const age = Date.now() - (query.state.dataUpdatedAt || 0);
+          return age > cacheTimeout;
+        }
+      });
+
+      // Prefetch dados visíveis
+      const visibleLeadIds = virtualizedLeads.map(lead => lead.id);
+      await prefetchRelatedData(visibleLeadIds);
+      
+      console.log('🚀 [OPTIMIZED_CRM] Cache otimizado');
+    } catch (error) {
+      console.error('❌ [OPTIMIZED_CRM] Erro ao otimizar cache:', error);
+    } finally {
+      setIsOptimizing(false);
+    }
+  }, [queryClient, cacheTimeout, virtualizedLeads, prefetchRelatedData]);
+
+  // Mover lead com otimizações
+  const optimizedMoveLeadToColumn = useCallback(async (
+    leadId: string,
+    newColumnId: string
+  ) => {
+    const endTiming = startTiming();
+    
+    try {
+      await moveLeadToColumn(leadId, newColumnId);
+      
+      // Prefetch dados da nova coluna se necessário
+      const newColumnLeads = leadsByColumn[newColumnId] || [];
+      if (newColumnLeads.length < 10) {
+        await prefetchRelatedData([leadId]);
+      }
+      
+    } finally {
+      endTiming();
+    }
+  }, [moveLeadToColumn, leadsByColumn, prefetchRelatedData, startTiming]);
+
+  // Métricas de performance
+  const performanceMetrics = useMemo(() => ({
+    totalLeads: allLeads.length,
+    virtualizedLeads: virtualizedLeads.length,
+    columnsWithData: Object.keys(leadsByColumn).length,
+    isVirtualized: enableVirtualization && allLeads.length > 100,
+    cacheAge: Date.now() - lastFetchTime,
+    isOptimizing
+  }), [
+    allLeads.length,
+    virtualizedLeads.length,
+    leadsByColumn,
+    enableVirtualization,
+    lastFetchTime,
+    isOptimizing
+  ]);
 
   return {
-    leadsWithContacts,
-    leadsByColumn,
-    loading: isLoading,
+    // Dados principais
+    leadsWithContacts: enableVirtualization ? virtualizedLeads : allLeads,
+    leadsByColumn: enableVirtualization ? virtualizedLeadsByColumn : leadsByColumn,
+    allLeads, // Dados completos sempre disponíveis
+    
+    // Estados
+    loading,
     error,
+    isOptimizing,
+    
+    // Actions
     refetch,
-    moveLeadToColumn
+    moveLeadToColumn: optimizedMoveLeadToColumn,
+    optimizeCache,
+    updateVirtualizedRange,
+    
+    // Métricas
+    performanceMetrics,
+    
+    // Configurações
+    options: {
+      enableRealtime,
+      enableVirtualization,
+      cacheTimeout,
+      prefetchRelated
+    }
   };
 };
+
+export default useOptimizedCRMData;

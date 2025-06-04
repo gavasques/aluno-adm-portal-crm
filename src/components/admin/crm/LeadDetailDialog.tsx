@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, MessageSquare, User, Edit } from "lucide-react";
 import { CRMLead, CRMPipelineColumn } from "@/types/crm.types";
+import { LeadPipelineControls } from "./lead-detail/LeadPipelineControls";
 
 interface LeadDetailDialogProps {
   lead: CRMLead | null;
@@ -24,6 +25,11 @@ const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDet
   if (!lead) return null;
 
   const leadColumn = columns.find(col => col.id === lead.column_id);
+
+  const handleLeadUpdate = () => {
+    // Force re-render/refresh - can be enhanced with query invalidation
+    console.log('Lead updated, refreshing data...');
+  };
 
   return (
     <Dialog open={!!lead} onOpenChange={onClose}>
@@ -48,6 +54,7 @@ const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDet
             </Button>
           </DialogTitle>
         </DialogHeader>
+        
         <div className="py-4">
           <Tabs defaultValue="details">
             <TabsList className="mb-4">
@@ -82,6 +89,10 @@ const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDet
                       <p className="mt-1 text-base">{leadColumn?.name || 'Não definido'}</p>
                     </div>
                     <div>
+                      <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                      <p className="mt-1 text-base capitalize">{lead.status}</p>
+                    </div>
+                    <div>
                       <h3 className="text-sm font-medium text-gray-500">Tem Empresa</h3>
                       <p className="mt-1 text-base">{lead.has_company ? 'Sim' : 'Não'}</p>
                     </div>
@@ -93,7 +104,18 @@ const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDet
                       <h3 className="text-sm font-medium text-gray-500">Trabalha com FBA</h3>
                       <p className="mt-1 text-base">{lead.works_with_fba ? 'Sim' : 'Não'}</p>
                     </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Busca marca própria</h3>
+                      <p className="mt-1 text-base">{lead.seeks_private_label ? 'Sim' : 'Não'}</p>
+                    </div>
                   </div>
+                  
+                  {lead.notes && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-gray-500">Observações</h3>
+                      <p className="mt-1 text-base whitespace-pre-wrap">{lead.notes}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -159,6 +181,10 @@ const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDet
             </TabsContent>
           </Tabs>
         </div>
+
+        {/* Controles de Pipeline - Adicionados no final */}
+        <LeadPipelineControls lead={lead} onLeadUpdate={handleLeadUpdate} />
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Fechar</Button>
         </DialogFooter>

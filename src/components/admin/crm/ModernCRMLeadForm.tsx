@@ -1,6 +1,6 @@
 
 import React from 'react';
-import CompactCRMLeadForm from './CompactCRMLeadForm';
+import UnifiedCRMLeadForm from './UnifiedCRMLeadForm';
 import { CRMLead } from '@/types/crm.types';
 
 interface ModernCRMLeadFormProps {
@@ -13,8 +13,8 @@ interface ModernCRMLeadFormProps {
 }
 
 const ModernCRMLeadForm = (props: ModernCRMLeadFormProps) => {
-  console.log('🔄 ModernCRMLeadForm: Redirecionando para CompactCRMLeadForm');
-  return <CompactCRMLeadForm {...props} />;
+  console.log('🔄 ModernCRMLeadForm: Redirecionando para UnifiedCRMLeadForm');
+  return <UnifiedCRMLeadForm {...props} />;
 };
 
 export default ModernCRMLeadForm;

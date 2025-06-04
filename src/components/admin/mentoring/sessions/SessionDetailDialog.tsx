@@ -38,7 +38,7 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
   const [mentorNotes, setMentorNotes] = useState(session?.mentorNotes || '');
   const [observations, setObservations] = useState(session?.observations || '');
   const [transcription, setTranscription] = useState(session?.transcription || '');
-  const [meetingLink, setMeetingLink] = useState(session?.meetingLink || '');
+  const [meetingLink, setMeetingLink] = useState(session?.meeting_link || session?.meetingLink || '');
   const [recordingLink, setRecordingLink] = useState(session?.recordingLink || '');
 
   if (!session) return null;
@@ -82,6 +82,10 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
     }
   };
 
+  const sessionDate = session.scheduled_date || session.scheduledDate;
+  const sessionNumber = session.session_number || session.sessionNumber;
+  const durationMinutes = session.duration_minutes || session.durationMinutes;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -108,20 +112,20 @@ export const SessionDetailDialog: React.FC<SessionDetailDialogProps> = ({
                 </div>
                 <div>
                   <Label className="text-xs text-gray-600">Número da Sessão</Label>
-                  <p className="font-medium">{session.sessionNumber}</p>
+                  <p className="font-medium">{sessionNumber}</p>
                 </div>
                 <div>
                   <Label className="text-xs text-gray-600">Duração</Label>
-                  <p className="font-medium">{session.durationMinutes} minutos</p>
+                  <p className="font-medium">{durationMinutes} minutos</p>
                 </div>
               </div>
               
-              {session.scheduledDate && (
+              {sessionDate && (
                 <div>
                   <Label className="text-xs text-gray-600">Data e Hora Agendada</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">{formatSafeDate(session.scheduledDate)}</span>
+                    <span className="font-medium">{formatSafeDate(sessionDate)}</span>
                   </div>
                 </div>
               )}
