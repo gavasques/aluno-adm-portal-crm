@@ -66,30 +66,6 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
     sellsOnAmazon
   });
 
-  const handleSubmit = () => {
-    debugLogger.info('🚀 [UNIFIED_FORM] Iniciando submissão do formulário', {
-      component: 'UnifiedCRMLeadForm',
-      mode,
-      pipelineId
-    });
-
-    form.handleSubmit((data) => {
-      debugLogger.info('📤 [UNIFIED_FORM] Dados do formulário para submissão', {
-        component: 'UnifiedCRMLeadForm',
-        data: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          column_id: data.column_id,
-          responsible_id: data.responsible_id,
-          pipelineId
-        }
-      });
-      
-      onSubmit(data, pipelineColumns);
-    })();
-  };
-
   if (dataLoading) {
     debugLogger.info('⏳ [UNIFIED_FORM] Carregando dados do formulário...', {
       component: 'UnifiedCRMLeadForm'
@@ -112,6 +88,31 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
     );
   }
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    debugLogger.info('🚀 [UNIFIED_FORM] Form submit iniciado', {
+      component: 'UnifiedCRMLeadForm',
+      mode,
+      pipelineId
+    });
+
+    form.handleSubmit((data) => {
+      debugLogger.info('📤 [UNIFIED_FORM] Dados do formulário para submissão', {
+        component: 'UnifiedCRMLeadForm',
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          column_id: data.column_id,
+          responsible_id: data.responsible_id,
+          pipelineId
+        }
+      });
+      
+      onSubmit(data, pipelineColumns);
+    })(e);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -122,7 +123,7 @@ const UnifiedCRMLeadForm: React.FC<UnifiedCRMLeadFormProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             {/* Seção de Informações Básicas */}
             <LeadBasicInfoSection form={form} />
             
