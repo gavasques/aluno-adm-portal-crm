@@ -24,7 +24,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const LeadDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { lead, loading, error, refetch } = useCRMLeadDetail(id || '');
+  const { data: lead, isLoading: loading, error, refetch } = useCRMLeadDetail(id || '');
   
   // Estados para edição
   const [isEditing, setIsEditing] = useState(false);
@@ -91,7 +91,7 @@ const LeadDetail = () => {
         
         <Alert variant="destructive">
           <AlertDescription>
-            {error}
+            {error.message}
           </AlertDescription>
         </Alert>
         

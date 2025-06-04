@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLead, LeadStatus } from '@/types/crm.types';
 
 export const useCRMLeadDetail = (leadId: string) => {
   return useQuery({
@@ -38,12 +38,13 @@ export const useCRMLeadDetail = (leadId: string) => {
       const { data: tags } = await supabase
         .from('crm_lead_tags')
         .select(`
-          tag:crm_tags(id, name, color)
+          tag:crm_tags(id, name, color, created_at)
         `)
         .eq('lead_id', leadId);
 
       const processedLead: CRMLead = {
         ...lead,
+        status: lead.status as LeadStatus,
         tags: tags?.map(tagWrapper => tagWrapper.tag).filter(Boolean) || []
       };
 

@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
+import { CRMFilters, LeadWithContacts, LeadStatus } from '@/types/crm.types';
 import { useMemo } from 'react';
 
 export const useUnifiedCRMData = (filters: CRMFilters) => {
@@ -27,7 +27,7 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
           responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
           loss_reason:crm_loss_reasons(id, name),
           tags:crm_lead_tags(
-            tag:crm_tags(id, name, color)
+            tag:crm_tags(id, name, color, created_at)
           )
         `);
 
@@ -82,6 +82,7 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
       // Processar dados para incluir contatos
       const processedLeads: LeadWithContacts[] = (leads || []).map(lead => ({
         ...lead,
+        status: lead.status as LeadStatus,
         tags: lead.tags?.map((tagWrapper: any) => tagWrapper.tag).filter(Boolean) || [],
         pending_contacts: contactsData.filter(contact => contact.lead_id === lead.id),
         last_completed_contact: undefined // Pode ser implementado depois se necessário

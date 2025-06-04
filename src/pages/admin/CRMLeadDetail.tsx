@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const CRMLeadDetail = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const { lead, loading, error } = useCRMLeadDetail(leadId || '');
+  const { data: lead, isLoading: loading, error } = useCRMLeadDetail(leadId || '');
 
   console.log('🎯 CRMLeadDetail - leadId:', leadId, 'lead:', lead, 'loading:', loading, 'error:', error);
 
@@ -41,7 +41,7 @@ const CRMLeadDetail = () => {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            {error}
+            {error.message}
           </AlertDescription>
         </Alert>
         
