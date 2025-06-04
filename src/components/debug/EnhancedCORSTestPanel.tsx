@@ -1,347 +1,281 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, XCircle, RefreshCw, ExternalLink, Settings } from 'lucide-react';
-import { runCORSDiagnostics, logCORSDiagnostics, type CORSDiagnostics } from '@/utils/cors-diagnostics';
-import { ENVIRONMENT, CORS_CONFIG } from '@/config/cors';
+import { AlertCircle, CheckCircle, XCircle, RefreshCw, Globe, Database, Key, Wifi } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ENVIRONMENT } from '@/config/cors';
 import { toast } from 'sonner';
 
+interface CORSTestResult {
+  test: string;
+  status: 'success' | 'error' | 'warning';
+  message: string;
+  details?: string;
+}
+
 export const EnhancedCORSTestPanel: React.FC = () => {
-  const [diagnostics, setDiagnostics] = useState<CORSDiagnostics | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [connectionDetails, setConnectionDetails] = useState<any>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [results, setResults] = useState<CORSTestResult[]>([]);
 
-  const currentOrigin = ENVIRONMENT.getOrigin();
-  const isLovableEnv = ENVIRONMENT.isLovable();
+  const runComprehensiveTests = async () => {
+    setIsRunning(true);
+    setResults([]);
+    const newResults: CORSTestResult[] = [];
 
-  useEffect(() => {
-    // Auto-run diagnostics on mount
-    handleRunDiagnostics();
-  }, []);
-
-  const handleRunDiagnostics = async () => {
-    setIsLoading(true);
     try {
-      console.log('🔍 [ENHANCED_CORS_TEST] Iniciando diagnóstico completo...');
-      
-      // Teste completo de conectividade
-      const tests = await Promise.allSettled([
-        // Teste 1: Conectividade básica com database
-        supabase.from('profiles').select('id').limit(1),
-        
-        // Teste 2: Verificar sessão de autenticação
-        supabase.auth.getSession(),
-        
-        // Teste 3: Testar edge function list-users
-        supabase.functions.invoke('list-users', {
-          body: { test: true },
-          headers: {
-            'x-lovable-origin': currentOrigin,
-            'x-application-name': 'crm-lead-management'
-          }
-        }),
-        
-        // Teste 4: Testar configuração CORS atual
-        fetch(`${supabase.supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
-          headers: {
-            'apikey': supabase.supabaseKey,
-            'x-lovable-origin': currentOrigin
-          }
-        })
-      ]);
-
-      const [dbTest, authTest, edgeFunctionTest, corsTest] = tests;
-      
-      const details = {
-        dbTest: dbTest.status === 'fulfilled' && !dbTest.value.error,
-        authTest: authTest.status === 'fulfilled' && !authTest.value.error,
-        edgeFunctionTest: edgeFunctionTest.status === 'fulfilled' && !edgeFunctionTest.value.error,
-        corsTest: corsTest.status === 'fulfilled' && corsTest.value.ok,
-        environment: {
-          isLovable: isLovableEnv,
-          origin: currentOrigin,
-          hostname: window.location.hostname,
-          allowedOrigins: CORS_CONFIG.allowedOrigins,
-          isOriginAllowed: CORS_CONFIG.isOriginAllowed(currentOrigin)
-        },
-        errors: []
-      };
-
-      // Coletar erros detalhados
-      if (dbTest.status === 'rejected') details.errors.push(`DB: ${dbTest.reason}`);
-      if (authTest.status === 'rejected') details.errors.push(`Auth: ${authTest.reason}`);
-      if (edgeFunctionTest.status === 'rejected') details.errors.push(`Edge Function: ${edgeFunctionTest.reason}`);
-      if (corsTest.status === 'rejected') details.errors.push(`CORS: ${corsTest.reason}`);
-
-      setConnectionDetails(details);
-      
-      // Executar diagnóstico original também
-      const result = await runCORSDiagnostics();
-      setDiagnostics(result);
-      
-      // Log completo no console
-      await logCORSDiagnostics();
-      
-      // Feedback baseado nos resultados
-      if (details.dbTest && details.authTest) {
-        toast.success('✅ Conectividade básica funcionando!');
-      } else if (!details.environment.isOriginAllowed) {
-        toast.error('❌ Origem não permitida na configuração CORS');
-      } else {
-        toast.warning('⚠️ Alguns testes falharam - veja detalhes');
-      }
-      
-    } catch (error) {
-      console.error('❌ [ENHANCED_CORS_TEST] Erro ao executar diagnóstico:', error);
-      toast.error('Erro ao executar diagnóstico');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTestEdgeFunction = async () => {
-    setIsLoading(true);
-    try {
-      console.log('🧪 [ENHANCED_CORS_TEST] Testando edge function específica...');
-      
-      const { data, error } = await supabase.functions.invoke('list-users', {
-        body: { action: 'test' },
-        headers: {
-          'x-lovable-origin': currentOrigin,
-          'x-application-name': 'crm-lead-management'
+      // Test 1: Basic connectivity
+      console.log('🔍 [CORS_TEST] Teste 1: Conectividade básica');
+      try {
+        const { data, error } = await supabase.from('profiles').select('id').limit(1);
+        if (error) {
+          newResults.push({
+            test: 'Conectividade Básica',
+            status: 'error',
+            message: 'Falha na conexão com o banco',
+            details: error.message
+          });
+        } else {
+          newResults.push({
+            test: 'Conectividade Básica',
+            status: 'success',
+            message: 'Conexão com banco funcionando',
+            details: `${data?.length || 0} registros acessíveis`
+          });
         }
-      });
-      
-      if (error) {
-        console.error('❌ [ENHANCED_CORS_TEST] Erro na edge function:', error);
-        toast.error(`Edge Function falhou: ${error.message}`);
-      } else {
-        console.log('✅ [ENHANCED_CORS_TEST] Edge function funcionando:', data);
-        toast.success('✅ Edge Function funcionando!');
+      } catch (error: any) {
+        newResults.push({
+          test: 'Conectividade Básica',
+          status: 'error',
+          message: 'Erro de rede ou CORS',
+          details: error.message
+        });
       }
+
+      // Test 2: Authentication
+      console.log('🔍 [CORS_TEST] Teste 2: Autenticação');
+      try {
+        const { data: session, error } = await supabase.auth.getSession();
+        if (error) {
+          newResults.push({
+            test: 'Autenticação',
+            status: 'error',
+            message: 'Erro ao verificar sessão',
+            details: error.message
+          });
+        } else if (session.session) {
+          newResults.push({
+            test: 'Autenticação',
+            status: 'success',
+            message: 'Usuário autenticado',
+            details: `Email: ${session.session.user.email}`
+          });
+        } else {
+          newResults.push({
+            test: 'Autenticação',
+            status: 'warning',
+            message: 'Usuário não autenticado',
+            details: 'Faça login para acessar recursos protegidos'
+          });
+        }
+      } catch (error: any) {
+        newResults.push({
+          test: 'Autenticação',
+          status: 'error',
+          message: 'Falha na verificação de autenticação',
+          details: error.message
+        });
+      }
+
+      // Test 3: Edge Functions
+      console.log('🔍 [CORS_TEST] Teste 3: Edge Functions');
+      try {
+        const { data, error } = await supabase.functions.invoke('list-users', {
+          method: 'GET'
+        });
+        
+        if (error) {
+          newResults.push({
+            test: 'Edge Functions',
+            status: 'error',
+            message: 'Falha na chamada da edge function',
+            details: error.message
+          });
+        } else {
+          newResults.push({
+            test: 'Edge Functions',
+            status: 'success',
+            message: 'Edge function respondeu',
+            details: 'Comunicação com serverless funcionando'
+          });
+        }
+      } catch (error: any) {
+        newResults.push({
+          test: 'Edge Functions',
+          status: 'error',
+          message: 'Erro ao chamar edge function',
+          details: error.message
+        });
+      }
+
+      // Test 4: Environment detection
+      console.log('🔍 [CORS_TEST] Teste 4: Detecção de ambiente');
+      const isLovable = ENVIRONMENT.isLovable();
+      const currentOrigin = ENVIRONMENT.getOrigin();
+      
+      newResults.push({
+        test: 'Ambiente',
+        status: isLovable ? 'success' : 'warning',
+        message: isLovable ? 'Ambiente Lovable detectado' : 'Ambiente local/externo',
+        details: `Origin: ${currentOrigin}`
+      });
+
+      setResults(newResults);
+      
+      // Summary toast
+      const errorCount = newResults.filter(r => r.status === 'error').length;
+      const successCount = newResults.filter(r => r.status === 'success').length;
+      
+      if (errorCount === 0) {
+        toast.success(`Todos os testes passaram! (${successCount}/${newResults.length})`);
+      } else {
+        toast.error(`${errorCount} teste(s) falharam de ${newResults.length} total`);
+      }
+
     } catch (error: any) {
-      console.error('❌ [ENHANCED_CORS_TEST] Erro no teste da edge function:', error);
-      toast.error(`Teste falhou: ${error.message}`);
+      console.error('❌ [CORS_TEST] Erro geral nos testes:', error);
+      newResults.push({
+        test: 'Sistema',
+        status: 'error',
+        message: 'Erro crítico no sistema de testes',
+        details: error.message
+      });
+      setResults(newResults);
+      toast.error('Erro crítico nos testes de CORS');
     } finally {
-      setIsLoading(false);
+      setIsRunning(false);
     }
   };
 
-  const getStatusIcon = (status: boolean, isError = false) => {
-    if (isError) {
-      return status ? <XCircle className="h-4 w-4 text-red-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />;
+  const getStatusIcon = (status: CORSTestResult['status']) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
     }
-    return status ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />;
   };
 
-  const getStatusBadge = (status: boolean, isError = false) => {
-    if (isError) {
-      return (
-        <Badge variant={status ? "destructive" : "default"}>
-          {status ? "Erro" : "OK"}
-        </Badge>
-      );
+  const getStatusBadge = (status: CORSTestResult['status']) => {
+    switch (status) {
+      case 'success':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">OK</Badge>;
+      case 'error':
+        return <Badge variant="destructive">Erro</Badge>;
+      case 'warning':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Aviso</Badge>;
     }
-    return (
-      <Badge variant={status ? "default" : "destructive"}>
-        {status ? "OK" : "Erro"}
-      </Badge>
-    );
   };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5" />
-          Diagnóstico Avançado de CORS e Conectividade
+          <Globe className="h-5 w-5" />
+          Diagnóstico Avançado de CORS
         </CardTitle>
         <CardDescription>
-          Teste completo da conectividade com Supabase e diagnóstico de problemas de CORS
+          Testes completos de conectividade, autenticação e edge functions
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        
-        {/* Informações do Ambiente */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
-          <div>
-            <h4 className="font-medium text-blue-900">Ambiente Atual</h4>
-            <p className="text-sm text-blue-700">Origem: <code className="bg-blue-100 px-1 rounded">{currentOrigin}</code></p>
-            <p className="text-sm text-blue-700">Lovable: {isLovableEnv ? '✅ Sim' : '❌ Não'}</p>
+        {/* Info do ambiente */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-blue-500" />
+            <div className="text-sm">
+              <div className="font-medium">Ambiente</div>
+              <div className="text-gray-600">
+                {ENVIRONMENT.isLovable() ? 'Lovable' : 'Local'}
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="font-medium text-blue-900">Configuração CORS</h4>
-            <p className="text-sm text-blue-700">
-              Origem Permitida: {connectionDetails?.environment?.isOriginAllowed ? '✅ Sim' : '❌ Não'}
-            </p>
-            <p className="text-sm text-blue-700">
-              Origins Configurados: {CORS_CONFIG.allowedOrigins.length} domínios
-            </p>
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-green-500" />
+            <div className="text-sm">
+              <div className="font-medium">Supabase</div>
+              <div className="text-gray-600">Conectado</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Key className="h-4 w-4 text-purple-500" />
+            <div className="text-sm">
+              <div className="font-medium">Auth</div>
+              <div className="text-gray-600">PKCE</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Wifi className="h-4 w-4 text-orange-500" />
+            <div className="text-sm">
+              <div className="font-medium">Origin</div>
+              <div className="text-gray-600 text-xs">{ENVIRONMENT.getOrigin()}</div>
+            </div>
           </div>
         </div>
 
-        {/* Controles */}
-        <div className="flex items-center gap-4 flex-wrap">
+        {/* Botão de teste */}
+        <div className="flex items-center gap-4">
           <Button 
-            onClick={handleRunDiagnostics} 
-            disabled={isLoading}
+            onClick={runComprehensiveTests} 
+            disabled={isRunning}
             className="flex items-center gap-2"
           >
-            {isLoading ? (
+            {isRunning ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            {isLoading ? 'Executando...' : 'Executar Testes Completos'}
+            {isRunning ? 'Executando Testes...' : 'Executar Testes Completos'}
           </Button>
-          
-          <Button 
-            variant="outline"
-            onClick={handleTestEdgeFunction} 
-            disabled={isLoading}
-          >
-            Testar Edge Function
-          </Button>
-
-          {isLovableEnv && (
-            <Button 
-              variant="outline"
-              onClick={() => window.open('https://supabase.com/dashboard/project/qflmguzmticupqtnlirf/settings/api', '_blank')}
-              className="flex items-center gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Abrir Dashboard Supabase
-            </Button>
-          )}
         </div>
 
-        {/* Resultados dos Testes */}
-        {connectionDetails && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Resultados dos Testes</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">Database</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(connectionDetails.dbTest)}
-                  {getStatusBadge(connectionDetails.dbTest)}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">Autenticação</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(connectionDetails.authTest)}
-                  {getStatusBadge(connectionDetails.authTest)}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">Edge Function</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(connectionDetails.edgeFunctionTest)}
-                  {getStatusBadge(connectionDetails.edgeFunctionTest)}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">CORS Direto</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(connectionDetails.corsTest)}
-                  {getStatusBadge(connectionDetails.corsTest)}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Diagnóstico Original */}
-        {diagnostics && (
+        {/* Resultados */}
+        {results.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Diagnóstico Detalhado</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">Conexão Geral</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(diagnostics.canConnect)}
-                  {getStatusBadge(diagnostics.canConnect)}
+            <h3 className="font-semibold text-lg">Resultados dos Testes</h3>
+            <div className="space-y-2">
+              {results.map((result, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(result.status)}
+                    <div>
+                      <div className="font-medium">{result.test}</div>
+                      <div className="text-sm text-gray-600">{result.message}</div>
+                      {result.details && (
+                        <div className="text-xs text-gray-500 mt-1">{result.details}</div>
+                      )}
+                    </div>
+                  </div>
+                  {getStatusBadge(result.status)}
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">Erro CORS</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(diagnostics.corsError, true)}
-                  {getStatusBadge(diagnostics.corsError, true)}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <span className="text-sm font-medium">Autenticação</span>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(diagnostics.authWorking)}
-                  {getStatusBadge(diagnostics.authWorking)}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Erros Detalhados */}
-        {connectionDetails?.errors && connectionDetails.errors.length > 0 && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h4 className="text-sm font-medium text-red-800 mb-2">Erros Detalhados:</h4>
-            <ul className="text-sm text-red-700 space-y-1">
-              {connectionDetails.errors.map((error: string, index: number) => (
-                <li key={index} className="font-mono text-xs">• {error}</li>
               ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Configuração Necessária */}
-        {isLovableEnv && (!connectionDetails?.environment?.isOriginAllowed || connectionDetails?.errors?.length > 0) && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <Settings className="h-4 w-4 text-yellow-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-yellow-800">⚠️ Configuração CORS Necessária</p>
-                <p className="text-yellow-700 mt-2">
-                  Para resolver os problemas detectados, configure no Supabase Dashboard:
-                </p>
-                <div className="mt-2 p-2 bg-yellow-100 rounded text-yellow-800 font-mono text-xs">
-                  Settings → API → CORS Origins
-                </div>
-                <p className="text-yellow-700 mt-2">Adicionar estes domínios:</p>
-                <ul className="mt-1 space-y-1">
-                  {CORS_CONFIG.allowedOrigins.map((origin, index) => (
-                    <li key={index} className="font-mono text-xs text-yellow-800">
-                      • <code className="bg-yellow-100 px-1 rounded">{origin}</code>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
           </div>
         )}
 
-        {/* Status de Sucesso */}
-        {connectionDetails?.dbTest && connectionDetails?.authTest && connectionDetails?.environment?.isOriginAllowed && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="font-medium text-green-800">✅ Conectividade OK!</p>
-                <p className="text-green-700 text-sm mt-1">
-                  Todos os testes principais passaram. O sistema está funcionando corretamente.
-                </p>
-              </div>
-            </div>
+        {/* Dicas de solução */}
+        <div className="text-xs text-gray-500 space-y-2 mt-6 p-4 bg-blue-50 rounded-lg">
+          <h4 className="font-medium text-blue-800">💡 Dicas de Solução:</h4>
+          <div className="space-y-1">
+            <p><strong>CORS Errors:</strong> Configurações atualizadas automaticamente no código</p>
+            <p><strong>Auth Errors:</strong> Verifique se está logado ou se a sessão expirou</p>
+            <p><strong>Edge Functions:</strong> Logs disponíveis no dashboard do Supabase</p>
+            <p><strong>Network:</strong> Verifique conexão de internet e firewall</p>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

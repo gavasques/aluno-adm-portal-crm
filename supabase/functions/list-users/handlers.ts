@@ -1,6 +1,4 @@
 
-import { CORS_CONFIG, CORS_LOGGER } from "../../../src/config/cors.ts";
-
 export async function handleGetRequest(supabaseAdmin: any) {
   try {
     console.log("📋 [HANDLER] Iniciando busca de usuários...");
@@ -26,7 +24,6 @@ export async function handleGetRequest(supabaseAdmin: any) {
 
     if (error) {
       console.error("❌ [HANDLER] Erro ao buscar usuários:", error);
-      CORS_LOGGER.logError(error, "busca de usuários");
       throw new Error(`Erro ao buscar usuários: ${error.message}`);
     }
 
@@ -35,7 +32,6 @@ export async function handleGetRequest(supabaseAdmin: any) {
     
   } catch (error: any) {
     console.error("💥 [HANDLER] Erro crítico no GET:", error);
-    CORS_LOGGER.logError(error, "GET handler");
     throw error;
   }
 }
@@ -54,7 +50,6 @@ export async function handlePostRequest(req: Request, supabaseAdmin: any) {
       
       if (error) {
         console.error("❌ [HANDLER] Erro ao deletar usuário:", error);
-        CORS_LOGGER.logError(error, "deleção de usuário");
         throw new Error(`Erro ao deletar usuário: ${error.message}`);
       }
       
@@ -70,7 +65,6 @@ export async function handlePostRequest(req: Request, supabaseAdmin: any) {
     
   } catch (error: any) {
     console.error("💥 [HANDLER] Erro crítico no POST:", error);
-    CORS_LOGGER.logError(error, "POST handler");
     throw error;
   }
 }
