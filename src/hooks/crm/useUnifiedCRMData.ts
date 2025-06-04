@@ -17,19 +17,10 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
     queryFn: async () => {
       console.log('🔍 [UNIFIED_CRM_DATA] Buscando leads com filtros:', filters);
       
-      // Query with complete field selection for all related tables
+      // Buscar leads básicos primeiro
       let query = supabase
         .from('crm_leads')
-        .select(`
-          *,
-          pipeline:crm_pipelines(id, name, description, sort_order, is_active, created_at, updated_at),
-          column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
-          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-          loss_reason:crm_loss_reasons(id, name, description, sort_order, is_active, created_at, updated_at),
-          tags:crm_lead_tags(
-            tag:crm_tags(id, name, color, created_at)
-          )
-        `);
+        .select('*');
 
       // Aplicar filtros
       if (filters.pipeline_id) {
@@ -61,12 +52,60 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
 
       console.log(`✅ [UNIFIED_CRM_DATA] ${leads?.length || 0} leads encontrados`);
 
-      // Buscar contatos pendentes para cada lead (query separada para evitar joins complexos)
-      const leadIds = leads?.map(lead => lead.id) || [];
-      
-      let contactsData = [];
-      if (leadIds.length > 0) {
-        const { data: contacts } = await supabase
+      if (!leads || leads.length === 0) {
+        return [];
+      }
+
+      // Buscar dados relacionados em lotes para otimização
+      const leadIds = leads.map(lead => lead.id);
+      const pipelineIds = [...new Set(leads.map(lead => lead.pipeline_id).filter(Boolean))];
+      const columnIds = [...new Set(leads.map(lead => lead.column_id).filter(Boolean))];
+      const responsibleIds = [...new Set(leads.map(lead => lead.responsible_id).filter(Boolean))];
+      const lossReasonIds = [...new Set(leads.map(lead => lead.loss_reason_id).filter(Boolean))];
+
+      // Buscar todos os dados relacionados em paralelo
+      const [
+        pipelinesData,
+        columnsData,
+        responsiblesData,
+        lossReasonsData,
+        contactsData,
+        tagsData
+      ] = await Promise.all([
+        // Pipelines
+        pipelineIds.length > 0 ? supabase
+          .from('crm_pipelines')
+          .select('id, name, description, sort_order, is_active, created_at, updated_at')
+          .in('id', pipelineIds)
+          .then(res => res.data || [])
+          .catch(() => []) : [],
+        
+        // Columns
+        columnIds.length > 0 ? supabase
+          .from('crm_pipeline_columns')
+          .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
+          .in('id', columnIds)
+          .then(res => res.data || [])
+          .catch(() => []) : [],
+        
+        // Responsibles
+        responsibleIds.length > 0 ? supabase
+          .from('profiles')
+          .select('id, name, email')
+          .in('id', responsibleIds)
+          .then(res => res.data || [])
+          .catch(() => []) : [],
+        
+        // Loss Reasons
+        lossReasonIds.length > 0 ? supabase
+          .from('crm_loss_reasons')
+          .select('id, name, description, sort_order, is_active, created_at, updated_at')
+          .in('id', lossReasonIds)
+          .then(res => res.data || [])
+          .catch(() => []) : [],
+        
+        // Contacts
+        supabase
           .from('crm_lead_contacts')
           .select(`
             *,
@@ -74,18 +113,59 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
           `)
           .in('lead_id', leadIds)
           .eq('status', 'pending')
-          .order('contact_date', { ascending: true });
+          .order('contact_date', { ascending: true })
+          .then(res => res.data || [])
+          .catch(() => []),
         
-        contactsData = contacts || [];
-      }
+        // Tags
+        supabase
+          .from('crm_lead_tags')
+          .select(`
+            lead_id,
+            crm_tags(id, name, color, created_at)
+          `)
+          .in('lead_id', leadIds)
+          .then(res => res.data || [])
+          .catch(() => [])
+      ]);
 
-      // Processar dados para incluir contatos
-      const processedLeads: LeadWithContacts[] = (leads || []).map(lead => ({
+      // Criar mapas para lookup rápido
+      const pipelinesMap = new Map(pipelinesData.map(p => [p.id, p]));
+      const columnsMap = new Map(columnsData.map(c => [c.id, c]));
+      const responsiblesMap = new Map(responsiblesData.map(r => [r.id, r]));
+      const lossReasonsMap = new Map(lossReasonsData.map(lr => [lr.id, lr]));
+      const contactsMap = new Map<string, any[]>();
+      const tagsMap = new Map<string, any[]>();
+
+      // Organizar contacts por lead
+      contactsData.forEach(contact => {
+        if (!contactsMap.has(contact.lead_id)) {
+          contactsMap.set(contact.lead_id, []);
+        }
+        contactsMap.get(contact.lead_id)!.push(contact);
+      });
+
+      // Organizar tags por lead
+      tagsData.forEach(tagWrapper => {
+        if (tagWrapper.crm_tags) {
+          if (!tagsMap.has(tagWrapper.lead_id)) {
+            tagsMap.set(tagWrapper.lead_id, []);
+          }
+          tagsMap.get(tagWrapper.lead_id)!.push(tagWrapper.crm_tags);
+        }
+      });
+
+      // Processar leads com dados relacionados
+      const processedLeads: LeadWithContacts[] = leads.map(lead => ({
         ...lead,
         status: lead.status as LeadStatus,
-        tags: lead.tags?.map((tagWrapper: any) => tagWrapper.tag).filter(Boolean) || [],
-        pending_contacts: contactsData.filter(contact => contact.lead_id === lead.id),
-        last_completed_contact: undefined // Pode ser implementado depois se necessário
+        pipeline: lead.pipeline_id ? pipelinesMap.get(lead.pipeline_id) : undefined,
+        column: lead.column_id ? columnsMap.get(lead.column_id) : undefined,
+        responsible: lead.responsible_id ? responsiblesMap.get(lead.responsible_id) : undefined,
+        loss_reason: lead.loss_reason_id ? lossReasonsMap.get(lead.loss_reason_id) : undefined,
+        tags: tagsMap.get(lead.id) || [],
+        pending_contacts: contactsMap.get(lead.id) || [],
+        last_completed_contact: undefined
       }));
 
       console.log('🎯 [UNIFIED_CRM_DATA] Leads processados:', {

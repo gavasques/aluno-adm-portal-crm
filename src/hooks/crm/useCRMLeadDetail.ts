@@ -11,16 +11,10 @@ export const useCRMLeadDetail = (leadId: string) => {
 
       console.log('🔍 [CRM_LEAD_DETAIL] Buscando detalhes do lead:', leadId);
 
-      // Query with complete field selection for all related tables
+      // Buscar dados básicos do lead primeiro
       const { data: lead, error } = await supabase
         .from('crm_leads')
-        .select(`
-          *,
-          pipeline:crm_pipelines(id, name, description, sort_order, is_active, created_at, updated_at),
-          column:crm_pipeline_columns(id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at),
-          responsible:profiles!crm_leads_responsible_id_fkey(id, name, email),
-          loss_reason:crm_loss_reasons(id, name, description, sort_order, is_active, created_at, updated_at)
-        `)
+        .select('*')
         .eq('id', leadId)
         .maybeSingle();
 
@@ -34,18 +28,63 @@ export const useCRMLeadDetail = (leadId: string) => {
         return null;
       }
 
-      // Buscar tags separadamente para evitar joins complexos
-      const { data: tags } = await supabase
-        .from('crm_lead_tags')
-        .select(`
-          tag:crm_tags(id, name, color, created_at)
-        `)
-        .eq('lead_id', leadId);
+      // Buscar dados relacionados separadamente para evitar JOINs complexos
+      const [pipelineData, columnData, responsibleData, lossReasonData, tagsData] = await Promise.all([
+        // Pipeline
+        lead.pipeline_id ? supabase
+          .from('crm_pipelines')
+          .select('id, name, description, sort_order, is_active, created_at, updated_at')
+          .eq('id', lead.pipeline_id)
+          .single()
+          .then(res => res.data)
+          .catch(() => null) : null,
+        
+        // Column
+        lead.column_id ? supabase
+          .from('crm_pipeline_columns')
+          .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
+          .eq('id', lead.column_id)
+          .single()
+          .then(res => res.data)
+          .catch(() => null) : null,
+        
+        // Responsible
+        lead.responsible_id ? supabase
+          .from('profiles')
+          .select('id, name, email')
+          .eq('id', lead.responsible_id)
+          .single()
+          .then(res => res.data)
+          .catch(() => null) : null,
+        
+        // Loss Reason
+        lead.loss_reason_id ? supabase
+          .from('crm_loss_reasons')
+          .select('id, name, description, sort_order, is_active, created_at, updated_at')
+          .eq('id', lead.loss_reason_id)
+          .single()
+          .then(res => res.data)
+          .catch(() => null) : null,
+        
+        // Tags
+        supabase
+          .from('crm_lead_tags')
+          .select(`
+            crm_tags(id, name, color, created_at)
+          `)
+          .eq('lead_id', leadId)
+          .then(res => res.data?.map(item => item.crm_tags).filter(Boolean) || [])
+          .catch(() => [])
+      ]);
 
       const processedLead: CRMLead = {
         ...lead,
         status: lead.status as LeadStatus,
-        tags: tags?.map(tagWrapper => tagWrapper.tag).filter(Boolean) || []
+        pipeline: pipelineData,
+        column: columnData,
+        responsible: responsibleData,
+        loss_reason: lossReasonData,
+        tags: tagsData
       };
 
       console.log('✅ [CRM_LEAD_DETAIL] Lead encontrado:', {
