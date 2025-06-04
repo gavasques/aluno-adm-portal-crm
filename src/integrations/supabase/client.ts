@@ -6,6 +6,9 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://qflmguzmticupqtnlirf.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmbG1ndXptdGljdXBxdG5saXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDkzOTUsImV4cCI6MjA2MzI4NTM5NX0.0aHGL_E9V9adyonhJ3fVudjxDnHXv8E3tIEXjby9qZM";
 
+// Detectar ambiente Lovable
+const isLovableEnvironment = window.location.hostname.includes('lovable.dev');
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -19,7 +22,23 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     headers: {
-      'x-application-name': 'crm-lead-management'
+      'x-application-name': 'crm-lead-management',
+      // Headers específicos para CORS no ambiente Lovable
+      ...(isLovableEnvironment && {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, cache-control, x-timestamp',
+        'x-lovable-origin': window.location.origin,
+        'x-client-info': 'lovable-crm-client'
+      })
+    }
+  },
+  // Configurações específicas para CORS
+  realtime: {
+    headers: {
+      ...(isLovableEnvironment && {
+        'x-lovable-origin': window.location.origin
+      })
     }
   }
 });
@@ -27,9 +46,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Debug info para diagnóstico
 if (typeof window !== 'undefined') {
   (window as any).supabaseClient = supabase;
-  console.log('🔧 [SUPABASE_CLIENT] Cliente configurado:', {
+  console.log('🔧 [SUPABASE_CLIENT] Cliente configurado com CORS:', {
     url: SUPABASE_URL,
     hasKey: !!SUPABASE_PUBLISHABLE_KEY,
-    keyPreview: SUPABASE_PUBLISHABLE_KEY.slice(0, 20) + '...'
+    keyPreview: SUPABASE_PUBLISHABLE_KEY.slice(0, 20) + '...',
+    isLovable: isLovableEnvironment,
+    origin: window.location.origin,
+    hostname: window.location.hostname
   });
 }
