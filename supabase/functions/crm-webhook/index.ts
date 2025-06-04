@@ -1,389 +1,484 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface WebhookPayload {
-  name: string;
-  email: string;
-  phone?: string;
-  has_company?: boolean;
-  sells_on_amazon?: boolean;
-  works_with_fba?: boolean;
-  had_contact_with_lv?: boolean;
-  seeks_private_label?: boolean;
-  ready_to_invest_3k?: boolean;
-  calendly_scheduled?: boolean;
-  what_sells?: string;
-  keep_or_new_niches?: string;
-  amazon_store_link?: string;
-  amazon_state?: string;
-  amazon_tax_regime?: string;
-  main_doubts?: string;
-  calendly_link?: string;
-  notes?: string;
-  status_reason?: string;
-}
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-Deno.serve(async (req) => {
-  const startTime = Date.now();
-  let payload: WebhookPayload | null = null;
-  let pipelineId: string | null = null;
-  let responseStatus = 200;
-  let responseBody: any = { success: false };
-  let leadCreatedId: string | null = null;
-  let errorMessage: string | null = null;
-  let success = false;
-
-  // Capturar informações da requisição com fallbacks seguros
-  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                   req.headers.get('x-real-ip') || 
-                   req.headers.get('cf-connecting-ip') ||
-                   '127.0.0.1';
-  const userAgent = req.headers.get('user-agent') || 'unknown';
-  const webhookUrl = req.url;
-
-  // Função para validar e formatar IP
-  const formatIPAddress = (ip: string): string => {
-    // Remove espaços e pega apenas o primeiro IP se houver múltiplos
-    const cleanIP = ip.trim().split(',')[0].trim();
-    
-    // Validação básica de IPv4
-    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    if (ipv4Regex.test(cleanIP)) {
-      return cleanIP;
-    }
-    
-    // Se não for um IP válido, retorna localhost
-    return '127.0.0.1';
-  };
-
-  const formattedIP = formatIPAddress(clientIP);
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
 
   try {
-    // Handle CORS preflight requests
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
+    console.log('=== CRM WEBHOOK RECEIVED ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
 
-    if (req.method !== 'POST') {
-      responseStatus = 405;
-      errorMessage = 'Method not allowed. Use POST.';
-      responseBody = { error: errorMessage };
-      return new Response(
-        JSON.stringify(responseBody),
-        { 
-          status: responseStatus, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Get pipeline_id from URL parameters
+    // Parse URL parameters
     const url = new URL(req.url);
-    pipelineId = url.searchParams.get('pipeline_id');
-    
+    const pipelineId = url.searchParams.get('pipeline_id');
+    const token = url.searchParams.get('token');
+
+    console.log('Pipeline ID:', pipelineId);
+    console.log('Token provided:', !!token);
+
     if (!pipelineId) {
-      responseStatus = 400;
-      errorMessage = 'Pipeline ID is required. Use ?pipeline_id=xxx in the URL.';
-      responseBody = { error: errorMessage };
+      console.error('❌ Pipeline ID missing');
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Pipeline ID is required',
+          message: 'Please provide pipeline_id parameter'
+        }),
         { 
-          status: responseStatus, 
+          status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
     // Parse request body
+    let payload;
     try {
-      payload = await req.json();
-    } catch (parseError) {
-      responseStatus = 400;
-      errorMessage = 'Invalid JSON payload.';
-      responseBody = { error: errorMessage };
+      const body = await req.text();
+      console.log('Raw body received:', body);
+      payload = JSON.parse(body);
+      console.log('Parsed payload:', JSON.stringify(payload, null, 2));
+    } catch (error) {
+      console.error('❌ Failed to parse JSON:', error);
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Invalid JSON payload',
+          message: 'Request body must be valid JSON'
+        }),
         { 
-          status: responseStatus, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    // Validate required fields
-    if (!payload || !payload.name || !payload.email) {
-      responseStatus = 400;
-      errorMessage = 'Name and email are required fields.';
-      responseBody = { error: errorMessage };
-      return new Response(
-        JSON.stringify(responseBody),
-        { 
-          status: responseStatus, 
+          status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(payload.email)) {
-      responseStatus = 400;
-      errorMessage = 'Invalid email format.';
-      responseBody = { error: errorMessage };
-      return new Response(
-        JSON.stringify(responseBody),
-        { 
-          status: responseStatus, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    console.log('🔗 Webhook received for pipeline:', pipelineId);
-    console.log('📝 Lead data:', { name: payload.name, email: payload.email });
-
-    // Verify pipeline exists and is active
+    // Verify pipeline exists
     const { data: pipeline, error: pipelineError } = await supabase
       .from('crm_pipelines')
-      .select('id, name, is_active')
+      .select('id, name')
       .eq('id', pipelineId)
       .eq('is_active', true)
       .single();
 
     if (pipelineError || !pipeline) {
-      console.error('❌ Pipeline not found or inactive:', pipelineError);
-      responseStatus = 404;
-      errorMessage = 'Pipeline not found or inactive.';
-      responseBody = { error: errorMessage };
+      console.error('❌ Pipeline not found:', pipelineError);
+      
+      // Log the webhook attempt
+      await supabase.from('crm_webhook_logs').insert({
+        pipeline_id: pipelineId,
+        payload_received: payload,
+        success: false,
+        error_message: 'Pipeline not found or inactive',
+        response_status: 404,
+        response_body: { success: false, error: 'Pipeline not found' },
+        ip_address: req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+        webhook_url: req.url
+      });
+
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Pipeline not found or inactive',
+          pipeline_id: pipelineId
+        }),
         { 
-          status: responseStatus, 
+          status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Get the first active column of the pipeline
+    console.log('✅ Pipeline found:', pipeline.name);
+
+    // Get field mappings for this pipeline
+    const { data: mappings, error: mappingsError } = await supabase
+      .from('crm_webhook_field_mappings')
+      .select(`
+        webhook_field_name,
+        crm_field_name,
+        crm_field_type,
+        field_type,
+        is_required,
+        is_active,
+        transformation_rules,
+        custom_field:crm_custom_fields(id, field_name, field_key)
+      `)
+      .eq('pipeline_id', pipelineId)
+      .eq('is_active', true);
+
+    if (mappingsError) {
+      console.error('❌ Error fetching mappings:', mappingsError);
+    }
+
+    console.log('Field mappings found:', mappings?.length || 0);
+
+    // Transform data based on format
+    let transformedData;
+    
+    // Detect Typeform format (has form_response.answers array)
+    if (payload.form_response?.answers) {
+      console.log('📝 Processing Typeform format');
+      transformedData = await transformTypeformData(payload, mappings || [], supabase);
+    } else {
+      console.log('📝 Processing standard format');
+      transformedData = await transformStandardData(payload, mappings || []);
+    }
+
+    console.log('Transformed data:', transformedData);
+
+    // Validate required fields
+    if (!transformedData.name || !transformedData.email) {
+      console.error('❌ Missing required fields:', { 
+        name: !!transformedData.name, 
+        email: !!transformedData.email 
+      });
+      
+      // Log the failed attempt
+      await supabase.from('crm_webhook_logs').insert({
+        pipeline_id: pipelineId,
+        payload_received: payload,
+        success: false,
+        error_message: 'Name and email are required fields',
+        response_status: 400,
+        response_body: { 
+          success: false, 
+          error: 'Name and email are required',
+          received_data: transformedData
+        },
+        ip_address: req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+        webhook_url: req.url
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Name and email are required',
+          received_data: transformedData,
+          available_mappings: mappings?.map(m => ({
+            webhook_field: m.webhook_field_name,
+            crm_field: m.crm_field_name,
+            required: m.is_required
+          }))
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Get first column of the pipeline
     const { data: firstColumn, error: columnError } = await supabase
       .from('crm_pipeline_columns')
       .select('id, name')
       .eq('pipeline_id', pipelineId)
       .eq('is_active', true)
-      .order('sort_order')
+      .order('sort_order', { ascending: true })
       .limit(1)
       .single();
 
     if (columnError || !firstColumn) {
       console.error('❌ No active columns found for pipeline:', columnError);
-      responseStatus = 400;
-      errorMessage = 'No active columns found for this pipeline.';
-      responseBody = { error: errorMessage };
+      
+      await supabase.from('crm_webhook_logs').insert({
+        pipeline_id: pipelineId,
+        payload_received: payload,
+        success: false,
+        error_message: 'No active columns found for pipeline',
+        response_status: 500,
+        response_body: { success: false, error: 'Pipeline has no active columns' },
+        ip_address: req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+        webhook_url: req.url
+      });
+
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Pipeline has no active columns' 
+        }),
         { 
-          status: responseStatus, 
+          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Check if lead with this email already exists
+    console.log('✅ First column found:', firstColumn.name);
+
+    // Check if lead already exists by email
     const { data: existingLead } = await supabase
       .from('crm_leads')
       .select('id, name, email')
-      .eq('email', payload.email)
+      .eq('email', transformedData.email)
       .single();
 
     if (existingLead) {
-      console.log('⚠️ Lead already exists:', existingLead.id);
-      leadCreatedId = existingLead.id;
-      success = true;
-      responseBody = { 
-        message: 'Lead already exists',
-        lead_id: existingLead.id,
-        existing: true
-      };
+      console.log('👤 Lead already exists:', existingLead.id);
+      
+      // Log successful webhook (existing lead)
+      await supabase.from('crm_webhook_logs').insert({
+        pipeline_id: pipelineId,
+        payload_received: payload,
+        success: true,
+        lead_created_id: existingLead.id,
+        response_status: 200,
+        response_body: {
+          success: true,
+          message: 'Lead already exists',
+          lead_id: existingLead.id,
+          existing: true
+        },
+        ip_address: req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+        webhook_url: req.url
+      });
+
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify({
+          success: true,
+          message: 'Lead already exists',
+          lead_id: existingLead.id,
+          existing: true,
+          pipeline: pipeline,
+          column: firstColumn
+        }),
         { 
-          status: responseStatus, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Prepare lead data
+    // Create new lead
     const leadData = {
-      name: payload.name,
-      email: payload.email,
-      phone: payload.phone || null,
-      has_company: payload.has_company || false,
-      sells_on_amazon: payload.sells_on_amazon || false,
-      works_with_fba: payload.works_with_fba || false,
-      had_contact_with_lv: payload.had_contact_with_lv || false,
-      seeks_private_label: payload.seeks_private_label || false,
-      ready_to_invest_3k: payload.ready_to_invest_3k || false,
-      calendly_scheduled: payload.calendly_scheduled || false,
-      what_sells: payload.what_sells || null,
-      keep_or_new_niches: payload.keep_or_new_niches || null,
-      amazon_store_link: payload.amazon_store_link || null,
-      amazon_state: payload.amazon_state || null,
-      amazon_tax_regime: payload.amazon_tax_regime || null,
-      main_doubts: payload.main_doubts || null,
-      calendly_link: payload.calendly_link || null,
-      notes: payload.notes || null,
-      status_reason: payload.status_reason || null,
       pipeline_id: pipelineId,
       column_id: firstColumn.id,
-      status: 'aberto' as const,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      ...transformedData,
+      status: 'aberto',
+      created_at: new Date().toISOString()
     };
 
-    // Create the lead
+    console.log('📝 Creating new lead with data:', leadData);
+
     const { data: newLead, error: leadError } = await supabase
       .from('crm_leads')
       .insert(leadData)
-      .select('id, name, email, pipeline_id, column_id')
+      .select('id, name, email')
       .single();
 
     if (leadError) {
-      console.error('❌ Error creating lead:', leadError);
-      responseStatus = 500;
-      errorMessage = 'Failed to create lead: ' + leadError.message;
-      responseBody = { error: errorMessage };
+      console.error('❌ Failed to create lead:', leadError);
+      
+      await supabase.from('crm_webhook_logs').insert({
+        pipeline_id: pipelineId,
+        payload_received: payload,
+        success: false,
+        error_message: `Failed to create lead: ${leadError.message}`,
+        response_status: 500,
+        response_body: { success: false, error: leadError.message },
+        ip_address: req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+        webhook_url: req.url
+      });
+
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to create lead',
+          details: leadError.message
+        }),
         { 
-          status: responseStatus, 
+          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
     console.log('✅ Lead created successfully:', newLead.id);
-    leadCreatedId = newLead.id;
-    success = true;
 
-    // Log the webhook activity for audit (existing audit log)
-    await supabase
-      .from('audit_logs')
-      .insert({
-        event_type: 'crm_webhook_received',
-        event_category: 'crm',
-        action: 'create_lead',
-        description: `Lead criado via webhook para pipeline ${pipeline.name}`,
-        entity_type: 'crm_lead',
-        entity_id: newLead.id,
-        metadata: {
-          pipeline_id: pipelineId,
-          pipeline_name: pipeline.name,
-          column_id: firstColumn.id,
-          column_name: firstColumn.name,
-          webhook_source: 'external'
-        },
-        risk_level: 'low'
-      });
+    // Log successful webhook
+    await supabase.from('crm_webhook_logs').insert({
+      pipeline_id: pipelineId,
+      payload_received: payload,
+      success: true,
+      lead_created_id: newLead.id,
+      response_status: 200,
+      response_body: {
+        success: true,
+        message: 'Lead created successfully',
+        lead_id: newLead.id
+      },
+      ip_address: req.headers.get('x-forwarded-for'),
+      user_agent: req.headers.get('user-agent'),
+      webhook_url: req.url
+    });
 
-    responseBody = {
+    const successResponse = {
       success: true,
       message: 'Lead created successfully',
       lead_id: newLead.id,
-      pipeline: {
-        id: pipeline.id,
-        name: pipeline.name
-      },
-      column: {
-        id: firstColumn.id,
-        name: firstColumn.name
-      }
+      pipeline: pipeline,
+      column: firstColumn
     };
 
+    console.log('🎉 Webhook processed successfully');
+    console.log('Response:', successResponse);
+
     return new Response(
-      JSON.stringify(responseBody),
+      JSON.stringify(successResponse),
       { 
-        status: responseStatus, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
 
   } catch (error) {
-    console.error('❌ Webhook error:', error);
-    responseStatus = 500;
-    errorMessage = 'Internal server error: ' + (error as Error).message;
-    responseBody = { error: errorMessage };
+    console.error('💥 Unexpected error:', error);
     
+    try {
+      await supabase.from('crm_webhook_logs').insert({
+        pipeline_id: new URL(req.url).searchParams.get('pipeline_id'),
+        payload_received: {},
+        success: false,
+        error_message: `Unexpected error: ${error.message}`,
+        response_status: 500,
+        response_body: { success: false, error: 'Internal server error' },
+        ip_address: req.headers.get('x-forwarded-for'),
+        user_agent: req.headers.get('user-agent'),
+        webhook_url: req.url
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+
     return new Response(
-      JSON.stringify(responseBody),
+      JSON.stringify({ 
+        success: false, 
+        error: 'Internal server error',
+        message: error.message
+      }),
       { 
-        status: responseStatus, 
+        status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
-  } finally {
-    // SEMPRE salvar log detalhado do webhook, independente de sucesso ou erro
-    const processingTime = Date.now() - startTime;
-    
-    try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      console.log('💾 Saving webhook log:', {
-        pipeline_id: pipelineId,
-        success,
-        status: responseStatus,
-        ip: formattedIP,
-        processing_time: processingTime
-      });
-
-      const logData = {
-        pipeline_id: pipelineId,
-        payload_received: payload || {},
-        response_status: responseStatus,
-        response_body: responseBody,
-        ip_address: formattedIP,
-        user_agent: userAgent || 'unknown',
-        lead_created_id: leadCreatedId,
-        processing_time_ms: processingTime,
-        error_message: errorMessage,
-        success: success,
-        webhook_url: webhookUrl || ''
-      };
-
-      const { error: logError } = await supabase
-        .from('crm_webhook_logs')
-        .insert(logData);
-
-      if (logError) {
-        console.error('❌ Error saving webhook log:', logError);
-        console.error('❌ Log data that failed:', JSON.stringify(logData, null, 2));
-      } else {
-        console.log('✅ Webhook log saved successfully');
-      }
-    } catch (logError) {
-      console.error('❌ Critical error in logging block:', logError);
-      console.error('❌ Variables at error time:', {
-        pipelineId,
-        success,
-        responseStatus,
-        formattedIP,
-        processingTime,
-        errorMessage
-      });
-    }
   }
 });
+
+// Transform Typeform data format
+async function transformTypeformData(payload: any, mappings: any[], supabase: any) {
+  console.log('🔄 Transforming Typeform data');
+  
+  const result: any = {};
+  const answers = payload.form_response?.answers || [];
+
+  // Create mapping from field IDs to CRM fields
+  const fieldMappings = new Map();
+  for (const mapping of mappings) {
+    fieldMappings.set(mapping.webhook_field_name, mapping);
+  }
+
+  console.log('Available field mappings:', Array.from(fieldMappings.keys()));
+
+  // Process each answer
+  for (const answer of answers) {
+    const fieldId = answer.field?.id;
+    if (!fieldId) continue;
+
+    console.log(`Processing field ID: ${fieldId}`);
+    
+    // Check if we have a mapping for this field ID
+    const mapping = fieldMappings.get(fieldId);
+    if (!mapping) {
+      console.log(`⚠️ No mapping found for field ID: ${fieldId}`);
+      continue;
+    }
+
+    console.log(`✅ Found mapping: ${fieldId} -> ${mapping.crm_field_name}`);
+
+    // Extract value based on answer type
+    let value = null;
+    if (answer.short_text?.value) {
+      value = answer.short_text.value;
+    } else if (answer.email?.value) {
+      value = answer.email.value;
+    } else if (answer.phone_number?.value) {
+      value = answer.phone_number.value;
+    } else if (answer.long_text?.value) {
+      value = answer.long_text.value;
+    } else if (answer.choice?.label) {
+      value = answer.choice.label;
+    } else if (answer.boolean !== undefined) {
+      value = answer.boolean;
+    } else if (answer.number) {
+      value = answer.number;
+    }
+
+    if (value !== null) {
+      // Apply transformations if needed
+      if (mapping.transformation_rules && typeof mapping.transformation_rules === 'object') {
+        // Apply transformation rules here if needed
+      }
+
+      result[mapping.crm_field_name] = value;
+      console.log(`✅ Mapped: ${fieldId} -> ${mapping.crm_field_name} = ${value}`);
+    }
+  }
+
+  // Add any additional metadata
+  if (payload.form_response?.token) {
+    result.external_id = payload.form_response.token;
+  }
+
+  console.log('Final transformed data:', result);
+  return result;
+}
+
+// Transform standard data format
+async function transformStandardData(payload: any, mappings: any[]) {
+  console.log('🔄 Transforming standard data');
+  
+  const result: any = {};
+  
+  // Create mapping from webhook fields to CRM fields
+  const fieldMappings = new Map();
+  for (const mapping of mappings) {
+    fieldMappings.set(mapping.webhook_field_name, mapping);
+  }
+
+  // Process each field in payload
+  for (const [key, value] of Object.entries(payload)) {
+    const mapping = fieldMappings.get(key);
+    if (mapping && value !== null && value !== undefined) {
+      result[mapping.crm_field_name] = value;
+    } else if (!mapping) {
+      // For unmapped fields, use direct mapping if it matches CRM fields
+      const directFields = ['name', 'email', 'phone', 'notes', 'has_company', 'sells_on_amazon'];
+      if (directFields.includes(key)) {
+        result[key] = value;
+      }
+    }
+  }
+
+  console.log('Final transformed data:', result);
+  return result;
+}

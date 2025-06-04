@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, AlertCircle, Settings } from 'lucide-react';
+import { RefreshCw, Plus, Edit, Trash2, Eye, EyeOff, AlertCircle, Settings, FileText } from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
 import { ManualFieldMappingDialog } from './ManualFieldMappingDialog';
 import { EditFieldMappingDialog } from './EditFieldMappingDialog';
+import { TypeformFieldMappingDialog } from './TypeformFieldMappingDialog';
 import { toast } from 'sonner';
 
 export const WebhookFieldMappingsCard = () => {
@@ -108,8 +109,22 @@ export const WebhookFieldMappingsCard = () => {
             className="gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${syncStandardMappings.isPending ? 'animate-spin' : ''}`} />
-            Sincronizar Campo Obrigatório
+            Campo Obrigatório
           </Button>
+
+          <TypeformFieldMappingDialog 
+            pipelineId={selectedPipelineId}
+            trigger={
+              <Button
+                variant="outline"
+                disabled={!selectedPipelineId}
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Importar Typeform
+              </Button>
+            }
+          />
 
           <ManualFieldMappingDialog 
             pipelineId={selectedPipelineId}
@@ -120,7 +135,7 @@ export const WebhookFieldMappingsCard = () => {
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Adicionar Mapeamento
+                Adicionar Manual
               </Button>
             }
           />
@@ -137,9 +152,29 @@ export const WebhookFieldMappingsCard = () => {
               <div className="text-center py-8 text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">Nenhum mapeamento encontrado</p>
-                <p className="text-sm">
-                  Clique em "Sincronizar Campo Obrigatório" para criar o mapeamento básico do campo Nome
+                <p className="text-sm mb-4">
+                  Configure os mapeamentos para processar webhooks do Typeform e outros sistemas
                 </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={handleSyncStandardMappings}
+                    disabled={syncStandardMappings.isPending}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${syncStandardMappings.isPending ? 'animate-spin' : ''}`} />
+                    Criar Campo Obrigatório
+                  </Button>
+                  <TypeformFieldMappingDialog 
+                    pipelineId={selectedPipelineId}
+                    trigger={
+                      <Button variant="default" className="gap-2">
+                        <FileText className="h-4 w-4" />
+                        Importar do Typeform
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
             ) : (
               <div className="space-y-2">
