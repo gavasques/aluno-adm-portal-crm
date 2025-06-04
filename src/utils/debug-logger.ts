@@ -5,6 +5,8 @@ interface LogContext {
   leadId?: string;
   columnId?: string;
   userId?: string;
+  supabaseUrl?: string;
+  supabaseKey?: string;
   [key: string]: any;
 }
 
@@ -36,12 +38,24 @@ class DebugLogger {
       this.logs = this.logs.slice(-this.maxLogs);
     }
 
-    // Log no console também
+    // Log melhorado no console
     const logMethod = console[level] || console.log;
-    logMethod(`[${level.toUpperCase()}] ${message}`, context);
+    const emoji = {
+      info: 'ℹ️',
+      warn: '⚠️',
+      error: '❌',
+      debug: '🔍'
+    }[level];
+    
+    logMethod(`${emoji} [${level.toUpperCase()}] ${message}`, {
+      ...context,
+      timestamp: entry.timestamp
+    });
 
-    // Persistir no localStorage para debug
-    this.persistLogs();
+    // Persistir logs críticos
+    if (level === 'error' || level === 'warn') {
+      this.persistCriticalLogs();
+    }
   }
 
   info(message: string, context: LogContext = {}) {
@@ -82,12 +96,26 @@ class DebugLogger {
     );
   }
 
+  getLeadMovementLogs(leadId?: string) {
+    return this.logs.filter(log => 
+      log.message.includes('LEAD_MOVEMENT') || 
+      log.message.includes('DRAG_') ||
+      (leadId && log.context.leadId === leadId)
+    );
+  }
+
   exportLogs() {
     const data = {
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
       url: window.location.href,
-      logs: this.logs
+      logs: this.logs,
+      stats: {
+        total: this.logs.length,
+        errors: this.logs.filter(l => l.level === 'error').length,
+        warnings: this.logs.filter(l => l.level === 'warn').length,
+        recentErrors: this.getRecentErrors().length
+      }
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -102,26 +130,54 @@ class DebugLogger {
   clearLogs() {
     this.logs = [];
     localStorage.removeItem('crm_debug_logs');
+    localStorage.removeItem('crm_critical_logs');
+    console.log('🧹 [DEBUG_LOGGER] Logs limpos');
   }
 
-  private persistLogs() {
-    try {
-      const recentLogs = this.logs.slice(-100); // Apenas os últimos 100
-      localStorage.setItem('crm_debug_logs', JSON.stringify(recentLogs));
-    } catch (error) {
-      console.warn('Não foi possível persistir logs:', error);
+  // Diagnóstico do sistema
+  getDiagnostics() {
+    const recent = this.logs.slice(-50);
+    const errors = recent.filter(l => l.level === 'error');
+    const leadMovementLogs = this.getLeadMovementLogs();
+    
+    return {
+      totalLogs: this.logs.length,
+      recentLogs: recent.length,
+      recentErrors: errors.length,
+      leadMovementLogs: leadMovementLogs.length,
+      lastError: errors[errors.length - 1] || null,
+      systemHealth: errors.length === 0 ? 'healthy' : 'issues',
+      recommendations: this.getRecommendations(errors)
+    };
+  }
+
+  private getRecommendations(errors: LogEntry[]) {
+    const recommendations = [];
+    
+    if (errors.some(e => e.message.includes('conexão'))) {
+      recommendations.push('Verificar conexão com Supabase');
     }
+    
+    if (errors.some(e => e.message.includes('FULL JOIN'))) {
+      recommendations.push('Simplificar queries do banco de dados');
+    }
+    
+    if (errors.some(e => e.message.includes('Lead não encontrado'))) {
+      recommendations.push('Verificar sincronização de dados');
+    }
+    
+    return recommendations;
   }
 
-  private loadPersistedLogs() {
+  private persistCriticalLogs() {
     try {
-      const stored = localStorage.getItem('crm_debug_logs');
-      if (stored) {
-        const logs = JSON.parse(stored);
-        this.logs = [...logs, ...this.logs];
-      }
+      const criticalLogs = this.logs.filter(log => 
+        log.level === 'error' || log.level === 'warn'
+      ).slice(-20);
+      
+      localStorage.setItem('crm_critical_logs', JSON.stringify(criticalLogs));
     } catch (error) {
-      console.warn('Não foi possível carregar logs persistidos:', error);
+      console.warn('Não foi possível persistir logs críticos:', error);
     }
   }
 
@@ -130,13 +186,49 @@ class DebugLogger {
     
     // Adicionar ao window para debug global
     (window as any).crmDebugLogger = this;
+    
+    // Log de inicialização
+    this.info('Debug Logger inicializado', {
+      component: 'DebugLogger',
+      logsCarregados: this.logs.length
+    });
+  }
+
+  private loadPersistedLogs() {
+    try {
+      const stored = localStorage.getItem('crm_debug_logs');
+      const critical = localStorage.getItem('crm_critical_logs');
+      
+      if (stored) {
+        const logs = JSON.parse(stored);
+        this.logs = [...logs];
+      }
+      
+      if (critical) {
+        const criticalLogs = JSON.parse(critical);
+        // Adicionar logs críticos se não estiverem já carregados
+        criticalLogs.forEach((criticalLog: LogEntry) => {
+          if (!this.logs.some(log => log.timestamp === criticalLog.timestamp)) {
+            this.logs.push(criticalLog);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Não foi possível carregar logs persistidos:', error);
+    }
   }
 }
 
 export const debugLogger = new DebugLogger();
 
 // Função para debug rápido de movimentação de leads
-export const logLeadMovement = (leadId: string, fromColumn: string, toColumn: string, status: 'start' | 'success' | 'error', error?: any) => {
+export const logLeadMovement = (
+  leadId: string, 
+  fromColumn: string, 
+  toColumn: string, 
+  status: 'start' | 'success' | 'error', 
+  error?: any
+) => {
   debugLogger.info(`Lead Movement ${status}`, {
     component: 'LeadMovement',
     operation: 'moveLeadToColumn',
@@ -144,6 +236,19 @@ export const logLeadMovement = (leadId: string, fromColumn: string, toColumn: st
     fromColumn,
     toColumn,
     status,
-    ...(error && { error: error.message || error })
+    ...(error && { 
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack
+      } : error 
+    })
+  });
+};
+
+// Verificação de integridade do sistema
+export const checkSystemIntegrity = () => {
+  debugLogger.info('🔍 Verificação de integridade do sistema', {
+    component: 'SystemCheck',
+    diagnostics: debugLogger.getDiagnostics()
   });
 };
