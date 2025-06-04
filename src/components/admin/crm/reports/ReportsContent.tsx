@@ -50,11 +50,10 @@ export const ReportsContent: React.FC<ReportsContentProps> = ({
 
       {/* Tabs de Relatórios */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="conversion">Conversão</TabsTrigger>
-          <TabsTrigger value="custom">Personalizados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -67,31 +66,6 @@ export const ReportsContent: React.FC<ReportsContentProps> = ({
 
         <TabsContent value="conversion">
           <ConversionMetricsReport dateRange={dateRange} />
-        </TabsContent>
-
-        <TabsContent value="custom">
-          <Card>
-            <CardHeader>
-              <CardTitle>Relatórios Personalizados</CardTitle>
-              <CardDescription>
-                Crie e configure relatórios sob medida para suas necessidades
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Construtor de Relatórios
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  Ferramenta para criar relatórios personalizados em desenvolvimento
-                </p>
-                <Button variant="outline" disabled>
-                  Em breve
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
