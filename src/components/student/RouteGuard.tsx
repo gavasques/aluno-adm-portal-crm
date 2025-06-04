@@ -5,7 +5,7 @@ import AccessDenied from "@/components/admin/AccessDenied";
 
 interface StudentRouteGuardProps {
   children: React.ReactNode;
-  requiredMenuKey: string;
+  requiredMenuKey?: string; // Tornando opcional
 }
 
 const StudentRouteGuard: React.FC<StudentRouteGuardProps> = ({ 
@@ -29,19 +29,21 @@ const StudentRouteGuard: React.FC<StudentRouteGuardProps> = ({
     return null;
   }
 
-  // CORRIGIDO: Verificação simplificada de permissão
-  const hasPermission = permissions.hasAdminAccess || permissions.allowedMenus.includes(requiredMenuKey);
+  // Verificação de permissão apenas se requiredMenuKey for fornecida
+  if (requiredMenuKey) {
+    const hasPermission = permissions.hasAdminAccess || permissions.allowedMenus.includes(requiredMenuKey);
 
-  console.log("DEBUG - RouteGuard:", {
-    email: user.email,
-    requiredMenuKey,
-    hasAdminAccess: permissions.hasAdminAccess,
-    allowedMenus: permissions.allowedMenus,
-    hasPermission
-  });
+    console.log("DEBUG - RouteGuard:", {
+      email: user.email,
+      requiredMenuKey,
+      hasAdminAccess: permissions.hasAdminAccess,
+      allowedMenus: permissions.allowedMenus,
+      hasPermission
+    });
 
-  if (!hasPermission) {
-    return <AccessDenied />;
+    if (!hasPermission) {
+      return <AccessDenied />;
+    }
   }
 
   return <>{children}</>;
