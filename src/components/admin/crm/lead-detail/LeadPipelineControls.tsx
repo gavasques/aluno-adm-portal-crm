@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,8 +21,8 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
   const { pipelines } = useCRMPipelines();
   const { moveLeadToColumn } = useUnifiedLeadMovement({ 
     pipeline_id: lead.pipeline_id || '',
-    responsible: '',
-    tags: [],
+    responsible_id: '',
+    tag_ids: [],
     search: '',
     status: 'aberto'
   });
