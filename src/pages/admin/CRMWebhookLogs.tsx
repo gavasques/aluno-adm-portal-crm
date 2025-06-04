@@ -6,7 +6,7 @@ import { WebhookLogsList } from '@/components/admin/crm/webhook-logs/WebhookLogs
 import { WebhookStatsCards } from '@/components/admin/crm/webhook-logs/WebhookStatsCards';
 import { WebhookTestButton } from '@/components/admin/crm/webhook-logs/WebhookTestButton';
 import { WebhookUrlsCard } from '@/components/admin/crm/webhook-logs/WebhookUrlsCard';
-import { Activity, BarChart3, TestTube, Globe } from 'lucide-react';
+import { Activity, BarChart3, TestTube, Globe, Settings } from 'lucide-react';
 
 const CRMWebhookLogs = () => {
   return (
@@ -16,15 +16,17 @@ const CRMWebhookLogs = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Logs do Webhook CRM</h1>
           <p className="text-muted-foreground">
-            Monitore todas as requisições de webhook recebidas pelos pipelines
+            Monitore todas as requisições de webhook e gerencie tokens de segurança
           </p>
         </div>
         
         <WebhookTestButton />
       </div>
 
-      {/* URLs dos Webhooks */}
-      <WebhookUrlsCard />
+      {/* URLs e Configurações dos Webhooks */}
+      <div className="grid grid-cols-1 gap-6">
+        <WebhookUrlsCard />
+      </div>
 
       {/* Estatísticas */}
       <WebhookStatsCards />

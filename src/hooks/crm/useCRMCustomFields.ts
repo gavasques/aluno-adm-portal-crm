@@ -101,6 +101,8 @@ export const useCRMCustomFields = (pipelineId?: string, includeInactive = true) 
     queryClient.invalidateQueries({ queryKey: ['crm-custom-fields-all'] });
     queryClient.invalidateQueries({ queryKey: ['crm-leads'] });
     queryClient.invalidateQueries({ queryKey: ['crm-lead-detail'] });
+    // Invalidar também queries de webhook mappings
+    queryClient.invalidateQueries({ queryKey: ['crm-webhook-field-mappings'] });
   };
 
   // Criar grupo de campos
@@ -194,7 +196,7 @@ export const useCRMCustomFields = (pipelineId?: string, includeInactive = true) 
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success('Campo criado com sucesso!');
+      toast.success('Campo criado com sucesso! Mapeamentos de webhook atualizados automaticamente.');
     },
     onError: (error) => {
       console.error('Erro ao criar campo:', error);
@@ -217,7 +219,7 @@ export const useCRMCustomFields = (pipelineId?: string, includeInactive = true) 
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success('Campo atualizado com sucesso!');
+      toast.success('Campo atualizado com sucesso! Mapeamentos de webhook atualizados automaticamente.');
     },
     onError: (error) => {
       console.error('Erro ao atualizar campo:', error);
@@ -237,7 +239,7 @@ export const useCRMCustomFields = (pipelineId?: string, includeInactive = true) 
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success('Campo removido com sucesso!');
+      toast.success('Campo removido com sucesso! Mapeamentos de webhook atualizados automaticamente.');
     },
     onError: (error) => {
       console.error('Erro ao remover campo:', error);

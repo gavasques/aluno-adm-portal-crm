@@ -1158,6 +1158,66 @@ export type Database = {
           },
         ]
       }
+      crm_webhook_field_mappings: {
+        Row: {
+          created_at: string
+          crm_field_name: string
+          crm_field_type: string
+          custom_field_id: string | null
+          field_type: string
+          id: string
+          is_active: boolean
+          is_required: boolean
+          pipeline_id: string
+          transformation_rules: Json | null
+          updated_at: string
+          webhook_field_name: string
+        }
+        Insert: {
+          created_at?: string
+          crm_field_name: string
+          crm_field_type?: string
+          custom_field_id?: string | null
+          field_type: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          pipeline_id: string
+          transformation_rules?: Json | null
+          updated_at?: string
+          webhook_field_name: string
+        }
+        Update: {
+          created_at?: string
+          crm_field_name?: string
+          crm_field_type?: string
+          custom_field_id?: string | null
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          pipeline_id?: string
+          transformation_rules?: Json | null
+          updated_at?: string
+          webhook_field_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_webhook_field_mappings_custom_field_id_fkey"
+            columns: ["custom_field_id"]
+            isOneToOne: false
+            referencedRelation: "crm_custom_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_webhook_field_mappings_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_webhook_logs: {
         Row: {
           created_at: string
@@ -1214,6 +1274,53 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_webhook_logs_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_webhook_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deactivated_at: string | null
+          deactivated_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          pipeline_id: string
+          reason: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          pipeline_id: string
+          reason?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          pipeline_id?: string
+          reason?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_webhook_tokens_pipeline_id_fkey"
             columns: ["pipeline_id"]
             isOneToOne: false
             referencedRelation: "crm_pipelines"
@@ -2686,6 +2793,10 @@ export type Database = {
       }
       generate_session_name: {
         Args: { first_message: string }
+        Returns: string
+      }
+      generate_webhook_token: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_allowed_menus: {
