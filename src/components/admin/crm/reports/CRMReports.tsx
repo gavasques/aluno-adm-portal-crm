@@ -32,7 +32,7 @@ const CRMReports: React.FC = () => {
           onExport={handleExportReport}
         />
 
-        <CRMReportsOverview metrics={metrics} loading={loading} />
+        <CRMReportsOverview loading={loading} />
 
         <CRMReportsTabsContainer
           pipelineMetrics={pipelineMetrics}
