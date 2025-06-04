@@ -21,10 +21,10 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
 }) => {
   const { pipelines } = useCRMPipelines();
   const { moveLeadToColumn } = useUnifiedLeadMovement({ 
-    selectedPipelineId: lead.pipeline_id || '',
+    pipeline_id: lead.pipeline_id || '',
     responsible: '',
     tags: [],
-    searchTerm: '',
+    search: '',
     status: 'aberto'
   });
   const { changeStatus } = useLeadStatusChange();

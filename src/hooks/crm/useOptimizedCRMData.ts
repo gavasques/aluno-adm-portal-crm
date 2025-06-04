@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,8 +121,8 @@ export const useOptimizedCRMData = (
           event: '*',
           schema: 'public',
           table: 'crm_leads',
-          filter: filters.selectedPipelineId 
-            ? `pipeline_id=eq.${filters.selectedPipelineId}`
+          filter: filters.pipeline_id 
+            ? `pipeline_id=eq.${filters.pipeline_id}`
             : undefined
         },
         async (payload) => {
@@ -146,7 +145,7 @@ export const useOptimizedCRMData = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [enableRealtime, filters.selectedPipelineId, queryClient, lastFetchTime]);
+  }, [enableRealtime, filters.pipeline_id, queryClient, lastFetchTime]);
 
   // Atualizar range de virtualização
   const updateVirtualizedRange = useCallback((start: number, end: number) => {
