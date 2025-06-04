@@ -2,7 +2,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMLead, CRMFilters, CRMLeadContact, LeadWithContacts } from '@/types/crm.types';
+import { CRMLead, CRMFilters, CRMLeadContact, LeadWithContacts, LeadStatus } from '@/types/crm.types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useCRMDataTransformService } from './services/useCRMDataTransformService';
 import { useCRMLeadFilters } from './useCRMLeadFilters';
@@ -21,6 +21,12 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
   // Estratégia de cache inteligente
   const cacheStrategy = getCacheStrategy('unified-crm-leads', debouncedFilters);
+
+  // Função para validar e converter status
+  const validateLeadStatus = (status: string): LeadStatus => {
+    const validStatuses: LeadStatus[] = ['aberto', 'ganho', 'perdido'];
+    return validStatuses.includes(status as LeadStatus) ? (status as LeadStatus) : 'aberto';
+  };
 
   const fetchUnifiedLeadsData = useCallback(async (): Promise<LeadWithContacts[]> => {
     if (!debouncedFilters.pipeline_id) {
@@ -156,9 +162,10 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           return acc;
         }, {} as Record<string, any>) || {};
 
-        // Montar leads com dados relacionados
+        // Montar leads com dados relacionados e validação de status
         const leadsWithContactsData: LeadWithContacts[] = leads.map(lead => ({
           ...lead,
+          status: validateLeadStatus(lead.status), // Validar e converter status
           pipeline: pipelinesMap.get(lead.pipeline_id),
           column: columnsMap.get(lead.column_id),
           responsible: profilesMap.get(lead.responsible_id),
@@ -180,7 +187,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
         throw error;
       }
     });
-  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags]);
+  }, [debouncedFilters, transformLeadData, filterLeadsByContact, filterLeadsByTags, validateLeadStatus]);
 
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
     queryKey: ['unified-crm-leads', debouncedFilters],
