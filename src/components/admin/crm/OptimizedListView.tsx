@@ -1,54 +1,40 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Eye, Loader2, Clock, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CRMFilters, CRMLead, CRMPipelineColumn } from "@/types/crm.types";
-import { useOptimizedCRMData } from "@/hooks/crm/useOptimizedCRMData";
-import { useNavigate } from "react-router-dom";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Search, Eye, Plus } from 'lucide-react';
+import { CRMFilters, CRMLead } from '@/types/crm.types';
+import { useCRMData } from '@/hooks/crm/useCRMData';
+import { motion } from 'framer-motion';
 
 interface OptimizedListViewProps {
   filters: CRMFilters;
-  columns: CRMPipelineColumn[];
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onOpenLeadDetails?: (lead: CRMLead) => void;
-  onCreateLead?: () => void;
+  onCreateLead: (columnId?: string) => void;
 }
 
-const OptimizedListView = React.memo(({
-  filters,
-  columns,
-  searchQuery,
-  onSearchChange,
-  onOpenLeadDetails,
-  onCreateLead
-}: OptimizedListViewProps) => {
-  const navigate = useNavigate();
-  const [debouncedSearch, isSearching] = useDebouncedValue(searchQuery, 300);
+const OptimizedListView: React.FC<OptimizedListViewProps> = ({ 
+  filters, 
+  onCreateLead 
+}) => {
+  const { leadsWithContacts, loading, error } = useCRMData(filters);
+  const [searchTerm, setSearchTerm] = React.useState('');
 
-  const {
-    leadsWithContacts,
-    loading
-  } = useOptimizedCRMData({
-    ...filters,
-    search: debouncedSearch
-  });
+  console.log('🔍 OptimizedListView: Loading state:', loading);
+  console.log('🔍 OptimizedListView: Error state:', error);
+  console.log('🔍 OptimizedListView: Leads count:', leadsWithContacts?.length || 0);
 
-  const handleOpenLeadDetails = (lead: CRMLead) => {
-    console.log('🔗 OptimizedListView - Navigating to lead detail page:', lead.id);
-    if (onOpenLeadDetails) {
-      onOpenLeadDetails(lead);
-    } else {
-      navigate(`/admin/lead/${lead.id}`);
-    }
-  };
+  // Filtrar leads baseado no termo de busca
+  const filteredLeads = React.useMemo(() => {
+    if (!searchTerm.trim()) return leadsWithContacts;
+    
+    return leadsWithContacts.filter(lead => 
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (lead.phone && lead.phone.includes(searchTerm))
+    );
+  }, [leadsWithContacts, searchTerm]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -58,271 +44,150 @@ const OptimizedListView = React.memo(({
     });
   };
 
-  const getColumnInfo = (columnId?: string) => {
-    if (!columnId) return {
-      name: 'Não definido',
-      color: '#6b7280'
-    };
-    const column = columns.find(col => col.id === columnId);
-    return column ? {
-      name: column.name,
-      color: column.color
-    } : {
-      name: 'Não definido',
-      color: '#6b7280'
-    };
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ganho': return 'bg-green-100 text-green-800';
+      case 'perdido': return 'bg-red-100 text-red-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
   };
 
-  const getContactInfo = (lead: any) => {
-    if (lead.pending_contacts && lead.pending_contacts.length > 0) {
-      const nextContact = lead.pending_contacts[0];
-      const contactDate = new Date(nextContact.contact_date);
-      const isToday = contactDate.toDateString() === new Date().toDateString();
-      const isTomorrow = contactDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
-
-      if (isToday) return {
-        text: 'Hoje',
-        icon: Clock,
-        color: 'text-red-600'
-      };
-      if (isTomorrow) return {
-        text: 'Amanhã',
-        icon: Clock,
-        color: 'text-orange-600'
-      };
-      return {
-        text: contactDate.toLocaleDateString('pt-BR'),
-        icon: Clock,
-        color: 'text-gray-600'
-      };
-    }
-    return null;
-  };
-
-  const getLastContactInfo = (lead: any) => {
-    if (lead.last_completed_contact) {
-      const lastContact = lead.last_completed_contact;
-      const contactDate = new Date(lastContact.completed_at || lastContact.contact_date);
-      return {
-        text: contactDate.toLocaleDateString('pt-BR'),
-        type: lastContact.contact_type
-      };
-    }
-    return null;
+  const handleLeadClick = (lead: CRMLead) => {
+    console.log('🔗 OptimizedListView: Lead clicked:', lead.id);
+    // Aqui você pode adicionar navegação para detalhes do lead
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-gray-600">Carregando leads...</span>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <p className="text-red-700">Erro ao carregar leads: {error.message}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header with Search */}
-      <div className="p-6 border-b border-gray-200 bg-white">
+      {/* Header da Lista */}
+      <div className="border-b border-gray-200 p-4 bg-gray-50">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
-            <h2 className="text-xl font-semibold text-gray-900">Lista de Leads</h2>
-            <div className="relative flex-1 max-w-md">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Lista de Leads ({filteredLeads.length})
+            </h2>
+            
+            {/* Campo de busca */}
+            <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Buscar leads..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Buscar por nome, email ou telefone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
               />
-              {isSearching && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                </div>
+            </div>
+          </div>
+
+          <Button 
+            onClick={() => onCreateLead()}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Lead
+          </Button>
+        </div>
+      </div>
+
+      {/* Conteúdo da Lista */}
+      <div className="flex-1 overflow-auto">
+        {filteredLeads.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-gray-500 mb-4">
+                {searchTerm ? 'Nenhum lead encontrado com os critérios de busca' : 'Nenhum lead encontrado'}
+              </p>
+              {!searchTerm && (
+                <Button onClick={() => onCreateLead()} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeiro Lead
+                </Button>
               )}
             </div>
           </div>
-          {onCreateLead && (
-            <Button onClick={onCreateLead} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Lead
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-              <tr>
-                <th className="w-12 px-6 py-4 text-left">
-                  <Checkbox />
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  LEAD
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  STATUS
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  RESPONSÁVEL
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  ÚLTIMO CONTATO
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  PRÓXIMO CONTATO
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  TAGS
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  AÇÕES
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {leadsWithContacts.map(lead => {
-                const columnInfo = getColumnInfo(lead.column_id);
-                const nextContactInfo = getContactInfo(lead);
-                const lastContactInfo = getLastContactInfo(lead);
-
-                return (
-                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleOpenLeadDetails(lead)}>
-                    <td className="px-6 py-4">
-                      <Checkbox onClick={e => e.stopPropagation()} />
-                    </td>
-                    
-                    {/* Lead Info */}
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-gray-900">{lead.name}</div>
-                        <div className="text-sm text-gray-500">{lead.email}</div>
-                      </div>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-2 h-2 rounded-full" 
-                          style={{ backgroundColor: columnInfo.color }}
-                        />
-                        <span className="text-sm text-gray-700">{columnInfo.name}</span>
-                      </div>
-                    </td>
-
-                    {/* Responsible */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
-                            {lead.responsible?.name?.split(' ').map(n => n[0]).join('') || 'NN'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-gray-700">
-                          {lead.responsible?.name || 'Sem responsável'}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Last Contact */}
-                    <td className="px-6 py-4">
-                      {lastContactInfo ? (
-                        <div className="text-sm text-gray-600">
-                          {lastContactInfo.text}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-
-                    {/* Next Contact */}
-                    <td className="px-6 py-4">
-                      {nextContactInfo ? (
-                        <div className="flex items-center gap-1">
-                          <nextContactInfo.icon className={cn("h-4 w-4", nextContactInfo.color)} />
-                          <span className={cn("text-sm", nextContactInfo.color)}>
-                            {nextContactInfo.text}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-
-                    {/* Tags */}
-                    <td className="px-6 py-4">
-                      <div className="flex gap-1">
-                        {lead.tags && lead.tags.length > 0 ? (
-                          lead.tags.slice(0, 2).map(tag => (
-                            <Badge 
-                              key={tag.id} 
-                              variant="secondary" 
-                              className="text-xs px-2 py-1"
-                              style={{
-                                backgroundColor: tag.color + '15',
-                                color: tag.color,
-                                borderColor: tag.color + '30'
-                              }}
-                            >
-                              {tag.name}
+        ) : (
+          <div className="p-4">
+            <div className="space-y-3">
+              {filteredLeads.map((lead, index) => (
+                <motion.div
+                  key={lead.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                >
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-semibold text-gray-900">{lead.name}</h3>
+                            <Badge className={getStatusColor(lead.status)}>
+                              {lead.status}
                             </Badge>
-                          ))
-                        ) : (
-                          <span className="text-sm text-gray-400">-</span>
-                        )}
-                        {lead.tags && lead.tags.length > 2 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{lead.tags.length - 2}
-                          </Badge>
-                        )}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">Email:</span> {lead.email}
+                            </div>
+                            <div>
+                              <span className="font-medium">Telefone:</span> {lead.phone || 'Não informado'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Responsável:</span> {lead.responsible?.name || 'Não atribuído'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                            <span>Criado em: {formatDate(lead.created_at)}</span>
+                            {lead.pipeline?.name && (
+                              <span>Pipeline: {lead.pipeline.name}</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleLeadClick(lead)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Detalhes
+                          </Button>
+                        </div>
                       </div>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-6 py-4">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleOpenLeadDetails(lead);
-                        }} 
-                        className="h-8 w-8 p-0 hover:bg-gray-100"
-                      >
-                        <Eye className="h-4 w-4 text-gray-500" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {/* Empty State */}
-          {leadsWithContacts.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              {debouncedSearch ? `Nenhum lead encontrado para "${debouncedSearch}"` : 'Nenhum lead encontrado com os critérios de busca.'}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </div>
-          )}
-        </ScrollArea>
-      </div>
-
-      {/* Footer Stats */}
-      <div className="border-t border-gray-200 px-6 py-3 bg-gray-50">
-        <div className="text-sm text-gray-600">
-          Total: {leadsWithContacts.length} leads
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
-});
-
-OptimizedListView.displayName = 'OptimizedListView';
+};
 
 export default OptimizedListView;

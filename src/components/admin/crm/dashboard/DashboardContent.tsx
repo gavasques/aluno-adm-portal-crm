@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import OptimizedKanbanBoard from '../OptimizedKanbanBoard';
-import CRMListView from '../CRMListView';
+import OptimizedListView from '../OptimizedListView';
 import { CRMFilters } from '@/types/crm.types';
 import { motion } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
@@ -88,9 +88,9 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           }>
-            <CRMListView
+            <OptimizedListView
               filters={effectiveFilters}
-              onCreateLead={() => onCreateLead()}
+              onCreateLead={onCreateLead}
             />
           </React.Suspense>
         </motion.div>
