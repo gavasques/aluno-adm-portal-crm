@@ -32,72 +32,87 @@ export const useCRMLeadDetail = (leadId: string) => {
       const [pipelineData, columnData, responsibleData, lossReasonData, tagsData] = await Promise.all([
         // Pipeline
         lead.pipeline_id ? 
-          supabase
-            .from('crm_pipelines')
-            .select('id, name, description, sort_order, is_active, created_at, updated_at')
-            .eq('id', lead.pipeline_id)
-            .single()
-            .then(res => res.data)
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('crm_pipelines')
+                .select('id, name, description, sort_order, is_active, created_at, updated_at')
+                .eq('id', lead.pipeline_id)
+                .single();
+              return data;
+            } catch (err) {
               console.warn('Pipeline not found:', err);
               return null;
-            }) : 
+            }
+          })() : 
           Promise.resolve(null),
         
         // Column
         lead.column_id ? 
-          supabase
-            .from('crm_pipeline_columns')
-            .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
-            .eq('id', lead.column_id)
-            .single()
-            .then(res => res.data)
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('crm_pipeline_columns')
+                .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
+                .eq('id', lead.column_id)
+                .single();
+              return data;
+            } catch (err) {
               console.warn('Column not found:', err);
               return null;
-            }) : 
+            }
+          })() : 
           Promise.resolve(null),
         
         // Responsible
         lead.responsible_id ? 
-          supabase
-            .from('profiles')
-            .select('id, name, email')
-            .eq('id', lead.responsible_id)
-            .single()
-            .then(res => res.data)
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, name, email')
+                .eq('id', lead.responsible_id)
+                .single();
+              return data;
+            } catch (err) {
               console.warn('Responsible not found:', err);
               return null;
-            }) : 
+            }
+          })() : 
           Promise.resolve(null),
         
         // Loss Reason
         lead.loss_reason_id ? 
-          supabase
-            .from('crm_loss_reasons')
-            .select('id, name, description, sort_order, is_active, created_at, updated_at')
-            .eq('id', lead.loss_reason_id)
-            .single()
-            .then(res => res.data)
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('crm_loss_reasons')
+                .select('id, name, description, sort_order, is_active, created_at, updated_at')
+                .eq('id', lead.loss_reason_id)
+                .single();
+              return data;
+            } catch (err) {
               console.warn('Loss reason not found:', err);
               return null;
-            }) : 
+            }
+          })() : 
           Promise.resolve(null),
         
         // Tags
-        supabase
-          .from('crm_lead_tags')
-          .select(`
-            crm_tags(id, name, color, created_at)
-          `)
-          .eq('lead_id', leadId)
-          .then(res => res.data?.map(item => item.crm_tags).filter(Boolean) || [])
-          .catch(err => {
+        (async () => {
+          try {
+            const { data } = await supabase
+              .from('crm_lead_tags')
+              .select(`
+                crm_tags(id, name, color, created_at)
+              `)
+              .eq('lead_id', leadId);
+            return data?.map(item => item.crm_tags).filter(Boolean) || [];
+          } catch (err) {
             console.warn('Tags not found:', err);
             return [];
-          })
+          }
+        })()
       ]);
 
       const processedLead: CRMLead = {

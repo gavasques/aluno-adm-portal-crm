@@ -74,85 +74,103 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
       ] = await Promise.all([
         // Pipelines
         pipelineIds.length > 0 ? 
-          supabase
-            .from('crm_pipelines')
-            .select('id, name, description, sort_order, is_active, created_at, updated_at')
-            .in('id', pipelineIds)
-            .then(res => res.data || [])
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('crm_pipelines')
+                .select('id, name, description, sort_order, is_active, created_at, updated_at')
+                .in('id', pipelineIds);
+              return data || [];
+            } catch (err) {
               console.warn('Pipelines not found:', err);
               return [];
-            }) : 
+            }
+          })() : 
           Promise.resolve([]),
         
         // Columns
         columnIds.length > 0 ? 
-          supabase
-            .from('crm_pipeline_columns')
-            .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
-            .in('id', columnIds)
-            .then(res => res.data || [])
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('crm_pipeline_columns')
+                .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at')
+                .in('id', columnIds);
+              return data || [];
+            } catch (err) {
               console.warn('Columns not found:', err);
               return [];
-            }) : 
+            }
+          })() : 
           Promise.resolve([]),
         
         // Responsibles
         responsibleIds.length > 0 ? 
-          supabase
-            .from('profiles')
-            .select('id, name, email')
-            .in('id', responsibleIds)
-            .then(res => res.data || [])
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, name, email')
+                .in('id', responsibleIds);
+              return data || [];
+            } catch (err) {
               console.warn('Responsibles not found:', err);
               return [];
-            }) : 
+            }
+          })() : 
           Promise.resolve([]),
         
         // Loss Reasons
         lossReasonIds.length > 0 ? 
-          supabase
-            .from('crm_loss_reasons')
-            .select('id, name, description, sort_order, is_active, created_at, updated_at')
-            .in('id', lossReasonIds)
-            .then(res => res.data || [])
-            .catch(err => {
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('crm_loss_reasons')
+                .select('id, name, description, sort_order, is_active, created_at, updated_at')
+                .in('id', lossReasonIds);
+              return data || [];
+            } catch (err) {
               console.warn('Loss reasons not found:', err);
               return [];
-            }) : 
+            }
+          })() : 
           Promise.resolve([]),
         
         // Contacts
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            *,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .in('lead_id', leadIds)
-          .eq('status', 'pending')
-          .order('contact_date', { ascending: true })
-          .then(res => res.data || [])
-          .catch(err => {
+        (async () => {
+          try {
+            const { data } = await supabase
+              .from('crm_lead_contacts')
+              .select(`
+                *,
+                responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+              `)
+              .in('lead_id', leadIds)
+              .eq('status', 'pending')
+              .order('contact_date', { ascending: true });
+            return data || [];
+          } catch (err) {
             console.warn('Contacts not found:', err);
             return [];
-          }),
+          }
+        })(),
         
         // Tags
-        supabase
-          .from('crm_lead_tags')
-          .select(`
-            lead_id,
-            crm_tags(id, name, color, created_at)
-          `)
-          .in('lead_id', leadIds)
-          .then(res => res.data || [])
-          .catch(err => {
+        (async () => {
+          try {
+            const { data } = await supabase
+              .from('crm_lead_tags')
+              .select(`
+                lead_id,
+                crm_tags(id, name, color, created_at)
+              `)
+              .in('lead_id', leadIds);
+            return data || [];
+          } catch (err) {
             console.warn('Tags not found:', err);
             return [];
-          })
+          }
+        })()
       ]);
 
       // Criar mapas para lookup rápido
