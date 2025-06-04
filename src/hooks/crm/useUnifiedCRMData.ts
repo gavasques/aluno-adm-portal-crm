@@ -67,7 +67,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
     return await measureAsyncOperation('fetch_unified_leads_data', async () => {
       try {
-        debugLogger.info('📊 [UNIFIED_CRM] Buscando leads ULTRA SIMPLIFICADO para pipeline', {
+        debugLogger.info('📊 [UNIFIED_CRM] Buscando leads SIMPLIFICADO para pipeline', {
           component: 'useUnifiedCRMData',
           operation: 'fetchUnifiedLeadsData',
           pipelineId: debouncedFilters.pipeline_id
@@ -96,7 +96,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           leadsQuery = leadsQuery.or(`name.ilike.%${debouncedFilters.search}%,email.ilike.%${debouncedFilters.search}%`);
         }
 
-        debugLogger.info('🔍 [UNIFIED_CRM] Executando query ultra simplificada...', {
+        debugLogger.info('🔍 [UNIFIED_CRM] Executando query simplificada...', {
           component: 'useUnifiedCRMData',
           operation: 'executeQuery'
         });
@@ -123,25 +123,28 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           return [];
         }
 
-        // Buscar dados relacionados SEPARADAMENTE - SEM JOINS
-        const leadIds = leads.map(lead => lead.id);
+        // Buscar dados relacionados SEPARADAMENTE - SEM JOINS COMPLEXOS
+        debugLogger.info('🔗 [UNIFIED_CRM] Buscando dados relacionados separadamente...', {
+          component: 'useUnifiedCRMData',
+          operation: 'fetchRelatedData'
+        });
 
-        // Buscar pipelines simples
+        // Buscar pipelines
         const { data: pipelines } = await supabase
           .from('crm_pipelines')
           .select('id, name, description, is_active, sort_order, created_at, updated_at');
 
-        // Buscar colunas simples
+        // Buscar colunas
         const { data: columns } = await supabase
           .from('crm_pipeline_columns')
           .select('id, name, color, pipeline_id, sort_order, is_active, created_at, updated_at');
 
-        // Buscar responsáveis simples
+        // Buscar responsáveis
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, name, email');
 
-        debugLogger.info('🔗 [UNIFIED_CRM] Dados relacionados simples carregados', {
+        debugLogger.info('✅ [UNIFIED_CRM] Dados relacionados carregados', {
           component: 'useUnifiedCRMData',
           operation: 'fetchRelatedData',
           pipelines: pipelines?.length || 0,
@@ -149,37 +152,30 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
           profiles: profiles?.length || 0
         });
 
-        // Criar mapas simples para facilitar a busca
+        // Criar mapas para facilitar a busca
         const pipelinesMap = new Map(pipelines?.map(p => [p.id, p]) || []);
         const columnsMap = new Map(columns?.map(c => [c.id, c]) || []);
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-        // Montar leads com dados relacionados básicos
+        // Montar leads com dados relacionados
         const leadsWithContactsData: LeadWithContacts[] = leads.map(lead => ({
           ...lead,
           status: validateLeadStatus(lead.status),
           pipeline: pipelinesMap.get(lead.pipeline_id),
           column: columnsMap.get(lead.column_id),
           responsible: profilesMap.get(lead.responsible_id),
-          tags: [], // Simplificado - sem tags por enquanto
-          pending_contacts: [], // Simplificado - sem contatos por enquanto
+          tags: [], // Simplificado - buscar separadamente se necessário
+          pending_contacts: [], // Simplificado - buscar separadamente se necessário
           last_completed_contact: undefined // Simplificado
         }));
 
-        // Aplicar filtros usando services (simplificado)
-        let filteredLeads = leadsWithContactsData;
-        if (debouncedFilters.tag_ids && debouncedFilters.tag_ids.length > 0) {
-          // Para filtros de tag, simplesmente retornar todos por enquanto
-          filteredLeads = leadsWithContactsData;
-        }
-
-        debugLogger.info('✅ [UNIFIED_CRM] Leads processados com sucesso (simplificado)', {
+        debugLogger.info('✅ [UNIFIED_CRM] Leads processados com sucesso', {
           component: 'useUnifiedCRMData',
           operation: 'processLeads',
-          filteredCount: filteredLeads.length
+          finalCount: leadsWithContactsData.length
         });
         
-        return filteredLeads;
+        return leadsWithContactsData;
 
       } catch (error) {
         debugLogger.error('❌ [UNIFIED_CRM] Erro ao buscar dados CRM', {
@@ -217,7 +213,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
     ...cacheStrategy,
   });
 
-  // Agrupar leads por coluna de forma memoizada com otimização
+  // Agrupar leads por coluna de forma memoizada
   const leadsByColumn = useMemo(() => {
     const grouped: Record<string, LeadWithContacts[]> = {};
     
@@ -233,7 +229,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
       cacheLeadsByColumn(debouncedFilters.pipeline_id, grouped);
     }
     
-    debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna (simplificado)', {
+    debugLogger.info('📊 [UNIFIED_CRM] Leads agrupados por coluna', {
       component: 'useUnifiedCRMData',
       operation: 'groupLeadsByColumn',
       totalColumns: Object.keys(grouped).length,
