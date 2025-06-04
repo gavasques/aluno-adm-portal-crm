@@ -36,11 +36,19 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
     if (!searchTerm.trim()) return leadsWithContacts;
     
     const normalizedSearch = searchTerm.toLowerCase();
-    return leadsWithContacts.filter(lead => 
+    const filtered = leadsWithContacts.filter(lead => 
       lead.name.toLowerCase().includes(normalizedSearch) ||
       lead.email.toLowerCase().includes(normalizedSearch) ||
       (lead.phone && lead.phone.includes(searchTerm))
     );
+    
+    console.log('🔍 [OPTIMIZED_LIST_VIEW] Filtros aplicados:', {
+      searchTerm: normalizedSearch,
+      totalLeads: leadsWithContacts.length,
+      filteredLeads: filtered.length
+    });
+    
+    return filtered;
   }, [leadsWithContacts, searchTerm]);
 
   const formatDate = React.useCallback((dateString: string) => {
@@ -68,6 +76,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
     setSearchTerm(e.target.value);
   }, []);
 
+  // Early return para loading
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -76,6 +85,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
     );
   }
 
+  // Early return para error
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -91,7 +101,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header da Lista */}
-      <div className="border-b border-gray-200 p-4 bg-gray-50">
+      <div className="border-b border-gray-200 p-4 bg-gray-50 flex-shrink-0">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -112,7 +122,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
 
           <Button 
             onClick={() => onCreateLead()}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 flex-shrink-0"
           >
             <Plus className="h-4 w-4 mr-2" />
             Novo Lead
@@ -180,7 +190,7 @@ const OptimizedListView: React.FC<OptimizedListViewProps> = ({
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="sm"

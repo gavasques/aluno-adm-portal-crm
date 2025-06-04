@@ -23,7 +23,6 @@ interface CRMDashboardProps {
 
 const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const navigate = useNavigate();
-  const [hasError, setHasError] = React.useState(false);
   const [showDiagnostics, setShowDiagnostics] = React.useState(false);
   
   // Cache inteligente
@@ -55,7 +54,8 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     effectiveFilters,
     handleCreateLead,
     handleLeadFormSuccess,
-    handleTagsChange
+    handleTagsChange,
+    isInitialized
   } = useCRMDashboardState();
 
   // Hooks de dados
@@ -74,15 +74,22 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     hasData,
     selectedPipelineId,
     pipelinesCount: pipelines.length,
-    effectiveFilters
+    effectiveFilters,
+    isInitialized
   });
 
   // Carregar estado persistido apenas uma vez na inicialização
   React.useEffect(() => {
-    if (!isLoading && hasData && !selectedPipelineId) {
+    if (!isLoading && hasData && !selectedPipelineId && !isInitialized) {
       const persistedState = loadKanbanState();
       
-      if (persistedState.selectedPipelineId) {
+      console.log('📂 [CRM_DASHBOARD] Verificando inicialização:', {
+        persistedPipelineId: persistedState.selectedPipelineId,
+        hasPersistedState: !!persistedState.selectedPipelineId,
+        firstPipelineId: pipelines[0]?.id
+      });
+      
+      if (persistedState.selectedPipelineId && pipelines.some(p => p.id === persistedState.selectedPipelineId)) {
         console.log('📂 [CRM_DASHBOARD] Carregando estado persistido:', persistedState.selectedPipelineId);
         setSelectedPipelineId(persistedState.selectedPipelineId);
       } else if (pipelines.length > 0) {
@@ -90,26 +97,61 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         setSelectedPipelineId(pipelines[0].id);
       }
     }
-  }, [isLoading, hasData, selectedPipelineId, pipelines, loadKanbanState, setSelectedPipelineId]);
+  }, [isLoading, hasData, selectedPipelineId, pipelines, loadKanbanState, setSelectedPipelineId, isInitialized]);
 
-  // Salvar estado quando mudanças importantes acontecem
+  // Salvar estado com debounce para evitar execuções excessivas
+  const saveStateTimeoutRef = React.useRef<NodeJS.Timeout>();
   React.useEffect(() => {
     if (selectedPipelineId && !isLoading) {
-      console.log('💾 [CRM_DASHBOARD] Salvando estado:', {
-        selectedPipelineId,
-        viewMode: activeView
-      });
+      // Limpar timeout anterior
+      if (saveStateTimeoutRef.current) {
+        clearTimeout(saveStateTimeoutRef.current);
+      }
       
-      saveKanbanState({
-        selectedPipelineId,
-        filters,
-        viewMode: activeView
-      });
-      
-      // Prefetch dados críticos
-      prefetchCriticalData(selectedPipelineId);
+      // Debounce de 500ms
+      saveStateTimeoutRef.current = setTimeout(() => {
+        console.log('💾 [CRM_DASHBOARD] Salvando estado (debounced):', {
+          selectedPipelineId,
+          viewMode: activeView
+        });
+        
+        saveKanbanState({
+          selectedPipelineId,
+          filters,
+          viewMode: activeView
+        });
+      }, 500);
     }
-  }, [selectedPipelineId, activeView, filters, isLoading, saveKanbanState, prefetchCriticalData]);
+
+    return () => {
+      if (saveStateTimeoutRef.current) {
+        clearTimeout(saveStateTimeoutRef.current);
+      }
+    };
+  }, [selectedPipelineId, activeView, filters, isLoading, saveKanbanState]);
+
+  // Prefetch com controle para evitar loops
+  const prefetchTimeoutRef = React.useRef<NodeJS.Timeout>();
+  React.useEffect(() => {
+    if (selectedPipelineId && !isLoading) {
+      // Limpar timeout anterior
+      if (prefetchTimeoutRef.current) {
+        clearTimeout(prefetchTimeoutRef.current);
+      }
+      
+      // Debounce de 1 segundo para prefetch
+      prefetchTimeoutRef.current = setTimeout(() => {
+        console.log('🔄 [CRM_DASHBOARD] Executando prefetch (debounced)');
+        prefetchCriticalData(selectedPipelineId);
+      }, 1000);
+    }
+
+    return () => {
+      if (prefetchTimeoutRef.current) {
+        clearTimeout(prefetchTimeoutRef.current);
+      }
+    };
+  }, [selectedPipelineId, isLoading, prefetchCriticalData]);
 
   // Get pipeline columns from the selected pipeline
   const pipelineColumns = React.useMemo(() => {

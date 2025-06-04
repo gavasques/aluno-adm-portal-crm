@@ -1,7 +1,8 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { CRMFilters } from '@/types/crm.types';
 import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
+import { isEqual } from 'lodash';
 
 export const useCRMDashboardState = () => {
   // Estados principais
@@ -13,6 +14,10 @@ export const useCRMDashboardState = () => {
   const [selectedColumnId, setSelectedColumnId] = useState<string | undefined>();
   const [filters, setFilters] = useState<CRMFilters>({});
 
+  // Refs para controle de estabilidade
+  const lastEffectiveFiltersRef = useRef<CRMFilters>({});
+  const isInitializedRef = useRef(false);
+
   // Hook para gerenciar filtros
   const {
     searchValue,
@@ -22,20 +27,26 @@ export const useCRMDashboardState = () => {
     clearAllFilters
   } = useCRMFiltersState(filters, setFilters);
 
-  // Filtros efetivos - memoizado com dependências estáveis
+  // Filtros efetivos - estabilizado com referência
   const effectiveFilters: CRMFilters = useMemo(() => {
-    const result = {
+    const newFilters = {
       ...filters,
       pipeline_id: selectedPipelineId || filters.pipeline_id
     };
     
-    console.log('🔧 [DASHBOARD_STATE] EffectiveFilters recalculado:', {
-      selectedPipelineId,
-      filters,
-      result
-    });
+    // Só recalcula se realmente mudou
+    if (!isEqual(newFilters, lastEffectiveFiltersRef.current)) {
+      console.log('🔧 [DASHBOARD_STATE] EffectiveFilters recalculado:', {
+        selectedPipelineId,
+        filters,
+        newFilters,
+        changed: !isEqual(newFilters, lastEffectiveFiltersRef.current)
+      });
+      
+      lastEffectiveFiltersRef.current = newFilters;
+    }
     
-    return result;
+    return lastEffectiveFiltersRef.current;
   }, [filters, selectedPipelineId]);
 
   // Handlers estabilizados com useCallback
@@ -104,6 +115,9 @@ export const useCRMDashboardState = () => {
     // Handlers
     handleCreateLead,
     handleLeadFormSuccess,
-    handleTagsChange
+    handleTagsChange,
+    
+    // Control flags
+    isInitialized: isInitializedRef.current
   };
 };

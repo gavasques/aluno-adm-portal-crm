@@ -14,10 +14,31 @@ interface LeadWithContacts extends CRMLead {
 export const useCRMData = (filters: CRMFilters = {}) => {
   const queryClient = useQueryClient();
 
-  // Estabilizar a key de query
+  // Query key mais estável
   const queryKey = useMemo(() => {
-    return ['crm-leads-with-contacts', JSON.stringify(filters)];
-  }, [filters]);
+    // Criar chave baseada apenas nos valores relevantes
+    const key = [
+      'crm-leads-with-contacts',
+      filters.pipeline_id || 'no-pipeline',
+      filters.column_id || 'no-column',
+      filters.responsible_id || 'no-responsible',
+      filters.status || 'no-status',
+      filters.search || 'no-search',
+      filters.contact_filter || 'no-contact-filter',
+      (filters.tag_ids || []).sort().join(',') || 'no-tags'
+    ];
+    
+    console.log('🔑 [CRM_DATA] Query key gerada:', key);
+    return key;
+  }, [
+    filters.pipeline_id,
+    filters.column_id,
+    filters.responsible_id,
+    filters.status,
+    filters.search,
+    filters.contact_filter,
+    filters.tag_ids
+  ]);
 
   const transformLeadData = useCallback((dbLead: any): CRMLead => {
     return {
@@ -78,18 +99,18 @@ export const useCRMData = (filters: CRMFilters = {}) => {
     });
   }, []);
 
-  // Função de fetch estabilizada
+  // Função de fetch estabilizada e simplificada
   const fetchLeadsWithContacts = useCallback(async (): Promise<LeadWithContacts[]> => {
     console.log('🔍 [CRM_DATA] Iniciando busca de leads com filtros:', filters);
     
-    // Se não há pipeline_id, retornar array vazio mas continuar tentando
+    // Early return se não há pipeline_id
     if (!filters.pipeline_id) {
       console.log('⚠️ [CRM_DATA] Nenhum pipeline_id fornecido, retornando array vazio');
       return [];
     }
 
     try {
-      // Buscar leads com filtros incluindo status
+      // Buscar leads com filtros básicos
       let leadsQuery = supabase
         .from('crm_leads')
         .select(`
@@ -103,6 +124,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
         `)
         .eq('pipeline_id', filters.pipeline_id);
 
+      // Aplicar filtros condicionalmente
       if (filters.column_id) {
         leadsQuery = leadsQuery.eq('column_id', filters.column_id);
       }
@@ -133,49 +155,25 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       const transformedLeads = leads.map(transformLeadData);
       const leadIds = transformedLeads.map(lead => lead.id);
 
-      // Buscar contatos em paralelo
-      const [pendingContactsResult, completedContactsResult] = await Promise.allSettled([
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            *,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .in('lead_id', leadIds)
-          .eq('status', 'pending')
-          .order('contact_date', { ascending: true }),
-        
-        supabase
-          .from('crm_lead_contacts')
-          .select(`
-            *,
-            responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
-          `)
-          .in('lead_id', leadIds)
-          .eq('status', 'completed')
-          .not('completed_at', 'is', null)
-          .order('completed_at', { ascending: false })
-      ]);
+      // Buscar contatos apenas se necessário
+      const pendingContactsResult = await supabase
+        .from('crm_lead_contacts')
+        .select(`
+          *,
+          responsible:profiles!crm_lead_contacts_responsible_id_fkey(id, name, email)
+        `)
+        .in('lead_id', leadIds)
+        .eq('status', 'pending')
+        .order('contact_date', { ascending: true });
 
-      const pendingContacts = pendingContactsResult.status === 'fulfilled' ? pendingContactsResult.value.data || [] : [];
-      const completedContacts = completedContactsResult.status === 'fulfilled' ? completedContactsResult.value.data || [] : [];
+      const pendingContacts = pendingContactsResult.data || [];
 
       // Transformar e agrupar contatos
-      const transformedPendingContacts = pendingContacts
-        .filter(contact => contact.status === 'pending')
-        .map(contact => ({
-          ...contact,
-          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-          status: contact.status as 'pending' | 'completed' | 'overdue'
-        }));
-
-      const transformedCompletedContacts = completedContacts
-        .filter(contact => contact.status === 'completed' && contact.completed_at)
-        .map(contact => ({
-          ...contact,
-          contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
-          status: contact.status as 'pending' | 'completed' | 'overdue'
-        }));
+      const transformedPendingContacts = pendingContacts.map(contact => ({
+        ...contact,
+        contact_type: contact.contact_type as 'call' | 'email' | 'whatsapp' | 'meeting',
+        status: contact.status as 'pending' | 'completed' | 'overdue'
+      }));
 
       // Agrupar contatos por lead
       const pendingContactsByLead = transformedPendingContacts.reduce((acc, contact) => {
@@ -184,18 +182,11 @@ export const useCRMData = (filters: CRMFilters = {}) => {
         return acc;
       }, {} as Record<string, CRMLeadContact[]>);
 
-      const lastCompletedContactsByLead = transformedCompletedContacts.reduce((acc, contact) => {
-        if (!acc[contact.lead_id]) {
-          acc[contact.lead_id] = contact;
-        }
-        return acc;
-      }, {} as Record<string, CRMLeadContact>);
-
       // Combinar leads com contatos
       const leadsWithContactsData: LeadWithContacts[] = transformedLeads.map(lead => ({
         ...lead,
         pending_contacts: pendingContactsByLead[lead.id] || [],
-        last_completed_contact: lastCompletedContactsByLead[lead.id]
+        last_completed_contact: undefined
       }));
 
       console.log('📊 [CRM_DATA] Leads processados com contatos:', leadsWithContactsData.length);
@@ -206,13 +197,14 @@ export const useCRMData = (filters: CRMFilters = {}) => {
       toast.error('Erro ao carregar dados do CRM');
       return [];
     }
-  }, [filters, transformLeadData, filterLeadsByContact]);
+  }, [filters.pipeline_id, filters.column_id, filters.responsible_id, filters.status, filters.search, filters.contact_filter, transformLeadData, filterLeadsByContact]);
 
   const { data: leadsWithContacts = [], isLoading, error, refetch } = useQuery({
     queryKey,
     queryFn: fetchLeadsWithContacts,
-    enabled: true,
-    staleTime: 30000, // 30 seconds
+    enabled: !!filters.pipeline_id,
+    staleTime: 60000, // 1 minuto
+    gcTime: 300000, // 5 minutos
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
