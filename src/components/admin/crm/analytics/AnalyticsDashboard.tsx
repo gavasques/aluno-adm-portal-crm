@@ -10,7 +10,7 @@ interface AnalyticsDashboardProps {
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ dateRange }) => {
-  const { analyticsMetrics, leadSourceAnalysis, conversionFunnel, isLoading } = useCRMAnalytics(dateRange);
+  const { analyticsMetrics, conversionFunnel, isLoading } = useCRMAnalytics(dateRange);
 
   if (isLoading) {
     return (
@@ -37,7 +37,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ dateRang
         
         <AnalyticsTabsContainer
           analyticsMetrics={analyticsMetrics}
-          leadSourceAnalysis={leadSourceAnalysis}
           conversionFunnel={conversionFunnel}
         />
       </div>
