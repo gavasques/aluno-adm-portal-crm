@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Users, Target, Clock } from 'lucide-react';
-import { useCRMAnalytics } from '@/hooks/crm/useCRMAnalytics';
 
 interface OverviewCard {
   title: string;
@@ -13,19 +12,26 @@ interface OverviewCard {
   trend: string;
 }
 
+interface CRMAnalyticsMetrics {
+  totalLeads: number;
+  leadsThisWeek: number;
+  conversionRate: number;
+  averageTimeInPipeline: number;
+}
+
 interface AnalyticsOverviewCardsProps {
+  analyticsMetrics?: CRMAnalyticsMetrics;
   dateRange?: { from: Date; to: Date };
 }
 
 export const AnalyticsOverviewCards: React.FC<AnalyticsOverviewCardsProps> = ({
+  analyticsMetrics,
   dateRange = {
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     to: new Date()
   }
 }) => {
-  const { analyticsMetrics, isLoading } = useCRMAnalytics(dateRange);
-
-  if (isLoading) {
+  if (!analyticsMetrics) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
@@ -38,8 +44,6 @@ export const AnalyticsOverviewCards: React.FC<AnalyticsOverviewCardsProps> = ({
       </div>
     );
   }
-
-  if (!analyticsMetrics) return null;
 
   const overviewCards: OverviewCard[] = [
     {
