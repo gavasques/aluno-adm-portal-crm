@@ -104,20 +104,16 @@ export const useCRMWebhookFieldMappings = (pipelineId?: string) => {
     }
   });
 
-  // Sincronizar mapeamentos padrão para um pipeline
+  // Sincronizar APENAS campos obrigatórios (name, email, phone)
   const syncStandardMappings = useMutation({
     mutationFn: async (targetPipelineId: string) => {
-      const standardFields = [
+      const requiredFields = [
         { webhook_field_name: 'name', crm_field_name: 'name', field_type: 'text', is_required: true },
         { webhook_field_name: 'email', crm_field_name: 'email', field_type: 'email', is_required: true },
-        { webhook_field_name: 'phone', crm_field_name: 'phone', field_type: 'phone', is_required: false },
-        { webhook_field_name: 'has_company', crm_field_name: 'has_company', field_type: 'boolean', is_required: false },
-        { webhook_field_name: 'sells_on_amazon', crm_field_name: 'sells_on_amazon', field_type: 'boolean', is_required: false },
-        { webhook_field_name: 'what_sells', crm_field_name: 'what_sells', field_type: 'text', is_required: false },
-        { webhook_field_name: 'notes', crm_field_name: 'notes', field_type: 'text', is_required: false }
+        { webhook_field_name: 'phone', crm_field_name: 'phone', field_type: 'phone', is_required: true }
       ];
 
-      const mappingsToCreate = standardFields.map(field => ({
+      const mappingsToCreate = requiredFields.map(field => ({
         pipeline_id: targetPipelineId,
         crm_field_type: 'standard' as const,
         transformation_rules: {},
@@ -136,11 +132,11 @@ export const useCRMWebhookFieldMappings = (pipelineId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-webhook-field-mappings'] });
-      toast.success('Mapeamentos padrão sincronizados!');
+      toast.success('Campos obrigatórios sincronizados! Para mapear outros campos, use "Adicionar Mapeamento"');
     },
     onError: (error) => {
       console.error('Erro ao sincronizar mapeamentos:', error);
-      toast.error('Erro ao sincronizar mapeamentos padrão');
+      toast.error('Erro ao sincronizar campos obrigatórios');
     }
   });
 

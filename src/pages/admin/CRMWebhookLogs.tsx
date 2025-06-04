@@ -6,6 +6,7 @@ import { WebhookLogsList } from '@/components/admin/crm/webhook-logs/WebhookLogs
 import { WebhookStatsCards } from '@/components/admin/crm/webhook-logs/WebhookStatsCards';
 import { WebhookTestButton } from '@/components/admin/crm/webhook-logs/WebhookTestButton';
 import { WebhookUrlsCard } from '@/components/admin/crm/webhook-logs/WebhookUrlsCard';
+import { WebhookFieldMappingsCard } from '@/components/admin/crm/webhook-logs/WebhookFieldMappingsCard';
 import { Activity, BarChart3, TestTube, Globe, Settings } from 'lucide-react';
 
 const CRMWebhookLogs = () => {
@@ -26,6 +27,11 @@ const CRMWebhookLogs = () => {
       {/* URLs e Configurações dos Webhooks */}
       <div className="grid grid-cols-1 gap-6">
         <WebhookUrlsCard />
+      </div>
+
+      {/* Mapeamento de Campos */}
+      <div className="grid grid-cols-1 gap-6">
+        <WebhookFieldMappingsCard />
       </div>
 
       {/* Estatísticas */}
