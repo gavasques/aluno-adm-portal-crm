@@ -68,9 +68,7 @@ export const FastLeadCard: React.FC<FastLeadCardProps> = React.memo(({
         <span className={cn(
           "inline-block px-2 py-1 text-xs font-medium rounded-full",
           lead.status === 'aberto' && "bg-green-100 text-green-800",
-          lead.status === 'contatado' && "bg-blue-100 text-blue-800",
-          lead.status === 'qualificado' && "bg-yellow-100 text-yellow-800",
-          lead.status === 'convertido' && "bg-purple-100 text-purple-800",
+          lead.status === 'ganho' && "bg-blue-100 text-blue-800",
           lead.status === 'perdido' && "bg-red-100 text-red-800"
         )}>
           {lead.status}

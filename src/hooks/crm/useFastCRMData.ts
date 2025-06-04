@@ -20,6 +20,26 @@ export const useFastCRMData = (filters: CRMFilters) => {
           pipeline_id,
           responsible_id,
           notes,
+          has_company,
+          sells_on_amazon,
+          works_with_fba,
+          had_contact_with_lv,
+          seeks_private_label,
+          ready_to_invest_3k,
+          calendly_scheduled,
+          what_sells,
+          keep_or_new_niches,
+          amazon_store_link,
+          amazon_state,
+          amazon_tax_regime,
+          main_doubts,
+          calendly_link,
+          created_by,
+          scheduled_contact_date,
+          status_reason,
+          loss_reason_id,
+          status_changed_at,
+          status_changed_by,
           created_at,
           updated_at,
           responsible:profiles!crm_leads_responsible_id_fkey(id, name),
@@ -56,7 +76,15 @@ export const useFastCRMData = (filters: CRMFilters) => {
         throw error;
       }
 
-      return data || [];
+      // Transformar os dados para incluir as propriedades necessárias
+      const leadsWithContacts: LeadWithContacts[] = (data || []).map(lead => ({
+        ...lead,
+        tags: [], // Inicializar como array vazio por enquanto
+        pending_contacts: [], // Inicializar como array vazio por enquanto
+        last_completed_contact: undefined, // Pode ser undefined
+      }));
+
+      return leadsWithContacts;
     },
     staleTime: 30 * 1000, // 30 segundos
     gcTime: 5 * 60 * 1000, // 5 minutos

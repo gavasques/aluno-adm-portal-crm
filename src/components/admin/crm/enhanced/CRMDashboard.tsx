@@ -6,7 +6,7 @@ import { Plus, BarChart3, Table } from 'lucide-react';
 import { CRMFilters } from '@/types/crm.types';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import CRMLeadForm from '../CRMLeadForm';
-import { CRMFiltersPanel } from '../filters/CRMFiltersPanel';
+import { PrimaryFilters } from '../filters/PrimaryFilters';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 interface CRMDashboardProps {
@@ -76,7 +76,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
         {/* Filtros sem animação */}
         <div className="space-y-4">
-          <CRMFiltersPanel
+          <PrimaryFilters
             filters={filters}
             onFiltersChange={setFilters}
             selectedPipelineId={selectedPipelineId}
