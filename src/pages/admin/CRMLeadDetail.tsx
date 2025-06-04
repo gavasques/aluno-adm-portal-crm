@@ -7,7 +7,7 @@ import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const CRMLeadDetail = () => {
-  const { leadId } = useParams<{ leadId: string }>();
+  const { id: leadId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: lead, isLoading: loading, error } = useCRMLeadDetail(leadId || '');
 

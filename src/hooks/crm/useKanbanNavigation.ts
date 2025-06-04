@@ -21,8 +21,8 @@ export const useKanbanNavigation = () => {
 
     try {
       console.log('🔄 Navigating to lead detail:', lead.id);
-      // Usar a rota correta /admin/lead/{id}
-      navigate(`/admin/lead/${lead.id}`);
+      // Usar a rota correta /admin/crm/lead/{id} que corresponde ao App.tsx
+      navigate(`/admin/crm/lead/${lead.id}`);
     } catch (error) {
       console.error('❌ Error navigating to lead detail:', error);
     }
