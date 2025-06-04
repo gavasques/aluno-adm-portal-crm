@@ -1,5 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { DateRange } from './useCRMReportsFilters';
 
 export interface PipelineMetrics {
@@ -52,19 +53,60 @@ export const useCRMReports = (dateRange: DateRange) => {
   const { data: metrics, isLoading: loading } = useQuery({
     queryKey: ['crm-reports-metrics', dateRange],
     queryFn: async (): Promise<CRMMetrics> => {
-      // Mock data - substitua por chamada real à API
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      // Total de leads
+      const { count: totalLeads } = await supabase
+        .from('crm_leads')
+        .select('*', { count: 'exact', head: true });
+
+      // Leads deste mês
+      const { count: leadsThisMonth } = await supabase
+        .from('crm_leads')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth.toISOString());
+
+      // Leads por status
+      const { data: leadsByStatus } = await supabase
+        .from('crm_leads')
+        .select('status')
+        .in('status', ['aberto', 'ganho', 'perdido']);
+
+      const statusCounts = {
+        aberto: leadsByStatus?.filter(l => l.status === 'aberto').length || 0,
+        ganho: leadsByStatus?.filter(l => l.status === 'ganho').length || 0,
+        perdido: leadsByStatus?.filter(l => l.status === 'perdido').length || 0
+      };
+
+      // Calcular taxa de conversão
+      const conversionRate = totalLeads && totalLeads > 0 ? 
+        (statusCounts.ganho / totalLeads) * 100 : 0;
+
+      // Crescimento mensal (comparar com mês anterior)
+      const previousMonth = new Date(startOfMonth);
+      previousMonth.setMonth(previousMonth.getMonth() - 1);
+      const previousMonthEnd = new Date(startOfMonth);
+      previousMonthEnd.setTime(previousMonthEnd.getTime() - 1);
+
+      const { count: leadsPreviousMonth } = await supabase
+        .from('crm_leads')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', previousMonth.toISOString())
+        .lte('created_at', previousMonthEnd.toISOString());
+
+      const monthlyGrowth = leadsPreviousMonth && leadsPreviousMonth > 0 ? 
+        (((leadsThisMonth || 0) - leadsPreviousMonth) / leadsPreviousMonth) * 100 : 0;
+
       return {
-        total_leads: 245,
-        new_leads_this_month: 32,
-        conversion_rate: 24.5,
-        avg_deal_size: 3500,
-        total_revenue: 85000,
-        monthly_growth: 12.5,
-        leads_by_status: {
-          aberto: 120,
-          ganho: 60,
-          perdido: 65
-        }
+        total_leads: totalLeads || 0,
+        new_leads_this_month: leadsThisMonth || 0,
+        conversion_rate: conversionRate,
+        avg_deal_size: 3500, // Valor médio estimado
+        total_revenue: statusCounts.ganho * 3500,
+        monthly_growth: monthlyGrowth,
+        leads_by_status: statusCounts
       };
     }
   });
@@ -72,89 +114,137 @@ export const useCRMReports = (dateRange: DateRange) => {
   const { data: pipelineMetrics } = useQuery({
     queryKey: ['crm-pipeline-metrics', dateRange],
     queryFn: async (): Promise<PipelineMetrics[]> => {
-      return [
-        {
-          pipeline_id: '1',
-          pipeline_name: 'Vendas Diretas',
-          total_leads: 120,
-          converted_leads: 30,
-          conversion_rate: 25.0,
-          avg_time_to_convert: 15,
-          columnBreakdown: [
-            { columnName: 'Prospect', count: 40, percentage: 33.3, color: '#3b82f6' },
-            { columnName: 'Qualificado', count: 35, percentage: 29.2, color: '#10b981' },
-            { columnName: 'Proposta', count: 25, percentage: 20.8, color: '#f59e0b' },
-            { columnName: 'Fechado', count: 20, percentage: 16.7, color: '#ef4444' }
-          ]
-        },
-        {
-          pipeline_id: '2',
-          pipeline_name: 'Leads Qualificados',
-          total_leads: 85,
-          converted_leads: 25,
-          conversion_rate: 29.4,
-          avg_time_to_convert: 12,
-          columnBreakdown: [
-            { columnName: 'Contato Inicial', count: 30, percentage: 35.3, color: '#3b82f6' },
-            { columnName: 'Demo', count: 25, percentage: 29.4, color: '#10b981' },
-            { columnName: 'Negociação', count: 20, percentage: 23.5, color: '#f59e0b' },
-            { columnName: 'Fechado', count: 10, percentage: 11.8, color: '#ef4444' }
-          ]
-        }
-      ];
+      // Buscar pipelines e suas colunas
+      const { data: pipelines } = await supabase
+        .from('crm_pipelines')
+        .select(`
+          id,
+          name,
+          crm_pipeline_columns(id, name, color, sort_order)
+        `)
+        .eq('is_active', true);
+
+      if (!pipelines) return [];
+
+      const pipelineMetrics: PipelineMetrics[] = [];
+
+      for (const pipeline of pipelines) {
+        // Buscar leads do pipeline
+        const { data: pipelineLeads } = await supabase
+          .from('crm_leads')
+          .select('status, column_id')
+          .eq('pipeline_id', pipeline.id);
+
+        if (!pipelineLeads) continue;
+
+        const totalLeads = pipelineLeads.length;
+        const convertedLeads = pipelineLeads.filter(l => l.status === 'ganho').length;
+        const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+
+        // Calcular distribuição por coluna
+        const columnBreakdown = pipeline.crm_pipeline_columns.map(column => {
+          const columnLeads = pipelineLeads.filter(l => l.column_id === column.id).length;
+          return {
+            columnName: column.name,
+            count: columnLeads,
+            percentage: totalLeads > 0 ? (columnLeads / totalLeads) * 100 : 0,
+            color: column.color || '#3b82f6'
+          };
+        }).filter(cb => cb.count > 0);
+
+        pipelineMetrics.push({
+          pipeline_id: pipeline.id,
+          pipeline_name: pipeline.name,
+          total_leads: totalLeads,
+          converted_leads: convertedLeads,
+          conversion_rate: conversionRate,
+          avg_time_to_convert: 15, // Estimativa
+          columnBreakdown
+        });
+      }
+
+      return pipelineMetrics;
     }
   });
 
   const { data: responsibleMetrics } = useQuery({
     queryKey: ['crm-responsible-metrics', dateRange],
     queryFn: async (): Promise<ResponsibleMetrics[]> => {
-      return [
-        {
-          responsible_id: '1',
-          responsible_name: 'João Silva',
-          total_leads: 45,
-          converted_leads: 12,
-          conversion_rate: 26.7,
-          avg_deal_size: 4200
-        },
-        {
-          responsible_id: '2',
-          responsible_name: 'Maria Santos',
-          total_leads: 38,
-          converted_leads: 11,
-          conversion_rate: 28.9,
-          avg_deal_size: 3800
+      // Buscar leads com responsáveis
+      const { data: leadsWithResponsibles } = await supabase
+        .from('crm_leads')
+        .select(`
+          status,
+          responsible_id,
+          responsible:profiles!crm_leads_responsible_id_fkey(id, name)
+        `)
+        .not('responsible_id', 'is', null);
+
+      if (!leadsWithResponsibles) return [];
+
+      // Agrupar por responsável
+      const responsibleMap = new Map();
+      
+      leadsWithResponsibles.forEach(lead => {
+        if (lead.responsible) {
+          const id = lead.responsible.id;
+          if (responsibleMap.has(id)) {
+            const current = responsibleMap.get(id);
+            responsibleMap.set(id, {
+              ...current,
+              total_leads: current.total_leads + 1,
+              converted_leads: current.converted_leads + (lead.status === 'ganho' ? 1 : 0)
+            });
+          } else {
+            responsibleMap.set(id, {
+              responsible_id: id,
+              responsible_name: lead.responsible.name || 'Sem nome',
+              total_leads: 1,
+              converted_leads: lead.status === 'ganho' ? 1 : 0,
+              avg_deal_size: 3500
+            });
+          }
         }
-      ];
+      });
+
+      // Calcular taxa de conversão
+      return Array.from(responsibleMap.values()).map(responsible => ({
+        ...responsible,
+        conversion_rate: responsible.total_leads > 0 ? 
+          (responsible.converted_leads / responsible.total_leads) * 100 : 0
+      }));
     }
   });
 
   const { data: periodData } = useQuery({
     queryKey: ['crm-period-data', dateRange],
     queryFn: async (): Promise<LeadsByPeriod[]> => {
-      return [
-        {
-          period: '2024-01',
-          new_leads: 45,
-          converted_leads: 12,
-          lost_leads: 8,
-          active_leads: 25
-        },
-        {
-          period: '2024-02',
-          new_leads: 52,
-          converted_leads: 15,
-          lost_leads: 10,
-          active_leads: 27
-        },
-        {
-          period: '2024-03',
-          new_leads: 38,
-          converted_leads: 18,
-          lost_leads: 6,
-          active_leads: 14
+      const periods = [];
+      const currentDate = new Date();
+      
+      // Últimos 3 meses
+      for (let i = 2; i >= 0; i--) {
+        const periodStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const periodEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() - i + 1, 0);
+        
+        const { data: periodLeads } = await supabase
+          .from('crm_leads')
+          .select('status, created_at')
+          .gte('created_at', periodStart.toISOString())
+          .lte('created_at', periodEnd.toISOString());
+
+        if (periodLeads) {
+          periods.push({
+            period: `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`,
+            new_leads: periodLeads.length,
+            converted_leads: periodLeads.filter(l => l.status === 'ganho').length,
+            lost_leads: periodLeads.filter(l => l.status === 'perdido').length,
+            active_leads: periodLeads.filter(l => l.status === 'aberto').length
+          });
         }
-      ];
+      }
+
+      return periods;
     }
   });
 
