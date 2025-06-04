@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { debugLogger } from '@/utils/debug-logger';
 
 interface StatusChangeParams {
   leadId: string;
@@ -16,7 +17,8 @@ export const useLeadStatusChange = () => {
 
   const changeStatus = useCallback(async ({ leadId, status, reason, lossReasonId }: StatusChangeParams) => {
     const operationId = `status_change_${leadId}_${Date.now()}`;
-    console.log(`🔄 [STATUS_CHANGE_${operationId}] Iniciando alteração:`, {
+    
+    debugLogger.info(`🔄 [STATUS_CHANGE_${operationId}] Iniciando`, {
       leadId,
       status,
       reason,
@@ -49,9 +51,9 @@ export const useLeadStatusChange = () => {
         updateData.loss_reason_id = lossReasonId;
       }
 
-      console.log(`💾 [STATUS_CHANGE_${operationId}] Atualizando no banco:`, updateData);
+      debugLogger.info(`💾 [STATUS_CHANGE_${operationId}] Dados para atualização:`, updateData);
 
-      // UPDATE simples sem JOINs
+      // UPDATE SIMPLES (SEM JOINS)
       const { data: updatedLead, error } = await supabase
         .from('crm_leads')
         .update(updateData)
@@ -60,7 +62,7 @@ export const useLeadStatusChange = () => {
         .single();
 
       if (error) {
-        console.error(`❌ [STATUS_CHANGE_${operationId}] Erro no banco:`, error);
+        debugLogger.error(`❌ [STATUS_CHANGE_${operationId}] Erro no banco:`, error);
         throw new Error(`Erro ao atualizar status: ${error.message}`);
       }
 
@@ -68,7 +70,7 @@ export const useLeadStatusChange = () => {
         throw new Error('Nenhum lead foi atualizado');
       }
 
-      console.log(`✅ [STATUS_CHANGE_${operationId}] Status alterado com sucesso:`, {
+      debugLogger.info(`✅ [STATUS_CHANGE_${operationId}] Status alterado:`, {
         leadId: updatedLead.id,
         newStatus: updatedLead.status
       });
@@ -88,7 +90,7 @@ export const useLeadStatusChange = () => {
       toast.success(`Status do lead "${updatedLead.name}" alterado para "${status}"`);
 
     } catch (error) {
-      console.error(`❌ [STATUS_CHANGE_${operationId}] Erro:`, error);
+      debugLogger.error(`❌ [STATUS_CHANGE_${operationId}] Erro:`, error);
       
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error(`Erro ao alterar status: ${errorMessage}`);
