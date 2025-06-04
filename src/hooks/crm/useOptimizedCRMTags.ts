@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CRMTag } from '@/types/crm.types';
 import { toast } from 'sonner';
 
-export const useOptimizedCRMTags = () => {
+export const useOptimizedCRMTags = (options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
 
   // Query otimizada para tags
@@ -23,6 +23,7 @@ export const useOptimizedCRMTags = () => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutos - tags são muito estáticas
     refetchOnWindowFocus: false,
+    enabled: options?.enabled !== false // Enabled by default unless explicitly set to false
   });
 
   const createTag = async (tagData: Omit<CRMTag, 'id' | 'created_at'>) => {

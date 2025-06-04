@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs } from '@/components/ui/tabs';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
-import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
+import { useOptimizedCRMTags } from '@/hooks/crm/useOptimizedCRMTags';
 import ModernCRMLeadFormDialog from '../ModernCRMLeadFormDialog';
 import { CRMDashboardHeader } from './CRMDashboardHeader';
 import { CRMDashboardContent } from './CRMDashboardContent';
@@ -52,13 +51,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   // Hooks de dados com loading sequencial
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
   
-  // Carregar usuários só depois dos pipelines
-  const { users, loading: usersLoading } = useCRMUsers({
-    enabled: !pipelinesLoading
-  });
+  // Carregar usuários após os pipelines - não enviamos mais parâmetros
+  const { users, loading: usersLoading } = useCRMUsers();
   
-  // Carregar tags só depois dos usuários
-  const { tags, loading: tagsLoading } = useCRMTags({
+  // Carregar tags com opção de enabled
+  const { tags, loading: tagsLoading } = useOptimizedCRMTags({
     enabled: !pipelinesLoading && !usersLoading
   });
 
