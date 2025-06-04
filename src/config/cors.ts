@@ -61,15 +61,34 @@ export const CORS_CONFIG = {
 
 // Utilitário para detectar ambiente
 export const ENVIRONMENT = {
-  isLovable: () => typeof window !== 'undefined' && window.location.hostname.includes('lovable.dev'),
-  isProduction: () => typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('lovable.dev'),
-  isDevelopment: () => typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')),
+  isLovable: () => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname;
+    return hostname.includes('lovable.dev') || hostname.includes('lovable.app');
+  },
+  
+  isProduction: () => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname;
+    return !hostname.includes('localhost') && 
+           !hostname.includes('127.0.0.1') && 
+           !hostname.includes('lovable.dev');
+  },
+  
+  isDevelopment: () => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname;
+    return hostname.includes('localhost') || hostname.includes('127.0.0.1');
+  },
   
   getOrigin: () => typeof window !== 'undefined' ? window.location.origin : '',
   
-  // URLs permitidas para CORS
+  // URLs permitidas para CORS - incluindo mais variações do Lovable
   getAllowedOrigins: () => [
     'https://lovable.dev',
+    'https://lovable.app',
+    'https://*.lovable.dev',
+    'https://*.lovable.app',
     'https://id-preview--615752d4-0ad0-4fbd-9977-45d5385af67b.lovable.app',
     'http://localhost:3000',
     'http://localhost:5173',
@@ -85,6 +104,7 @@ export const CORS_LOGGER = {
       origin: headers.origin || 'no-origin',
       referer: headers.referer || 'no-referer',
       userAgent: headers['user-agent']?.substring(0, 50) || 'unknown',
+      lovableOrigin: headers['x-lovable-origin'] || 'not-set',
       timestamp: new Date().toISOString()
     });
   },
