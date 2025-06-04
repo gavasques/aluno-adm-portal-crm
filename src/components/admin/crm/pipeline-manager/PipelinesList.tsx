@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Settings, Eye, Target } from 'lucide-react';
+import { Plus, Edit, Trash2, Settings, Eye, Target, Link as LinkIcon } from 'lucide-react';
 import { CRMPipeline } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import PipelineFormDialog from './PipelineFormDialog';
 import DeletePipelineDialog from './DeletePipelineDialog';
+import { WebhookUrlDisplay } from './WebhookUrlDisplay';
 
 interface PipelinesListProps {
   pipelines: CRMPipeline[];
@@ -139,10 +140,17 @@ const PipelinesList = ({ pipelines, loading, onPipelineSelect, onRefresh }: Pipe
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>Posição: {pipeline.sort_order + 1}</span>
                           <span>Criado: {new Date(pipeline.created_at).toLocaleDateString('pt-BR')}</span>
+                          <div className="flex items-center gap-1">
+                            <LinkIcon className="h-3 w-3" />
+                            <span>Webhook disponível</span>
+                          </div>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Webhook URL Display */}
+                        <WebhookUrlDisplay pipeline={pipeline} />
+                        
                         <Button
                           variant="ghost"
                           size="sm"
