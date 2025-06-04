@@ -1,29 +1,29 @@
 
-import { useState, useEffect } from 'react';
-import { CRMLead, CRMLeadContact } from '@/types/crm.types';
+import { useState, useCallback, useMemo } from 'react';
+import { CRMLead } from '@/types/crm.types';
 
 interface UseLeadDetailDataProps {
   lead: CRMLead | null;
 }
 
 export const useLeadDetailData = ({ lead }: UseLeadDetailDataProps) => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [attachmentCount, setAttachmentCount] = useState(0);
-  const [commentCount, setCommentCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'attachments' | 'comments' | 'history'>('overview');
 
-  // Simular contagem de anexos e comentários (substituir por API real)
-  useEffect(() => {
-    if (lead) {
-      // Aqui você faria chamadas para APIs reais
-      setAttachmentCount(3);
-      setCommentCount(2);
-    }
-  }, [lead]);
+  // Mock data para contadores - em um cenário real, estes viriam de hooks específicos
+  const attachmentCount = useMemo(() => {
+    // Aqui você faria uma query para contar anexos do lead
+    return 3; // Mock
+  }, [lead?.id]);
 
-  const handleLeadUpdate = () => {
-    console.log('🔄 Lead updated in detail dialog');
-    // Callback para atualizar dados do lead
-  };
+  const commentCount = useMemo(() => {
+    // Aqui você faria uma query para contar comentários do lead
+    return 2; // Mock
+  }, [lead?.id]);
+
+  const handleLeadUpdate = useCallback(() => {
+    console.log('🔄 Lead data updated');
+    // Aqui você pode invalidar queries ou refetch dados necessários
+  }, []);
 
   return {
     activeTab,

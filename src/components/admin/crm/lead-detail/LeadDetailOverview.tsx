@@ -1,280 +1,235 @@
 
 import React from 'react';
 import { CRMLead } from '@/types/crm.types';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Building2, 
-  ShoppingCart, 
-  Package, 
-  Target,
-  DollarSign,
+  User, 
+  Mail, 
+  Phone, 
+  Building, 
   Calendar,
-  Globe,
-  MapPin,
-  FileText
+  Tag,
+  ShoppingCart,
+  Package,
+  Link as LinkIcon
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { LeadDetailQuickActions } from './LeadDetailQuickActions';
 
 interface LeadDetailOverviewProps {
   lead: CRMLead;
 }
 
 export const LeadDetailOverview = ({ lead }: LeadDetailOverviewProps) => {
-  const InfoCard = ({ 
-    icon: Icon, 
-    title, 
-    content, 
-    color = "blue" 
-  }: { 
-    icon: any; 
-    title: string; 
-    content: React.ReactNode; 
-    color?: string; 
-  }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg"
-    >
-      <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-xl bg-${color}-100`}>
-          <Icon className={`h-5 w-5 text-${color}-600`} />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-          <div className="text-gray-700">{content}</div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const YesNoIndicator = ({ value, trueText = "Sim", falseText = "Não" }: { value: boolean; trueText?: string; falseText?: string }) => (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-      value 
-        ? 'bg-green-100 text-green-800' 
-        : 'bg-gray-100 text-gray-600'
-    }`}>
-      {value ? trueText : falseText}
-    </span>
-  );
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50/30 to-purple-50/30 p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Informações da Empresa */}
-        <InfoCard
-          icon={Building2}
-          title="Informações da Empresa"
-          color="blue"
-          content={
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Tem empresa:</span>
-                <YesNoIndicator value={lead.has_company} />
-              </div>
-              {lead.amazon_state && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Estado (Amazon):</span>
-                  <span className="font-medium">{lead.amazon_state}</span>
-                </div>
-              )}
-              {lead.amazon_tax_regime && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Regime Tributário:</span>
-                  <span className="font-medium">{lead.amazon_tax_regime}</span>
-                </div>
-              )}
-            </div>
-          }
-        />
-
-        {/* Amazon e E-commerce */}
-        <InfoCard
-          icon={ShoppingCart}
-          title="Amazon e E-commerce"
-          color="orange"
-          content={
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Vende na Amazon:</span>
-                <YesNoIndicator value={lead.sells_on_amazon} />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Trabalha com FBA:</span>
-                <YesNoIndicator value={lead.works_with_fba} />
-              </div>
-              {lead.amazon_store_link && (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Coluna Principal - Informações do Lead */}
+      <div className="lg:col-span-2 space-y-6">
+        {/* Informações Básicas */}
+        <Card className="shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <User className="h-5 w-5 text-blue-600" />
+              Informações Básicas
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-gray-400" />
                 <div>
-                  <span className="text-sm text-gray-600 block mb-1">Link da Loja:</span>
-                  <a 
-                    href={lead.amazon_store_link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline text-sm break-all"
-                  >
-                    {lead.amazon_store_link}
-                  </a>
+                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="font-medium">{lead.email}</p>
                 </div>
-              )}
-            </div>
-          }
-        />
-
-        {/* Produtos e Negócio */}
-        <InfoCard
-          icon={Package}
-          title="Produtos e Negócio"
-          color="green"
-          content={
-            <div className="space-y-3">
-              {lead.what_sells && (
-                <div>
-                  <span className="text-sm text-gray-600 block mb-1">O que vende:</span>
-                  <p className="text-sm">{lead.what_sells}</p>
-                </div>
-              )}
-              {lead.keep_or_new_niches && (
-                <div>
-                  <span className="text-sm text-gray-600 block mb-1">Nichos:</span>
-                  <p className="text-sm">{lead.keep_or_new_niches}</p>
-                </div>
-              )}
-            </div>
-          }
-        />
-
-        {/* Qualificação */}
-        <InfoCard
-          icon={Target}
-          title="Qualificação"
-          color="purple"
-          content={
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Busca marca própria:</span>
-                <YesNoIndicator value={lead.seeks_private_label} />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Pronto para investir 3k:</span>
-                <YesNoIndicator value={lead.ready_to_invest_3k} />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Teve contato com LV:</span>
-                <YesNoIndicator value={lead.had_contact_with_lv} />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Calendly agendado:</span>
-                <YesNoIndicator value={lead.calendly_scheduled} />
-              </div>
-            </div>
-          }
-        />
-
-        {/* Datas Importantes */}
-        {(lead.scheduled_contact_date || lead.created_at) && (
-          <InfoCard
-            icon={Calendar}
-            title="Datas Importantes"
-            color="indigo"
-            content={
-              <div className="space-y-3">
-                {lead.scheduled_contact_date && (
+              
+              {lead.phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 text-gray-400" />
                   <div>
-                    <span className="text-sm text-gray-600 block mb-1">Próximo contato:</span>
-                    <span className="font-medium">
-                      {format(new Date(lead.scheduled_contact_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                    </span>
+                    <p className="text-sm text-gray-600">Telefone</p>
+                    <p className="font-medium">{lead.phone}</p>
                   </div>
-                )}
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3">
+                <Building className="h-4 w-4 text-gray-400" />
                 <div>
-                  <span className="text-sm text-gray-600 block mb-1">Criado em:</span>
-                  <span className="font-medium">
-                    {format(new Date(lead.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                  </span>
+                  <p className="text-sm text-gray-600">Tem empresa</p>
+                  <Badge variant={lead.has_company ? "default" : "secondary"}>
+                    {lead.has_company ? 'Sim' : 'Não'}
+                  </Badge>
                 </div>
               </div>
-            }
-          />
-        )}
+              
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-sm text-gray-600">Criado em</p>
+                  <p className="font-medium">{formatDate(lead.created_at)}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Links e Calendly */}
-        {lead.calendly_link && (
-          <InfoCard
-            icon={Globe}
-            title="Links"
-            color="teal"
-            content={
+        {/* Informações Amazon */}
+        <Card className="shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-orange-600" />
+              Informações Amazon
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <span className="text-sm text-gray-600 block mb-1">Link do Calendly:</span>
+                <p className="text-sm text-gray-600 mb-1">Vende na Amazon</p>
+                <Badge variant={lead.sells_on_amazon ? "default" : "secondary"}>
+                  {lead.sells_on_amazon ? 'Sim' : 'Não'}
+                </Badge>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Trabalha com FBA</p>
+                <Badge variant={lead.works_with_fba ? "default" : "secondary"}>
+                  {lead.works_with_fba ? 'Sim' : 'Não'}
+                </Badge>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Busca marca própria</p>
+                <Badge variant={lead.seeks_private_label ? "default" : "secondary"}>
+                  {lead.seeks_private_label ? 'Sim' : 'Não'}
+                </Badge>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Pronto para investir 3k</p>
+                <Badge variant={lead.ready_to_invest_3k ? "default" : "secondary"}>
+                  {lead.ready_to_invest_3k ? 'Sim' : 'Não'}
+                </Badge>
+              </div>
+            </div>
+            
+            {lead.what_sells && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-1">O que vende</p>
+                <p className="text-gray-900">{lead.what_sells}</p>
+              </div>
+            )}
+            
+            {lead.amazon_store_link && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-1">Link da loja</p>
                 <a 
-                  href={lead.calendly_link} 
+                  href={lead.amazon_store_link} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm break-all"
+                  className="text-blue-600 hover:underline flex items-center gap-1"
                 >
-                  {lead.calendly_link}
+                  <LinkIcon className="h-4 w-4" />
+                  {lead.amazon_store_link}
                 </a>
               </div>
-            }
-          />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Observações e Dúvidas */}
+        {(lead.notes || lead.main_doubts) && (
+          <Card className="shadow-sm">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Observações e Dúvidas</h3>
+              
+              {lead.notes && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Observações</p>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
+                  </div>
+                </div>
+              )}
+              
+              {lead.main_doubts && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Principais Dúvidas</p>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-gray-700 whitespace-pre-wrap">{lead.main_doubts}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
-      </div>
 
-      {/* Observações */}
-      {(lead.notes || lead.main_doubts) && (
-        <div className="mt-6 space-y-4">
-          {lead.main_doubts && (
-            <InfoCard
-              icon={FileText}
-              title="Principais Dúvidas"
-              color="amber"
-              content={
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{lead.main_doubts}</p>
-              }
-            />
-          )}
-          
-          {lead.notes && (
-            <InfoCard
-              icon={FileText}
-              title="Observações"
-              color="gray"
-              content={
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
-              }
-            />
-          )}
-        </div>
-      )}
-
-      {/* Tags */}
-      {lead.tags && lead.tags.length > 0 && (
-        <div className="mt-6">
-          <InfoCard
-            icon={Target}
-            title="Tags"
-            color="pink"
-            content={
+        {/* Tags */}
+        {lead.tags && lead.tags.length > 0 && (
+          <Card className="shadow-sm">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Tag className="h-5 w-5 text-purple-600" />
+                Tags
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {lead.tags.map((tag) => (
                   <span
                     key={tag.id}
                     className="px-3 py-1 rounded-full text-sm font-medium"
-                    style={{ 
-                      backgroundColor: tag.color + '20', 
-                      color: tag.color,
-                      border: `1px solid ${tag.color}40`
-                    }}
+                    style={{ backgroundColor: tag.color + '20', color: tag.color }}
                   >
                     {tag.name}
                   </span>
                 ))}
               </div>
-            }
-          />
-        </div>
-      )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Coluna Lateral - Ações Rápidas */}
+      <div className="space-y-6">
+        <LeadDetailQuickActions
+          leadId={lead.id}
+          leadName={lead.name}
+          lead={lead}
+          compact={false}
+        />
+
+        {/* Status do Pipeline */}
+        <Card className="shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Status do Pipeline</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600">Pipeline</p>
+                <p className="font-medium">{lead.pipeline?.name || 'Não definido'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Estágio</p>
+                <p className="font-medium">{lead.column?.name || 'Não definido'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Responsável</p>
+                <p className="font-medium">{lead.responsible?.name || 'Não definido'}</p>
+              </div>
+              {lead.scheduled_contact_date && (
+                <div>
+                  <p className="text-sm text-gray-600">Próximo contato</p>
+                  <p className="font-medium">{formatDate(lead.scheduled_contact_date)}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

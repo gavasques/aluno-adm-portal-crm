@@ -1,17 +1,83 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger, TabsTriggerWithBadge } from '@/components/ui/tabs';
+import { 
+  User, 
+  FileText, 
+  MessageSquare, 
+  Clock,
+  Calendar
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { LeadDetailHeader } from '@/components/admin/crm/lead-detail/LeadDetailHeader';
+import { ConditionalLeadDetailOverview } from '@/components/admin/crm/lead-detail/ConditionalLeadDetailOverview';
+import LeadAttachmentsTab from '@/components/admin/crm/lead-detail-tabs/LeadAttachmentsTab';
+import LeadCommentsTab from '@/components/admin/crm/lead-detail-tabs/LeadCommentsTab';
+import LeadHistoryTab from '@/components/admin/crm/lead-detail-tabs/LeadHistoryTab';
+import LeadContactsTab from '@/components/admin/crm/lead-detail-tabs/LeadContactsTab';
 import { useCRMLeadDetail } from '@/hooks/crm/useCRMLeadDetail';
+import { useLeadDetailData } from '@/hooks/crm/useLeadDetailData';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const CRMLeadDetail = () => {
-  const { id: leadId } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: lead, isLoading: loading, error } = useCRMLeadDetail(leadId || '');
+  const { data: lead, isLoading: loading, error, refetch } = useCRMLeadDetail(id || '');
+  
+  // Estados para edição
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  console.log('🎯 CRMLeadDetail - leadId:', leadId, 'lead:', lead, 'loading:', loading, 'error:', error);
+  // Hook para dados das abas
+  const {
+    activeTab,
+    setActiveTab,
+    attachmentCount,
+    commentCount,
+    handleLeadUpdate
+  } = useLeadDetailData({ lead });
+
+  console.log('🎯 CRMLeadDetail - id:', id, 'lead:', lead, 'loading:', loading, 'error:', error);
+
+  const handleBack = () => {
+    if (isEditing && hasChanges) {
+      const confirm = window.confirm('Você tem alterações não salvas. Deseja sair mesmo assim?');
+      if (!confirm) return;
+    }
+    navigate('/admin/crm');
+  };
+
+  const handleLeadUpdateAndRefetch = () => {
+    console.log('🔄 Lead updated, refetching data...');
+    handleLeadUpdate();
+    refetch();
+    setIsEditing(false);
+    setHasChanges(false);
+  };
+
+  const handleToggleEdit = () => {
+    if (isEditing && hasChanges) {
+      const confirm = window.confirm('Você tem alterações não salvas. Deseja cancelar as alterações?');
+      if (!confirm) return;
+    }
+    setIsEditing(!isEditing);
+    setHasChanges(false);
+  };
+
+  const handleSave = async () => {
+    if ((window as any).saveLeadData) {
+      await (window as any).saveLeadData();
+      setIsEditing(false);
+      setHasChanges(false);
+    }
+  };
+
+  const handleDataChange = (changes: boolean) => {
+    setHasChanges(changes);
+  };
 
   if (loading) {
     return (
@@ -27,19 +93,14 @@ const CRMLeadDetail = () => {
   if (error) {
     return (
       <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/admin/crm')}
-            className="mb-4"
-          >
+        <div className="flex items-center justify-between mb-6">
+          <Button onClick={handleBack} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao CRM
+            Voltar para CRM
           </Button>
         </div>
         
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             {error.message}
           </AlertDescription>
@@ -47,7 +108,7 @@ const CRMLeadDetail = () => {
         
         <div className="mt-4">
           <p className="text-sm text-muted-foreground">
-            Lead ID: {leadId}
+            Lead ID: {id}
           </p>
         </div>
       </div>
@@ -57,118 +118,163 @@ const CRMLeadDetail = () => {
   if (!lead) {
     return (
       <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/admin/crm')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao CRM
-          </Button>
-        </div>
-        
         <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Lead não encontrado</h2>
-          <p className="text-gray-600 mb-4">
-            Não foi possível encontrar o lead com ID: {leadId}
+          <p className="text-red-600 mb-4">
+            Lead não encontrado (ID: {id})
           </p>
+          <Button onClick={handleBack} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para CRM
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="container mx-auto p-6 space-y-6"
+    >
+      {/* Breadcrumb e navegação */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBack}
+            className="p-0 h-auto hover:bg-transparent hover:text-blue-600"
+            disabled={isEditing && hasChanges}
+          >
+            CRM
+          </Button>
+          <span>/</span>
+          <span>Lead</span>
+          <span>/</span>
+          <span className="font-medium text-gray-900">{lead.name}</span>
+          {isEditing && (
+            <>
+              <span>/</span>
+              <span className="font-medium text-blue-600">Editando</span>
+            </>
+          )}
+        </div>
+        
         <Button 
-          variant="outline" 
-          onClick={() => navigate('/admin/crm')}
-          className="mb-4"
+          onClick={handleBack} 
+          variant="outline"
+          disabled={isEditing && hasChanges}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao CRM
+          Voltar
         </Button>
-        
-        <h1 className="text-3xl font-bold text-gray-900">{lead.name}</h1>
-        <p className="text-gray-600">{lead.email}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Informações Básicas</h3>
-          <div className="space-y-2">
-            <p><strong>Email:</strong> {lead.email}</p>
-            {lead.phone && <p><strong>Telefone:</strong> {lead.phone}</p>}
-            <p><strong>Tem empresa:</strong> {lead.has_company ? 'Sim' : 'Não'}</p>
-            <p><strong>Vende na Amazon:</strong> {lead.sells_on_amazon ? 'Sim' : 'Não'}</p>
-            <p><strong>Trabalha com FBA:</strong> {lead.works_with_fba ? 'Sim' : 'Não'}</p>
-            <p><strong>Busca marca própria:</strong> {lead.seeks_private_label ? 'Sim' : 'Não'}</p>
-            <p><strong>Pronto para investir 3k:</strong> {lead.ready_to_invest_3k ? 'Sim' : 'Não'}</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Status do Pipeline</h3>
-          <div className="space-y-2">
-            <p><strong>Pipeline:</strong> {lead.pipeline?.name || 'Não definido'}</p>
-            <p><strong>Estágio:</strong> {lead.column?.name || 'Não definido'}</p>
-            <p><strong>Responsável:</strong> {lead.responsible?.name || 'Não definido'}</p>
-            {lead.scheduled_contact_date && (
-              <p><strong>Próximo contato:</strong> {new Date(lead.scheduled_contact_date).toLocaleDateString('pt-BR')}</p>
-            )}
-          </div>
-        </div>
-
-        {lead.what_sells && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Produtos</h3>
-            <p><strong>O que vende:</strong> {lead.what_sells}</p>
-            {lead.keep_or_new_niches && (
-              <p><strong>Nichos:</strong> {lead.keep_or_new_niches}</p>
-            )}
-            {lead.amazon_store_link && (
-              <p><strong>Link da loja:</strong> 
-                <a href={lead.amazon_store_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                  {lead.amazon_store_link}
-                </a>
-              </p>
-            )}
-          </div>
-        )}
-
-        {lead.notes && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Observações</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
-          </div>
-        )}
-
-        {lead.main_doubts && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Principais Dúvidas</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{lead.main_doubts}</p>
-          </div>
-        )}
+      {/* Header do Lead */}
+      <div className="bg-white rounded-2xl border border-gray-200/50 shadow-lg overflow-hidden">
+        <LeadDetailHeader 
+          lead={lead} 
+          onClose={handleBack} 
+          onLeadUpdate={handleLeadUpdateAndRefetch}
+          isEditing={isEditing}
+          onToggleEdit={handleToggleEdit}
+          onSave={handleSave}
+          hasChanges={hasChanges}
+        />
       </div>
 
-      {lead.tags && lead.tags.length > 0 && (
-        <div className="mt-6 bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            {lead.tags.map((tag) => (
-              <span
-                key={tag.id}
-                className="px-3 py-1 rounded-full text-sm font-medium"
-                style={{ backgroundColor: tag.color + '20', color: tag.color }}
+      {/* Conteúdo Principal com Abas Completas */}
+      <div className="bg-white rounded-2xl border border-gray-200/50 shadow-lg overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="border-b border-gray-200/50 bg-gray-50/50 px-6">
+            <TabsList className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm">
+              <TabsTrigger 
+                value="overview" 
+                className="flex items-center gap-2"
+                disabled={isEditing}
               >
-                {tag.name}
-              </span>
-            ))}
+                <User className="h-4 w-4" />
+                Visão Geral & Dados
+                {isEditing && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    Editando
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="contacts" 
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
+                <Calendar className="h-4 w-4" />
+                Contatos
+              </TabsTrigger>
+              <TabsTriggerWithBadge 
+                value="attachments" 
+                badgeContent={attachmentCount}
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
+                <FileText className="h-4 w-4" />
+                Anexos
+              </TabsTriggerWithBadge>
+              <TabsTriggerWithBadge 
+                value="comments" 
+                badgeContent={commentCount}
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Comentários
+              </TabsTriggerWithBadge>
+              <TabsTrigger 
+                value="history" 
+                className="flex items-center gap-2"
+                disabled={isEditing}
+              >
+                <Clock className="h-4 w-4" />
+                Histórico
+              </TabsTrigger>
+            </TabsList>
           </div>
+
+          <div className="p-6">
+            <TabsContent value="overview" className="mt-0">
+              <ConditionalLeadDetailOverview 
+                lead={lead}
+                isEditing={isEditing}
+                onDataChange={handleDataChange}
+                onLeadUpdate={handleLeadUpdateAndRefetch}
+              />
+            </TabsContent>
+            
+            <TabsContent value="contacts" className="mt-0">
+              <LeadContactsTab leadId={lead.id} />
+            </TabsContent>
+            
+            <TabsContent value="attachments" className="mt-0">
+              <LeadAttachmentsTab leadId={lead.id} />
+            </TabsContent>
+            
+            <TabsContent value="comments" className="mt-0">
+              <LeadCommentsTab leadId={lead.id} />
+            </TabsContent>
+            
+            <TabsContent value="history" className="mt-0">
+              <LeadHistoryTab leadId={lead.id} />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
+
+      {/* Indicador de alterações não salvas */}
+      {isEditing && hasChanges && (
+        <div className="fixed bottom-4 right-4 bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg shadow-lg">
+          <p className="text-sm font-medium">Você tem alterações não salvas</p>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
