@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs } from '@/components/ui/tabs';
@@ -87,7 +86,7 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   // Hooks de dados com loading sequencial
   const { pipelines, loading: pipelinesLoading } = useCRMPipelines();
   
-  // Carregar usuários após os pipelines - não enviamos mais parâmetros
+  // Carregar usuários após os pipelines
   const { users, loading: usersLoading } = useCRMUsers();
   
   // Carregar tags com opção de enabled
@@ -222,10 +221,11 @@ const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
         onValueChange={handleTabChange}
         className="h-full w-full flex flex-col relative z-10"
       >
-        {/* Header com Tabs */}
+        {/* Header com Tabs e botão de teste */}
         <CRMDashboardHeader
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          selectedPipelineId={selectedPipelineId}
         />
 
         {/* Conteúdo das Tabs - Ocupando toda largura disponível */}
