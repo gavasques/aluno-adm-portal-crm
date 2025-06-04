@@ -29,49 +29,70 @@ interface WebhookPayload {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const startTime = Date.now();
+  let payload: WebhookPayload | null = null;
+  let pipelineId: string | null = null;
+  let responseStatus = 200;
+  let responseBody: any = { success: false };
+  let leadCreatedId: string | null = null;
+  let errorMessage: string | null = null;
+  let success = false;
 
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed. Use POST.' }),
-      { 
-        status: 405, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-  }
+  // Capturar informações da requisição
+  const clientIP = req.headers.get('x-forwarded-for') || 
+                   req.headers.get('x-real-ip') || 
+                   'unknown';
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+  const webhookUrl = req.url;
 
   try {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    if (req.method !== 'POST') {
+      responseStatus = 405;
+      errorMessage = 'Method not allowed. Use POST.';
+      responseBody = { error: errorMessage };
+      return new Response(
+        JSON.stringify(responseBody),
+        { 
+          status: responseStatus, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Get pipeline_id from URL parameters
     const url = new URL(req.url);
-    const pipelineId = url.searchParams.get('pipeline_id');
+    pipelineId = url.searchParams.get('pipeline_id');
     
     if (!pipelineId) {
+      responseStatus = 400;
+      errorMessage = 'Pipeline ID is required. Use ?pipeline_id=xxx in the URL.';
+      responseBody = { error: errorMessage };
       return new Response(
-        JSON.stringify({ 
-          error: 'Pipeline ID is required. Use ?pipeline_id=xxx in the URL.' 
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 400, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
     // Parse request body
-    const payload: WebhookPayload = await req.json();
+    payload = await req.json();
     
     // Validate required fields
     if (!payload.name || !payload.email) {
+      responseStatus = 400;
+      errorMessage = 'Name and email are required fields.';
+      responseBody = { error: errorMessage };
       return new Response(
-        JSON.stringify({ 
-          error: 'Name and email are required fields.' 
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 400, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -80,12 +101,13 @@ Deno.serve(async (req) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(payload.email)) {
+      responseStatus = 400;
+      errorMessage = 'Invalid email format.';
+      responseBody = { error: errorMessage };
       return new Response(
-        JSON.stringify({ 
-          error: 'Invalid email format.' 
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 400, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -110,12 +132,13 @@ Deno.serve(async (req) => {
 
     if (pipelineError || !pipeline) {
       console.error('❌ Pipeline not found or inactive:', pipelineError);
+      responseStatus = 404;
+      errorMessage = 'Pipeline not found or inactive.';
+      responseBody = { error: errorMessage };
       return new Response(
-        JSON.stringify({ 
-          error: 'Pipeline not found or inactive.' 
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 404, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -133,12 +156,13 @@ Deno.serve(async (req) => {
 
     if (columnError || !firstColumn) {
       console.error('❌ No active columns found for pipeline:', columnError);
+      responseStatus = 400;
+      errorMessage = 'No active columns found for this pipeline.';
+      responseBody = { error: errorMessage };
       return new Response(
-        JSON.stringify({ 
-          error: 'No active columns found for this pipeline.' 
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 400, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -153,14 +177,17 @@ Deno.serve(async (req) => {
 
     if (existingLead) {
       console.log('⚠️ Lead already exists:', existingLead.id);
+      leadCreatedId = existingLead.id;
+      success = true;
+      responseBody = { 
+        message: 'Lead already exists',
+        lead_id: existingLead.id,
+        existing: true
+      };
       return new Response(
-        JSON.stringify({ 
-          message: 'Lead already exists',
-          lead_id: existingLead.id,
-          existing: true
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 200, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -203,20 +230,23 @@ Deno.serve(async (req) => {
 
     if (leadError) {
       console.error('❌ Error creating lead:', leadError);
+      responseStatus = 500;
+      errorMessage = 'Failed to create lead: ' + leadError.message;
+      responseBody = { error: errorMessage };
       return new Response(
-        JSON.stringify({ 
-          error: 'Failed to create lead: ' + leadError.message 
-        }),
+        JSON.stringify(responseBody),
         { 
-          status: 500, 
+          status: responseStatus, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
     console.log('✅ Lead created successfully:', newLead.id);
+    leadCreatedId = newLead.id;
+    success = true;
 
-    // Log the webhook activity for audit
+    // Log the webhook activity for audit (existing audit log)
     await supabase
       .from('audit_logs')
       .insert({
@@ -236,37 +266,69 @@ Deno.serve(async (req) => {
         risk_level: 'low'
       });
 
+    responseBody = {
+      success: true,
+      message: 'Lead created successfully',
+      lead_id: newLead.id,
+      pipeline: {
+        id: pipeline.id,
+        name: pipeline.name
+      },
+      column: {
+        id: firstColumn.id,
+        name: firstColumn.name
+      }
+    };
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Lead created successfully',
-        lead_id: newLead.id,
-        pipeline: {
-          id: pipeline.id,
-          name: pipeline.name
-        },
-        column: {
-          id: firstColumn.id,
-          name: firstColumn.name
-        }
-      }),
+      JSON.stringify(responseBody),
       { 
-        status: 201, 
+        status: responseStatus, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
 
   } catch (error) {
     console.error('❌ Webhook error:', error);
+    responseStatus = 500;
+    errorMessage = 'Internal server error: ' + (error as Error).message;
+    responseBody = { error: errorMessage };
     
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error: ' + (error as Error).message 
-      }),
+      JSON.stringify(responseBody),
       { 
-        status: 500, 
+        status: responseStatus, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
+  } finally {
+    // SEMPRE salvar log detalhado do webhook, independente de sucesso ou erro
+    const processingTime = Date.now() - startTime;
+    
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      await supabase
+        .from('crm_webhook_logs')
+        .insert({
+          pipeline_id: pipelineId,
+          payload_received: payload || {},
+          response_status: responseStatus,
+          response_body: responseBody,
+          ip_address: clientIP,
+          user_agent: userAgent,
+          lead_created_id: leadCreatedId,
+          processing_time_ms: processingTime,
+          error_message: errorMessage,
+          success: success,
+          webhook_url: webhookUrl
+        });
+    } catch (logError) {
+      console.error('❌ Error saving webhook log:', logError);
+      // Não interferir na resposta principal mesmo se o log falhar
+    }
   }
 });

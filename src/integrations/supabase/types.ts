@@ -1158,6 +1158,69 @@ export type Database = {
           },
         ]
       }
+      crm_webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          lead_created_id: string | null
+          payload_received: Json
+          pipeline_id: string | null
+          processing_time_ms: number | null
+          response_body: Json | null
+          response_status: number
+          success: boolean
+          user_agent: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          lead_created_id?: string | null
+          payload_received: Json
+          pipeline_id?: string | null
+          processing_time_ms?: number | null
+          response_body?: Json | null
+          response_status: number
+          success?: boolean
+          user_agent?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          lead_created_id?: string | null
+          payload_received?: Json
+          pipeline_id?: string | null
+          processing_time_ms?: number | null
+          response_body?: Json | null
+          response_status?: number
+          success?: boolean
+          user_agent?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_webhook_logs_lead_created_id_fkey"
+            columns: ["lead_created_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_webhook_logs_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "crm_pipelines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       livi_ai_messages: {
         Row: {
           ai_response: string | null
