@@ -15,7 +15,6 @@ import {
 import { motion } from 'framer-motion';
 import { CRMFilters, CRMPipeline, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
 import { CRMCardConfigDialog } from '../card-config/CRMCardConfigDialog';
-import { ContactSyncIndicatorImproved } from './ContactSyncIndicatorImproved';
 import { MainFilters } from '../filters/MainFilters';
 
 interface ModernDashboardToolbarProps {
@@ -67,11 +66,6 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
 
   return (
     <>
-      {/* Indicador de Sincronização de Contatos Aprimorado */}
-      <div className="px-8">
-        <ContactSyncIndicatorImproved />
-      </div>
-
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0">
         {/* Primeira linha - Ações principais */}
         <div className="flex items-center justify-between gap-6 mb-4">
