@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMWebhookTokens } from '@/hooks/crm/useCRMWebhookTokens';
+import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
 
 export const WebhookUrlsCard = () => {
   const [copied, setCopied] = useState(false);
@@ -87,7 +88,7 @@ export const WebhookUrlsCard = () => {
           <div className="text-sm text-blue-800 space-y-1">
             <p>• Configure sua aplicação para enviar POST requests para a URL do pipeline</p>
             <p>• Use Content-Type: application/json no header</p>
-            <p>• Campos obrigatórios: <code>name</code> e <code>email</code></p>
+            <p>• Campos obrigatórios variam por pipeline (veja configurações de mapeamento)</p>
             <p>• Configure tokens de segurança na aba "Tokens de Segurança"</p>
           </div>
         </div>
@@ -120,19 +121,27 @@ export const WebhookUrlsCard = () => {
                 </div>
               </div>
 
-              {/* Campos Obrigatórios */}
+              {/* Validação Configurável */}
               <div>
-                <h3 className="font-semibold mb-2">Campos Obrigatórios</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <Badge variant="destructive">name</Badge>
-                  <Badge variant="destructive">email</Badge>
+                <h3 className="font-semibold mb-2">Validação Configurável</h3>
+                <div className="bg-green-50 p-3 rounded border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-green-900">Campos Obrigatórios por Pipeline</span>
+                  </div>
+                  <p className="text-sm text-green-800">
+                    Cada pipeline pode ter seus próprios campos obrigatórios configurados. 
+                    Verifique a aba "Configuração" → "Mapeamento de Campos" para ver quais campos são obrigatórios para cada pipeline.
+                  </p>
                 </div>
               </div>
 
               {/* Campos Opcionais */}
               <div>
-                <h3 className="font-semibold mb-2">Campos Opcionais</h3>
+                <h3 className="font-semibold mb-2">Campos Disponíveis (configuráveis)</h3>
                 <div className="grid grid-cols-3 gap-2">
+                  <Badge variant="secondary">name</Badge>
+                  <Badge variant="secondary">email</Badge>
                   <Badge variant="secondary">phone</Badge>
                   <Badge variant="secondary">has_company</Badge>
                   <Badge variant="secondary">sells_on_amazon</Badge>
@@ -183,6 +192,18 @@ export const WebhookUrlsCard = () => {
 }, null, 2)}
                 </pre>
               </div>
+
+              {/* Resposta de Erro */}
+              <div>
+                <h3 className="font-semibold mb-2">Resposta de Erro (Campos Obrigatórios)</h3>
+                <pre className="bg-red-50 p-4 rounded-lg text-sm overflow-x-auto">
+{JSON.stringify({
+  success: false,
+  error: "Campos obrigatórios faltando: name, email",
+  missing_fields: ["name", "email"]
+}, null, 2)}
+                </pre>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -200,8 +221,11 @@ interface PipelineWebhookCardProps {
 
 const PipelineWebhookCard = ({ pipeline, webhookBaseUrl, onCopyUrl, copied }: PipelineWebhookCardProps) => {
   const { getActiveToken } = useCRMWebhookTokens(pipeline.id);
+  const { mappings } = useCRMWebhookFieldMappings(pipeline.id);
   const activeToken = getActiveToken(pipeline.id);
   const webhookUrl = `${webhookBaseUrl}?pipeline_id=${pipeline.id}`;
+  
+  const requiredFields = mappings?.filter(m => m.is_required && m.is_active) || [];
 
   return (
     <div className="border rounded-lg p-4 space-y-3">
@@ -221,6 +245,17 @@ const PipelineWebhookCard = ({ pipeline, webhookBaseUrl, onCopyUrl, copied }: Pi
             <Badge className="bg-orange-100 text-orange-800">
               <AlertTriangle className="h-3 w-3 mr-1" />
               Sem Token
+            </Badge>
+          )}
+          
+          {requiredFields.length > 0 ? (
+            <Badge className="bg-blue-100 text-blue-800">
+              <Shield className="h-3 w-3 mr-1" />
+              {requiredFields.length} Obrigatório{requiredFields.length > 1 ? 's' : ''}
+            </Badge>
+          ) : (
+            <Badge className="bg-gray-100 text-gray-800">
+              Sem Campos Obrigatórios
             </Badge>
           )}
         </div>
@@ -244,6 +279,23 @@ const PipelineWebhookCard = ({ pipeline, webhookBaseUrl, onCopyUrl, copied }: Pi
           )}
         </Button>
       </div>
+      
+      {/* Mostrar campos obrigatórios */}
+      {requiredFields.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded p-3">
+          <p className="text-sm text-blue-800 mb-2">
+            <Shield className="h-4 w-4 inline mr-1" />
+            Campos obrigatórios para este pipeline:
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {requiredFields.map((field) => (
+              <Badge key={field.id} variant="destructive" className="text-xs">
+                {field.webhook_field_name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
       
       {!activeToken && (
         <div className="bg-orange-50 border border-orange-200 rounded p-3">

@@ -10,10 +10,12 @@ import {
   Trash2, 
   RefreshCw,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Shield
 } from 'lucide-react';
 import { ManualFieldMappingDialog } from './ManualFieldMappingDialog';
 import { EditFieldMappingDialog } from './EditFieldMappingDialog';
+import { RequiredFieldsIndicator } from './RequiredFieldsIndicator';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
 import { toast } from 'sonner';
 import { CRMWebhookFieldMapping } from '@/types/crm-webhook.types';
@@ -100,6 +102,9 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Indicador de Campos Obrigatórios */}
+          <RequiredFieldsIndicator mappings={mappings} />
+
           {/* Botões de Ação */}
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -148,11 +153,16 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
               {mappings.map((mapping) => (
                 <div
                   key={mapping.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className={`border rounded-lg p-4 hover:bg-gray-50 transition-colors ${
+                    mapping.is_required ? 'border-red-200 bg-red-50/50' : ''
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
+                        {mapping.is_required && (
+                          <Shield className="h-4 w-4 text-red-600" title="Campo obrigatório" />
+                        )}
                         <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
                           {mapping.webhook_field_name}
                         </code>
@@ -175,7 +185,10 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
                           {mapping.crm_field_type === 'standard' ? 'Padrão' : 'Customizado'}
                         </Badge>
                         {mapping.is_required && (
-                          <Badge variant="destructive">Obrigatório</Badge>
+                          <Badge variant="destructive" className="gap-1">
+                            <Shield className="h-3 w-3" />
+                            Obrigatório
+                          </Badge>
                         )}
                         {mapping.is_active ? (
                           <Badge className="bg-green-100 text-green-800">
@@ -215,12 +228,12 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
 
           {/* Informações Úteis */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 mb-2">ℹ️ Como Funciona</h4>
+            <h4 className="font-medium text-blue-900 mb-2">ℹ️ Validação Configurável</h4>
             <div className="text-sm text-blue-800 space-y-1">
-              <p>• Configure como os campos do webhook são mapeados para o CRM</p>
-              <p>• Campos obrigatórios: <code>name</code> e <code>email</code></p>
-              <p>• Webhook padrão: <code>{"{ \"name\": \"João\", \"email\": \"joao@email.com\" }"}</code></p>
-              <p>• Use "Adicionar Mapeamento" para campos customizados</p>
+              <p>• Marque campos como obrigatórios para validação automática</p>
+              <p>• Cada pipeline pode ter validações diferentes</p>
+              <p>• Campos obrigatórios são indicados com <Shield className="inline h-3 w-3 mx-1" /></p>
+              <p>• Webhooks serão rejeitados se campos obrigatórios estiverem faltando</p>
             </div>
           </div>
         </CardContent>
