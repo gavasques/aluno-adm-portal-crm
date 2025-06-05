@@ -22,6 +22,12 @@ const CatalogContent: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  console.log('📊 CatalogContent - Dados recebidos:', {
+    catalogs: catalogs.length,
+    loading,
+    error: error?.message
+  });
+
   // Use optimized filtering hook
   const { filteredCatalogs, stats } = useMentoringCatalogFilters(catalogs, {
     searchTerm,
@@ -60,19 +66,37 @@ const CatalogContent: React.FC = () => {
     try {
       console.log('Delete catalog:', id);
       await refetch();
+      toast({
+        title: "Sucesso",
+        description: "Mentoria excluída com sucesso!",
+      });
     } catch (error) {
       console.error('Erro ao excluir mentoria:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir mentoria. Tente novamente.",
+        variant: "destructive",
+      });
     }
-  }, [refetch]);
+  }, [refetch, toast]);
 
   const handleToggleStatus = useCallback(async (id: string, currentStatus: boolean) => {
     try {
       console.log('Toggle status:', id, currentStatus);
       await refetch();
+      toast({
+        title: "Sucesso",
+        description: "Status alterado com sucesso!",
+      });
     } catch (error) {
       console.error('Erro ao alterar status:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar status. Tente novamente.",
+        variant: "destructive",
+      });
     }
-  }, [refetch]);
+  }, [refetch, toast]);
 
   const handleFormSubmit = useCallback(async (data: CreateMentoringCatalogData) => {
     try {
@@ -83,11 +107,20 @@ const CatalogContent: React.FC = () => {
       }
       setFormDialog({ open: false, catalog: null });
       await refetch();
+      toast({
+        title: "Sucesso",
+        description: formDialog.catalog ? "Mentoria atualizada com sucesso!" : "Mentoria criada com sucesso!",
+      });
     } catch (error) {
       console.error('Erro ao salvar mentoria:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar mentoria. Tente novamente.",
+        variant: "destructive",
+      });
       throw error;
     }
-  }, [formDialog.catalog, refetch]);
+  }, [formDialog.catalog, refetch, toast]);
 
   const handleClearFilters = useCallback(() => {
     setSearchTerm('');
