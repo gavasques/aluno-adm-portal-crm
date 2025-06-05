@@ -15,6 +15,11 @@ export const recoveryModeUtils = {
     localStorage.removeItem(RECOVERY_EXPIRY_KEY);
   },
 
+  clearAllRecoveryData: () => {
+    localStorage.removeItem(RECOVERY_MODE_KEY);
+    localStorage.removeItem(RECOVERY_EXPIRY_KEY);
+  },
+
   isInRecoveryMode: (): boolean => {
     const recoveryMode = localStorage.getItem(RECOVERY_MODE_KEY);
     const expiry = localStorage.getItem(RECOVERY_EXPIRY_KEY);
@@ -31,5 +36,29 @@ export const recoveryModeUtils = {
     }
     
     return recoveryMode === "true";
+  },
+
+  detectRecoveryFlow: (session: any, pathname: string): boolean => {
+    // Detectar se estamos em um fluxo de recuperação de senha
+    if (!session) return false;
+    
+    // Verificar se a URL contém parâmetros de recuperação
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasRecoveryType = urlParams.get('type') === 'recovery';
+    const isRecoveryPath = pathname.includes('reset-password');
+    
+    // Verificar se o usuário tem metadados de recuperação
+    const hasRecoveryMetadata = session.user?.aud === 'recovery' || 
+                               session.user?.app_metadata?.provider === 'recovery';
+    
+    return hasRecoveryType || isRecoveryPath || hasRecoveryMetadata;
+  },
+
+  setRecoveryMode: (enabled: boolean) => {
+    if (enabled) {
+      recoveryModeUtils.enableRecoveryMode();
+    } else {
+      recoveryModeUtils.disableRecoveryMode();
+    }
   }
 };
