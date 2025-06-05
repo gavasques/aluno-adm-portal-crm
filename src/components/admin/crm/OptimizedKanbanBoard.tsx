@@ -39,13 +39,14 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   } = useCRMPipelines();
 
   const activeColumns = useMemo(() => {
-    const filteredColumns = columns.filter(col => 
+    const columnsArray = Array.isArray(columns) ? columns : [];
+    const filteredColumns = columnsArray.filter(col => 
       col.is_active && col.pipeline_id === pipelineId
     );
     
     debugLogger.info('📋 [ULTRA_SIMPLE_KANBAN] Colunas processadas (refatorado):', {
       pipelineId,
-      totalColumns: columns.length,
+      totalColumns: columnsArray.length,
       filteredColumns: filteredColumns.length,
       columnDetails: filteredColumns.map(col => ({
         id: col.id,
@@ -64,16 +65,16 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
   } = useUnifiedCRMData(filters);
 
   debugLogger.info('📊 [ULTRA_SIMPLE_KANBAN] Dados dos leads (refatorado):', {
-    totalLeads: leadsWithContacts.length,
+    totalLeads: Array.isArray(leadsWithContacts) ? leadsWithContacts.length : 0,
     leadsByColumnCount: Object.entries(leadsByColumn).map(([columnId, leads]) => ({
       columnId,
-      leadsCount: leads.length,
-      leadNames: leads.map(l => l.name)
+      leadsCount: Array.isArray(leads) ? leads.length : 0,
+      leadNames: Array.isArray(leads) ? leads.map(l => l.name) : []
     }))
   });
 
   const { handleOpenDetail } = useKanbanNavigation();
-  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement(filters);
+  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement({ filters });
 
   const {
     draggedLead,
@@ -122,7 +123,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
 
   debugLogger.info('🎮 [ULTRA_SIMPLE_KANBAN] Estado final do Kanban (refatorado):', {
     columns: activeColumns.length,
-    totalLeads: leadsWithContacts.length,
+    totalLeads: Array.isArray(leadsWithContacts) ? leadsWithContacts.length : 0,
     draggedLead: draggedLead?.id,
     isMoving,
     isDragging,
@@ -146,7 +147,7 @@ const OptimizedKanbanBoard: React.FC<OptimizedKanbanBoardProps> = React.memo(({
           isMoving={isMoving}
           onOpenDetail={handleLeadClick}
           onCreateLead={onCreateLead}
-          useVirtualization={leadsWithContacts.length > 50}
+          useVirtualization={Array.isArray(leadsWithContacts) ? leadsWithContacts.length > 50 : false}
         />
 
         <DragOverlay>

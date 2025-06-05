@@ -21,11 +21,13 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
 }) => {
   const { pipelines } = useCRMPipelines();
   const { moveLeadToColumn } = useUltraSimplifiedLeadMovement({ 
-    pipeline_id: lead.pipeline_id || '',
-    responsible_id: '',
-    tag_ids: [],
-    search: '',
-    status: 'aberto'
+    filters: {
+      pipeline_id: lead.pipeline_id || '',
+      responsible_id: '',
+      tag_ids: [],
+      search: '',
+      status: 'aberto'
+    }
   });
   const { changeStatus } = useLeadStatusChange();
   const [showStatusDialog, setShowStatusDialog] = useState(false);

@@ -122,6 +122,32 @@ export class CRMCacheManager {
       })
     ]);
   }
+
+  // Métodos adicionados para compatibilidade
+  async cleanupStaleCache() {
+    debugLogger.info('🧹 [CACHE_MANAGER] Limpando cache obsoleto');
+    
+    // Remover queries antigas (mais de 10 minutos)
+    this.queryClient.getQueryCache().getAll().forEach(query => {
+      const age = Date.now() - (query.state.dataUpdatedAt || 0);
+      if (age > 10 * 60 * 1000) { // 10 minutos
+        this.queryClient.removeQueries({ queryKey: query.queryKey });
+      }
+    });
+  }
+
+  getCacheMetrics() {
+    const cache = this.queryClient.getQueryCache();
+    const queries = cache.getAll();
+    
+    return {
+      totalQueries: queries.length,
+      freshQueries: queries.filter(q => q.state.status === 'success').length,
+      staleQueries: queries.filter(q => q.isStale()).length,
+      errorQueries: queries.filter(q => q.state.status === 'error').length,
+      loadingQueries: queries.filter(q => q.state.status === 'pending').length
+    };
+  }
 }
 
 // Singleton instance

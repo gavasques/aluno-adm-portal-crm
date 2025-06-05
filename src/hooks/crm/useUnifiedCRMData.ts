@@ -30,7 +30,8 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
 
   // Agrupar leads por coluna
   const leadsByColumn = useMemo(() => {
-    const grouped = leadsWithContacts.reduce((acc, lead) => {
+    const leadsArray = Array.isArray(leadsWithContacts) ? leadsWithContacts : [];
+    const grouped = leadsArray.reduce((acc, lead) => {
       if (lead.column_id) {
         if (!acc[lead.column_id]) {
           acc[lead.column_id] = [];
@@ -41,7 +42,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
     }, {} as Record<string, LeadWithContacts[]>);
 
     debugLogger.info('📊 [UNIFIED_CRM_DATA] Leads agrupados por coluna:', {
-      totalLeads: leadsWithContacts.length,
+      totalLeads: leadsArray.length,
       columnGroups: Object.entries(grouped).map(([columnId, leads]) => ({
         columnId,
         leadsCount: leads.length,
@@ -54,7 +55,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
   }, [leadsWithContacts]);
 
   debugLogger.info('📈 [UNIFIED_CRM_DATA] Resultado final:', {
-    totalLeads: leadsWithContacts.length,
+    totalLeads: Array.isArray(leadsWithContacts) ? leadsWithContacts.length : 0,
     loading,
     hasError: !!error,
     columnsWithLeads: Object.keys(leadsByColumn).length,
@@ -62,7 +63,7 @@ export const useUnifiedCRMData = (filters: CRMFilters = {}) => {
   });
 
   return {
-    leadsWithContacts,
+    leadsWithContacts: Array.isArray(leadsWithContacts) ? leadsWithContacts : [],
     leadsByColumn,
     loading,
     error,
