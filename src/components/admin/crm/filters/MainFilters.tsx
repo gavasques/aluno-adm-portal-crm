@@ -110,9 +110,6 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
         <ModernTagsSelector
           selectedTags={filters.tag_ids || []}
           onTagsChange={(tagIds) => updateFilter('tag_ids', tagIds.length > 0 ? tagIds : undefined)}
-          availableTags={tags}
-          placeholder="Tags"
-          className="h-9"
         />
       </div>
 
