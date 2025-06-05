@@ -69,17 +69,22 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     updateFilter('tag_ids', tagIds);
   };
 
+  // Função wrapper para converter o tipo do setActiveTab
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as 'dashboard' | 'reports' | 'analytics' | 'settings');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="flex flex-col h-full bg-gray-50"
     >
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="h-full flex flex-col">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
         {/* Header com as abas */}
         <CRMDashboardHeader
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           selectedPipelineId={selectedPipelineId}
         />
 
