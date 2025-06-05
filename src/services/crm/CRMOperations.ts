@@ -59,7 +59,9 @@ export const crmOperations = {
         last_completed_contact: lead.last_completed_contact?.find((contact: any) => contact.status === 'completed') || undefined
       })) as LeadWithContacts[];
 
-      debugLogger.info('✅ [CRM_OPERATIONS] Leads carregados:', processedLeads.length);
+      debugLogger.info('✅ [CRM_OPERATIONS] Leads carregados:', { 
+        count: processedLeads.length 
+      });
       return processedLeads;
 
     } catch (error) {

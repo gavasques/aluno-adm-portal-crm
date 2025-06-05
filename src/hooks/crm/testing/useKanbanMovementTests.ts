@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useUnifiedCRMData } from '../useUnifiedCRMData';
 import { useUltraSimplifiedLeadMovement } from '../useUltraSimplifiedLeadMovement';
@@ -78,7 +77,15 @@ export const useKanbanMovementTests = (pipelineId: string) => {
   const [isRunning, setIsRunning] = useState(false);
   const { columns } = useCRMPipelines();
   const { refetch } = useUnifiedCRMData({ pipeline_id: pipelineId });
-  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement({ pipeline_id: pipelineId });
+  const { moveLeadToColumn } = useUltraSimplifiedLeadMovement({ 
+    filters: {
+      pipeline_id: pipelineId,
+      responsible_id: '',
+      tag_ids: [],
+      search: '',
+      status: 'aberto'
+    }
+  });
 
   // Buscar colunas ativas do pipeline
   const pipelineColumns = columns.filter(col => 
