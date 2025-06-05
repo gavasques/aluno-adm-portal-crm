@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Eye } from 'lucide-react';
-import { CRMLead } from '@/types/crm.types';
+import { CRMLeadCardField, CRMLead } from '@/types/crm.types';
 import { useCRMCardPreferences } from '@/hooks/crm/useCRMCardPreferences';
 import { ConfigurableCardLayout } from './card-fields/ConfigurableCardLayout';
 
@@ -65,8 +65,19 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
     );
   }
 
+  // Safe parsing of preferences
+  const parseFieldArray = (data: any): CRMLeadCardField[] => {
+    if (Array.isArray(data)) {
+      return data as CRMLeadCardField[];
+    }
+    return [];
+  };
+
+  const visibleFields = parseFieldArray(preferences.visible_fields);
+  const fieldOrder = parseFieldArray(preferences.field_order);
+
   // Determine card height based on field count
-  const fieldCount = preferences.visible_fields.length;
+  const fieldCount = visibleFields.length;
   const dynamicHeight = fieldCount <= 4 ? 'min-h-[120px]' : 
                        fieldCount <= 7 ? 'min-h-[160px]' : 'min-h-[200px]';
 
@@ -102,8 +113,8 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
           <div className="flex-1 overflow-hidden">
             <ConfigurableCardLayout
               lead={lead}
-              visibleFields={preferences.visible_fields}
-              fieldOrder={preferences.field_order}
+              visibleFields={visibleFields}
+              fieldOrder={fieldOrder}
             />
           </div>
         </CardContent>

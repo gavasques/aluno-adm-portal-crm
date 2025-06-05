@@ -49,6 +49,14 @@ const DEFAULT_FIELD_ORDER: CRMLeadCardField[] = [
   'updated_at'
 ];
 
+// Helper function to safely convert Json to CRMLeadCardField array
+function parseJsonToFields(jsonValue: any): CRMLeadCardField[] {
+  if (Array.isArray(jsonValue)) {
+    return jsonValue as CRMLeadCardField[];
+  }
+  return DEFAULT_VISIBLE_FIELDS;
+}
+
 export const useCRMCardPreferences = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -83,25 +91,33 @@ export const useCRMCardPreferences = () => {
           .single();
 
         if (insertError) throw insertError;
-        return newData;
+        return {
+          ...newData,
+          visible_fields: DEFAULT_VISIBLE_FIELDS,
+          field_order: DEFAULT_FIELD_ORDER
+        };
       }
 
+      // Parse JSON fields safely
+      const visibleFields = parseJsonToFields(data.visible_fields);
+      const fieldOrder = parseJsonToFields(data.field_order) || DEFAULT_FIELD_ORDER;
+
       // Garantir que scheduled_contact_date esteja sempre incluído
-      let visibleFields = data.visible_fields || DEFAULT_VISIBLE_FIELDS;
-      if (!visibleFields.includes('scheduled_contact_date')) {
-        visibleFields = [...visibleFields, 'scheduled_contact_date'];
+      let finalVisibleFields = visibleFields;
+      if (!finalVisibleFields.includes('scheduled_contact_date')) {
+        finalVisibleFields = [...finalVisibleFields, 'scheduled_contact_date'];
         
         // Atualizar no banco de dados
         await supabase
           .from('crm_user_card_preferences')
-          .update({ visible_fields: visibleFields })
+          .update({ visible_fields: finalVisibleFields })
           .eq('id', data.id);
       }
 
       return {
         ...data,
-        visible_fields: visibleFields,
-        field_order: data.field_order || DEFAULT_FIELD_ORDER
+        visible_fields: finalVisibleFields,
+        field_order: fieldOrder
       };
     },
     enabled: !!user?.id

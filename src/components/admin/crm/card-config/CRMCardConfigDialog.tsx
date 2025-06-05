@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -161,23 +162,36 @@ export const CRMCardConfigDialog: React.FC<CRMCardConfigDialogProps> = ({
   onOpenChange
 }) => {
   const { preferences, updatePreferences, isSaving } = useCRMCardPreferences();
+  
+  // Safe parsing with proper type checking
+  const parseFieldArray = (data: any): CRMLeadCardField[] => {
+    if (Array.isArray(data)) {
+      return data as CRMLeadCardField[];
+    }
+    // Fallback to defaults
+    return preferences.visible_fields as CRMLeadCardField[];
+  };
+
   const [localVisibleFields, setLocalVisibleFields] = useState<CRMLeadCardField[]>(
-    preferences.visible_fields
+    parseFieldArray(preferences.visible_fields)
   );
   const [localFieldOrder, setLocalFieldOrder] = useState<CRMLeadCardField[]>(
-    preferences.field_order
+    parseFieldArray(preferences.field_order)
   );
 
   React.useEffect(() => {
     if (preferences) {
       // Garantir que o campo scheduled_contact_date esteja sempre incluído nos campos visíveis
-      let visibleFields = preferences.visible_fields;
-      if (!visibleFields.includes('scheduled_contact_date')) {
-        visibleFields = [...visibleFields, 'scheduled_contact_date'];
+      const visibleFields = parseFieldArray(preferences.visible_fields);
+      const fieldOrder = parseFieldArray(preferences.field_order);
+      
+      let finalVisibleFields = visibleFields;
+      if (!finalVisibleFields.includes('scheduled_contact_date')) {
+        finalVisibleFields = [...finalVisibleFields, 'scheduled_contact_date'];
       }
       
-      setLocalVisibleFields(visibleFields);
-      setLocalFieldOrder(preferences.field_order);
+      setLocalVisibleFields(finalVisibleFields);
+      setLocalFieldOrder(fieldOrder);
     }
   }, [preferences]);
 
@@ -201,8 +215,8 @@ export const CRMCardConfigDialog: React.FC<CRMCardConfigDialogProps> = ({
   };
 
   const handleCancel = () => {
-    setLocalVisibleFields(preferences.visible_fields);
-    setLocalFieldOrder(preferences.field_order);
+    setLocalVisibleFields(parseFieldArray(preferences.visible_fields));
+    setLocalFieldOrder(parseFieldArray(preferences.field_order));
     onOpenChange(false);
   };
 
