@@ -1,64 +1,84 @@
 
-const RECOVERY_MODE_KEY = "supabase_recovery_mode";
-const RECOVERY_EXPIRY_KEY = "supabase_recovery_expiry";
-const RECOVERY_DURATION = 30 * 60 * 1000; // 30 minutos
+// Constants for localStorage keys
+export const RECOVERY_MODE_KEY = "supabase_recovery_mode";
+export const RECOVERY_EXPIRY_KEY = "supabase_recovery_expiry";
+// Tempo de expiração do modo de recuperação (30 minutos em milissegundos)
+export const RECOVERY_TIMEOUT = 30 * 60 * 1000;
 
+/**
+ * Utility functions to manage password recovery mode
+ * These help track when a user is in the process of resetting their password
+ */
 export const recoveryModeUtils = {
-  enableRecoveryMode: () => {
-    const expiry = Date.now() + RECOVERY_DURATION;
-    localStorage.setItem(RECOVERY_MODE_KEY, "true");
-    localStorage.setItem(RECOVERY_EXPIRY_KEY, expiry.toString());
-  },
-
-  disableRecoveryMode: () => {
-    localStorage.removeItem(RECOVERY_MODE_KEY);
-    localStorage.removeItem(RECOVERY_EXPIRY_KEY);
-  },
-
-  clearAllRecoveryData: () => {
-    localStorage.removeItem(RECOVERY_MODE_KEY);
-    localStorage.removeItem(RECOVERY_EXPIRY_KEY);
-  },
-
+  /**
+   * Check if the current session is in password recovery mode
+   */
   isInRecoveryMode: (): boolean => {
-    const recoveryMode = localStorage.getItem(RECOVERY_MODE_KEY);
-    const expiry = localStorage.getItem(RECOVERY_EXPIRY_KEY);
+    const inRecoveryMode = localStorage.getItem(RECOVERY_MODE_KEY) === "true";
+    const expiryTime = Number(localStorage.getItem(RECOVERY_EXPIRY_KEY) || "0");
     
-    if (!recoveryMode || !expiry) {
+    // If the time of expiração passou, limpar o modo de recuperação
+    if (inRecoveryMode && expiryTime < Date.now()) {
+      localStorage.removeItem(RECOVERY_MODE_KEY);
+      localStorage.removeItem(RECOVERY_EXPIRY_KEY);
       return false;
     }
     
-    const expiryTime = parseInt(expiry, 10);
-    if (Date.now() > expiryTime) {
-      // Modo expirado, limpar
-      recoveryModeUtils.disableRecoveryMode();
-      return false;
-    }
-    
-    return recoveryMode === "true";
+    return inRecoveryMode;
   },
 
-  detectRecoveryFlow: (session: any, pathname: string): boolean => {
-    // Detectar se estamos em um fluxo de recuperação de senha
-    if (!session) return false;
-    
-    // Verificar se a URL contém parâmetros de recuperação
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasRecoveryType = urlParams.get('type') === 'recovery';
-    const isRecoveryPath = pathname.includes('reset-password');
-    
-    // Verificar se o usuário tem metadados de recuperação
-    const hasRecoveryMetadata = session.user?.aud === 'recovery' || 
-                               session.user?.app_metadata?.provider === 'recovery';
-    
-    return hasRecoveryType || isRecoveryPath || hasRecoveryMetadata;
-  },
-
-  setRecoveryMode: (enabled: boolean) => {
+  /**
+   * Set or clear the recovery mode
+   */
+  setRecoveryMode: (enabled: boolean): void => {
     if (enabled) {
-      recoveryModeUtils.enableRecoveryMode();
+      localStorage.setItem(RECOVERY_MODE_KEY, "true");
+      localStorage.setItem(RECOVERY_EXPIRY_KEY, String(Date.now() + RECOVERY_TIMEOUT));
+      console.log("Modo de recuperação de senha ativado");
     } else {
-      recoveryModeUtils.disableRecoveryMode();
+      localStorage.removeItem(RECOVERY_MODE_KEY);
+      localStorage.removeItem(RECOVERY_EXPIRY_KEY);
+      console.log("Modo de recuperação de senha desativado");
     }
+  },
+
+  /**
+   * Clear all recovery-related data
+   */
+  clearAllRecoveryData: (): void => {
+    console.log("=== LIMPANDO TODOS OS DADOS DE RECUPERAÇÃO ===");
+    
+    const keysToRemove = [
+      RECOVERY_MODE_KEY,
+      RECOVERY_EXPIRY_KEY,
+      "supabase_recovery_mode",
+      "supabase_recovery_expiry",
+      "password_reset_attempts"
+    ];
+    
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        console.log(`Removido: ${key}`);
+      } catch (error) {
+        console.warn(`Erro ao remover ${key}:`, error);
+      }
+    });
+    
+    console.log("=== LIMPEZA DE DADOS DE RECUPERAÇÃO CONCLUÍDA ===");
+  },
+
+  /**
+   * Detect if the current URL or session appears to be for password recovery
+   */
+  detectRecoveryFlow: (session: any, pathname: string): boolean => {
+    const url = window.location.href;
+    return !!(
+      session?.user?.aud === "recovery" || 
+      pathname === "/reset-password" || 
+      recoveryModeUtils.isInRecoveryMode() ||
+      url.includes("type=recovery") || 
+      (url.includes("access_token=") && pathname === "/reset-password")
+    );
   }
 };

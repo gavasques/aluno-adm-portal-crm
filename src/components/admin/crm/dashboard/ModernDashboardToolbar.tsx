@@ -16,9 +16,9 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CRMFilters, CRMPipeline, CRMUser, CRMTag } from '@/types/crm.types';
+import { CRMFilters, CRMPipeline } from '@/types/crm.types';
 import { CRMCardConfigDialog } from '../card-config/CRMCardConfigDialog';
-import { InlineFilters } from '../filters/InlineFilters';
+import { ContactSyncIndicatorImproved } from './ContactSyncIndicatorImproved';
 
 interface ModernDashboardToolbarProps {
   activeView: 'kanban' | 'list';
@@ -35,11 +35,6 @@ interface ModernDashboardToolbarProps {
   searchValue: string;
   setSearchValue: (value: string) => void;
   isDebouncing: boolean;
-  // Novos props para filtros inline
-  updateFilter: (key: keyof CRMFilters, value: any) => void;
-  users: CRMUser[];
-  tags: CRMTag[];
-  handleTagsChange: (tagIds: string[]) => void;
 }
 
 export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
@@ -55,29 +50,35 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
   pipelines,
   searchValue,
   setSearchValue,
-  isDebouncing,
-  updateFilter,
-  users,
-  tags,
-  handleTagsChange
+  isDebouncing
 }) => {
   const [showCardConfig, setShowCardConfig] = useState(false);
 
-  // Contar filtros ativos (excluindo os padrões)
+  // Contar filtros ativos
   const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
     if (key === 'pipeline_id') return false;
-    if (key === 'status' && value === 'aberto') return false; // Não contar status padrão
     if (Array.isArray(value)) return value.length > 0;
     return value && value !== '';
   }).length;
 
+  // Função para abrir filtros diretamente
+  const handleFiltersClick = () => {
+    if (!showFilters) {
+      onToggleFilters();
+    }
+  };
+
   return (
     <>
-      <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0 space-y-4">
-        {/* Primeira linha - Ações principais e filtros primários */}
+      {/* Indicador de Sincronização de Contatos Aprimorado */}
+      <div className="px-8">
+        <ContactSyncIndicatorImproved />
+      </div>
+
+      <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0">
         <div className="flex items-center justify-between gap-6">
-          {/* Lado Esquerdo - Ações principais */}
-          <div className="flex items-center gap-4">
+          {/* Lado Esquerdo - Ações principais e filtros primários */}
+          <div className="flex items-center gap-4 flex-1">
             {/* Botão Novo Lead - Destaque */}
             <motion.div
               whileHover={{ scale: 1.02 }}
@@ -138,28 +139,37 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
               Configurar Campos
             </Button>
 
-            {/* Botão Filtros Avançados - apenas se houver filtros extras */}
-            {activeFiltersCount > 0 && (
-              <Button 
-                variant="outline" 
-                onClick={onToggleFilters}
-                className="relative border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filtros Avançados
-                <Badge 
-                  variant="destructive" 
-                  className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                >
-                  {activeFiltersCount}
-                </Badge>
-                <ChevronDown 
-                  className={`h-4 w-4 ml-2 transition-transform duration-200 ${
-                    showFilters ? 'rotate-180' : ''
-                  }`} 
-                />
-              </Button>
-            )}
+            {/* Botão Mostrar Filtros - CORRIGIDO para abrir diretamente */}
+            <Button 
+              variant="outline" 
+              onClick={handleFiltersClick}
+              className="relative border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filtros Avançados
+              <AnimatePresence>
+                {activeFiltersCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-2 -right-2"
+                  >
+                    <Badge 
+                      variant="destructive" 
+                      className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {activeFiltersCount}
+                    </Badge>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <ChevronDown 
+                className={`h-4 w-4 ml-2 transition-transform duration-200 ${
+                  showFilters ? 'rotate-180' : ''
+                }`} 
+              />
+            </Button>
 
             {/* Botão Relatórios */}
             {onOpenReports && (
@@ -203,17 +213,6 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
               Lista
             </Button>
           </div>
-        </div>
-
-        {/* Segunda linha - Filtros inline */}
-        <div className="border-t border-gray-100 pt-4">
-          <InlineFilters
-            filters={filters}
-            updateFilter={updateFilter}
-            users={users}
-            tags={tags}
-            handleTagsChange={handleTagsChange}
-          />
         </div>
       </div>
 
