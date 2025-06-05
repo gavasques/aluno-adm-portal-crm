@@ -3,9 +3,9 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Calendar, Tag, X } from 'lucide-react';
+import { Users, Calendar, LayoutGrid, X } from 'lucide-react';
 import { CRMFilters, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
-import ModernTagsSelector from '../form-components/ModernTagsSelector';
+import { TagsDropdownFilter } from './TagsDropdownFilter';
 import StatusFilter from './StatusFilter';
 
 interface MainFiltersProps {
@@ -31,15 +31,18 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
 }) => {
   return (
     <div className="flex items-end gap-4 flex-wrap">
-      {/* Filtro por Estágio/Etapa */}
+      {/* Filtro por Estágio/Etapa - DESTACADO */}
       <div className="min-w-[180px]">
         <label className="block text-xs font-medium text-gray-600 mb-1">Estágio</label>
         <Select 
           value={filters.column_id || 'all'} 
           onValueChange={(value) => updateFilter('column_id', value === 'all' ? undefined : value)}
         >
-          <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-9">
-            <SelectValue placeholder="Estágio" />
+          <SelectTrigger className="border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 h-9 bg-blue-50/50 font-medium shadow-sm">
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="h-4 w-4 text-blue-600" />
+              <SelectValue placeholder="Estágio" />
+            </div>
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 shadow-lg">
             <SelectItem value="all">Todos os estágios</SelectItem>
@@ -91,7 +94,7 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
           value={filters.contact_filter || 'all'} 
           onValueChange={(value) => updateFilter('contact_filter', value === 'all' ? undefined : value)}
         >
-          <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-9">
+          <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-9 bg-white">
             <SelectValue placeholder="Contatos" />
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 shadow-lg">
@@ -109,16 +112,17 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
         </Select>
       </div>
 
-      {/* Filtro por Tags */}
+      {/* Filtro por Tags - DROPDOWN COMPACTO */}
       <div className="min-w-[140px]">
         <label className="block text-xs font-medium text-gray-600 mb-1">Tags</label>
-        <ModernTagsSelector
+        <TagsDropdownFilter
           selectedTags={filters.tag_ids || []}
           onTagsChange={(tagIds) => updateFilter('tag_ids', tagIds.length > 0 ? tagIds : undefined)}
+          tags={tags}
         />
       </div>
 
-      {/* Filtro por Status */}
+      {/* Filtro por Status - ADICIONADO NA MESMA LINHA */}
       <div className="min-w-[140px]">
         <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
         <StatusFilter
