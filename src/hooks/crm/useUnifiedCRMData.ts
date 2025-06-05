@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CRMFilters, LeadWithContacts, LeadStatus } from '@/types/crm.types';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
 export const useUnifiedCRMData = (filters: CRMFilters) => {
   const queryKey = ['unified-crm-leads', filters];
@@ -70,7 +70,8 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
         responsiblesData,
         lossReasonsData,
         contactsData,
-        tagsData
+        tagsData,
+        missingContactDates
       ] = await Promise.all([
         // Pipelines
         pipelineIds.length > 0 ? 
@@ -170,6 +171,57 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
             console.warn('Tags not found:', err);
             return [];
           }
+        })(),
+
+        // Verificar leads que precisam de sincronização de contatos
+        (async () => {
+          try {
+            const leadsWithoutScheduledDate = leads.filter(lead => !lead.scheduled_contact_date);
+            if (leadsWithoutScheduledDate.length === 0) return [];
+
+            const leadsNeedingSync = [];
+            
+            for (const lead of leadsWithoutScheduledDate) {
+              const { data: nextContact } = await supabase
+                .from('crm_lead_contacts')
+                .select('contact_date')
+                .eq('lead_id', lead.id)
+                .eq('status', 'pending')
+                .order('contact_date', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+
+              if (nextContact) {
+                leadsNeedingSync.push({
+                  leadId: lead.id,
+                  nextContactDate: nextContact.contact_date
+                });
+              }
+            }
+
+            // Sincronizar automaticamente se houver leads que precisam
+            if (leadsNeedingSync.length > 0) {
+              console.log(`🔄 [UNIFIED_CRM_DATA] Auto-sincronizando ${leadsNeedingSync.length} leads...`);
+              
+              const updatePromises = leadsNeedingSync.map(({ leadId, nextContactDate }) =>
+                supabase
+                  .from('crm_leads')
+                  .update({ 
+                    scheduled_contact_date: nextContactDate,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', leadId)
+              );
+
+              await Promise.all(updatePromises);
+              console.log('✅ [UNIFIED_CRM_DATA] Auto-sincronização concluída');
+            }
+
+            return leadsNeedingSync;
+          } catch (err) {
+            console.warn('Auto-sync failed:', err);
+            return [];
+          }
         })()
       ]);
 
@@ -199,8 +251,18 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
         }
       });
 
+      // Atualizar leads com dados de contatos sincronizados se necessário
+      const updatedLeads = missingContactDates.length > 0 ? 
+        leads.map(lead => {
+          const syncData = missingContactDates.find(sync => sync.leadId === lead.id);
+          return syncData ? {
+            ...lead,
+            scheduled_contact_date: syncData.nextContactDate
+          } : lead;
+        }) : leads;
+
       // Processar leads com dados relacionados
-      const processedLeads: LeadWithContacts[] = leads.map(lead => ({
+      const processedLeads: LeadWithContacts[] = updatedLeads.map(lead => ({
         ...lead,
         status: lead.status as LeadStatus,
         pipeline: lead.pipeline_id ? pipelinesMap.get(lead.pipeline_id) : undefined,
@@ -214,7 +276,9 @@ export const useUnifiedCRMData = (filters: CRMFilters) => {
 
       console.log('🎯 [UNIFIED_CRM_DATA] Leads processados:', {
         totalLeads: processedLeads.length,
-        leadsWithContacts: processedLeads.filter(l => l.pending_contacts.length > 0).length
+        leadsWithContacts: processedLeads.filter(l => l.pending_contacts.length > 0).length,
+        leadsWithScheduledContact: processedLeads.filter(l => l.scheduled_contact_date).length,
+        autoSynced: missingContactDates.length
       });
 
       return processedLeads;

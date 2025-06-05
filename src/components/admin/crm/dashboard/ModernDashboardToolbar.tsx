@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { CRMFilters, CRMPipeline } from '@/types/crm.types';
 import { CRMCardConfigDialog } from '../card-config/CRMCardConfigDialog';
+import { ContactSyncIndicator } from './ContactSyncIndicator';
 
 interface ModernDashboardToolbarProps {
   activeView: 'kanban' | 'list';
@@ -69,6 +70,11 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
 
   return (
     <>
+      {/* Indicador de Sincronização de Contatos */}
+      <div className="px-8">
+        <ContactSyncIndicator />
+      </div>
+
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0">
         <div className="flex items-center justify-between gap-6">
           {/* Lado Esquerdo - Ações principais e filtros primários */}
