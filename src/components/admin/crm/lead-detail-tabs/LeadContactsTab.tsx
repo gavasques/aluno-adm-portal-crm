@@ -6,50 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useCRMLeadContacts } from '@/hooks/crm/useCRMLeadContacts';
 
 interface LeadContactsTabProps {
   leadId: string;
 }
 
 const LeadContactsTab = ({ leadId }: LeadContactsTabProps) => {
-  const [contacts] = useState([
-    {
-      id: '1',
-      type: 'call',
-      reason: 'Apresentação da proposta',
-      date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Amanhã
-      status: 'pending',
-      responsible: 'João Silva',
-      notes: 'Cliente interessado em saber mais sobre o processo'
-    },
-    {
-      id: '2',
-      type: 'email',
-      reason: 'Envio de material complementar',
-      date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
-      status: 'completed',
-      responsible: 'Maria Santos',
-      notes: 'Enviado e-book sobre marca própria'
-    },
-    {
-      id: '3',
-      type: 'whatsapp',
-      reason: 'Follow-up inicial',
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000), // Ontem
-      status: 'completed',
-      responsible: 'João Silva',
-      notes: 'Cliente respondeu positivamente'
-    },
-    {
-      id: '4',
-      type: 'meeting',
-      reason: 'Reunião de descoberta',
-      date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Em 3 dias
-      status: 'pending',
-      responsible: 'Maria Santos',
-      notes: 'Reunião agendada via Calendly'
-    }
-  ]);
+  const { contacts, loading, createContact, completeContact, deleteContact } = useCRMLeadContacts(leadId);
 
   const getContactIcon = (type: string) => {
     switch (type) {
@@ -109,6 +73,18 @@ const LeadContactsTab = ({ leadId }: LeadContactsTabProps) => {
     }
   };
 
+  const handleCompleteContact = async (contactId: string) => {
+    await completeContact(contactId);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   const pendingContacts = contacts.filter(c => c.status === 'pending');
   const completedContacts = contacts.filter(c => c.status === 'completed');
 
@@ -144,21 +120,28 @@ const LeadContactsTab = ({ leadId }: LeadContactsTabProps) => {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${getContactTypeColor(contact.type)}`}>
-                        {getContactIcon(contact.type)}
+                      <div className={`p-2 rounded-lg ${getContactTypeColor(contact.contact_type)}`}>
+                        {getContactIcon(contact.contact_type)}
                       </div>
                       <div>
-                        <h5 className="font-medium text-gray-900">{contact.reason}</h5>
+                        <h5 className="font-medium text-gray-900">{contact.contact_reason}</h5>
                         <p className="text-sm text-gray-600">
-                          {format(contact.date, 'dd/MM/yyyy HH:mm', { locale: ptBR })} • {contact.responsible}
+                          {format(new Date(contact.contact_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })} • {contact.responsible?.name}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {getContactTypeLabel(contact.type)}
+                        {getContactTypeLabel(contact.contact_type)}
                       </Badge>
                       {getStatusBadge(contact.status)}
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleCompleteContact(contact.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Marcar como Concluído
+                      </Button>
                     </div>
                   </div>
                   {contact.notes && (
@@ -190,19 +173,19 @@ const LeadContactsTab = ({ leadId }: LeadContactsTabProps) => {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${getContactTypeColor(contact.type)}`}>
-                        {getContactIcon(contact.type)}
+                      <div className={`p-2 rounded-lg ${getContactTypeColor(contact.contact_type)}`}>
+                        {getContactIcon(contact.contact_type)}
                       </div>
                       <div>
-                        <h5 className="font-medium text-gray-900">{contact.reason}</h5>
+                        <h5 className="font-medium text-gray-900">{contact.contact_reason}</h5>
                         <p className="text-sm text-gray-600">
-                          {format(contact.date, 'dd/MM/yyyy HH:mm', { locale: ptBR })} • {contact.responsible}
+                          {format(new Date(contact.contact_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })} • {contact.responsible?.name}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {getContactTypeLabel(contact.type)}
+                        {getContactTypeLabel(contact.contact_type)}
                       </Badge>
                       {getStatusBadge(contact.status)}
                     </div>
@@ -222,7 +205,7 @@ const LeadContactsTab = ({ leadId }: LeadContactsTabProps) => {
       {contacts.length === 0 && (
         <div className="text-center py-12">
           <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">Nenhum contato registrado</p>
+          <p className="text-gray-500 mb-4">Nenhum contato registrado para este lead</p>
           <Button className="bg-blue-600 hover:bg-blue-700">
             <Plus className="h-4 w-4 mr-2" />
             Agendar Primeiro Contato
