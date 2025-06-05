@@ -23,7 +23,9 @@ import {
   Database,
   Cog,
   Newspaper,
-  Activity
+  Activity,
+  Code,
+  FileText
 } from "lucide-react";
 import { MenuItem, MenuGroup } from "./types";
 
@@ -204,6 +206,15 @@ export const configurationMenuItems: MenuItem[] = [
   },
 ];
 
+export const apiMenuItems: MenuItem[] = [
+  {
+    title: "Documentação API",
+    href: "/admin/api-docs",
+    icon: Code,
+    gradient: "bg-gradient-to-br from-emerald-600 to-emerald-700",
+  },
+];
+
 export const systemMenuItems: MenuItem[] = [
   {
     title: "Configurações",
@@ -219,5 +230,6 @@ export const menuGroups: MenuGroup[] = [
   { title: "Gestão", items: managementMenuItems },
   { title: "Recursos Gerais", items: resourcesMenuItems },
   { title: "Configurações", items: configurationMenuItems },
+  { title: "API & Integrações", items: apiMenuItems },
   { title: "Sistema", items: systemMenuItems },
 ];
