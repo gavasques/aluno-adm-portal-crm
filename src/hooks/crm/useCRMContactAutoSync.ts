@@ -22,7 +22,7 @@ export const useCRMContactAutoSync = () => {
           const { eventType, new: newRecord, old: oldRecord } = payload;
           
           // Identificar o lead afetado
-          const leadId = newRecord?.lead_id || oldRecord?.lead_id;
+          const leadId = (newRecord as any)?.lead_id || (oldRecord as any)?.lead_id;
           if (!leadId) return;
 
           try {

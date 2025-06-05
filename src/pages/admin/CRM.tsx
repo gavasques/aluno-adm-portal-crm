@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import CRMDashboard from '@/components/admin/crm/enhanced/CRMDashboard';
+import { CRMDashboard } from '@/components/admin/crm/enhanced/CRMDashboard';
 import { UnifiedCRMProvider } from '@/providers/CRMProvider';
 
 const CRM = () => {

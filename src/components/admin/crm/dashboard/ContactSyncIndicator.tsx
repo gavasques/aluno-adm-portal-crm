@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sync, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { RefreshCw, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCRMContactSync } from '@/hooks/crm/useCRMContactSync';
 
@@ -47,7 +47,7 @@ export const ContactSyncIndicator: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Sync className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   Sincronizar Agora
                 </>
               )}
