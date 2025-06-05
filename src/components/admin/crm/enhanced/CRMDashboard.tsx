@@ -9,7 +9,7 @@ import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
 import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
-import { useCRMContactAutoSync } from '@/hooks/crm/useCRMContactAutoSync';
+import { useCRMContactAutoSyncImproved } from '@/hooks/crm/useCRMContactAutoSyncImproved';
 import { CRMFilters } from '@/types/crm.types';
 
 interface CRMDashboardProps {
@@ -47,8 +47,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     updateFilter
   } = useCRMFiltersState(filters, setFilters);
 
-  // Ativar sincronização automática de contatos
-  useCRMContactAutoSync();
+  // Ativar sincronização automática aprimorada de contatos
+  useCRMContactAutoSyncImproved();
 
   const isLoading = pipelinesLoading || leadsLoading;
 

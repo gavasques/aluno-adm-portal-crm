@@ -2771,6 +2771,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      detect_contact_inconsistencies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          lead_id: string
+          lead_name: string
+          scheduled_date: string
+          actual_next_contact: string
+          inconsistent: boolean
+        }[]
+      }
       detect_suspicious_activity: {
         Args: Record<PropertyKey, never>
         Returns: undefined
