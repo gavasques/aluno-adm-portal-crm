@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -56,7 +55,7 @@ const FIELD_CONFIGS: CRMLeadCardFieldConfig[] = [
   // Sistema
   { key: 'created_at', label: 'Data de Criação', category: 'sistema' },
   { key: 'updated_at', label: 'Última Atualização', category: 'sistema' },
-  { key: 'scheduled_contact_date', label: 'Próximo Contato', category: 'sistema' }
+  { key: 'scheduled_contact_date', label: 'Próximo Contato', category: 'essencial', description: 'Data do próximo contato agendado - importante para acompanhamento' }
 ];
 
 const CATEGORY_LABELS = {
@@ -171,7 +170,13 @@ export const CRMCardConfigDialog: React.FC<CRMCardConfigDialogProps> = ({
 
   React.useEffect(() => {
     if (preferences) {
-      setLocalVisibleFields(preferences.visible_fields);
+      // Garantir que o campo scheduled_contact_date esteja sempre incluído nos campos visíveis
+      let visibleFields = preferences.visible_fields;
+      if (!visibleFields.includes('scheduled_contact_date')) {
+        visibleFields = [...visibleFields, 'scheduled_contact_date'];
+      }
+      
+      setLocalVisibleFields(visibleFields);
       setLocalFieldOrder(preferences.field_order);
     }
   }, [preferences]);
@@ -185,7 +190,13 @@ export const CRMCardConfigDialog: React.FC<CRMCardConfigDialogProps> = ({
   };
 
   const handleSave = () => {
-    updatePreferences(localVisibleFields, localFieldOrder);
+    // Garantir que scheduled_contact_date sempre esteja incluído
+    let finalVisibleFields = localVisibleFields;
+    if (!finalVisibleFields.includes('scheduled_contact_date')) {
+      finalVisibleFields = [...finalVisibleFields, 'scheduled_contact_date'];
+    }
+    
+    updatePreferences(finalVisibleFields, localFieldOrder);
     onOpenChange(false);
   };
 

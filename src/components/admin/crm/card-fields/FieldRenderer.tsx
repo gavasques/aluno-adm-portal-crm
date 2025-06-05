@@ -1,10 +1,27 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag, ExternalLink, MessageSquare, FileText, Package, ShoppingCart, Truck, Star, AlertCircle } from 'lucide-react';
 import { CRMLead, CRMLeadCardField } from '@/types/crm.types';
-import { format, differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
+import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { 
+  Calendar, 
+  CalendarClock, 
+  AlertTriangle, 
+  Clock,
+  CheckCircle, 
+  XCircle, 
+  Phone, 
+  Mail, 
+  User, 
+  Tag,
+  Building,
+  ShoppingCart,
+  Package,
+  Target,
+  DollarSign,
+  Calendar as CalendarIcon
+} from 'lucide-react';
 
 interface FieldRendererProps {
   field: CRMLeadCardField;
@@ -13,11 +30,68 @@ interface FieldRendererProps {
 }
 
 export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compact = false }) => {
-  const renderField = () => {
+  const renderScheduledContactDate = () => {
+    if (!lead.scheduled_contact_date) return null;
+
+    const contactDate = new Date(lead.scheduled_contact_date);
+    const now = new Date();
+    const daysDiff = differenceInDays(contactDate, now);
+    
+    let bgColor = 'bg-blue-100';
+    let textColor = 'text-blue-800';
+    let icon = <CalendarClock className="h-3 w-3" />;
+    let urgencyText = '';
+
+    if (isPast(contactDate) && !isToday(contactDate)) {
+      bgColor = 'bg-red-100';
+      textColor = 'text-red-800';
+      icon = <AlertTriangle className="h-3 w-3" />;
+      urgencyText = 'ATRASADO';
+    } else if (isToday(contactDate)) {
+      bgColor = 'bg-orange-100';
+      textColor = 'text-orange-800';
+      icon = <Clock className="h-3 w-3" />;
+      urgencyText = 'HOJE';
+    } else if (isTomorrow(contactDate)) {
+      bgColor = 'bg-yellow-100';
+      textColor = 'text-yellow-800';
+      icon = <Calendar className="h-3 w-3" />;
+      urgencyText = 'AMANHÃ';
+    } else if (daysDiff <= 3) {
+      bgColor = 'bg-blue-100';
+      textColor = 'text-blue-800';
+      icon = <Calendar className="h-3 w-3" />;
+      urgencyText = `EM ${daysDiff} DIAS`;
+    }
+
+    const formattedDate = format(contactDate, 'dd/MM/yyyy', { locale: ptBR });
+
+    return (
+      <div className={`${bgColor} ${textColor} rounded-lg px-3 py-2 text-xs font-medium flex items-center gap-2 border-l-4 ${
+        isPast(contactDate) && !isToday(contactDate) ? 'border-l-red-500' :
+        isToday(contactDate) ? 'border-l-orange-500' :
+        isTomorrow(contactDate) ? 'border-l-yellow-500' : 'border-l-blue-500'
+      }`}>
+        {icon}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">{urgencyText}</span>
+            <span>{formattedDate}</span>
+          </div>
+          <span className="text-xs opacity-80">Próximo contato</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBasicField = () => {
     switch (field) {
+      case 'scheduled_contact_date':
+        return renderScheduledContactDate();
+
       case 'name':
         return (
-          <div className="font-medium text-gray-900 text-sm leading-tight">
+          <div className="font-semibold text-gray-900 text-sm truncate">
             {lead.name}
           </div>
         );
@@ -26,7 +100,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
         if (!lead.email) return null;
         return (
           <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Mail className="h-3 w-3 flex-shrink-0" />
+            <Mail className="h-3 w-3" />
             <span className="truncate">{lead.email}</span>
           </div>
         );
@@ -35,284 +109,211 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
         if (!lead.phone) return null;
         return (
           <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Phone className="h-3 w-3 flex-shrink-0" />
+            <Phone className="h-3 w-3" />
             <span>{lead.phone}</span>
           </div>
         );
 
       case 'status':
+        const statusColors = {
+          'aberto': 'bg-blue-100 text-blue-800',
+          'ganho': 'bg-green-100 text-green-800',
+          'perdido': 'bg-red-100 text-red-800'
+        };
         return (
-          <Badge 
-            variant="outline" 
-            className={`text-xs ${getStatusColor(lead.status)}`}
-          >
-            {getStatusLabel(lead.status)}
+          <Badge className={`text-xs ${statusColors[lead.status] || 'bg-gray-100 text-gray-800'}`}>
+            {lead.status?.toUpperCase()}
           </Badge>
         );
 
       case 'responsible':
+        if (!lead.responsible) return null;
         return (
-          <div className="flex items-center gap-1.5">
-            <Avatar className="h-4 w-4">
-              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                {lead.responsible ? lead.responsible.name.charAt(0) : <User className="h-2.5 w-2.5" />}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-xs text-gray-600 truncate">
-              {lead.responsible?.name || 'Sem responsável'}
-            </span>
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <User className="h-3 w-3" />
+            <span className="truncate">{lead.responsible.name}</span>
           </div>
         );
 
       case 'pipeline':
         if (!lead.pipeline) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <span>Pipeline: {lead.pipeline.name}</span>
-          </div>
+          <Badge variant="outline" className="text-xs">
+            {lead.pipeline.name}
+          </Badge>
         );
 
       case 'column':
         if (!lead.column) return null;
         return (
-          <Badge 
-            variant="outline" 
-            className="text-xs" 
-            style={{ 
-              backgroundColor: lead.column.color + '15', 
-              borderColor: lead.column.color + '30',
-              color: lead.column.color 
-            }}
-          >
+          <Badge variant="outline" className="text-xs">
             {lead.column.name}
           </Badge>
         );
 
       case 'tags':
         if (!lead.tags || lead.tags.length === 0) return null;
-        const visibleTags = compact ? lead.tags.slice(0, 2) : lead.tags.slice(0, 3);
         return (
           <div className="flex flex-wrap gap-1">
-            {visibleTags.map(tag => (
-              <Badge 
-                key={tag.id} 
-                variant="outline" 
-                className="text-xs px-1.5 py-0.5 h-5"
-                style={{ 
-                  backgroundColor: tag.color + '15', 
-                  color: tag.color,
-                  borderColor: tag.color + '30'
-                }}
+            {lead.tags.slice(0, compact ? 2 : 5).map((tag) => (
+              <Badge
+                key={tag.id}
+                variant="secondary"
+                className="text-xs px-1 py-0"
+                style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
               >
                 {tag.name}
               </Badge>
             ))}
-            {lead.tags.length > visibleTags.length && (
-              <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gray-50 text-gray-600 h-5">
-                +{lead.tags.length - visibleTags.length}
+            {compact && lead.tags.length > 2 && (
+              <Badge variant="secondary" className="text-xs px-1 py-0">
+                +{lead.tags.length - 2}
               </Badge>
             )}
           </div>
         );
 
+      // Campos de qualificação como badges
       case 'has_company':
-        if (!lead.has_company) return null;
-        return (
-          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 h-5 px-1.5">
-            <Building className="h-2.5 w-2.5 mr-0.5" />
-            Empresa
+        return lead.has_company ? (
+          <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
+            <Building className="h-3 w-3" />
+            Tem Empresa
           </Badge>
-        );
+        ) : null;
 
       case 'sells_on_amazon':
-        if (!lead.sells_on_amazon) return null;
-        return (
-          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
-            <ShoppingCart className="h-2.5 w-2.5 mr-0.5" />
-            Amazon
+        return lead.sells_on_amazon ? (
+          <Badge className="bg-orange-100 text-orange-800 text-xs flex items-center gap-1">
+            <ShoppingCart className="h-3 w-3" />
+            Vende Amazon
           </Badge>
-        );
+        ) : null;
 
       case 'works_with_fba':
-        if (!lead.works_with_fba) return null;
-        return (
-          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200 h-5 px-1.5">
-            <Truck className="h-2.5 w-2.5 mr-0.5" />
+        return lead.works_with_fba ? (
+          <Badge className="bg-blue-100 text-blue-800 text-xs flex items-center gap-1">
+            <Package className="h-3 w-3" />
             FBA
           </Badge>
-        );
+        ) : null;
 
       case 'seeks_private_label':
-        if (!lead.seeks_private_label) return null;
-        return (
-          <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200 h-5 px-1.5">
-            <Star className="h-2.5 w-2.5 mr-0.5" />
+        return lead.seeks_private_label ? (
+          <Badge className="bg-purple-100 text-purple-800 text-xs flex items-center gap-1">
+            <Target className="h-3 w-3" />
             Marca Própria
           </Badge>
-        );
+        ) : null;
 
       case 'ready_to_invest_3k':
-        if (!lead.ready_to_invest_3k) return null;
-        return (
-          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 h-5 px-1.5">
-            <DollarSign className="h-2.5 w-2.5 mr-0.5" />
-            R$ 3k
+        return lead.ready_to_invest_3k ? (
+          <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
+            <DollarSign className="h-3 w-3" />
+            Pronto 3k
           </Badge>
-        );
+        ) : null;
 
       case 'calendly_scheduled':
-        if (!lead.calendly_scheduled) return null;
-        return (
-          <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700 border-teal-200 h-5 px-1.5">
-            <Calendar className="h-2.5 w-2.5 mr-0.5" />
-            Agendado
+        return lead.calendly_scheduled ? (
+          <Badge className="bg-indigo-100 text-indigo-800 text-xs flex items-center gap-1">
+            <CalendarIcon className="h-3 w-3" />
+            Calendly
           </Badge>
-        );
+        ) : null;
 
+      // Campos de texto
       case 'what_sells':
         if (!lead.what_sells) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <Package className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{lead.what_sells}</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Vende:</span> {compact ? lead.what_sells.slice(0, 30) + '...' : lead.what_sells}
           </div>
         );
 
       case 'amazon_state':
         if (!lead.amazon_state) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <span>Estado: {lead.amazon_state}</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Estado:</span> {lead.amazon_state}
           </div>
         );
 
       case 'amazon_tax_regime':
         if (!lead.amazon_tax_regime) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <span>Regime: {lead.amazon_tax_regime}</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Regime:</span> {lead.amazon_tax_regime}
           </div>
         );
 
       case 'amazon_store_link':
         if (!lead.amazon_store_link) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-blue-600">
-            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">Loja Amazon</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Loja:</span> 
+            <a 
+              href={lead.amazon_store_link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline ml-1"
+            >
+              Ver loja
+            </a>
           </div>
         );
 
       case 'keep_or_new_niches':
         if (!lead.keep_or_new_niches) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <span className="truncate">Nichos: {lead.keep_or_new_niches}</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Nichos:</span> {compact ? lead.keep_or_new_niches.slice(0, 20) + '...' : lead.keep_or_new_niches}
           </div>
         );
 
       case 'main_doubts':
         if (!lead.main_doubts) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <MessageSquare className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{lead.main_doubts}</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Dúvidas:</span> {compact ? lead.main_doubts.slice(0, 30) + '...' : lead.main_doubts}
           </div>
         );
 
       case 'notes':
         if (!lead.notes) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <FileText className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{lead.notes}</span>
+          <div className="text-xs text-gray-600">
+            <span className="font-medium">Obs:</span> {compact ? lead.notes.slice(0, 30) + '...' : lead.notes}
           </div>
         );
 
       case 'calendly_link':
         if (!lead.calendly_link) return null;
         return (
-          <div className="flex items-center gap-1 text-xs text-blue-600">
-            <Calendar className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">Link Calendly</span>
+          <div className="text-xs text-gray-600">
+            <a 
+              href={lead.calendly_link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Link Calendly
+            </a>
           </div>
         );
 
       case 'created_at':
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Calendar className="h-3 w-3" />
-            <span>
-              Criado {format(new Date(lead.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-            </span>
+          <div className="text-xs text-gray-500">
+            Criado: {format(new Date(lead.created_at), 'dd/MM/yyyy', { locale: ptBR })}
           </div>
         );
 
       case 'updated_at':
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            <span>
-              Atualizado {format(new Date(lead.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
-            </span>
+          <div className="text-xs text-gray-500">
+            Atualizado: {format(new Date(lead.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
           </div>
-        );
-
-      case 'scheduled_contact_date':
-        if (!lead.scheduled_contact_date) return null;
-        
-        const contactDate = new Date(lead.scheduled_contact_date);
-        const now = new Date();
-        const daysDiff = differenceInDays(contactDate, now);
-        
-        // Determinar cor e urgência baseado na proximidade
-        let badgeColor = '';
-        let textColor = '';
-        let icon = Clock;
-        let prefix = 'Próximo:';
-        
-        if (isPast(contactDate) && !isToday(contactDate)) {
-          // Vencido
-          badgeColor = 'bg-red-50 border-red-200';
-          textColor = 'text-red-700';
-          icon = AlertCircle;
-          prefix = 'Vencido:';
-        } else if (isToday(contactDate)) {
-          // Hoje
-          badgeColor = 'bg-yellow-50 border-yellow-200';
-          textColor = 'text-yellow-800';
-          icon = AlertCircle;
-          prefix = 'Hoje:';
-        } else if (isTomorrow(contactDate)) {
-          // Amanhã
-          badgeColor = 'bg-orange-50 border-orange-200';
-          textColor = 'text-orange-700';
-          icon = AlertCircle;
-          prefix = 'Amanhã:';
-        } else if (daysDiff <= 3) {
-          // Próximos 3 dias
-          badgeColor = 'bg-blue-50 border-blue-200';
-          textColor = 'text-blue-700';
-          icon = Clock;
-          prefix = 'Em breve:';
-        } else {
-          // Normal
-          badgeColor = 'bg-gray-50 border-gray-200';
-          textColor = 'text-gray-600';
-          icon = Clock;
-          prefix = 'Próximo:';
-        }
-        
-        const IconComponent = icon;
-        
-        return (
-          <Badge 
-            variant="outline" 
-            className={`text-xs ${badgeColor} ${textColor} h-5 px-1.5 font-medium`}
-          >
-            <IconComponent className="h-2.5 w-2.5 mr-0.5" />
-            {prefix} {format(contactDate, 'dd/MM', { locale: ptBR })}
-          </Badge>
         );
 
       default:
@@ -320,34 +321,9 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
     }
   };
 
-  const fieldContent = renderField();
-  if (!fieldContent) return null;
+  const renderedField = renderBasicField();
+  
+  if (!renderedField) return null;
 
-  return fieldContent;
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'aberto':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
-    case 'ganho':
-      return 'bg-green-50 text-green-700 border-green-200';
-    case 'perdido':
-      return 'bg-red-50 text-red-700 border-red-200';
-    default:
-      return 'bg-gray-50 text-gray-700 border-gray-200';
-  }
-};
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'aberto':
-      return 'Aberto';
-    case 'ganho':
-      return 'Ganho';
-    case 'perdido':
-      return 'Perdido';
-    default:
-      return status;
-  }
+  return <div className="w-full">{renderedField}</div>;
 };

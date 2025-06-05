@@ -60,6 +60,13 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
     return value && value !== '';
   }).length;
 
+  // Função para abrir filtros diretamente
+  const handleFiltersClick = () => {
+    if (!showFilters) {
+      onToggleFilters();
+    }
+  };
+
   return (
     <>
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0">
@@ -126,10 +133,10 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
               Configurar Campos
             </Button>
 
-            {/* Botão Mostrar Filtros */}
+            {/* Botão Mostrar Filtros - CORRIGIDO para abrir diretamente */}
             <Button 
               variant="outline" 
-              onClick={onToggleFilters}
+              onClick={handleFiltersClick}
               className="relative border-gray-300 hover:border-blue-400 hover:bg-blue-50"
             >
               <Filter className="h-4 w-4 mr-2" />
@@ -171,7 +178,7 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
             )}
           </div>
 
-          {/* Lado Direito - Controles de Visualização - CORRIGIDO */}
+          {/* Lado Direito - Controles de Visualização */}
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
               variant="ghost"

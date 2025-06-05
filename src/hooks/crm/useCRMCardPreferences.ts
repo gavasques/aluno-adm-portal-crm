@@ -2,26 +2,61 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMUserCardPreferences, CRMLeadCardField } from '@/types/crm.types';
-import { toast } from 'sonner';
+import { CRMLeadCardField } from '@/types/crm.types';
+import { useAuth } from '@/hooks/useAuth';
 
 const DEFAULT_VISIBLE_FIELDS: CRMLeadCardField[] = [
-  'name', 'status', 'responsible', 'phone', 'email', 'pipeline', 'column', 'tags'
+  'name',
+  'status', 
+  'responsible',
+  'phone',
+  'email',
+  'scheduled_contact_date', // Incluído por padrão
+  'has_company',
+  'sells_on_amazon',
+  'works_with_fba',
+  'seeks_private_label',
+  'ready_to_invest_3k',
+  'tags'
 ];
 
 const DEFAULT_FIELD_ORDER: CRMLeadCardField[] = [
-  'name', 'status', 'responsible', 'phone', 'email', 'pipeline', 'column', 'tags'
+  'name',
+  'status',
+  'responsible', 
+  'scheduled_contact_date', // Priorizado no início
+  'phone',
+  'email',
+  'has_company',
+  'sells_on_amazon',
+  'works_with_fba',
+  'seeks_private_label',
+  'ready_to_invest_3k',
+  'calendly_scheduled',
+  'what_sells',
+  'amazon_state',
+  'amazon_tax_regime',
+  'amazon_store_link',
+  'keep_or_new_niches',
+  'main_doubts',
+  'notes',
+  'calendly_link',
+  'had_contact_with_lv',
+  'pipeline',
+  'column',
+  'tags',
+  'created_at',
+  'updated_at'
 ];
 
 export const useCRMCardPreferences = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: preferences, isLoading } = useQuery({
-    queryKey: ['crm-card-preferences'],
+    queryKey: ['crm-card-preferences', user?.id],
     queryFn: async () => {
-      console.log('🔧 Loading card preferences...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user?.id) return null;
 
       const { data, error } = await supabase
         .from('crm_user_card_preferences')
@@ -29,104 +64,92 @@ export const useCRMCardPreferences = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = não encontrado
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
+      // Se não existe preferência, criar uma com os valores padrão
       if (!data) {
-        console.log('📝 No preferences found, using defaults');
-        return {
+        const defaultPrefs = {
+          user_id: user.id,
           visible_fields: DEFAULT_VISIBLE_FIELDS,
           field_order: DEFAULT_FIELD_ORDER
         };
+
+        const { data: newData, error: insertError } = await supabase
+          .from('crm_user_card_preferences')
+          .insert(defaultPrefs)
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return newData;
       }
 
-      console.log('✅ Preferences loaded:', data);
+      // Garantir que scheduled_contact_date esteja sempre incluído
+      let visibleFields = data.visible_fields || DEFAULT_VISIBLE_FIELDS;
+      if (!visibleFields.includes('scheduled_contact_date')) {
+        visibleFields = [...visibleFields, 'scheduled_contact_date'];
+        
+        // Atualizar no banco de dados
+        await supabase
+          .from('crm_user_card_preferences')
+          .update({ visible_fields: visibleFields })
+          .eq('id', data.id);
+      }
+
       return {
-        visible_fields: data.visible_fields as CRMLeadCardField[],
-        field_order: data.field_order as CRMLeadCardField[]
+        ...data,
+        visible_fields: visibleFields,
+        field_order: data.field_order || DEFAULT_FIELD_ORDER
       };
-    }
+    },
+    enabled: !!user?.id
   });
 
-  const updatePreferencesMutation = useMutation({
+  const updateMutation = useMutation({
     mutationFn: async ({ 
-      visible_fields, 
-      field_order 
+      visibleFields, 
+      fieldOrder 
     }: { 
-      visible_fields: CRMLeadCardField[]; 
-      field_order: CRMLeadCardField[]; 
+      visibleFields: CRMLeadCardField[]; 
+      fieldOrder: CRMLeadCardField[] 
     }) => {
-      console.log('💾 Saving preferences:', { visible_fields, field_order });
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user?.id) throw new Error('User not authenticated');
 
-      const { data: existing } = await supabase
+      // Garantir que scheduled_contact_date esteja sempre incluído
+      const finalVisibleFields = visibleFields.includes('scheduled_contact_date') 
+        ? visibleFields 
+        : [...visibleFields, 'scheduled_contact_date'];
+
+      const { data, error } = await supabase
         .from('crm_user_card_preferences')
-        .select('id')
-        .eq('user_id', user.id)
+        .upsert({
+          user_id: user.id,
+          visible_fields: finalVisibleFields,
+          field_order: fieldOrder
+        })
+        .select()
         .single();
 
-      if (existing) {
-        // Atualizar existente
-        const { error } = await supabase
-          .from('crm_user_card_preferences')
-          .update({
-            visible_fields,
-            field_order,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existing.id);
-
-        if (error) throw error;
-      } else {
-        // Criar novo
-        const { error } = await supabase
-          .from('crm_user_card_preferences')
-          .insert({
-            user_id: user.id,
-            visible_fields,
-            field_order
-          });
-
-        if (error) throw error;
-      }
-
-      return { visible_fields, field_order };
+      if (error) throw error;
+      return data;
     },
-    onSuccess: (data) => {
-      console.log('✅ Preferences saved successfully:', data);
-      
-      // Invalidar as queries relacionadas para forçar atualização
-      queryClient.invalidateQueries({ queryKey: ['crm-card-preferences'] });
-      queryClient.setQueryData(['crm-card-preferences'], {
-        visible_fields: data.visible_fields,
-        field_order: data.field_order
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['crm-card-preferences', user?.id]
       });
-      
-      toast.success('Preferências de card atualizadas');
-    },
-    onError: (error) => {
-      console.error('❌ Erro ao salvar preferências:', error);
-      toast.error('Erro ao salvar preferências');
     }
   });
-
-  const updatePreferences = (
-    visible_fields: CRMLeadCardField[], 
-    field_order: CRMLeadCardField[]
-  ) => {
-    updatePreferencesMutation.mutate({ visible_fields, field_order });
-  };
 
   return {
     preferences: preferences || {
       visible_fields: DEFAULT_VISIBLE_FIELDS,
       field_order: DEFAULT_FIELD_ORDER
     },
-    updatePreferences,
     isLoading,
-    isSaving: updatePreferencesMutation.isPending
+    updatePreferences: (visibleFields: CRMLeadCardField[], fieldOrder: CRMLeadCardField[]) =>
+      updateMutation.mutate({ visibleFields, fieldOrder }),
+    isSaving: updateMutation.isPending
   };
 };
