@@ -1,3 +1,5 @@
+
+import { supabase } from '@/integrations/supabase/client';
 import { IMentoringRepository } from '@/features/mentoring/types/contracts.types';
 import { 
   MentoringCatalog, 
@@ -10,177 +12,126 @@ import {
   MentoringExtension,
   UpdateSessionData
 } from '@/types/mentoring.types';
-import { supabase } from '@/integrations/supabase/client';
 
 export class SupabaseMentoringRepository implements IMentoringRepository {
+  // Catalog operations
   async getCatalogs(): Promise<MentoringCatalog[]> {
     try {
-      console.log('🔍 SupabaseMentoringRepository.getCatalogs - Buscando catálogos...');
-      
-      const { data: catalogsData, error: catalogsError } = await supabase
+      const { data, error } = await supabase
         .from('mentoring_catalogs')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (catalogsError) {
-        console.error('❌ Erro ao buscar catálogos:', catalogsError);
-        throw catalogsError;
+      if (error) {
+        console.error('Erro ao buscar catálogos:', error);
+        throw error;
       }
 
-      console.log('📋 Catálogos encontrados:', catalogsData?.length || 0);
-
-      const catalogs: MentoringCatalog[] = [];
-
-      for (const catalog of catalogsData || []) {
-        // Buscar extensões para cada catálogo
-        const { data: extensionsData, error: extensionsError } = await supabase
-          .from('mentoring_extensions')
-          .select('*')
-          .eq('catalog_id', catalog.id)
-          .order('months', { ascending: true });
-
-        if (extensionsError) {
-          console.error('❌ Erro ao buscar extensões:', extensionsError);
-        }
-
-        const extensions = (extensionsData || []).map(ext => ({
-          id: ext.id,
-          months: ext.months,
-          price: ext.price,
-          totalSessions: Math.ceil(ext.months * 4), // Aproximadamente 4 sessões por mês
-          description: ext.description || ''
-        }));
-
-        const transformedCatalog: MentoringCatalog = {
-          id: catalog.id,
-          name: catalog.name,
-          type: catalog.type as 'Individual' | 'Grupo',
-          instructor: catalog.instructor,
-          durationMonths: catalog.duration_months,
-          frequency: 'Semanal',
-          numberOfSessions: catalog.number_of_sessions,
-          totalSessions: catalog.total_sessions,
-          price: catalog.price,
-          description: catalog.description,
-          tags: catalog.tags || [],
-          imageUrl: catalog.image_url,
-          active: catalog.active,
-          status: catalog.status as 'Ativa' | 'Inativa' | 'Cancelada',
-          createdAt: catalog.created_at,
-          updatedAt: catalog.updated_at,
-          extensions
-        };
-
-        catalogs.push(transformedCatalog);
-      }
-
-      console.log('✅ Catálogos transformados:', catalogs.length);
-      return catalogs;
+      // Map database fields to interface
+      return (data || []).map(catalog => ({
+        id: catalog.id,
+        name: catalog.name,
+        description: catalog.description,
+        instructor: catalog.instructor,
+        type: catalog.type as 'Individual' | 'Grupo',
+        durationMonths: catalog.duration_months,
+        numberOfSessions: catalog.number_of_sessions,
+        totalSessions: catalog.total_sessions,
+        price: catalog.price,
+        active: catalog.active,
+        status: catalog.status as 'Ativa' | 'Inativa' | 'Cancelada',
+        createdAt: catalog.created_at,
+        updatedAt: catalog.updated_at,
+        tags: catalog.tags || [],
+        imageUrl: catalog.image_url
+      }));
     } catch (error) {
-      console.error('❌ Erro geral ao buscar catálogos:', error);
+      console.error('Erro na consulta de catálogos:', error);
       return [];
     }
   }
 
   async getCatalogById(id: string): Promise<MentoringCatalog | null> {
     try {
-      const { data: catalog, error } = await supabase
+      const { data, error } = await supabase
         .from('mentoring_catalogs')
         .select('*')
         .eq('id', id)
         .single();
 
       if (error) {
-        console.error('Error fetching catalog by ID:', error);
+        console.error('Erro ao buscar catálogo por ID:', error);
         return null;
       }
 
-      if (!catalog) return null;
-
-      // Buscar extensões
-      const { data: extensionsData } = await supabase
-        .from('mentoring_extensions')
-        .select('*')
-        .eq('catalog_id', catalog.id);
-
-      const extensions = (extensionsData || []).map(ext => ({
-        id: ext.id,
-        months: ext.months,
-        price: ext.price,
-        totalSessions: Math.ceil(ext.months * 4),
-        description: ext.description || ''
-      }));
+      if (!data) return null;
 
       return {
-        id: catalog.id,
-        name: catalog.name,
-        type: catalog.type as 'Individual' | 'Grupo',
-        instructor: catalog.instructor,
-        durationMonths: catalog.duration_months,
-        frequency: 'Semanal',
-        numberOfSessions: catalog.number_of_sessions,
-        totalSessions: catalog.total_sessions,
-        price: catalog.price,
-        description: catalog.description,
-        tags: catalog.tags || [],
-        imageUrl: catalog.image_url,
-        active: catalog.active,
-        status: catalog.status as 'Ativa' | 'Inativa' | 'Cancelada',
-        createdAt: catalog.created_at,
-        updatedAt: catalog.updated_at,
-        extensions
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        instructor: data.instructor,
+        type: data.type as 'Individual' | 'Grupo',
+        durationMonths: data.duration_months,
+        numberOfSessions: data.number_of_sessions,
+        totalSessions: data.total_sessions,
+        price: data.price,
+        active: data.active,
+        status: data.status as 'Ativa' | 'Inativa' | 'Cancelada',
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        tags: data.tags || [],
+        imageUrl: data.image_url
       };
     } catch (error) {
-      console.error('Error fetching catalog by ID:', error);
+      console.error('Erro ao buscar catálogo:', error);
       return null;
     }
   }
 
   async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
     try {
-      const { data: newCatalog, error } = await supabase
+      const { data: result, error } = await supabase
         .from('mentoring_catalogs')
-        .insert([{
+        .insert({
           name: data.name,
-          type: data.type,
-          instructor: data.instructor,
-          duration_months: data.durationMonths,
-          number_of_sessions: data.numberOfSessions || 0,
-          total_sessions: data.numberOfSessions || 0,
-          price: data.price,
           description: data.description,
-          active: data.active ?? true,
-          status: data.status ?? 'Ativa',
-          tags: []
-        }])
+          instructor: data.instructor,
+          type: data.type,
+          duration_months: data.durationMonths,
+          number_of_sessions: data.numberOfSessions,
+          total_sessions: data.numberOfSessions,
+          price: data.price,
+          active: data.active,
+          status: data.status || 'Ativa',
+          tags: data.tags || []
+        })
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating catalog:', error);
+        console.error('Erro ao criar catálogo:', error);
         throw error;
       }
 
       return {
-        id: newCatalog.id,
-        name: newCatalog.name,
-        type: newCatalog.type as 'Individual' | 'Grupo',
-        instructor: newCatalog.instructor,
-        durationMonths: newCatalog.duration_months,
-        frequency: 'Semanal',
-        numberOfSessions: newCatalog.number_of_sessions,
-        totalSessions: newCatalog.total_sessions,
-        price: newCatalog.price,
-        description: newCatalog.description,
-        tags: newCatalog.tags || [],
-        active: newCatalog.active,
-        status: newCatalog.status as 'Ativa' | 'Inativa' | 'Cancelada',
-        extensions: [],
-        createdAt: newCatalog.created_at,
-        updatedAt: newCatalog.updated_at
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        instructor: result.instructor,
+        type: result.type as 'Individual' | 'Grupo',
+        durationMonths: result.duration_months,
+        numberOfSessions: result.number_of_sessions,
+        totalSessions: result.total_sessions,
+        price: result.price,
+        active: result.active,
+        status: result.status as 'Ativa' | 'Inativa' | 'Cancelada',
+        createdAt: result.created_at,
+        updatedAt: result.updated_at,
+        tags: result.tags || []
       };
     } catch (error) {
-      console.error('Error creating catalog:', error);
+      console.error('Erro ao criar catálogo:', error);
       throw error;
     }
   }
@@ -190,17 +141,18 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
       const updateData: any = {};
       
       if (data.name !== undefined) updateData.name = data.name;
-      if (data.type !== undefined) updateData.type = data.type;
+      if (data.description !== undefined) updateData.description = data.description;
       if (data.instructor !== undefined) updateData.instructor = data.instructor;
+      if (data.type !== undefined) updateData.type = data.type;
       if (data.durationMonths !== undefined) updateData.duration_months = data.durationMonths;
       if (data.numberOfSessions !== undefined) {
         updateData.number_of_sessions = data.numberOfSessions;
         updateData.total_sessions = data.numberOfSessions;
       }
       if (data.price !== undefined) updateData.price = data.price;
-      if (data.description !== undefined) updateData.description = data.description;
       if (data.active !== undefined) updateData.active = data.active;
       if (data.status !== undefined) updateData.status = data.status;
+      if (data.tags !== undefined) updateData.tags = data.tags;
 
       const { error } = await supabase
         .from('mentoring_catalogs')
@@ -208,13 +160,13 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         .eq('id', id);
 
       if (error) {
-        console.error('Error updating catalog:', error);
+        console.error('Erro ao atualizar catálogo:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error updating catalog:', error);
+      console.error('Erro ao atualizar catálogo:', error);
       return false;
     }
   }
@@ -227,22 +179,21 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting catalog:', error);
+        console.error('Erro ao deletar catálogo:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error deleting catalog:', error);
+      console.error('Erro ao deletar catálogo:', error);
       return false;
     }
   }
 
+  // Enrollment operations
   async getEnrollments(): Promise<StudentMentoringEnrollment[]> {
     try {
-      console.log('🔍 SupabaseMentoringRepository.getEnrollments - Buscando inscrições...');
-      
-      const { data: enrollmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('mentoring_enrollments')
         .select(`
           *,
@@ -250,206 +201,262 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
             id,
             name,
             type,
-            duration_months,
             description
-          ),
-          profiles!mentoring_enrollments_student_id_fkey (
-            id,
-            name,
-            email
           )
         `)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar inscrições:', error);
-        return [];
+        console.error('Erro ao buscar inscrições:', error);
+        throw error;
       }
 
-      console.log('📋 Inscrições encontradas:', enrollmentsData?.length || 0);
-
-      const enrollments: StudentMentoringEnrollment[] = (enrollmentsData || []).map(enrollment => {
-        // Buscar extensões para esta inscrição
-        const extensions: MentoringExtension[] = [];
-
-        return {
-          id: enrollment.id,
-          studentId: enrollment.student_id,
-          mentoringId: enrollment.mentoring_id,
-          mentoring: {
-            id: enrollment.mentoring_catalogs.id,
-            name: enrollment.mentoring_catalogs.name,
-            type: enrollment.mentoring_catalogs.type as 'Individual' | 'Grupo',
-            frequency: 'Semanal',
-            durationMonths: enrollment.mentoring_catalogs.duration_months,
-            extensions: [],
-            description: enrollment.mentoring_catalogs.description
-          },
-          status: enrollment.status as 'ativa' | 'pausada' | 'cancelada' | 'concluida',
-          enrollmentDate: enrollment.enrollment_date,
-          startDate: enrollment.start_date,
-          endDate: enrollment.end_date,
-          sessionsUsed: enrollment.sessions_used,
-          totalSessions: enrollment.total_sessions,
-          responsibleMentor: enrollment.responsible_mentor,
-          paymentStatus: enrollment.payment_status as 'pendente' | 'pago' | 'cancelado',
-          observations: enrollment.observations,
-          hasExtension: enrollment.has_extension || false,
-          extensions: extensions,
-          originalEndDate: enrollment.original_end_date,
-          createdAt: enrollment.created_at,
-          updatedAt: enrollment.updated_at
-        };
-      });
-
-      return enrollments;
+      return (data || []).map(enrollment => ({
+        id: enrollment.id,
+        studentId: enrollment.student_id,
+        mentoringId: enrollment.mentoring_id,
+        mentoring: {
+          id: enrollment.mentoring_catalogs?.id || enrollment.mentoring_id,
+          name: enrollment.mentoring_catalogs?.name || 'Mentoria não encontrada',
+          type: (enrollment.mentoring_catalogs?.type as 'Individual' | 'Grupo') || 'Individual',
+          description: enrollment.mentoring_catalogs?.description
+        },
+        status: enrollment.status as 'ativa' | 'concluida' | 'pausada' | 'cancelada',
+        enrollmentDate: enrollment.enrollment_date,
+        startDate: enrollment.start_date,
+        endDate: enrollment.end_date,
+        totalSessions: enrollment.total_sessions,
+        sessionsUsed: enrollment.sessions_used,
+        responsibleMentor: enrollment.responsible_mentor,
+        paymentStatus: enrollment.payment_status,
+        observations: enrollment.observations,
+        hasExtension: enrollment.has_extension || false,
+        originalEndDate: enrollment.original_end_date,
+        createdAt: enrollment.created_at,
+        updatedAt: enrollment.updated_at,
+        groupId: enrollment.group_id
+      }));
     } catch (error) {
-      console.error('❌ Erro geral ao buscar inscrições:', error);
+      console.error('Erro na consulta de inscrições:', error);
       return [];
     }
   }
 
   async getStudentEnrollments(studentId: string): Promise<StudentMentoringEnrollment[]> {
     try {
-      const enrollments = await this.getEnrollments();
-      return enrollments.filter(e => e.studentId === studentId);
+      const { data, error } = await supabase
+        .from('mentoring_enrollments')
+        .select(`
+          *,
+          mentoring_catalogs (
+            id,
+            name,
+            type,
+            description
+          )
+        `)
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar inscrições do estudante:', error);
+        throw error;
+      }
+
+      return (data || []).map(enrollment => ({
+        id: enrollment.id,
+        studentId: enrollment.student_id,
+        mentoringId: enrollment.mentoring_id,
+        mentoring: {
+          id: enrollment.mentoring_catalogs?.id || enrollment.mentoring_id,
+          name: enrollment.mentoring_catalogs?.name || 'Mentoria não encontrada',
+          type: (enrollment.mentoring_catalogs?.type as 'Individual' | 'Grupo') || 'Individual',
+          description: enrollment.mentoring_catalogs?.description
+        },
+        status: enrollment.status as 'ativa' | 'concluida' | 'pausada' | 'cancelada',
+        enrollmentDate: enrollment.enrollment_date,
+        startDate: enrollment.start_date,
+        endDate: enrollment.end_date,
+        totalSessions: enrollment.total_sessions,
+        sessionsUsed: enrollment.sessions_used,
+        responsibleMentor: enrollment.responsible_mentor,
+        paymentStatus: enrollment.payment_status,
+        observations: enrollment.observations,
+        hasExtension: enrollment.has_extension || false,
+        originalEndDate: enrollment.original_end_date,
+        createdAt: enrollment.created_at,
+        updatedAt: enrollment.updated_at,
+        groupId: enrollment.group_id
+      }));
     } catch (error) {
-      console.error('Error fetching student enrollments:', error);
+      console.error('Erro ao buscar inscrições do estudante:', error);
       return [];
     }
   }
 
   async createEnrollment(data: any): Promise<StudentMentoringEnrollment> {
     try {
-      const { data: newEnrollment, error } = await supabase
+      const { data: result, error } = await supabase
         .from('mentoring_enrollments')
-        .insert([{
+        .insert({
           student_id: data.studentId,
           mentoring_id: data.mentoringId,
+          enrollment_date: data.enrollmentDate || new Date().toISOString().split('T')[0],
           start_date: data.startDate,
           end_date: data.endDate,
           total_sessions: data.totalSessions || 12,
+          sessions_used: 0,
           responsible_mentor: data.responsibleMentor,
+          payment_status: data.paymentStatus || 'pendente',
           observations: data.observations,
-          status: 'ativa',
-          payment_status: 'pendente',
-          sessions_used: 0
-        }])
+          status: 'ativa'
+        })
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating enrollment:', error);
+        console.error('Erro ao criar inscrição:', error);
         throw error;
       }
 
-      // Buscar dados do catálogo
-      const catalog = await this.getCatalogById(data.mentoringId);
+      // Buscar dados da mentoria para retorno completo
+      const { data: catalogData } = await supabase
+        .from('mentoring_catalogs')
+        .select('*')
+        .eq('id', result.mentoring_id)
+        .single();
 
       return {
-        id: newEnrollment.id,
-        studentId: newEnrollment.student_id,
-        mentoringId: newEnrollment.mentoring_id,
+        id: result.id,
+        studentId: result.student_id,
+        mentoringId: result.mentoring_id,
         mentoring: {
-          id: catalog?.id || data.mentoringId,
-          name: catalog?.name || 'Mentoria',
-          type: catalog?.type || 'Individual',
-          frequency: 'Semanal',
-          durationMonths: catalog?.durationMonths || 6,
-          extensions: [],
-          description: catalog?.description || ''
+          id: catalogData?.id || result.mentoring_id,
+          name: catalogData?.name || 'Mentoria não encontrada',
+          type: (catalogData?.type as 'Individual' | 'Grupo') || 'Individual',
+          description: catalogData?.description
         },
-        status: 'ativa',
-        enrollmentDate: newEnrollment.enrollment_date,
-        startDate: newEnrollment.start_date,
-        endDate: newEnrollment.end_date,
-        sessionsUsed: 0,
-        totalSessions: newEnrollment.total_sessions,
-        responsibleMentor: newEnrollment.responsible_mentor,
-        paymentStatus: 'pendente',
-        observations: newEnrollment.observations,
-        hasExtension: false,
-        createdAt: newEnrollment.created_at,
-        updatedAt: newEnrollment.updated_at
+        status: result.status as 'ativa' | 'concluida' | 'pausada' | 'cancelada',
+        enrollmentDate: result.enrollment_date,
+        startDate: result.start_date,
+        endDate: result.end_date,
+        totalSessions: result.total_sessions,
+        sessionsUsed: result.sessions_used,
+        responsibleMentor: result.responsible_mentor,
+        paymentStatus: result.payment_status,
+        observations: result.observations,
+        hasExtension: result.has_extension || false,
+        originalEndDate: result.original_end_date,
+        createdAt: result.created_at,
+        updatedAt: result.updated_at,
+        groupId: result.group_id
       };
     } catch (error) {
-      console.error('Error creating enrollment:', error);
+      console.error('Erro ao criar inscrição:', error);
       throw error;
     }
   }
 
   async deleteEnrollment(id: string): Promise<boolean> {
     try {
-      console.log('🗑️ SupabaseMentoringRepository.deleteEnrollment - ID:', id);
-      // Delete enrollment from Supabase
+      const { error } = await supabase
+        .from('mentoring_enrollments')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erro ao deletar inscrição:', error);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error deleting enrollment:', error);
+      console.error('Erro ao deletar inscrição:', error);
       return false;
     }
   }
 
   async addExtension(data: CreateExtensionData): Promise<boolean> {
     try {
-      const extension = {
-        id: `ext-${Date.now()}`,
-        enrollment_id: data.enrollmentId,
-        enrollmentId: data.enrollmentId,
-        extension_months: data.extensionMonths,
-        extensionMonths: data.extensionMonths,
-        applied_date: new Date().toISOString(),
-        appliedDate: new Date().toISOString(),
-        notes: data.notes,
-        admin_id: 'current-admin-id',
-        adminId: 'current-admin-id',
-        created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
+      const { error } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .insert({
+          enrollment_id: data.enrollmentId,
+          extension_months: data.extensionMonths,
+          notes: data.notes,
+          applied_date: new Date().toISOString().split('T')[0]
+        });
 
-      // Logic to update enrollment and add extension
+      if (error) {
+        console.error('Erro ao adicionar extensão:', error);
+        return false;
+      }
+
+      // Atualizar a data de fim da inscrição
+      const { error: updateError } = await supabase
+        .from('mentoring_enrollments')
+        .update({
+          has_extension: true,
+          end_date: supabase.rpc('extend_enrollment_date', {
+            enrollment_id: data.enrollmentId,
+            months_to_add: data.extensionMonths
+          })
+        })
+        .eq('id', data.enrollmentId);
+
+      if (updateError) {
+        console.error('Erro ao atualizar inscrição com extensão:', updateError);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error adding extension:', error);
+      console.error('Erro ao adicionar extensão:', error);
       return false;
     }
   }
 
   async removeExtension(extensionId: string): Promise<boolean> {
     try {
-      console.log('🗑️ SupabaseMentoringRepository.removeExtension - ID:', extensionId);
-      // Remove extension from Supabase
+      const { error } = await supabase
+        .from('mentoring_enrollment_extensions')
+        .delete()
+        .eq('id', extensionId);
+
+      if (error) {
+        console.error('Erro ao remover extensão:', error);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error removing extension:', error);
+      console.error('Erro ao remover extensão:', error);
       return false;
     }
   }
 
+  // Session operations
   async getSessions(): Promise<MentoringSession[]> {
     try {
-      console.log('🔍 SupabaseMentoringRepository.getSessions - Buscando sessões...');
-      
-      const { data: sessionsData, error } = await supabase
+      const { data, error } = await supabase
         .from('mentoring_sessions')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar sessões:', error);
-        return [];
+        console.error('Erro ao buscar sessões:', error);
+        throw error;
       }
 
-      console.log('📋 Sessões encontradas:', sessionsData?.length || 0);
-
-      const sessions: MentoringSession[] = (sessionsData || []).map(session => ({
+      return (data || []).map(session => ({
         id: session.id,
         enrollment_id: session.enrollment_id,
         enrollmentId: session.enrollment_id,
-        type: session.type,
+        type: (session.type === 'individual' || session.type === 'group') ? session.type : 'individual',
         title: session.title,
         scheduled_date: session.scheduled_date,
         scheduledDate: session.scheduled_date,
-        scheduled_time: session.scheduled_date ? new Date(session.scheduled_date).toTimeString().slice(0, 5) : undefined,
+        scheduled_time: session.scheduled_date ? new Date(session.scheduled_date).toTimeString().substring(0, 5) : undefined,
         duration_minutes: session.duration_minutes,
         durationMinutes: session.duration_minutes,
         meeting_link: session.meeting_link,
@@ -457,145 +464,374 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         observations: session.observations,
         session_number: session.session_number,
         sessionNumber: session.session_number,
-        status: session.status,
+        status: session.status as 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada',
         group_id: session.group_id,
         groupId: session.group_id,
+        mentor_notes: session.mentor_notes,
+        mentorNotes: session.mentor_notes,
+        transcription: session.transcription,
+        recording_link: session.recording_link,
+        recordingLink: session.recording_link,
+        calendly_link: session.calendly_link,
+        calendlyLink: session.calendly_link,
+        student_notes: session.student_notes,
+        studentNotes: session.student_notes,
         created_at: session.created_at,
         createdAt: session.created_at,
         updated_at: session.updated_at,
         updatedAt: session.updated_at
       }));
-
-      return sessions;
     } catch (error) {
-      console.error('❌ Erro geral ao buscar sessões:', error);
+      console.error('Erro na consulta de sessões:', error);
       return [];
     }
   }
 
   async getEnrollmentSessions(enrollmentId: string): Promise<MentoringSession[]> {
     try {
-      const sessions = await this.getSessions();
-      return sessions.filter(s => s.enrollmentId === enrollmentId);
+      const { data, error } = await supabase
+        .from('mentoring_sessions')
+        .select('*')
+        .eq('enrollment_id', enrollmentId)
+        .order('session_number', { ascending: true });
+
+      if (error) {
+        console.error('Erro ao buscar sessões da inscrição:', error);
+        return [];
+      }
+
+      return (data || []).map(session => ({
+        id: session.id,
+        enrollment_id: session.enrollment_id,
+        enrollmentId: session.enrollment_id,
+        type: (session.type === 'individual' || session.type === 'group') ? session.type : 'individual',
+        title: session.title,
+        scheduled_date: session.scheduled_date,
+        scheduledDate: session.scheduled_date,
+        scheduled_time: session.scheduled_date ? new Date(session.scheduled_date).toTimeString().substring(0, 5) : undefined,
+        duration_minutes: session.duration_minutes,
+        durationMinutes: session.duration_minutes,
+        meeting_link: session.meeting_link,
+        meetingLink: session.meeting_link,
+        observations: session.observations,
+        session_number: session.session_number,
+        sessionNumber: session.session_number,
+        status: session.status as 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada',
+        group_id: session.group_id,
+        groupId: session.group_id,
+        mentor_notes: session.mentor_notes,
+        mentorNotes: session.mentor_notes,
+        transcription: session.transcription,
+        recording_link: session.recording_link,
+        recordingLink: session.recording_link,
+        calendly_link: session.calendly_link,
+        calendlyLink: session.calendly_link,
+        student_notes: session.student_notes,
+        studentNotes: session.student_notes,
+        created_at: session.created_at,
+        createdAt: session.created_at,
+        updated_at: session.updated_at,
+        updatedAt: session.updated_at
+      }));
     } catch (error) {
-      console.error('Error fetching enrollment sessions:', error);
+      console.error('Erro ao buscar sessões da inscrição:', error);
       return [];
     }
   }
 
   async createSession(data: CreateSessionData): Promise<MentoringSession> {
     try {
-      const sessionNumber = data.sessionNumber || 1; // Auto-generate if not provided
-      
-      const newSession: MentoringSession = {
-        id: `session-${Date.now()}`,
-        enrollment_id: data.enrollmentId,
-        enrollmentId: data.enrollmentId,
-        type: data.type,
-        title: data.title,
-        scheduled_date: data.scheduledDate,
-        scheduledDate: data.scheduledDate,
-        scheduled_time: data.scheduledTime,
-        duration_minutes: data.durationMinutes,
-        durationMinutes: data.durationMinutes,
-        meeting_link: data.meetingLink,
-        meetingLink: data.meetingLink,
-        observations: data.observations,
-        session_number: sessionNumber,
-        sessionNumber: sessionNumber,
-        status: data.status || 'aguardando_agendamento',
-        group_id: data.groupId,
-        groupId: data.groupId,
-        created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      const { data: result, error } = await supabase
+        .from('mentoring_sessions')
+        .insert({
+          enrollment_id: data.enrollmentId,
+          type: data.type,
+          title: data.title,
+          scheduled_date: data.scheduledDate,
+          duration_minutes: data.durationMinutes,
+          meeting_link: data.meetingLink,
+          observations: data.observations,
+          session_number: data.sessionNumber || 1,
+          status: data.status || 'aguardando_agendamento',
+          group_id: data.groupId
+        })
+        .select()
+        .single();
 
-      return newSession;
+      if (error) {
+        console.error('Erro ao criar sessão:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        enrollment_id: result.enrollment_id,
+        enrollmentId: result.enrollment_id,
+        type: result.type as 'individual' | 'group',
+        title: result.title,
+        scheduled_date: result.scheduled_date,
+        scheduledDate: result.scheduled_date,
+        scheduled_time: result.scheduled_date ? new Date(result.scheduled_date).toTimeString().substring(0, 5) : undefined,
+        duration_minutes: result.duration_minutes,
+        durationMinutes: result.duration_minutes,
+        meeting_link: result.meeting_link,
+        meetingLink: result.meeting_link,
+        observations: result.observations,
+        session_number: result.session_number,
+        sessionNumber: result.session_number,
+        status: result.status as 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada',
+        group_id: result.group_id,
+        groupId: result.group_id,
+        created_at: result.created_at,
+        createdAt: result.created_at,
+        updated_at: result.updated_at,
+        updatedAt: result.updated_at
+      };
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error('Erro ao criar sessão:', error);
       throw error;
     }
   }
 
   async updateSession(sessionId: string, data: UpdateSessionData): Promise<boolean> {
     try {
-      console.log('📝 SupabaseMentoringRepository.updateSession - ID:', sessionId, 'Data:', data);
-      // Update session in Supabase
+      const updateData: any = {};
+      
+      if (data.title !== undefined) updateData.title = data.title;
+      if (data.scheduledDate !== undefined) updateData.scheduled_date = data.scheduledDate;
+      if (data.durationMinutes !== undefined) updateData.duration_minutes = data.durationMinutes;
+      if (data.meetingLink !== undefined) updateData.meeting_link = data.meetingLink;
+      if (data.observations !== undefined) updateData.observations = data.observations;
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.mentorNotes !== undefined) updateData.mentor_notes = data.mentorNotes;
+      if (data.transcription !== undefined) updateData.transcription = data.transcription;
+      if (data.recordingLink !== undefined) updateData.recording_link = data.recordingLink;
+      if (data.calendlyLink !== undefined) updateData.calendly_link = data.calendlyLink;
+      if (data.studentNotes !== undefined) updateData.student_notes = data.studentNotes;
+
+      const { error } = await supabase
+        .from('mentoring_sessions')
+        .update(updateData)
+        .eq('id', sessionId);
+
+      if (error) {
+        console.error('Erro ao atualizar sessão:', error);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error updating session:', error);
+      console.error('Erro ao atualizar sessão:', error);
       return false;
     }
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
     try {
-      console.log('🗑️ SupabaseMentoringRepository.deleteSession - ID:', sessionId);
-      // Delete session from Supabase
+      const { error } = await supabase
+        .from('mentoring_sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (error) {
+        console.error('Erro ao deletar sessão:', error);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error deleting session:', error);
+      console.error('Erro ao deletar sessão:', error);
       return false;
     }
   }
 
+  // Material operations
   async getMaterials(): Promise<MentoringMaterial[]> {
     try {
-      // Fetch materials from Supabase
-      return []; // Replace with actual data
+      const { data, error } = await supabase
+        .from('mentoring_materials')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar materiais:', error);
+        return [];
+      }
+
+      return (data || []).map(material => ({
+        id: material.id,
+        enrollment_id: material.enrollment_id,
+        enrollmentId: material.enrollment_id,
+        session_id: material.session_id,
+        sessionId: material.session_id,
+        file_name: material.file_name,
+        fileName: material.file_name,
+        file_url: material.file_url,
+        fileUrl: material.file_url,
+        file_type: material.file_type,
+        fileType: material.file_type,
+        description: material.description,
+        uploader_id: material.uploader_id,
+        uploaderId: material.uploader_id,
+        uploader_type: material.uploader_type,
+        uploaderType: material.uploader_type,
+        size_mb: material.size_mb,
+        sizeMb: material.size_mb,
+        sizeMB: material.size_mb,
+        tags: material.tags || [],
+        created_at: material.created_at,
+        createdAt: material.created_at,
+        updated_at: material.updated_at,
+        updatedAt: material.updated_at
+      }));
     } catch (error) {
-      console.error('Error fetching materials:', error);
+      console.error('Erro ao buscar materiais:', error);
       return [];
     }
   }
 
   async getEnrollmentMaterials(enrollmentId: string): Promise<MentoringMaterial[]> {
     try {
-      // Fetch enrollment materials from Supabase
-      return []; // Replace with actual data
+      const { data, error } = await supabase
+        .from('mentoring_materials')
+        .select('*')
+        .eq('enrollment_id', enrollmentId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar materiais da inscrição:', error);
+        return [];
+      }
+
+      return (data || []).map(material => ({
+        id: material.id,
+        enrollment_id: material.enrollment_id,
+        enrollmentId: material.enrollment_id,
+        session_id: material.session_id,
+        sessionId: material.session_id,
+        file_name: material.file_name,
+        fileName: material.file_name,
+        file_url: material.file_url,
+        fileUrl: material.file_url,
+        file_type: material.file_type,
+        fileType: material.file_type,
+        description: material.description,
+        uploader_id: material.uploader_id,
+        uploaderId: material.uploader_id,
+        uploader_type: material.uploader_type,
+        uploaderType: material.uploader_type,
+        size_mb: material.size_mb,
+        sizeMb: material.size_mb,
+        sizeMB: material.size_mb,
+        tags: material.tags || [],
+        created_at: material.created_at,
+        createdAt: material.created_at,
+        updated_at: material.updated_at,
+        updatedAt: material.updated_at
+      }));
     } catch (error) {
-      console.error('Error fetching enrollment materials:', error);
+      console.error('Erro ao buscar materiais da inscrição:', error);
       return [];
     }
   }
 
   async getSessionMaterials(sessionId: string): Promise<MentoringMaterial[]> {
     try {
-      // Fetch session materials from Supabase
-      return []; // Replace with actual data
+      const { data, error } = await supabase
+        .from('mentoring_materials')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar materiais da sessão:', error);
+        return [];
+      }
+
+      return (data || []).map(material => ({
+        id: material.id,
+        enrollment_id: material.enrollment_id,
+        enrollmentId: material.enrollment_id,
+        session_id: material.session_id,
+        sessionId: material.session_id,
+        file_name: material.file_name,
+        fileName: material.file_name,
+        file_url: material.file_url,
+        fileUrl: material.file_url,
+        file_type: material.file_type,
+        fileType: material.file_type,
+        description: material.description,
+        uploader_id: material.uploader_id,
+        uploaderId: material.uploader_id,
+        uploader_type: material.uploader_type,
+        uploaderType: material.uploader_type,
+        size_mb: material.size_mb,
+        sizeMb: material.size_mb,
+        sizeMB: material.size_mb,
+        tags: material.tags || [],
+        created_at: material.created_at,
+        createdAt: material.created_at,
+        updated_at: material.updated_at,
+        updatedAt: material.updated_at
+      }));
     } catch (error) {
-      console.error('Error fetching session materials:', error);
+      console.error('Erro ao buscar materiais da sessão:', error);
       return [];
     }
   }
 
   async uploadMaterial(file: File, enrollmentId?: string, sessionId?: string): Promise<MentoringMaterial> {
     try {
-      const material: MentoringMaterial = {
-        id: `material-${Date.now()}`,
-        enrollment_id: enrollmentId,
-        enrollmentId: enrollmentId,
-        session_id: sessionId,
-        sessionId: sessionId,
-        file_name: file.name,
-        fileName: file.name,
-        file_url: `fake-url/${file.name}`,
-        fileUrl: `fake-url/${file.name}`,
-        file_type: file.type,
-        fileType: file.type,
-        size_mb: file.size / (1024 * 1024),
-        sizeMb: file.size / (1024 * 1024),
-        created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      // Upload do arquivo para o storage (implementar conforme necessário)
+      const fileName = `${Date.now()}-${file.name}`;
+      const fileUrl = `fake-url/${fileName}`; // Substituir por upload real
 
-      return material;
+      const { data: result, error } = await supabase
+        .from('mentoring_materials')
+        .insert({
+          enrollment_id: enrollmentId,
+          session_id: sessionId,
+          file_name: file.name,
+          file_url: fileUrl,
+          file_type: file.type,
+          size_mb: file.size / (1024 * 1024)
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao fazer upload do material:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        enrollment_id: result.enrollment_id,
+        enrollmentId: result.enrollment_id,
+        session_id: result.session_id,
+        sessionId: result.session_id,
+        file_name: result.file_name,
+        fileName: result.file_name,
+        file_url: result.file_url,
+        fileUrl: result.file_url,
+        file_type: result.file_type,
+        fileType: result.file_type,
+        description: result.description,
+        uploader_id: result.uploader_id,
+        uploaderId: result.uploader_id,
+        uploader_type: result.uploader_type,
+        uploaderType: result.uploader_type,
+        size_mb: result.size_mb,
+        sizeMb: result.size_mb,
+        sizeMB: result.size_mb,
+        tags: result.tags || [],
+        created_at: result.created_at,
+        createdAt: result.created_at,
+        updated_at: result.updated_at,
+        updatedAt: result.updated_at
+      };
     } catch (error) {
-      console.error('Error uploading material:', error);
+      console.error('Erro ao fazer upload do material:', error);
       throw error;
     }
   }
