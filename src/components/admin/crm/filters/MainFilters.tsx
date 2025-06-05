@@ -41,7 +41,7 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
           <SelectTrigger className="border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 h-9 bg-blue-50/50 font-medium shadow-sm">
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 text-blue-600" />
-              <SelectValue placeholder="Estágio" />
+              <SelectValue placeholder="Todos os estágios" />
             </div>
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 shadow-lg">

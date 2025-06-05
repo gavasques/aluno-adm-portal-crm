@@ -14,26 +14,12 @@ export const useCRMFiltersState = (
   const [searchValue, setSearchValue] = React.useState(filters.search || '');
   const [debouncedSearch, isDebouncing] = useDebouncedValue(searchValue, 300);
 
-  // Encontrar coluna "Abertos" por padrão
-  const defaultOpenColumn = React.useMemo(() => {
-    return columns.find(col => 
-      col.name.toLowerCase().includes('aberto') || 
-      col.name.toLowerCase().includes('novo') ||
-      col.name.toLowerCase().includes('lead')
-    );
-  }, [columns]);
-
-  // Inicializar filtros com estágio padrão e status "aberto"
+  // Inicializar filtros apenas com status "aberto" por padrão, sem forçar estágio
   React.useEffect(() => {
-    const needsDefaults = (!filters.column_id && columns.length > 0) || !filters.status;
+    const needsStatusDefault = !filters.status;
     
-    if (needsDefaults) {
+    if (needsStatusDefault) {
       const newFilters = { ...filters };
-      
-      // Definir coluna padrão se não existe
-      if (defaultOpenColumn && !filters.column_id && columns.length > 0) {
-        newFilters.column_id = defaultOpenColumn.id;
-      }
       
       // Definir status "aberto" como padrão se não existe
       if (!filters.status) {
@@ -42,7 +28,7 @@ export const useCRMFiltersState = (
       
       onFiltersChange(newFilters);
     }
-  }, [defaultOpenColumn, filters, columns.length, onFiltersChange]);
+  }, [filters, onFiltersChange]);
 
   // Sincronizar debounced search com filters
   React.useEffect(() => {
@@ -65,13 +51,8 @@ export const useCRMFiltersState = (
     setSearchValue('');
     const baseFilters: CRMFiltersType = { 
       pipeline_id: filters.pipeline_id,
-      status: 'aberto' // Manter status "aberto" ao limpar filtros
+      status: 'aberto' // Manter apenas status "aberto" ao limpar filtros
     };
-    
-    // Manter o estágio padrão ao limpar filtros
-    if (defaultOpenColumn) {
-      baseFilters.column_id = defaultOpenColumn.id;
-    }
     
     onFiltersChange(baseFilters);
   };
@@ -79,7 +60,6 @@ export const useCRMFiltersState = (
   const getActiveFiltersCount = () => {
     return Object.keys(filters).filter(key => {
       if (key === 'pipeline_id') return false;
-      if (key === 'column_id' && filters[key] === defaultOpenColumn?.id) return false; // Não contar filtro padrão
       if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
       return filters[key as keyof CRMFiltersType];
     }).length;

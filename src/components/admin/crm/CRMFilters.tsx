@@ -37,13 +37,16 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
 
   const clearFilters = () => {
     onFiltersChange({
-      pipeline_id: filters.pipeline_id
+      pipeline_id: filters.pipeline_id,
+      status: 'aberto' // Manter apenas status padrão
     });
   };
 
-  const activeFiltersCount = Object.keys(filters).filter(key => 
-    key !== 'pipeline_id' && filters[key as keyof CRMFiltersType]
-  ).length;
+  const activeFiltersCount = Object.keys(filters).filter(key => {
+    if (key === 'pipeline_id') return false;
+    if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
+    return filters[key as keyof CRMFiltersType];
+  }).length;
 
   return (
     <div className="space-y-4">
@@ -72,10 +75,10 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
           onValueChange={(value) => handleFilterChange('column_id', value === 'all' ? undefined : value)}
         >
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Etapa" />
+            <SelectValue placeholder="Todos os estágios" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas as etapas</SelectItem>
+            <SelectItem value="all">Todos os estágios</SelectItem>
             {pipelineColumns.map((column) => (
               <SelectItem key={column.id} value={column.id}>
                 <div className="flex items-center gap-2">
