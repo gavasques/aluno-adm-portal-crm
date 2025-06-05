@@ -6,13 +6,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Eye } from 'lucide-react';
 import { CRMLeadCardField, CRMLead } from '@/types/crm.types';
-import { useCRMCardPreferences } from '@/hooks/crm/useCRMCardPreferences';
 import { ConfigurableCardLayout } from './card-fields/ConfigurableCardLayout';
 
 interface KanbanLeadCardProps {
   lead: CRMLead;
   onOpenDetail?: (lead: CRMLead) => void;
 }
+
+// Configuração padrão para campos visíveis
+const DEFAULT_VISIBLE_FIELDS: CRMLeadCardField[] = [
+  'name', 'status', 'responsible', 'phone', 'email', 'pipeline', 'column', 'tags'
+];
+
+const DEFAULT_FIELD_ORDER: CRMLeadCardField[] = [
+  'name', 'status', 'responsible', 'phone', 'email', 'pipeline', 'column', 'tags'
+];
 
 const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
   const {
@@ -23,8 +31,6 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
     transition,
     isDragging,
   } = useSortable({ id: lead.id });
-
-  const { preferences, isLoading } = useCRMCardPreferences();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -42,42 +48,8 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
     onOpenDetail?.(lead);
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing"
-      >
-        <Card className="hover:shadow-md transition-all duration-200 border border-gray-200 bg-white">
-          <CardContent className="p-3 animate-pulse">
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Safe parsing of preferences
-  const parseFieldArray = (data: any): CRMLeadCardField[] => {
-    if (Array.isArray(data)) {
-      return data as CRMLeadCardField[];
-    }
-    return [];
-  };
-
-  const visibleFields = parseFieldArray(preferences.visible_fields);
-  const fieldOrder = parseFieldArray(preferences.field_order);
-
   // Determine card height based on field count
-  const fieldCount = visibleFields.length;
+  const fieldCount = DEFAULT_VISIBLE_FIELDS.length;
   const dynamicHeight = fieldCount <= 4 ? 'min-h-[120px]' : 
                        fieldCount <= 7 ? 'min-h-[160px]' : 'min-h-[200px]';
 
@@ -113,8 +85,8 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
           <div className="flex-1 overflow-hidden">
             <ConfigurableCardLayout
               lead={lead}
-              visibleFields={visibleFields}
-              fieldOrder={fieldOrder}
+              visibleFields={DEFAULT_VISIBLE_FIELDS}
+              fieldOrder={DEFAULT_FIELD_ORDER}
             />
           </div>
         </CardContent>
