@@ -38,13 +38,14 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
   const clearFilters = () => {
     onFiltersChange({
       pipeline_id: filters.pipeline_id,
-      status: 'aberto' // Manter apenas status padrão
+      status: 'aberto' // Manter apenas status padrão, sem column_id
     });
   };
 
   const activeFiltersCount = Object.keys(filters).filter(key => {
     if (key === 'pipeline_id') return false;
     if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
+    if (key === 'column_id' && !filters[key]) return false; // Não contar quando não há estágio
     return filters[key as keyof CRMFiltersType];
   }).length;
 
@@ -69,7 +70,7 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
           onValueChange={(status) => handleFilterChange('status', status)}
         />
 
-        {/* Filtro por Coluna/Etapa */}
+        {/* Filtro por Coluna/Etapa - CORRIGIDO */}
         <Select 
           value={filters.column_id || 'all'} 
           onValueChange={(value) => handleFilterChange('column_id', value === 'all' ? undefined : value)}

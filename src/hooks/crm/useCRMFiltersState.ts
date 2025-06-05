@@ -2,19 +2,16 @@
 import React from 'react';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 export const useCRMFiltersState = (
   filters: CRMFiltersType,
   onFiltersChange: (filters: CRMFiltersType) => void
 ) => {
-  const { columns } = useCRMPipelines();
-  
   // Debounce search para evitar queries excessivas
   const [searchValue, setSearchValue] = React.useState(filters.search || '');
   const [debouncedSearch, isDebouncing] = useDebouncedValue(searchValue, 300);
 
-  // Inicializar filtros apenas com status "aberto" por padrão, sem forçar estágio
+  // Inicializar filtros apenas com status "aberto" por padrão, SEM forçar estágio
   React.useEffect(() => {
     const needsStatusDefault = !filters.status;
     
@@ -52,6 +49,7 @@ export const useCRMFiltersState = (
     const baseFilters: CRMFiltersType = { 
       pipeline_id: filters.pipeline_id,
       status: 'aberto' // Manter apenas status "aberto" ao limpar filtros
+      // column_id removido - permitir "Todos os estágios"
     };
     
     onFiltersChange(baseFilters);
@@ -61,6 +59,7 @@ export const useCRMFiltersState = (
     return Object.keys(filters).filter(key => {
       if (key === 'pipeline_id') return false;
       if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
+      if (key === 'column_id' && !filters[key]) return false; // Não contar quando não há estágio selecionado
       return filters[key as keyof CRMFiltersType];
     }).length;
   };
