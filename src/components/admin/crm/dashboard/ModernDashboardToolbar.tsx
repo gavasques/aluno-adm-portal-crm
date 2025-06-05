@@ -16,9 +16,10 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CRMFilters, CRMPipeline } from '@/types/crm.types';
+import { CRMFilters, CRMPipeline, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
 import { CRMCardConfigDialog } from '../card-config/CRMCardConfigDialog';
 import { ContactSyncIndicatorImproved } from './ContactSyncIndicatorImproved';
+import { MainFilters } from '../filters/MainFilters';
 
 interface ModernDashboardToolbarProps {
   activeView: 'kanban' | 'list';
@@ -35,6 +36,14 @@ interface ModernDashboardToolbarProps {
   searchValue: string;
   setSearchValue: (value: string) => void;
   isDebouncing: boolean;
+  // Novos props para filtros principais
+  updateFilter: (key: keyof CRMFilters, value: any) => void;
+  removeFilter: (key: keyof CRMFilters) => void;
+  clearAllFilters: () => void;
+  pipelineColumns: CRMPipelineColumn[];
+  users: CRMUser[];
+  tags: CRMTag[];
+  activeFiltersCount: number;
 }
 
 export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
@@ -50,23 +59,23 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
   pipelines,
   searchValue,
   setSearchValue,
-  isDebouncing
+  isDebouncing,
+  updateFilter,
+  removeFilter,
+  clearAllFilters,
+  pipelineColumns,
+  users,
+  tags,
+  activeFiltersCount
 }) => {
   const [showCardConfig, setShowCardConfig] = useState(false);
 
-  // Contar filtros ativos
-  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
-    if (key === 'pipeline_id') return false;
+  // Contar filtros avançados ativos (exclui os principais)
+  const advancedFiltersCount = Object.entries(filters).filter(([key, value]) => {
+    if (['pipeline_id', 'column_id', 'responsible_id', 'contact_filter', 'tag_ids', 'search'].includes(key)) return false;
     if (Array.isArray(value)) return value.length > 0;
     return value && value !== '';
   }).length;
-
-  // Função para abrir filtros diretamente
-  const handleFiltersClick = () => {
-    if (!showFilters) {
-      onToggleFilters();
-    }
-  };
 
   return (
     <>
@@ -76,9 +85,10 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
       </div>
 
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0">
-        <div className="flex items-center justify-between gap-6">
-          {/* Lado Esquerdo - Ações principais e filtros primários */}
-          <div className="flex items-center gap-4 flex-1">
+        {/* Primeira linha - Ações principais */}
+        <div className="flex items-center justify-between gap-6 mb-4">
+          {/* Lado Esquerdo - Ações principais */}
+          <div className="flex items-center gap-4">
             {/* Botão Novo Lead - Destaque */}
             <motion.div
               whileHover={{ scale: 1.02 }}
@@ -127,63 +137,6 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
             </div>
           </div>
 
-          {/* Centro - Botões de ação */}
-          <div className="flex items-center gap-3">
-            {/* Botão Configurar Campos */}
-            <Button
-              variant="outline"
-              onClick={() => setShowCardConfig(true)}
-              className="flex items-center gap-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-            >
-              <Settings className="h-4 w-4" />
-              Configurar Campos
-            </Button>
-
-            {/* Botão Mostrar Filtros - CORRIGIDO para abrir diretamente */}
-            <Button 
-              variant="outline" 
-              onClick={handleFiltersClick}
-              className="relative border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros Avançados
-              <AnimatePresence>
-                {activeFiltersCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-2 -right-2"
-                  >
-                    <Badge 
-                      variant="destructive" 
-                      className="h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    >
-                      {activeFiltersCount}
-                    </Badge>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <ChevronDown 
-                className={`h-4 w-4 ml-2 transition-transform duration-200 ${
-                  showFilters ? 'rotate-180' : ''
-                }`} 
-              />
-            </Button>
-
-            {/* Botão Relatórios */}
-            {onOpenReports && (
-              <Button
-                variant="outline"
-                onClick={onOpenReports}
-                className="flex items-center gap-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-              >
-                <BarChart3 className="h-4 w-4" />
-                Relatórios
-              </Button>
-            )}
-          </div>
-
           {/* Lado Direito - Controles de Visualização */}
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
@@ -212,6 +165,80 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
               <List className="h-4 w-4 mr-2" />
               Lista
             </Button>
+          </div>
+        </div>
+
+        {/* Segunda linha - Filtros principais */}
+        <div className="flex items-center justify-between gap-6">
+          {/* Filtros Principais */}
+          <div className="flex-1">
+            <MainFilters
+              filters={filters}
+              updateFilter={updateFilter}
+              removeFilter={removeFilter}
+              pipelineColumns={pipelineColumns}
+              users={users}
+              tags={tags}
+              activeFiltersCount={activeFiltersCount}
+              clearAllFilters={clearAllFilters}
+            />
+          </div>
+
+          {/* Botões de ação secundários */}
+          <div className="flex items-center gap-3">
+            {/* Botão Configurar Campos */}
+            <Button
+              variant="outline"
+              onClick={() => setShowCardConfig(true)}
+              className="flex items-center gap-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 h-9"
+            >
+              <Settings className="h-4 w-4" />
+              Configurar Campos
+            </Button>
+
+            {/* Botão Filtros Avançados */}
+            <Button 
+              variant="outline" 
+              onClick={onToggleFilters}
+              className="relative border-gray-300 hover:border-blue-400 hover:bg-blue-50 h-9"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filtros Avançados
+              <AnimatePresence>
+                {advancedFiltersCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-2 -right-2"
+                  >
+                    <Badge 
+                      variant="destructive" 
+                      className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {advancedFiltersCount}
+                    </Badge>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <ChevronDown 
+                className={`h-4 w-4 ml-2 transition-transform duration-200 ${
+                  showFilters ? 'rotate-180' : ''
+                }`} 
+              />
+            </Button>
+
+            {/* Botão Relatórios */}
+            {onOpenReports && (
+              <Button
+                variant="outline"
+                onClick={onOpenReports}
+                className="flex items-center gap-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 h-9"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Relatórios
+              </Button>
+            )}
           </div>
         </div>
       </div>

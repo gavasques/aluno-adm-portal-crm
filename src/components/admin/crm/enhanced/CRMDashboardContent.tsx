@@ -8,7 +8,7 @@ import { CRMMetricsCards } from '../dashboard/CRMMetricsCards';
 import CRMReports from '../reports/CRMReports';
 import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
 import { CRMSettings } from '../settings/CRMSettings';
-import { CRMFilters, CRMPipeline, CRMUser, CRMTag } from '@/types/crm.types';
+import { CRMFilters, CRMPipeline, CRMUser, CRMTag, CRMPipelineColumn } from '@/types/crm.types';
 
 interface CRMDashboardContentProps {
   activeTab: 'dashboard' | 'reports' | 'analytics' | 'settings';
@@ -24,12 +24,15 @@ interface CRMDashboardContentProps {
   isDebouncing: boolean;
   filters: CRMFilters;
   updateFilter: (key: keyof CRMFilters, value: any) => void;
-  pipelineColumns: any[];
+  removeFilter: (key: keyof CRMFilters) => void;
+  clearAllFilters: () => void;
+  pipelineColumns: CRMPipelineColumn[];
   users: CRMUser[];
   tags: CRMTag[];
   handleTagsChange: (tagIds: string[]) => void;
   effectiveFilters: CRMFilters;
   onCreateLead: (columnId?: string) => void;
+  activeFiltersCount: number;
 }
 
 export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
@@ -46,12 +49,15 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
   isDebouncing,
   filters,
   updateFilter,
+  removeFilter,
+  clearAllFilters,
   pipelineColumns,
   users,
   tags,
   handleTagsChange,
   effectiveFilters,
-  onCreateLead
+  onCreateLead,
+  activeFiltersCount
 }) => {
   // Renderização condicional baseada na aba ativa
   const renderActiveTabContent = () => {
@@ -85,6 +91,13 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
                 searchValue={searchValue}
                 setSearchValue={setSearchValue}
                 isDebouncing={isDebouncing}
+                updateFilter={updateFilter}
+                removeFilter={removeFilter}
+                clearAllFilters={clearAllFilters}
+                pipelineColumns={pipelineColumns}
+                users={users}
+                tags={tags}
+                activeFiltersCount={activeFiltersCount}
               />
             </div>
 

@@ -44,7 +44,10 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     searchValue,
     setSearchValue,
     isDebouncing,
-    updateFilter
+    updateFilter,
+    removeFilter,
+    clearAllFilters,
+    getActiveFiltersCount
   } = useCRMFiltersState(filters, setFilters);
 
   // Ativar sincronização automática aprimorada de contatos
@@ -73,6 +76,9 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as 'dashboard' | 'reports' | 'analytics' | 'settings');
   };
+
+  // Filtrar colunas do pipeline selecionado
+  const pipelineColumns = columns.filter(col => col.pipeline_id === selectedPipelineId);
 
   return (
     <motion.div
@@ -105,12 +111,15 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               isDebouncing={isDebouncing}
               filters={filters}
               updateFilter={updateFilter}
-              pipelineColumns={columns}
+              removeFilter={removeFilter}
+              clearAllFilters={clearAllFilters}
+              pipelineColumns={pipelineColumns}
               users={users}
               tags={tags}
               handleTagsChange={handleTagsChange}
               effectiveFilters={effectiveFilters}
               onCreateLead={handleCreateLead}
+              activeFiltersCount={getActiveFiltersCount()}
             />
           </TabsContent>
 
@@ -129,12 +138,15 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               isDebouncing={isDebouncing}
               filters={filters}
               updateFilter={updateFilter}
-              pipelineColumns={columns}
+              removeFilter={removeFilter}
+              clearAllFilters={clearAllFilters}
+              pipelineColumns={pipelineColumns}
               users={users}
               tags={tags}
               handleTagsChange={handleTagsChange}
               effectiveFilters={effectiveFilters}
               onCreateLead={handleCreateLead}
+              activeFiltersCount={getActiveFiltersCount()}
             />
           </TabsContent>
 
@@ -153,12 +165,15 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               isDebouncing={isDebouncing}
               filters={filters}
               updateFilter={updateFilter}
-              pipelineColumns={columns}
+              removeFilter={removeFilter}
+              clearAllFilters={clearAllFilters}
+              pipelineColumns={pipelineColumns}
               users={users}
               tags={tags}
               handleTagsChange={handleTagsChange}
               effectiveFilters={effectiveFilters}
               onCreateLead={handleCreateLead}
+              activeFiltersCount={getActiveFiltersCount()}
             />
           </TabsContent>
 
@@ -177,12 +192,15 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               isDebouncing={isDebouncing}
               filters={filters}
               updateFilter={updateFilter}
-              pipelineColumns={columns}
+              removeFilter={removeFilter}
+              clearAllFilters={clearAllFilters}
+              pipelineColumns={pipelineColumns}
               users={users}
               tags={tags}
               handleTagsChange={handleTagsChange}
               effectiveFilters={effectiveFilters}
               onCreateLead={handleCreateLead}
+              activeFiltersCount={getActiveFiltersCount()}
             />
           </TabsContent>
         </div>

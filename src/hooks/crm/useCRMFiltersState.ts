@@ -2,14 +2,36 @@
 import React from 'react';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 export const useCRMFiltersState = (
   filters: CRMFiltersType,
   onFiltersChange: (filters: CRMFiltersType) => void
 ) => {
+  const { columns } = useCRMPipelines();
+  
   // Debounce search para evitar queries excessivas
   const [searchValue, setSearchValue] = React.useState(filters.search || '');
   const [debouncedSearch, isDebouncing] = useDebouncedValue(searchValue, 300);
+
+  // Encontrar coluna "Abertos" por padrão
+  const defaultOpenColumn = React.useMemo(() => {
+    return columns.find(col => 
+      col.name.toLowerCase().includes('aberto') || 
+      col.name.toLowerCase().includes('novo') ||
+      col.name.toLowerCase().includes('lead')
+    );
+  }, [columns]);
+
+  // Inicializar filtros com estágio padrão
+  React.useEffect(() => {
+    if (defaultOpenColumn && !filters.column_id && columns.length > 0) {
+      onFiltersChange({ 
+        ...filters, 
+        column_id: defaultOpenColumn.id 
+      });
+    }
+  }, [defaultOpenColumn, filters.column_id, columns.length, filters, onFiltersChange]);
 
   // Sincronizar debounced search com filters
   React.useEffect(() => {
@@ -30,13 +52,22 @@ export const useCRMFiltersState = (
 
   const clearAllFilters = () => {
     setSearchValue('');
-    onFiltersChange({ pipeline_id: filters.pipeline_id });
+    const baseFilters: CRMFiltersType = { pipeline_id: filters.pipeline_id };
+    
+    // Manter o estágio padrão ao limpar filtros
+    if (defaultOpenColumn) {
+      baseFilters.column_id = defaultOpenColumn.id;
+    }
+    
+    onFiltersChange(baseFilters);
   };
 
   const getActiveFiltersCount = () => {
-    return Object.keys(filters).filter(key => 
-      key !== 'pipeline_id' && filters[key as keyof CRMFiltersType]
-    ).length;
+    return Object.keys(filters).filter(key => {
+      if (key === 'pipeline_id') return false;
+      if (key === 'column_id' && filters[key] === defaultOpenColumn?.id) return false; // Não contar filtro padrão
+      return filters[key as keyof CRMFiltersType];
+    }).length;
   };
 
   return {
