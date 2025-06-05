@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,8 @@ import { toast } from 'sonner';
 interface ManualFieldMappingDialogProps {
   pipelineId: string;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const standardFields = [
@@ -38,8 +39,13 @@ const standardFields = [
   { key: 'calendly_link', name: 'Link do Calendly', type: 'text' },
 ];
 
-export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMappingDialogProps) => {
-  const [open, setOpen] = useState(false);
+export const ManualFieldMappingDialog = ({ 
+  pipelineId, 
+  trigger, 
+  open = false, 
+  onOpenChange 
+}: ManualFieldMappingDialogProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [formData, setFormData] = useState({
     webhookFieldName: '',
     crmFieldName: '',
@@ -53,6 +59,10 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
 
   const { mappings, createMapping } = useCRMWebhookFieldMappings(pipelineId);
   const { customFields } = useCRMCustomFields(pipelineId);
+
+  // Use controlled open state if provided, otherwise use internal state
+  const isOpen = onOpenChange ? open : internalOpen;
+  const setIsOpen = onOpenChange ? onOpenChange : setInternalOpen;
 
   // Filtrar campos já mapeados
   const mappedStandardFields = mappings
@@ -99,7 +109,7 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
         transformation_rules: JSON.parse(formData.transformationRules)
       });
 
-      setOpen(false);
+      setIsOpen(false);
       setFormData({
         webhookFieldName: '',
         crmFieldName: '',
@@ -139,15 +149,12 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Adicionar Mapeamento
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Mapear Novo Campo</DialogTitle>
@@ -257,7 +264,7 @@ export const ManualFieldMappingDialog = ({ pipelineId, trigger }: ManualFieldMap
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>

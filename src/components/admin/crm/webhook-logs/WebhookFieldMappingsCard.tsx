@@ -1,347 +1,246 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Settings, FileText, AlertCircle, Trash2, Edit } from 'lucide-react';
+import { 
+  Plus, 
+  Settings, 
+  Edit, 
+  Trash2, 
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2
+} from 'lucide-react';
+import { ManualFieldMappingDialog } from './ManualFieldMappingDialog';
+import { EditFieldMappingDialog } from './EditFieldMappingDialog';
 import { useCRMWebhookFieldMappings } from '@/hooks/crm/useCRMWebhookFieldMappings';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
 import { CRMWebhookFieldMapping } from '@/types/crm-webhook.types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import TypeformFieldMappingDialog from './TypeformFieldMappingDialog';
 
 interface WebhookFieldMappingsCardProps {
   pipelineId: string;
 }
 
-export const WebhookFieldMappingsCard: React.FC<WebhookFieldMappingsCardProps> = ({ pipelineId }) => {
-  const { mappings, isLoading, createMapping, updateMapping, deleteMapping, syncStandardMappings } = useCRMWebhookFieldMappings(pipelineId);
-  
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showTypeformDialog, setShowTypeformDialog] = useState(false);
+export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCardProps) => {
+  const [showManualDialog, setShowManualDialog] = useState(false);
   const [editingMapping, setEditingMapping] = useState<CRMWebhookFieldMapping | null>(null);
-  const [newMapping, setNewMapping] = useState({
-    webhook_field_name: '',
-    crm_field_name: '',
-    crm_field_type: 'standard' as const,
-    field_type: 'text' as const,
-    is_required: false,
-    transformation_rules: {}
-  });
 
-  const handleAddMapping = async () => {
-    if (!newMapping.webhook_field_name || !newMapping.crm_field_name) return;
-    
-    await createMapping.mutateAsync({
-      pipeline_id: pipelineId,
-      ...newMapping
-    });
-    
-    setNewMapping({
-      webhook_field_name: '',
-      crm_field_name: '',
-      crm_field_type: 'standard',
-      field_type: 'text',
-      is_required: false,
-      transformation_rules: {}
-    });
-    setShowAddDialog(false);
-  };
+  const { 
+    mappings, 
+    isLoading, 
+    createMapping, 
+    updateMapping, 
+    deleteMapping, 
+    syncStandardMappings 
+  } = useCRMWebhookFieldMappings(pipelineId);
 
-  const handleUpdateMapping = async () => {
-    if (!editingMapping) return;
-    
-    await updateMapping.mutateAsync({
-      id: editingMapping.id,
-      input: {
-        webhook_field_name: editingMapping.webhook_field_name,
-        crm_field_name: editingMapping.crm_field_name,
-        crm_field_type: editingMapping.crm_field_type,
-        field_type: editingMapping.field_type,
-        is_required: editingMapping.is_required,
-        transformation_rules: editingMapping.transformation_rules
-      }
-    });
-    
-    setEditingMapping(null);
+  const handleSyncRequired = async () => {
+    try {
+      await syncStandardMappings.mutateAsync(pipelineId);
+    } catch (error) {
+      console.error('Erro ao sincronizar campos obrigatórios:', error);
+    }
   };
 
   const handleDeleteMapping = async (id: string) => {
-    await deleteMapping.mutateAsync(id);
+    if (confirm('Tem certeza que deseja remover este mapeamento?')) {
+      try {
+        await deleteMapping.mutateAsync(id);
+      } catch (error) {
+        console.error('Erro ao deletar mapeamento:', error);
+      }
+    }
   };
 
-  const handleSyncStandardMappings = async () => {
-    await syncStandardMappings.mutateAsync(pipelineId);
+  const getFieldTypeColor = (type: string) => {
+    switch (type) {
+      case 'text': return 'bg-blue-100 text-blue-800';
+      case 'email': return 'bg-green-100 text-green-800';
+      case 'phone': return 'bg-purple-100 text-purple-800';
+      case 'boolean': return 'bg-orange-100 text-orange-800';
+      case 'number': return 'bg-gray-100 text-gray-800';
+      case 'select': return 'bg-pink-100 text-pink-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleTypeformImport = (importedMappings: any[]) => {
-    // Process imported mappings from Typeform
-    importedMappings.forEach(async (mapping) => {
-      await createMapping.mutateAsync({
-        pipeline_id: pipelineId,
-        ...mapping
-      });
-    });
-    setShowTypeformDialog(false);
+  const getCrmFieldTypeColor = (type: 'standard' | 'custom') => {
+    return type === 'standard' 
+      ? 'bg-emerald-100 text-emerald-800' 
+      : 'bg-violet-100 text-violet-800';
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Mapeamento de Campos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">
+            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-gray-400" />
+            <p className="text-gray-500">Carregando mapeamentos...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Mapeamento de Campos
-            </CardTitle>
-            <CardDescription>
-              Configure como os campos do webhook serão mapeados para o CRM
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Mapeamento de Campos do Webhook
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Botões de Ação */}
+          <div className="flex gap-2 flex-wrap">
             <Button
+              onClick={() => setShowManualDialog(true)}
               variant="outline"
               size="sm"
-              onClick={() => setShowTypeformDialog(true)}
-              className="flex items-center gap-2"
-            >
-              <FileText className="h-4 w-4" />
-              Typeform
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncStandardMappings}
-              disabled={syncStandardMappings.isPending}
-            >
-              Sincronizar Campo Obrigatório
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setShowAddDialog(true)}
-              className="flex items-center gap-2"
+              className="gap-2"
             >
               <Plus className="h-4 w-4" />
               Adicionar Mapeamento
             </Button>
-          </div>
-        </div>
-      </CardHeader>
 
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="text-sm text-gray-600">Carregando mapeamentos...</div>
+            <Button
+              onClick={handleSyncRequired}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={syncStandardMappings.isPending}
+            >
+              <RefreshCw className={`h-4 w-4 ${syncStandardMappings.isPending ? 'animate-spin' : ''}`} />
+              Sincronizar Campo Obrigatório
+            </Button>
           </div>
-        ) : mappings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <AlertCircle className="h-8 w-8 text-gray-400 mb-3" />
-            <h3 className="font-medium text-gray-900 mb-1">Nenhum mapeamento configurado</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Configure o mapeamento de campos para que os webhooks funcionem corretamente
-            </p>
-            <div className="flex items-center gap-2">
+
+          {/* Lista de Mapeamentos */}
+          {mappings.length === 0 ? (
+            <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+              <AlertCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">
+                Nenhum mapeamento configurado
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Configure como os campos do webhook serão mapeados para o CRM
+              </p>
               <Button
+                onClick={() => setShowManualDialog(true)}
                 variant="outline"
-                size="sm"
-                onClick={() => setShowTypeformDialog(true)}
+                className="gap-2"
               >
-                <FileText className="h-4 w-4 mr-2" />
-                Importar Typeform
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSyncStandardMappings}
-                disabled={syncStandardMappings.isPending}
-              >
-                Sincronizar Campo Obrigatório
+                <Plus className="h-4 w-4" />
+                Adicionar Primeiro Mapeamento
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campo Webhook</TableHead>
-                  <TableHead>Campo CRM</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Obrigatório</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mappings.map((mapping) => (
-                  <TableRow key={mapping.id}>
-                    <TableCell className="font-mono text-sm">
-                      {mapping.webhook_field_name}
-                    </TableCell>
-                    <TableCell>{mapping.crm_field_name}</TableCell>
-                    <TableCell>
-                      <Badge variant={mapping.crm_field_type === 'standard' ? 'default' : 'secondary'}>
-                        {mapping.crm_field_type === 'standard' ? 'Padrão' : 'Personalizado'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={mapping.is_required ? 'destructive' : 'secondary'}>
-                        {mapping.is_required ? 'Sim' : 'Não'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingMapping(mapping)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteMapping(mapping.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-
-      {/* Add Mapping Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Adicionar Novo Mapeamento</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Campo no Webhook</label>
-              <Input
-                value={newMapping.webhook_field_name}
-                onChange={(e) => setNewMapping(prev => ({ ...prev, webhook_field_name: e.target.value }))}
-                placeholder="Ex: nome, email, telefone"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Campo no CRM</label>
-              <Input
-                value={newMapping.crm_field_name}
-                onChange={(e) => setNewMapping(prev => ({ ...prev, crm_field_name: e.target.value }))}
-                placeholder="Ex: name, email, phone"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Tipo do Campo</label>
-              <Select
-                value={newMapping.field_type}
-                onValueChange={(value: any) => setNewMapping(prev => ({ ...prev, field_type: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="text">Texto</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="phone">Telefone</SelectItem>
-                  <SelectItem value="number">Número</SelectItem>
-                  <SelectItem value="boolean">Boolean</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={newMapping.is_required}
-                onChange={(e) => setNewMapping(prev => ({ ...prev, is_required: e.target.checked }))}
-              />
-              <label className="text-sm">Campo obrigatório</label>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddMapping}>
-                Adicionar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Mapping Dialog */}
-      <Dialog open={!!editingMapping} onOpenChange={(open) => !open && setEditingMapping(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Mapeamento</DialogTitle>
-          </DialogHeader>
-          {editingMapping && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Campo no Webhook</label>
-                <Input
-                  value={editingMapping.webhook_field_name}
-                  onChange={(e) => setEditingMapping(prev => prev ? ({ ...prev, webhook_field_name: e.target.value }) : null)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Campo no CRM</label>
-                <Input
-                  value={editingMapping.crm_field_name}
-                  onChange={(e) => setEditingMapping(prev => prev ? ({ ...prev, crm_field_name: e.target.value }) : null)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Tipo do Campo</label>
-                <Select
-                  value={editingMapping.field_type}
-                  onValueChange={(value: any) => setEditingMapping(prev => prev ? ({ ...prev, field_type: value }) : null)}
+          ) : (
+            <div className="space-y-3">
+              {mappings.map((mapping) => (
+                <div
+                  key={mapping.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Texto</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="phone">Telefone</SelectItem>
-                    <SelectItem value="number">Número</SelectItem>
-                    <SelectItem value="boolean">Boolean</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={editingMapping.is_required}
-                  onChange={(e) => setEditingMapping(prev => prev ? ({ ...prev, is_required: e.target.checked }) : null)}
-                />
-                <label className="text-sm">Campo obrigatório</label>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setEditingMapping(null)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleUpdateMapping}>
-                  Salvar
-                </Button>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
+                          {mapping.webhook_field_name}
+                        </code>
+                        <span className="text-gray-400">→</span>
+                        <code className="bg-blue-50 px-2 py-1 rounded text-sm font-mono">
+                          {mapping.crm_field_name}
+                        </code>
+                        {mapping.custom_field && (
+                          <span className="text-sm text-gray-500">
+                            ({mapping.custom_field.field_name})
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm">
+                        <Badge className={getFieldTypeColor(mapping.field_type)}>
+                          {mapping.field_type}
+                        </Badge>
+                        <Badge className={getCrmFieldTypeColor(mapping.crm_field_type)}>
+                          {mapping.crm_field_type === 'standard' ? 'Padrão' : 'Customizado'}
+                        </Badge>
+                        {mapping.is_required && (
+                          <Badge variant="destructive">Obrigatório</Badge>
+                        )}
+                        {mapping.is_active ? (
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Ativo
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Inativo</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingMapping(mapping)}
+                        title="Editar mapeamento"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteMapping(mapping.id)}
+                        className="text-red-600 hover:text-red-700"
+                        title="Remover mapeamento"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
 
-      {/* Typeform Import Dialog */}
-      <TypeformFieldMappingDialog
-        open={showTypeformDialog}
-        onOpenChange={setShowTypeformDialog}
-        onImport={handleTypeformImport}
+          {/* Informações Úteis */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">ℹ️ Como Funciona</h4>
+            <div className="text-sm text-blue-800 space-y-1">
+              <p>• Configure como os campos do webhook são mapeados para o CRM</p>
+              <p>• Campos obrigatórios: <code>name</code> e <code>email</code></p>
+              <p>• Webhook padrão: <code>{"{ \"name\": \"João\", \"email\": \"joao@email.com\" }"}</code></p>
+              <p>• Use "Adicionar Mapeamento" para campos customizados</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Diálogos */}
+      <ManualFieldMappingDialog
+        pipelineId={pipelineId}
+        trigger={null}
+        open={showManualDialog}
+        onOpenChange={setShowManualDialog}
       />
-    </Card>
+
+      {editingMapping && (
+        <EditFieldMappingDialog
+          mapping={editingMapping}
+          open={!!editingMapping}
+          onOpenChange={(open) => !open && setEditingMapping(null)}
+        />
+      )}
+    </>
   );
 };
