@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { UserProvider } from '@/contexts/UserContext';
+import { AuthProvider } from '@/hooks/auth';
 import { Toaster as SonnerToaster } from 'sonner';
 import AdminLayout from './layout/AdminLayout';
 import StudentLayout from './layout/StudentLayout';
@@ -75,7 +75,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UserProvider>
+      <AuthProvider>
         <Router>
           <Routes>
             {/* Public Routes */}
@@ -158,7 +158,7 @@ function App() {
         </Router>
         <Toaster />
         <SonnerToaster />
-      </UserProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
