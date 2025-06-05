@@ -120,7 +120,7 @@ export const useCRMContactSync = () => {
   return {
     unsynced: unsynced || [],
     isLoading,
-    syncAll: () => syncMutation.mutate(),
+    syncAll: () => syncMutation.mutate(undefined), // Corrigido: passando undefined explicitamente
     syncSpecific: (leadIds: string[]) => syncMutation.mutate(leadIds),
     isSyncing: syncMutation.isPending
   };
