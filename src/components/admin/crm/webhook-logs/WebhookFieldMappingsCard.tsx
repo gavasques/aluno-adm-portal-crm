@@ -161,7 +161,7 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {mapping.is_required && (
-                          <Shield className="h-4 w-4 text-red-600" title="Campo obrigatório" />
+                          <Shield className="h-4 w-4 text-red-600" />
                         )}
                         <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
                           {mapping.webhook_field_name}
@@ -206,7 +206,6 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
                         variant="ghost"
                         size="sm"
                         onClick={() => setEditingMapping(mapping)}
-                        title="Editar mapeamento"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -215,7 +214,6 @@ export const WebhookFieldMappingsCard = ({ pipelineId }: WebhookFieldMappingsCar
                         size="sm"
                         onClick={() => handleDeleteMapping(mapping.id)}
                         className="text-red-600 hover:text-red-700"
-                        title="Remover mapeamento"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
