@@ -1,18 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ModernDashboardToolbar } from '../dashboard/ModernDashboardToolbar';
-import { DashboardContent } from '../dashboard/DashboardContent';
-import { CRMMetricsCards } from '../dashboard/CRMMetricsCards';
-import { AdvancedFilters } from '../filters/AdvancedFilters';
-import { AnimatePresence } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CRMDashboardHeader } from './CRMDashboardHeader';
+import { CRMDashboardContent } from './CRMDashboardContent';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMFiltersState } from '@/hooks/crm/useCRMFiltersState';
 import { useCRMTags } from '@/hooks/crm/useCRMTags';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
 import { useUnifiedCRMData } from '@/hooks/crm/useUnifiedCRMData';
 import { useCRMContactAutoSync } from '@/hooks/crm/useCRMContactAutoSync';
-import { useState } from 'react';
 import { CRMFilters } from '@/types/crm.types';
 
 interface CRMDashboardProps {
@@ -20,6 +17,10 @@ interface CRMDashboardProps {
 }
 
 export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
+  // Estado das abas
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'settings'>('dashboard');
+  
+  // Estado da view e filtros
   const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
@@ -51,6 +52,7 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   const isLoading = pipelinesLoading || leadsLoading;
 
+  // Handlers
   const handleCreateLead = (columnId?: string) => {
     console.log('Create lead for column:', columnId);
   };
@@ -63,72 +65,123 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
+  const handleTagsChange = (tagIds: string[]) => {
+    updateFilter('tag_ids', tagIds);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="flex flex-col h-full bg-gray-50"
     >
-      {/* Métricas/KPIs */}
-      <div className="bg-gray-50 px-8 py-6 border-b border-gray-200 flex-shrink-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <CRMMetricsCards />
-        </motion.div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex-shrink-0">
-        <ModernDashboardToolbar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          showFilters={showFilters}
-          onToggleFilters={handleToggleFilters}
-          onCreateLead={handleCreateLead}
-          filters={effectiveFilters}
-          pipelineId={selectedPipelineId}
-          onPipelineChange={setSelectedPipelineId}
-          pipelines={pipelines}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          isDebouncing={isDebouncing}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="h-full flex flex-col">
+        {/* Header com as abas */}
+        <CRMDashboardHeader
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          selectedPipelineId={selectedPipelineId}
         />
-      </div>
 
-      {/* Filtros Avançados */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0"
-          >
-            <AdvancedFilters
+        {/* Conteúdo das abas */}
+        <div className="flex-1 min-h-0">
+          <TabsContent value="dashboard" className="h-full m-0">
+            <CRMDashboardContent
+              activeTab="dashboard"
+              activeView={activeView}
+              onViewChange={setActiveView}
+              showFilters={showFilters}
+              onToggleFilters={handleToggleFilters}
+              selectedPipelineId={selectedPipelineId}
+              onPipelineChange={setSelectedPipelineId}
+              pipelines={pipelines}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              isDebouncing={isDebouncing}
               filters={filters}
               updateFilter={updateFilter}
               pipelineColumns={columns}
               users={users}
               tags={tags}
-              handleTagsChange={(tagIds: string[]) => updateFilter('tag_ids', tagIds)}
+              handleTagsChange={handleTagsChange}
+              effectiveFilters={effectiveFilters}
+              onCreateLead={handleCreateLead}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </TabsContent>
 
-      {/* Conteúdo Principal */}
-      <div className="flex-1 min-h-0 w-full">
-        <DashboardContent
-          activeView={activeView}
-          effectiveFilters={effectiveFilters}
-          selectedPipelineId={selectedPipelineId}
-          onCreateLead={handleCreateLead}
-        />
-      </div>
+          <TabsContent value="reports" className="h-full m-0">
+            <CRMDashboardContent
+              activeTab="reports"
+              activeView={activeView}
+              onViewChange={setActiveView}
+              showFilters={showFilters}
+              onToggleFilters={handleToggleFilters}
+              selectedPipelineId={selectedPipelineId}
+              onPipelineChange={setSelectedPipelineId}
+              pipelines={pipelines}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              isDebouncing={isDebouncing}
+              filters={filters}
+              updateFilter={updateFilter}
+              pipelineColumns={columns}
+              users={users}
+              tags={tags}
+              handleTagsChange={handleTagsChange}
+              effectiveFilters={effectiveFilters}
+              onCreateLead={handleCreateLead}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="h-full m-0">
+            <CRMDashboardContent
+              activeTab="analytics"
+              activeView={activeView}
+              onViewChange={setActiveView}
+              showFilters={showFilters}
+              onToggleFilters={handleToggleFilters}
+              selectedPipelineId={selectedPipelineId}
+              onPipelineChange={setSelectedPipelineId}
+              pipelines={pipelines}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              isDebouncing={isDebouncing}
+              filters={filters}
+              updateFilter={updateFilter}
+              pipelineColumns={columns}
+              users={users}
+              tags={tags}
+              handleTagsChange={handleTagsChange}
+              effectiveFilters={effectiveFilters}
+              onCreateLead={handleCreateLead}
+            />
+          </TabsContent>
+
+          <TabsContent value="settings" className="h-full m-0">
+            <CRMDashboardContent
+              activeTab="settings"
+              activeView={activeView}
+              onViewChange={setActiveView}
+              showFilters={showFilters}
+              onToggleFilters={handleToggleFilters}
+              selectedPipelineId={selectedPipelineId}
+              onPipelineChange={setSelectedPipelineId}
+              pipelines={pipelines}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              isDebouncing={isDebouncing}
+              filters={filters}
+              updateFilter={updateFilter}
+              pipelineColumns={columns}
+              users={users}
+              tags={tags}
+              handleTagsChange={handleTagsChange}
+              effectiveFilters={effectiveFilters}
+              onCreateLead={handleCreateLead}
+            />
+          </TabsContent>
+        </div>
+      </Tabs>
     </motion.div>
   );
 };
