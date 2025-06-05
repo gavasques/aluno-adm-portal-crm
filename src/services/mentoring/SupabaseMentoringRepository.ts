@@ -27,26 +27,9 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         throw error;
       }
 
-      // Map database fields to interface
-      return (data || []).map(catalog => ({
-        id: catalog.id,
-        name: catalog.name,
-        description: catalog.description,
-        instructor: catalog.instructor,
-        type: catalog.type as 'Individual' | 'Grupo',
-        durationMonths: catalog.duration_months,
-        numberOfSessions: catalog.number_of_sessions,
-        totalSessions: catalog.total_sessions,
-        price: catalog.price,
-        active: catalog.active,
-        status: catalog.status as 'Ativa' | 'Inativa' | 'Cancelada',
-        createdAt: catalog.created_at,
-        updatedAt: catalog.updated_at,
-        tags: catalog.tags || [],
-        imageUrl: catalog.image_url
-      }));
+      return (data || []).map(this.mapDatabaseToCatalog);
     } catch (error) {
-      console.error('Erro na consulta de catálogos:', error);
+      console.error('Erro na query de catálogos:', error);
       return [];
     }
   }
@@ -64,130 +47,77 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         return null;
       }
 
-      if (!data) return null;
-
-      return {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        instructor: data.instructor,
-        type: data.type as 'Individual' | 'Grupo',
-        durationMonths: data.duration_months,
-        numberOfSessions: data.number_of_sessions,
-        totalSessions: data.total_sessions,
-        price: data.price,
-        active: data.active,
-        status: data.status as 'Ativa' | 'Inativa' | 'Cancelada',
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        tags: data.tags || [],
-        imageUrl: data.image_url
-      };
+      return data ? this.mapDatabaseToCatalog(data) : null;
     } catch (error) {
-      console.error('Erro ao buscar catálogo:', error);
+      console.error('Erro na query de catálogo por ID:', error);
       return null;
     }
   }
 
   async createCatalog(data: CreateMentoringCatalogData): Promise<MentoringCatalog> {
-    try {
-      const { data: result, error } = await supabase
-        .from('mentoring_catalogs')
-        .insert({
-          name: data.name,
-          description: data.description,
-          instructor: data.instructor,
-          type: data.type,
-          duration_months: data.durationMonths,
-          number_of_sessions: data.numberOfSessions,
-          total_sessions: data.numberOfSessions,
-          price: data.price,
-          active: data.active,
-          status: data.status || 'Ativa',
-          tags: data.tags || []
-        })
-        .select()
-        .single();
+    const { data: newCatalog, error } = await supabase
+      .from('mentoring_catalogs')
+      .insert({
+        name: data.name,
+        type: data.type,
+        instructor: data.instructor,
+        duration_months: data.durationMonths,
+        number_of_sessions: data.numberOfSessions || 0,
+        total_sessions: data.numberOfSessions || 0,
+        price: data.price,
+        description: data.description,
+        active: data.active ?? true,
+        status: data.status ?? 'Ativa'
+      })
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Erro ao criar catálogo:', error);
-        throw error;
-      }
-
-      return {
-        id: result.id,
-        name: result.name,
-        description: result.description,
-        instructor: result.instructor,
-        type: result.type as 'Individual' | 'Grupo',
-        durationMonths: result.duration_months,
-        numberOfSessions: result.number_of_sessions,
-        totalSessions: result.total_sessions,
-        price: result.price,
-        active: result.active,
-        status: result.status as 'Ativa' | 'Inativa' | 'Cancelada',
-        createdAt: result.created_at,
-        updatedAt: result.updated_at,
-        tags: result.tags || []
-      };
-    } catch (error) {
+    if (error) {
       console.error('Erro ao criar catálogo:', error);
       throw error;
     }
+
+    return this.mapDatabaseToCatalog(newCatalog);
   }
 
   async updateCatalog(id: string, data: Partial<CreateMentoringCatalogData>): Promise<boolean> {
-    try {
-      const updateData: any = {};
-      
-      if (data.name !== undefined) updateData.name = data.name;
-      if (data.description !== undefined) updateData.description = data.description;
-      if (data.instructor !== undefined) updateData.instructor = data.instructor;
-      if (data.type !== undefined) updateData.type = data.type;
-      if (data.durationMonths !== undefined) updateData.duration_months = data.durationMonths;
-      if (data.numberOfSessions !== undefined) {
-        updateData.number_of_sessions = data.numberOfSessions;
-        updateData.total_sessions = data.numberOfSessions;
-      }
-      if (data.price !== undefined) updateData.price = data.price;
-      if (data.active !== undefined) updateData.active = data.active;
-      if (data.status !== undefined) updateData.status = data.status;
-      if (data.tags !== undefined) updateData.tags = data.tags;
+    const updateData: any = {};
+    
+    if (data.name) updateData.name = data.name;
+    if (data.type) updateData.type = data.type;
+    if (data.instructor) updateData.instructor = data.instructor;
+    if (data.durationMonths) updateData.duration_months = data.durationMonths;
+    if (data.numberOfSessions) updateData.number_of_sessions = data.numberOfSessions;
+    if (data.price) updateData.price = data.price;
+    if (data.description) updateData.description = data.description;
+    if (data.active !== undefined) updateData.active = data.active;
+    if (data.status) updateData.status = data.status;
 
-      const { error } = await supabase
-        .from('mentoring_catalogs')
-        .update(updateData)
-        .eq('id', id);
+    const { error } = await supabase
+      .from('mentoring_catalogs')
+      .update(updateData)
+      .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao atualizar catálogo:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Erro ao atualizar catálogo:', error);
       return false;
     }
+
+    return true;
   }
 
   async deleteCatalog(id: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('mentoring_catalogs')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabase
+      .from('mentoring_catalogs')
+      .delete()
+      .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao deletar catálogo:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Erro ao deletar catálogo:', error);
       return false;
     }
+
+    return true;
   }
 
   // Enrollment operations
@@ -197,10 +127,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         .from('mentoring_enrollments')
         .select(`
           *,
-          mentoring_catalogs (
+          mentoring_catalogs:mentoring_id (
             id,
             name,
             type,
+            duration_months,
             description
           )
         `)
@@ -211,33 +142,9 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         throw error;
       }
 
-      return (data || []).map(enrollment => ({
-        id: enrollment.id,
-        studentId: enrollment.student_id,
-        mentoringId: enrollment.mentoring_id,
-        mentoring: {
-          id: enrollment.mentoring_catalogs?.id || enrollment.mentoring_id,
-          name: enrollment.mentoring_catalogs?.name || 'Mentoria não encontrada',
-          type: (enrollment.mentoring_catalogs?.type as 'Individual' | 'Grupo') || 'Individual',
-          description: enrollment.mentoring_catalogs?.description
-        },
-        status: enrollment.status as 'ativa' | 'concluida' | 'pausada' | 'cancelada',
-        enrollmentDate: enrollment.enrollment_date,
-        startDate: enrollment.start_date,
-        endDate: enrollment.end_date,
-        totalSessions: enrollment.total_sessions,
-        sessionsUsed: enrollment.sessions_used,
-        responsibleMentor: enrollment.responsible_mentor,
-        paymentStatus: enrollment.payment_status,
-        observations: enrollment.observations,
-        hasExtension: enrollment.has_extension || false,
-        originalEndDate: enrollment.original_end_date,
-        createdAt: enrollment.created_at,
-        updatedAt: enrollment.updated_at,
-        groupId: enrollment.group_id
-      }));
+      return (data || []).map(this.mapDatabaseToEnrollment);
     } catch (error) {
-      console.error('Erro na consulta de inscrições:', error);
+      console.error('Erro na query de inscrições:', error);
       return [];
     }
   }
@@ -248,10 +155,11 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         .from('mentoring_enrollments')
         .select(`
           *,
-          mentoring_catalogs (
+          mentoring_catalogs:mentoring_id (
             id,
             name,
             type,
+            duration_months,
             description
           )
         `)
@@ -260,179 +168,134 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
 
       if (error) {
         console.error('Erro ao buscar inscrições do estudante:', error);
-        throw error;
+        return [];
       }
 
-      return (data || []).map(enrollment => ({
-        id: enrollment.id,
-        studentId: enrollment.student_id,
-        mentoringId: enrollment.mentoring_id,
-        mentoring: {
-          id: enrollment.mentoring_catalogs?.id || enrollment.mentoring_id,
-          name: enrollment.mentoring_catalogs?.name || 'Mentoria não encontrada',
-          type: (enrollment.mentoring_catalogs?.type as 'Individual' | 'Grupo') || 'Individual',
-          description: enrollment.mentoring_catalogs?.description
-        },
-        status: enrollment.status as 'ativa' | 'concluida' | 'pausada' | 'cancelada',
-        enrollmentDate: enrollment.enrollment_date,
-        startDate: enrollment.start_date,
-        endDate: enrollment.end_date,
-        totalSessions: enrollment.total_sessions,
-        sessionsUsed: enrollment.sessions_used,
-        responsibleMentor: enrollment.responsible_mentor,
-        paymentStatus: enrollment.payment_status,
-        observations: enrollment.observations,
-        hasExtension: enrollment.has_extension || false,
-        originalEndDate: enrollment.original_end_date,
-        createdAt: enrollment.created_at,
-        updatedAt: enrollment.updated_at,
-        groupId: enrollment.group_id
-      }));
+      return (data || []).map(this.mapDatabaseToEnrollment);
     } catch (error) {
-      console.error('Erro ao buscar inscrições do estudante:', error);
+      console.error('Erro na query de inscrições do estudante:', error);
       return [];
     }
   }
 
   async createEnrollment(data: any): Promise<StudentMentoringEnrollment> {
-    try {
-      const { data: result, error } = await supabase
-        .from('mentoring_enrollments')
-        .insert({
-          student_id: data.studentId,
-          mentoring_id: data.mentoringId,
-          enrollment_date: data.enrollmentDate || new Date().toISOString().split('T')[0],
-          start_date: data.startDate,
-          end_date: data.endDate,
-          total_sessions: data.totalSessions || 12,
-          sessions_used: 0,
-          responsible_mentor: data.responsibleMentor,
-          payment_status: data.paymentStatus || 'pendente',
-          observations: data.observations,
-          status: 'ativa'
-        })
-        .select()
-        .single();
+    const { data: newEnrollment, error } = await supabase
+      .from('mentoring_enrollments')
+      .insert({
+        student_id: data.studentId,
+        mentoring_id: data.mentoringId,
+        status: data.status || 'ativa',
+        start_date: data.startDate,
+        end_date: data.endDate,
+        total_sessions: data.totalSessions || 12,
+        sessions_used: 0,
+        responsible_mentor: data.responsibleMentor,
+        payment_status: data.paymentStatus || 'pendente',
+        observations: data.observations
+      })
+      .select(`
+        *,
+        mentoring_catalogs:mentoring_id (
+          id,
+          name,
+          type,
+          duration_months,
+          description
+        )
+      `)
+      .single();
 
-      if (error) {
-        console.error('Erro ao criar inscrição:', error);
-        throw error;
-      }
-
-      // Buscar dados da mentoria para retorno completo
-      const { data: catalogData } = await supabase
-        .from('mentoring_catalogs')
-        .select('*')
-        .eq('id', result.mentoring_id)
-        .single();
-
-      return {
-        id: result.id,
-        studentId: result.student_id,
-        mentoringId: result.mentoring_id,
-        mentoring: {
-          id: catalogData?.id || result.mentoring_id,
-          name: catalogData?.name || 'Mentoria não encontrada',
-          type: (catalogData?.type as 'Individual' | 'Grupo') || 'Individual',
-          description: catalogData?.description
-        },
-        status: result.status as 'ativa' | 'concluida' | 'pausada' | 'cancelada',
-        enrollmentDate: result.enrollment_date,
-        startDate: result.start_date,
-        endDate: result.end_date,
-        totalSessions: result.total_sessions,
-        sessionsUsed: result.sessions_used,
-        responsibleMentor: result.responsible_mentor,
-        paymentStatus: result.payment_status,
-        observations: result.observations,
-        hasExtension: result.has_extension || false,
-        originalEndDate: result.original_end_date,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at,
-        groupId: result.group_id
-      };
-    } catch (error) {
+    if (error) {
       console.error('Erro ao criar inscrição:', error);
       throw error;
     }
+
+    return this.mapDatabaseToEnrollment(newEnrollment);
   }
 
   async deleteEnrollment(id: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('mentoring_enrollments')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabase
+      .from('mentoring_enrollments')
+      .delete()
+      .eq('id', id);
 
-      if (error) {
-        console.error('Erro ao deletar inscrição:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Erro ao deletar inscrição:', error);
       return false;
     }
+
+    return true;
   }
 
   async addExtension(data: CreateExtensionData): Promise<boolean> {
     try {
-      const { error } = await supabase
+      // First, get the current enrollment
+      const { data: enrollment, error: enrollmentError } = await supabase
+        .from('mentoring_enrollments')
+        .select('end_date, original_end_date')
+        .eq('id', data.enrollmentId)
+        .single();
+
+      if (enrollmentError) {
+        console.error('Erro ao buscar inscrição:', enrollmentError);
+        return false;
+      }
+
+      // Calculate new end date
+      const currentEndDate = new Date(enrollment.end_date);
+      const newEndDate = new Date(currentEndDate);
+      newEndDate.setMonth(newEndDate.getMonth() + data.extensionMonths);
+
+      // Create extension record
+      const { error: extensionError } = await supabase
         .from('mentoring_enrollment_extensions')
         .insert({
           enrollment_id: data.enrollmentId,
           extension_months: data.extensionMonths,
+          applied_date: new Date().toISOString().split('T')[0],
           notes: data.notes,
-          applied_date: new Date().toISOString().split('T')[0]
+          admin_id: 'current-admin-id' // You might want to get this from auth context
         });
 
-      if (error) {
-        console.error('Erro ao adicionar extensão:', error);
+      if (extensionError) {
+        console.error('Erro ao criar extensão:', extensionError);
         return false;
       }
 
-      // Atualizar a data de fim da inscrição
+      // Update enrollment
       const { error: updateError } = await supabase
         .from('mentoring_enrollments')
         .update({
-          has_extension: true,
-          end_date: supabase.rpc('extend_enrollment_date', {
-            enrollment_id: data.enrollmentId,
-            months_to_add: data.extensionMonths
-          })
+          end_date: newEndDate.toISOString().split('T')[0],
+          original_end_date: enrollment.original_end_date || enrollment.end_date,
+          has_extension: true
         })
         .eq('id', data.enrollmentId);
 
       if (updateError) {
-        console.error('Erro ao atualizar inscrição com extensão:', updateError);
+        console.error('Erro ao atualizar inscrição:', updateError);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Erro ao adicionar extensão:', error);
+      console.error('Erro geral ao adicionar extensão:', error);
       return false;
     }
   }
 
   async removeExtension(extensionId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('mentoring_enrollment_extensions')
-        .delete()
-        .eq('id', extensionId);
+    const { error } = await supabase
+      .from('mentoring_enrollment_extensions')
+      .delete()
+      .eq('id', extensionId);
 
-      if (error) {
-        console.error('Erro ao remover extensão:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Erro ao remover extensão:', error);
       return false;
     }
+
+    return true;
   }
 
   // Session operations
@@ -448,41 +311,9 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         throw error;
       }
 
-      return (data || []).map(session => ({
-        id: session.id,
-        enrollment_id: session.enrollment_id,
-        enrollmentId: session.enrollment_id,
-        type: (session.type === 'individual' || session.type === 'group') ? session.type : 'individual',
-        title: session.title,
-        scheduled_date: session.scheduled_date,
-        scheduledDate: session.scheduled_date,
-        scheduled_time: session.scheduled_date ? new Date(session.scheduled_date).toTimeString().substring(0, 5) : undefined,
-        duration_minutes: session.duration_minutes,
-        durationMinutes: session.duration_minutes,
-        meeting_link: session.meeting_link,
-        meetingLink: session.meeting_link,
-        observations: session.observations,
-        session_number: session.session_number,
-        sessionNumber: session.session_number,
-        status: session.status as 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada',
-        group_id: session.group_id,
-        groupId: session.group_id,
-        mentor_notes: session.mentor_notes,
-        mentorNotes: session.mentor_notes,
-        transcription: session.transcription,
-        recording_link: session.recording_link,
-        recordingLink: session.recording_link,
-        calendly_link: session.calendly_link,
-        calendlyLink: session.calendly_link,
-        student_notes: session.student_notes,
-        studentNotes: session.student_notes,
-        created_at: session.created_at,
-        createdAt: session.created_at,
-        updated_at: session.updated_at,
-        updatedAt: session.updated_at
-      }));
+      return (data || []).map(this.mapDatabaseToSession);
     } catch (error) {
-      console.error('Erro na consulta de sessões:', error);
+      console.error('Erro na query de sessões:', error);
       return [];
     }
   }
@@ -500,149 +331,74 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         return [];
       }
 
-      return (data || []).map(session => ({
-        id: session.id,
-        enrollment_id: session.enrollment_id,
-        enrollmentId: session.enrollment_id,
-        type: (session.type === 'individual' || session.type === 'group') ? session.type : 'individual',
-        title: session.title,
-        scheduled_date: session.scheduled_date,
-        scheduledDate: session.scheduled_date,
-        scheduled_time: session.scheduled_date ? new Date(session.scheduled_date).toTimeString().substring(0, 5) : undefined,
-        duration_minutes: session.duration_minutes,
-        durationMinutes: session.duration_minutes,
-        meeting_link: session.meeting_link,
-        meetingLink: session.meeting_link,
-        observations: session.observations,
-        session_number: session.session_number,
-        sessionNumber: session.session_number,
-        status: session.status as 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada',
-        group_id: session.group_id,
-        groupId: session.group_id,
-        mentor_notes: session.mentor_notes,
-        mentorNotes: session.mentor_notes,
-        transcription: session.transcription,
-        recording_link: session.recording_link,
-        recordingLink: session.recording_link,
-        calendly_link: session.calendly_link,
-        calendlyLink: session.calendly_link,
-        student_notes: session.student_notes,
-        studentNotes: session.student_notes,
-        created_at: session.created_at,
-        createdAt: session.created_at,
-        updated_at: session.updated_at,
-        updatedAt: session.updated_at
-      }));
+      return (data || []).map(this.mapDatabaseToSession);
     } catch (error) {
-      console.error('Erro ao buscar sessões da inscrição:', error);
+      console.error('Erro na query de sessões da inscrição:', error);
       return [];
     }
   }
 
   async createSession(data: CreateSessionData): Promise<MentoringSession> {
-    try {
-      const { data: result, error } = await supabase
-        .from('mentoring_sessions')
-        .insert({
-          enrollment_id: data.enrollmentId,
-          type: data.type,
-          title: data.title,
-          scheduled_date: data.scheduledDate,
-          duration_minutes: data.durationMinutes,
-          meeting_link: data.meetingLink,
-          observations: data.observations,
-          session_number: data.sessionNumber || 1,
-          status: data.status || 'aguardando_agendamento',
-          group_id: data.groupId
-        })
-        .select()
-        .single();
+    const { data: newSession, error } = await supabase
+      .from('mentoring_sessions')
+      .insert({
+        enrollment_id: data.enrollmentId,
+        type: data.type,
+        title: data.title,
+        scheduled_date: data.scheduledDate,
+        duration_minutes: data.durationMinutes || 60,
+        meeting_link: data.meetingLink,
+        observations: data.observations,
+        session_number: data.sessionNumber || 1,
+        status: data.status || 'aguardando_agendamento',
+        group_id: data.groupId
+      })
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Erro ao criar sessão:', error);
-        throw error;
-      }
-
-      return {
-        id: result.id,
-        enrollment_id: result.enrollment_id,
-        enrollmentId: result.enrollment_id,
-        type: result.type as 'individual' | 'group',
-        title: result.title,
-        scheduled_date: result.scheduled_date,
-        scheduledDate: result.scheduled_date,
-        scheduled_time: result.scheduled_date ? new Date(result.scheduled_date).toTimeString().substring(0, 5) : undefined,
-        duration_minutes: result.duration_minutes,
-        durationMinutes: result.duration_minutes,
-        meeting_link: result.meeting_link,
-        meetingLink: result.meeting_link,
-        observations: result.observations,
-        session_number: result.session_number,
-        sessionNumber: result.session_number,
-        status: result.status as 'agendada' | 'concluida' | 'cancelada' | 'aguardando_agendamento' | 'no_show_aluno' | 'no_show_mentor' | 'reagendada',
-        group_id: result.group_id,
-        groupId: result.group_id,
-        created_at: result.created_at,
-        createdAt: result.created_at,
-        updated_at: result.updated_at,
-        updatedAt: result.updated_at
-      };
-    } catch (error) {
+    if (error) {
       console.error('Erro ao criar sessão:', error);
       throw error;
     }
+
+    return this.mapDatabaseToSession(newSession);
   }
 
   async updateSession(sessionId: string, data: UpdateSessionData): Promise<boolean> {
-    try {
-      const updateData: any = {};
-      
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.scheduledDate !== undefined) updateData.scheduled_date = data.scheduledDate;
-      if (data.durationMinutes !== undefined) updateData.duration_minutes = data.durationMinutes;
-      if (data.meetingLink !== undefined) updateData.meeting_link = data.meetingLink;
-      if (data.observations !== undefined) updateData.observations = data.observations;
-      if (data.status !== undefined) updateData.status = data.status;
-      if (data.mentorNotes !== undefined) updateData.mentor_notes = data.mentorNotes;
-      if (data.transcription !== undefined) updateData.transcription = data.transcription;
-      if (data.recordingLink !== undefined) updateData.recording_link = data.recordingLink;
-      if (data.calendlyLink !== undefined) updateData.calendly_link = data.calendlyLink;
-      if (data.studentNotes !== undefined) updateData.student_notes = data.studentNotes;
+    const updateData: any = {};
+    
+    if (data.title) updateData.title = data.title;
+    if (data.scheduledDate) updateData.scheduled_date = data.scheduledDate;
+    if (data.durationMinutes) updateData.duration_minutes = data.durationMinutes;
+    if (data.meetingLink) updateData.meeting_link = data.meetingLink;
+    if (data.observations) updateData.observations = data.observations;
+    if (data.status) updateData.status = data.status;
 
-      const { error } = await supabase
-        .from('mentoring_sessions')
-        .update(updateData)
-        .eq('id', sessionId);
+    const { error } = await supabase
+      .from('mentoring_sessions')
+      .update(updateData)
+      .eq('id', sessionId);
 
-      if (error) {
-        console.error('Erro ao atualizar sessão:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Erro ao atualizar sessão:', error);
       return false;
     }
+
+    return true;
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('mentoring_sessions')
-        .delete()
-        .eq('id', sessionId);
+    const { error } = await supabase
+      .from('mentoring_sessions')
+      .delete()
+      .eq('id', sessionId);
 
-      if (error) {
-        console.error('Erro ao deletar sessão:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Erro ao deletar sessão:', error);
       return false;
     }
+
+    return true;
   }
 
   // Material operations
@@ -658,34 +414,9 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         return [];
       }
 
-      return (data || []).map(material => ({
-        id: material.id,
-        enrollment_id: material.enrollment_id,
-        enrollmentId: material.enrollment_id,
-        session_id: material.session_id,
-        sessionId: material.session_id,
-        file_name: material.file_name,
-        fileName: material.file_name,
-        file_url: material.file_url,
-        fileUrl: material.file_url,
-        file_type: material.file_type,
-        fileType: material.file_type,
-        description: material.description,
-        uploader_id: material.uploader_id,
-        uploaderId: material.uploader_id,
-        uploader_type: material.uploader_type,
-        uploaderType: material.uploader_type,
-        size_mb: material.size_mb,
-        sizeMb: material.size_mb,
-        sizeMB: material.size_mb,
-        tags: material.tags || [],
-        created_at: material.created_at,
-        createdAt: material.created_at,
-        updated_at: material.updated_at,
-        updatedAt: material.updated_at
-      }));
+      return (data || []).map(this.mapDatabaseToMaterial);
     } catch (error) {
-      console.error('Erro ao buscar materiais:', error);
+      console.error('Erro na query de materiais:', error);
       return [];
     }
   }
@@ -703,34 +434,9 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         return [];
       }
 
-      return (data || []).map(material => ({
-        id: material.id,
-        enrollment_id: material.enrollment_id,
-        enrollmentId: material.enrollment_id,
-        session_id: material.session_id,
-        sessionId: material.session_id,
-        file_name: material.file_name,
-        fileName: material.file_name,
-        file_url: material.file_url,
-        fileUrl: material.file_url,
-        file_type: material.file_type,
-        fileType: material.file_type,
-        description: material.description,
-        uploader_id: material.uploader_id,
-        uploaderId: material.uploader_id,
-        uploader_type: material.uploader_type,
-        uploaderType: material.uploader_type,
-        size_mb: material.size_mb,
-        sizeMb: material.size_mb,
-        sizeMB: material.size_mb,
-        tags: material.tags || [],
-        created_at: material.created_at,
-        createdAt: material.created_at,
-        updated_at: material.updated_at,
-        updatedAt: material.updated_at
-      }));
+      return (data || []).map(this.mapDatabaseToMaterial);
     } catch (error) {
-      console.error('Erro ao buscar materiais da inscrição:', error);
+      console.error('Erro na query de materiais da inscrição:', error);
       return [];
     }
   }
@@ -748,91 +454,145 @@ export class SupabaseMentoringRepository implements IMentoringRepository {
         return [];
       }
 
-      return (data || []).map(material => ({
-        id: material.id,
-        enrollment_id: material.enrollment_id,
-        enrollmentId: material.enrollment_id,
-        session_id: material.session_id,
-        sessionId: material.session_id,
-        file_name: material.file_name,
-        fileName: material.file_name,
-        file_url: material.file_url,
-        fileUrl: material.file_url,
-        file_type: material.file_type,
-        fileType: material.file_type,
-        description: material.description,
-        uploader_id: material.uploader_id,
-        uploaderId: material.uploader_id,
-        uploader_type: material.uploader_type,
-        uploaderType: material.uploader_type,
-        size_mb: material.size_mb,
-        sizeMb: material.size_mb,
-        sizeMB: material.size_mb,
-        tags: material.tags || [],
-        created_at: material.created_at,
-        createdAt: material.created_at,
-        updated_at: material.updated_at,
-        updatedAt: material.updated_at
-      }));
+      return (data || []).map(this.mapDatabaseToMaterial);
     } catch (error) {
-      console.error('Erro ao buscar materiais da sessão:', error);
+      console.error('Erro na query de materiais da sessão:', error);
       return [];
     }
   }
 
   async uploadMaterial(file: File, enrollmentId?: string, sessionId?: string): Promise<MentoringMaterial> {
-    try {
-      // Upload do arquivo para o storage (implementar conforme necessário)
-      const fileName = `${Date.now()}-${file.name}`;
-      const fileUrl = `fake-url/${fileName}`; // Substituir por upload real
+    // For now, we'll simulate the upload and create a record
+    const { data: newMaterial, error } = await supabase
+      .from('mentoring_materials')
+      .insert({
+        enrollment_id: enrollmentId,
+        session_id: sessionId,
+        file_name: file.name,
+        file_url: `fake-url/${file.name}`, // In real implementation, upload to storage first
+        file_type: file.type,
+        size_mb: file.size / (1024 * 1024),
+        uploader_type: 'admin'
+      })
+      .select()
+      .single();
 
-      const { data: result, error } = await supabase
-        .from('mentoring_materials')
-        .insert({
-          enrollment_id: enrollmentId,
-          session_id: sessionId,
-          file_name: file.name,
-          file_url: fileUrl,
-          file_type: file.type,
-          size_mb: file.size / (1024 * 1024)
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erro ao fazer upload do material:', error);
-        throw error;
-      }
-
-      return {
-        id: result.id,
-        enrollment_id: result.enrollment_id,
-        enrollmentId: result.enrollment_id,
-        session_id: result.session_id,
-        sessionId: result.session_id,
-        file_name: result.file_name,
-        fileName: result.file_name,
-        file_url: result.file_url,
-        fileUrl: result.file_url,
-        file_type: result.file_type,
-        fileType: result.file_type,
-        description: result.description,
-        uploader_id: result.uploader_id,
-        uploaderId: result.uploader_id,
-        uploader_type: result.uploader_type,
-        uploaderType: result.uploader_type,
-        size_mb: result.size_mb,
-        sizeMb: result.size_mb,
-        sizeMB: result.size_mb,
-        tags: result.tags || [],
-        created_at: result.created_at,
-        createdAt: result.created_at,
-        updated_at: result.updated_at,
-        updatedAt: result.updated_at
-      };
-    } catch (error) {
+    if (error) {
       console.error('Erro ao fazer upload do material:', error);
       throw error;
     }
+
+    return this.mapDatabaseToMaterial(newMaterial);
+  }
+
+  // Helper methods to map database records to domain objects
+  private mapDatabaseToCatalog(data: any): MentoringCatalog {
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      instructor: data.instructor,
+      durationMonths: data.duration_months,
+      frequency: 'Semanal', // Default value as it's not in DB
+      numberOfSessions: data.number_of_sessions,
+      totalSessions: data.total_sessions,
+      price: data.price,
+      description: data.description,
+      tags: data.tags || [],
+      active: data.active,
+      status: data.status,
+      extensions: [], // Extensions would need to be loaded separately
+      checkoutLinks: {}, // Default empty object
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  }
+
+  private mapDatabaseToEnrollment(data: any): StudentMentoringEnrollment {
+    return {
+      id: data.id,
+      studentId: data.student_id,
+      mentoringId: data.mentoring_id,
+      mentoring: data.mentoring_catalogs ? {
+        id: data.mentoring_catalogs.id,
+        name: data.mentoring_catalogs.name,
+        type: data.mentoring_catalogs.type,
+        frequency: 'Semanal',
+        durationMonths: data.mentoring_catalogs.duration_months,
+        extensions: [],
+        description: data.mentoring_catalogs.description
+      } : {
+        id: data.mentoring_id,
+        name: 'Unknown Mentoring',
+        type: 'Individual' as const,
+        frequency: 'Semanal',
+        durationMonths: 6,
+        extensions: [],
+        description: ''
+      },
+      status: data.status as any,
+      enrollmentDate: data.enrollment_date,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      sessionsUsed: data.sessions_used,
+      totalSessions: data.total_sessions,
+      responsibleMentor: data.responsible_mentor,
+      paymentStatus: data.payment_status as any,
+      observations: data.observations,
+      hasExtension: data.has_extension || false,
+      originalEndDate: data.original_end_date,
+      extensions: [], // Extensions would need to be loaded separately
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  }
+
+  private mapDatabaseToSession(data: any): MentoringSession {
+    return {
+      id: data.id,
+      enrollment_id: data.enrollment_id,
+      enrollmentId: data.enrollment_id,
+      type: (data.type === 'individual' || data.type === 'group') ? data.type : 'individual',
+      title: data.title,
+      scheduled_date: data.scheduled_date,
+      scheduledDate: data.scheduled_date,
+      scheduled_time: data.scheduled_time || '',
+      duration_minutes: data.duration_minutes,
+      durationMinutes: data.duration_minutes,
+      meeting_link: data.meeting_link,
+      meetingLink: data.meeting_link,
+      observations: data.observations,
+      session_number: data.session_number,
+      sessionNumber: data.session_number,
+      status: data.status,
+      group_id: data.group_id,
+      groupId: data.group_id,
+      created_at: data.created_at,
+      createdAt: data.created_at,
+      updated_at: data.updated_at,
+      updatedAt: data.updated_at
+    };
+  }
+
+  private mapDatabaseToMaterial(data: any): MentoringMaterial {
+    return {
+      id: data.id,
+      enrollment_id: data.enrollment_id,
+      enrollmentId: data.enrollment_id,
+      session_id: data.session_id,
+      sessionId: data.session_id,
+      file_name: data.file_name,
+      fileName: data.file_name,
+      file_url: data.file_url,
+      fileUrl: data.file_url,
+      file_type: data.file_type,
+      fileType: data.file_type,
+      size_mb: data.size_mb,
+      sizeMb: data.size_mb,
+      created_at: data.created_at,
+      createdAt: data.created_at,
+      updated_at: data.updated_at,
+      updatedAt: data.updated_at
+    };
   }
 }
