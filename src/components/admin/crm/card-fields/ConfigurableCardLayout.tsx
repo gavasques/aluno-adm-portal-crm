@@ -2,6 +2,7 @@
 import React from 'react';
 import { CRMLead, CRMLeadCardField } from '@/types/crm.types';
 import { FieldRenderer } from './FieldRenderer';
+import { isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 
 interface ConfigurableCardLayoutProps {
   lead: CRMLead;
@@ -14,10 +15,21 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
   visibleFields,
   fieldOrder
 }) => {
-  // Ordenar campos conforme preferência do usuário
-  const orderedVisibleFields = fieldOrder.filter(field => visibleFields.includes(field));
+  // Verificar se há contato agendado e se deve ser destacado
+  const hasScheduledContact = lead.scheduled_contact_date && visibleFields.includes('scheduled_contact_date');
+  const shouldHighlightContact = hasScheduledContact && (() => {
+    const contactDate = new Date(lead.scheduled_contact_date!);
+    const daysDiff = differenceInDays(contactDate, new Date());
+    return isPast(contactDate) || isToday(contactDate) || isTomorrow(contactDate) || daysDiff <= 3;
+  })();
+
+  // Separar campos por categoria, excluindo o contato agendado se deve ser destacado
+  const fieldsToProcess = shouldHighlightContact 
+    ? visibleFields.filter(field => field !== 'scheduled_contact_date')
+    : visibleFields;
+
+  const orderedVisibleFields = fieldOrder.filter(field => fieldsToProcess.includes(field));
   
-  // Separar campos por categoria para organização
   const essentialFields = orderedVisibleFields.filter(field => 
     ['name', 'status', 'responsible'].includes(field)
   );
@@ -39,7 +51,7 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
   );
   
   const systemFields = orderedVisibleFields.filter(field => 
-    ['pipeline', 'column', 'tags', 'created_at', 'updated_at', 'scheduled_contact_date'].includes(field)
+    ['pipeline', 'column', 'tags', 'created_at', 'updated_at'].includes(field)
   );
 
   // Função para verificar se uma seção tem conteúdo válido
@@ -83,7 +95,18 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
 
   return (
     <div className="space-y-2">
-      {/* Campos Essenciais - Sempre renderizar se estiverem na lista */}
+      {/* Contato Agendado em Destaque - Sempre no topo quando urgente */}
+      {shouldHighlightContact && (
+        <div className="mb-2">
+          <FieldRenderer 
+            field="scheduled_contact_date" 
+            lead={lead} 
+            compact={true}
+          />
+        </div>
+      )}
+
+      {/* Campos Essenciais */}
       {essentialFields.map(field => (
         <FieldRenderer 
           key={field} 
@@ -93,7 +116,7 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
         />
       ))}
 
-      {/* Campos de Contato - Apenas se tiverem conteúdo */}
+      {/* Campos de Contato */}
       {hasValidContent(contactFields) && (
         <div className="space-y-1">
           {contactFields.map(field => (
@@ -107,7 +130,7 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
         </div>
       )}
 
-      {/* Campos de Qualificação - Como badges compactos em linha */}
+      {/* Campos de Qualificação - Como badges compactos */}
       {hasValidContent(qualificationFields) && (
         <div className="flex flex-wrap gap-1">
           {qualificationFields.map(field => (
@@ -153,6 +176,15 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
       {systemFields.includes('tags') && lead.tags && lead.tags.length > 0 && (
         <FieldRenderer 
           field="tags" 
+          lead={lead} 
+          compact={true}
+        />
+      )}
+
+      {/* Contato Agendado Normal - quando não é urgente */}
+      {hasScheduledContact && !shouldHighlightContact && (
+        <FieldRenderer 
+          field="scheduled_contact_date" 
           lead={lead} 
           compact={true}
         />

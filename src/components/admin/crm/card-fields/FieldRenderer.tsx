@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag, ExternalLink, MessageSquare, FileText, Package, ShoppingCart, Truck, Star } from 'lucide-react';
+import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag, ExternalLink, MessageSquare, FileText, Package, ShoppingCart, Truck, Star, AlertCircle } from 'lucide-react';
 import { CRMLead, CRMLeadCardField } from '@/types/crm.types';
-import { format } from 'date-fns';
+import { format, differenceInDays, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface FieldRendererProps {
@@ -261,13 +260,59 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
 
       case 'scheduled_contact_date':
         if (!lead.scheduled_contact_date) return null;
+        
+        const contactDate = new Date(lead.scheduled_contact_date);
+        const now = new Date();
+        const daysDiff = differenceInDays(contactDate, now);
+        
+        // Determinar cor e urgência baseado na proximidade
+        let badgeColor = '';
+        let textColor = '';
+        let icon = Clock;
+        let prefix = 'Próximo:';
+        
+        if (isPast(contactDate) && !isToday(contactDate)) {
+          // Vencido
+          badgeColor = 'bg-red-50 border-red-200';
+          textColor = 'text-red-700';
+          icon = AlertCircle;
+          prefix = 'Vencido:';
+        } else if (isToday(contactDate)) {
+          // Hoje
+          badgeColor = 'bg-yellow-50 border-yellow-200';
+          textColor = 'text-yellow-800';
+          icon = AlertCircle;
+          prefix = 'Hoje:';
+        } else if (isTomorrow(contactDate)) {
+          // Amanhã
+          badgeColor = 'bg-orange-50 border-orange-200';
+          textColor = 'text-orange-700';
+          icon = AlertCircle;
+          prefix = 'Amanhã:';
+        } else if (daysDiff <= 3) {
+          // Próximos 3 dias
+          badgeColor = 'bg-blue-50 border-blue-200';
+          textColor = 'text-blue-700';
+          icon = Clock;
+          prefix = 'Em breve:';
+        } else {
+          // Normal
+          badgeColor = 'bg-gray-50 border-gray-200';
+          textColor = 'text-gray-600';
+          icon = Clock;
+          prefix = 'Próximo:';
+        }
+        
+        const IconComponent = icon;
+        
         return (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            <span>
-              Próximo: {format(new Date(lead.scheduled_contact_date), 'dd/MM', { locale: ptBR })}
-            </span>
-          </div>
+          <Badge 
+            variant="outline" 
+            className={`text-xs ${badgeColor} ${textColor} h-5 px-1.5 font-medium`}
+          >
+            <IconComponent className="h-2.5 w-2.5 mr-0.5" />
+            {prefix} {format(contactDate, 'dd/MM', { locale: ptBR })}
+          </Badge>
         );
 
       default:
