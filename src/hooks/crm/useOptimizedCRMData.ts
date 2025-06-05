@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,14 +46,12 @@ export const useOptimizedCRMData = (
 
   // Dados virtualizados para performance
   const virtualizedLeads = useMemo(() => {
-    const leadsArray = Array.isArray(allLeads) ? allLeads : [];
-    
-    if (!enableVirtualization || leadsArray.length <= 100) {
-      return leadsArray;
+    if (!enableVirtualization || allLeads.length <= 100) {
+      return allLeads;
     }
 
     const endTiming = startTiming();
-    const result = leadsArray.slice(virtualizedRange.start, virtualizedRange.end);
+    const result = allLeads.slice(virtualizedRange.start, virtualizedRange.end);
     endTiming();
     
     return result;
@@ -69,12 +66,11 @@ export const useOptimizedCRMData = (
     const result: Record<string, LeadWithContacts[]> = {};
     
     Object.entries(leadsByColumn).forEach(([columnId, leads]) => {
-      const leadsArray = Array.isArray(leads) ? leads : [];
-      if (leadsArray.length <= 50) {
-        result[columnId] = leadsArray;
+      if (leads.length <= 50) {
+        result[columnId] = leads;
       } else {
         // Para colunas com muitos leads, aplicar virtualização
-        result[columnId] = leadsArray.slice(0, 50);
+        result[columnId] = leads.slice(0, 50);
       }
     });
 
@@ -194,8 +190,7 @@ export const useOptimizedCRMData = (
       
       // Prefetch dados da nova coluna se necessário
       const newColumnLeads = leadsByColumn[newColumnId] || [];
-      const newColumnLeadsArray = Array.isArray(newColumnLeads) ? newColumnLeads : [];
-      if (newColumnLeadsArray.length < 10) {
+      if (newColumnLeads.length < 10) {
         await prefetchRelatedData([leadId]);
       }
       
@@ -205,19 +200,15 @@ export const useOptimizedCRMData = (
   }, [moveLeadToColumn, leadsByColumn, prefetchRelatedData, startTiming]);
 
   // Métricas de performance
-  const performanceMetrics = useMemo(() => {
-    const allLeadsArray = Array.isArray(allLeads) ? allLeads : [];
-    
-    return {
-      totalLeads: allLeadsArray.length,
-      virtualizedLeads: virtualizedLeads.length,
-      columnsWithData: Object.keys(leadsByColumn).length,
-      isVirtualized: enableVirtualization && allLeadsArray.length > 100,
-      cacheAge: Date.now() - lastFetchTime,
-      isOptimizing
-    };
-  }, [
-    allLeads,
+  const performanceMetrics = useMemo(() => ({
+    totalLeads: allLeads.length,
+    virtualizedLeads: virtualizedLeads.length,
+    columnsWithData: Object.keys(leadsByColumn).length,
+    isVirtualized: enableVirtualization && allLeads.length > 100,
+    cacheAge: Date.now() - lastFetchTime,
+    isOptimizing
+  }), [
+    allLeads.length,
     virtualizedLeads.length,
     leadsByColumn,
     enableVirtualization,
@@ -227,9 +218,9 @@ export const useOptimizedCRMData = (
 
   return {
     // Dados principais
-    leadsWithContacts: enableVirtualization ? virtualizedLeads : (Array.isArray(allLeads) ? allLeads : []),
+    leadsWithContacts: enableVirtualization ? virtualizedLeads : allLeads,
     leadsByColumn: enableVirtualization ? virtualizedLeadsByColumn : leadsByColumn,
-    allLeads: Array.isArray(allLeads) ? allLeads : [], // Dados completos sempre disponíveis
+    allLeads, // Dados completos sempre disponíveis
     
     // Estados
     loading,

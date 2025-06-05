@@ -8,14 +8,18 @@ const createCRMQueryClient = () => {
   return new QueryClient({
     defaultOptions: {
       queries: {
+        // Cache mais agressivo para dados CRM
         staleTime: 2 * 60 * 1000, // 2 minutos
         gcTime: 10 * 60 * 1000, // 10 minutos
         
+        // Retry customizado para problemas de CORS
         retry: (failureCount, error: any) => {
+          // Não retry em erros de CORS ou autenticação
           if (error?.status === 401 || error?.status === 403) {
             return false;
           }
           
+          // Detectar erros de CORS
           if (error?.message?.includes('CORS') || 
               error?.message?.includes('cross-origin') ||
               error?.message?.includes('Access-Control-Allow-Origin')) {
@@ -23,18 +27,26 @@ const createCRMQueryClient = () => {
             return false;
           }
           
+          // Retry limitado para outros erros
           return failureCount < 1;
         },
         
+        // Delay progressivo entre retries
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+        
+        // Configurações de refetch otimizadas para ambiente Lovable
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
         refetchOnMount: 'always',
+        
+        // Configuração específica para detectar problemas de rede
         networkMode: 'always',
       },
       
       mutations: {
+        // Configurações globais para mutations CRM
         retry: (failureCount, error: any) => {
+          // Não retry em erros de CORS
           if (error?.message?.includes('CORS') || 
               error?.message?.includes('cross-origin')) {
             return false;
@@ -45,11 +57,13 @@ const createCRMQueryClient = () => {
         onError: (error: any) => {
           console.error('❌ [CRM_MUTATION] Erro em mutation:', error);
           
+          // Log específico para erros de CORS
           if (error?.message?.includes('CORS')) {
             console.error('🚫 [CRM_MUTATION] Erro de CORS detectado - verifique configurações do Supabase');
           }
         },
         
+        // Configurações de timeout
         networkMode: 'always',
       }
     }
@@ -65,11 +79,16 @@ interface CRMProviderProps {
 
 /**
  * Provider unificado para todo o sistema CRM
- * Integra React Query e Context corretamente
+ * Integra:
+ * - React Query para cache e sincronização
+ * - Context para estado global
+ * - Configurações otimizadas para ambiente Lovable
+ * - Tratamento específico de erros de CORS
  */
 export const UnifiedCRMProvider: React.FC<CRMProviderProps> = ({ children }) => {
-  console.log('🚀 [UNIFIED_CRM_PROVIDER] Inicializando provider unificado');
+  console.log('🚀 [UNIFIED_CRM_PROVIDER] Inicializando provider unificado (refatorado)');
 
+  // Adicionar listeners para detectar problemas de rede
   React.useEffect(() => {
     const handleOnline = () => {
       console.log('🌐 [CRM_PROVIDER] Conexão online detectada');
@@ -89,6 +108,15 @@ export const UnifiedCRMProvider: React.FC<CRMProviderProps> = ({ children }) => 
     };
   }, []);
 
+  // Log de status do cliente
+  React.useEffect(() => {
+    console.log('📊 [CRM_PROVIDER] Status do cliente:', {
+      queriesCount: crmQueryClient.getQueryCache().getAll().length,
+      mutationsCount: crmQueryClient.getMutationCache().getAll().length,
+      isOnline: navigator.onLine
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={crmQueryClient}>
       <CRMContextProvider>
@@ -101,6 +129,27 @@ export const UnifiedCRMProvider: React.FC<CRMProviderProps> = ({ children }) => 
 // Hook para acessar o query client CRM
 export const useCRMQueryClient = () => {
   return crmQueryClient;
+};
+
+// Provider alternativo que permite usar query client existente
+interface CRMProviderWithClientProps {
+  children: React.ReactNode;
+  queryClient?: QueryClient;
+}
+
+export const CRMProviderWithClient: React.FC<CRMProviderWithClientProps> = ({ 
+  children, 
+  queryClient 
+}) => {
+  const client = queryClient || crmQueryClient;
+  
+  return (
+    <QueryClientProvider client={client}>
+      <CRMContextProvider>
+        {children}
+      </CRMContextProvider>
+    </QueryClientProvider>
+  );
 };
 
 export default UnifiedCRMProvider;

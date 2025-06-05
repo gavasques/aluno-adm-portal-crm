@@ -1,109 +1,106 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Handshake, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Plus, Handshake, Star, TrendingUp } from 'lucide-react';
 
-const Partners = () => {
-  console.log('Partners page component is rendering');
-
+const AdminPartners = () => {
   return (
-    <div className="p-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Parceiros ADM</h1>
-          <p className="text-gray-600 mt-1">Gerencie os parceiros da plataforma</p>
+          <h1 className="text-3xl font-bold tracking-tight">Parceiros</h1>
+          <p className="text-muted-foreground">
+            Gerencie parceiros da plataforma (Área ADM)
+          </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Parceiro
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Parceiro
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total de Parceiros
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Handshake className="h-5 w-5 mr-2" />
+              Total
             </CardTitle>
-            <Handshake className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-green-600">+5 este mês</p>
+            <p className="text-xs text-muted-foreground">
+              Parceiros ativos
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Parceiros Ativos
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-gray-400" />
+          <CardHeader>
+            <CardTitle>Novos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">76</div>
-            <p className="text-xs text-gray-600">85% do total</p>
+            <div className="text-2xl font-bold">5</div>
+            <p className="text-xs text-muted-foreground">
+              Este mês
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Avaliação Média
-            </CardTitle>
-            <Star className="h-4 w-4 text-gray-400" />
+          <CardHeader>
+            <CardTitle>Avaliações</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.5</div>
-            <p className="text-xs text-green-600">+0.2 este mês</p>
+            <div className="text-2xl font-bold">4.8</div>
+            <p className="text-xs text-muted-foreground">
+              Média geral
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Novos Acordos
-            </CardTitle>
-            <Plus className="h-4 w-4 text-gray-400" />
+          <CardHeader>
+            <CardTitle>Tipos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-green-600">Este trimestre</p>
+            <p className="text-xs text-muted-foreground">
+              Categorias diferentes
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Content */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Parceiros</CardTitle>
+          <CardDescription>
+            Gerencie todos os parceiros cadastrados na plataforma
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <Handshake className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Módulo de Parceiros
-            </h3>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Este módulo está sendo desenvolvido. Em breve você poderá gerenciar todos os parceiros aqui.
-            </p>
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                placeholder="Buscar parceiros..."
+                className="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtros
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Debug Info */}
-      <Card className="bg-gray-50">
-        <CardHeader>
-          <CardTitle className="text-sm">Debug Info</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-xs text-gray-600">
-            <p>Componente Partners renderizado com sucesso</p>
-            <p>Rota: /admin/parceiros</p>
-            <p>Timestamp: {new Date().toISOString()}</p>
+          
+          <div className="border rounded-lg">
+            <div className="p-4 text-center text-muted-foreground">
+              <Handshake className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>Sistema de parceiros será implementado em breve</p>
+              <p className="text-sm">Esta funcionalidade está em desenvolvimento</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -111,4 +108,4 @@ const Partners = () => {
   );
 };
 
-export default Partners;
+export default AdminPartners;

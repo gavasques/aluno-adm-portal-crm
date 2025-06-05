@@ -1,11 +1,16 @@
 
 import React from 'react';
-import UserPageWrapper from '@/components/admin/users/UserPageWrapper';
+import { PerformanceOptimizedUserProvider } from '@/contexts/PerformanceOptimizedUserContext';
+import ModernUnifiedUserPage from '@/features/users/components/ModernUnifiedUserPage';
 
 const Users = () => {
-  console.log('Users page component is rendering');
-  
-  return <UserPageWrapper />;
+  return (
+    <div className="p-8">
+      <PerformanceOptimizedUserProvider>
+        <ModernUnifiedUserPage />
+      </PerformanceOptimizedUserProvider>
+    </div>
+  );
 };
 
 export default Users;

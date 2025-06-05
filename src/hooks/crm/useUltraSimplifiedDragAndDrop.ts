@@ -1,21 +1,17 @@
 
 import { useState, useCallback } from 'react';
-import { useSensors, useSensor, PointerSensor, KeyboardSensor, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { DragEndEvent, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CRMLead } from '@/types/crm.types';
+import { toast } from 'sonner';
 import { debugLogger } from '@/utils/debug-logger';
 
 interface UseUltraSimplifiedDragAndDropProps {
   onMoveLeadToColumn: (leadId: string, newColumnId: string) => Promise<void>;
 }
 
-export const useUltraSimplifiedDragAndDrop = ({
-  onMoveLeadToColumn
-}: UseUltraSimplifiedDragAndDropProps) => {
+export const useUltraSimplifiedDragAndDrop = ({ onMoveLeadToColumn }: UseUltraSimplifiedDragAndDropProps) => {
   const [draggedLead, setDraggedLead] = useState<CRMLead | null>(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [canDrag, setCanDrag] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -23,114 +19,155 @@ export const useUltraSimplifiedDragAndDrop = ({
         distance: 8,
       },
     }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 8,
+      },
     })
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
+    const dragStartId = `ultra_simple_drag_start_${Date.now()}`;
     
-    if (!active || !active.data.current) {
-      debugLogger.warn('🚫 [ULTRA_SIMPLIFIED_DRAG] DragStart: Dados inválidos', { active });
+    debugLogger.info(`🎯 [ULTRA_SIMPLE_DRAG_START_${dragStartId}] INÍCIO`, {
+      activeId: event.active.id,
+      isMoving,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (isMoving) {
+      debugLogger.warn('❌ [DRAG_START] Drag bloqueado - movimento em andamento');
+      toast.warning('Aguarde o movimento anterior terminar');
       return;
     }
-
-    const leadData = active.data.current.lead;
-    if (!leadData) {
-      debugLogger.warn('🚫 [ULTRA_SIMPLIFIED_DRAG] DragStart: Lead não encontrado', { activeData: active.data.current });
+    
+    const dragData = event.active.data?.current;
+    
+    if (!dragData || dragData.type !== 'lead' || !dragData.lead) {
+      debugLogger.error('❌ [DRAG_START] Dados do drag inválidos:', {
+        hasData: !!dragData,
+        type: dragData?.type,
+        hasLead: !!dragData?.lead
+      });
+      toast.error('Erro: Dados do lead inválidos para movimentação');
       return;
     }
-
-    debugLogger.info('🎯 [ULTRA_SIMPLIFIED_DRAG] DragStart:', {
+    
+    const leadData = dragData.lead as CRMLead;
+    
+    // Validação rigorosa dos dados do lead
+    if (!leadData.id || !leadData.name || !leadData.column_id) {
+      debugLogger.error('❌ [DRAG_START] Lead com dados incompletos:', {
+        hasId: !!leadData.id,
+        hasName: !!leadData.name,
+        hasColumnId: !!leadData.column_id,
+        leadData: {
+          id: leadData.id,
+          name: leadData.name,
+          column_id: leadData.column_id
+        }
+      });
+      toast.error('Erro: Lead com dados incompletos');
+      return;
+    }
+    
+    setDraggedLead(leadData);
+    
+    debugLogger.info('✅ [DRAG_START] Drag iniciado com sucesso:', {
       leadId: leadData.id,
       leadName: leadData.name,
-      currentColumn: leadData.column_id,
-      timestamp: new Date().toISOString()
+      currentColumn: leadData.column_id
     });
-
-    setDraggedLead(leadData);
-    setIsDragging(true);
-    setCanDrag(false);
-  }, []);
+  }, [isMoving]);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
+    const dragEndId = `ultra_simple_drag_end_${Date.now()}`;
     
-    debugLogger.info('🏁 [ULTRA_SIMPLIFIED_DRAG] DragEnd iniciado:', {
-      activeId: active?.id,
-      overId: over?.id,
-      activeData: active?.data?.current,
-      overData: over?.data?.current,
+    debugLogger.info(`🎯 [ULTRA_SIMPLE_DRAG_END_${dragEndId}] FINAL`, {
+      hasDestination: !!event.over,
+      hasLead: !!draggedLead,
+      isMoving,
       timestamp: new Date().toISOString()
     });
-
-    setIsDragging(false);
     
-    if (!over || !active || !draggedLead) {
-      debugLogger.warn('🚫 [ULTRA_SIMPLIFIED_DRAG] DragEnd: Dados insuficientes', {
-        hasOver: !!over,
-        hasActive: !!active,
-        hasDraggedLead: !!draggedLead
-      });
-      
-      setDraggedLead(null);
-      setCanDrag(true);
+    const currentDraggedLead = draggedLead;
+    setDraggedLead(null);
+
+    if (!event.over || !currentDraggedLead) {
+      debugLogger.info('ℹ️ [DRAG_END] Drag cancelado - sem destino ou lead');
       return;
     }
 
-    const targetColumnId = over.data?.current?.columnId || over.id;
-    const sourceColumnId = draggedLead.column_id;
+    const newColumnId = event.over.id as string;
 
-    debugLogger.info('🎯 [ULTRA_SIMPLIFIED_DRAG] Processando movimento:', {
-      leadId: draggedLead.id,
-      leadName: draggedLead.name,
-      sourceColumnId,
-      targetColumnId,
-      sameColumn: sourceColumnId === targetColumnId
+    debugLogger.info('📊 [DRAG_END] Dados para movimento:', {
+      leadId: currentDraggedLead.id,
+      leadName: currentDraggedLead.name,
+      fromColumn: currentDraggedLead.column_id,
+      toColumn: newColumnId,
+      isSameColumn: currentDraggedLead.column_id === newColumnId
     });
 
-    // Se solto na mesma coluna, não fazer nada
-    if (sourceColumnId === targetColumnId) {
-      debugLogger.info('↩️ [ULTRA_SIMPLIFIED_DRAG] Mesma coluna - cancelando movimento');
-      setDraggedLead(null);
-      setCanDrag(true);
+    // Validações básicas
+    if (!currentDraggedLead.id || !newColumnId) {
+      debugLogger.error('❌ [DRAG_END] IDs inválidos:', {
+        leadId: currentDraggedLead.id,
+        newColumnId
+      });
+      toast.error('Erro: Identificadores inválidos');
       return;
     }
 
+    if (currentDraggedLead.column_id === newColumnId) {
+      debugLogger.info('ℹ️ [DRAG_END] Mesmo destino - nenhuma ação necessária');
+      return;
+    }
+
+    if (isMoving) {
+      debugLogger.warn('❌ [DRAG_END] Movimento bloqueado - já em processamento');
+      toast.warning('Aguarde o movimento anterior terminar');
+      return;
+    }
+
+    debugLogger.info('🚀 [DRAG_END] Iniciando movimento ultra simplificado do lead...');
     setIsMoving(true);
 
     try {
-      await onMoveLeadToColumn(draggedLead.id, targetColumnId as string);
+      await onMoveLeadToColumn(currentDraggedLead.id, newColumnId);
       
-      debugLogger.info('✅ [ULTRA_SIMPLIFIED_DRAG] Movimento concluído com sucesso:', {
-        leadId: draggedLead.id,
-        from: sourceColumnId,
-        to: targetColumnId,
-        timestamp: new Date().toISOString()
-      });
+      debugLogger.info('✅ [DRAG_END] Lead movido com sucesso (ultra simplificado)');
       
     } catch (error) {
-      debugLogger.error('❌ [ULTRA_SIMPLIFIED_DRAG] Erro no movimento:', {
-        leadId: draggedLead.id,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        timestamp: new Date().toISOString()
+      debugLogger.error('❌ [DRAG_END] Erro ao mover lead:', {
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        } : error,
+        leadId: currentDraggedLead.id,
+        leadName: currentDraggedLead.name,
+        targetColumn: newColumnId
       });
+      
+      // Erro já foi tratado no hook de movimento, não precisa mostrar toast aqui
+      
     } finally {
-      setDraggedLead(null);
-      setIsMoving(false);
-      // Pequeno delay para evitar cliques acidentais
-      setTimeout(() => setCanDrag(true), 100);
+      // Delay para evitar conflitos de estado
+      setTimeout(() => {
+        setIsMoving(false);
+        debugLogger.info('🔄 [DRAG_END] Flag de movimento liberada');
+      }, 500);
     }
-  }, [draggedLead, onMoveLeadToColumn]);
+  }, [draggedLead, onMoveLeadToColumn, isMoving]);
 
   return {
     draggedLead,
     isMoving,
-    isDragging,
-    canDrag,
     sensors,
     handleDragStart,
-    handleDragEnd
+    handleDragEnd,
+    isDragging: !!draggedLead,
+    canDrag: !isMoving
   };
 };

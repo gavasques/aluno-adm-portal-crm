@@ -43,7 +43,6 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleUpdate = () => {
-    console.log('📝 [LEAD_DETAIL_MODAL] Lead atualizado:', lead?.id);
     handleLeadUpdate();
     onLeadUpdate?.();
   };
@@ -53,13 +52,11 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
       const confirm = window.confirm('Você tem alterações não salvas. Deseja cancelar as alterações?');
       if (!confirm) return;
     }
-    console.log('✏️ [LEAD_DETAIL_MODAL] Alternando modo de edição:', !isEditing);
     setIsEditing(!isEditing);
     setHasChanges(false);
   };
 
   const handleSave = async () => {
-    console.log('💾 [LEAD_DETAIL_MODAL] Salvando dados do lead');
     if ((window as any).saveLeadData) {
       await (window as any).saveLeadData();
       setIsEditing(false);
@@ -67,12 +64,7 @@ const LeadDetailModal = ({ lead, open, onOpenChange, onLeadUpdate }: LeadDetailM
     }
   };
 
-  if (!lead) {
-    console.log('⚠️ [LEAD_DETAIL_MODAL] Nenhum lead fornecido');
-    return null;
-  }
-
-  console.log('🔍 [LEAD_DETAIL_MODAL] Renderizando modal para lead:', lead.id);
+  if (!lead) return null;
 
   return (
     <AnimatePresence>

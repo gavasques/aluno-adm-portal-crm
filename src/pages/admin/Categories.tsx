@@ -1,99 +1,154 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, Database } from 'lucide-react';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Edit } from "lucide-react";
+import ListTable, { ListItem } from "@/components/admin/ListTable";
+import AddItemForm from "@/components/admin/AddItemForm";
+import EditCategoryForm from "@/components/admin/EditCategoryForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { useCategories, Category } from "@/hooks/useCategories";
 
 const Categories = () => {
-  console.log('Categories page component is rendering');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  
+  const { 
+    categories, 
+    isLoading, 
+    error, 
+    createCategory, 
+    updateCategory,
+    deleteCategory,
+    isCreating,
+    isUpdating
+  } = useCategories();
+
+  const handleAddCategory = (data: { name: string; description?: string }) => {
+    createCategory(data);
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditCategory = (data: { name: string; description?: string }) => {
+    if (selectedCategory) {
+      updateCategory(selectedCategory.id, data);
+      setIsEditDialogOpen(false);
+      setSelectedCategory(null);
+    }
+  };
+
+  const handleDeleteCategory = (id: string | number) => {
+    deleteCategory(String(id));
+  };
+
+  const openEditDialog = (category: Category) => {
+    setSelectedCategory(category);
+    setIsEditDialogOpen(true);
+  };
+
+  // Convert to ListItem format for the table
+  const listItems: ListItem[] = categories.map(category => ({
+    id: category.id,
+    name: category.name,
+    description: category.description || "",
+    created_at: category.created_at,
+    updated_at: category.updated_at,
+  }));
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="text-red-500 text-lg mb-2">Erro ao carregar categorias</div>
+          <div className="text-gray-400 text-sm">
+            {error instanceof Error ? error.message : 'Erro desconhecido'}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categorias</h1>
-          <p className="text-gray-600 mt-1">Gerencie as categorias do sistema</p>
+          <h1 className="text-2xl font-bold text-gray-900">Categorias</h1>
+          <p className="text-gray-600 mt-1">
+            Gerencie as categorias disponíveis no sistema
+          </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Categoria
-        </Button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2" disabled={isCreating}>
+              <Plus className="h-4 w-4" />
+              {isCreating ? 'Criando...' : 'Nova Categoria'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Nova Categoria</DialogTitle>
+              <DialogDescription>
+                Preencha as informações para adicionar uma nova categoria ao sistema.
+              </DialogDescription>
+            </DialogHeader>
+            <AddItemForm 
+              onSubmit={handleAddCategory} 
+              itemName="Categoria"
+              showDescription={true}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total de Categorias
-            </CardTitle>
-            <Database className="h-4 w-4 text-gray-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-green-600">+2 este mês</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Categorias Ativas
-            </CardTitle>
-            <Database className="h-4 w-4 text-gray-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">10</div>
-            <p className="text-xs text-gray-600">83% do total</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Mais Utilizada
-            </CardTitle>
-            <Database className="h-4 w-4 text-gray-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Tecnologia</div>
-            <p className="text-xs text-gray-600">45 itens</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Content */}
-      <Card>
+      
+      <Card className="border-0 shadow-lg">
         <CardHeader>
-          <CardTitle>Lista de Categorias</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Lista de Categorias</span>
+            <span className="text-sm font-normal text-gray-500">
+              {isLoading ? 'Carregando...' : `${categories.length} categorias cadastradas`}
+            </span>
+          </CardTitle>
+          <CardDescription>
+            Aqui você pode visualizar e gerenciar todas as categorias cadastradas.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Módulo de Categorias
-            </h3>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Este módulo está sendo desenvolvido. Em breve você poderá gerenciar todas as categorias do sistema aqui.
-            </p>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando categorias...</p>
+            </div>
+          ) : (
+            <ListTable 
+              items={listItems} 
+              onDelete={handleDeleteCategory}
+              onEdit={(item) => openEditDialog(categories.find(c => c.id === item.id)!)}
+              showDescription={true}
+              showDates={true}
+            />
+          )}
         </CardContent>
       </Card>
 
-      {/* Debug Info */}
-      <Card className="bg-gray-50">
-        <CardHeader>
-          <CardTitle className="text-sm">Debug Info</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-xs text-gray-600">
-            <p>Componente Categories renderizado com sucesso</p>
-            <p>Rota: /admin/categorias</p>
-            <p>Timestamp: {new Date().toISOString()}</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Edit Category Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Categoria</DialogTitle>
+            <DialogDescription>
+              Atualize as informações da categoria selecionada.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCategory && (
+            <EditCategoryForm 
+              category={selectedCategory}
+              onSubmit={handleEditCategory} 
+              isLoading={isUpdating}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

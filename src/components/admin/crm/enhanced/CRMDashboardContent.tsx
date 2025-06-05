@@ -1,13 +1,14 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AdvancedFilters } from '../filters/AdvancedFilters';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { ModernDashboardToolbar } from '../dashboard/ModernDashboardToolbar';
 import { CRMMetricsCards } from '../dashboard/CRMMetricsCards';
 import CRMReports from '../reports/CRMReports';
 import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
 import { CRMSettings } from '../settings/CRMSettings';
-import { CRMFilters, CRMPipeline, CRMUser, CRMTag, CRMPipelineColumn } from '@/types/crm.types';
+import { CRMFilters, CRMPipeline, CRMUser, CRMTag } from '@/types/crm.types';
 
 interface CRMDashboardContentProps {
   activeTab: 'dashboard' | 'reports' | 'analytics' | 'settings';
@@ -23,15 +24,12 @@ interface CRMDashboardContentProps {
   isDebouncing: boolean;
   filters: CRMFilters;
   updateFilter: (key: keyof CRMFilters, value: any) => void;
-  removeFilter: (key: keyof CRMFilters) => void;
-  clearAllFilters: () => void;
-  pipelineColumns: CRMPipelineColumn[];
+  pipelineColumns: any[];
   users: CRMUser[];
   tags: CRMTag[];
   handleTagsChange: (tagIds: string[]) => void;
   effectiveFilters: CRMFilters;
   onCreateLead: (columnId?: string) => void;
-  activeFiltersCount: number;
 }
 
 export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
@@ -48,15 +46,12 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
   isDebouncing,
   filters,
   updateFilter,
-  removeFilter,
-  clearAllFilters,
   pipelineColumns,
   users,
   tags,
   handleTagsChange,
   effectiveFilters,
-  onCreateLead,
-  activeFiltersCount
+  onCreateLead
 }) => {
   // Renderização condicional baseada na aba ativa
   const renderActiveTabContent = () => {
@@ -90,15 +85,30 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
                 searchValue={searchValue}
                 setSearchValue={setSearchValue}
                 isDebouncing={isDebouncing}
-                updateFilter={updateFilter}
-                removeFilter={removeFilter}
-                clearAllFilters={clearAllFilters}
-                pipelineColumns={pipelineColumns}
-                users={users}
-                tags={tags}
-                activeFiltersCount={activeFiltersCount}
               />
             </div>
+
+            {/* Filtros Avançados */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0"
+                >
+                  <AdvancedFilters
+                    filters={filters}
+                    updateFilter={updateFilter}
+                    pipelineColumns={pipelineColumns}
+                    users={users}
+                    tags={tags}
+                    handleTagsChange={handleTagsChange}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Conteúdo Principal - Usar toda altura restante e largura completa */}
             <div className="flex-1 min-h-0 w-full">

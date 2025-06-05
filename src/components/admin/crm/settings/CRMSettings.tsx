@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Database, Tags, XCircle } from 'lucide-react';
+import { Settings, Database, Users, Tags, XCircle } from 'lucide-react';
 import { CRMFieldManager } from '../custom-fields/CRMFieldManager';
 import { PipelineManager } from './PipelineManager';
 import { CRMTagsContent } from './CRMTagsContent';
@@ -22,7 +22,7 @@ export const CRMSettings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="fields" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
               Campos
@@ -34,6 +34,10 @@ export const CRMSettings = () => {
             <TabsTrigger value="loss-reasons" className="flex items-center gap-2">
               <XCircle className="h-4 w-4" />
               Motivos de Perda
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Usuários
             </TabsTrigger>
             <TabsTrigger value="tags" className="flex items-center gap-2">
               <Tags className="h-4 w-4" />
@@ -61,6 +65,22 @@ export const CRMSettings = () => {
 
           <TabsContent value="loss-reasons" className="space-y-4 mt-4">
             <LossReasonsManager />
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações de Usuários</CardTitle>
+                <CardDescription>
+                  Gerencie permissões e configurações de usuários do CRM
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Funcionalidade em desenvolvimento - será implementada em breve
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="tags" className="space-y-4 mt-4">

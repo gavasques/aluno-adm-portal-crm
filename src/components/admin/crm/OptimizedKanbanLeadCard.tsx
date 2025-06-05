@@ -6,6 +6,7 @@ import { MoreVertical, Eye } from 'lucide-react';
 import { CRMLeadCardField, CRMLead } from '@/types/crm.types';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useCRMCardPreferences } from '@/hooks/crm/useCRMCardPreferences';
 import { ConfigurableCardLayout } from './card-fields/ConfigurableCardLayout';
 
 interface OptimizedKanbanLeadCardProps {
@@ -14,38 +15,49 @@ interface OptimizedKanbanLeadCardProps {
   isDragging?: boolean;
 }
 
-// Configuração padrão para campos visíveis
-const DEFAULT_VISIBLE_FIELDS: CRMLeadCardField[] = [
-  'name', 'status', 'responsible', 'phone', 'email', 'pipeline', 'column', 'tags'
-];
-
-const DEFAULT_FIELD_ORDER: CRMLeadCardField[] = [
-  'name', 'status', 'responsible', 'phone', 'email', 'pipeline', 'column', 'tags'
-];
-
 const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({ 
   lead, 
   onClick, 
   isDragging = false 
 }) => {
+  const { preferences, isLoading } = useCRMCardPreferences();
+
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent card click when clicking on dropdown
     if ((e.target as HTMLElement).closest('[data-dropdown-trigger]')) {
       return;
     }
-    console.log('🃏 [KANBAN_LEAD_CARD] Card clicado:', lead.id);
     onClick();
   };
 
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('🃏 [KANBAN_LEAD_CARD] Menu clicado:', lead.id);
-    onClick();
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className="p-4 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Safe parsing of preferences
+  const parseFieldArray = (data: any): CRMLeadCardField[] => {
+    if (Array.isArray(data)) {
+      return data as CRMLeadCardField[];
+    }
+    return [];
   };
 
+  const visibleFields = parseFieldArray(preferences.visible_fields);
+  const fieldOrder = parseFieldArray(preferences.field_order);
+  
   console.log('🃏 [KANBAN_LEAD_CARD] Renderizando card otimizado:', {
     leadId: lead.id,
     leadName: lead.name,
+    visibleFields: visibleFields,
     isDragging
   });
   
@@ -66,7 +78,7 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleMenuClick}>
+            <DropdownMenuItem onClick={onClick}>
               <Eye className="h-4 w-4 mr-2" />
               Abrir Lead
             </DropdownMenuItem>
@@ -78,8 +90,8 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
       <div className="pr-8">
         <ConfigurableCardLayout
           lead={lead}
-          visibleFields={DEFAULT_VISIBLE_FIELDS}
-          fieldOrder={DEFAULT_FIELD_ORDER}
+          visibleFields={visibleFields}
+          fieldOrder={fieldOrder}
         />
       </div>
     </Card>
