@@ -35,8 +35,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     filtersCount: Object.keys(filters).length
   });
 
-  // Hooks para dados
-  const { pipelines, columns, loading: pipelinesLoading, error: pipelinesError } = useCRMPipelines();
+  // Hooks para dados - removendo error que não existe
+  const { pipelines, columns, loading: pipelinesLoading } = useCRMPipelines();
   const { tags, loading: tagsLoading } = useCRMTags();
   const { users, loading: usersLoading } = useCRMUsers();
   
@@ -73,7 +73,7 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
 
   console.log('⚡ [CRMDashboard] Status:', {
     isLoading,
-    hasError: !!(pipelinesError || leadsError),
+    hasError: !!leadsError,
     leadsCount: leadsWithContacts.length
   });
 
@@ -103,10 +103,7 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     setActiveTab(tab as 'dashboard' | 'reports' | 'analytics' | 'settings');
   };
 
-  // Log de erros
-  if (pipelinesError) {
-    console.error('❌ [CRMDashboard] Erro ao carregar pipelines:', pipelinesError);
-  }
+  // Log de erros apenas para leads
   if (leadsError) {
     console.error('❌ [CRMDashboard] Erro ao carregar leads:', leadsError);
   }
@@ -123,8 +120,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
     );
   }
 
-  // Estado de erro
-  if (pipelinesError || leadsError) {
+  // Estado de erro apenas para leads
+  if (leadsError) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
@@ -132,7 +129,7 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
             Erro ao carregar CRM
           </h2>
           <p className="text-gray-500 mb-4">
-            {pipelinesError?.message || leadsError?.message || 'Erro desconhecido'}
+            {leadsError?.message || 'Erro desconhecido'}
           </p>
           <button 
             onClick={() => window.location.reload()} 
