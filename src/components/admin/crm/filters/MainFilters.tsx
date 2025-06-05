@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, LayoutGrid, X } from 'lucide-react';
 import { CRMFilters, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
 import { TagsDropdownFilter } from './TagsDropdownFilter';
+import StatusFilter from './StatusFilter';
 
 interface MainFiltersProps {
   filters: CRMFilters;
@@ -118,6 +119,15 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
           selectedTags={filters.tag_ids || []}
           onTagsChange={(tagIds) => updateFilter('tag_ids', tagIds.length > 0 ? tagIds : undefined)}
           tags={tags}
+        />
+      </div>
+
+      {/* Filtro por Status - ADICIONADO NA MESMA LINHA */}
+      <div className="min-w-[140px]">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+        <StatusFilter
+          value={filters.status}
+          onValueChange={(status) => updateFilter('status', status)}
         />
       </div>
 
