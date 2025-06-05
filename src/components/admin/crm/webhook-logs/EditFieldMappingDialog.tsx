@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,8 @@ import { toast } from 'sonner';
 
 interface EditFieldMappingDialogProps {
   mapping: CRMWebhookFieldMapping;
-  pipelineId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   trigger?: React.ReactNode;
 }
 
@@ -40,8 +40,7 @@ const standardFields = [
   { key: 'calendly_link', name: 'Link do Calendly', type: 'text' },
 ];
 
-export const EditFieldMappingDialog = ({ mapping, pipelineId, trigger }: EditFieldMappingDialogProps) => {
-  const [open, setOpen] = useState(false);
+export const EditFieldMappingDialog = ({ mapping, open, onOpenChange, trigger }: EditFieldMappingDialogProps) => {
   const [formData, setFormData] = useState({
     webhookFieldName: mapping.webhook_field_name,
     crmFieldName: mapping.crm_field_name,
@@ -53,8 +52,8 @@ export const EditFieldMappingDialog = ({ mapping, pipelineId, trigger }: EditFie
     transformationRules: JSON.stringify(mapping.transformation_rules || {}, null, 2)
   });
 
-  const { mappings, updateMapping } = useCRMWebhookFieldMappings(pipelineId);
-  const { customFields } = useCRMCustomFields(pipelineId);
+  const { mappings, updateMapping } = useCRMWebhookFieldMappings(mapping.pipeline_id);
+  const { customFields } = useCRMCustomFields(mapping.pipeline_id);
 
   // Reset form when mapping changes
   useEffect(() => {
@@ -121,7 +120,7 @@ export const EditFieldMappingDialog = ({ mapping, pipelineId, trigger }: EditFie
         }
       });
 
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error('Erro ao atualizar mapeamento:', error);
     }
@@ -153,14 +152,12 @@ export const EditFieldMappingDialog = ({ mapping, pipelineId, trigger }: EditFie
   const isNameField = mapping.crm_field_name === 'name';
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm">
-            <Edit className="h-4 w-4" />
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Editar Mapeamento de Campo</DialogTitle>
@@ -262,7 +259,7 @@ export const EditFieldMappingDialog = ({ mapping, pipelineId, trigger }: EditFie
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
