@@ -87,15 +87,15 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
         </Select>
       </div>
 
-      {/* Filtro por Contatos */}
+      {/* Filtro por Próximo Contato */}
       <div className="min-w-[160px]">
-        <label className="block text-xs font-medium text-gray-600 mb-1">Contatos</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Próximo Contato</label>
         <Select 
           value={filters.contact_filter || 'all'} 
           onValueChange={(value) => updateFilter('contact_filter', value === 'all' ? undefined : value)}
         >
           <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-9 bg-white">
-            <SelectValue placeholder="Contatos" />
+            <SelectValue placeholder="Próximo Contato" />
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 shadow-lg">
             <SelectItem value="all">

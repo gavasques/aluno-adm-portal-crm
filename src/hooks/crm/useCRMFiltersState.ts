@@ -23,15 +23,26 @@ export const useCRMFiltersState = (
     );
   }, [columns]);
 
-  // Inicializar filtros com estágio padrão
+  // Inicializar filtros com estágio padrão e status "aberto"
   React.useEffect(() => {
-    if (defaultOpenColumn && !filters.column_id && columns.length > 0) {
-      onFiltersChange({ 
-        ...filters, 
-        column_id: defaultOpenColumn.id 
-      });
+    const needsDefaults = (!filters.column_id && columns.length > 0) || !filters.status;
+    
+    if (needsDefaults) {
+      const newFilters = { ...filters };
+      
+      // Definir coluna padrão se não existe
+      if (defaultOpenColumn && !filters.column_id && columns.length > 0) {
+        newFilters.column_id = defaultOpenColumn.id;
+      }
+      
+      // Definir status "aberto" como padrão se não existe
+      if (!filters.status) {
+        newFilters.status = 'aberto';
+      }
+      
+      onFiltersChange(newFilters);
     }
-  }, [defaultOpenColumn, filters.column_id, columns.length, filters, onFiltersChange]);
+  }, [defaultOpenColumn, filters, columns.length, onFiltersChange]);
 
   // Sincronizar debounced search com filters
   React.useEffect(() => {
@@ -52,7 +63,10 @@ export const useCRMFiltersState = (
 
   const clearAllFilters = () => {
     setSearchValue('');
-    const baseFilters: CRMFiltersType = { pipeline_id: filters.pipeline_id };
+    const baseFilters: CRMFiltersType = { 
+      pipeline_id: filters.pipeline_id,
+      status: 'aberto' // Manter status "aberto" ao limpar filtros
+    };
     
     // Manter o estágio padrão ao limpar filtros
     if (defaultOpenColumn) {
@@ -66,6 +80,7 @@ export const useCRMFiltersState = (
     return Object.keys(filters).filter(key => {
       if (key === 'pipeline_id') return false;
       if (key === 'column_id' && filters[key] === defaultOpenColumn?.id) return false; // Não contar filtro padrão
+      if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
       return filters[key as keyof CRMFiltersType];
     }).length;
   };
