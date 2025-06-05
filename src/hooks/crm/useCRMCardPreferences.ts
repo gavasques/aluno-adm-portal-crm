@@ -19,6 +19,7 @@ const DEFAULT_PREFERENCES = {
 export const useCRMCardPreferences = () => {
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     // Por enquanto, retorna configurações padrão
@@ -27,12 +28,23 @@ export const useCRMCardPreferences = () => {
     setIsLoading(false);
   }, []);
 
+  const updatePreferences = async (newPreferences: Partial<typeof DEFAULT_PREFERENCES>) => {
+    console.log('📋 [CRM_CARD_PREFERENCES] Atualizando preferências:', newPreferences);
+    setIsSaving(true);
+    
+    try {
+      // Simula operação assíncrona
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setPreferences(prev => ({ ...prev, ...newPreferences }));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return {
     preferences,
     isLoading,
-    updatePreferences: (newPreferences: Partial<typeof DEFAULT_PREFERENCES>) => {
-      console.log('📋 [CRM_CARD_PREFERENCES] Atualizando preferências:', newPreferences);
-      setPreferences(prev => ({ ...prev, ...newPreferences }));
-    }
+    isSaving,
+    updatePreferences
   };
 };

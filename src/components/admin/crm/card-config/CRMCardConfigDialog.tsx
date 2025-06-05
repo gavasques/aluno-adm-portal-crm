@@ -1,299 +1,373 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, EyeOff } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { 
+  DragDropContext, 
+  Droppable, 
+  Draggable, 
+  DropResult 
+} from '@hello-pangea/dnd';
+import { 
+  Settings, 
+  Eye, 
+  EyeOff, 
+  GripVertical, 
+  Save, 
+  RotateCcw,
+  CheckCircle2,
+  Info
+} from 'lucide-react';
 import { CRMLeadCardField, CRMLeadCardFieldConfig } from '@/types/crm.types';
 import { useCRMCardPreferences } from '@/hooks/crm/useCRMCardPreferences';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Configuração de campos disponíveis
+const FIELD_CONFIGS: CRMLeadCardFieldConfig[] = [
+  // Essenciais
+  { key: 'name', label: 'Nome', category: 'essencial', isRequired: true, description: 'Nome do lead' },
+  { key: 'status', label: 'Status', category: 'essencial', description: 'Status atual do lead' },
+  { key: 'responsible', label: 'Responsável', category: 'essencial', description: 'Pessoa responsável pelo lead' },
+  
+  // Contato
+  { key: 'phone', label: 'Telefone', category: 'contato', description: 'Número de telefone' },
+  { key: 'email', label: 'Email', category: 'contato', description: 'Endereço de email' },
+  
+  // Sistema
+  { key: 'pipeline', label: 'Pipeline', category: 'sistema', description: 'Pipeline atual' },
+  { key: 'column', label: 'Coluna/Estágio', category: 'sistema', description: 'Estágio no pipeline' },
+  { key: 'tags', label: 'Tags', category: 'sistema', description: 'Tags associadas' },
+  { key: 'created_at', label: 'Data de Criação', category: 'sistema', description: 'Quando o lead foi criado' },
+  { key: 'updated_at', label: 'Última Atualização', category: 'sistema', description: 'Última modificação' },
+  { key: 'scheduled_contact_date', label: 'Próximo Contato', category: 'sistema', description: 'Data do próximo contato agendado' },
+  
+  // Qualificação
+  { key: 'has_company', label: 'Tem Empresa', category: 'qualificacao', description: 'Se possui empresa' },
+  { key: 'sells_on_amazon', label: 'Vende na Amazon', category: 'qualificacao', description: 'Se vende na Amazon' },
+  { key: 'works_with_fba', label: 'Trabalha com FBA', category: 'qualificacao', description: 'Se trabalha com FBA' },
+  { key: 'seeks_private_label', label: 'Busca Marca Própria', category: 'qualificacao', description: 'Se busca marca própria' },
+  { key: 'ready_to_invest_3k', label: 'Pronto para Investir 3k', category: 'qualificacao', description: 'Se está pronto para investir' },
+  { key: 'calendly_scheduled', label: 'Calendly Agendado', category: 'qualificacao', description: 'Se tem reunião agendada' },
+  { key: 'had_contact_with_lv', label: 'Teve Contato com LV', category: 'qualificacao', description: 'Se já teve contato anterior' },
+  
+  // Amazon
+  { key: 'what_sells', label: 'O que Vende', category: 'amazon', description: 'Produtos que vende' },
+  { key: 'amazon_state', label: 'Estado Amazon', category: 'amazon', description: 'Estado da conta Amazon' },
+  { key: 'amazon_tax_regime', label: 'Regime Tributário', category: 'amazon', description: 'Regime tributário Amazon' },
+  { key: 'amazon_store_link', label: 'Link da Loja', category: 'amazon', description: 'URL da loja Amazon' },
+  { key: 'keep_or_new_niches', label: 'Nichos Atuais/Novos', category: 'amazon', description: 'Estratégia de nichos' },
+  { key: 'main_doubts', label: 'Principais Dúvidas', category: 'amazon', description: 'Principais questionamentos' },
+  { key: 'notes', label: 'Observações', category: 'amazon', description: 'Anotações gerais' },
+  { key: 'calendly_link', label: 'Link Calendly', category: 'amazon', description: 'Link do Calendly' }
+];
+
+const CATEGORY_COLORS = {
+  essencial: 'bg-red-50 border-red-200 text-red-800',
+  contato: 'bg-blue-50 border-blue-200 text-blue-800',
+  qualificacao: 'bg-green-50 border-green-200 text-green-800',
+  amazon: 'bg-purple-50 border-purple-200 text-purple-800',
+  sistema: 'bg-gray-50 border-gray-200 text-gray-800'
+};
+
+const CATEGORY_LABELS = {
+  essencial: 'Essencial',
+  contato: 'Contato',
+  qualificacao: 'Qualificação',
+  amazon: 'Amazon',
+  sistema: 'Sistema'
+};
 
 interface CRMCardConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const FIELD_CONFIGS: CRMLeadCardFieldConfig[] = [
-  // Essenciais (não podem ser removidos)
-  { key: 'name', label: 'Nome do Lead', category: 'essencial', isRequired: true },
-  { key: 'status', label: 'Status', category: 'essencial', isRequired: true },
-  { key: 'responsible', label: 'Responsável', category: 'essencial', isRequired: true },
-  
-  // Contato
-  { key: 'phone', label: 'Telefone', category: 'contato' },
-  { key: 'email', label: 'Email', category: 'contato' },
-  
-  // Pipeline
-  { key: 'pipeline', label: 'Pipeline', category: 'sistema' },
-  { key: 'column', label: 'Estágio', category: 'sistema' },
-  { key: 'tags', label: 'Tags', category: 'sistema' },
-  
-  // Qualificação
-  { key: 'has_company', label: 'Tem Empresa', category: 'qualificacao' },
-  { key: 'sells_on_amazon', label: 'Vende na Amazon', category: 'qualificacao' },
-  { key: 'works_with_fba', label: 'Trabalha com FBA', category: 'qualificacao' },
-  { key: 'seeks_private_label', label: 'Busca Marca Própria', category: 'qualificacao' },
-  { key: 'ready_to_invest_3k', label: 'Pronto para Investir 3k', category: 'qualificacao' },
-  { key: 'calendly_scheduled', label: 'Calendly Agendado', category: 'qualificacao' },
-  { key: 'had_contact_with_lv', label: 'Teve Contato com LV', category: 'qualificacao' },
-  
-  // Amazon
-  { key: 'what_sells', label: 'O que Vende', category: 'amazon' },
-  { key: 'amazon_state', label: 'Estado Amazon', category: 'amazon' },
-  { key: 'amazon_tax_regime', label: 'Regime Tributário', category: 'amazon' },
-  { key: 'amazon_store_link', label: 'Link da Loja Amazon', category: 'amazon' },
-  { key: 'keep_or_new_niches', label: 'Manter ou Novos Nichos', category: 'amazon' },
-  
-  // Outros
-  { key: 'main_doubts', label: 'Principais Dúvidas', category: 'sistema' },
-  { key: 'notes', label: 'Observações', category: 'sistema' },
-  { key: 'calendly_link', label: 'Link Calendly', category: 'sistema' },
-  
-  // Sistema
-  { key: 'created_at', label: 'Data de Criação', category: 'sistema' },
-  { key: 'updated_at', label: 'Última Atualização', category: 'sistema' },
-  { key: 'scheduled_contact_date', label: 'Próximo Contato', category: 'essencial', description: 'Data do próximo contato agendado - importante para acompanhamento' }
-];
-
-const CATEGORY_LABELS = {
-  essencial: 'Campos Essenciais',
-  contato: 'Informações de Contato',
-  qualificacao: 'Qualificação',
-  amazon: 'Informações Amazon',
-  sistema: 'Sistema'
-};
-
-const CATEGORY_COLORS = {
-  essencial: 'bg-red-100 text-red-800',
-  contato: 'bg-blue-100 text-blue-800',
-  qualificacao: 'bg-green-100 text-green-800',
-  amazon: 'bg-orange-100 text-orange-800',
-  sistema: 'bg-gray-100 text-gray-800'
-};
-
-interface SortableFieldItemProps {
-  field: CRMLeadCardFieldConfig;
-  isVisible: boolean;
-  onToggle: (fieldKey: CRMLeadCardField) => void;
-}
-
-const SortableFieldItem: React.FC<SortableFieldItemProps> = ({ field, isVisible, onToggle }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: field.key });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-3 p-3 border rounded-lg bg-white ${
-        isDragging ? 'shadow-lg' : 'shadow-sm'
-      }`}
-    >
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab hover:cursor-grabbing text-gray-400 hover:text-gray-600"
-      >
-        <GripVertical className="h-4 w-4" />
-      </div>
-      
-      <Checkbox
-        id={field.key}
-        checked={isVisible}
-        onCheckedChange={() => !field.isRequired && onToggle(field.key)}
-        disabled={field.isRequired}
-        className="flex-shrink-0"
-      />
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <Label 
-            htmlFor={field.key} 
-            className={`text-sm font-medium cursor-pointer ${
-              field.isRequired ? 'text-gray-600' : 'text-gray-900'
-            }`}
-          >
-            {field.label}
-          </Label>
-          {field.isRequired && (
-            <Badge variant="secondary" className="text-xs">
-              Obrigatório
-            </Badge>
-          )}
-        </div>
-        {field.description && (
-          <p className="text-xs text-gray-500 mt-1">{field.description}</p>
-        )}
-      </div>
-      
-      <Badge className={`text-xs ${CATEGORY_COLORS[field.category]}`}>
-        {CATEGORY_LABELS[field.category]}
-      </Badge>
-      
-      <div className="flex-shrink-0 w-6 flex justify-center">
-        {isVisible ? (
-          <Eye className="h-4 w-4 text-green-600" />
-        ) : (
-          <EyeOff className="h-4 w-4 text-gray-400" />
-        )}
-      </div>
-    </div>
-  );
-};
-
 export const CRMCardConfigDialog: React.FC<CRMCardConfigDialogProps> = ({
   open,
   onOpenChange
 }) => {
-  const { preferences, updatePreferences, isSaving } = useCRMCardPreferences();
+  const { preferences, isLoading, isSaving, updatePreferences } = useCRMCardPreferences();
   
-  // Safe parsing with proper type checking
-  const parseFieldArray = (data: any): CRMLeadCardField[] => {
-    if (Array.isArray(data)) {
-      return data as CRMLeadCardField[];
+  const [localVisibleFields, setLocalVisibleFields] = useState<CRMLeadCardField[]>([]);
+  const [localFieldOrder, setLocalFieldOrder] = useState<CRMLeadCardField[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Sincronizar estado local com preferências
+  useEffect(() => {
+    if (preferences.visible_fields) {
+      setLocalVisibleFields([...preferences.visible_fields]);
     }
-    // Fallback to defaults
-    return preferences.visible_fields as CRMLeadCardField[];
-  };
-
-  const [localVisibleFields, setLocalVisibleFields] = useState<CRMLeadCardField[]>(
-    parseFieldArray(preferences.visible_fields)
-  );
-  const [localFieldOrder, setLocalFieldOrder] = useState<CRMLeadCardField[]>(
-    parseFieldArray(preferences.field_order)
-  );
-
-  React.useEffect(() => {
-    if (preferences) {
-      // Garantir que o campo scheduled_contact_date esteja sempre incluído nos campos visíveis
-      const visibleFields = parseFieldArray(preferences.visible_fields);
-      const fieldOrder = parseFieldArray(preferences.field_order);
-      
-      let finalVisibleFields = visibleFields;
-      if (!finalVisibleFields.includes('scheduled_contact_date')) {
-        finalVisibleFields = [...finalVisibleFields, 'scheduled_contact_date'];
-      }
-      
-      setLocalVisibleFields(finalVisibleFields);
-      setLocalFieldOrder(fieldOrder);
+    if (preferences.field_order) {
+      setLocalFieldOrder([...preferences.field_order]);
     }
   }, [preferences]);
 
-  const handleToggleField = (fieldKey: CRMLeadCardField) => {
-    setLocalVisibleFields(prev => 
-      prev.includes(fieldKey) 
-        ? prev.filter(f => f !== fieldKey)
-        : [...prev, fieldKey]
-    );
-  };
+  // Detectar mudanças
+  useEffect(() => {
+    const visibleChanged = JSON.stringify(localVisibleFields) !== JSON.stringify(preferences.visible_fields);
+    const orderChanged = JSON.stringify(localFieldOrder) !== JSON.stringify(preferences.field_order);
+    setHasChanges(visibleChanged || orderChanged);
+  }, [localVisibleFields, localFieldOrder, preferences]);
 
-  const handleSave = () => {
-    // Garantir que scheduled_contact_date sempre esteja incluído
-    let finalVisibleFields = localVisibleFields;
-    if (!finalVisibleFields.includes('scheduled_contact_date')) {
-      finalVisibleFields = [...finalVisibleFields, 'scheduled_contact_date'];
+  const handleFieldToggle = (fieldKey: CRMLeadCardField, checked: boolean) => {
+    const fieldConfig = FIELD_CONFIGS.find(f => f.key === fieldKey);
+    
+    // Não permitir desabilitar campos obrigatórios
+    if (fieldConfig?.isRequired && !checked) {
+      return;
     }
-    
-    updatePreferences(finalVisibleFields, localFieldOrder);
-    onOpenChange(false);
+
+    if (checked) {
+      // Adicionar campo se não existe
+      if (!localVisibleFields.includes(fieldKey)) {
+        setLocalVisibleFields(prev => [...prev, fieldKey]);
+        setLocalFieldOrder(prev => [...prev, fieldKey]);
+      }
+    } else {
+      // Remover campo
+      setLocalVisibleFields(prev => prev.filter(f => f !== fieldKey));
+      setLocalFieldOrder(prev => prev.filter(f => f !== fieldKey));
+    }
   };
 
-  const handleCancel = () => {
-    setLocalVisibleFields(parseFieldArray(preferences.visible_fields));
-    setLocalFieldOrder(parseFieldArray(preferences.field_order));
-    onOpenChange(false);
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(localFieldOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setLocalFieldOrder(items);
   };
 
-  const orderedFields = FIELD_CONFIGS.sort((a, b) => {
-    const aIndex = localFieldOrder.indexOf(a.key);
-    const bIndex = localFieldOrder.indexOf(b.key);
-    
-    if (aIndex === -1 && bIndex === -1) return 0;
-    if (aIndex === -1) return 1;
-    if (bIndex === -1) return -1;
-    
-    return aIndex - bIndex;
-  });
+  const handleSave = async () => {
+    await updatePreferences({
+      visible_fields: localVisibleFields,
+      field_order: localFieldOrder
+    });
+  };
 
-  const visibleCount = localVisibleFields.length;
-  const totalCount = FIELD_CONFIGS.length;
+  const handleReset = () => {
+    setLocalVisibleFields([...preferences.visible_fields]);
+    setLocalFieldOrder([...preferences.field_order]);
+  };
+
+  const groupedFields = FIELD_CONFIGS.reduce((acc, field) => {
+    if (!acc[field.category]) {
+      acc[field.category] = [];
+    }
+    acc[field.category].push(field);
+    return acc;
+  }, {} as Record<string, CRMLeadCardFieldConfig[]>);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Configurar Campos do Card</DialogTitle>
-          <DialogDescription>
-            Personalize quais campos são exibidos nos cards dos leads. 
-            Arraste para reordenar os campos conforme sua preferência.
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configuração dos Cards de Lead
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">
-                Campos visíveis: <strong>{visibleCount}</strong> de {totalCount}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocalVisibleFields(FIELD_CONFIGS.map(f => f.key))}
-                >
-                  Mostrar Todos
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocalVisibleFields(
-                    FIELD_CONFIGS.filter(f => f.isRequired).map(f => f.key)
-                  )}
-                >
-                  Apenas Essenciais
-                </Button>
-              </div>
+        <div className="flex gap-6 h-[70vh]">
+          {/* Painel de Campos Disponíveis */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Campos Disponíveis</h3>
+              <Badge variant="secondary">
+                {localVisibleFields.length} de {FIELD_CONFIGS.length} campos
+              </Badge>
             </div>
+
+            <ScrollArea className="h-full">
+              <div className="space-y-4">
+                {Object.entries(groupedFields).map(([category, fields]) => (
+                  <Card key={category}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">
+                        <Badge className={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}>
+                          {CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {fields.map((field) => {
+                        const isVisible = localVisibleFields.includes(field.key);
+                        const isRequired = field.isRequired;
+                        
+                        return (
+                          <div key={field.key} className="flex items-start space-x-3 py-2">
+                            <Checkbox
+                              id={field.key}
+                              checked={isVisible}
+                              onCheckedChange={(checked) => handleFieldToggle(field.key, checked as boolean)}
+                              disabled={isRequired}
+                              className="mt-1"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <Label 
+                                htmlFor={field.key} 
+                                className={`text-sm font-medium cursor-pointer ${isRequired ? 'text-red-600' : ''}`}
+                              >
+                                {field.label}
+                                {isRequired && <span className="text-red-500 ml-1">*</span>}
+                              </Label>
+                              {field.description && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {field.description}
+                                </p>
+                              )}
+                            </div>
+                            {isVisible ? (
+                              <Eye className="h-4 w-4 text-green-600 mt-1" />
+                            ) : (
+                              <EyeOff className="h-4 w-4 text-gray-400 mt-1" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
 
-          <SortableContext items={orderedFields.map(f => f.key)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2">
-              {orderedFields.map((field) => (
-                <SortableFieldItem
-                  key={field.key}
-                  field={field}
-                  isVisible={localVisibleFields.includes(field.key)}
-                  onToggle={handleToggleField}
-                />
-              ))}
+          <Separator orientation="vertical" />
+
+          {/* Painel de Ordenação */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Ordem dos Campos</h3>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Info className="h-4 w-4" />
+                Arraste para reordenar
+              </div>
             </div>
-          </SortableContext>
+
+            <ScrollArea className="h-full">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="field-order">
+                  {(provided, snapshot) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className={`space-y-2 min-h-[200px] p-2 rounded-lg border-2 border-dashed transition-colors ${
+                        snapshot.isDraggingOver 
+                          ? 'border-blue-300 bg-blue-50' 
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <AnimatePresence>
+                        {localFieldOrder.map((fieldKey, index) => {
+                          const fieldConfig = FIELD_CONFIGS.find(f => f.key === fieldKey);
+                          if (!fieldConfig || !localVisibleFields.includes(fieldKey)) return null;
+
+                          return (
+                            <Draggable 
+                              key={fieldKey} 
+                              draggableId={fieldKey} 
+                              index={index}
+                            >
+                              {(provided, snapshot) => (
+                                <motion.div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                  className={`flex items-center gap-3 p-3 bg-white border rounded-lg cursor-move transition-all ${
+                                    snapshot.isDragging 
+                                      ? 'shadow-lg rotate-2 scale-105' 
+                                      : 'hover:shadow-md'
+                                  }`}
+                                >
+                                  <GripVertical className="h-4 w-4 text-gray-400" />
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">
+                                      {fieldConfig.label}
+                                      {fieldConfig.isRequired && <span className="text-red-500 ml-1">*</span>}
+                                    </div>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs ${CATEGORY_COLORS[fieldConfig.category]}`}
+                                    >
+                                      {CATEGORY_LABELS[fieldConfig.category]}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-xs text-gray-500 bg-gray-100 rounded px-2 py-1">
+                                    #{index + 1}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                      </AnimatePresence>
+                      {provided.placeholder}
+                      
+                      {localFieldOrder.filter(f => localVisibleFields.includes(f)).length === 0 && (
+                        <div className="text-center py-8 text-gray-400">
+                          <Eye className="h-8 w-8 mx-auto mb-2" />
+                          <p>Nenhum campo selecionado</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </ScrollArea>
+          </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Salvando...' : 'Salvar Configurações'}
-          </Button>
-        </DialogFooter>
+        {/* Footer com ações */}
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            {hasChanges && (
+              <>
+                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                Alterações não salvas
+              </>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={!hasChanges || isSaving}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reverter
+            </Button>
+            
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className="flex items-center gap-2"
+            >
+              {isSaving ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
