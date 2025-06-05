@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,7 +26,7 @@ export const LeadPipelineControls: React.FC<LeadPipelineControlsProps> = ({
       responsible_id: '',
       tag_ids: [],
       search: '',
-      contact_filter: ''
+      status: 'aberto'
     }
   });
   const { changeStatus } = useLeadStatusChange();

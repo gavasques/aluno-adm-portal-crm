@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { CRMFilters, LeadWithContacts } from '@/types/crm.types';
 import { debugLogger } from '@/utils/debug-logger';
@@ -36,6 +37,9 @@ export const crmOperations = {
       }
       if (filters.responsible_id) {
         query = query.eq('responsible_id', filters.responsible_id);
+      }
+      if (filters.status) {
+        query = query.eq('status', filters.status);
       }
       if (filters.search) {
         query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
