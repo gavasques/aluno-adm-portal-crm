@@ -20,7 +20,6 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
   // Determinar layout baseado no número de campos
   const fieldCount = orderedVisibleFields.length;
   const isCompact = fieldCount <= 4;
-  const isMedium = fieldCount > 4 && fieldCount <= 7;
   
   // Separar campos por categoria para organização
   const essentialFields = orderedVisibleFields.filter(field => 
@@ -32,19 +31,21 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
   );
   
   const qualificationFields = orderedVisibleFields.filter(field => 
-    ['has_company', 'sells_on_amazon', 'ready_to_invest_3k', 'calendly_scheduled'].includes(field)
+    ['has_company', 'sells_on_amazon', 'works_with_fba', 'seeks_private_label', 'ready_to_invest_3k', 'calendly_scheduled'].includes(field)
+  );
+  
+  const amazonFields = orderedVisibleFields.filter(field => 
+    ['what_sells', 'amazon_state'].includes(field)
   );
   
   const systemFields = orderedVisibleFields.filter(field => 
-    ['pipeline', 'column', 'tags', 'created_at', 'scheduled_contact_date'].includes(field)
+    ['pipeline', 'column', 'tags', 'created_at', 'updated_at', 'scheduled_contact_date'].includes(field)
   );
 
-  const otherFields = orderedVisibleFields.filter(field => 
-    ![...essentialFields, ...contactFields, ...qualificationFields, ...systemFields].includes(field)
-  );
+  const spacingClass = isCompact ? 'space-y-2' : 'space-y-3';
 
   return (
-    <div className={`space-y-${isCompact ? '2' : '3'}`}>
+    <div className={spacingClass}>
       {/* Campos Essenciais - Sempre no topo */}
       {essentialFields.length > 0 && (
         <div className="space-y-2">
@@ -59,9 +60,9 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
         </div>
       )}
 
-      {/* Campos de Contato - Em linha quando possível */}
+      {/* Campos de Contato */}
       {contactFields.length > 0 && (
-        <div className={`${contactFields.length > 1 && !isCompact ? 'space-y-1' : 'space-y-1'}`}>
+        <div className="space-y-1">
           {contactFields.map(field => (
             <FieldRenderer 
               key={field} 
@@ -87,7 +88,21 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
         </div>
       )}
 
-      {/* Tags e Pipeline */}
+      {/* Campos Amazon */}
+      {amazonFields.length > 0 && (
+        <div className="space-y-1">
+          {amazonFields.map(field => (
+            <FieldRenderer 
+              key={field} 
+              field={field} 
+              lead={lead} 
+              compact={isCompact}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Tags */}
       {systemFields.includes('tags') && (
         <FieldRenderer 
           field="tags" 
@@ -98,16 +113,6 @@ export const ConfigurableCardLayout: React.FC<ConfigurableCardLayoutProps> = ({
 
       {/* Outros campos do sistema */}
       {systemFields.filter(f => f !== 'tags').map(field => (
-        <FieldRenderer 
-          key={field} 
-          field={field} 
-          lead={lead} 
-          compact={isCompact}
-        />
-      ))}
-
-      {/* Outros campos */}
-      {otherFields.map(field => (
         <FieldRenderer 
           key={field} 
           field={field} 

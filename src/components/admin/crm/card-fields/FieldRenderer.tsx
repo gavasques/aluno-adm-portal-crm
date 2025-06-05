@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag } from 'lucide-react';
+import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag, ExternalLink, MessageSquare, FileText, Package, ShoppingCart, Truck } from 'lucide-react';
 import { CRMLead, CRMLeadCardField } from '@/types/crm.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -129,7 +129,26 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
         if (!lead.sells_on_amazon) return null;
         return (
           <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 h-5 px-1.5">
+            <ShoppingCart className="h-2.5 w-2.5 mr-0.5" />
             Amazon
+          </Badge>
+        );
+
+      case 'works_with_fba':
+        if (!lead.works_with_fba) return null;
+        return (
+          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200 h-5 px-1.5">
+            <Truck className="h-2.5 w-2.5 mr-0.5" />
+            FBA
+          </Badge>
+        );
+
+      case 'seeks_private_label':
+        if (!lead.seeks_private_label) return null;
+        return (
+          <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200 h-5 px-1.5">
+            <Package className="h-2.5 w-2.5 mr-0.5" />
+            Marca Própria
           </Badge>
         );
 
@@ -142,12 +161,48 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
           </Badge>
         );
 
+      case 'calendly_scheduled':
+        if (!lead.calendly_scheduled) return null;
+        return (
+          <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700 border-teal-200 h-5 px-1.5">
+            <Calendar className="h-2.5 w-2.5 mr-0.5" />
+            Agendado
+          </Badge>
+        );
+
+      case 'what_sells':
+        if (!lead.what_sells) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <Package className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{lead.what_sells}</span>
+          </div>
+        );
+
+      case 'amazon_state':
+        if (!lead.amazon_state) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <span>Estado: {lead.amazon_state}</span>
+          </div>
+        );
+
       case 'created_at':
         return (
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Calendar className="h-3 w-3" />
             <span>
               Criado {format(new Date(lead.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+            </span>
+          </div>
+        );
+
+      case 'updated_at':
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
+            <span>
+              Atualizado {format(new Date(lead.updated_at), 'dd/MM/yyyy', { locale: ptBR })}
             </span>
           </div>
         );

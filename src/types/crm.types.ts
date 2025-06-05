@@ -300,6 +300,13 @@ export type CRMLeadCardField =
   | 'calendly_scheduled'
   | 'what_sells'
   | 'amazon_state'
+  | 'amazon_tax_regime'
+  | 'amazon_store_link'
+  | 'keep_or_new_niches'
+  | 'main_doubts'
+  | 'notes'
+  | 'calendly_link'
+  | 'had_contact_with_lv'
   | 'created_at'
   | 'updated_at'
   | 'scheduled_contact_date';

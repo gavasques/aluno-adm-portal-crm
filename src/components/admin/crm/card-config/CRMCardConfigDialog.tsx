@@ -39,10 +39,19 @@ const FIELD_CONFIGS: CRMLeadCardFieldConfig[] = [
   { key: 'seeks_private_label', label: 'Busca Marca Própria', category: 'qualificacao' },
   { key: 'ready_to_invest_3k', label: 'Pronto para Investir 3k', category: 'qualificacao' },
   { key: 'calendly_scheduled', label: 'Calendly Agendado', category: 'qualificacao' },
+  { key: 'had_contact_with_lv', label: 'Teve Contato com LV', category: 'qualificacao' },
   
   // Amazon
   { key: 'what_sells', label: 'O que Vende', category: 'amazon' },
   { key: 'amazon_state', label: 'Estado Amazon', category: 'amazon' },
+  { key: 'amazon_tax_regime', label: 'Regime Tributário', category: 'amazon' },
+  { key: 'amazon_store_link', label: 'Link da Loja Amazon', category: 'amazon' },
+  { key: 'keep_or_new_niches', label: 'Manter ou Novos Nichos', category: 'amazon' },
+  
+  // Outros
+  { key: 'main_doubts', label: 'Principais Dúvidas', category: 'sistema' },
+  { key: 'notes', label: 'Observações', category: 'sistema' },
+  { key: 'calendly_link', label: 'Link Calendly', category: 'sistema' },
   
   // Sistema
   { key: 'created_at', label: 'Data de Criação', category: 'sistema' },

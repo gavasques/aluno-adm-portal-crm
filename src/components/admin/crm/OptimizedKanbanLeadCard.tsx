@@ -45,8 +45,8 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
 
   // Determine card height based on field count
   const fieldCount = preferences.visible_fields.length;
-  const dynamicHeight = fieldCount <= 4 ? 'min-h-[120px]' : 
-                       fieldCount <= 7 ? 'min-h-[160px]' : 'min-h-[200px]';
+  const cardHeight = fieldCount <= 4 ? 'min-h-[120px]' : 
+                    fieldCount <= 7 ? 'min-h-[160px]' : 'min-h-[200px]';
   
   console.log('🃏 [KANBAN_LEAD_CARD] Renderizando card configurável:', {
     leadId: lead.id,
@@ -60,32 +60,27 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
     <Card 
       className={cn(
         "p-3 cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:shadow-md",
-        dynamicHeight,
+        cardHeight,
         isDragging && "opacity-70 rotate-2 shadow-lg scale-105"
       )}
       onClick={handleCardClick}
     >
       <div className="flex flex-col h-full">
-        {/* Header com ações */}
-        <div className="flex items-start justify-between mb-2 flex-shrink-0">
-          <div className="flex-1 min-w-0">
-            {/* O nome será renderizado pelo ConfigurableCardLayout se estiver nas preferências */}
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild data-dropdown-trigger="true">
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                  <MoreVertical className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onClick}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Abrir Lead
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+        {/* Header com ações - posicionado no canto superior direito */}
+        <div className="flex justify-end mb-2 flex-shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild data-dropdown-trigger="true">
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <MoreVertical className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onClick}>
+                <Eye className="h-4 w-4 mr-2" />
+                Abrir Lead
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Conteúdo configurável */}
