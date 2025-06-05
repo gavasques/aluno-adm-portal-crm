@@ -1,4 +1,3 @@
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
+import { RouteDebugger } from "@/components/debug/RouteDebugger";
+import { Error404Boundary } from "@/components/ErrorBoundary404";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -87,73 +88,76 @@ function App() {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/complete-registration" element={<CompleteRegistration />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={
-                <RouteGuard requireAdminAccess>
-                  <AdminLayout />
-                </RouteGuard>
-              }>
-                <Route index element={<Dashboard />} />
-                <Route path="users" element={<Users />} />
-                <Route path="students" element={<Students />} />
-                <Route path="suppliers" element={<Suppliers />} />
-                <Route path="partners" element={<Partners />} />
-                <Route path="tools" element={<Tools />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="partner-types" element={<PartnerTypes />} />
-                <Route path="software-types" element={<SoftwareTypes />} />
-                <Route path="news" element={<News />} />
-                <Route path="bonus" element={<Bonus />} />
-                <Route path="bonus/:id" element={<BonusDetail />} />
-                <Route path="courses" element={<Courses />} />
-                <Route path="credits" element={<Credits />} />
-                <Route path="tasks" element={<Tasks />} />
-                <Route path="crm" element={<CRM />} />
-                <Route path="crm/lead/:id" element={<CRMLeadDetail />} />
-                <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
-                <Route path="mentoring" element={<Mentoring />} />
-                <Route path="mentoring/:id" element={<MentoringDetail />} />
-                <Route path="mentoring-catalog" element={<AdminMentoringCatalog />} />
-                <Route path="mentoring-enrollments" element={<AdminMentoringEnrollments />} />
-                <Route path="individual-enrollments" element={<AdminIndividualEnrollments />} />
-                <Route path="group-enrollments" element={<AdminGroupEnrollments />} />
-                <Route path="individual-sessions" element={<AdminMentoringSessionsIndividual />} />
-                <Route path="group-sessions" element={<AdminMentoringSessionsGroup />} />
-                <Route path="calendly-config" element={<AdminCalendlyConfig />} />
-                <Route path="permissions" element={<Permissions />} />
-                <Route path="audit" element={<Audit />} />
-                <Route path="audit-analytics" element={<AuditAnalytics />} />
-                <Route path="audit-reports" element={<AuditReports />} />
-                <Route path="audit-behavior" element={<AuditBehaviorAnalytics />} />
-              </Route>
+            <RouteDebugger />
+            <Error404Boundary>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/complete-registration" element={<CompleteRegistration />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={
+                  <RouteGuard requireAdminAccess>
+                    <AdminLayout />
+                  </RouteGuard>
+                }>
+                  <Route index element={<Dashboard />} />
+                  <Route path="users" element={<Users />} />
+                  <Route path="students" element={<Students />} />
+                  <Route path="suppliers" element={<Suppliers />} />
+                  <Route path="partners" element={<Partners />} />
+                  <Route path="tools" element={<Tools />} />
+                  <Route path="categories" element={<Categories />} />
+                  <Route path="partner-types" element={<PartnerTypes />} />
+                  <Route path="software-types" element={<SoftwareTypes />} />
+                  <Route path="news" element={<News />} />
+                  <Route path="bonus" element={<Bonus />} />
+                  <Route path="bonus/:id" element={<BonusDetail />} />
+                  <Route path="courses" element={<Courses />} />
+                  <Route path="credits" element={<Credits />} />
+                  <Route path="tasks" element={<Tasks />} />
+                  <Route path="crm" element={<CRM />} />
+                  <Route path="crm/lead/:id" element={<CRMLeadDetail />} />
+                  <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
+                  <Route path="mentoring" element={<Mentoring />} />
+                  <Route path="mentoring/:id" element={<MentoringDetail />} />
+                  <Route path="mentoring-catalog" element={<AdminMentoringCatalog />} />
+                  <Route path="mentoring-enrollments" element={<AdminMentoringEnrollments />} />
+                  <Route path="individual-enrollments" element={<AdminIndividualEnrollments />} />
+                  <Route path="group-enrollments" element={<AdminGroupEnrollments />} />
+                  <Route path="individual-sessions" element={<AdminMentoringSessionsIndividual />} />
+                  <Route path="group-sessions" element={<AdminMentoringSessionsGroup />} />
+                  <Route path="calendly-config" element={<AdminCalendlyConfig />} />
+                  <Route path="permissions" element={<Permissions />} />
+                  <Route path="audit" element={<Audit />} />
+                  <Route path="audit-analytics" element={<AuditAnalytics />} />
+                  <Route path="audit-reports" element={<AuditReports />} />
+                  <Route path="audit-behavior" element={<AuditBehaviorAnalytics />} />
+                </Route>
 
-              {/* Student Routes */}
-              <Route path="/aluno" element={
-                <StudentRouteGuard>
-                  <StudentLayout />
-                </StudentRouteGuard>
-              }>
-                <Route index element={<StudentDashboard />} />
-                <Route path="fornecedores" element={<StudentSuppliers />} />
-                <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
-                <Route path="meus-fornecedores/:id" element={<StudentMySupplierDetail />} />
-                <Route path="fornecedores/:id" element={<StudentSupplierDetail />} />
-                <Route path="parceiros" element={<StudentPartners />} />
-                <Route path="ferramentas" element={<StudentTools />} />
-                <Route path="creditos" element={<StudentCredits />} />
-                <Route path="mentoria" element={<StudentMentoring />} />
-                <Route path="livi-ai" element={<StudentLiviAI />} />
-                <Route path="configuracoes" element={<StudentSettings />} />
-              </Route>
+                {/* Student Routes */}
+                <Route path="/aluno" element={
+                  <StudentRouteGuard>
+                    <StudentLayout />
+                  </StudentRouteGuard>
+                }>
+                  <Route index element={<StudentDashboard />} />
+                  <Route path="fornecedores" element={<StudentSuppliers />} />
+                  <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
+                  <Route path="meus-fornecedores/:id" element={<StudentMySupplierDetail />} />
+                  <Route path="fornecedores/:id" element={<StudentSupplierDetail />} />
+                  <Route path="parceiros" element={<StudentPartners />} />
+                  <Route path="ferramentas" element={<StudentTools />} />
+                  <Route path="creditos" element={<StudentCredits />} />
+                  <Route path="mentoria" element={<StudentMentoring />} />
+                  <Route path="livi-ai" element={<StudentLiviAI />} />
+                  <Route path="configuracoes" element={<StudentSettings />} />
+                </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Error404Boundary>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
