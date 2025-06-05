@@ -1,3 +1,4 @@
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from "@/components/ui/toaster";
@@ -96,13 +97,59 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/complete-registration" element={<CompleteRegistration />} />
                 
-                {/* Admin Routes */}
+                {/* Admin Routes - URLs em português para corresponder ao menu */}
                 <Route path="/admin" element={
                   <RouteGuard requireAdminAccess>
                     <AdminLayout />
                   </RouteGuard>
                 }>
                   <Route index element={<Dashboard />} />
+                  {/* Rota duplicada para dashboard */}
+                  <Route path="dashboard" element={<Dashboard />} />
+                  
+                  {/* Principal */}
+                  <Route path="usuarios" element={<Users />} />
+                  <Route path="crm" element={<CRM />} />
+                  <Route path="crm/lead/:id" element={<CRMLeadDetail />} />
+                  <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
+                  <Route path="tarefas" element={<Tasks />} />
+                  
+                  {/* Mentorias */}
+                  <Route path="mentorias" element={<Mentoring />} />
+                  <Route path="mentorias/:id" element={<MentoringDetail />} />
+                  <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
+                  <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
+                  <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
+                  <Route path="sessoes-individuais" element={<AdminMentoringSessionsIndividual />} />
+                  <Route path="sessoes-grupo" element={<AdminMentoringSessionsGroup />} />
+                  <Route path="mentorias/materiais" element={<AdminMentoringCatalog />} />
+                  
+                  {/* Gestão */}
+                  <Route path="alunos" element={<Students />} />
+                  <Route path="cursos" element={<Courses />} />
+                  <Route path="mentoria" element={<Mentoring />} />
+                  <Route path="bonus" element={<Bonus />} />
+                  <Route path="bonus/:id" element={<BonusDetail />} />
+                  <Route path="creditos" element={<Credits />} />
+                  <Route path="noticias" element={<News />} />
+                  
+                  {/* Recursos Gerais */}
+                  <Route path="fornecedores" element={<Suppliers />} />
+                  <Route path="parceiros" element={<Partners />} />
+                  <Route path="ferramentas" element={<Tools />} />
+                  
+                  {/* Configurações */}
+                  <Route path="categorias" element={<Categories />} />
+                  <Route path="tipos-softwares" element={<SoftwareTypes />} />
+                  <Route path="tipos-parceiros" element={<PartnerTypes />} />
+                  <Route path="permissoes" element={<Permissions />} />
+                  <Route path="auditoria" element={<Audit />} />
+                  <Route path="audit-analytics" element={<AuditAnalytics />} />
+                  <Route path="audit-reports" element={<AuditReports />} />
+                  <Route path="audit-behavior" element={<AuditBehaviorAnalytics />} />
+                  <Route path="calendly-config" element={<AdminCalendlyConfig />} />
+                  
+                  {/* Rotas legadas para compatibilidade */}
                   <Route path="users" element={<Users />} />
                   <Route path="students" element={<Students />} />
                   <Route path="suppliers" element={<Suppliers />} />
@@ -112,14 +159,9 @@ function App() {
                   <Route path="partner-types" element={<PartnerTypes />} />
                   <Route path="software-types" element={<SoftwareTypes />} />
                   <Route path="news" element={<News />} />
-                  <Route path="bonus" element={<Bonus />} />
-                  <Route path="bonus/:id" element={<BonusDetail />} />
                   <Route path="courses" element={<Courses />} />
                   <Route path="credits" element={<Credits />} />
                   <Route path="tasks" element={<Tasks />} />
-                  <Route path="crm" element={<CRM />} />
-                  <Route path="crm/lead/:id" element={<CRMLeadDetail />} />
-                  <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
                   <Route path="mentoring" element={<Mentoring />} />
                   <Route path="mentoring/:id" element={<MentoringDetail />} />
                   <Route path="mentoring-catalog" element={<AdminMentoringCatalog />} />
@@ -128,12 +170,8 @@ function App() {
                   <Route path="group-enrollments" element={<AdminGroupEnrollments />} />
                   <Route path="individual-sessions" element={<AdminMentoringSessionsIndividual />} />
                   <Route path="group-sessions" element={<AdminMentoringSessionsGroup />} />
-                  <Route path="calendly-config" element={<AdminCalendlyConfig />} />
                   <Route path="permissions" element={<Permissions />} />
                   <Route path="audit" element={<Audit />} />
-                  <Route path="audit-analytics" element={<AuditAnalytics />} />
-                  <Route path="audit-reports" element={<AuditReports />} />
-                  <Route path="audit-behavior" element={<AuditBehaviorAnalytics />} />
                 </Route>
 
                 {/* Student Routes */}

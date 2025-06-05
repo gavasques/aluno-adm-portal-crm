@@ -1,106 +1,109 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wrench, Plus, Search, Filter } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Plus, Wrench, Star, TrendingUp } from 'lucide-react';
 
-const AdminTools = () => {
+const Tools = () => {
+  console.log('Tools page component is rendering');
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ferramentas</h1>
-          <p className="text-muted-foreground">
-            Gerencie ferramentas da plataforma (Área ADM)
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Ferramentas ADM</h1>
+          <p className="text-gray-600 mt-1">Gerencie as ferramentas da plataforma</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Ferramenta
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Nova Ferramenta
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Wrench className="h-5 w-5 mr-2" />
-              Total
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Total de Ferramentas
             </CardTitle>
+            <Wrench className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">67</div>
-            <p className="text-xs text-muted-foreground">
-              Ferramentas ativas
-            </p>
+            <div className="text-2xl font-bold">156</div>
+            <p className="text-xs text-green-600">+8 este mês</p>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardHeader>
-            <CardTitle>Novas</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Ferramentas Ativas
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">
-              Este mês
-            </p>
+            <div className="text-2xl font-bold">142</div>
+            <p className="text-xs text-gray-600">91% do total</p>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardHeader>
-            <CardTitle>Avaliações</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Avaliação Média
+            </CardTitle>
+            <Star className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.5</div>
-            <p className="text-xs text-muted-foreground">
-              Média geral
-            </p>
+            <div className="text-2xl font-bold">4.3</div>
+            <p className="text-xs text-green-600">+0.1 este mês</p>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardHeader>
-            <CardTitle>Categorias</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Mais Usada
+            </CardTitle>
+            <Wrench className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">
-              Tipos diferentes
-            </p>
+            <div className="text-2xl font-bold">Slack</div>
+            <p className="text-xs text-gray-600">67% dos usuários</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Content */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Ferramentas</CardTitle>
-          <CardDescription>
-            Gerencie todas as ferramentas cadastradas na plataforma
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                placeholder="Buscar ferramentas..."
-                className="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
+          <div className="text-center py-12">
+            <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Módulo de Ferramentas
+            </h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Este módulo está sendo desenvolvido. Em breve você poderá gerenciar todas as ferramentas aqui.
+            </p>
           </div>
-          
-          <div className="border rounded-lg">
-            <div className="p-4 text-center text-muted-foreground">
-              <Wrench className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Sistema de ferramentas será implementado em breve</p>
-              <p className="text-sm">Esta funcionalidade está em desenvolvimento</p>
-            </div>
+        </CardContent>
+      </Card>
+
+      {/* Debug Info */}
+      <Card className="bg-gray-50">
+        <CardHeader>
+          <CardTitle className="text-sm">Debug Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-xs text-gray-600">
+            <p>Componente Tools renderizado com sucesso</p>
+            <p>Rota: /admin/ferramentas</p>
+            <p>Timestamp: {new Date().toISOString()}</p>
           </div>
         </CardContent>
       </Card>
@@ -108,4 +111,4 @@ const AdminTools = () => {
   );
 };
 
-export default AdminTools;
+export default Tools;

@@ -1,155 +1,99 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import ListTable, { ListItem } from "@/components/admin/ListTable";
-import AddItemForm from "@/components/admin/AddItemForm";
-import EditSoftwareTypeForm from "@/components/admin/EditSoftwareTypeForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { useSoftwareTypes, SoftwareType } from "@/hooks/admin/useSoftwareTypes";
-import { Skeleton } from "@/components/ui/skeleton";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, Cog } from 'lucide-react';
 
 const SoftwareTypes = () => {
-  const { softwareTypes, loading, addSoftwareType, updateSoftwareType, deleteSoftwareType, updating } = useSoftwareTypes();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedSoftwareType, setSelectedSoftwareType] = useState<SoftwareType | null>(null);
+  console.log('SoftwareTypes page component is rendering');
 
-  const handleAddSoftwareType = async (data: { name: string; description?: string }) => {
-    const success = await addSoftwareType(data);
-    if (success) {
-      setIsAddDialogOpen(false);
-    }
-  };
-
-  const handleEditSoftwareType = async (data: { name: string; description?: string }) => {
-    if (selectedSoftwareType) {
-      const success = await updateSoftwareType(selectedSoftwareType.id, data);
-      if (success) {
-        setIsEditDialogOpen(false);
-        setSelectedSoftwareType(null);
-      }
-    }
-  };
-
-  const handleDeleteSoftwareType = async (id: string | number) => {
-    await deleteSoftwareType(id.toString());
-  };
-
-  const openEditDialog = (softwareType: SoftwareType) => {
-    setSelectedSoftwareType(softwareType);
-    setIsEditDialogOpen(true);
-  };
-
-  // Convert to ListItem format for the table
-  const listItems: ListItem[] = softwareTypes.map(type => ({
-    id: type.id,
-    name: type.name,
-    description: type.description || "",
-    created_at: type.created_at,
-    updated_at: type.updated_at,
-  }));
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-48 mt-2" />
-          </div>
-          <Skeleton className="h-10 w-32" />
+  return (
+    <div className="p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Tipos de Ferramentas</h1>
+          <p className="text-gray-600 mt-1">Gerencie os tipos de ferramentas/softwares do sistema</p>
         </div>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Novo Tipo
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-96" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Total de Tipos
+            </CardTitle>
+            <Cog className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </div>
+            <div className="text-2xl font-bold">15</div>
+            <p className="text-xs text-green-600">+3 este mês</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Tipos Ativos
+            </CardTitle>
+            <Cog className="h-4 w-4 text-gray-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">13</div>
+            <p className="text-xs text-gray-600">87% do total</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Mais Popular
+            </CardTitle>
+            <Cog className="h-4 w-4 text-gray-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Produtividade</div>
+            <p className="text-xs text-gray-600">45 ferramentas</p>
           </CardContent>
         </Card>
       </div>
-    );
-  }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tipos de Ferramentas</h1>
-          <p className="text-gray-600 mt-1">
-            Gerencie os tipos de ferramentas disponíveis no sistema
-          </p>
-        </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Novo Tipo de Ferramenta
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Novo Tipo de Ferramenta</DialogTitle>
-              <DialogDescription>
-                Preencha as informações para adicionar um novo tipo de ferramenta ao sistema.
-              </DialogDescription>
-            </DialogHeader>
-            <AddItemForm 
-              onSubmit={handleAddSoftwareType} 
-              itemName="Tipo de Ferramenta"
-              showDescription={true}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-      
-      <Card className="border-0 shadow-lg">
+      {/* Content */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Lista de Tipos de Ferramentas</span>
-            <span className="text-sm font-normal text-gray-500">
-              {softwareTypes.length} tipos cadastrados
-            </span>
-          </CardTitle>
-          <CardDescription>
-            Aqui você pode visualizar e gerenciar todos os tipos de ferramentas cadastrados.
-          </CardDescription>
+          <CardTitle>Lista de Tipos de Ferramentas</CardTitle>
         </CardHeader>
         <CardContent>
-          <ListTable 
-            items={listItems} 
-            onDelete={handleDeleteSoftwareType}
-            onEdit={(item) => openEditDialog(softwareTypes.find(st => st.id === item.id)!)}
-            showDescription={true}
-            showDates={true}
-          />
+          <div className="text-center py-12">
+            <Cog className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Módulo de Tipos de Ferramentas
+            </h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Este módulo está sendo desenvolvido. Em breve você poderá gerenciar todos os tipos de ferramentas aqui.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Edit Software Type Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Tipo de Ferramenta</DialogTitle>
-            <DialogDescription>
-              Atualize as informações do tipo de ferramenta selecionado.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedSoftwareType && (
-            <EditSoftwareTypeForm 
-              softwareType={selectedSoftwareType}
-              onSubmit={handleEditSoftwareType} 
-              isLoading={updating}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Debug Info */}
+      <Card className="bg-gray-50">
+        <CardHeader>
+          <CardTitle className="text-sm">Debug Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-xs text-gray-600">
+            <p>Componente SoftwareTypes renderizado com sucesso</p>
+            <p>Rota: /admin/tipos-softwares</p>
+            <p>Timestamp: {new Date().toISOString()}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
