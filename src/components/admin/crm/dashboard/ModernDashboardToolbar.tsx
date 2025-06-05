@@ -1,21 +1,18 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Grid3X3, 
   List, 
-  Filter, 
   Settings,
   Plus,
-  ChevronDown,
   BarChart3,
   Search,
   LayoutGrid
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CRMFilters, CRMPipeline, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
 import { CRMCardConfigDialog } from '../card-config/CRMCardConfigDialog';
 import { ContactSyncIndicatorImproved } from './ContactSyncIndicatorImproved';
@@ -49,8 +46,6 @@ interface ModernDashboardToolbarProps {
 export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
   activeView,
   onViewChange,
-  showFilters,
-  onToggleFilters,
   onCreateLead,
   filters,
   onOpenReports,
@@ -69,13 +64,6 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
   activeFiltersCount
 }) => {
   const [showCardConfig, setShowCardConfig] = useState(false);
-
-  // Contar filtros avançados ativos (exclui os principais)
-  const advancedFiltersCount = Object.entries(filters).filter(([key, value]) => {
-    if (['pipeline_id', 'column_id', 'responsible_id', 'contact_filter', 'tag_ids', 'search'].includes(key)) return false;
-    if (Array.isArray(value)) return value.length > 0;
-    return value && value !== '';
-  }).length;
 
   return (
     <>
@@ -194,38 +182,6 @@ export const ModernDashboardToolbar: React.FC<ModernDashboardToolbarProps> = ({
             >
               <Settings className="h-4 w-4" />
               Configurar Campos
-            </Button>
-
-            {/* Botão Filtros Avançados */}
-            <Button 
-              variant="outline" 
-              onClick={onToggleFilters}
-              className="relative border-gray-300 hover:border-blue-400 hover:bg-blue-50 h-9"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros Avançados
-              <AnimatePresence>
-                {advancedFiltersCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-2 -right-2"
-                  >
-                    <Badge 
-                      variant="destructive" 
-                      className="h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    >
-                      {advancedFiltersCount}
-                    </Badge>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <ChevronDown 
-                className={`h-4 w-4 ml-2 transition-transform duration-200 ${
-                  showFilters ? 'rotate-180' : ''
-                }`} 
-              />
             </Button>
 
             {/* Botão Relatórios */}

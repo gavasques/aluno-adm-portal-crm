@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, Tag, X } from 'lucide-react';
 import { CRMFilters, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
 import ModernTagsSelector from '../form-components/ModernTagsSelector';
+import StatusFilter from './StatusFilter';
 
 interface MainFiltersProps {
   filters: CRMFilters;
@@ -29,9 +30,10 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
   clearAllFilters
 }) => {
   return (
-    <div className="flex items-center gap-3 flex-wrap">
-      {/* Filtro por Etapa/Estágio */}
+    <div className="flex items-end gap-4 flex-wrap">
+      {/* Filtro por Estágio/Etapa */}
       <div className="min-w-[180px]">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Estágio</label>
         <Select 
           value={filters.column_id || 'all'} 
           onValueChange={(value) => updateFilter('column_id', value === 'all' ? undefined : value)}
@@ -58,6 +60,7 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
 
       {/* Filtro por Responsável */}
       <div className="min-w-[160px]">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Responsável</label>
         <Select 
           value={filters.responsible_id || 'all'} 
           onValueChange={(value) => updateFilter('responsible_id', value === 'all' ? undefined : value)}
@@ -83,6 +86,7 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
 
       {/* Filtro por Contatos */}
       <div className="min-w-[160px]">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Contatos</label>
         <Select 
           value={filters.contact_filter || 'all'} 
           onValueChange={(value) => updateFilter('contact_filter', value === 'all' ? undefined : value)}
@@ -107,26 +111,38 @@ export const MainFilters: React.FC<MainFiltersProps> = ({
 
       {/* Filtro por Tags */}
       <div className="min-w-[140px]">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Tags</label>
         <ModernTagsSelector
           selectedTags={filters.tag_ids || []}
           onTagsChange={(tagIds) => updateFilter('tag_ids', tagIds.length > 0 ? tagIds : undefined)}
         />
       </div>
 
+      {/* Filtro por Status */}
+      <div className="min-w-[140px]">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+        <StatusFilter
+          value={filters.status}
+          onValueChange={(status) => updateFilter('status', status)}
+        />
+      </div>
+
       {/* Botão Limpar Filtros */}
       {activeFiltersCount > 0 && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={clearAllFilters}
-          className="flex items-center gap-2 h-9 text-gray-600 hover:text-gray-800"
-        >
-          <X className="h-4 w-4" />
-          Limpar
-          <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
-            {activeFiltersCount}
-          </Badge>
-        </Button>
+        <div className="pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearAllFilters}
+            className="flex items-center gap-2 h-9 text-gray-600 hover:text-gray-800"
+          >
+            <X className="h-4 w-4" />
+            Limpar
+            <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+              {activeFiltersCount}
+            </Badge>
+          </Button>
+        </div>
       )}
     </div>
   );

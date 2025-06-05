@@ -20,9 +20,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   // Estado das abas
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'settings'>('dashboard');
   
-  // Estado da view e filtros
+  // Estado da view (removendo showFilters já que não temos mais filtros avançados)
   const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
   const [filters, setFilters] = useState<CRMFilters>({});
 
@@ -58,10 +57,6 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
   // Handlers
   const handleCreateLead = (columnId?: string) => {
     console.log('Create lead for column:', columnId);
-  };
-
-  const handleToggleFilters = () => {
-    setShowFilters(!showFilters);
   };
 
   const handleFiltersChange = (newFilters: Partial<CRMFilters>) => {
@@ -101,8 +96,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               activeTab="dashboard"
               activeView={activeView}
               onViewChange={setActiveView}
-              showFilters={showFilters}
-              onToggleFilters={handleToggleFilters}
+              showFilters={false}
+              onToggleFilters={() => {}}
               selectedPipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
               pipelines={pipelines}
@@ -128,8 +123,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               activeTab="reports"
               activeView={activeView}
               onViewChange={setActiveView}
-              showFilters={showFilters}
-              onToggleFilters={handleToggleFilters}
+              showFilters={false}
+              onToggleFilters={() => {}}
               selectedPipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
               pipelines={pipelines}
@@ -155,8 +150,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               activeTab="analytics"
               activeView={activeView}
               onViewChange={setActiveView}
-              showFilters={showFilters}
-              onToggleFilters={handleToggleFilters}
+              showFilters={false}
+              onToggleFilters={() => {}}
               selectedPipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
               pipelines={pipelines}
@@ -182,8 +177,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ onOpenLead }) => {
               activeTab="settings"
               activeView={activeView}
               onViewChange={setActiveView}
-              showFilters={showFilters}
-              onToggleFilters={handleToggleFilters}
+              showFilters={false}
+              onToggleFilters={() => {}}
               selectedPipelineId={selectedPipelineId}
               onPipelineChange={setSelectedPipelineId}
               pipelines={pipelines}

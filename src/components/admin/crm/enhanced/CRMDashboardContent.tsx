@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AdvancedFilters } from '../filters/AdvancedFilters';
+import { motion } from 'framer-motion';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { ModernDashboardToolbar } from '../dashboard/ModernDashboardToolbar';
 import { CRMMetricsCards } from '../dashboard/CRMMetricsCards';
@@ -100,28 +99,6 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
                 activeFiltersCount={activeFiltersCount}
               />
             </div>
-
-            {/* Filtros Avançados */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden bg-white border-b border-gray-200 px-8 py-4 flex-shrink-0"
-                >
-                  <AdvancedFilters
-                    filters={filters}
-                    updateFilter={updateFilter}
-                    pipelineColumns={pipelineColumns}
-                    users={users}
-                    tags={tags}
-                    handleTagsChange={handleTagsChange}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Conteúdo Principal - Usar toda altura restante e largura completa */}
             <div className="flex-1 min-h-0 w-full">
