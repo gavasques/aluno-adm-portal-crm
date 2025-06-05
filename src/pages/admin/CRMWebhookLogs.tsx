@@ -8,7 +8,8 @@ import { WebhookStatsCards } from '@/components/admin/crm/webhook-logs/WebhookSt
 import { WebhookTestButton } from '@/components/admin/crm/webhook-logs/WebhookTestButton';
 import { WebhookUrlsCard } from '@/components/admin/crm/webhook-logs/WebhookUrlsCard';
 import { WebhookFieldMappingsCard } from '@/components/admin/crm/webhook-logs/WebhookFieldMappingsCard';
-import { Activity, BarChart3, TestTube, Globe, Settings } from 'lucide-react';
+import { WebhookTokensManager } from '@/components/admin/crm/webhook-logs/WebhookTokensManager';
+import { Activity, BarChart3, Settings, Key, Globe } from 'lucide-react';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 
 const CRMWebhookLogs = () => {
@@ -72,22 +73,20 @@ const CRMWebhookLogs = () => {
 
       {selectedPipelineId && (
         <>
-          {/* URLs e Configurações dos Webhooks */}
-          <div className="grid grid-cols-1 gap-6">
-            <WebhookUrlsCard />
-          </div>
-
-          {/* Mapeamento de Campos */}
-          <div className="grid grid-cols-1 gap-6">
-            <WebhookFieldMappingsCard pipelineId={selectedPipelineId} />
-          </div>
-
           {/* Estatísticas */}
           <WebhookStatsCards />
 
           {/* Conteúdo Principal */}
-          <Tabs defaultValue="logs" className="space-y-4">
-            <TabsList>
+          <Tabs defaultValue="configuration" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="configuration" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Configuração
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                Tokens de Segurança
+              </TabsTrigger>
               <TabsTrigger value="logs" className="flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 Logs Recentes
@@ -97,6 +96,22 @@ const CRMWebhookLogs = () => {
                 Analytics
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="configuration" className="space-y-4">
+              {/* URLs e Configurações dos Webhooks */}
+              <div className="grid grid-cols-1 gap-6">
+                <WebhookUrlsCard />
+              </div>
+
+              {/* Mapeamento de Campos */}
+              <div className="grid grid-cols-1 gap-6">
+                <WebhookFieldMappingsCard pipelineId={selectedPipelineId} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="security" className="space-y-4">
+              <WebhookTokensManager pipelineId={selectedPipelineId} />
+            </TabsContent>
 
             <TabsContent value="logs" className="space-y-4">
               <WebhookLogsList />

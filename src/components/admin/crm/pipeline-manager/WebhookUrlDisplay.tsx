@@ -7,7 +7,9 @@ import {
   Link as LinkIcon, 
   Check, 
   Info, 
-  ExternalLink
+  Shield,
+  AlertTriangle,
+  Key
 } from 'lucide-react';
 import { 
   Dialog,
@@ -18,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { CRMPipeline } from '@/types/crm.types';
+import { useCRMWebhookTokens } from '@/hooks/crm/useCRMWebhookTokens';
 
 interface WebhookUrlDisplayProps {
   pipeline: CRMPipeline;
@@ -26,8 +29,10 @@ interface WebhookUrlDisplayProps {
 export const WebhookUrlDisplay = ({ pipeline }: WebhookUrlDisplayProps) => {
   const [copied, setCopied] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const { getActiveToken } = useCRMWebhookTokens(pipeline.id);
 
   const webhookUrl = `https://qflmguzmticupqtnlirf.supabase.co/functions/v1/crm-webhook?pipeline_id=${pipeline.id}`;
+  const activeToken = getActiveToken(pipeline.id);
 
   const handleCopyUrl = async () => {
     try {
@@ -52,6 +57,19 @@ export const WebhookUrlDisplay = ({ pipeline }: WebhookUrlDisplayProps) => {
 
   return (
     <div className="flex items-center gap-2">
+      {/* Status do Token */}
+      {activeToken ? (
+        <Badge className="bg-green-100 text-green-800">
+          <Shield className="h-3 w-3 mr-1" />
+          Protegido
+        </Badge>
+      ) : (
+        <Badge className="bg-orange-100 text-orange-800">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          Sem Token
+        </Badge>
+      )}
+
       <Button
         variant="ghost"
         size="sm"
@@ -87,6 +105,34 @@ export const WebhookUrlDisplay = ({ pipeline }: WebhookUrlDisplayProps) => {
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Status de Segurança */}
+            <div className={`p-4 rounded-lg border ${
+              activeToken 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-orange-50 border-orange-200'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                {activeToken ? (
+                  <>
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <h3 className="font-semibold text-green-900">Webhook Protegido</h3>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-5 w-5 text-orange-600" />
+                    <h3 className="font-semibold text-orange-900">Webhook Sem Proteção</h3>
+                  </>
+                )}
+              </div>
+              <p className={`text-sm ${
+                activeToken ? 'text-green-800' : 'text-orange-800'
+              }`}>
+                {activeToken 
+                  ? 'Este webhook possui um token de segurança ativo que protege contra acesso não autorizado.'
+                  : 'Este webhook não possui token de segurança. Configure um token para maior proteção.'}
+              </p>
+            </div>
+
             {/* URL Section */}
             <div>
               <h3 className="font-semibold mb-2">URL do Webhook</h3>
@@ -112,6 +158,14 @@ export const WebhookUrlDisplay = ({ pipeline }: WebhookUrlDisplayProps) => {
                   <Badge variant="default">POST</Badge>
                   <span className="text-sm text-gray-600">Content-Type: application/json</span>
                 </div>
+                {activeToken && (
+                  <div className="flex gap-2">
+                    <Badge className="bg-green-100 text-green-800">
+                      <Key className="h-3 w-3 mr-1" />
+                      Autenticação por Token
+                    </Badge>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -179,6 +233,19 @@ export const WebhookUrlDisplay = ({ pipeline }: WebhookUrlDisplayProps) => {
               </pre>
             </div>
 
+            {/* Security Note */}
+            {!activeToken && (
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-medium text-orange-900 mb-2">🔐 Recomendação de Segurança</h4>
+                <p className="text-sm text-orange-800 mb-2">
+                  Para maior segurança, configure um token de segurança para este webhook.
+                </p>
+                <p className="text-sm text-orange-800">
+                  Acesse a página "Logs do Webhook CRM" → aba "Tokens de Segurança" para configurar.
+                </p>
+              </div>
+            )}
+
             {/* Info */}
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">ℹ️ Informações Importantes</h4>
@@ -186,7 +253,11 @@ export const WebhookUrlDisplay = ({ pipeline }: WebhookUrlDisplayProps) => {
                 <li>• O lead será criado automaticamente na primeira coluna do pipeline</li>
                 <li>• Se já existir um lead com o mesmo email, será retornado o lead existente</li>
                 <li>• Todos os requests são logados para auditoria</li>
-                <li>• O webhook não requer autenticação</li>
+                {activeToken ? (
+                  <li>• Webhook protegido por token de segurança</li>
+                ) : (
+                  <li>• Webhook público - considere adicionar um token de segurança</li>
+                )}
               </ul>
             </div>
           </div>
