@@ -8,6 +8,9 @@ import { Toaster as SonnerToaster } from 'sonner';
 import AdminLayout from './layout/AdminLayout';
 import StudentLayout from './layout/StudentLayout';
 
+// Pages
+import Index from './pages/Index';
+
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminCRM from './pages/admin/CRM';
@@ -32,7 +35,7 @@ function App() {
       <UserProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Bem-vindo à Plataforma</h1></div>} />
+            <Route path="/" element={<Index />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
