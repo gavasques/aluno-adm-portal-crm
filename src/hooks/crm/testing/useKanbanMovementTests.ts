@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { useUnifiedCRMData } from '../useUnifiedCRMData';
 import { useUltraSimplifiedLeadMovement } from '../useUltraSimplifiedLeadMovement';
 import { useCRMPipelines } from '../useCRMPipelines';
-import { supabase } from '@/integrations/supabase/client';
 import { debugLogger } from '@/utils/debug-logger';
 
 interface TestResult {
@@ -83,7 +82,7 @@ export const useKanbanMovementTests = (pipelineId: string) => {
       responsible_id: '',
       tag_ids: [],
       search: '',
-      status: 'aberto'
+      contact_filter: ''
     }
   });
 

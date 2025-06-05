@@ -8,7 +8,6 @@ import { X, Search, Users, Calendar } from 'lucide-react';
 import { CRMFilters as CRMFiltersType } from '@/types/crm.types';
 import { useCRMPipelines } from '@/hooks/crm/useCRMPipelines';
 import { useCRMUsers } from '@/hooks/crm/useCRMUsers';
-import StatusFilter from './filters/StatusFilter';
 
 interface CRMFiltersProps {
   filters: CRMFiltersType;
@@ -59,12 +58,6 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
             className="pl-10"
           />
         </div>
-
-        {/* Filtro por Status */}
-        <StatusFilter
-          value={filters.status}
-          onValueChange={(status) => handleFilterChange('status', status)}
-        />
 
         {/* Filtro por Coluna/Etapa */}
         <Select 

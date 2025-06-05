@@ -1,4 +1,3 @@
-
 export interface CRMPipeline {
   id: string;
   name: string;
@@ -228,7 +227,6 @@ export interface CRMFilters {
   search?: string;
   contact_filter?: string;
   tag_ids?: string[];
-  status?: LeadStatus;
 }
 
 export interface LeadWithContacts extends CRMLead {

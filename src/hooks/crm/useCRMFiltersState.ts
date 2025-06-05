@@ -23,9 +23,9 @@ export const useCRMFiltersState = (
     );
   }, [columns]);
 
-  // Inicializar filtros com estágio padrão e status "aberto"
+  // Inicializar filtros com estágio padrão
   React.useEffect(() => {
-    const needsDefaults = (!filters.column_id && columns.length > 0) || !filters.status;
+    const needsDefaults = (!filters.column_id && columns.length > 0);
     
     if (needsDefaults) {
       const newFilters = { ...filters };
@@ -33,11 +33,6 @@ export const useCRMFiltersState = (
       // Definir coluna padrão se não existe
       if (defaultOpenColumn && !filters.column_id && columns.length > 0) {
         newFilters.column_id = defaultOpenColumn.id;
-      }
-      
-      // Definir status "aberto" como padrão se não existe
-      if (!filters.status) {
-        newFilters.status = 'aberto';
       }
       
       onFiltersChange(newFilters);
@@ -64,8 +59,7 @@ export const useCRMFiltersState = (
   const clearAllFilters = () => {
     setSearchValue('');
     const baseFilters: CRMFiltersType = { 
-      pipeline_id: filters.pipeline_id,
-      status: 'aberto' // Manter status "aberto" ao limpar filtros
+      pipeline_id: filters.pipeline_id
     };
     
     // Manter o estágio padrão ao limpar filtros
@@ -80,7 +74,6 @@ export const useCRMFiltersState = (
     return Object.keys(filters).filter(key => {
       if (key === 'pipeline_id') return false;
       if (key === 'column_id' && filters[key] === defaultOpenColumn?.id) return false; // Não contar filtro padrão
-      if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
       return filters[key as keyof CRMFiltersType];
     }).length;
   };
