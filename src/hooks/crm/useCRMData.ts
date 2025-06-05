@@ -1,6 +1,7 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CRMFilters, CRMLead } from '@/types/crm.types';
+import { CRMFilters, CRMLead, LeadWithContacts } from '@/types/crm.types';
 import { debugLogger } from '@/utils/debug-logger';
 
 export const useCRMData = (filters: CRMFilters = {}) => {
@@ -50,8 +51,10 @@ export const useCRMData = (filters: CRMFilters = {}) => {
 
         const processedLeads = (data || []).map(lead => ({
           ...lead,
-          tags: lead.tags?.map((tagRel: any) => tagRel.crm_tags) || []
-        })) as CRMLead[];
+          tags: lead.tags?.map((tagRel: any) => tagRel.crm_tags) || [],
+          pending_contacts: [],
+          last_completed_contact: undefined
+        })) as LeadWithContacts[];
 
         debugLogger.info('✅ [CRM_DATA] Leads carregados:', { 
           count: processedLeads.length 
@@ -69,6 +72,7 @@ export const useCRMData = (filters: CRMFilters = {}) => {
 
   return {
     leads,
+    leadsWithContacts: leads,
     loading,
     error,
     refetch
