@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag, ExternalLink, MessageSquare, FileText, Package, ShoppingCart, Truck } from 'lucide-react';
+import { Phone, Mail, Building, Calendar, DollarSign, User, Clock, Tag, ExternalLink, MessageSquare, FileText, Package, ShoppingCart, Truck, Star } from 'lucide-react';
 import { CRMLead, CRMLeadCardField } from '@/types/crm.types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -147,7 +147,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
         if (!lead.seeks_private_label) return null;
         return (
           <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200 h-5 px-1.5">
-            <Package className="h-2.5 w-2.5 mr-0.5" />
+            <Star className="h-2.5 w-2.5 mr-0.5" />
             Marca Própria
           </Badge>
         );
@@ -184,6 +184,58 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
         return (
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <span>Estado: {lead.amazon_state}</span>
+          </div>
+        );
+
+      case 'amazon_tax_regime':
+        if (!lead.amazon_tax_regime) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <span>Regime: {lead.amazon_tax_regime}</span>
+          </div>
+        );
+
+      case 'amazon_store_link':
+        if (!lead.amazon_store_link) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-blue-600">
+            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">Loja Amazon</span>
+          </div>
+        );
+
+      case 'keep_or_new_niches':
+        if (!lead.keep_or_new_niches) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <span className="truncate">Nichos: {lead.keep_or_new_niches}</span>
+          </div>
+        );
+
+      case 'main_doubts':
+        if (!lead.main_doubts) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <MessageSquare className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{lead.main_doubts}</span>
+          </div>
+        );
+
+      case 'notes':
+        if (!lead.notes) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <FileText className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{lead.notes}</span>
+          </div>
+        );
+
+      case 'calendly_link':
+        if (!lead.calendly_link) return null;
+        return (
+          <div className="flex items-center gap-1 text-xs text-blue-600">
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">Link Calendly</span>
           </div>
         );
 
@@ -226,7 +278,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, lead, compa
   const fieldContent = renderField();
   if (!fieldContent) return null;
 
-  return <div className="field-item">{fieldContent}</div>;
+  return fieldContent;
 };
 
 const getStatusColor = (status: string) => {

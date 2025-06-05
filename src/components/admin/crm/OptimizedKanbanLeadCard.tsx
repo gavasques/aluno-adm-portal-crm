@@ -42,55 +42,46 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
       </Card>
     );
   }
-
-  // Determine card height based on field count
-  const fieldCount = preferences.visible_fields.length;
-  const cardHeight = fieldCount <= 4 ? 'min-h-[120px]' : 
-                    fieldCount <= 7 ? 'min-h-[160px]' : 'min-h-[200px]';
   
-  console.log('🃏 [KANBAN_LEAD_CARD] Renderizando card configurável:', {
+  console.log('🃏 [KANBAN_LEAD_CARD] Renderizando card otimizado:', {
     leadId: lead.id,
     leadName: lead.name,
     visibleFields: preferences.visible_fields,
-    fieldCount,
     isDragging
   });
   
   return (
     <Card 
       className={cn(
-        "p-3 cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:shadow-md",
-        cardHeight,
+        "p-3 cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:shadow-md relative",
         isDragging && "opacity-70 rotate-2 shadow-lg scale-105"
       )}
       onClick={handleCardClick}
     >
-      <div className="flex flex-col h-full">
-        {/* Header com ações - posicionado no canto superior direito */}
-        <div className="flex justify-end mb-2 flex-shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild data-dropdown-trigger="true">
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <MoreVertical className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onClick}>
-                <Eye className="h-4 w-4 mr-2" />
-                Abrir Lead
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      {/* Menu de ações posicionado absolutamente no canto superior direito */}
+      <div className="absolute top-2 right-2 z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild data-dropdown-trigger="true">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-60 hover:opacity-100">
+              <MoreVertical className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onClick}>
+              <Eye className="h-4 w-4 mr-2" />
+              Abrir Lead
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Conteúdo configurável */}
-        <div className="flex-1 overflow-hidden">
-          <ConfigurableCardLayout
-            lead={lead}
-            visibleFields={preferences.visible_fields}
-            fieldOrder={preferences.field_order}
-          />
-        </div>
+      {/* Conteúdo principal com padding à direita para não sobrepor o menu */}
+      <div className="pr-8">
+        <ConfigurableCardLayout
+          lead={lead}
+          visibleFields={preferences.visible_fields}
+          fieldOrder={preferences.field_order}
+        />
       </div>
     </Card>
   );
