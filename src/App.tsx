@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
+import CompleteRegistration from './pages/CompleteRegistration';
 
 // Admin Pages - Main
 import AdminDashboard from './pages/admin/Dashboard';
@@ -28,6 +29,24 @@ import AdminCalendlyConfig from './pages/admin/AdminCalendlyConfig';
 import AdminGroups from './pages/admin/AdminGroups';
 import AdminGroupSessions from './pages/admin/AdminGroupSessions';
 import AdminIndividualSessions from './pages/admin/AdminIndividualSessions';
+import CRMWebhookLogs from './pages/admin/CRMWebhookLogs';
+import Tasks from './pages/admin/Tasks';
+
+// Admin Pages - Specific
+import Categories from './pages/admin/Categories';
+import SoftwareTypes from './pages/admin/SoftwareTypes';
+import PartnerTypes from './pages/admin/PartnerTypes';
+import Permissions from './pages/admin/Permissions';
+import Users from './pages/admin/Users';
+import Students from './pages/admin/Students';
+import Courses from './pages/admin/Courses';
+import Mentoring from './pages/admin/Mentoring';
+import Credits from './pages/admin/Credits';
+import News from './pages/admin/News';
+import Suppliers from './pages/admin/Suppliers';
+import Partners from './pages/admin/Partners';
+import Tools from './pages/admin/Tools';
+import Settings from './pages/admin/Settings';
 
 // Admin Pages - Mentoring
 import AdminMentoringCatalog from './pages/admin/AdminMentoringCatalog';
@@ -36,6 +55,13 @@ import AdminMentoringSessionsIndividual from './pages/admin/AdminMentoringSessio
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
+import StudentCredits from './pages/student/Credits';
+import StudentSuppliers from './pages/student/Suppliers';
+import StudentPartners from './pages/student/Partners';
+import StudentTools from './pages/student/Tools';
+import MySuppliers from './pages/student/MySuppliers';
+import StudentMentoring from './pages/student/Mentoring';
+import LiviAI from './pages/student/LiviAI';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +82,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/complete-registration" element={<CompleteRegistration />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={
@@ -78,31 +105,31 @@ function App() {
               <Route path="mentorias/materiais" element={<AdminDashboard />} />
               
               {/* Management Routes */}
-              <Route path="usuarios" element={<AdminDashboard />} />
-              <Route path="alunos" element={<AdminDashboard />} />
-              <Route path="cursos" element={<AdminDashboard />} />
-              <Route path="mentoria" element={<AdminDashboard />} />
-              <Route path="creditos" element={<AdminDashboard />} />
-              <Route path="noticias" element={<AdminDashboard />} />
-              <Route path="tarefas" element={<AdminDashboard />} />
-              <Route path="crm-webhook-logs" element={<AdminDashboard />} />
+              <Route path="usuarios" element={<Users />} />
+              <Route path="alunos" element={<Students />} />
+              <Route path="cursos" element={<Courses />} />
+              <Route path="mentoria" element={<Mentoring />} />
+              <Route path="creditos" element={<Credits />} />
+              <Route path="noticias" element={<News />} />
+              <Route path="tarefas" element={<Tasks />} />
+              <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
               
               {/* Resources Routes */}
-              <Route path="fornecedores" element={<AdminDashboard />} />
-              <Route path="parceiros" element={<AdminDashboard />} />
-              <Route path="ferramentas" element={<AdminDashboard />} />
+              <Route path="fornecedores" element={<Suppliers />} />
+              <Route path="parceiros" element={<Partners />} />
+              <Route path="ferramentas" element={<Tools />} />
               
               {/* Configuration Routes */}
-              <Route path="categorias" element={<AdminDashboard />} />
-              <Route path="tipos-softwares" element={<AdminDashboard />} />
-              <Route path="tipos-parceiros" element={<AdminDashboard />} />
-              <Route path="permissoes" element={<AdminDashboard />} />
+              <Route path="categorias" element={<Categories />} />
+              <Route path="tipos-softwares" element={<SoftwareTypes />} />
+              <Route path="tipos-parceiros" element={<PartnerTypes />} />
+              <Route path="permissoes" element={<Permissions />} />
               <Route path="auditoria" element={<AdminAudit />} />
               <Route path="auditoria/relatorios" element={<AdminAuditReports />} />
               <Route path="auditoria/analytics" element={<AdminAuditAnalytics />} />
               <Route path="auditoria/behavior" element={<AdminAuditBehaviorAnalytics />} />
               <Route path="calendly-config" element={<AdminCalendlyConfig />} />
-              <Route path="configuracoes" element={<AdminDashboard />} />
+              <Route path="configuracoes" element={<Settings />} />
               
               {/* Individual/Group Sessions */}
               <Route path="individual-sessions" element={<AdminIndividualSessions />} />
@@ -116,13 +143,13 @@ function App() {
               </RouteGuard>
             }>
               <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="creditos" element={<StudentDashboard />} />
-              <Route path="fornecedores" element={<StudentDashboard />} />
-              <Route path="parceiros" element={<StudentDashboard />} />
-              <Route path="ferramentas" element={<StudentDashboard />} />
-              <Route path="meus-fornecedores" element={<StudentDashboard />} />
-              <Route path="mentoria" element={<StudentDashboard />} />
-              <Route path="livi-ai" element={<StudentDashboard />} />
+              <Route path="creditos" element={<StudentCredits />} />
+              <Route path="fornecedores" element={<StudentSuppliers />} />
+              <Route path="parceiros" element={<StudentPartners />} />
+              <Route path="ferramentas" element={<StudentTools />} />
+              <Route path="meus-fornecedores" element={<MySuppliers />} />
+              <Route path="mentoria" element={<StudentMentoring />} />
+              <Route path="livi-ai" element={<LiviAI />} />
             </Route>
 
             {/* Catch all route - 404 */}
