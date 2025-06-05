@@ -17,9 +17,10 @@ const Index = () => {
     );
   }
 
-  // Se o usuário já está logado, redirecionar para a área admin
+  // Se o usuário já está logado, redirecionar diretamente para o CRM
   if (user) {
-    return <Navigate to="/admin" replace />;
+    console.log("✅ User authenticated, redirecting to CRM...");
+    return <Navigate to="/admin/crm" replace />;
   }
 
   // Página de boas-vindas para usuários não logados
@@ -50,6 +51,13 @@ const Index = () => {
           <Link to="/login" className="block">
             <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 text-lg">
               Acessar Sistema
+            </Button>
+          </Link>
+          
+          {/* Debug: Acesso direto ao CRM */}
+          <Link to="/admin/crm" className="block">
+            <Button variant="outline" className="w-full text-blue-300 border-blue-300 hover:bg-blue-600 hover:text-white py-2">
+              Ir direto para CRM (Debug)
             </Button>
           </Link>
           

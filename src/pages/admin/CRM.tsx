@@ -14,6 +14,9 @@ const CRM = () => {
     setSelectedLeadId(leadId);
   };
 
+  // Debug: verificar se chegou até aqui
+  console.log('✅ [CRM Page] Renderizando página do CRM');
+
   return (
     <UnifiedCRMProvider>
       <motion.div
@@ -22,6 +25,9 @@ const CRM = () => {
         transition={{ duration: 0.4 }}
         className="h-full w-full relative"
       >
+        <div className="absolute top-4 right-4 z-50 bg-green-500 text-white px-3 py-1 rounded text-sm">
+          CRM Carregado ✅
+        </div>
         <CRMDashboard onOpenLead={handleOpenLead} />
       </motion.div>
     </UnifiedCRMProvider>
