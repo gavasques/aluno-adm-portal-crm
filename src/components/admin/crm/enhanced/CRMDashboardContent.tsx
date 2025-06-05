@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AdvancedFilters } from '../filters/AdvancedFilters';
 import { DashboardContent } from '../dashboard/DashboardContent';
 import { ModernDashboardToolbar } from '../dashboard/ModernDashboardToolbar';
-import { CRMMetricsCards } from '../dashboard/CRMMetricsCards';
 import CRMReports from '../reports/CRMReports';
 import AnalyticsDashboard from '../analytics/AnalyticsDashboard';
 import { CRMSettings } from '../settings/CRMSettings';
@@ -59,17 +58,6 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
       case 'dashboard':
         return (
           <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100/50">
-            {/* Métricas/KPIs */}
-            <div className="bg-gray-50 px-8 py-6 border-b border-gray-200 flex-shrink-0">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <CRMMetricsCards />
-              </motion.div>
-            </div>
-
             {/* Toolbar Integrada com Filtros Primários */}
             <div className="flex-shrink-0">
               <ModernDashboardToolbar
@@ -85,6 +73,10 @@ export const CRMDashboardContent: React.FC<CRMDashboardContentProps> = ({
                 searchValue={searchValue}
                 setSearchValue={setSearchValue}
                 isDebouncing={isDebouncing}
+                updateFilter={updateFilter}
+                users={users}
+                tags={tags}
+                handleTagsChange={handleTagsChange}
               />
             </div>
 

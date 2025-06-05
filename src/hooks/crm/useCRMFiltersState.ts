@@ -11,6 +11,13 @@ export const useCRMFiltersState = (
   const [searchValue, setSearchValue] = React.useState(filters.search || '');
   const [debouncedSearch, isDebouncing] = useDebouncedValue(searchValue, 300);
 
+  // Inicializar com status "aberto" se não houver filtro de status definido
+  React.useEffect(() => {
+    if (!filters.status) {
+      onFiltersChange({ ...filters, status: 'aberto' });
+    }
+  }, []);
+
   // Sincronizar debounced search com filters
   React.useEffect(() => {
     if (debouncedSearch !== filters.search) {
@@ -25,18 +32,27 @@ export const useCRMFiltersState = (
   const removeFilter = (key: keyof CRMFiltersType) => {
     const newFilters = { ...filters };
     delete newFilters[key];
+    // Manter status padrão como "aberto" se removido
+    if (key === 'status') {
+      newFilters.status = 'aberto';
+    }
     onFiltersChange(newFilters);
   };
 
   const clearAllFilters = () => {
     setSearchValue('');
-    onFiltersChange({ pipeline_id: filters.pipeline_id });
+    onFiltersChange({ 
+      pipeline_id: filters.pipeline_id,
+      status: 'aberto' // Manter status padrão
+    });
   };
 
   const getActiveFiltersCount = () => {
-    return Object.keys(filters).filter(key => 
-      key !== 'pipeline_id' && filters[key as keyof CRMFiltersType]
-    ).length;
+    return Object.keys(filters).filter(key => {
+      if (key === 'pipeline_id') return false;
+      if (key === 'status' && filters[key] === 'aberto') return false; // Não contar status padrão
+      return filters[key as keyof CRMFiltersType];
+    }).length;
   };
 
   return {
