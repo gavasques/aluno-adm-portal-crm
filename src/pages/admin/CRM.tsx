@@ -5,9 +5,12 @@ import { CRMDashboard } from '@/components/admin/crm/enhanced/CRMDashboard';
 import { UnifiedCRMProvider } from '@/providers/CRMProvider';
 
 const CRM = () => {
+  console.log('🎯 [CRM Page] Carregando página do CRM...');
+  
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const handleOpenLead = (leadId: string) => {
+    console.log('🔗 [CRM Page] Abrindo lead:', leadId);
     setSelectedLeadId(leadId);
   };
 
