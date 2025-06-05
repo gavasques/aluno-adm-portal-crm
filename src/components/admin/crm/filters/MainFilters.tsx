@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, Tag, X } from 'lucide-react';
 import { CRMFilters, CRMPipelineColumn, CRMUser, CRMTag } from '@/types/crm.types';
-import { ModernTagsSelector } from '../form-components/ModernTagsSelector';
+import ModernTagsSelector from '../form-components/ModernTagsSelector';
 
 interface MainFiltersProps {
   filters: CRMFilters;
