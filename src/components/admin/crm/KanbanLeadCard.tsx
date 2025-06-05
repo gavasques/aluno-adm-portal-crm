@@ -40,11 +40,13 @@ const KanbanLeadCard = ({ lead, onOpenDetail }: KanbanLeadCardProps) => {
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('🃏 [KANBAN_LEAD_CARD] Detalhes clicado:', lead.id);
     onOpenDetail?.(lead);
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('🃏 [KANBAN_LEAD_CARD] Card clicado:', lead.id);
     onOpenDetail?.(lead);
   };
 

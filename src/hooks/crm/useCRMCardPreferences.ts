@@ -31,6 +31,7 @@ export const useCRMCardPreferences = () => {
     preferences,
     isLoading,
     updatePreferences: (newPreferences: Partial<typeof DEFAULT_PREFERENCES>) => {
+      console.log('📋 [CRM_CARD_PREFERENCES] Atualizando preferências:', newPreferences);
       setPreferences(prev => ({ ...prev, ...newPreferences }));
     }
   };

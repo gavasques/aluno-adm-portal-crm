@@ -22,13 +22,24 @@ interface LeadDetailDialogProps {
 }
 
 const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDetailDialogProps) => {
-  if (!lead) return null;
+  if (!lead) {
+    console.log('⚠️ [LEAD_DETAIL_DIALOG] Nenhum lead fornecido');
+    return null;
+  }
+
+  console.log('🔍 [LEAD_DETAIL_DIALOG] Renderizando dialog para lead:', lead.id);
 
   const leadColumn = columns.find(col => col.id === lead.column_id);
 
   const handleLeadUpdate = () => {
     // Force re-render/refresh - can be enhanced with query invalidation
-    console.log('Lead updated, refreshing data...');
+    console.log('📝 [LEAD_DETAIL_DIALOG] Lead atualizado, atualizando dados...');
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('✏️ [LEAD_DETAIL_DIALOG] Editando lead:', lead.id);
+    onEdit(lead);
   };
 
   return (
@@ -41,10 +52,7 @@ const LeadDetailDialog = React.memo(({ lead, columns, onClose, onEdit }: LeadDet
               {lead.name} - {lead.email}
             </div>
             <Button 
-              onClick={e => {
-                e.stopPropagation();
-                onEdit(lead);
-              }} 
+              onClick={handleEditClick} 
               variant="outline" 
               size="sm" 
               className="flex items-center"

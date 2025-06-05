@@ -36,6 +36,11 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     transition,
   };
 
+  const handleClick = () => {
+    console.log('🃏 [DYNAMIC_LEAD_CARD] Card clicado:', lead.id);
+    onClick();
+  };
+
   console.log('🃏 [DYNAMIC_LEAD_CARD] Renderizando card:', {
     leadId: lead.id,
     leadName: lead.name,
@@ -58,7 +63,7 @@ export const DynamicLeadCard: React.FC<DynamicLeadCardProps> = ({
     >
       <OptimizedKanbanLeadCard
         lead={lead}
-        onClick={onClick}
+        onClick={handleClick}
         isDragging={isDragging || isSortableDragging}
       />
     </div>

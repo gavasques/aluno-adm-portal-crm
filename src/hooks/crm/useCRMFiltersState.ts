@@ -23,6 +23,7 @@ export const useCRMFiltersState = (
         newFilters.status = 'aberto';
       }
       
+      console.log('🔧 [CRM_FILTERS_STATE] Inicializando filtros padrão:', newFilters);
       onFiltersChange(newFilters);
     }
   }, [filters, onFiltersChange]);
@@ -30,21 +31,25 @@ export const useCRMFiltersState = (
   // Sincronizar debounced search com filters
   React.useEffect(() => {
     if (debouncedSearch !== filters.search) {
+      console.log('🔍 [CRM_FILTERS_STATE] Atualizando search:', debouncedSearch);
       onFiltersChange({ ...filters, search: debouncedSearch });
     }
   }, [debouncedSearch, filters, onFiltersChange]);
 
   const updateFilter = (key: keyof CRMFiltersType, value: any) => {
+    console.log('🔧 [CRM_FILTERS_STATE] Atualizando filtro:', key, value);
     onFiltersChange({ ...filters, [key]: value });
   };
 
   const removeFilter = (key: keyof CRMFiltersType) => {
+    console.log('🗑️ [CRM_FILTERS_STATE] Removendo filtro:', key);
     const newFilters = { ...filters };
     delete newFilters[key];
     onFiltersChange(newFilters);
   };
 
   const clearAllFilters = () => {
+    console.log('🧹 [CRM_FILTERS_STATE] Limpando todos os filtros');
     setSearchValue('');
     const baseFilters: CRMFiltersType = { 
       pipeline_id: filters.pipeline_id,

@@ -29,6 +29,7 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
   const pipelineColumns = columns.filter(col => col.pipeline_id === pipelineId);
 
   const handleFilterChange = (key: keyof CRMFiltersType, value: any) => {
+    console.log('🔧 [CRM_FILTERS] Alterando filtro:', key, value);
     onFiltersChange({
       ...filters,
       [key]: value
@@ -36,6 +37,7 @@ const CRMFilters: React.FC<CRMFiltersProps> = ({
   };
 
   const clearFilters = () => {
+    console.log('🧹 [CRM_FILTERS] Limpando filtros');
     onFiltersChange({
       pipeline_id: filters.pipeline_id,
       status: 'aberto' // Manter apenas status padrão, sem column_id

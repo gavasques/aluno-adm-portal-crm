@@ -33,6 +33,13 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
     if ((e.target as HTMLElement).closest('[data-dropdown-trigger]')) {
       return;
     }
+    console.log('🃏 [KANBAN_LEAD_CARD] Card clicado:', lead.id);
+    onClick();
+  };
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('🃏 [KANBAN_LEAD_CARD] Menu clicado:', lead.id);
     onClick();
   };
 
@@ -59,7 +66,7 @@ const OptimizedKanbanLeadCard: React.FC<OptimizedKanbanLeadCardProps> = memo(({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onClick}>
+            <DropdownMenuItem onClick={handleMenuClick}>
               <Eye className="h-4 w-4 mr-2" />
               Abrir Lead
             </DropdownMenuItem>
