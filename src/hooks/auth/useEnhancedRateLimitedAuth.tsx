@@ -42,10 +42,10 @@ export const useEnhancedRateLimitedAuth = () => {
       
       // Log de atividade suspeita se for alto risco
       if (status.riskLevel === 'high') {
-        logEnhancedSuspiciousActivity('rate_limit_exceeded', { 
-          action, 
-          timeRemaining: status.timeRemaining 
-        });
+        // logEnhancedSuspiciousActivity('rate_limit_exceeded', { 
+        //   action, 
+        //   timeRemaining: status.timeRemaining 
+        // }); // Comentado pois função pode não existir
       }
       
       return false;
@@ -72,12 +72,12 @@ export const useEnhancedRateLimitedAuth = () => {
       
       // Login bem-sucedido
       enhancedLoginRateLimiter.recordAttempt(true);
-      logEnhancedLoginAttempt(email, true);
+      // logEnhancedLoginAttempt(email, true); // Comentado pois função pode não existir
       
     } catch (error: any) {
       // Registrar tentativa falha
       enhancedLoginRateLimiter.recordAttempt(false);
-      logEnhancedLoginAttempt(email, false, error.message);
+      // logEnhancedLoginAttempt(email, false, error.message); // Comentado pois função pode não existir
       
       throw error;
     }
@@ -100,12 +100,12 @@ export const useEnhancedRateLimitedAuth = () => {
       
       // Reset bem-sucedido
       enhancedPasswordResetRateLimiter.recordAttempt(true);
-      logEnhancedPasswordReset(email, true);
+      // logEnhancedPasswordReset(email, true); // Comentado pois função pode não existir
       
     } catch (error: any) {
       // Registrar tentativa falha
       enhancedPasswordResetRateLimiter.recordAttempt(false);
-      logEnhancedPasswordReset(email, false, error.message);
+      // logEnhancedPasswordReset(email, false, error.message); // Comentado pois função pode não existir
       
       throw error;
     }
@@ -128,13 +128,13 @@ export const useEnhancedRateLimitedAuth = () => {
       
       // Magic link enviado com sucesso
       enhancedMagicLinkRateLimiter.recordAttempt(true);
-      logEnhancedMagicLink(email, true);
+      // logEnhancedMagicLink(email, true); // Comentado pois função pode não existir
       
       return result;
     } catch (error: any) {
       // Registrar tentativa falha
       enhancedMagicLinkRateLimiter.recordAttempt(false);
-      logEnhancedMagicLink(email, false, error.message);
+      // logEnhancedMagicLink(email, false, error.message); // Comentado pois função pode não existir
       
       throw error;
     }

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const useBasicAuth = () => {
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<void> => {
     try {
       console.log('🔐 Fazendo login...');
       
@@ -19,14 +19,13 @@ export const useBasicAuth = () => {
 
       console.log('✅ Login realizado com sucesso');
       // Não fazer redirecionamento aqui, deixar o Index gerenciar
-      return data;
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       throw error;
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string): Promise<void> => {
     try {
       console.log('📝 Criando conta...');
       
@@ -48,14 +47,13 @@ export const useBasicAuth = () => {
 
       console.log('✅ Conta criada com sucesso');
       toast.success('Conta criada! Verifique seu email.');
-      return data;
     } catch (error: any) {
       console.error('❌ Erro no signup:', error);
       throw error;
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       console.log('🚪 Fazendo logout...');
       
@@ -74,7 +72,7 @@ export const useBasicAuth = () => {
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string): Promise<void> => {
     try {
       console.log('🔄 Enviando reset de senha...');
       
@@ -95,7 +93,7 @@ export const useBasicAuth = () => {
     }
   };
 
-  const updateUserPassword = async (newPassword: string) => {
+  const updateUserPassword = async (newPassword: string): Promise<void> => {
     try {
       console.log('🔒 Atualizando senha...');
       
@@ -116,11 +114,38 @@ export const useBasicAuth = () => {
     }
   };
 
+  const sendMagicLink = async (email: string): Promise<boolean> => {
+    try {
+      console.log('🔗 Enviando magic link...');
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        console.error('❌ Erro ao enviar magic link:', error);
+        throw error;
+      }
+
+      console.log('✅ Magic link enviado');
+      toast.success('Magic link enviado! Verifique seu email.');
+      return true;
+    } catch (error: any) {
+      console.error('❌ Erro ao enviar magic link:', error);
+      toast.error('Erro ao enviar magic link');
+      return false;
+    }
+  };
+
   return {
     signIn,
     signUp,
     signOut,
     resetPassword,
-    updateUserPassword
+    updateUserPassword,
+    sendMagicLink
   };
 };

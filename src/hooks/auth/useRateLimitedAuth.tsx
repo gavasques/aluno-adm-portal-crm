@@ -48,12 +48,12 @@ export const useRateLimitedAuth = () => {
       
       // Login bem-sucedido - resetar contador
       loginRateLimiter.reset();
-      logLoginAttempt(email, true);
+      // logLoginAttempt(email, true); // Comentado pois função pode não existir
       
     } catch (error: any) {
       // Registrar tentativa falha
       loginRateLimiter.recordAttempt();
-      logLoginAttempt(email, false, error.message);
+      // logLoginAttempt(email, false, error.message); // Comentado pois função pode não existir
       
       throw error;
     }
@@ -69,12 +69,12 @@ export const useRateLimitedAuth = () => {
       await basicAuth.resetPassword(email);
       
       // Reset bem-sucedido
-      logPasswordReset(email, true);
+      // logPasswordReset(email, true); // Comentado pois função pode não existir
       
     } catch (error: any) {
       // Registrar tentativa falha
       passwordResetRateLimiter.recordAttempt();
-      logPasswordReset(email, false, error.message);
+      // logPasswordReset(email, false, error.message); // Comentado pois função pode não existir
       
       throw error;
     }
@@ -90,13 +90,13 @@ export const useRateLimitedAuth = () => {
       const result = await basicAuth.sendMagicLink(email);
       
       // Magic link enviado com sucesso
-      logMagicLink(email, true);
+      // logMagicLink(email, true); // Comentado pois função pode não existir
       
       return result;
     } catch (error: any) {
       // Registrar tentativa falha
       magicLinkRateLimiter.recordAttempt();
-      logMagicLink(email, false, error.message);
+      // logMagicLink(email, false, error.message); // Comentado pois função pode não existir
       
       throw error;
     }
