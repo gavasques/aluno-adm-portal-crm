@@ -6,11 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Save } from 'lucide-react';
-import { useCreditSettings } from '@/hooks/credits/useCreditSettings';
+import { useCreditSettings, SystemCreditSettings as SystemCreditSettingsType } from '@/hooks/credits/useCreditSettings';
+
+const defaultSettings: SystemCreditSettingsType = {
+  monthly_free_credits: 50,
+  credit_base_price: 1.00,
+  enable_purchases: true,
+  enable_subscriptions: true,
+  low_credit_threshold: 10
+};
 
 export const SystemCreditSettings: React.FC = () => {
   const { creditSettings, updateSystemSetting } = useCreditSettings();
-  const [settings, setSettings] = useState(creditSettings?.systemSettings || {});
+  const [settings, setSettings] = useState<SystemCreditSettingsType>(defaultSettings);
   const [hasChanges, setHasChanges] = useState(false);
 
   React.useEffect(() => {
@@ -19,7 +27,7 @@ export const SystemCreditSettings: React.FC = () => {
     }
   }, [creditSettings?.systemSettings]);
 
-  const handleSettingChange = (key: string, value: any, type: string) => {
+  const handleSettingChange = (key: keyof SystemCreditSettingsType, value: any, type: string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
@@ -28,7 +36,7 @@ export const SystemCreditSettings: React.FC = () => {
     if (!creditSettings?.systemSettings) return;
 
     for (const [key, value] of Object.entries(settings)) {
-      const originalValue = creditSettings.systemSettings[key as keyof typeof creditSettings.systemSettings];
+      const originalValue = creditSettings.systemSettings[key as keyof SystemCreditSettingsType];
       
       if (value !== originalValue) {
         const type = typeof value === 'number' ? 'number' : typeof value === 'boolean' ? 'boolean' : 'string';
@@ -67,7 +75,7 @@ export const SystemCreditSettings: React.FC = () => {
             <Input
               id="monthly_free_credits"
               type="number"
-              value={settings.monthly_free_credits || 50}
+              value={settings.monthly_free_credits}
               onChange={(e) => handleSettingChange('monthly_free_credits', parseInt(e.target.value), 'number')}
             />
             <p className="text-sm text-gray-600">
@@ -81,7 +89,7 @@ export const SystemCreditSettings: React.FC = () => {
               id="credit_base_price"
               type="number"
               step="0.01"
-              value={settings.credit_base_price || 1.00}
+              value={settings.credit_base_price}
               onChange={(e) => handleSettingChange('credit_base_price', parseFloat(e.target.value), 'number')}
             />
             <p className="text-sm text-gray-600">
@@ -94,7 +102,7 @@ export const SystemCreditSettings: React.FC = () => {
             <Input
               id="low_credit_threshold"
               type="number"
-              value={settings.low_credit_threshold || 10}
+              value={settings.low_credit_threshold}
               onChange={(e) => handleSettingChange('low_credit_threshold', parseInt(e.target.value), 'number')}
             />
             <p className="text-sm text-gray-600">
@@ -112,7 +120,7 @@ export const SystemCreditSettings: React.FC = () => {
               </p>
             </div>
             <Switch
-              checked={settings.enable_purchases || false}
+              checked={settings.enable_purchases}
               onCheckedChange={(checked) => handleSettingChange('enable_purchases', checked, 'boolean')}
             />
           </div>
@@ -125,7 +133,7 @@ export const SystemCreditSettings: React.FC = () => {
               </p>
             </div>
             <Switch
-              checked={settings.enable_subscriptions || false}
+              checked={settings.enable_subscriptions}
               onCheckedChange={(checked) => handleSettingChange('enable_subscriptions', checked, 'boolean')}
             />
           </div>
