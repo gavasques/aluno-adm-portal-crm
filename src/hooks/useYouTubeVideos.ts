@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 
 export interface YouTubeVideo {
@@ -39,41 +40,36 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   const { user } = useAuth();
+  const { permissions } = usePermissions();
 
-  // Verificar se é admin
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase.rpc('is_admin');
-        if (!error) {
-          setIsAdmin(data || false);
-        }
-      } catch (err) {
-        console.error('Erro ao verificar status admin:', err);
-        setIsAdmin(false);
-      }
-    };
+  console.log('🎥 useYouTubeVideos: Inicializando hook');
+  console.log('👤 User:', user?.email);
+  console.log('🔑 Permissions:', permissions);
 
-    checkAdminStatus();
-  }, [user]);
+  // Usar as permissões já carregadas pelo usePermissions
+  const isAdmin = permissions.hasAdminAccess;
+
+  console.log('👑 Is Admin:', isAdmin);
 
   const fetchVideos = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log('🎥 Buscando vídeos...');
+      console.log('🎥 Buscando vídeos do YouTube...');
 
       const { data, error: supabaseError } = await supabase.functions.invoke('youtube-videos');
 
+      console.log('📊 Resposta da função:', data);
+      console.log('❌ Erro da função:', supabaseError);
+
       if (supabaseError) {
         console.error('❌ Erro na Edge Function:', supabaseError);
-        throw new Error('Erro de conexão com o serviço');
+        setError('Erro de conexão com o serviço');
+        setVideos([]);
+        return;
       }
 
       if (data?.error) {
@@ -82,6 +78,7 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
         
         // Se há vídeos em cache mesmo com erro, usar eles
         if (data.videos && data.videos.length > 0) {
+          console.log('📹 Usando vídeos do cache apesar do erro');
           setVideos(data.videos);
         } else {
           setVideos([]);
@@ -97,7 +94,7 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
       const fetchedVideos = data?.videos || [];
       const channelData = data?.channel_info || null;
       
-      console.log(`✅ ${fetchedVideos.length} vídeos carregados`);
+      console.log(`✅ ${fetchedVideos.length} vídeos carregados com sucesso`);
       
       setVideos(fetchedVideos);
       setChannelInfo(channelData);
@@ -107,7 +104,7 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
         setLastSync(channelData.last_sync);
       }
     } catch (err) {
-      console.error('❌ Erro ao carregar vídeos:', err);
+      console.error('❌ Erro geral ao carregar vídeos:', err);
       setError('Não foi possível carregar os vídeos');
       setVideos([]);
     } finally {
@@ -117,13 +114,14 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
 
   const syncVideos = async () => {
     if (!isAdmin) {
+      console.warn('🚫 Usuário não é admin, bloqueando sincronização');
       toast.error('Apenas administradores podem sincronizar vídeos');
       return;
     }
 
     try {
       setSyncing(true);
-      console.log('🔄 Iniciando sincronização manual...');
+      console.log('🔄 Iniciando sincronização manual de vídeos...');
       
       toast.loading('Sincronizando vídeos do YouTube...', { id: 'sync' });
 
@@ -131,13 +129,17 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
         body: { manual: true }
       });
 
+      console.log('🔄 Resultado da sincronização:', data);
+      console.log('❌ Erro da sincronização:', error);
+
       if (error) {
         console.error('❌ Erro na sincronização:', error);
-        throw new Error('Erro na sincronização');
+        toast.error('Erro ao sincronizar vídeos', { id: 'sync' });
+        return;
       }
 
       if (data?.error) {
-        console.error('❌ Erro retornado:', data.error);
+        console.error('❌ Erro retornado pela sincronização:', data.error);
         
         if (data.quota_exceeded) {
           toast.error('Quota da API do YouTube excedida. Tente novamente mais tarde.', { id: 'sync' });
@@ -149,14 +151,14 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
         return;
       }
 
-      console.log('✅ Sincronização concluída:', data);
-      toast.success(`${data.videos_synced} vídeos sincronizados com sucesso!`, { id: 'sync' });
+      console.log('✅ Sincronização concluída com sucesso:', data);
+      toast.success(`${data.videos_synced || 0} vídeos sincronizados com sucesso!`, { id: 'sync' });
       
       // Atualizar dados após sincronização
       await fetchVideos();
       
     } catch (err) {
-      console.error('❌ Erro na sincronização:', err);
+      console.error('❌ Erro geral na sincronização:', err);
       toast.error('Erro ao sincronizar vídeos', { id: 'sync' });
     } finally {
       setSyncing(false);
@@ -164,11 +166,12 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
   };
 
   useEffect(() => {
+    console.log('🎬 useEffect: Carregando vídeos iniciais');
     fetchVideos();
   }, []);
 
   const refetch = () => {
-    console.log('🔄 Recarregando vídeos...');
+    console.log('🔄 Recarregando vídeos manualmente...');
     fetchVideos();
   };
 
