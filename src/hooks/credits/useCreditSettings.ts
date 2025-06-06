@@ -12,6 +12,7 @@ export interface CreditPackage {
   is_popular: boolean;
   is_active: boolean;
   sort_order: number;
+  stripe_price_id: string | null;
 }
 
 export interface SystemCreditSettings {

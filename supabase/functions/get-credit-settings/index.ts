@@ -33,7 +33,7 @@ serve(async (req) => {
       throw new Error("Erro ao buscar configurações do sistema");
     }
 
-    // Buscar pacotes de créditos
+    // Buscar pacotes de créditos (incluindo stripe_price_id)
     const { data: packages, error: packagesError } = await supabaseClient
       .from("credit_packages")
       .select("*")
@@ -45,7 +45,7 @@ serve(async (req) => {
       throw new Error("Erro ao buscar pacotes de créditos");
     }
 
-    // Buscar planos de assinatura
+    // Buscar planos de assinatura (incluindo stripe_price_id)
     const { data: subscriptionPlans, error: subscriptionPlansError } = await supabaseClient
       .from("credit_subscription_plans")
       .select("*")

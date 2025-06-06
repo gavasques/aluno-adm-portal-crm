@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Zap, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Zap, Loader2, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 import { usePurchaseCredits } from '@/hooks/credits/usePurchaseCredits';
 import { useCreditSettings } from '@/hooks/credits/useCreditSettings';
 
@@ -137,6 +137,16 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   </p>
                 </div>
 
+                {/* Indicador de configuração Stripe */}
+                {option.stripe_price_id && (
+                  <div className="mb-3">
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Stripe Configurado
+                    </Badge>
+                  </div>
+                )}
+
                 <Button
                   onClick={() => handlePurchase(option.credits)}
                   disabled={isLoading}
@@ -165,6 +175,10 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <CheckCircle className="h-4 w-4 text-green-500" />
             <span>Créditos não expiram no final do mês</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Shield className="h-4 w-4 text-blue-500" />
+            <span>Pagamentos processados de forma segura via Stripe</span>
           </div>
           {systemSettings?.enable_purchases === false && (
             <div className="flex items-center gap-2 text-sm text-orange-600">

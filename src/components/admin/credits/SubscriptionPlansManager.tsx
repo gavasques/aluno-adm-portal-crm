@@ -3,358 +3,340 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Save, X, Crown, Edit, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Edit2, Trash2, ExternalLink, Check, AlertCircle } from 'lucide-react';
 import { useCreditSettings, CreditSubscriptionPlan } from '@/hooks/credits/useCreditSettings';
-import { toast } from 'sonner';
-
-const defaultPlan: Omit<CreditSubscriptionPlan, 'id'> = {
-  name: '',
-  monthly_credits: 50,
-  price: 50,
-  is_popular: false,
-  is_active: true,
-  sort_order: 0,
-  stripe_price_id: null,
-  description: null
-};
 
 export const SubscriptionPlansManager: React.FC = () => {
-  const { creditSettings, updateSubscriptionPlan, createSubscriptionPlan, deleteSubscriptionPlan } = useCreditSettings();
-  const [isCreating, setIsCreating] = useState(false);
+  const { creditSettings, createSubscriptionPlan, updateSubscriptionPlan, deleteSubscriptionPlan } = useCreditSettings();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<CreditSubscriptionPlan | null>(null);
-  const [newPlan, setNewPlan] = useState<Omit<CreditSubscriptionPlan, 'id'>>(defaultPlan);
+  const [formData, setFormData] = useState({
+    name: '',
+    monthly_credits: 0,
+    price: 0,
+    description: '',
+    is_popular: false,
+    is_active: true,
+    sort_order: 0,
+    stripe_price_id: ''
+  });
 
-  const subscriptionPlans = creditSettings?.subscriptionPlans || [];
+  const plans = creditSettings?.subscriptionPlans || [];
 
-  const handleCreatePlan = async () => {
-    if (!newPlan.name.trim()) {
-      toast.error('Nome do plano é obrigatório');
-      return;
-    }
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      monthly_credits: 0,
+      price: 0,
+      description: '',
+      is_popular: false,
+      is_active: true,
+      sort_order: 0,
+      stripe_price_id: ''
+    });
+  };
 
-    if (newPlan.monthly_credits <= 0) {
-      toast.error('Créditos mensais deve ser maior que zero');
-      return;
-    }
-
-    if (newPlan.price <= 0) {
-      toast.error('Preço deve ser maior que zero');
-      return;
-    }
-
+  const handleCreate = async () => {
     try {
-      await createSubscriptionPlan.mutateAsync(newPlan);
-      setIsCreating(false);
-      setNewPlan(defaultPlan);
+      await createSubscriptionPlan.mutateAsync({
+        ...formData,
+        stripe_price_id: formData.stripe_price_id || null
+      });
+      setIsCreateModalOpen(false);
+      resetForm();
     } catch (error) {
       console.error('Erro ao criar plano:', error);
     }
   };
 
-  const handleUpdatePlan = async (plan: CreditSubscriptionPlan) => {
-    if (!plan.name.trim()) {
-      toast.error('Nome do plano é obrigatório');
-      return;
-    }
+  const handleEdit = (plan: CreditSubscriptionPlan) => {
+    setEditingPlan(plan);
+    setFormData({
+      name: plan.name,
+      monthly_credits: plan.monthly_credits,
+      price: plan.price,
+      description: plan.description || '',
+      is_popular: plan.is_popular,
+      is_active: plan.is_active,
+      sort_order: plan.sort_order,
+      stripe_price_id: plan.stripe_price_id || ''
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingPlan) return;
 
     try {
-      await updateSubscriptionPlan.mutateAsync(plan);
+      await updateSubscriptionPlan.mutateAsync({
+        id: editingPlan.id,
+        ...formData,
+        stripe_price_id: formData.stripe_price_id || null
+      });
       setEditingPlan(null);
+      resetForm();
     } catch (error) {
       console.error('Erro ao atualizar plano:', error);
     }
   };
 
-  const handleDeletePlan = async (planId: string) => {
-    if (window.confirm('Tem certeza que deseja desativar este plano?')) {
-      try {
-        await deleteSubscriptionPlan.mutateAsync(planId);
-      } catch (error) {
-        console.error('Erro ao desativar plano:', error);
-      }
+  const handleDelete = async (planId: string) => {
+    if (!confirm('Tem certeza que deseja desativar este plano?')) return;
+
+    try {
+      await deleteSubscriptionPlan.mutateAsync(planId);
+    } catch (error) {
+      console.error('Erro ao desativar plano:', error);
     }
   };
 
-  const startEditing = (plan: CreditSubscriptionPlan) => {
-    setEditingPlan({ ...plan });
+  const validateStripePriceId = (value: string): boolean => {
+    if (!value) return true; // Opcional
+    return value.startsWith('price_') && value.length > 6;
   };
 
-  const cancelEditing = () => {
-    setEditingPlan(null);
+  const isFormValid = () => {
+    return (
+      formData.name.trim() !== '' &&
+      formData.monthly_credits > 0 &&
+      formData.price > 0 &&
+      validateStripePriceId(formData.stripe_price_id)
+    );
   };
 
-  if (!creditSettings) {
-    return <div>Carregando planos de assinatura...</div>;
-  }
+  const PlanModal = ({ isOpen, onClose, onSave, title }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: () => void;
+    title: string;
+  }) => (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Nome do Plano</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Ex: Plano Básico"
+            />
+          </div>
 
-  return (
-    <div className="space-y-6">
-      {/* Header com botão de criar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Crown className="h-5 w-5 text-yellow-600" />
-            Planos de Assinatura Recorrentes
-          </h3>
-          <p className="text-sm text-gray-600">
-            Gerencie os planos de assinatura mensais de créditos
-          </p>
-        </div>
-        <Button onClick={() => setIsCreating(true)} disabled={isCreating}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Plano
-        </Button>
-      </div>
-
-      {/* Formulário de criação */}
-      {isCreating && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-lg text-blue-900">Criar Novo Plano de Assinatura</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="new-name">Nome do Plano</Label>
-                <Input
-                  id="new-name"
-                  value={newPlan.name}
-                  onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                  placeholder="Ex: Básico, Profissional"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new-credits">Créditos Mensais</Label>
-                <Input
-                  id="new-credits"
-                  type="number"
-                  value={newPlan.monthly_credits}
-                  onChange={(e) => setNewPlan({ ...newPlan, monthly_credits: parseInt(e.target.value) })}
-                  placeholder="Ex: 50, 100, 200"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new-price">Preço Mensal (R$)</Label>
-                <Input
-                  id="new-price"
-                  type="number"
-                  step="0.01"
-                  value={newPlan.price}
-                  onChange={(e) => setNewPlan({ ...newPlan, price: parseFloat(e.target.value) })}
-                  placeholder="Ex: 50.00"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new-stripe-id">Stripe Price ID</Label>
-                <Input
-                  id="new-stripe-id"
-                  value={newPlan.stripe_price_id || ''}
-                  onChange={(e) => setNewPlan({ ...newPlan, stripe_price_id: e.target.value || null })}
-                  placeholder="price_xxx (opcional)"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="new-description">Descrição</Label>
-              <Textarea
-                id="new-description"
-                value={newPlan.description || ''}
-                onChange={(e) => setNewPlan({ ...newPlan, description: e.target.value || null })}
-                placeholder="Descrição opcional do plano"
-                rows={3}
+              <Label htmlFor="monthly_credits">Créditos/Mês</Label>
+              <Input
+                id="monthly_credits"
+                type="number"
+                value={formData.monthly_credits}
+                onChange={(e) => setFormData(prev => ({ ...prev, monthly_credits: parseInt(e.target.value) || 0 }))}
               />
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={newPlan.is_popular}
-                  onCheckedChange={(checked) => setNewPlan({ ...newPlan, is_popular: checked })}
-                />
-                <Label>Plano Popular</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={newPlan.is_active}
-                  onCheckedChange={(checked) => setNewPlan({ ...newPlan, is_active: checked })}
-                />
-                <Label>Ativo</Label>
-              </div>
+            <div>
+              <Label htmlFor="price">Preço Mensal (R$)</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+              />
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleCreatePlan} disabled={createSubscriptionPlan.isPending}>
-                <Save className="h-4 w-4 mr-2" />
-                Criar Plano
-              </Button>
-              <Button variant="outline" onClick={() => setIsCreating(false)}>
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
 
-      {/* Lista de planos */}
-      <div className="space-y-4">
-        {subscriptionPlans.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Crown className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhum plano de assinatura criado</h3>
-              <p className="text-gray-500 mb-4">Crie seu primeiro plano de assinatura recorrente</p>
-              <Button onClick={() => setIsCreating(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeiro Plano
+          <div>
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Descrição do plano..."
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="stripe_price_id">Stripe Price ID (Obrigatório para assinaturas)</Label>
+            <Input
+              id="stripe_price_id"
+              type="text"
+              placeholder="price_1234567890abcdef"
+              value={formData.stripe_price_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, stripe_price_id: e.target.value }))}
+              className={!validateStripePriceId(formData.stripe_price_id) ? 'border-red-500' : ''}
+            />
+            <div className="flex items-center gap-2 mt-2">
+              {formData.stripe_price_id && validateStripePriceId(formData.stripe_price_id) ? (
+                <div className="flex items-center gap-1 text-green-600 text-sm">
+                  <Check className="h-3 w-3" />
+                  Price ID válido
+                </div>
+              ) : formData.stripe_price_id ? (
+                <div className="flex items-center gap-1 text-red-600 text-sm">
+                  <AlertCircle className="h-3 w-3" />
+                  Deve começar com "price_"
+                </div>
+              ) : null}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open('https://dashboard.stripe.com/products', '_blank')}
+                className="ml-auto"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Stripe Dashboard
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Obrigatório: Configure um produto recorrente no Stripe
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="sort_order">Ordem de Exibição</Label>
+            <Input
+              id="sort_order"
+              type="number"
+              value={formData.sort_order}
+              onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_popular"
+                checked={formData.is_popular}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_popular: checked }))}
+              />
+              <Label htmlFor="is_popular">Mais Popular</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+              />
+              <Label htmlFor="is_active">Ativo</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={onClose} variant="outline" className="flex-1">
+              Cancelar
+            </Button>
+            <Button 
+              onClick={onSave} 
+              disabled={!isFormValid()}
+              className="flex-1"
+            >
+              Salvar
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Planos de Assinatura</CardTitle>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Plano
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {plans.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Nenhum plano de assinatura configurado
+          </div>
         ) : (
-          subscriptionPlans.map((plan) => (
-            <Card key={plan.id} className={editingPlan?.id === plan.id ? 'border-blue-500' : ''}>
-              <CardContent className="p-6">
-                {editingPlan?.id === plan.id ? (
-                  // Modo de edição
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Nome do Plano</Label>
-                        <Input
-                          value={editingPlan.name}
-                          onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Créditos Mensais</Label>
-                        <Input
-                          type="number"
-                          value={editingPlan.monthly_credits}
-                          onChange={(e) => setEditingPlan({ ...editingPlan, monthly_credits: parseInt(e.target.value) })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Preço Mensal (R$)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={editingPlan.price}
-                          onChange={(e) => setEditingPlan({ ...editingPlan, price: parseFloat(e.target.value) })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Stripe Price ID</Label>
-                        <Input
-                          value={editingPlan.stripe_price_id || ''}
-                          onChange={(e) => setEditingPlan({ ...editingPlan, stripe_price_id: e.target.value || null })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Descrição</Label>
-                      <Textarea
-                        value={editingPlan.description || ''}
-                        onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value || null })}
-                        rows={3}
-                      />
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={editingPlan.is_popular}
-                          onCheckedChange={(checked) => setEditingPlan({ ...editingPlan, is_popular: checked })}
-                        />
-                        <Label>Popular</Label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={editingPlan.is_active}
-                          onCheckedChange={(checked) => setEditingPlan({ ...editingPlan, is_active: checked })}
-                        />
-                        <Label>Ativo</Label>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={() => handleUpdatePlan(editingPlan)} disabled={updateSubscriptionPlan.isPending}>
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar
-                      </Button>
-                      <Button variant="outline" onClick={cancelEditing}>
-                        <X className="h-4 w-4 mr-2" />
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  // Modo de visualização
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-lg font-semibold">{plan.name}</h4>
-                        <div className="flex gap-1">
-                          {plan.is_popular && <Badge className="bg-yellow-100 text-yellow-800">Popular</Badge>}
-                          {!plan.is_active && <Badge variant="secondary">Inativo</Badge>}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Créditos/Mês:</span>
-                          <p className="font-semibold">+{plan.monthly_credits}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Preço:</span>
-                          <p className="font-semibold text-green-600">R$ {plan.price.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Por Crédito:</span>
-                          <p className="font-semibold">R$ {(plan.price / plan.monthly_credits).toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Stripe ID:</span>
-                          <p className="font-mono text-xs">{plan.stripe_price_id || 'Não configurado'}</p>
-                        </div>
-                      </div>
-                      {plan.description && (
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                          {plan.description}
-                        </p>
+          <div className="space-y-4">
+            {plans.map((plan) => (
+              <div key={plan.id} className="border rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{plan.name}</h3>
+                      {plan.is_popular && <Badge variant="secondary">Popular</Badge>}
+                      {!plan.is_active && <Badge variant="destructive">Inativo</Badge>}
+                      {plan.stripe_price_id && (
+                        <Badge variant="outline" className="text-green-600 border-green-600">
+                          <Check className="h-3 w-3 mr-1" />
+                          Stripe ID
+                        </Badge>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => startEditing(plan)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDeletePlan(plan.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium text-green-600">R$ {plan.price.toFixed(2)}/mês</span>
+                      {' '}• {plan.monthly_credits} créditos/mês
                     </div>
+                    {plan.description && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {plan.description}
+                      </div>
+                    )}
+                    {plan.stripe_price_id && (
+                      <div className="text-xs text-gray-500 font-mono">
+                        {plan.stripe_price_id}
+                      </div>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
-      {/* Informações sobre integração */}
-      <Card className="bg-amber-50 border-amber-200">
-        <CardContent className="p-4">
-          <h4 className="font-semibold text-amber-900 mb-2">💡 Configuração do Stripe</h4>
-          <div className="text-sm text-amber-800 space-y-1">
-            <p>• Para funcionar em produção, configure os Stripe Price IDs para cada plano</p>
-            <p>• Em modo desenvolvimento, as assinaturas funcionam como simulação</p>
-            <p>• Planos marcados como "Popular" aparecem destacados na página do aluno</p>
-            <p>• Planos inativos não são exibidos para os alunos</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(plan)}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDelete(plan.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+
+        <PlanModal
+          isOpen={isCreateModalOpen}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            resetForm();
+          }}
+          onSave={handleCreate}
+          title="Criar Novo Plano"
+        />
+
+        <PlanModal
+          isOpen={!!editingPlan}
+          onClose={() => {
+            setEditingPlan(null);
+            resetForm();
+          }}
+          onSave={handleUpdate}
+          title="Editar Plano"
+        />
+      </CardContent>
+    </Card>
   );
 };

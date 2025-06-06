@@ -39,7 +39,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Buscar pacote correspondente
+    // Buscar pacote correspondente (incluindo stripe_price_id)
     const { data: creditPackage, error: packageError } = await supabaseClient
       .from("credit_packages")
       .select("*")
@@ -111,10 +111,6 @@ serve(async (req) => {
     const user = userData.user;
     console.log("👤 Usuário autenticado:", user.email);
 
-    // Usar preço do pacote configurado (convertido para centavos)
-    const price = Math.round(parseFloat(creditPackage.price.toString()) * 100);
-    console.log("💰 Preço do pacote:", { credits, price: price / 100 });
-
     const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
@@ -138,10 +134,37 @@ serve(async (req) => {
     console.log("🌐 Origin:", origin);
 
     console.log("🛒 Criando sessão de checkout");
-    const session = await stripe.checkout.sessions.create({
+
+    let sessionConfig: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
+      mode: "payment",
+      success_url: `${origin}/aluno/creditos?success=true&credits=${credits}`,
+      cancel_url: `${origin}/aluno/creditos?cancelled=true`,
+      metadata: {
+        user_id: user.id,
+        credits: credits.toString(),
+        type: "purchase",
+        package_id: creditPackage.id
+      }
+    };
+
+    // Se o pacote tem stripe_price_id configurado, usar o Price ID do Stripe
+    if (creditPackage.stripe_price_id) {
+      console.log("💳 Usando Stripe Price ID pré-configurado:", creditPackage.stripe_price_id);
+      sessionConfig.line_items = [
+        {
+          price: creditPackage.stripe_price_id,
+          quantity: 1,
+        }
+      ];
+    } else {
+      // Fallback: criar preço dinamicamente como antes
+      console.log("🔧 Criando preço dinamicamente");
+      const price = Math.round(parseFloat(creditPackage.price.toString()) * 100);
+      console.log("💰 Preço do pacote:", { credits, price: price / 100 });
+      
+      sessionConfig.line_items = [
         {
           price_data: {
             currency: "brl",
@@ -152,18 +175,11 @@ serve(async (req) => {
             unit_amount: price,
           },
           quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${origin}/aluno/creditos?success=true&credits=${credits}`,
-      cancel_url: `${origin}/aluno/creditos?cancelled=true`,
-      metadata: {
-        user_id: user.id,
-        credits: credits.toString(),
-        type: "purchase",
-        package_id: creditPackage.id
-      }
-    });
+        }
+      ];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log("✅ Sessão de checkout criada:", session.id);
 
