@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import CompleteRegistration from "./pages/CompleteRegistration";
 import NotFound from "./pages/NotFound";
+import NoAccess from "./pages/NoAccess";
 
 // Admin Pages
 import Dashboard from "./pages/admin/Dashboard";
@@ -81,6 +82,7 @@ const queryClient = new QueryClient({
 
 import PermissionCreate from "./pages/admin/PermissionCreate";
 import PermissionEdit from "./pages/admin/PermissionEdit";
+import NoAccess from "./pages/NoAccess";
 
 function App() {
   return (
@@ -95,6 +97,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/complete-registration" element={<CompleteRegistration />} />
+              <Route path="/no-access" element={<NoAccess />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={

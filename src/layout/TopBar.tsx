@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/auth";
@@ -31,10 +30,12 @@ const TopBar = () => {
   const isStudentArea = location.pathname.startsWith("/aluno");
 
   const handleNavigateToAdmin = () => {
+    console.log("TopBar: Navegando para área admin");
     navigate("/admin");
   };
 
   const handleNavigateToStudent = () => {
+    console.log("TopBar: Navegando para área do aluno");
     navigate("/aluno");
   };
 
@@ -134,17 +135,19 @@ const TopBar = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-gray-800 border border-gray-700 shadow-lg">
-                {/* Navigation between areas */}
-                {permissions.hasAdminAccess && isStudentArea && (
-                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="cursor-pointer text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
-                    <Users className="h-4 w-4 mr-2" />
-                    Ir para Área Administrativa
-                  </DropdownMenuItem>
-                )}
+                {/* Navigation between areas - sempre mostrar opção de ir para área do aluno */}
                 {isAdminArea && (
                   <DropdownMenuItem onClick={handleNavigateToStudent} className="cursor-pointer text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                     <User className="h-4 w-4 mr-2" />
                     Ir para Área do Aluno
+                  </DropdownMenuItem>
+                )}
+                
+                {/* Só mostrar opção de ir para admin se o usuário tem acesso admin */}
+                {permissions.hasAdminAccess && isStudentArea && (
+                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="cursor-pointer text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
+                    <Users className="h-4 w-4 mr-2" />
+                    Ir para Área Administrativa
                   </DropdownMenuItem>
                 )}
                 

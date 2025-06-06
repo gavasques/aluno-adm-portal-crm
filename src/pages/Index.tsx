@@ -1,15 +1,33 @@
 
 import { useAuth } from "@/hooks/auth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Navigate, Link } from "react-router-dom";
 import { ConnectionTest } from "@/components/debug/ConnectionTest";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { permissions, loading: permissionsLoading } = usePermissions();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
-  console.log("Index page - User:", user, "Loading:", loading);
+  console.log("Index page - User:", user, "Auth Loading:", authLoading, "Permissions Loading:", permissionsLoading);
+  console.log("Index page - Permissions:", permissions);
 
-  if (loading) {
+  useEffect(() => {
+    // Só redirecionar quando não estiver carregando
+    if (!authLoading && !permissionsLoading && user) {
+      console.log("Index - Determining redirect for user:", {
+        email: user.email,
+        hasAdminAccess: permissions.hasAdminAccess,
+        allowedMenus: permissions.allowedMenus
+      });
+      
+      setShouldRedirect(true);
+    }
+  }, [authLoading, permissionsLoading, user, permissions]);
+
+  if (authLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -17,9 +35,18 @@ const Index = () => {
     );
   }
 
-  // Se o usuário já está logado, redirecionar para a área admin
-  if (user) {
-    return <Navigate to="/admin" replace />;
+  // Se o usuário está logado e as permissões foram carregadas, fazer redirecionamento inteligente
+  if (user && shouldRedirect) {
+    // Se tem acesso admin, vai para admin
+    if (permissions.hasAdminAccess) {
+      console.log("Index - Redirecting to admin area");
+      return <Navigate to="/admin" replace />;
+    } 
+    // Senão, vai para área do aluno
+    else {
+      console.log("Index - Redirecting to student area");
+      return <Navigate to="/aluno" replace />;
+    }
   }
 
   // Página de boas-vindas para usuários não logados
@@ -38,10 +65,10 @@ const Index = () => {
         {/* Título e descrição */}
         <div className="text-white space-y-4">
           <h1 className="text-3xl md:text-4xl font-bold">
-            Portal Administrativo
+            Portal Educacional
           </h1>
           <p className="text-blue-200 text-lg">
-            Sistema de gerenciamento e CRM
+            Sistema de gerenciamento e aprendizado
           </p>
         </div>
 
@@ -54,7 +81,7 @@ const Index = () => {
           </Link>
           
           <p className="text-blue-300 text-sm">
-            Faça login para acessar o painel administrativo
+            Faça login para acessar sua área
           </p>
         </div>
 
