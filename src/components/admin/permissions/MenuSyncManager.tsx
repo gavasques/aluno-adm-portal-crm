@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
-import { PermissionServiceFactory } from "@/services/permissions";
+import { MenuSyncService } from "@/services/permissions/MenuSyncService";
 import { toast } from "@/hooks/use-toast";
 
 const MenuSyncManager: React.FC = () => {
@@ -16,28 +16,21 @@ const MenuSyncManager: React.FC = () => {
       setIsSyncing(true);
       setSyncResult(null);
       
-      const menuService = PermissionServiceFactory.getSystemMenuService();
-      const result = await menuService.syncMenusFromCode();
+      const menuSyncService = new MenuSyncService();
+      const result = await menuSyncService.syncMenusWithDatabase();
       
-      setSyncResult(result);
+      setSyncResult({ success: true, data: result });
       
-      if (result.success) {
-        toast({
-          title: "Sincronização concluída",
-          description: `${result.data?.created || 0} menus criados, ${result.data?.updated || 0} atualizados`,
-        });
-      } else {
-        toast({
-          title: "Erro na sincronização",
-          description: result.error || "Erro desconhecido",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Sincronização concluída",
+        description: `${result.added || 0} menus criados, ${result.updated || 0} atualizados`,
+      });
     } catch (error: any) {
       console.error("Erro ao sincronizar menus:", error);
+      setSyncResult({ success: false, error: error.message });
       toast({
-        title: "Erro",
-        description: "Erro inesperado durante a sincronização",
+        title: "Erro na sincronização",
+        description: error.message || "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
@@ -104,26 +97,12 @@ const MenuSyncManager: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Badge variant="outline" className="bg-green-50 text-green-700">
-                        {syncResult.data.created || 0} novos menus criados
+                        {syncResult.data.added || 0} novos menus criados
                       </Badge>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700">
                         {syncResult.data.updated || 0} menus atualizados
                       </Badge>
                     </div>
-                    
-                    {syncResult.data.menus && syncResult.data.menus.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium mb-2">Menus processados:</p>
-                        <div className="max-h-32 overflow-y-auto space-y-1">
-                          {syncResult.data.menus.map((menu: any, index: number) => (
-                            <div key={index} className="text-xs bg-gray-50 p-2 rounded">
-                              <span className="font-medium">{menu.display_name}</span>
-                              <span className="text-gray-500 ml-2">({menu.menu_key})</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 

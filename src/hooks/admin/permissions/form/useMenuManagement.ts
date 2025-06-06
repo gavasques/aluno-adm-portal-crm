@@ -40,10 +40,10 @@ export const useMenuManagement = ({
   }, [isEdit, permissionGroup?.id, isAdmin, getPermissionGroupMenus, setSelectedMenus, setLoadingGroupData]);
 
   const handleMenuToggle = (menuKey: string) => {
-    setSelectedMenus(prev => 
-      prev.includes(menuKey)
-        ? prev.filter(key => key !== menuKey)
-        : [...prev, menuKey]
+    setSelectedMenus(
+      selectedMenus.includes(menuKey)
+        ? selectedMenus.filter(key => key !== menuKey)
+        : [...selectedMenus, menuKey]
     );
   };
 
