@@ -1,9 +1,8 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, Users } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,7 +26,7 @@ export const SidebarUserMenu: React.FC = () => {
   };
 
   const handleGoToStudent = () => {
-    navigate("/aluno/dashboard");
+    navigate("/aluno");
   };
 
   return (
