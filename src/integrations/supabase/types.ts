@@ -372,6 +372,48 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          monthly_credits: number
+          name: string
+          price: number
+          sort_order: number | null
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          monthly_credits: number
+          name: string
+          price: number
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          monthly_credits?: number
+          name?: string
+          price?: number
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_subscriptions: {
         Row: {
           created_at: string

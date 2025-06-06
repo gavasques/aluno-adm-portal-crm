@@ -8,7 +8,8 @@ import { CreditInfoCard } from '@/components/credits/CreditInfoCard';
 import { PurchaseModal } from '@/components/credits/PurchaseModal';
 import { SubscriptionModal } from '@/components/credits/SubscriptionModal';
 import { CreditHistory } from '@/components/credits/CreditHistory';
-import { useCredits } from '@/hooks/credits/useCredits';
+import { useCreditStatus } from '@/hooks/credits/useCreditStatus';
+import { useSubscriptions } from '@/hooks/credits/useSubscriptions';
 import { toast } from 'sonner';
 
 const StudentCredits = () => {
@@ -17,7 +18,9 @@ const StudentCredits = () => {
     isLoading, 
     error, 
     refreshCredits
-  } = useCredits();
+  } = useCreditStatus();
+
+  const { createSubscription } = useSubscriptions();
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -40,6 +43,11 @@ const StudentCredits = () => {
 
   const handlePurchaseSuccess = () => {
     console.log('📈 Compra realizada com sucesso, atualizando créditos...');
+    refreshCredits();
+  };
+
+  const handleSubscriptionSuccess = () => {
+    console.log('📱 Assinatura realizada com sucesso, atualizando créditos...');
     refreshCredits();
   };
 
@@ -109,11 +117,7 @@ const StudentCredits = () => {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
-        onSubscribe={async (monthlyCredits: number) => {
-          // Implementar lógica de assinatura quando necessário
-          console.log('Assinatura solicitada:', monthlyCredits);
-          return true;
-        }}
+        onSubscribe={handleSubscriptionSuccess}
         currentSubscription={safeSubscription}
       />
     </div>

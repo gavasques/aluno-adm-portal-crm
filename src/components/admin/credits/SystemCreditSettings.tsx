@@ -10,7 +10,7 @@ import { useCreditSettings, SystemCreditSettings as SystemCreditSettingsType } f
 
 const defaultSettings: SystemCreditSettingsType = {
   monthly_free_credits: 50,
-  credit_base_price: 1.00,
+  credit_base_price: 0.15,
   enable_purchases: true,
   enable_subscriptions: true,
   low_credit_threshold: 10
@@ -69,6 +69,14 @@ export const SystemCreditSettings: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <h4 className="font-semibold text-blue-900 mb-2">⚡ Atualização Automática</h4>
+          <p className="text-sm text-blue-800">
+            Ao alterar "Créditos Gratuitos Mensais", o limite será atualizado automaticamente 
+            para todos os usuários que não possuem assinatura ativa.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="monthly_free_credits">Créditos Gratuitos Mensais</Label>
@@ -89,11 +97,12 @@ export const SystemCreditSettings: React.FC = () => {
               id="credit_base_price"
               type="number"
               step="0.01"
+              min="0"
               value={settings.credit_base_price}
               onChange={(e) => handleSettingChange('credit_base_price', parseFloat(e.target.value), 'number')}
             />
             <p className="text-sm text-gray-600">
-              Preço base de referência por crédito em reais
+              Preço base de referência por crédito em reais (ex: 0.15)
             </p>
           </div>
 
