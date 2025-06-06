@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Handshake, Search, Star, MapPin, Globe, Phone, Mail } from 'lucide-react';
+import { Handshake, Search, Star, ExternalLink, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,10 +13,8 @@ interface Partner {
   type: string;
   rating: number;
   description: string;
-  email?: string;
-  phone?: string;
   website?: string;
-  address?: string;
+  location: string;
   logo?: string;
   status: "Ativo" | "Inativo";
 }
@@ -24,44 +22,26 @@ interface Partner {
 const INITIAL_PARTNERS: Partner[] = [
   {
     id: 1,
-    name: "Tech Solutions Brasil",
+    name: "TechCorp",
     category: "Tecnologia",
     type: "Parceiro Estratégico",
-    rating: 4.8,
-    description: "Soluções tecnológicas inovadoras para empresas",
-    email: "contato@techsolutions.com.br",
-    phone: "(11) 98765-4321",
-    website: "www.techsolutions.com.br",
-    address: "São Paulo/SP",
-    logo: "TS",
+    rating: 4.9,
+    description: "Especializada em soluções tecnológicas inovadoras",
+    website: "https://techcorp.com",
+    location: "São Paulo, SP",
+    logo: "TC",
     status: "Ativo"
   },
   {
     id: 2,
-    name: "Marketing Digital Pro",
-    category: "Marketing",
-    type: "Parceiro Comercial",
-    rating: 4.5,
-    description: "Agência especializada em marketing digital",
-    email: "contato@marketingpro.com",
-    phone: "(11) 91234-5678",
-    website: "www.marketingpro.com",
-    address: "Rio de Janeiro/RJ",
-    logo: "MP",
-    status: "Ativo"
-  },
-  {
-    id: 3,
-    name: "Consultoria Empresarial",
-    category: "Consultoria",
-    type: "Parceiro Especialista",
+    name: "EduSolutions",
+    category: "Educação",
+    type: "Parceiro Educacional",
     rating: 4.7,
-    description: "Consultoria em gestão e processos empresariais",
-    email: "contato@consultoria.com",
-    phone: "(11) 94567-8901",
-    website: "www.consultoria.com",
-    address: "Belo Horizonte/MG",
-    logo: "CE",
+    description: "Plataforma educacional com foco em capacitação profissional",
+    website: "https://edusolutions.com",
+    location: "Rio de Janeiro, RJ",
+    logo: "ES",
     status: "Ativo"
   }
 ];
@@ -74,12 +54,10 @@ const StudentPartners = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setPartners(INITIAL_PARTNERS);
-      setFilteredPartners(INITIAL_PARTNERS);
-      setIsLoading(false);
-    }, 1000);
+    // Carregamento rápido sem delay
+    setPartners(INITIAL_PARTNERS);
+    setFilteredPartners(INITIAL_PARTNERS);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -149,7 +127,7 @@ const StudentPartners = () => {
             Buscar Parceiros
           </CardTitle>
           <CardDescription>
-            Encontre parceiros por nome ou área de atuação
+            Encontre parceiros por nome ou categoria
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,7 +139,7 @@ const StudentPartners = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <Input 
-              placeholder="Área de atuação..." 
+              placeholder="Categoria..." 
               className="w-48"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -194,7 +172,7 @@ const StudentPartners = () => {
           ) : (
             <div className="grid gap-4">
               {filteredPartners.map((partner) => (
-                <Card key={partner.id} className="hover:shadow-lg transition-shadow">
+                <Card key={partner.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
@@ -210,34 +188,25 @@ const StudentPartners = () => {
                           <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                             <Badge variant="outline">{partner.category}</Badge>
                             <Badge variant="outline">{partner.type}</Badge>
+                            <Badge variant={partner.status === 'Ativo' ? 'default' : 'secondary'}>
+                              {partner.status}
+                            </Badge>
                           </div>
                           {renderStars(partner.rating)}
                           <p className="text-sm text-gray-600 mt-2 mb-3">
                             {partner.description}
                           </p>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            {partner.email && (
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            {partner.location && (
                               <div className="flex items-center">
-                                <Mail className="h-4 w-4 mr-2" />
-                                {partner.email}
-                              </div>
-                            )}
-                            {partner.phone && (
-                              <div className="flex items-center">
-                                <Phone className="h-4 w-4 mr-2" />
-                                {partner.phone}
+                                <MapPin className="h-4 w-4 mr-1" />
+                                {partner.location}
                               </div>
                             )}
                             {partner.website && (
-                              <div className="flex items-center">
-                                <Globe className="h-4 w-4 mr-2" />
+                              <div className="flex items-center text-blue-600">
+                                <ExternalLink className="h-4 w-4 mr-1" />
                                 {partner.website}
-                              </div>
-                            )}
-                            {partner.address && (
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-2" />
-                                {partner.address}
                               </div>
                             )}
                           </div>
@@ -245,10 +214,11 @@ const StudentPartners = () => {
                       </div>
                       <div className="flex flex-col gap-2">
                         <Button variant="outline" size="sm">
-                          Ver Detalhes
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Visitar
                         </Button>
                         <Button size="sm">
-                          Entrar em Contato
+                          Ver Detalhes
                         </Button>
                       </div>
                     </div>

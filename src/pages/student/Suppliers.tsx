@@ -5,8 +5,46 @@ import { Users, Search, Star, MapPin, Globe, Phone, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { INITIAL_SUPPLIERS } from '@/data/suppliersData';
-import { Supplier } from '@/types/supplier.types';
+
+interface Supplier {
+  id: number;
+  name: string;
+  category: string;
+  type: string;
+  rating: number;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  logo?: string;
+}
+
+const INITIAL_SUPPLIERS: Supplier[] = [
+  {
+    id: 1,
+    name: "Fornecedor Alpha",
+    category: "Tecnologia",
+    type: "Produtos",
+    rating: 4.8,
+    email: "contato@alpha.com",
+    phone: "(11) 1234-5678",
+    website: "https://alpha.com",
+    address: "São Paulo, SP",
+    logo: "FA"
+  },
+  {
+    id: 2,
+    name: "Beta Solutions",
+    category: "Consultoria",
+    type: "Serviços",
+    rating: 4.5,
+    email: "info@beta.com",
+    phone: "(21) 8765-4321",
+    website: "https://beta.com",
+    address: "Rio de Janeiro, RJ",
+    logo: "BS"
+  }
+];
 
 const StudentSuppliers = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -16,12 +54,10 @@ const StudentSuppliers = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setSuppliers(INITIAL_SUPPLIERS);
-      setFilteredSuppliers(INITIAL_SUPPLIERS);
-      setIsLoading(false);
-    }, 1000);
+    // Carregamento rápido sem delay
+    setSuppliers(INITIAL_SUPPLIERS);
+    setFilteredSuppliers(INITIAL_SUPPLIERS);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -90,7 +126,7 @@ const StudentSuppliers = () => {
             Buscar Fornecedores
           </CardTitle>
           <CardDescription>
-            Encontre fornecedores por nome, categoria ou localização
+            Encontre fornecedores por nome ou categoria
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,7 +171,7 @@ const StudentSuppliers = () => {
           ) : (
             <div className="grid gap-4">
               {filteredSuppliers.map((supplier) => (
-                <Card key={supplier.id} className="hover:shadow-lg transition-shadow">
+                <Card key={supplier.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">

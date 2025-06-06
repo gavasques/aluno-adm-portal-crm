@@ -78,12 +78,10 @@ const StudentTools = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setTools(INITIAL_TOOLS);
-      setFilteredTools(INITIAL_TOOLS);
-      setIsLoading(false);
-    }, 1000);
+    // Carregamento rápido sem delay
+    setTools(INITIAL_TOOLS);
+    setFilteredTools(INITIAL_TOOLS);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -153,7 +151,7 @@ const StudentTools = () => {
             Buscar Ferramentas
           </CardTitle>
           <CardDescription>
-            Encontre ferramentas por nome, categoria ou descrição
+            Encontre ferramentas por nome ou categoria
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -198,7 +196,7 @@ const StudentTools = () => {
           ) : (
             <div className="grid gap-4">
               {filteredTools.map((tool) => (
-                <Card key={tool.id} className="hover:shadow-lg transition-shadow">
+                <Card key={tool.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
