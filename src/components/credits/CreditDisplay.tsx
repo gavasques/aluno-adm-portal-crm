@@ -2,10 +2,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CreditCard, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
+import { CreditCard, Calendar, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
+import { useCreditSettings } from '@/hooks/credits/useCreditSettings';
 
 interface CreditDisplayProps {
   current: number;
@@ -25,15 +26,12 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
   subscriptionType
 }) => {
   const { refreshCredits, isLoading } = useCredits();
+  const { creditSettings } = useCreditSettings();
+  
+  const monthlyFreeCredits = creditSettings?.systemSettings?.monthly_free_credits || limit;
   
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
-  const getProgressColor = () => {
-    if (usagePercentage >= 90) return 'bg-red-500';
-    if (usagePercentage >= 70) return 'bg-yellow-500';
-    return 'bg-green-500';
   };
 
   const getStatusColor = () => {
@@ -74,24 +72,26 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
         {/* Saldo Principal */}
         <div className="text-center">
           <div className="text-3xl font-bold text-gray-900">
-            {current} <span className="text-lg text-gray-500">de {limit}</span>
+            {current} <span className="text-lg text-gray-500">disponíveis</span>
           </div>
-          <p className="text-sm text-gray-600">créditos disponíveis</p>
+          <p className="text-sm text-gray-600">
+            {monthlyFreeCredits} créditos gratuitos mensais + compras avulsas
+          </p>
         </div>
 
         {/* Barra de Progresso */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Usado este mês</span>
-            <span>{usagePercentage}%</span>
+            <span>Créditos gratuitos usados este mês</span>
+            <span>{Math.min(used, monthlyFreeCredits)}/{monthlyFreeCredits}</span>
           </div>
           <Progress 
-            value={usagePercentage} 
+            value={(Math.min(used, monthlyFreeCredits) / monthlyFreeCredits) * 100} 
             className="h-3"
           />
           <div className="flex justify-between text-xs text-gray-600">
-            <span>{used} consumidos</span>
-            <span>{current} restantes</span>
+            <span>{Math.min(used, monthlyFreeCredits)} usados dos gratuitos</span>
+            <span>{Math.max(0, monthlyFreeCredits - used)} gratuitos restantes</span>
           </div>
         </div>
 
@@ -100,12 +100,12 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-500" />
             <span className="text-sm text-gray-600">
-              Renova em: {formatDate(renewalDate)}
+              Créditos gratuitos renovam em: {formatDate(renewalDate)}
             </span>
           </div>
           <Badge variant={getStatusColor()}>
             {current <= 0 ? 'Sem créditos' : 
-             usagePercentage >= 90 ? 'Atenção' : 'Normal'}
+             current <= (creditSettings?.systemSettings?.low_credit_threshold || 10) ? 'Créditos baixos' : 'Normal'}
           </Badge>
         </div>
 
@@ -118,10 +118,19 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
           </div>
         )}
         
-        {usagePercentage >= 90 && current > 0 && (
+        {current > 0 && current <= (creditSettings?.systemSettings?.low_credit_threshold || 10) && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-sm text-yellow-800 font-medium">
-              ⚡ Você já usou {usagePercentage}% dos seus créditos mensais.
+              ⚡ Você tem poucos créditos restantes ({current}). Considere adquirir mais.
+            </p>
+          </div>
+        )}
+
+        {used >= monthlyFreeCredits && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800 font-medium">
+              🎉 Você já usou todos os seus {monthlyFreeCredits} créditos gratuitos deste mês! 
+              Os créditos restantes são de compras avulsas.
             </p>
           </div>
         )}

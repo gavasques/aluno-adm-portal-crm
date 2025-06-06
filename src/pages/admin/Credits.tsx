@@ -1,101 +1,121 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, Users, TrendingUp, DollarSign } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CreditCard, Settings, Package, Users, TrendingUp } from 'lucide-react';
+import { SystemCreditSettings } from '@/components/admin/credits/SystemCreditSettings';
+import { CreditPackagesManager } from '@/components/admin/credits/CreditPackagesManager';
+import { useCreditSettings } from '@/hooks/credits/useCreditSettings';
 
-const AdminCredits = () => {
+const Credits = () => {
+  const { creditSettings, isLoading } = useCreditSettings();
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center">Carregando configurações...</div>
+      </div>
+    );
+  }
+
+  const totalPackages = creditSettings?.packages?.length || 0;
+  const activePackages = creditSettings?.packages?.filter(p => p.is_active)?.length || 0;
+  const freeCredits = creditSettings?.systemSettings?.monthly_free_credits || 50;
+
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Créditos</h1>
-        <p className="text-muted-foreground">
-          Gerencie créditos dos usuários e pacotes disponíveis
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Configuração de Créditos</h1>
+        <p className="text-gray-600">
+          Configure pacotes de créditos, preços e configurações do sistema
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CreditCard className="h-5 w-5 mr-2" />
-              Total Créditos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">15,420</div>
-            <p className="text-xs text-muted-foreground">
-              Em circulação
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Package className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Pacotes Ativos</p>
+                <p className="text-2xl font-bold">{activePackages}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="h-5 w-5 mr-2" />
-              Usuários Ativos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">234</div>
-            <p className="text-xs text-muted-foreground">
-              Com créditos
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CreditCard className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Créditos Gratuitos/Mês</p>
+                <p className="text-2xl font-bold">{freeCredits}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              Consumo Médio
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-muted-foreground">
-              Créditos/usuário/mês
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total de Pacotes</p>
+                <p className="text-2xl font-bold">{totalPackages}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <DollarSign className="h-5 w-5 mr-2" />
-              Receita Créditos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R$ 12.5k</div>
-            <p className="text-xs text-muted-foreground">
-              Este mês
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Preço Base/Crédito</p>
+                <p className="text-2xl font-bold">
+                  R$ {creditSettings?.systemSettings?.credit_base_price?.toFixed(2) || '1,00'}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Funcionalidade em Desenvolvimento</CardTitle>
-          <CardDescription>
-            Sistema completo de gestão de créditos será implementado em breve
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Esta página está sendo desenvolvida. Em breve você poderá:
-          </p>
-          <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground space-y-1">
-            <li>Gerenciar pacotes de créditos</li>
-            <li>Visualizar histórico de consumo</li>
-            <li>Configurar preços e promoções</li>
-            <li>Relatórios detalhados de uso</li>
-          </ul>
-        </CardContent>
-      </Card>
+      {/* Tabs */}
+      <Tabs defaultValue="packages" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="packages" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Pacotes de Créditos
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Configurações do Sistema
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="packages">
+          <CreditPackagesManager />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <SystemCreditSettings />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export default AdminCredits;
+export default Credits;

@@ -333,6 +333,45 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_packages: {
+        Row: {
+          created_at: string
+          credits: number
+          discount_percentage: number | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          original_price: number
+          price: number
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          original_price: number
+          price: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          original_price?: number
+          price?: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_subscriptions: {
         Row: {
           created_at: string
@@ -2456,6 +2495,36 @@ export type Database = {
           upgrade_amount_mb?: number
           upgrade_date?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      system_credit_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_type: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_type?: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_type?: string
+          setting_value?: string
+          updated_at?: string
         }
         Relationships: []
       }

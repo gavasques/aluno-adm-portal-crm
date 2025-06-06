@@ -11,7 +11,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,7 +18,6 @@ serve(async (req) => {
   try {
     console.log("🚀 Iniciando purchase-credits function");
     
-    // Verificar se é POST
     if (req.method !== "POST") {
       throw new Error("Método não permitido");
     }
@@ -34,16 +32,28 @@ serve(async (req) => {
 
     const { credits } = requestBody;
     console.log("📋 Dados recebidos:", { credits });
-    
-    // Validar quantidade de créditos
-    const validAmounts = [10, 20, 50, 100, 200, 500];
-    if (!credits || !validAmounts.includes(credits)) {
-      console.log("⚠️ Quantidade inválida, retornando modo demo");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Buscar pacote correspondente
+    const { data: creditPackage, error: packageError } = await supabaseClient
+      .from("credit_packages")
+      .select("*")
+      .eq("credits", credits)
+      .eq("is_active", true)
+      .single();
+
+    if (packageError || !creditPackage) {
+      console.log("⚠️ Pacote não encontrado, retornando modo demo");
       return new Response(JSON.stringify({ 
         success: true,
         demo: true,
         credits: credits || 10,
-        message: `Compra simulada realizada: ${credits || 10} créditos! (Modo demonstração - quantidade inválida)`
+        message: `Compra simulada realizada: ${credits || 10} créditos! (Modo demonstração - pacote não configurado)`
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -80,13 +90,6 @@ serve(async (req) => {
       });
     }
 
-    // Criar cliente Supabase
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
     const token = authHeader.replace("Bearer ", "");
     console.log("🔐 Verificando autenticação do usuário");
     
@@ -108,31 +111,9 @@ serve(async (req) => {
     const user = userData.user;
     console.log("👤 Usuário autenticado:", user.email);
 
-    // Preços em centavos (BRL)
-    const priceMap: Record<number, number> = {
-      10: 1000,   // R$ 10,00
-      20: 2000,   // R$ 20,00
-      50: 4500,   // R$ 45,00 (10% desconto)
-      100: 8000,  // R$ 80,00 (20% desconto)
-      200: 14000, // R$ 140,00 (30% desconto)
-      500: 30000  // R$ 300,00 (40% desconto)
-    };
-
-    const price = priceMap[credits];
-    if (!price) {
-      console.log("⚠️ Preço não encontrado, retornando modo demo");
-      return new Response(JSON.stringify({
-        success: true,
-        demo: true,
-        credits: credits,
-        message: `Compra simulada realizada: ${credits} créditos! (Modo demonstração - preço não configurado)`
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    console.log("💰 Preço calculado:", { credits, price: price / 100 });
+    // Usar preço do pacote configurado (convertido para centavos)
+    const price = Math.round(parseFloat(creditPackage.price.toString()) * 100);
+    console.log("💰 Preço do pacote:", { credits, price: price / 100 });
 
     const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
@@ -179,7 +160,8 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         credits: credits.toString(),
-        type: "purchase"
+        type: "purchase",
+        package_id: creditPackage.id
       }
     });
 
@@ -201,7 +183,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true,
       demo: true,
-      credits: 10, // valor padrão
+      credits: 10,
       message: `Compra simulada realizada: 10 créditos! (Modo demonstração - erro: ${error.message})`
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

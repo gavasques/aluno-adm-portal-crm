@@ -24,14 +24,34 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // Buscar configurações do sistema
+    const { data: settingsData, error: settingsError } = await supabaseClient
+      .from("system_credit_settings")
+      .select("setting_key, setting_value, setting_type");
+
+    let defaultFreeCredits = 50;
+    let lowCreditThreshold = 10;
+
+    if (!settingsError && settingsData) {
+      const monthlyFreeSetting = settingsData.find(s => s.setting_key === 'monthly_free_credits');
+      if (monthlyFreeSetting) {
+        defaultFreeCredits = parseInt(monthlyFreeSetting.setting_value);
+      }
+      
+      const thresholdSetting = settingsData.find(s => s.setting_key === 'low_credit_threshold');
+      if (thresholdSetting) {
+        lowCreditThreshold = parseInt(thresholdSetting.setting_value);
+      }
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       console.log("⚠️ Sem token de autorização, retornando dados padrão");
       return new Response(JSON.stringify({
         credits: {
-          current: 50,
+          current: defaultFreeCredits,
           used: 0,
-          limit: 50,
+          limit: defaultFreeCredits,
           renewalDate: new Date().toISOString().split('T')[0],
           usagePercentage: 0
         },
@@ -54,9 +74,9 @@ serve(async (req) => {
       console.log("⚠️ Usuário não autenticado, retornando dados padrão");
       return new Response(JSON.stringify({
         credits: {
-          current: 50,
+          current: defaultFreeCredits,
           used: 0,
-          limit: 50,
+          limit: defaultFreeCredits,
           renewalDate: new Date().toISOString().split('T')[0],
           usagePercentage: 0
         },
@@ -83,14 +103,14 @@ serve(async (req) => {
       .single();
 
     if (creditsError && creditsError.code === 'PGRST116') {
-      // Usuário não existe, criar com créditos padrão
+      // Usuário não existe, criar com créditos padrão baseado nas configurações
       console.log("🆕 Criando registro de créditos para novo usuário");
       const { data: newCredits, error: insertError } = await supabaseClient
         .from("user_credits")
         .insert({
           user_id: user.id,
-          current_credits: 50,
-          monthly_limit: 50,
+          current_credits: defaultFreeCredits,
+          monthly_limit: defaultFreeCredits,
           used_this_month: 0,
           renewal_date: new Date().toISOString().split('T')[0]
         })
@@ -102,9 +122,9 @@ serve(async (req) => {
         // Retornar dados padrão em caso de erro
         return new Response(JSON.stringify({
           credits: {
-            current: 50,
+            current: defaultFreeCredits,
             used: 0,
-            limit: 50,
+            limit: defaultFreeCredits,
             renewalDate: new Date().toISOString().split('T')[0],
             usagePercentage: 0
           },
@@ -127,7 +147,7 @@ serve(async (req) => {
         credits: {
           current: 0,
           used: 0,
-          limit: 50,
+          limit: defaultFreeCredits,
           renewalDate: new Date().toISOString().split('T')[0],
           usagePercentage: 0
         },
@@ -162,9 +182,9 @@ serve(async (req) => {
     // Calcular porcentagem de uso
     const usagePercentage = credits.monthly_limit > 0 ? (credits.used_this_month / credits.monthly_limit) * 100 : 0;
 
-    // Verificar alertas
+    // Verificar alertas usando configurações dinâmicas
     const alerts = {
-      lowCredits: usagePercentage >= 90 && credits.current_credits > 0,
+      lowCredits: credits.current_credits <= lowCreditThreshold && credits.current_credits > 0,
       noCredits: credits.current_credits <= 0
     };
 
@@ -172,7 +192,8 @@ serve(async (req) => {
       current: credits.current_credits,
       used: credits.used_this_month,
       limit: credits.monthly_limit,
-      usagePercentage: Math.round(usagePercentage)
+      usagePercentage: Math.round(usagePercentage),
+      alerts
     });
 
     return new Response(JSON.stringify({
