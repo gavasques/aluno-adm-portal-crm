@@ -156,6 +156,72 @@ export const useCreditSettings = () => {
     }
   });
 
+  // Mutations para planos de assinatura
+  const updateSubscriptionPlan = useMutation({
+    mutationFn: async (planData: Partial<CreditSubscriptionPlan> & { id: string }) => {
+      const { error } = await supabase
+        .from('credit_subscription_plans')
+        .update({
+          ...planData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', planData.id);
+
+      if (error) {
+        throw new Error(`Erro ao atualizar plano: ${error.message}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit-settings'] });
+      toast.success('Plano atualizado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar plano:', error);
+      toast.error(error.message);
+    }
+  });
+
+  const createSubscriptionPlan = useMutation({
+    mutationFn: async (planData: Omit<CreditSubscriptionPlan, 'id'>) => {
+      const { error } = await supabase
+        .from('credit_subscription_plans')
+        .insert(planData);
+
+      if (error) {
+        throw new Error(`Erro ao criar plano: ${error.message}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit-settings'] });
+      toast.success('Plano criado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao criar plano:', error);
+      toast.error(error.message);
+    }
+  });
+
+  const deleteSubscriptionPlan = useMutation({
+    mutationFn: async (planId: string) => {
+      const { error } = await supabase
+        .from('credit_subscription_plans')
+        .update({ is_active: false })
+        .eq('id', planId);
+
+      if (error) {
+        throw new Error(`Erro ao desativar plano: ${error.message}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit-settings'] });
+      toast.success('Plano desativado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao desativar plano:', error);
+      toast.error(error.message);
+    }
+  });
+
   return {
     creditSettings,
     isLoading,
@@ -163,6 +229,9 @@ export const useCreditSettings = () => {
     updateSystemSetting,
     updateCreditPackage,
     createCreditPackage,
-    deleteCreditPackage
+    deleteCreditPackage,
+    updateSubscriptionPlan,
+    createSubscriptionPlan,
+    deleteSubscriptionPlan
   };
 };

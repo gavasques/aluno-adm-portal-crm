@@ -45,6 +45,17 @@ serve(async (req) => {
       throw new Error("Erro ao buscar pacotes de créditos");
     }
 
+    // Buscar planos de assinatura
+    const { data: subscriptionPlans, error: subscriptionPlansError } = await supabaseClient
+      .from("credit_subscription_plans")
+      .select("*")
+      .order("sort_order");
+
+    if (subscriptionPlansError) {
+      console.error("❌ Erro ao buscar planos de assinatura:", subscriptionPlansError);
+      throw new Error("Erro ao buscar planos de assinatura");
+    }
+
     // Converter configurações para objeto
     const systemSettings = settings.reduce((acc, setting) => {
       let value = setting.setting_value;
@@ -66,7 +77,8 @@ serve(async (req) => {
       success: true,
       data: {
         systemSettings,
-        packages: packages || []
+        packages: packages || [],
+        subscriptionPlans: subscriptionPlans || []
       }
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
