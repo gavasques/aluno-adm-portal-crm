@@ -1,6 +1,6 @@
 
-import { useCallback } from "react";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
+import { usePermissionGroupCrud } from "../usePermissionGroupCrud";
+import { toast } from "@/hooks/use-toast";
 
 interface UseFormSubmissionProps {
   isEdit: boolean;
@@ -10,7 +10,7 @@ interface UseFormSubmissionProps {
   isAdmin: boolean;
   allowAdminAccess: boolean;
   selectedMenus: string[];
-  setIsSubmitting: (submitting: boolean) => void;
+  setIsSubmitting: (value: boolean) => void;
   onSuccess: () => void;
   onOpenChange: (open: boolean) => void;
 }
@@ -27,89 +27,62 @@ export const useFormSubmission = ({
   onSuccess,
   onOpenChange,
 }: UseFormSubmissionProps) => {
-  const { createPermissionGroup, updatePermissionGroup } = usePermissionGroups();
+  const { createPermissionGroup, updatePermissionGroup } = usePermissionGroupCrud();
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name) return;
-    
+
+    if (!name.trim()) {
+      toast({
+        title: "Erro de validação",
+        description: "O nome do grupo é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      
-      // VALIDAÇÃO FINAL CORRIGIDA
-      let menusToSend: string[];
-      
-      console.log("=== SUBMIT VALIDATION (FINAL FIX) ===");
-      console.log("Estado final antes do submit:");
-      console.log("- isAdmin:", isAdmin);
-      console.log("- allowAdminAccess:", allowAdminAccess);
-      console.log("- selectedMenus count:", selectedMenus.length);
-      console.log("- selectedMenus:", selectedMenus);
-      
-      if (isAdmin) {
-        // Admin completo (is_admin = true) - sem menus específicos (acesso total)
-        menusToSend = [];
-        console.log("✅ SUBMIT: Admin completo - enviando array vazio (acesso total)");
-      } else {
-        // Não-admin (is_admin = false) - preservar menus selecionados
-        // Isso inclui tanto usuários normais quanto admin limitado (allow_admin_access = true)
-        menusToSend = [...selectedMenus];
-        console.log("✅ SUBMIT: Não-admin - preservando menus selecionados:", menusToSend.length);
-        
-        // Log específico para admin limitado
-        if (allowAdminAccess) {
-          console.log("🟡 ADMIN LIMITADO: Preservando", menusToSend.length, "menus selecionados");
-        } else {
-          console.log("🔵 USUÁRIO NORMAL: Preservando", menusToSend.length, "menus selecionados");
-        }
-      }
-      
-      console.log("menusToSend final para backend:", menusToSend.length, "menus");
-      console.log("==========================================");
-      
-      if (isEdit && permissionGroup) {
-        await updatePermissionGroup({
-          id: permissionGroup.id,
-          name,
-          description,
-          is_admin: isAdmin,
-          allow_admin_access: allowAdminAccess,
-          menu_keys: menusToSend
+
+      const formData = {
+        name: name.trim(),
+        description: description.trim(),
+        is_admin: isAdmin,
+        allow_admin_access: isAdmin ? true : allowAdminAccess,
+        menu_keys: isAdmin ? [] : selectedMenus,
+      };
+
+      const result = isEdit
+        ? await updatePermissionGroup({ id: permissionGroup.id, ...formData })
+        : await createPermissionGroup(formData);
+
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: isEdit
+            ? "Grupo de permissão atualizado com sucesso"
+            : "Grupo de permissão criado com sucesso",
         });
+        onSuccess();
+        onOpenChange(false);
       } else {
-        await createPermissionGroup({
-          name,
-          description,
-          is_admin: isAdmin,
-          allow_admin_access: allowAdminAccess,
-          menu_keys: menusToSend
+        toast({
+          title: "Erro",
+          description: result.error || "Erro ao salvar grupo de permissão",
+          variant: "destructive",
         });
       }
-      
-      onSuccess();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("❌ Erro ao salvar grupo de permissão:", error);
+    } catch (error: any) {
+      console.error("Erro ao salvar grupo:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro inesperado ao salvar grupo",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    name, 
-    description, 
-    isAdmin, 
-    allowAdminAccess, 
-    selectedMenus, 
-    isEdit, 
-    permissionGroup, 
-    createPermissionGroup, 
-    updatePermissionGroup, 
-    onSuccess, 
-    onOpenChange,
-    setIsSubmitting
-  ]);
-
-  return {
-    handleSubmit,
   };
+
+  return { handleSubmit };
 };

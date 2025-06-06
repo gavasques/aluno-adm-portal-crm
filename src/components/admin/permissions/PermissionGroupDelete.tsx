@@ -1,12 +1,15 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { usePermissionGroups } from "@/hooks/admin/usePermissionGroups";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { usePermissionGroupCrud } from "@/hooks/admin/permissions/usePermissionGroupCrud";
+import { toast } from "@/hooks/use-toast";
+import type { PermissionGroup } from "@/types/permissions";
 
 interface PermissionGroupDeleteProps {
-  permissionGroup: any;
+  permissionGroup: PermissionGroup;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
@@ -16,73 +19,100 @@ const PermissionGroupDelete: React.FC<PermissionGroupDeleteProps> = ({
   onOpenChange,
   onSuccess,
 }) => {
-  const { deletePermissionGroup } = usePermissionGroups();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { deletePermissionGroup } = usePermissionGroupCrud();
 
   const handleDelete = async () => {
-    if (!permissionGroup) return;
-    
     try {
       setIsDeleting(true);
-      await deletePermissionGroup(permissionGroup.id);
-      onSuccess();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Erro ao excluir grupo de permissão:", error);
+      
+      const result = await deletePermissionGroup(permissionGroup.id);
+      
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: "Grupo de permissão removido com sucesso",
+        });
+        onSuccess();
+        onOpenChange(false);
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Erro ao remover grupo de permissão",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Erro ao deletar grupo:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro inesperado ao remover grupo",
+        variant: "destructive",
+      });
     } finally {
       setIsDeleting(false);
     }
   };
 
-  if (!permissionGroup) return null;
-
   return (
-    <>
+    <div className="space-y-4">
       <DialogHeader>
-        <DialogTitle className="text-red-600">Excluir Grupo de Permissão</DialogTitle>
+        <DialogTitle className="flex items-center gap-2 text-red-600">
+          <AlertTriangle className="h-5 w-5" />
+          Confirmar Exclusão
+        </DialogTitle>
         <DialogDescription>
-          Esta ação não pode ser desfeita. Isso excluirá permanentemente o grupo de permissão.
+          Esta ação não pode ser desfeita. O grupo será permanentemente removido.
         </DialogDescription>
       </DialogHeader>
 
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <AlertTriangle className="h-5 w-5 text-yellow-400" />
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-yellow-700">
-              Atenção: Os usuários vinculados a este grupo perderão suas permissões.
-            </p>
-          </div>
+      <Alert className="border-red-200 bg-red-50">
+        <AlertTriangle className="h-4 w-4 text-red-600" />
+        <AlertDescription className="text-red-800">
+          <strong>Atenção:</strong> Você está prestes a excluir o grupo "{permissionGroup.name}".
+          Esta ação é irreversível e pode afetar usuários que dependem dessas permissões.
+        </AlertDescription>
+      </Alert>
+
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="font-medium mb-2">Detalhes do grupo:</h4>
+        <div className="space-y-1 text-sm text-gray-600">
+          <p><strong>Nome:</strong> {permissionGroup.name}</p>
+          {permissionGroup.description && (
+            <p><strong>Descrição:</strong> {permissionGroup.description}</p>
+          )}
+          <p><strong>Tipo:</strong> {
+            permissionGroup.is_admin ? "Administrador Total" : 
+            permissionGroup.allow_admin_access ? "Admin Limitado" : "Usuário"
+          }</p>
+          <p><strong>Criado em:</strong> {new Date(permissionGroup.created_at).toLocaleDateString('pt-BR')}</p>
         </div>
       </div>
 
-      <div className="mt-4 bg-gray-50 p-4 rounded-md">
-        <p className="font-medium">Informações do grupo:</p>
-        <p className="mt-2"><span className="font-medium">Nome:</span> {permissionGroup.name}</p>
-        <p className="mt-1"><span className="font-medium">Descrição:</span> {permissionGroup.description || "Sem descrição"}</p>
-      </div>
-
-      <div className="flex justify-end space-x-2 mt-8">
-        <Button 
-          type="button" 
-          variant="outline" 
+      <div className="flex justify-end gap-3 pt-4">
+        <Button
+          variant="outline"
           onClick={() => onOpenChange(false)}
+          disabled={isDeleting}
         >
           Cancelar
         </Button>
-        <Button 
-          type="button" 
-          variant="destructive" 
+        <Button
+          variant="destructive"
           onClick={handleDelete}
           disabled={isDeleting}
         >
-          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Confirmar Exclusão
+          {isDeleting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Removendo...
+            </>
+          ) : (
+            "Confirmar Exclusão"
+          )}
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,99 +1,97 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Users, Lock, Key } from 'lucide-react';
+import React, { useState } from 'react';
+import { usePermissionGroupsState } from '@/hooks/admin/permissions/usePermissionGroupsState';
+import { PermissionGroup } from '@/types/permissions';
+import PerformanceOptimizedPermissions from '@/components/admin/permissions/PerformanceOptimizedPermissions';
+import PermissionsHeader from '@/components/admin/permissions/PermissionsHeader';
+import PermissionsDialogs from '@/components/admin/permissions/PermissionsDialogs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 const AdminPermissions = () => {
+  const { permissionGroups, isLoading, error, refreshPermissionGroups } = usePermissionGroupsState();
+  
+  // Dialog states
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUsersDialog, setShowUsersDialog] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
+
+  const handleAdd = () => {
+    setSelectedGroup(null);
+    setShowAddDialog(true);
+  };
+
+  const handleEdit = (group: PermissionGroup) => {
+    setSelectedGroup(group);
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = (group: PermissionGroup) => {
+    setSelectedGroup(group);
+    setShowDeleteDialog(true);
+  };
+
+  const handleViewUsers = (group: PermissionGroup) => {
+    setSelectedGroup(group);
+    setShowUsersDialog(true);
+  };
+
+  const handleSuccess = () => {
+    refreshPermissionGroups();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <Card>
+          <CardContent className="flex items-center justify-center p-12">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="text-gray-600">Carregando sistema de permissões...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="text-red-600 mb-2">Erro ao carregar permissões</div>
+            <p className="text-gray-600">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Permissões</h1>
-        <p className="text-muted-foreground">
-          Gerencie permissões e controle de acesso do sistema
-        </p>
-      </div>
+    <div className="p-8 space-y-6">
+      <PermissionsHeader onAdd={handleAdd} />
+      
+      <PerformanceOptimizedPermissions
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onViewUsers={handleViewUsers}
+      />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Shield className="h-5 w-5 mr-2" />
-              Grupos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">
-              Grupos de permissão
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="h-5 w-5 mr-2" />
-              Usuários
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">234</div>
-            <p className="text-xs text-muted-foreground">
-              Com permissões
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Lock className="h-5 w-5 mr-2" />
-              Recursos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-muted-foreground">
-              Protegidos
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Key className="h-5 w-5 mr-2" />
-              Roles
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">
-              Funções ativas
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Sistema de Permissões</CardTitle>
-          <CardDescription>
-            Funcionalidade será implementada em breve
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            O sistema de permissões granular está sendo desenvolvido para oferecer:
-          </p>
-          <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground space-y-1">
-            <li>Controle de acesso baseado em roles</li>
-            <li>Permissões granulares por funcionalidade</li>
-            <li>Grupos de usuários personalizáveis</li>
-            <li>Auditoria de acessos e modificações</li>
-          </ul>
-        </CardContent>
-      </Card>
+      <PermissionsDialogs
+        showAddDialog={showAddDialog}
+        setShowAddDialog={setShowAddDialog}
+        showEditDialog={showEditDialog}
+        setShowEditDialog={setShowEditDialog}
+        showDeleteDialog={showDeleteDialog}
+        setShowDeleteDialog={setShowDeleteDialog}
+        showUsersDialog={showUsersDialog}
+        setShowUsersDialog={setShowUsersDialog}
+        selectedGroup={selectedGroup}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 };

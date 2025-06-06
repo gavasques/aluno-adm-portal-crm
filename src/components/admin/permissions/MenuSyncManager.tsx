@@ -1,217 +1,138 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  RefreshCw, 
-  CheckCircle, 
-  AlertTriangle, 
-  RotateCcw,
-  Search,
-  Shield,
-  Database
-} from "lucide-react";
-import { toast } from "sonner";
-import { MenuSyncService } from "@/services/permissions/MenuSyncService";
+import { Loader2, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { PermissionServiceFactory } from "@/services/permissions";
+import { toast } from "@/hooks/use-toast";
 
-const MenuSyncManager = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastSync, setLastSync] = useState<{
-    added: number;
-    updated: number;
-    inconsistencies: string[];
-  } | null>(null);
-  const [validation, setValidation] = useState<{
-    isConsistent: boolean;
-    issues: string[];
-    suggestions: string[];
-  } | null>(null);
+const MenuSyncManager: React.FC = () => {
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<any>(null);
 
-  const menuSyncService = new MenuSyncService();
-
-  const handleSync = async () => {
-    setIsLoading(true);
+  const handleMenuSync = async () => {
     try {
-      const result = await menuSyncService.syncMenusWithDatabase();
-      setLastSync(result);
+      setIsSyncing(true);
+      setSyncResult(null);
       
-      if (result.added > 0 || result.updated > 0) {
-        toast.success(`Sincronização concluída! ${result.added} adicionados, ${result.updated} atualizados`);
+      const menuService = PermissionServiceFactory.getSystemMenuService();
+      const result = await menuService.syncMenusFromCode();
+      
+      setSyncResult(result);
+      
+      if (result.success) {
+        toast({
+          title: "Sincronização concluída",
+          description: `${result.data?.created || 0} menus criados, ${result.data?.updated || 0} atualizados`,
+        });
       } else {
-        toast.success('Todos os menus já estão sincronizados');
+        toast({
+          title: "Erro na sincronização",
+          description: result.error || "Erro desconhecido",
+          variant: "destructive",
+        });
       }
-
-      // Revalidar após sync
-      await handleValidate();
-    } catch (error) {
-      console.error('Erro na sincronização:', error);
-      toast.error('Erro ao sincronizar menus');
+    } catch (error: any) {
+      console.error("Erro ao sincronizar menus:", error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado durante a sincronização",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsSyncing(false);
     }
   };
-
-  const handleValidate = async () => {
-    try {
-      const result = await menuSyncService.validateMenuConsistency();
-      setValidation(result);
-      
-      if (result.isConsistent) {
-        toast.success('Todos os menus estão consistentes');
-      } else {
-        toast.warning(`${result.issues.length} inconsistência(s) encontrada(s)`);
-      }
-    } catch (error) {
-      console.error('Erro na validação:', error);
-      toast.error('Erro ao validar menus');
-    }
-  };
-
-  React.useEffect(() => {
-    handleValidate();
-  }, []);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <RotateCcw className="w-5 h-5" />
+            <RefreshCw className="h-5 w-5" />
             Sincronização de Menus
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Mantenha os menus do sistema sincronizados entre o sidebar e as permissões
-          </p>
+          <CardDescription>
+            Sincronize os menus do código com o banco de dados para manter as permissões atualizadas
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleSync} 
-              disabled={isLoading}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              {isLoading ? 'Sincronizando...' : 'Sincronizar Menus'}
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={handleValidate}
-              className="flex items-center gap-2"
-            >
-              <Search className="w-4 h-4" />
-              Validar Consistência
-            </Button>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium text-blue-800 mb-2">O que esta operação faz:</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• Analisa os menus definidos no código da aplicação</li>
+              <li>• Cria novos registros para menus que não existem no banco</li>
+              <li>• Atualiza informações de menus existentes</li>
+              <li>• Mantém a consistência entre código e permissões</li>
+            </ul>
           </div>
 
-          {/* Status da Validação */}
-          {validation && (
-            <Alert className={validation.isConsistent ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}>
-              <div className="flex items-center gap-2">
-                {validation.isConsistent ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                )}
-                <span className="font-medium">
-                  {validation.isConsistent ? 'Sistema Consistente' : 'Inconsistências Detectadas'}
-                </span>
-              </div>
-              {!validation.isConsistent && (
-                <AlertDescription className="mt-2">
-                  <div className="space-y-2">
-                    <div>
-                      <strong>Problemas encontrados:</strong>
-                      <ul className="list-disc list-inside ml-2 text-sm">
-                        {validation.issues.map((issue, index) => (
-                          <li key={index}>{issue}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <strong>Sugestões:</strong>
-                      <ul className="list-disc list-inside ml-2 text-sm">
-                        {validation.suggestions.map((suggestion, index) => (
-                          <li key={index}>{suggestion}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </AlertDescription>
-              )}
-            </Alert>
-          )}
+          <Button
+            onClick={handleMenuSync}
+            disabled={isSyncing}
+            className="w-full"
+          >
+            {isSyncing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Sincronizando menus...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Iniciar Sincronização
+              </>
+            )}
+          </Button>
 
-          {/* Resultado da Última Sincronização */}
-          {lastSync && (
-            <Card className="bg-gray-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Database className="w-4 h-4" />
-                  Última Sincronização
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-green-600">{lastSync.added}</div>
-                    <div className="text-muted-foreground">Adicionados</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-blue-600">{lastSync.updated}</div>
-                    <div className="text-muted-foreground">Atualizados</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-orange-600">{lastSync.inconsistencies.length}</div>
-                    <div className="text-muted-foreground">Inconsistências</div>
-                  </div>
+          {syncResult && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  {syncResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                  )}
+                  <h4 className="font-medium">
+                    {syncResult.success ? "Sincronização Concluída" : "Erro na Sincronização"}
+                  </h4>
                 </div>
-                
-                {lastSync.inconsistencies.length > 0 && (
-                  <div className="mt-3 pt-3 border-t">
-                    <div className="text-sm font-medium mb-2">Inconsistências:</div>
-                    <div className="space-y-1">
-                      {lastSync.inconsistencies.map((inc, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {inc}
-                        </Badge>
-                      ))}
+
+                {syncResult.success && syncResult.data && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        {syncResult.data.created || 0} novos menus criados
+                      </Badge>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        {syncResult.data.updated || 0} menus atualizados
+                      </Badge>
                     </div>
+                    
+                    {syncResult.data.menus && syncResult.data.menus.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium mb-2">Menus processados:</p>
+                        <div className="max-h-32 overflow-y-auto space-y-1">
+                          {syncResult.data.menus.map((menu: any, index: number) => (
+                            <div key={index} className="text-xs bg-gray-50 p-2 rounded">
+                              <span className="font-medium">{menu.display_name}</span>
+                              <span className="text-gray-500 ml-2">({menu.menu_key})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
+                )}
+
+                {!syncResult.success && (
+                  <p className="text-sm text-red-600">{syncResult.error}</p>
                 )}
               </CardContent>
             </Card>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Informações dos Menus */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            Menus do Sistema
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Lista de todos os menus disponíveis no sidebar
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 max-h-60 overflow-y-auto">
-            {menuSyncService.getSidebarMenus().map((menu) => (
-              <div key={menu.key} className="flex items-center justify-between p-2 border rounded">
-                <div>
-                  <div className="font-medium text-sm">{menu.label}</div>
-                  <div className="text-xs text-muted-foreground">{menu.description}</div>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {menu.key}
-                </Badge>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>
