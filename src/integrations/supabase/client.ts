@@ -21,7 +21,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     headers: {
-      'x-application-name': 'crm-lead-management',
       'x-client-info': 'lovable-crm-client'
     }
   },
