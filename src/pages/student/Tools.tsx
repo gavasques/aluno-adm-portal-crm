@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wrench, Search, Star, ExternalLink, DollarSign, Zap } from 'lucide-react';
+import { Wrench, Search, Star, ExternalLink, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +14,9 @@ interface Tool {
   rating: number;
   description: string;
   website?: string;
-  price?: string;
-  features: string[];
+  price: string;
   logo?: string;
-  isPopular?: boolean;
-  isFree?: boolean;
+  status: "Ativo" | "Inativo";
 }
 
 const INITIAL_TOOLS: Tool[] = [
@@ -26,69 +24,49 @@ const INITIAL_TOOLS: Tool[] = [
     id: 1,
     name: "Figma",
     category: "Design",
-    type: "Design de Interface",
+    type: "Software Online",
     rating: 4.9,
-    description: "Ferramenta colaborativa de design de interface e prototipagem",
+    description: "Ferramenta de design colaborativo para interface e prototipagem",
     website: "https://figma.com",
-    price: "Gratuito / $12/mês",
-    features: ["Design colaborativo", "Prototipagem", "Componentes", "Versionamento"],
+    price: "Gratuito/Pago",
     logo: "FG",
-    isPopular: true,
-    isFree: true
+    status: "Ativo"
   },
   {
     id: 2,
-    name: "Slack",
-    category: "Comunicação",
-    type: "Comunicação em Equipe",
+    name: "Notion",
+    category: "Produtividade",
+    type: "Software Online",
     rating: 4.7,
-    description: "Plataforma de comunicação para equipes e organizações",
-    website: "https://slack.com",
-    price: "Gratuito / $6.67/mês",
-    features: ["Canais organizados", "Mensagens diretas", "Integrações", "Chamadas"],
-    logo: "SL",
-    isPopular: true,
-    isFree: true
+    description: "Workspace tudo-em-um para notas, tarefas e colaboração",
+    website: "https://notion.so",
+    price: "Gratuito/Pago",
+    logo: "NT",
+    status: "Ativo"
   },
   {
     id: 3,
-    name: "Notion",
-    category: "Produtividade",
-    type: "Gestão de Conhecimento",
-    rating: 4.8,
-    description: "Workspace all-in-one para notas, docs, wikis e projetos",
-    website: "https://notion.so",
-    price: "Gratuito / $8/mês",
-    features: ["Banco de dados", "Templates", "Colaboração", "API"],
-    logo: "NO",
-    isPopular: true,
-    isFree: true
+    name: "Slack",
+    category: "Comunicação",
+    type: "Software Online",
+    rating: 4.6,
+    description: "Plataforma de comunicação e colaboração em equipe",
+    website: "https://slack.com",
+    price: "Gratuito/Pago",
+    logo: "SL",
+    status: "Ativo"
   },
   {
     id: 4,
     name: "Canva",
     category: "Design",
-    type: "Design Gráfico",
-    rating: 4.6,
-    description: "Plataforma de design gráfico online com templates prontos",
-    website: "https://canva.com",
-    price: "Gratuito / $14.99/mês",
-    features: ["Templates prontos", "Editor drag-and-drop", "Biblioteca de imagens", "Colaboração"],
-    logo: "CV",
-    isFree: true
-  },
-  {
-    id: 5,
-    name: "Trello",
-    category: "Produtividade",
-    type: "Gestão de Projetos",
+    type: "Software Online",
     rating: 4.5,
-    description: "Ferramenta de gestão de projetos baseada em quadros Kanban",
-    website: "https://trello.com",
-    price: "Gratuito / $5/mês",
-    features: ["Quadros Kanban", "Cards e listas", "Power-ups", "Timeline"],
-    logo: "TR",
-    isFree: true
+    description: "Editor gráfico online para criação de designs",
+    website: "https://canva.com",
+    price: "Gratuito/Pago",
+    logo: "CV",
+    status: "Ativo"
   }
 ];
 
@@ -148,7 +126,7 @@ const StudentTools = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Ferramentas</h1>
           <p className="text-muted-foreground">
-            Descubra ferramentas úteis para seu negócio
+            Explore as ferramentas disponíveis
           </p>
         </div>
         <div className="flex items-center justify-center py-12">
@@ -164,7 +142,7 @@ const StudentTools = () => {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Ferramentas</h1>
         <p className="text-muted-foreground">
-          Descubra ferramentas úteis para seu negócio
+          Explore as ferramentas disponíveis
         </p>
       </div>
 
@@ -175,7 +153,7 @@ const StudentTools = () => {
             Buscar Ferramentas
           </CardTitle>
           <CardDescription>
-            Encontre ferramentas por nome, categoria ou funcionalidade
+            Encontre ferramentas por nome, categoria ou descrição
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -220,13 +198,7 @@ const StudentTools = () => {
           ) : (
             <div className="grid gap-4">
               {filteredTools.map((tool) => (
-                <Card key={tool.id} className="hover:shadow-lg transition-shadow relative">
-                  {tool.isPopular && (
-                    <Badge className="absolute -top-2 left-4 bg-orange-500">
-                      <Zap className="h-3 w-3 mr-1" />
-                      Popular
-                    </Badge>
-                  )}
+                <Card key={tool.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
@@ -236,54 +208,35 @@ const StudentTools = () => {
                           </span>
                         </div>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {tool.name}
-                            </h3>
-                            {tool.isFree && (
-                              <Badge variant="outline" className="text-green-600 border-green-600">
-                                Gratuito
-                              </Badge>
-                            )}
-                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {tool.name}
+                          </h3>
                           <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                             <Badge variant="outline">{tool.category}</Badge>
                             <Badge variant="outline">{tool.type}</Badge>
+                            <Badge variant="outline">{tool.price}</Badge>
                           </div>
                           {renderStars(tool.rating)}
                           <p className="text-sm text-gray-600 mt-2 mb-3">
                             {tool.description}
                           </p>
-                          <div className="flex items-center text-sm text-gray-600 mb-3">
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            {tool.price}
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {tool.features.slice(0, 3).map((feature, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {feature}
-                              </Badge>
-                            ))}
-                            {tool.features.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{tool.features.length - 3} mais
-                              </Badge>
-                            )}
-                          </div>
+                          {tool.website && (
+                            <div className="flex items-center text-sm text-blue-600">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              {tool.website}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
                         <Button variant="outline" size="sm">
-                          Ver Detalhes
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Acessar
                         </Button>
-                        {tool.website && (
-                          <Button size="sm" asChild>
-                            <a href={tool.website} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Acessar
-                            </a>
-                          </Button>
-                        )}
+                        <Button size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          Salvar
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

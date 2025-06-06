@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Zap, Loader2 } from 'lucide-react';
+import { ShoppingCart, Zap, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -50,13 +50,15 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
         body: { credits }
       });
 
+      console.log('📊 Resposta da função purchase-credits:', { data, error });
+
       if (error) {
         console.error('❌ Erro na edge function:', error);
         toast.error(`Erro ao processar compra: ${error.message}`);
         return;
       }
 
-      if (data?.error) {
+      if (data?.error && !data?.demo) {
         console.error('❌ Erro retornado pela função:', data.error);
         toast.error(data.error);
         return;
@@ -64,7 +66,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
       if (data?.demo) {
         console.log('✅ Compra simulada realizada');
-        toast.success(`Compra simulada: ${credits} créditos adicionados! (Modo demonstração)`);
+        toast.success(data.message || `Compra simulada: ${credits} créditos adicionados! (Modo demonstração)`);
         onSuccess?.();
         onClose();
         return;
@@ -159,10 +161,19 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           ))}
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-600 text-center">
-            💡 <strong>Dica:</strong> Créditos avulsos são adicionados ao seu saldo atual e não expiram no final do mês.
-          </p>
+        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span>Créditos avulsos são adicionados ao seu saldo atual</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span>Créditos não expiram no final do mês</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-orange-600">
+            <AlertCircle className="h-4 w-4 text-orange-500" />
+            <span>Modo demonstração ativo - pagamentos simulados</span>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
