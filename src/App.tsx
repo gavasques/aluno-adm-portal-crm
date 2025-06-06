@@ -1,3 +1,4 @@
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from "@/components/ui/toaster";
@@ -149,6 +150,7 @@ function App() {
                 </StudentRouteGuard>
               }>
                 <Route index element={<StudentDashboard />} />
+                <Route path="dashboard" element={<StudentDashboard />} />
                 <Route path="home" element={<StudentDashboard />} />
                 <Route path="fornecedores" element={<StudentSuppliers />} />
                 <Route path="meus-fornecedores" element={<StudentMySuppliers />} />
