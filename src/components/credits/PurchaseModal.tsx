@@ -5,18 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Zap, Loader2 } from 'lucide-react';
-import { PurchaseOption } from '@/types/credits.types';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface PurchaseOption {
+  credits: number;
+  price: number;
+  originalPrice: number;
+  discount?: number;
+  popular?: boolean;
+}
 
 interface PurchaseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPurchase: (credits: number) => Promise<boolean>;
+  onSuccess?: () => void;
 }
 
 export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   isOpen,
   onClose,
-  onPurchase
+  onSuccess
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingCredits, setLoadingCredits] = useState<number | null>(null);
@@ -35,24 +44,48 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     setLoadingCredits(credits);
     
     try {
-      console.log('🛒 Iniciando compra no modal:', { credits });
-      const success = await onPurchase(credits);
+      console.log('🛒 Iniciando compra de créditos:', { credits });
       
-      if (success) {
-        // Só fecha o modal se for uma compra simulada (demo)
-        // Para compras reais, deixa aberto pois o usuário será redirecionado
-        setTimeout(() => {
-          setLoadingCredits(null);
-          setIsLoading(false);
-        }, 2000);
-      } else {
-        setLoadingCredits(null);
-        setIsLoading(false);
+      const { data, error } = await supabase.functions.invoke('purchase-credits', {
+        body: { credits }
+      });
+
+      if (error) {
+        console.error('❌ Erro na edge function:', error);
+        toast.error(`Erro ao processar compra: ${error.message}`);
+        return;
       }
-    } catch (error) {
-      console.error('❌ Erro na compra:', error);
-      setLoadingCredits(null);
+
+      if (data?.error) {
+        console.error('❌ Erro retornado pela função:', data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.demo) {
+        console.log('✅ Compra simulada realizada');
+        toast.success(`Compra simulada: ${credits} créditos adicionados! (Modo demonstração)`);
+        onSuccess?.();
+        onClose();
+        return;
+      }
+
+      if (data?.url) {
+        console.log('✅ Redirecionando para checkout do Stripe');
+        toast.success('Redirecionando para o pagamento...');
+        window.open(data.url, '_blank');
+        return;
+      }
+
+      console.warn('⚠️ Resposta inesperada:', data);
+      toast.error('Resposta inesperada do servidor');
+
+    } catch (err) {
+      console.error('❌ Erro ao processar compra:', err);
+      toast.error('Erro ao processar compra de créditos');
+    } finally {
       setIsLoading(false);
+      setLoadingCredits(null);
     }
   };
 

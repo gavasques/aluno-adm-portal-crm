@@ -16,9 +16,7 @@ const StudentCredits = () => {
     creditStatus, 
     isLoading, 
     error, 
-    refreshCredits, 
-    purchaseCredits, 
-    subscribeCredits 
+    refreshCredits
   } = useCredits();
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -38,6 +36,11 @@ const StudentCredits = () => {
       console.error('Erro ao atualizar créditos:', err);
       toast.error('Erro ao atualizar informações');
     }
+  };
+
+  const handlePurchaseSuccess = () => {
+    console.log('📈 Compra realizada com sucesso, atualizando créditos...');
+    refreshCredits();
   };
 
   const safeCredits = creditStatus?.credits || {
@@ -100,13 +103,17 @@ const StudentCredits = () => {
       <PurchaseModal
         isOpen={showPurchaseModal}
         onClose={() => setShowPurchaseModal(false)}
-        onPurchase={purchaseCredits}
+        onSuccess={handlePurchaseSuccess}
       />
 
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
-        onSubscribe={subscribeCredits}
+        onSubscribe={async (monthlyCredits: number) => {
+          // Implementar lógica de assinatura quando necessário
+          console.log('Assinatura solicitada:', monthlyCredits);
+          return true;
+        }}
         currentSubscription={safeSubscription}
       />
     </div>

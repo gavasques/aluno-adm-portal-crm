@@ -35,55 +35,6 @@ export const useCreditActions = (refreshCredits: () => void) => {
     }
   }, [refreshCredits]);
 
-  const purchaseCredits = useCallback(async (credits: number) => {
-    try {
-      console.log('💰 Iniciando compra de créditos...', { credits });
-      toast.loading('Processando compra...', { id: 'purchase-loading' });
-      
-      const { data, error } = await supabase.functions.invoke('purchase-credits', {
-        body: { credits }
-      });
-
-      toast.dismiss('purchase-loading');
-
-      if (error) {
-        console.error('❌ Erro na função purchase-credits:', error);
-        toast.error(`Erro ao processar compra: ${error.message}`);
-        return false;
-      }
-
-      if (data?.error) {
-        console.error('❌ Erro retornado pela função:', data.error);
-        toast.error(data.error);
-        return false;
-      }
-
-      if (data?.demo) {
-        console.log('✅ Compra simulada realizada');
-        toast.success(`Compra simulada: ${credits} créditos adicionados! (Modo demonstração)`);
-        refreshCredits();
-        return true;
-      }
-
-      if (data?.url) {
-        console.log('✅ Redirecionando para checkout do Stripe');
-        toast.success('Redirecionando para o pagamento...');
-        window.open(data.url, '_blank');
-        return true;
-      }
-
-      console.warn('⚠️ Resposta inesperada:', data);
-      toast.error('Resposta inesperada do servidor');
-      return false;
-
-    } catch (err) {
-      console.error('❌ Erro ao processar compra:', err);
-      toast.dismiss('purchase-loading');
-      toast.error('Erro ao processar compra de créditos');
-      return false;
-    }
-  }, [refreshCredits]);
-
   const subscribeCredits = useCallback(async (monthlyCredits: number) => {
     try {
       console.log('📱 Criando assinatura...', { monthlyCredits });
@@ -120,7 +71,6 @@ export const useCreditActions = (refreshCredits: () => void) => {
 
   return {
     consumeCredits,
-    purchaseCredits,
     subscribeCredits
   };
 };

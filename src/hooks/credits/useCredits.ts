@@ -4,7 +4,7 @@ import { useCreditActions } from './useCreditActions';
 
 export const useCredits = () => {
   const { creditStatus, isLoading, error, refreshCredits } = useCreditStatus();
-  const { consumeCredits, purchaseCredits, subscribeCredits } = useCreditActions(refreshCredits);
+  const { consumeCredits, subscribeCredits } = useCreditActions(refreshCredits);
 
   return {
     creditStatus,
@@ -12,7 +12,6 @@ export const useCredits = () => {
     error,
     refreshCredits,
     consumeCredits,
-    purchaseCredits,
     subscribeCredits
   };
 };
