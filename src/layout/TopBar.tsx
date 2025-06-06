@@ -133,33 +133,33 @@ const TopBar = () => {
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+              <DropdownMenuContent align="end" className="w-56 bg-gray-800 border border-gray-700 shadow-lg">
                 {/* Navigation between areas */}
                 {permissions.hasAdminAccess && isStudentArea && (
-                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="cursor-pointer">
+                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="cursor-pointer text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                     <Users className="h-4 w-4 mr-2" />
                     Ir para Área Administrativa
                   </DropdownMenuItem>
                 )}
                 {isAdminArea && (
-                  <DropdownMenuItem onClick={handleNavigateToStudent} className="cursor-pointer">
+                  <DropdownMenuItem onClick={handleNavigateToStudent} className="cursor-pointer text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                     <User className="h-4 w-4 mr-2" />
                     Ir para Área do Aluno
                   </DropdownMenuItem>
                 )}
                 
                 {/* Settings */}
-                <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleSettings} className="cursor-pointer text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
                   <Settings className="h-4 w-4 mr-2" />
                   Configurações
                 </DropdownMenuItem>
                 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-gray-600" />
                 
                 {/* Logout */}
                 <DropdownMenuItem 
                   onClick={handleSignOut} 
-                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                  className="text-red-400 hover:text-red-300 focus:text-red-300 cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
                   disabled={isLoggingOut}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
