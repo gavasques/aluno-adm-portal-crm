@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Zap, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePurchaseCredits } from '@/hooks/credits/usePurchaseCredits';
 
 interface PurchaseOption {
   credits: number;
@@ -27,8 +26,8 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [loadingCredits, setLoadingCredits] = useState<number | null>(null);
+  const { purchaseCredits, isLoading } = usePurchaseCredits();
 
   const purchaseOptions: PurchaseOption[] = [
     { credits: 10, price: 10.00, originalPrice: 10.00 },
@@ -40,53 +39,30 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   ];
 
   const handlePurchase = async (credits: number) => {
-    setIsLoading(true);
     setLoadingCredits(credits);
     
     try {
       console.log('🛒 Iniciando compra de créditos:', { credits });
       
-      const { data, error } = await supabase.functions.invoke('purchase-credits', {
-        body: { credits }
-      });
-
-      console.log('📊 Resposta da função purchase-credits:', { data, error });
-
-      if (error) {
-        console.error('❌ Erro na edge function:', error);
-        toast.error(`Erro ao processar compra: ${error.message}`);
-        return;
+      const result = await purchaseCredits(credits);
+      
+      if (result.success) {
+        if (result.demo) {
+          // Sucesso em modo demo
+          onSuccess?.();
+          onClose();
+        } else if (result.redirected) {
+          // Redirecionamento para Stripe - apenas fechar modal
+          onClose();
+        }
+      } else {
+        // Erro - mas não fazer nada extra, o hook já mostrou o toast
+        console.log('❌ Compra não foi bem-sucedida');
       }
-
-      if (data?.error && !data?.demo) {
-        console.error('❌ Erro retornado pela função:', data.error);
-        toast.error(data.error);
-        return;
-      }
-
-      if (data?.demo) {
-        console.log('✅ Compra simulada realizada');
-        toast.success(data.message || `Compra simulada: ${credits} créditos adicionados! (Modo demonstração)`);
-        onSuccess?.();
-        onClose();
-        return;
-      }
-
-      if (data?.url) {
-        console.log('✅ Redirecionando para checkout do Stripe');
-        toast.success('Redirecionando para o pagamento...');
-        window.open(data.url, '_blank');
-        return;
-      }
-
-      console.warn('⚠️ Resposta inesperada:', data);
-      toast.error('Resposta inesperada do servidor');
 
     } catch (err) {
-      console.error('❌ Erro ao processar compra:', err);
-      toast.error('Erro ao processar compra de créditos');
+      console.error('❌ Erro inesperado no modal:', err);
     } finally {
-      setIsLoading(false);
       setLoadingCredits(null);
     }
   };
@@ -172,7 +148,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           </div>
           <div className="flex items-center gap-2 text-sm text-orange-600">
             <AlertCircle className="h-4 w-4 text-orange-500" />
-            <span>Modo demonstração ativo - pagamentos simulados</span>
+            <span>Sistema em modo demonstração - pagamentos simulados quando Stripe não configurado</span>
           </div>
         </div>
       </DialogContent>
