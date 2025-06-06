@@ -127,7 +127,7 @@ export const CreditPackagesManager: React.FC = () => {
                       type="number"
                       value={editingPackage.discount_percentage}
                       onChange={(e) => setEditingPackage({ ...editingPackage, discount_percentage: parseInt(e.target.value) })}
-                      placeholder="Desconto"
+                      placeholder="% desconto"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -155,21 +155,19 @@ export const CreditPackagesManager: React.FC = () => {
                     <div>
                       <span className="text-green-600 font-semibold">R$ {pkg.price.toFixed(2)}</span>
                       {pkg.original_price > pkg.price && (
-                        <p className="text-xs text-gray-500 line-through">
-                          R$ {pkg.original_price.toFixed(2)}
-                        </p>
+                        <p className="text-xs text-gray-500 line-through">R$ {pkg.original_price.toFixed(2)}</p>
                       )}
                     </div>
                     <div>
-                      <span className="text-blue-600">
-                        R$ {(pkg.price / pkg.credits).toFixed(2)}/crédito
+                      <span className="text-sm text-gray-600">
+                        R$ {(pkg.price / pkg.credits).toFixed(2)} por crédito
                       </span>
                     </div>
                     <div className="flex gap-2">
                       {pkg.is_popular && <Badge variant="default">Popular</Badge>}
                       {!pkg.is_active && <Badge variant="secondary">Inativo</Badge>}
                       {pkg.discount_percentage > 0 && (
-                        <Badge variant="destructive">-{pkg.discount_percentage}%</Badge>
+                        <Badge variant="destructive">{pkg.discount_percentage}% OFF</Badge>
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
@@ -230,7 +228,7 @@ export const CreditPackagesManager: React.FC = () => {
                   type="number"
                   value={editingPackage.discount_percentage}
                   onChange={(e) => setEditingPackage({ ...editingPackage, discount_percentage: parseInt(e.target.value) })}
-                  placeholder="Desconto"
+                  placeholder="% desconto"
                 />
               </div>
               <div className="flex items-center gap-2">

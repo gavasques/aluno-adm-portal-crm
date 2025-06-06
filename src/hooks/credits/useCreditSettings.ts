@@ -22,9 +22,22 @@ export interface SystemCreditSettings {
   low_credit_threshold: number;
 }
 
+export interface CreditSubscriptionPlan {
+  id: string;
+  name: string;
+  monthly_credits: number;
+  price: number;
+  is_popular: boolean;
+  is_active: boolean;
+  sort_order: number;
+  stripe_price_id: string | null;
+  description: string | null;
+}
+
 export interface CreditSettingsData {
   systemSettings: SystemCreditSettings;
   packages: CreditPackage[];
+  subscriptionPlans: CreditSubscriptionPlan[];
 }
 
 export const useCreditSettings = () => {
