@@ -1,3 +1,4 @@
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from "@/components/ui/toaster";
@@ -82,7 +83,6 @@ const queryClient = new QueryClient({
 
 import PermissionCreate from "./pages/admin/PermissionCreate";
 import PermissionEdit from "./pages/admin/PermissionEdit";
-import NoAccess from "./pages/NoAccess";
 
 function App() {
   return (
