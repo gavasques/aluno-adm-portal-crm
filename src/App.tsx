@@ -5,6 +5,8 @@ import { useAuth } from '@/hooks/auth';
 import RouteGuard from './components/RouteGuard';
 import Index from './pages/Index';
 import Login from './pages/Login';
+import Admin from './pages/Admin';
+import Student from './pages/Student';
 
 // Lazy load das páginas de créditos
 const CreditSuccess = lazy(() => import('./pages/student/credits/Success'));
@@ -21,6 +23,26 @@ function App() {
           
           {/* Login */}
           <Route path="/login" element={<Login />} />
+          
+          {/* Área Administrativa */}
+          <Route 
+            path="/admin" 
+            element={
+              <RouteGuard>
+                <Admin />
+              </RouteGuard>
+            } 
+          />
+          
+          {/* Área do Aluno */}
+          <Route 
+            path="/aluno" 
+            element={
+              <RouteGuard>
+                <Student />
+              </RouteGuard>
+            } 
+          />
           
           {/* Rotas de créditos do aluno */}
           <Route 
