@@ -10,12 +10,12 @@ import { CreditHistory } from '@/components/credits/CreditHistory';
 import { useCredits } from '@/hooks/useCredits';
 import { toast } from 'sonner';
 
-const Credits = () => {
+const StudentCredits = () => {
   const { 
     creditStatus, 
     isLoading, 
     error, 
-    fetchCredits, 
+    refreshCredits, 
     purchaseCredits, 
     subscribeCredits 
   } = useCredits();
@@ -23,12 +23,20 @@ const Credits = () => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
+  console.log("=== STUDENT CREDITS DEBUG ===");
+  console.log("Credit Status:", creditStatus);
+  console.log("Is Loading:", isLoading);
+  console.log("Error:", error);
+  console.log("=============================");
+
   const handleRefresh = async () => {
-    toast.promise(fetchCredits(), {
-      loading: 'Atualizando informações de créditos...',
-      success: 'Informações atualizadas com sucesso!',
-      error: 'Erro ao atualizar informações'
-    });
+    try {
+      await refreshCredits();
+      toast.success('Informações atualizadas com sucesso!');
+    } catch (err) {
+      console.error('Erro ao atualizar créditos:', err);
+      toast.error('Erro ao atualizar informações');
+    }
   };
 
   if (isLoading) {
@@ -44,7 +52,7 @@ const Credits = () => {
     );
   }
 
-  if (error || !creditStatus) {
+  if (error && !creditStatus) {
     return (
       <div className="container mx-auto py-6 space-y-6">
         <div className="text-center">
@@ -67,6 +75,18 @@ const Credits = () => {
     );
   }
 
+  // Usar dados padrão se não tiver creditStatus mas não houver erro
+  const safeCredits = creditStatus?.credits || {
+    current: 0,
+    used: 0,
+    limit: 50,
+    renewalDate: new Date().toISOString().split('T')[0],
+    usagePercentage: 0
+  };
+
+  const safeTransactions = creditStatus?.transactions || [];
+  const safeSubscription = creditStatus?.subscription || null;
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -75,24 +95,35 @@ const Credits = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Meus Créditos</h1>
           <p className="text-gray-600">Gerencie seus créditos e assinaturas</p>
         </div>
-        <Button onClick={handleRefresh} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
+        <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
       </div>
+
+      {/* Alert de erro se houver mas ainda tiver dados */}
+      {error && creditStatus && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="p-4">
+            <p className="text-yellow-800 text-sm">
+              ⚠️ Alguns dados podem estar desatualizados: {error}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Coluna Principal */}
         <div className="xl:col-span-2 space-y-6">
           {/* Display de Créditos */}
           <CreditDisplay
-            current={creditStatus.credits.current}
-            used={creditStatus.credits.used}
-            limit={creditStatus.credits.limit}
-            renewalDate={creditStatus.credits.renewalDate}
-            usagePercentage={creditStatus.credits.usagePercentage}
-            subscriptionType={creditStatus.subscription?.monthly_credits 
-              ? `+${creditStatus.subscription.monthly_credits}/mês` 
+            current={safeCredits.current}
+            used={safeCredits.used}
+            limit={safeCredits.limit}
+            renewalDate={safeCredits.renewalDate}
+            usagePercentage={safeCredits.usagePercentage}
+            subscriptionType={safeSubscription?.monthly_credits 
+              ? `+${safeSubscription.monthly_credits}/mês` 
               : null}
           />
 
@@ -143,9 +174,9 @@ const Credits = () => {
                 <Button 
                   onClick={() => setShowSubscriptionModal(true)}
                   className="w-full"
-                  variant={creditStatus.subscription?.status === 'active' ? 'outline' : 'default'}
+                  variant={safeSubscription?.status === 'active' ? 'outline' : 'default'}
                 >
-                  {creditStatus.subscription?.status === 'active' 
+                  {safeSubscription?.status === 'active' 
                     ? 'Gerenciar Assinatura' 
                     : 'Ver Planos'}
                 </Button>
@@ -156,7 +187,7 @@ const Credits = () => {
 
         {/* Coluna Lateral - Histórico */}
         <div className="xl:col-span-1">
-          <CreditHistory transactions={creditStatus.transactions} />
+          <CreditHistory transactions={safeTransactions} />
         </div>
       </div>
 
@@ -165,10 +196,10 @@ const Credits = () => {
         <CardContent className="p-6">
           <h3 className="font-semibold text-blue-900 mb-2">💡 Como funcionam os créditos?</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• <strong>Limite mensal:</strong> Você possui {creditStatus.credits.limit} créditos base por mês</li>
+            <li>• <strong>Limite mensal:</strong> Você possui {safeCredits.limit} créditos base por mês</li>
             <li>• <strong>Compras avulsas:</strong> Somam ao seu saldo atual e não expiram</li>
             <li>• <strong>Assinatura:</strong> Adiciona créditos extras automaticamente todo mês</li>
-            <li>• <strong>Renovação:</strong> No dia {new Date(creditStatus.credits.renewalDate).getDate()} de cada mês seus créditos base são renovados</li>
+            <li>• <strong>Renovação:</strong> No dia {new Date(safeCredits.renewalDate).getDate()} de cada mês seus créditos base são renovados</li>
           </ul>
         </CardContent>
       </Card>
@@ -184,10 +215,10 @@ const Credits = () => {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
         onSubscribe={subscribeCredits}
-        currentSubscription={creditStatus.subscription}
+        currentSubscription={safeSubscription}
       />
     </div>
   );
 };
 
-export default Credits;
+export default StudentCredits;
