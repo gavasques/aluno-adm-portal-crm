@@ -15,7 +15,22 @@ interface ImprovedMenuPermissionsSectionProps {
   onMenuToggle: (menuKey: string) => void;
 }
 
-const menuCategories = {
+interface MenuCategory {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  keys: string[];
+}
+
+interface CategorizedMenuSection {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  menus: any[];
+  selectedCount: number;
+}
+
+const menuCategories: Record<string, MenuCategory> = {
   dashboard: {
     title: "Dashboard",
     icon: BarChart3,
@@ -76,7 +91,7 @@ export const ImprovedMenuPermissionsSection: React.FC<ImprovedMenuPermissionsSec
   onMenuToggle,
 }) => {
   const categorizedMenus = useMemo(() => {
-    const result = {};
+    const result: Record<string, CategorizedMenuSection> = {};
     
     Object.entries(menuCategories).forEach(([categoryKey, category]) => {
       const categoryMenus = systemMenus.filter(menu => 
@@ -85,7 +100,9 @@ export const ImprovedMenuPermissionsSection: React.FC<ImprovedMenuPermissionsSec
       
       if (categoryMenus.length > 0) {
         result[categoryKey] = {
-          ...category,
+          title: category.title,
+          icon: category.icon,
+          color: category.color,
           menus: categoryMenus,
           selectedCount: categoryMenus.filter(menu => selectedMenus.includes(menu.menu_key)).length
         };
