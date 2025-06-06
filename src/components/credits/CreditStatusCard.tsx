@@ -29,17 +29,25 @@ export const CreditStatusCard: React.FC<CreditStatusCardProps> = ({
     );
   }
 
+  // Se há erro mas não há dados, mostrar apenas um estado de carregamento silencioso
   if (error && !creditStatus) {
+    const safeCredits = {
+      current: 0,
+      used: 0,
+      limit: 50,
+      renewalDate: new Date().toISOString().split('T')[0],
+      usagePercentage: 0
+    };
+
     return (
-      <Card className="border-red-200">
-        <CardContent className="p-6 text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={onRefresh} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Tentar Novamente
-          </Button>
-        </CardContent>
-      </Card>
+      <CreditDisplay
+        current={safeCredits.current}
+        used={safeCredits.used}
+        limit={safeCredits.limit}
+        renewalDate={safeCredits.renewalDate}
+        usagePercentage={safeCredits.usagePercentage}
+        subscriptionType={null}
+      />
     );
   }
 

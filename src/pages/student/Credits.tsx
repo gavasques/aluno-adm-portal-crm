@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { RefreshCw } from 'lucide-react';
 import { CreditStatusCard } from '@/components/credits/CreditStatusCard';
 import { CreditActionsGrid } from '@/components/credits/CreditActionsGrid';
@@ -65,17 +64,6 @@ const StudentCredits = () => {
           Atualizar
         </Button>
       </div>
-
-      {/* Alert de erro se houver mas ainda tiver dados */}
-      {error && creditStatus && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="p-4">
-            <p className="text-yellow-800 text-sm">
-              ⚠️ Alguns dados podem estar desatualizados: {error}
-            </p>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Coluna Principal */}
