@@ -14,7 +14,10 @@ serve(async (req) => {
   }
 
   try {
+    console.log("🚀 Iniciando purchase-credits function");
+    
     const { credits } = await req.json();
+    console.log("📋 Dados recebidos:", { credits });
     
     // Validar quantidade de créditos
     const validAmounts = [10, 20, 50, 100, 200, 500];
@@ -29,14 +32,21 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      throw new Error("Token de autorização não fornecido");
+    }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !userData.user?.email) {
+      throw new Error("Usuário não autenticado");
+    }
 
-    // Preços em centavos (R$0,10 por crédito)
+    const user = userData.user;
+    console.log("👤 Usuário autenticado:", user.email);
+
+    // Preços em centavos (BRL)
     const priceMap = {
       10: 1000,   // R$ 10,00
       20: 2000,   // R$ 20,00
@@ -47,10 +57,14 @@ serve(async (req) => {
     };
 
     const price = priceMap[credits];
+    console.log("💰 Preço calculado:", { credits, price });
 
-    // Para desenvolvimento, simular compra sem Stripe
-    if (!Deno.env.get("STRIPE_SECRET_KEY")) {
-      // Simular compra bem-sucedida
+    // Verificar se o Stripe está configurado
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      console.log("⚠️ Stripe não configurado, simulando compra");
+      
+      // Simular compra bem-sucedida para desenvolvimento
       const { data: currentCredits } = await supabaseClient
         .from("user_credits")
         .select("current_credits")
@@ -77,6 +91,7 @@ serve(async (req) => {
           stripe_session_id: `demo_${Date.now()}`
         });
 
+      console.log("✅ Compra simulada realizada com sucesso");
       return new Response(JSON.stringify({
         success: true,
         demo: true,
@@ -88,16 +103,28 @@ serve(async (req) => {
       });
     }
 
-    // Integração real com Stripe (quando configurado)
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    // Integração real com Stripe
+    console.log("💳 Iniciando integração com Stripe");
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
 
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Verificar se o cliente já existe no Stripe
+    const customers = await stripe.customers.list({ 
+      email: user.email, 
+      limit: 1 
+    });
+
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("👤 Cliente existente encontrado:", customerId);
+    } else {
+      console.log("🆕 Criando novo cliente no Stripe");
     }
+
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+    console.log("🌐 Origin:", origin);
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -108,7 +135,7 @@ serve(async (req) => {
             currency: "brl",
             product_data: { 
               name: `${credits} Créditos`,
-              description: `Compra avulsa de ${credits} créditos`
+              description: `Compra avulsa de ${credits} créditos para a plataforma`
             },
             unit_amount: price,
           },
@@ -116,8 +143,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/aluno/creditos?success=true`,
-      cancel_url: `${req.headers.get("origin")}/aluno/creditos?cancelled=true`,
+      success_url: `${origin}/aluno/creditos?success=true&credits=${credits}`,
+      cancel_url: `${origin}/aluno/creditos?cancelled=true`,
       metadata: {
         user_id: user.id,
         credits: credits.toString(),
@@ -125,13 +152,19 @@ serve(async (req) => {
       }
     });
 
+    console.log("✅ Sessão de checkout criada:", session.id);
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
+
   } catch (error) {
-    console.error("Error in purchase-credits:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("❌ Erro em purchase-credits:", error);
+    return new Response(JSON.stringify({ 
+      error: error.message || "Erro interno do servidor",
+      details: error.toString()
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

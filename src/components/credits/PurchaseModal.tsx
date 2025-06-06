@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Zap } from 'lucide-react';
+import { ShoppingCart, Zap, Loader2 } from 'lucide-react';
 import { PurchaseOption } from '@/types/credits.types';
 
 interface PurchaseModalProps {
@@ -19,6 +19,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   onPurchase
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingCredits, setLoadingCredits] = useState<number | null>(null);
 
   const purchaseOptions: PurchaseOption[] = [
     { credits: 10, price: 10.00, originalPrice: 10.00 },
@@ -31,12 +32,26 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
   const handlePurchase = async (credits: number) => {
     setIsLoading(true);
+    setLoadingCredits(credits);
+    
     try {
+      console.log('🛒 Iniciando compra no modal:', { credits });
       const success = await onPurchase(credits);
+      
       if (success) {
-        onClose();
+        // Só fecha o modal se for uma compra simulada (demo)
+        // Para compras reais, deixa aberto pois o usuário será redirecionado
+        setTimeout(() => {
+          setLoadingCredits(null);
+          setIsLoading(false);
+        }, 2000);
+      } else {
+        setLoadingCredits(null);
+        setIsLoading(false);
       }
-    } finally {
+    } catch (error) {
+      console.error('❌ Erro na compra:', error);
+      setLoadingCredits(null);
       setIsLoading(false);
     }
   };
@@ -97,7 +112,14 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   className="w-full"
                   variant={option.popular ? 'default' : 'outline'}
                 >
-                  {isLoading ? 'Processando...' : 'Comprar Agora'}
+                  {loadingCredits === option.credits ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    'Comprar Agora'
+                  )}
                 </Button>
               </CardContent>
             </Card>
