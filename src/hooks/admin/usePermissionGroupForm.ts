@@ -70,34 +70,24 @@ export const usePermissionGroupForm = ({
     onOpenChange,
   });
 
-  // Monitor de estado para debug e validação de consistência
+  // Limpar menus quando alternar para admin
   useEffect(() => {
-    console.log("=== STATE MONITOR (CONSISTENCY CHECK) ===");
-    console.log("Estado atual:");
-    console.log("- isAdmin:", isAdmin);
-    console.log("- allowAdminAccess:", allowAdminAccess);
-    console.log("- selectedMenus count:", selectedMenus.length);
-    console.log("- isEdit:", isEdit);
-    
-    // VALIDAÇÃO DE CONSISTÊNCIA CRÍTICA
-    if (!isAdmin && allowAdminAccess && selectedMenus.length === 0) {
-      console.warn("⚠️ INCONSISTÊNCIA DETECTADA: Admin limitado sem menus!");
-      console.warn("📋 Isso pode indicar perda acidental de menus");
+    if (isAdmin) {
+      setSelectedMenus([]);
     }
-    if (isAdmin && selectedMenus.length > 0) {
-      console.warn("⚠️ INCONSISTÊNCIA: Admin completo com menus específicos!");
+  }, [isAdmin, setSelectedMenus]);
+
+  // Debug logging simplificado
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Form state:", {
+        isAdmin,
+        allowAdminAccess,
+        selectedMenusCount: selectedMenus.length,
+        isEdit,
+        hasPermissionGroup: !!permissionGroup
+      });
     }
-    
-    // PROTEÇÃO ADICIONAL: Verificar se é edição de grupo existente
-    if (isEdit && permissionGroup) {
-      console.log("🛡️ MODO EDIÇÃO ATIVO:");
-      console.log("- Grupo:", permissionGroup.name);
-      console.log("- ID:", permissionGroup.id);
-      console.log("- is_admin original:", permissionGroup.is_admin);
-      console.log("- allow_admin_access original:", permissionGroup.allow_admin_access);
-    }
-    
-    console.log("=========================================");
   }, [isAdmin, allowAdminAccess, selectedMenus.length, isEdit, permissionGroup]);
 
   const isLoading = loadingMenus || loadingGroupData;

@@ -21,6 +21,16 @@ export const useFormState = ({ isEdit, permissionGroup }: UseFormStateProps) => 
       setDescription(permissionGroup.description || "");
       setIsAdmin(permissionGroup.is_admin || false);
       setAllowAdminAccess(permissionGroup.allow_admin_access || false);
+      
+      // Resetar menus selecionados - serão carregados pelo useMenuManagement
+      setSelectedMenus([]);
+    } else {
+      // Reset para novo grupo
+      setName("");
+      setDescription("");
+      setIsAdmin(false);
+      setAllowAdminAccess(false);
+      setSelectedMenus([]);
     }
   }, [isEdit, permissionGroup]);
 

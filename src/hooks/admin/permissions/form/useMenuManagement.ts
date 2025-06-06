@@ -30,9 +30,13 @@ export const useMenuManagement = ({
           setSelectedMenus(menus);
         } catch (error) {
           console.error("Erro ao carregar menus do grupo:", error);
+          setSelectedMenus([]);
         } finally {
           setLoadingGroupData(false);
         }
+      } else if (isAdmin) {
+        // Admin não tem menus específicos
+        setSelectedMenus([]);
       }
     };
 
@@ -40,11 +44,11 @@ export const useMenuManagement = ({
   }, [isEdit, permissionGroup?.id, isAdmin, getPermissionGroupMenus, setSelectedMenus, setLoadingGroupData]);
 
   const handleMenuToggle = (menuKey: string) => {
-    setSelectedMenus(
-      selectedMenus.includes(menuKey)
-        ? selectedMenus.filter(key => key !== menuKey)
-        : [...selectedMenus, menuKey]
-    );
+    const newSelectedMenus = selectedMenus.includes(menuKey)
+      ? selectedMenus.filter(key => key !== menuKey)
+      : [...selectedMenus, menuKey];
+    
+    setSelectedMenus(newSelectedMenus);
   };
 
   return { handleMenuToggle };

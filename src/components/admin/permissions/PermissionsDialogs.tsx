@@ -1,10 +1,10 @@
 
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { PermissionGroup } from "@/hooks/admin/usePermissionGroups";
-import UnifiedPermissionForm from "./UnifiedPermissionForm";
+import PermissionFormDialog from "./form/PermissionFormDialog";
 import PermissionGroupDelete from "./PermissionGroupDelete";
 import PermissionGroupUsers from "./PermissionGroupUsers";
+import type { PermissionGroup } from "@/types/permissions";
 
 interface PermissionsDialogsProps {
   showAddDialog: boolean;
@@ -34,33 +34,25 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
   return (
     <>
       {/* Add Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <UnifiedPermissionForm
-            isEdit={false}
-            onOpenChange={setShowAddDialog}
-            onSuccess={onSuccess}
-          />
-        </DialogContent>
-      </Dialog>
+      <PermissionFormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        isEdit={false}
+        onSuccess={onSuccess}
+      />
 
       {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {selectedGroup && (
-            <UnifiedPermissionForm
-              isEdit={true}
-              permissionGroup={selectedGroup}
-              onOpenChange={setShowEditDialog}
-              onSuccess={onSuccess}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <PermissionFormDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        isEdit={true}
+        permissionGroup={selectedGroup}
+        onSuccess={onSuccess}
+      />
 
       {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           {selectedGroup && (
             <PermissionGroupDelete
               permissionGroup={selectedGroup}
@@ -73,7 +65,7 @@ const PermissionsDialogs: React.FC<PermissionsDialogsProps> = ({
 
       {/* Users Dialog */}
       <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-hidden">
           {selectedGroup && (
             <PermissionGroupUsers
               permissionGroup={selectedGroup}
