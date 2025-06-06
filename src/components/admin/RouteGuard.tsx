@@ -1,7 +1,8 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/hooks/auth";
+import { useSimplePermissions } from "@/hooks/useSimplePermissions";
 import { useNavigate } from "react-router-dom";
-import { useOptimizedAuth } from "@/hooks/auth/useOptimizedAuth";
+import { useEffect } from "react";
 import AccessDenied from "./AccessDenied";
 
 interface RouteGuardProps {
@@ -15,63 +16,26 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   requiredMenuKey, 
   requireAdminAccess = true 
 }) => {
-  const { user, loading, isAdmin, canAccessMenu } = useOptimizedAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { hasAdminAccess, allowedMenus, loading: permissionsLoading } = useSimplePermissions();
   const navigate = useNavigate();
-  const [showAccessDenied, setShowAccessDenied] = useState(false);
-  
-  // Evitar múltiplos redirecionamentos
-  const hasRedirectedRef = useRef(false);
-  const lastUserRef = useRef<string | null>(null);
+
+  console.log("=== ADMIN ROUTE GUARD ===");
+  console.log("Auth:", { hasUser: !!user, authLoading });
+  console.log("Permissions:", { hasAdminAccess, allowedMenus, permissionsLoading });
+  console.log("Required:", { requiredMenuKey, requireAdminAccess });
+  console.log("==========================");
 
   useEffect(() => {
-    // Reset quando usuário muda
-    if (lastUserRef.current !== user?.id) {
-      hasRedirectedRef.current = false;
-      setShowAccessDenied(false);
-      lastUserRef.current = user?.id || null;
+    // Se não está autenticado e não está carregando, redirecionar
+    if (!authLoading && !user) {
+      console.log("❌ Não autenticado, redirecionando");
+      navigate("/");
     }
-  }, [user?.id]);
+  }, [user, authLoading, navigate]);
 
-  useEffect(() => {
-    // Aguardar carregamento
-    if (loading || hasRedirectedRef.current) return;
-
-    console.log("🛡️ RouteGuard check:", {
-      hasUser: !!user,
-      isAdmin,
-      requiredMenuKey,
-      requireAdminAccess
-    });
-
-    // Se não está autenticado, redirecionar para home
-    if (!user) {
-      console.log("❌ Usuário não autenticado, redirecionando...");
-      hasRedirectedRef.current = true;
-      navigate("/", { replace: true });
-      return;
-    }
-
-    // Verificar permissões de admin
-    if (requireAdminAccess && !isAdmin) {
-      console.log("❌ Acesso admin negado");
-      hasRedirectedRef.current = true;
-      setShowAccessDenied(true);
-      return;
-    }
-
-    // Verificar menu específico (só para não-admins)
-    if (requiredMenuKey && !isAdmin && !canAccessMenu(requiredMenuKey)) {
-      console.log(`❌ Acesso negado ao menu: ${requiredMenuKey}`);
-      hasRedirectedRef.current = true;
-      setShowAccessDenied(true);
-      return;
-    }
-
-    console.log("✅ Acesso permitido");
-  }, [user, loading, isAdmin, canAccessMenu, navigate, requiredMenuKey, requireAdminAccess]);
-
-  // Loading state
-  if (loading) {
+  // Mostrar loading
+  if (authLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -79,12 +43,24 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  // Access denied
-  if (showAccessDenied) {
+  // Se não está autenticado, não renderizar
+  if (!user) {
+    return null;
+  }
+
+  // Verificar acesso admin
+  if (requireAdminAccess && !hasAdminAccess) {
+    console.log("❌ Sem acesso admin");
     return <AccessDenied />;
   }
 
-  // Renderizar conteúdo se tudo OK
+  // Verificar menu específico
+  if (requiredMenuKey && !hasAdminAccess && !allowedMenus.includes(requiredMenuKey)) {
+    console.log("❌ Sem acesso ao menu:", requiredMenuKey);
+    return <AccessDenied />;
+  }
+
+  console.log("✅ Acesso permitido");
   return <>{children}</>;
 };
 

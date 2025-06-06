@@ -1,66 +1,74 @@
 
-import { useState, useEffect } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, useRef } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useSimpleAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const initialized = useRef(false);
+  const subscription = useRef<any>(null);
 
   useEffect(() => {
-    console.log("useSimpleAuth: Inicializando...");
-    
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error("Erro ao obter sessão:", error);
-      } else {
-        console.log("Sessão atual:", session);
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-      setLoading(false);
-    });
+    if (initialized.current) return;
+    initialized.current = true;
 
-    // Listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state change:", event, session);
-        setSession(session);
-        setUser(session?.user ?? null);
+    console.log('🔧 Inicializando autenticação simples...');
+
+    const initAuth = async () => {
+      try {
+        // Verificar sessão existente
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('❌ Erro ao obter sessão:', sessionError);
+          setError(sessionError.message);
+        } else {
+          console.log('✅ Sessão verificada:', currentSession?.user?.email || 'Sem usuário');
+          setSession(currentSession);
+          setUser(currentSession?.user || null);
+        }
+      } catch (err) {
+        console.error('❌ Erro na inicialização:', err);
+        setError('Erro ao inicializar autenticação');
+      } finally {
         setLoading(false);
+      }
+    };
+
+    // Configurar listener
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('🔄 Auth event:', event, currentSession?.user?.email || 'Sem usuário');
+        
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+        setError(null);
+        
+        if (!initialized.current) {
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
+    subscription.current = authSubscription;
+    initAuth();
+
+    return () => {
+      if (subscription.current) {
+        subscription.current.unsubscribe();
+      }
+      initialized.current = false;
+    };
   }, []);
-
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
-    }
-  };
 
   return {
     user,
     session,
     loading,
-    signIn,
-    signOut,
+    error
   };
 };

@@ -1,42 +1,33 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
-import { User, Session, Provider } from "@supabase/supabase-js";
-import { useSession } from "./useSession";
+import { User, Session } from "@supabase/supabase-js";
+import { useSimpleAuth } from "./useSimpleAuth";
 import { useBasicAuth } from "./useBasicAuth";
-import { useSocialAuth } from "./useSocialAuth";
-import { recoveryModeUtils } from "./useRecoveryMode";
-
-// Import the CreateUserResult interface
-import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
-
-// URL base do site que será usado para redirecionamentos
-const BASE_URL = "https://titan.guilhermevasques.club";
 
 interface AuthContextProps {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserPassword: (newPassword: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  sendMagicLink: (email: string) => Promise<boolean>;
-  linkIdentity: (provider: Provider) => Promise<void>;
-  unlinkIdentity: (provider: Provider, identity_id: string) => Promise<void>;
-  getLinkedIdentities: () => Array<{id: string, provider: string}> | null;
-  isInRecoveryMode?: () => boolean;
-  setRecoveryMode?: (enabled: boolean) => void;
-  createAdminUser: (email: string, name: string, role: string, password: string) => Promise<CreateUserResult>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, session, loading, isInRecoveryMode, setRecoveryMode } = useSession();
-  const { signIn, signUp, signOut, resetPassword, updateUserPassword, sendMagicLink, createAdminUser } = useBasicAuth();
-  const { signInWithGoogle, linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(user);
+  const { user, session, loading, error } = useSimpleAuth();
+  const { signIn, signUp, signOut, resetPassword, updateUserPassword } = useBasicAuth();
+
+  console.log('🏠 AuthProvider state:', { 
+    hasUser: !!user, 
+    loading, 
+    error,
+    userEmail: user?.email 
+  });
 
   return (
     <AuthContext.Provider
@@ -44,19 +35,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         session,
         loading,
+        error,
         signIn,
         signUp,
         signOut,
         resetPassword,
-        updateUserPassword,
-        signInWithGoogle,
-        sendMagicLink,
-        linkIdentity,
-        unlinkIdentity,
-        getLinkedIdentities,
-        isInRecoveryMode,
-        setRecoveryMode,
-        createAdminUser
+        updateUserPassword
       }}
     >
       {children}
@@ -73,9 +57,3 @@ export const useAuth = () => {
   
   return context;
 };
-
-// Export recovery mode utilities directly
-export { recoveryModeUtils };
-
-// Re-export the CreateUserResult for other components to use
-export type { CreateUserResult };

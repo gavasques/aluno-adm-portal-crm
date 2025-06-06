@@ -1,53 +1,61 @@
 
 import { useAuth } from "@/hooks/auth";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useSimplePermissions } from "@/hooks/useSimplePermissions";
 import { Navigate, Link } from "react-router-dom";
-import { ConnectionTest } from "@/components/debug/ConnectionTest";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 const Index = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { permissions, loading: permissionsLoading } = usePermissions();
-  const [redirectChecked, setRedirectChecked] = useState(false);
+  const { user, loading: authLoading, error } = useAuth();
+  const { hasAdminAccess, loading: permissionsLoading } = useSimplePermissions();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   console.log("=== INDEX PAGE DEBUG ===");
-  console.log("User:", user?.email);
-  console.log("Auth Loading:", authLoading);
-  console.log("Permissions Loading:", permissionsLoading);
-  console.log("Permissions:", permissions);
-  console.log("Redirect Checked:", redirectChecked);
+  console.log("Auth state:", {
+    hasUser: !!user,
+    userEmail: user?.email,
+    authLoading,
+    error
+  });
+  console.log("Permissions:", {
+    hasAdminAccess,
+    permissionsLoading
+  });
   console.log("========================");
 
   useEffect(() => {
-    // Só marcar como verificado quando terminar de carregar
-    if (!authLoading && !permissionsLoading) {
-      console.log("Setting redirect checked to true");
-      setRedirectChecked(true);
+    // Só redirecionar quando tudo estiver carregado e houver usuário
+    if (!authLoading && !permissionsLoading && user) {
+      console.log("✅ Pronto para redirecionar");
+      setShouldRedirect(true);
     }
-  }, [authLoading, permissionsLoading]);
+  }, [authLoading, permissionsLoading, user]);
 
-  // Mostrar loading enquanto verifica
-  if (authLoading || permissionsLoading || !redirectChecked) {
+  // Mostrar loading enquanto verifica autenticação
+  if (authLoading || (user && permissionsLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-800 to-black">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Carregando...</p>
+        </div>
       </div>
     );
   }
 
-  // Se o usuário está logado, fazer redirecionamento
-  if (user && redirectChecked) {
-    console.log("User logged in - determining redirect");
-    
-    // Se tem acesso admin, vai para admin
-    if (permissions.hasAdminAccess) {
-      console.log("Redirecting to admin area");
+  // Se há erro de autenticação, mostrar página de login
+  if (error) {
+    console.log("❌ Erro de autenticação, mostrando página inicial");
+  }
+
+  // Redirecionar usuário logado
+  if (shouldRedirect && user) {
+    console.log("🔄 Redirecionando usuário logado");
+    if (hasAdminAccess) {
+      console.log("➡️ Redirecionando para admin");
       return <Navigate to="/admin" replace />;
-    } 
-    // Senão, vai para área do aluno
-    else {
-      console.log("Redirecting to student area");
+    } else {
+      console.log("➡️ Redirecionando para aluno");
       return <Navigate to="/aluno" replace />;
     }
   }
@@ -88,10 +96,10 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Debug info (apenas em desenvolvimento) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-8">
-            <ConnectionTest />
+        {/* Erro se houver */}
+        {error && (
+          <div className="bg-red-500/20 border border-red-500 text-red-200 p-3 rounded">
+            <p className="text-sm">{error}</p>
           </div>
         )}
       </div>

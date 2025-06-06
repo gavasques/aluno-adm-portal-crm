@@ -1,6 +1,6 @@
 
-import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/auth";
+import { useSimplePermissions } from "@/hooks/useSimplePermissions";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import AccessDenied from "@/components/admin/AccessDenied";
@@ -15,32 +15,24 @@ const StudentRouteGuard: React.FC<StudentRouteGuardProps> = ({
   requiredMenuKey 
 }) => {
   const { user, loading: authLoading } = useAuth();
-  const { permissions, loading: permissionsLoading } = usePermissions();
+  const { hasAdminAccess, allowedMenus, loading: permissionsLoading } = useSimplePermissions();
   const navigate = useNavigate();
 
-  console.log("=== STUDENT ROUTE GUARD DEBUG ===");
-  console.log("Auth state:", {
-    user: user?.email,
-    authLoading,
-    isAuthenticated: !!user
-  });
-  console.log("Permissions state:", {
-    hasAdminAccess: permissions.hasAdminAccess,
-    allowedMenus: permissions.allowedMenus,
-    permissionsLoading,
-    requiredMenuKey
-  });
-  console.log("================================");
+  console.log("=== STUDENT ROUTE GUARD ===");
+  console.log("Auth:", { hasUser: !!user, authLoading });
+  console.log("Permissions:", { hasAdminAccess, allowedMenus, permissionsLoading });
+  console.log("Required menu:", requiredMenuKey);
+  console.log("============================");
 
   useEffect(() => {
     // Se não está autenticado e não está carregando, redirecionar para login
     if (!authLoading && !user) {
-      console.log("StudentRouteGuard: Usuário não autenticado, redirecionando para login");
+      console.log("❌ Não autenticado, redirecionando");
       navigate("/login");
     }
   }, [user, authLoading, navigate]);
 
-  // Mostrar loading enquanto verifica autenticação e permissões
+  // Mostrar loading enquanto verifica
   if (authLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -49,34 +41,25 @@ const StudentRouteGuard: React.FC<StudentRouteGuardProps> = ({
     );
   }
 
-  // Se não está autenticado, não renderizar nada (já foi redirecionado)
+  // Se não está autenticado, não renderizar (já foi redirecionado)
   if (!user) {
     return null;
   }
 
-  // Se tem acesso admin e está tentando acessar área do aluno, permitir
-  // (admin pode acessar qualquer área)
-  if (permissions.hasAdminAccess) {
-    console.log("StudentRouteGuard: Admin acessando área do aluno - permitido");
+  // Admin pode acessar área do aluno
+  if (hasAdminAccess) {
+    console.log("✅ Admin acessando área do aluno");
     return <>{children}</>;
   }
 
-  // Se requer menu específico e usuário não tem acesso a ele
-  if (requiredMenuKey && !permissions.allowedMenus.includes(requiredMenuKey)) {
-    console.log("StudentRouteGuard: Usuário não tem acesso ao menu:", requiredMenuKey);
+  // Verificar menu específico se necessário
+  if (requiredMenuKey && !allowedMenus.includes(requiredMenuKey)) {
+    console.log("❌ Sem acesso ao menu:", requiredMenuKey);
     return <AccessDenied />;
   }
 
-  // Para usuários autenticados sem grupo de permissão específico, 
-  // permitir acesso básico à área do aluno
-  if (permissions.allowedMenus.length === 0 || permissions.allowedMenus.includes('student_basic')) {
-    console.log("StudentRouteGuard: Permitindo acesso básico à área do aluno");
-    return <>{children}</>;
-  }
-
-  // Se não tem acesso admin mas não requer menu específico, permitir acesso
-  // (área básica do aluno deve ser acessível a todos os usuários autenticados)
-  console.log("StudentRouteGuard: Acesso permitido para usuário:", user.email);
+  // Permitir acesso básico
+  console.log("✅ Acesso permitido à área do aluno");
   return <>{children}</>;
 };
 
