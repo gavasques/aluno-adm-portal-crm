@@ -18,7 +18,11 @@ export const usePermissions = () => {
   });
 
   const fetchPermissions = useCallback(async () => {
+    console.log("=== FETCHING PERMISSIONS ===");
+    console.log("User:", user?.email);
+
     if (!user) {
+      console.log("No user - setting default permissions");
       setPermissions({
         hasAdminAccess: false,
         allowedMenus: [],
@@ -41,13 +45,41 @@ export const usePermissions = () => {
         .eq('id', user.id)
         .single();
 
+      console.log("Profile data:", profile);
+      console.log("Profile error:", profileError);
+
+      // Se não encontrar perfil, permitir acesso básico à área do aluno
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log("No profile found - allowing basic student access");
+        setPermissions({
+          hasAdminAccess: false,
+          allowedMenus: ['student_basic'], // Permitir acesso básico
+          isLoading: false
+        });
+        return;
+      }
+
       if (profileError) {
         console.error('Erro ao buscar perfil:', profileError);
-        throw profileError;
+        // Em caso de erro, permitir acesso básico
+        setPermissions({
+          hasAdminAccess: false,
+          allowedMenus: ['student_basic'],
+          isLoading: false
+        });
+        return;
       }
 
       const hasAdminAccess = profile?.permission_group?.allow_admin_access || false;
       const allowedMenus = profile?.permission_group?.menus?.map((menu: any) => menu.menu_key) || [];
+
+      // Se não tem grupo de permissão, permitir acesso básico à área do aluno
+      if (!profile?.permission_group) {
+        console.log("No permission group - allowing basic student access");
+        allowedMenus.push('student_basic');
+      }
+
+      console.log("Final permissions:", { hasAdminAccess, allowedMenus });
 
       setPermissions({
         hasAdminAccess,
@@ -56,9 +88,10 @@ export const usePermissions = () => {
       });
     } catch (error) {
       console.error('Erro ao buscar permissões:', error);
+      // Em caso de erro, permitir acesso básico
       setPermissions({
         hasAdminAccess: false,
-        allowedMenus: [],
+        allowedMenus: ['student_basic'],
         isLoading: false
       });
     }

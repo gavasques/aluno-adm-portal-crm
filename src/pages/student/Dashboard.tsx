@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { PageTransition, PageChild } from '@/components/animations/PageTransition';
 import { useUXFeedback } from '@/hooks/useUXFeedback';
 import { YouTubeSection } from '@/components/student/dashboard/YouTubeSection';
@@ -11,6 +11,10 @@ import { NewsSection } from '@/components/student/dashboard/NewsSection';
 const StudentDashboard = () => {
   const { user } = useAuth();
   const { feedback } = useUXFeedback();
+
+  console.log("=== STUDENT DASHBOARD DEBUG ===");
+  console.log("User:", user?.email);
+  console.log("================================");
 
   // Extrair nome do usuário
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Aluno';

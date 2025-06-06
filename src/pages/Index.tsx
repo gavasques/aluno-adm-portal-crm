@@ -9,25 +9,26 @@ import { useEffect, useState } from "react";
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { permissions, loading: permissionsLoading } = usePermissions();
-  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [redirectChecked, setRedirectChecked] = useState(false);
 
-  console.log("Index page - User:", user, "Auth Loading:", authLoading, "Permissions Loading:", permissionsLoading);
-  console.log("Index page - Permissions:", permissions);
+  console.log("=== INDEX PAGE DEBUG ===");
+  console.log("User:", user?.email);
+  console.log("Auth Loading:", authLoading);
+  console.log("Permissions Loading:", permissionsLoading);
+  console.log("Permissions:", permissions);
+  console.log("Redirect Checked:", redirectChecked);
+  console.log("========================");
 
   useEffect(() => {
-    // Só redirecionar quando não estiver carregando
-    if (!authLoading && !permissionsLoading && user) {
-      console.log("Index - Determining redirect for user:", {
-        email: user.email,
-        hasAdminAccess: permissions.hasAdminAccess,
-        allowedMenus: permissions.allowedMenus
-      });
-      
-      setShouldRedirect(true);
+    // Só marcar como verificado quando terminar de carregar
+    if (!authLoading && !permissionsLoading) {
+      console.log("Setting redirect checked to true");
+      setRedirectChecked(true);
     }
-  }, [authLoading, permissionsLoading, user, permissions]);
+  }, [authLoading, permissionsLoading]);
 
-  if (authLoading || permissionsLoading) {
+  // Mostrar loading enquanto verifica
+  if (authLoading || permissionsLoading || !redirectChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -35,16 +36,18 @@ const Index = () => {
     );
   }
 
-  // Se o usuário está logado e as permissões foram carregadas, fazer redirecionamento inteligente
-  if (user && shouldRedirect) {
+  // Se o usuário está logado, fazer redirecionamento
+  if (user && redirectChecked) {
+    console.log("User logged in - determining redirect");
+    
     // Se tem acesso admin, vai para admin
     if (permissions.hasAdminAccess) {
-      console.log("Index - Redirecting to admin area");
+      console.log("Redirecting to admin area");
       return <Navigate to="/admin" replace />;
     } 
     // Senão, vai para área do aluno
     else {
-      console.log("Index - Redirecting to student area");
+      console.log("Redirecting to student area");
       return <Navigate to="/aluno" replace />;
     }
   }

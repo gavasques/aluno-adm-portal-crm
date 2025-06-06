@@ -67,6 +67,13 @@ const StudentRouteGuard: React.FC<StudentRouteGuardProps> = ({
     return <AccessDenied />;
   }
 
+  // Para usuários autenticados sem grupo de permissão específico, 
+  // permitir acesso básico à área do aluno
+  if (permissions.allowedMenus.length === 0 || permissions.allowedMenus.includes('student_basic')) {
+    console.log("StudentRouteGuard: Permitindo acesso básico à área do aluno");
+    return <>{children}</>;
+  }
+
   // Se não tem acesso admin mas não requer menu específico, permitir acesso
   // (área básica do aluno deve ser acessível a todos os usuários autenticados)
   console.log("StudentRouteGuard: Acesso permitido para usuário:", user.email);
