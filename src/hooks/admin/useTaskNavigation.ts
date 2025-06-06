@@ -6,7 +6,7 @@ export const useTaskNavigation = () => {
 
   // Função para visualizar detalhes da tarefa em nova página
   const viewTaskDetails = (taskId) => {
-    navigate(`/admin/tasks/${taskId}`);
+    navigate(`/admin/tarefas/${taskId}`);
   };
 
   return {

@@ -61,7 +61,7 @@ export function UpcomingTasks() {
         </div>
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Link to="/admin/tasks" className="w-full">
+        <Link to="/admin/tarefas" className="w-full">
           <Button variant="outline" className="w-full">Ver Todas as Tarefas</Button>
         </Link>
       </CardFooter>
