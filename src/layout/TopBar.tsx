@@ -118,10 +118,7 @@ const TopBar = () => {
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-md"
-                >
+                <button className="flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-gray-600 text-white text-sm">
                       {getUserInitials()}
@@ -134,25 +131,25 @@ const TopBar = () => {
                     </div>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400" />
-                </Button>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
                 {/* Navigation between areas */}
                 {permissions.hasAdminAccess && isStudentArea && (
-                  <DropdownMenuItem onClick={handleNavigateToAdmin}>
+                  <DropdownMenuItem onClick={handleNavigateToAdmin} className="cursor-pointer">
                     <Users className="h-4 w-4 mr-2" />
                     Ir para Área Administrativa
                   </DropdownMenuItem>
                 )}
                 {isAdminArea && (
-                  <DropdownMenuItem onClick={handleNavigateToStudent}>
+                  <DropdownMenuItem onClick={handleNavigateToStudent} className="cursor-pointer">
                     <User className="h-4 w-4 mr-2" />
                     Ir para Área do Aluno
                   </DropdownMenuItem>
                 )}
                 
                 {/* Settings */}
-                <DropdownMenuItem onClick={handleSettings}>
+                <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
                   <Settings className="h-4 w-4 mr-2" />
                   Configurações
                 </DropdownMenuItem>
@@ -162,7 +159,7 @@ const TopBar = () => {
                 {/* Logout */}
                 <DropdownMenuItem 
                   onClick={handleSignOut} 
-                  className="text-red-600 focus:text-red-600"
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
                   disabled={isLoggingOut}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
