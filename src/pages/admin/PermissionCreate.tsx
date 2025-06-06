@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import OptimizedPermissionForm from '@/components/admin/permissions/OptimizedPermissionForm';
+import FullPagePermissionForm from '@/components/admin/permissions/FullPagePermissionForm';
 
 const PermissionCreate = () => {
   const navigate = useNavigate();
@@ -46,9 +46,9 @@ const PermissionCreate = () => {
             <CardTitle>Configurações do Grupo</CardTitle>
           </CardHeader>
           <CardContent>
-            <OptimizedPermissionForm
+            <FullPagePermissionForm
               isEdit={false}
-              onOpenChange={handleCancel}
+              onCancel={handleCancel}
               onSuccess={handleSuccess}
             />
           </CardContent>

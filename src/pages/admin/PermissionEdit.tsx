@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { PermissionServiceFactory } from '@/services/permissions';
-import OptimizedPermissionForm from '@/components/admin/permissions/OptimizedPermissionForm';
+import FullPagePermissionForm from '@/components/admin/permissions/FullPagePermissionForm';
 
 const PermissionEdit = () => {
   const navigate = useNavigate();
@@ -98,10 +98,10 @@ const PermissionEdit = () => {
             <CardTitle>Configurações do Grupo</CardTitle>
           </CardHeader>
           <CardContent>
-            <OptimizedPermissionForm
+            <FullPagePermissionForm
               isEdit={true}
               permissionGroup={permissionGroup}
-              onOpenChange={handleCancel}
+              onCancel={handleCancel}
               onSuccess={handleSuccess}
             />
           </CardContent>
