@@ -13,8 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    console.log("🔍 Iniciando check-credits...");
-    
+    console.log("🔍 Iniciando check-credits function");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -23,123 +23,100 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      console.error("❌ No authorization header");
-      return new Response(
-        JSON.stringify({ 
-          error: "Token de autorização não fornecido",
-          credits: { current: 0, used: 0, limit: 50, renewalDate: new Date().toISOString().split('T')[0], usagePercentage: 0 },
-          subscription: null,
-          transactions: [],
-          alerts: { lowCredits: false, noCredits: true }
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
+      throw new Error("Token de autorização não fornecido");
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
-    if (userError || !userData.user?.id) {
-      console.error("❌ User not authenticated:", userError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Usuário não autenticado",
-          credits: { current: 0, used: 0, limit: 50, renewalDate: new Date().toISOString().split('T')[0], usagePercentage: 0 },
-          subscription: null,
-          transactions: [],
-          alerts: { lowCredits: false, noCredits: true }
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
+    if (userError || !userData.user?.email) {
+      throw new Error("Usuário não autenticado");
     }
 
-    const userId = userData.user.id;
-    console.log("✅ Usuário autenticado:", userId);
+    const user = userData.user;
+    console.log("👤 Usuário autenticado:", user.email);
 
-    // Garantir que o usuário tem registro de créditos
-    const { error: ensureError } = await supabaseClient.rpc('ensure_user_credits', {
-      target_user_id: userId
-    });
-    
-    if (ensureError) {
-      console.error("⚠️ Erro ao garantir créditos:", ensureError);
-    }
-
-    // Buscar créditos do usuário
-    const { data: userCredits, error: creditsError } = await supabaseClient
+    // Verificar ou criar registro de créditos do usuário
+    let { data: credits, error: creditsError } = await supabaseClient
       .from("user_credits")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .single();
 
-    if (creditsError) {
-      console.error("❌ Erro ao buscar créditos:", creditsError);
-      // Retornar dados padrão ao invés de falhar
-      return new Response(
-        JSON.stringify({ 
-          error: "Erro ao buscar créditos no banco de dados",
-          credits: { current: 0, used: 0, limit: 50, renewalDate: new Date().toISOString().split('T')[0], usagePercentage: 0 },
-          subscription: null,
-          transactions: [],
-          alerts: { lowCredits: false, noCredits: true }
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
+    if (creditsError && creditsError.code === 'PGRST116') {
+      // Usuário não existe, criar com créditos padrão
+      console.log("🆕 Criando registro de créditos para novo usuário");
+      const { data: newCredits, error: insertError } = await supabaseClient
+        .from("user_credits")
+        .insert({
+          user_id: user.id,
+          current_credits: 50,
+          monthly_limit: 50,
+          used_this_month: 0,
+          last_reset: new Date().toISOString().split('T')[0]
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        throw new Error(`Erro ao criar créditos: ${insertError.message}`);
+      }
+      credits = newCredits;
+    } else if (creditsError) {
+      throw new Error(`Erro ao buscar créditos: ${creditsError.message}`);
     }
 
-    console.log("📊 Créditos encontrados:", userCredits);
-
-    // Buscar assinatura ativa
-    const { data: subscription } = await supabaseClient
-      .from("credit_subscriptions")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("status", "active")
-      .maybeSingle();
-
-    // Buscar histórico de transações
+    // Buscar transações recentes
     const { data: transactions } = await supabaseClient
       .from("credit_transactions")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(10);
 
-    // Calcular percentual de uso
-    const usagePercentage = userCredits.monthly_limit > 0 
-      ? Math.round((userCredits.used_this_month / userCredits.monthly_limit) * 100)
-      : 0;
+    // Buscar assinatura (se houver)
+    const { data: subscription } = await supabaseClient
+      .from("credit_subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+
+    // Calcular porcentagem de uso
+    const usagePercentage = (credits.used_this_month / credits.monthly_limit) * 100;
 
     // Verificar alertas
     const alerts = {
-      lowCredits: usagePercentage >= 90 && userCredits.current_credits > 0,
-      noCredits: userCredits.current_credits <= 0
+      lowCredits: usagePercentage >= 90 && credits.current_credits > 0,
+      noCredits: credits.current_credits <= 0
     };
 
-    const response = {
+    console.log("✅ Dados de créditos processados com sucesso:", {
+      current: credits.current_credits,
+      used: credits.used_this_month,
+      limit: credits.monthly_limit,
+      usagePercentage: Math.round(usagePercentage)
+    });
+
+    return new Response(JSON.stringify({
       credits: {
-        current: userCredits.current_credits,
-        used: userCredits.used_this_month,
-        limit: userCredits.monthly_limit,
-        renewalDate: userCredits.renewal_date,
-        usagePercentage
+        current: credits.current_credits,
+        used: credits.used_this_month,
+        limit: credits.monthly_limit,
+        renewalDate: credits.last_reset,
+        usagePercentage: Math.round(usagePercentage)
       },
-      subscription: subscription || null,
+      subscription,
       transactions: transactions || [],
       alerts
-    };
-
-    console.log("✅ Resposta enviada com sucesso");
-
-    return new Response(JSON.stringify(response), {
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
+
   } catch (error) {
-    console.error("❌ Error in check-credits:", error);
-    
-    // Sempre retornar dados padrão para evitar crash do frontend
-    const errorResponse = {
+    console.error("❌ Erro em check-credits:", error);
+    return new Response(JSON.stringify({ 
       error: error.message || "Erro interno do servidor",
       credits: {
         current: 0,
@@ -154,11 +131,9 @@ serve(async (req) => {
         lowCredits: false,
         noCredits: true
       }
-    };
-
-    return new Response(JSON.stringify(errorResponse), {
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+      status: 200, // Retorna 200 mesmo com erro para evitar quebrar o frontend
     });
   }
 });
