@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 
 interface RouteGuardProps {
@@ -10,9 +10,11 @@ interface RouteGuardProps {
 const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   console.log("=== ROUTE GUARD DEBUG ===");
   console.log("Auth:", { hasUser: !!user, authLoading });
+  console.log("Current path:", location.pathname);
   console.log("========================");
 
   useEffect(() => {
@@ -20,8 +22,15 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     if (!authLoading && !user) {
       console.log("❌ Não autenticado, redirecionando para login");
       navigate("/login");
+      return;
     }
-  }, [user, authLoading, navigate]);
+
+    // Se usuário está autenticado e está em uma rota admin sem contexto específico
+    if (!authLoading && user && location.pathname === "/admin/usuarios") {
+      console.log("🔄 Redirecionando de /admin/usuarios para /admin");
+      navigate("/admin", { replace: true });
+    }
+  }, [user, authLoading, navigate, location.pathname]);
 
   // Mostrar loading enquanto verifica autenticação
   if (authLoading) {
