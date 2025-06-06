@@ -24,7 +24,16 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       console.error("❌ No authorization header");
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ 
+          error: "Token de autorização não fornecido",
+          credits: { current: 0, used: 0, limit: 50, renewalDate: new Date().toISOString().split('T')[0], usagePercentage: 0 },
+          subscription: null,
+          transactions: [],
+          alerts: { lowCredits: false, noCredits: true }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
     }
 
     const token = authHeader.replace("Bearer ", "");
@@ -32,25 +41,31 @@ serve(async (req) => {
     
     if (userError || !userData.user?.id) {
       console.error("❌ User not authenticated:", userError);
-      throw new Error("User not authenticated");
+      return new Response(
+        JSON.stringify({ 
+          error: "Usuário não autenticado",
+          credits: { current: 0, used: 0, limit: 50, renewalDate: new Date().toISOString().split('T')[0], usagePercentage: 0 },
+          subscription: null,
+          transactions: [],
+          alerts: { lowCredits: false, noCredits: true }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
     }
 
     const userId = userData.user.id;
     console.log("✅ Usuário autenticado:", userId);
-    console.log("📧 Email do usuário:", userData.user.email);
 
-    // Forçar recriação do registro se necessário
+    // Garantir que o usuário tem registro de créditos
     const { error: ensureError } = await supabaseClient.rpc('ensure_user_credits', {
       target_user_id: userId
     });
     
     if (ensureError) {
-      console.error("⚠️ Erro ao garantir créditos (continuando):", ensureError);
-    } else {
-      console.log("✅ Registro de créditos garantido");
+      console.error("⚠️ Erro ao garantir créditos:", ensureError);
     }
 
-    // Buscar créditos do usuário com logs detalhados
+    // Buscar créditos do usuário
     const { data: userCredits, error: creditsError } = await supabaseClient
       .from("user_credits")
       .select("*")
@@ -59,46 +74,36 @@ serve(async (req) => {
 
     if (creditsError) {
       console.error("❌ Erro ao buscar créditos:", creditsError);
-      throw creditsError;
+      // Retornar dados padrão ao invés de falhar
+      return new Response(
+        JSON.stringify({ 
+          error: "Erro ao buscar créditos no banco de dados",
+          credits: { current: 0, used: 0, limit: 50, renewalDate: new Date().toISOString().split('T')[0], usagePercentage: 0 },
+          subscription: null,
+          transactions: [],
+          alerts: { lowCredits: false, noCredits: true }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
     }
 
-    console.log("📊 Créditos encontrados:", {
-      current_credits: userCredits.current_credits,
-      monthly_limit: userCredits.monthly_limit,
-      used_this_month: userCredits.used_this_month,
-      renewal_date: userCredits.renewal_date
-    });
+    console.log("📊 Créditos encontrados:", userCredits);
 
     // Buscar assinatura ativa
-    const { data: subscription, error: subError } = await supabaseClient
+    const { data: subscription } = await supabaseClient
       .from("credit_subscriptions")
       .select("*")
       .eq("user_id", userId)
       .eq("status", "active")
       .maybeSingle();
 
-    if (subError) {
-      console.error("⚠️ Erro ao buscar assinatura:", subError);
-    }
-
-    console.log("💳 Assinatura encontrada:", subscription);
-
-    // Buscar histórico de transações (últimas 20 para debug)
-    const { data: transactions, error: transError } = await supabaseClient
+    // Buscar histórico de transações
+    const { data: transactions } = await supabaseClient
       .from("credit_transactions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(20);
-
-    if (transError) {
-      console.error("⚠️ Erro ao buscar transações:", transError);
-    }
-
-    console.log("📝 Transações encontradas:", transactions?.length || 0);
-    if (transactions && transactions.length > 0) {
-      console.log("🔍 Últimas 3 transações:", transactions.slice(0, 3));
-    }
 
     // Calcular percentual de uso
     const usagePercentage = userCredits.monthly_limit > 0 
@@ -121,19 +126,10 @@ serve(async (req) => {
       },
       subscription: subscription || null,
       transactions: transactions || [],
-      alerts,
-      debug: {
-        userId,
-        userEmail: userData.user.email,
-        timestamp: new Date().toISOString()
-      }
+      alerts
     };
 
-    console.log("✅ Resposta final:", {
-      current_credits: response.credits.current,
-      transactions_count: response.transactions.length,
-      has_subscription: !!response.subscription
-    });
+    console.log("✅ Resposta enviada com sucesso");
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -142,9 +138,9 @@ serve(async (req) => {
   } catch (error) {
     console.error("❌ Error in check-credits:", error);
     
-    // Retornar dados padrão com erro para não quebrar o frontend
+    // Sempre retornar dados padrão para evitar crash do frontend
     const errorResponse = {
-      error: error.message,
+      error: error.message || "Erro interno do servidor",
       credits: {
         current: 0,
         used: 0,
@@ -157,16 +153,12 @@ serve(async (req) => {
       alerts: {
         lowCredits: false,
         noCredits: true
-      },
-      debug: {
-        error: error.message,
-        timestamp: new Date().toISOString()
       }
     };
 
     return new Response(JSON.stringify(errorResponse), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200, // Retorna 200 para evitar crash do frontend
+      status: 200,
     });
   }
 });
