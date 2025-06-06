@@ -135,18 +135,23 @@ serve(async (req) => {
 
     console.log("🛒 Criando sessão de checkout");
 
+    // Metadados melhorados para o webhook
+    const metadata = {
+      user_id: user.id,
+      user_email: user.email,
+      credits: credits.toString(),
+      package_id: creditPackage.id,
+      type: "purchase",
+      timestamp: new Date().toISOString()
+    };
+
     let sessionConfig: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       mode: "payment",
-      success_url: `${origin}/aluno/creditos?success=true&credits=${credits}`,
-      cancel_url: `${origin}/aluno/creditos?cancelled=true`,
-      metadata: {
-        user_id: user.id,
-        credits: credits.toString(),
-        type: "purchase",
-        package_id: creditPackage.id
-      }
+      success_url: `${origin}/aluno/creditos/sucesso?session_id={CHECKOUT_SESSION_ID}&credits=${credits}`,
+      cancel_url: `${origin}/aluno/creditos/cancelado`,
+      metadata: metadata
     };
 
     // Se o pacote tem stripe_price_id configurado, usar o Price ID do Stripe
@@ -182,6 +187,25 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log("✅ Sessão de checkout criada:", session.id);
+
+    // Registrar sessão pendente na base de dados
+    try {
+      await supabaseClient
+        .from("credit_transactions")
+        .insert({
+          user_id: user.id,
+          type: "compra",
+          amount: credits,
+          description: `Compra de ${credits} créditos - Aguardando confirmação`,
+          stripe_session_id: session.id,
+          package_id: creditPackage.id,
+          status: "pending"
+        });
+      console.log("📝 Transação pendente registrada");
+    } catch (err) {
+      console.error("⚠️ Erro ao registrar transação pendente:", err);
+      // Não bloquear o fluxo por causa disso
+    }
 
     return new Response(JSON.stringify({ 
       success: true,

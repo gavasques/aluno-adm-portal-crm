@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -11,6 +10,7 @@ import { CreditHistory } from '@/components/credits/CreditHistory';
 import { useCreditStatus } from '@/hooks/credits/useCreditStatus';
 import { useSubscriptions } from '@/hooks/credits/useSubscriptions';
 import { toast } from 'sonner';
+import { PaymentStatus } from '@/components/credits/PaymentStatus';
 
 const StudentCredits = () => {
   const { 
@@ -51,6 +51,11 @@ const StudentCredits = () => {
     refreshCredits();
   };
 
+  const handlePaymentConfirmed = () => {
+    console.log('💳 Pagamento confirmado, atualizando créditos...');
+    refreshCredits();
+  };
+
   const safeCredits = creditStatus?.credits || {
     current: 0,
     used: 0,
@@ -64,6 +69,9 @@ const StudentCredits = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {/* Payment Status Alert */}
+      <PaymentStatus onPaymentConfirmed={handlePaymentConfirmed} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

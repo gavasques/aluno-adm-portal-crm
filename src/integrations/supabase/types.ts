@@ -456,6 +456,9 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          package_id: string | null
+          status: string | null
+          stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           type: string
           user_id: string
@@ -465,6 +468,9 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          package_id?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           type: string
           user_id: string
@@ -474,11 +480,22 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          package_id?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_custom_field_groups: {
         Row: {
@@ -2540,6 +2557,51 @@ export type Database = {
           upgrade_amount_mb?: number
           upgrade_date?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_webhook_events: {
+        Row: {
+          created_at: string | null
+          credits_added: number | null
+          error_message: string | null
+          event_type: string
+          id: string
+          processed: boolean | null
+          processed_at: string | null
+          retry_count: number | null
+          session_id: string | null
+          stripe_event_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credits_added?: number | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          retry_count?: number | null
+          session_id?: string | null
+          stripe_event_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credits_added?: number | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          retry_count?: number | null
+          session_id?: string | null
+          stripe_event_id?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
