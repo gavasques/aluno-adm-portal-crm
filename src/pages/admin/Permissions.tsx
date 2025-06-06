@@ -1,15 +1,26 @@
 
-import React, { useState } from 'react';
-import { usePermissionGroupsState } from '@/hooks/admin/permissions/usePermissionGroupsState';
+import React, { useState, useCallback } from 'react';
+import { useOptimizedPermissions } from '@/hooks/admin/permissions/useOptimizedPermissions';
 import { PermissionGroup } from '@/types/permissions';
-import PerformanceOptimizedPermissions from '@/components/admin/permissions/PerformanceOptimizedPermissions';
+import OptimizedPermissionsList from '@/components/admin/permissions/OptimizedPermissionsList';
 import PermissionsHeader from '@/components/admin/permissions/PermissionsHeader';
 import PermissionsDialogs from '@/components/admin/permissions/PermissionsDialogs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
 const AdminPermissions = () => {
-  const { permissionGroups, isLoading, error, refreshPermissionGroups } = usePermissionGroupsState();
+  const {
+    permissionGroups,
+    filteredGroups,
+    menuCounts,
+    isLoading,
+    error,
+    searchTerm,
+    isSearching,
+    setSearchTerm,
+    clearSearch,
+    refreshPermissionGroups,
+  } = useOptimizedPermissions();
   
   // Dialog states
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -18,31 +29,31 @@ const AdminPermissions = () => {
   const [showUsersDialog, setShowUsersDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setSelectedGroup(null);
     setShowAddDialog(true);
-  };
+  }, []);
 
-  const handleEdit = (group: PermissionGroup) => {
+  const handleEdit = useCallback((group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowEditDialog(true);
-  };
+  }, []);
 
-  const handleDelete = (group: PermissionGroup) => {
+  const handleDelete = useCallback((group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowDeleteDialog(true);
-  };
+  }, []);
 
-  const handleViewUsers = (group: PermissionGroup) => {
+  const handleViewUsers = useCallback((group: PermissionGroup) => {
     setSelectedGroup(group);
     setShowUsersDialog(true);
-  };
+  }, []);
 
-  const handleSuccess = () => {
+  const handleSuccess = useCallback(() => {
     refreshPermissionGroups();
-  };
+  }, [refreshPermissionGroups]);
 
-  if (isLoading) {
+  if (isLoading && permissionGroups.length === 0) {
     return (
       <div className="p-8">
         <Card>
@@ -74,7 +85,15 @@ const AdminPermissions = () => {
     <div className="p-8 space-y-6">
       <PermissionsHeader onAdd={handleAdd} />
       
-      <PerformanceOptimizedPermissions
+      <OptimizedPermissionsList
+        groups={permissionGroups}
+        filteredGroups={filteredGroups}
+        menuCounts={menuCounts}
+        searchTerm={searchTerm}
+        isSearching={isSearching}
+        isLoading={isLoading}
+        onSearchChange={setSearchTerm}
+        onClearSearch={clearSearch}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onViewUsers={handleViewUsers}
