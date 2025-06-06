@@ -30,7 +30,7 @@ import { MenuItem, MenuGroup } from "./types";
 export const mainMenuItems: MenuItem[] = [
   {
     title: "Dashboard",
-    href: "/admin/dashboard",
+    href: "/admin",
     icon: LayoutDashboard,
     gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
   },
@@ -117,12 +117,6 @@ export const managementMenuItems: MenuItem[] = [
     href: "/admin/cursos",
     icon: GraduationCap,
     gradient: "bg-gradient-to-br from-red-500 to-red-600",
-  },
-  {
-    title: "Cadastro de Mentorias",
-    href: "/admin/mentoria",
-    icon: Shield,
-    gradient: "bg-gradient-to-br from-slate-600 to-slate-700",
   },
   {
     title: "Cadastro de Bônus",

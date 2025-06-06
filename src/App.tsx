@@ -1,4 +1,3 @@
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from "@/components/ui/toaster";
@@ -46,6 +45,7 @@ import Audit from "./pages/admin/Audit";
 import AuditAnalytics from "./pages/admin/AuditAnalytics";
 import AuditReports from "./pages/admin/AuditReports";
 import AuditBehaviorAnalytics from "./pages/admin/AuditBehaviorAnalytics";
+import Settings from "./pages/admin/Settings";
 
 // Student Pages
 import StudentDashboard from "./pages/student/Dashboard";
@@ -101,25 +101,26 @@ function App() {
               }>
                 <Route index element={<Dashboard />} />
                 <Route path="usuarios" element={<Users />} />
-                <Route path="students" element={<Students />} />
+                <Route path="alunos" element={<Students />} />
                 <Route path="fornecedores" element={<Suppliers />} />
                 <Route path="parceiros" element={<Partners />} />
                 <Route path="ferramentas" element={<Tools />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="partner-types" element={<PartnerTypes />} />
-                <Route path="software-types" element={<SoftwareTypes />} />
-                <Route path="news" element={<News />} />
+                <Route path="categorias" element={<Categories />} />
+                <Route path="tipos-parceiros" element={<PartnerTypes />} />
+                <Route path="tipos-softwares" element={<SoftwareTypes />} />
+                <Route path="noticias" element={<News />} />
                 <Route path="bonus" element={<Bonus />} />
                 <Route path="bonus/:id" element={<BonusDetail />} />
                 <Route path="cursos" element={<Courses />} />
-                <Route path="credits" element={<Credits />} />
+                <Route path="creditos" element={<Credits />} />
                 <Route path="tarefas" element={<Tasks />} />
                 <Route path="crm" element={<CRM />} />
                 <Route path="crm/lead/:id" element={<CRMLeadDetail />} />
                 <Route path="crm-webhook-logs" element={<CRMWebhookLogs />} />
                 <Route path="mentorias" element={<Mentoring />} />
                 <Route path="mentoring/:id" element={<MentoringDetail />} />
-                <Route path="mentoring-catalog" element={<AdminMentoringCatalog />} />
+                <Route path="mentorias/catalogo" element={<AdminMentoringCatalog />} />
+                <Route path="mentorias/materiais" element={<AdminMentoringCatalog />} />
                 <Route path="mentoring-enrollments" element={<AdminMentoringEnrollments />} />
                 <Route path="inscricoes-individuais" element={<AdminIndividualEnrollments />} />
                 <Route path="inscricoes-grupo" element={<AdminGroupEnrollments />} />
@@ -131,6 +132,7 @@ function App() {
                 <Route path="audit-analytics" element={<AuditAnalytics />} />
                 <Route path="audit-reports" element={<AuditReports />} />
                 <Route path="audit-behavior" element={<AuditBehaviorAnalytics />} />
+                <Route path="configuracoes" element={<Settings />} />
               </Route>
 
               {/* Student Routes */}
