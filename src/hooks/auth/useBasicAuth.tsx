@@ -1,238 +1,117 @@
 
-import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { CreateUserResult } from "./useBasicAuth/useAdminOperations";
-import { useSignUp } from "./useBasicAuth/useSignUp";
-import { sanitizeError, logSecureError } from "@/utils/security";
-import { logUserCreation } from "@/utils/audit-logger";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-// URL base do site que será usado para redirecionamentos
-const BASE_URL = "https://titan.guilhermevasques.club";
-
-export function useBasicAuth() {
-  const navigate = useNavigate();
-  const { signUp: signUpUser } = useSignUp();
-
-  // Função para login
+export const useBasicAuth = () => {
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('🔐 Fazendo login...');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
-      
-      toast({
-        title: "Login realizado com sucesso",
-        variant: "default",
-      });
-
-    } catch (error: any) {
-      logSecureError(error, "Login");
-      const sanitizedMessage = sanitizeError(error);
-      
-      toast({
-        title: "Erro ao fazer login",
-        description: sanitizedMessage,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Função para enviar magic link
-  const sendMagicLink = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${BASE_URL}/`,
-        }
-      });
-
-      if (error) throw error;
-      
-      toast({
-        title: "Magic Link enviado com sucesso",
-        description: "Verifique seu email para fazer login.",
-        variant: "default",
-      });
-      
-      return true;
-    } catch (error: any) {
-      logSecureError(error, "Magic Link");
-      const sanitizedMessage = sanitizeError(error);
-      
-      toast({
-        title: "Erro ao enviar magic link",
-        description: sanitizedMessage,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Usar a função de signup do hook específico
-  const signUp = signUpUser;
-
-  // Função para logout
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Logout realizado com sucesso",
-        variant: "default",
-      });
-      
-      // Limpar qualquer modo de recuperação ao fazer logout
-      localStorage.removeItem("supabase_recovery_mode");
-      localStorage.removeItem("supabase_recovery_expiry");
-      
-      navigate("/");
-    } catch (error: any) {
-      logSecureError(error, "Logout");
-      const sanitizedMessage = sanitizeError(error);
-      
-      toast({
-        title: "Erro ao fazer logout",
-        description: sanitizedMessage,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Função para recuperação de senha
-  const resetPassword = async (email: string) => {
-    try {
-      // Certificar-se que o link de redefinição contém parâmetros específicos 
-      // Importante: incluir ?type=recovery para facilitar a detecção do fluxo
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${BASE_URL}/reset-password?type=recovery`,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Link de recuperação enviado",
-        description: "Verifique seu email para redefinir sua senha.",
-        variant: "default",
-      });
-    } catch (error: any) {
-      logSecureError(error, "Password Reset");
-      const sanitizedMessage = sanitizeError(error);
-      
-      toast({
-        title: "Erro ao solicitar recuperação de senha",
-        description: sanitizedMessage,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Função para atualizar a senha do usuário
-  const updateUserPassword = async (newPassword: string): Promise<void> => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
       if (error) {
+        console.error('❌ Erro no login:', error);
         throw error;
       }
 
-      // Limpar o modo de recuperação ao atualizar a senha com sucesso
-      localStorage.removeItem("supabase_recovery_mode");
-      localStorage.removeItem("supabase_recovery_expiry");
-      
-      toast({
-        title: "Senha atualizada com sucesso",
-        variant: "default",
-      });
+      console.log('✅ Login realizado com sucesso');
+      // Não fazer redirecionamento aqui, deixar o Index gerenciar
+      return data;
     } catch (error: any) {
-      logSecureError(error, "Password Update");
-      const sanitizedMessage = sanitizeError(error);
-      
-      toast({
-        title: "Erro ao atualizar senha",
-        description: sanitizedMessage,
-        variant: "destructive",
-      });
+      console.error('❌ Erro no login:', error);
       throw error;
     }
   };
 
-  // Nova função para adicionar um usuário no painel de admin
-  const createAdminUser = async (
-    email: string, 
-    name: string, 
-    role: string, 
-    password: string,
-    is_mentor: boolean = false
-  ): Promise<CreateUserResult> => {
+  const signUp = async (email: string, password: string, name: string) => {
     try {
-      logSecureError({ email, name, role, hasPassword: !!password, is_mentor }, "Creating user");
-
-      // Criar o usuário diretamente via Edge Function no Supabase
-      const { data: response, error } = await supabase.functions.invoke('list-users', {
-        method: 'POST',
-        body: {
-          action: 'createUser',
-          email: email,
-          name: name,
-          role: role,
-          password: password || Math.random().toString(36).slice(-10),
-          is_mentor: is_mentor
+      console.log('📝 Criando conta...');
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
       if (error) {
-        logSecureError(error, "Admin User Creation - Function Error");
-        logUserCreation(email, false, 'admin', sanitizeError(error));
-        throw new Error(sanitizeError(error));
+        console.error('❌ Erro no signup:', error);
+        throw error;
       }
-      
-      if (response && response.error) {
-        logSecureError(response.error, "Admin User Creation - Response Error");
-        logUserCreation(email, false, 'admin', sanitizeError(response.error));
-        throw new Error(sanitizeError(response.error));
-      }
-      
-      // Verificar se o usuário já existe e tratar adequadamente
-      if (response && response.existed) {
-        logUserCreation(email, false, 'admin', 'User already exists');
-        
-        toast({
-          title: "Usuário já existe",
-          description: `O usuário ${email} já existe no sistema, mas pode não estar visível na lista atual.`,
-          variant: "default",
-        });
-        
-        return { success: false, existed: true };
-      } else {
-        logUserCreation(email, true, 'admin');
-        
-        toast({
-          title: "Usuário adicionado com sucesso",
-          description: `Usuário ${email} foi criado e adicionado ao sistema.`,
-        });
-        
-        return { success: true, existed: false };
-      }
+
+      console.log('✅ Conta criada com sucesso');
+      toast.success('Conta criada! Verifique seu email.');
+      return data;
     } catch (error: any) {
-      logSecureError(error, "Admin User Creation");
-      const sanitizedMessage = sanitizeError(error);
-      logUserCreation(email, false, 'admin', sanitizedMessage);
+      console.error('❌ Erro no signup:', error);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      console.log('🚪 Fazendo logout...');
       
-      toast({
-        title: "Erro ao adicionar usuário",
-        description: sanitizedMessage,
-        variant: "destructive",
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('❌ Erro no logout:', error);
+        throw error;
+      }
+
+      console.log('✅ Logout realizado com sucesso');
+      // Redirecionamento será feito automaticamente pelo AuthProvider
+    } catch (error: any) {
+      console.error('❌ Erro no logout:', error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      console.log('🔄 Enviando reset de senha...');
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
       });
+
+      if (error) {
+        console.error('❌ Erro no reset:', error);
+        throw error;
+      }
+
+      console.log('✅ Email de reset enviado');
+      toast.success('Email de redefinição enviado!');
+    } catch (error: any) {
+      console.error('❌ Erro no reset:', error);
+      throw error;
+    }
+  };
+
+  const updateUserPassword = async (newPassword: string) => {
+    try {
+      console.log('🔒 Atualizando senha...');
+      
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('❌ Erro ao atualizar senha:', error);
+        throw error;
+      }
+
+      console.log('✅ Senha atualizada com sucesso');
+      toast.success('Senha atualizada com sucesso!');
+    } catch (error: any) {
+      console.error('❌ Erro ao atualizar senha:', error);
       throw error;
     }
   };
@@ -242,8 +121,6 @@ export function useBasicAuth() {
     signUp,
     signOut,
     resetPassword,
-    updateUserPassword,
-    sendMagicLink,
-    createAdminUser
+    updateUserPassword
   };
-}
+};
