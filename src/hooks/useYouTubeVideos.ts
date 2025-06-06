@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/auth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 
@@ -41,33 +40,28 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
   
-  const { user } = useAuth();
   const { permissions } = usePermissions();
-
-  console.log('🎥 useYouTubeVideos: Inicializando hook');
-  console.log('👤 User:', user?.email);
-  console.log('🔑 Permissions:', permissions);
-
-  // Usar as permissões já carregadas pelo usePermissions
   const isAdmin = permissions.hasAdminAccess;
 
+  console.log('🎥 useYouTubeVideos: Inicializando hook');
   console.log('👑 Is Admin:', isAdmin);
+  console.log('🔑 Permissions:', permissions);
 
   const fetchVideos = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log('🎥 Buscando vídeos do YouTube...');
+      console.log('🎥 Chamando edge function youtube-videos...');
 
-      const { data, error: supabaseError } = await supabase.functions.invoke('youtube-videos');
+      const { data, error: functionError } = await supabase.functions.invoke('youtube-videos');
 
-      console.log('📊 Resposta da função:', data);
-      console.log('❌ Erro da função:', supabaseError);
+      console.log('📊 Resposta da edge function:', data);
+      console.log('❌ Erro da edge function:', functionError);
 
-      if (supabaseError) {
-        console.error('❌ Erro na Edge Function:', supabaseError);
-        setError('Erro de conexão com o serviço');
+      if (functionError) {
+        console.error('❌ Erro na Edge Function youtube-videos:', functionError);
+        setError('Erro de conexão com o serviço de vídeos');
         setVideos([]);
         return;
       }
@@ -77,8 +71,8 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
         setError(data.error);
         
         // Se há vídeos em cache mesmo com erro, usar eles
-        if (data.videos && data.videos.length > 0) {
-          console.log('📹 Usando vídeos do cache apesar do erro');
+        if (data.videos && Array.isArray(data.videos) && data.videos.length > 0) {
+          console.log('📹 Usando vídeos do cache apesar do erro:', data.videos.length);
           setVideos(data.videos);
         } else {
           setVideos([]);
@@ -95,8 +89,18 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
       const channelData = data?.channel_info || null;
       
       console.log(`✅ ${fetchedVideos.length} vídeos carregados com sucesso`);
+      console.log('🎬 Vídeos:', fetchedVideos.map(v => ({ id: v.id, title: v.title?.substring(0, 30) })));
       
-      setVideos(fetchedVideos);
+      // Validar estrutura dos vídeos
+      const validVideos = fetchedVideos.filter(video => {
+        const isValid = video && video.id && video.title;
+        if (!isValid) {
+          console.warn('⚠️ Vídeo inválido encontrado:', video);
+        }
+        return isValid;
+      });
+
+      setVideos(validVideos);
       setChannelInfo(channelData);
       setError(null);
       
@@ -105,7 +109,7 @@ export const useYouTubeVideos = (): UseYouTubeVideosReturn => {
       }
     } catch (err) {
       console.error('❌ Erro geral ao carregar vídeos:', err);
-      setError('Não foi possível carregar os vídeos');
+      setError('Não foi possível carregar os vídeos do YouTube');
       setVideos([]);
     } finally {
       setLoading(false);

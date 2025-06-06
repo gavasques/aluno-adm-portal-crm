@@ -24,17 +24,22 @@ export const YouTubeSection: React.FC = () => {
     lastSync 
   } = useYouTubeVideos();
 
-  console.log('🎥 YouTubeSection: Estado atual', {
-    videosCount: videos.length,
+  console.log('🎥 YouTubeSection: Estado detalhado', {
+    videosCount: videos?.length || 0,
+    videos: videos?.map(v => ({ id: v.id, title: v.title?.substring(0, 30) })),
     loading,
     error,
     isAdmin,
     syncing,
-    hasChannelInfo: !!channelInfo
+    hasChannelInfo: !!channelInfo,
+    lastSync
   });
 
   const formatSubscriberCount = (count: string) => {
+    if (!count) return '0';
     const num = parseInt(count);
+    if (isNaN(num)) return '0';
+    
     if (num >= 1000000) {
       return `${(num / 1000000).toFixed(1)}M`;
     }
@@ -45,18 +50,23 @@ export const YouTubeSection: React.FC = () => {
   };
 
   const formatLastSync = (syncDate: string) => {
+    if (!syncDate) return 'nunca';
+    
     try {
       return formatDistanceToNow(new Date(syncDate), { 
         addSuffix: true, 
         locale: ptBR 
       });
-    } catch {
+    } catch (error) {
+      console.warn('Erro ao formatar data de sync:', error);
       return 'data inválida';
     }
   };
 
   const renderContent = () => {
+    // Estado de loading
     if (loading) {
+      console.log('🔄 YouTubeSection: Renderizando skeleton de loading');
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
@@ -70,30 +80,58 @@ export const YouTubeSection: React.FC = () => {
       );
     }
 
-    // Se há vídeos, mostrar mesmo com erro
-    if (videos.length > 0) {
-      return (
-        <div className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-              <Clock className="w-4 h-4 text-amber-600" />
-              <span className="text-sm text-amber-700 dark:text-amber-300">
-                Exibindo dados em cache - {error}
-              </span>
+    // Se há vídeos, mostrar mesmo com erro (dados em cache)
+    if (videos && videos.length > 0) {
+      console.log(`✅ YouTubeSection: Renderizando ${videos.length} vídeos`);
+      
+      try {
+        return (
+          <div className="space-y-4">
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <Clock className="w-4 h-4 text-amber-600" />
+                <span className="text-sm text-amber-700 dark:text-amber-300">
+                  Exibindo dados em cache - {error}
+                </span>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {videos.map((video, index) => {
+                if (!video || !video.id) {
+                  console.warn('⚠️ Vídeo inválido encontrado:', video);
+                  return null;
+                }
+                
+                return (
+                  <YouTubeVideoCard 
+                    key={`${video.id}-${index}`} 
+                    video={video} 
+                    index={index} 
+                  />
+                );
+              }).filter(Boolean)}
             </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {videos.map((video, index) => (
-              <YouTubeVideoCard key={video.id} video={video} index={index} />
-            ))}
           </div>
-        </div>
-      );
+        );
+      } catch (renderError) {
+        console.error('❌ Erro ao renderizar vídeos:', renderError);
+        return (
+          <div className="text-center py-8">
+            <p className="text-red-600">Erro ao exibir vídeos. Tente recarregar a página.</p>
+            <Button onClick={refetch} variant="outline" size="sm" className="mt-2">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Recarregar
+            </Button>
+          </div>
+        );
+      }
     }
 
-    // Diferentes estados de erro
+    // Diferentes estados de erro sem vídeos
     if (error) {
+      console.log('❌ YouTubeSection: Renderizando estado de erro:', error);
+      
       const isConfigurationError = error.includes('API key') || error.includes('configuração') || error.includes('Configuration');
       const isTemporaryError = error.includes('temporariamente') || error.includes('Cache');
       
@@ -151,6 +189,7 @@ export const YouTubeSection: React.FC = () => {
     }
 
     // Estado vazio sem erro
+    console.log('📭 YouTubeSection: Renderizando estado vazio');
     return (
       <div className="text-center py-8 space-y-4">
         <div className="flex justify-center">

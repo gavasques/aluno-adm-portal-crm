@@ -12,6 +12,8 @@ interface YouTubeVideoCardProps {
 
 // Função para converter duração ISO 8601 para formato legível
 const formatDuration = (duration: string): string => {
+  if (!duration) return '0:00';
+  
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!match) return '0:00';
   
@@ -27,7 +29,11 @@ const formatDuration = (duration: string): string => {
 
 // Função para formatar número de visualizações
 const formatViewCount = (count: string): string => {
+  if (!count) return '0';
+  
   const num = parseInt(count);
+  if (isNaN(num)) return '0';
+  
   if (num >= 1000000) {
     return `${(num / 1000000).toFixed(1)}M`;
   }
@@ -39,21 +45,47 @@ const formatViewCount = (count: string): string => {
 
 // Função para formatar data
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (!dateString) return '';
   
-  if (diffDays === 1) return 'há 1 dia';
-  if (diffDays < 7) return `há ${diffDays} dias`;
-  if (diffDays < 30) return `há ${Math.ceil(diffDays / 7)} semanas`;
-  if (diffDays < 365) return `há ${Math.ceil(diffDays / 30)} meses`;
-  return `há ${Math.ceil(diffDays / 365)} anos`;
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return 'há 1 dia';
+    if (diffDays < 7) return `há ${diffDays} dias`;
+    if (diffDays < 30) return `há ${Math.ceil(diffDays / 7)} semanas`;
+    if (diffDays < 365) return `há ${Math.ceil(diffDays / 30)} meses`;
+    return `há ${Math.ceil(diffDays / 365)} anos`;
+  } catch (error) {
+    console.warn('Erro ao formatar data:', error);
+    return '';
+  }
 };
 
 export const YouTubeVideoCard: React.FC<YouTubeVideoCardProps> = ({ video, index }) => {
+  console.log('🎬 Renderizando YouTubeVideoCard:', {
+    videoId: video.id,
+    title: video.title?.substring(0, 50),
+    thumbnail: video.thumbnail,
+    index
+  });
+
   const handleVideoClick = () => {
-    window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
+    if (video.id) {
+      window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
+    }
+  };
+
+  // Fallbacks para dados ausentes
+  const safeVideo = {
+    id: video.id || '',
+    title: video.title || 'Título não disponível',
+    thumbnail: video.thumbnail || '/placeholder-video.jpg',
+    duration: video.duration || 'PT0M0S',
+    viewCount: video.viewCount || '0',
+    publishedAt: video.publishedAt || new Date().toISOString()
   };
 
   return (
@@ -68,10 +100,14 @@ export const YouTubeVideoCard: React.FC<YouTubeVideoCardProps> = ({ video, index
       <Card className="overflow-hidden bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-white/20 hover:shadow-lg transition-all duration-300 group">
         <div className="relative aspect-video bg-gray-100 dark:bg-gray-700 overflow-hidden">
           <img
-            src={video.thumbnail}
-            alt={video.title}
+            src={safeVideo.thumbnail}
+            alt={safeVideo.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            onError={(e) => {
+              console.warn('Erro ao carregar thumbnail:', safeVideo.thumbnail);
+              e.currentTarget.src = '/placeholder-video.jpg';
+            }}
           />
           
           {/* Play button overlay */}
@@ -83,24 +119,24 @@ export const YouTubeVideoCard: React.FC<YouTubeVideoCardProps> = ({ video, index
           
           {/* Duration badge */}
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-            {formatDuration(video.duration)}
+            {formatDuration(safeVideo.duration)}
           </div>
         </div>
         
         <CardContent className="p-4">
           <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            {video.title}
+            {safeVideo.title}
           </h3>
           
           <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-3">
             <div className="flex items-center space-x-1">
               <Eye className="w-3 h-3" />
-              <span>{formatViewCount(video.viewCount)} visualizações</span>
+              <span>{formatViewCount(safeVideo.viewCount)} visualizações</span>
             </div>
             
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>{formatDate(video.publishedAt)}</span>
+              <span>{formatDate(safeVideo.publishedAt)}</span>
             </div>
           </div>
         </CardContent>
