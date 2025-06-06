@@ -98,8 +98,8 @@ const Index = () => {
                       • Configurações do Sistema
                     </div>
                   </CardContent>
-                </Link>
-              </Card>
+                </Card>
+              </Link>
             )}
 
             {/* Se não é admin, mostrar card informativo */}
