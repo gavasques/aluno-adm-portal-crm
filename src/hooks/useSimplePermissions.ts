@@ -36,19 +36,14 @@ export const useSimplePermissions = (): SimplePermissions => {
       try {
         console.log('🔍 Buscando permissões para:', user.email);
 
-        const { data: profile, error } = await supabase
+        // Buscar perfil do usuário
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select(`
-            *,
-            permission_groups (
-              name,
-              permissions
-            )
-          `)
+          .select('*, permission_groups(name, is_admin, allow_admin_access)')
           .eq('id', user.id)
           .single();
 
-        if (error) {
+        if (profileError) {
           console.warn('⚠️ Perfil não encontrado, usando permissões padrão');
           setPermissions({
             hasAdminAccess: false,
@@ -59,15 +54,47 @@ export const useSimplePermissions = (): SimplePermissions => {
           return;
         }
 
-        const isAdmin = profile?.permission_groups?.name === 'admin';
-        const permissions_data = profile?.permission_groups?.permissions || {};
-        const allowedMenus = Object.keys(permissions_data).filter(key => permissions_data[key] === true);
+        // Verificar se é admin
+        const isAdmin = profile?.permission_groups?.is_admin || 
+                       profile?.permission_groups?.allow_admin_access || 
+                       profile?.role === 'Admin';
 
-        console.log('✅ Permissões carregadas:', { isAdmin, allowedMenus });
+        // Se for admin, dar acesso total
+        if (isAdmin) {
+          console.log('✅ Usuário é admin - acesso total');
+          setPermissions({
+            hasAdminAccess: true,
+            allowedMenus: [], // Admin tem acesso a tudo
+            loading: false,
+            error: null
+          });
+          return;
+        }
+
+        // Para usuários não-admin, buscar menus permitidos
+        const { data: menuPermissions, error: menuError } = await supabase
+          .from('permission_group_menus')
+          .select('menu_key')
+          .eq('permission_group_id', profile.permission_group_id);
+
+        if (menuError) {
+          console.warn('⚠️ Erro ao buscar menus, usando básico');
+          setPermissions({
+            hasAdminAccess: false,
+            allowedMenus: ['student_basic'],
+            loading: false,
+            error: null
+          });
+          return;
+        }
+
+        const allowedMenus = menuPermissions?.map(m => m.menu_key) || ['student_basic'];
+
+        console.log('✅ Permissões carregadas:', { isAdmin: false, allowedMenus });
 
         setPermissions({
-          hasAdminAccess: isAdmin,
-          allowedMenus: isAdmin ? [] : allowedMenus, // Admin tem acesso total
+          hasAdminAccess: false,
+          allowedMenus,
           loading: false,
           error: null
         });
