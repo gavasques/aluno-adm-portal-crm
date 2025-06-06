@@ -79,6 +79,9 @@ const queryClient = new QueryClient({
   },
 });
 
+import PermissionCreate from "./pages/admin/PermissionCreate";
+import PermissionEdit from "./pages/admin/PermissionEdit";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -128,6 +131,8 @@ function App() {
                 <Route path="sessoes-grupo" element={<AdminMentoringSessionsGroup />} />
                 <Route path="calendly-config" element={<AdminCalendlyConfig />} />
                 <Route path="permissoes" element={<Permissions />} />
+                <Route path="permissoes/criar" element={<PermissionCreate />} />
+                <Route path="permissoes/editar/:id" element={<PermissionEdit />} />
                 <Route path="auditoria" element={<Audit />} />
                 <Route path="audit-analytics" element={<AuditAnalytics />} />
                 <Route path="audit-reports" element={<AuditReports />} />

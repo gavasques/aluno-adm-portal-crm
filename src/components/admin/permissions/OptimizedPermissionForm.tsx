@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { usePermissionGroupForm } from "@/hooks/admin/usePermissionGroupForm";
 import { BasicFormFields } from "./form/BasicFormFields";
 import { AdminAccessSwitches } from "./form/AdminAccessSwitches";
-import { MenuPermissionsSection } from "./form/MenuPermissionsSection";
+import { ImprovedMenuPermissionsSection } from "./form/ImprovedMenuPermissionsSection";
 import { FormActions } from "./form/FormActions";
 
 interface OptimizedPermissionFormProps {
@@ -28,9 +28,10 @@ const LoadingSkeleton = memo(() => (
     </div>
     <div className="space-y-4">
       <div className="h-6 bg-gray-200 rounded animate-pulse w-1/3" />
-      <div className="space-y-2">
-        <div className="h-6 bg-gray-200 rounded animate-pulse" />
-        <div className="h-6 bg-gray-200 rounded animate-pulse" />
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} className="h-32 bg-gray-200 rounded animate-pulse" />
+        ))}
       </div>
     </div>
   </div>
@@ -89,8 +90,8 @@ const OptimizedPermissionForm = memo<OptimizedPermissionFormProps>(({
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
-        <form onSubmit={handleFormSubmit} className="space-y-4 py-4">
-          <div className="grid gap-4">
+        <form onSubmit={handleFormSubmit} className="space-y-6 py-4 max-h-[70vh] overflow-y-auto">
+          <div className="grid gap-6">
             <BasicFormFields
               name={name}
               setName={setName}
@@ -111,7 +112,7 @@ const OptimizedPermissionForm = memo<OptimizedPermissionFormProps>(({
 
             <Separator className="my-2" />
 
-            <MenuPermissionsSection
+            <ImprovedMenuPermissionsSection
               isAdmin={isAdmin}
               allowAdminAccess={allowAdminAccess}
               selectedMenus={selectedMenus}

@@ -1,5 +1,6 @@
 
 import React, { memo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,6 @@ import type { PermissionGroup } from '@/types/permissions';
 interface PermissionGroupCardProps {
   group: PermissionGroup;
   menuCount?: number;
-  onEdit: (group: PermissionGroup) => void;
   onDelete: (group: PermissionGroup) => void;
   onViewUsers: (group: PermissionGroup) => void;
 }
@@ -29,10 +29,11 @@ interface PermissionGroupCardProps {
 const PermissionGroupCard = memo<PermissionGroupCardProps>(({ 
   group, 
   menuCount, 
-  onEdit, 
   onDelete, 
   onViewUsers 
 }) => {
+  const navigate = useNavigate();
+
   const getGroupTypeIcon = useCallback(() => {
     if (group.is_admin) {
       return <Shield className="h-5 w-5 text-red-500" />;
@@ -53,7 +54,10 @@ const PermissionGroupCard = memo<PermissionGroupCardProps>(({
     return <Badge variant="outline" className="text-xs">Usuário</Badge>;
   }, [group.is_admin, group.allow_admin_access]);
 
-  const handleEdit = useCallback(() => onEdit(group), [onEdit, group]);
+  const handleEdit = useCallback(() => {
+    navigate(`/admin/permissoes/editar/${group.id}`);
+  }, [navigate, group.id]);
+
   const handleDelete = useCallback(() => onDelete(group), [onDelete, group]);
   const handleViewUsers = useCallback(() => onViewUsers(group), [onViewUsers, group]);
 
@@ -134,7 +138,6 @@ interface OptimizedPermissionsListProps {
   isLoading: boolean;
   onSearchChange: (term: string) => void;
   onClearSearch: () => void;
-  onEdit: (group: PermissionGroup) => void;
   onDelete: (group: PermissionGroup) => void;
   onViewUsers: (group: PermissionGroup) => void;
 }
@@ -148,7 +151,6 @@ const OptimizedPermissionsList = memo<OptimizedPermissionsListProps>(({
   isLoading,
   onSearchChange,
   onClearSearch,
-  onEdit,
   onDelete,
   onViewUsers,
 }) => {
@@ -217,7 +219,6 @@ const OptimizedPermissionsList = memo<OptimizedPermissionsListProps>(({
               <PermissionGroupCard
                 group={group}
                 menuCount={menuCounts[group.id]}
-                onEdit={onEdit}
                 onDelete={onDelete}
                 onViewUsers={onViewUsers}
               />

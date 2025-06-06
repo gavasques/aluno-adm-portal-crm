@@ -4,7 +4,9 @@ import { useOptimizedPermissions } from '@/hooks/admin/permissions/useOptimizedP
 import { PermissionGroup } from '@/types/permissions';
 import OptimizedPermissionsList from '@/components/admin/permissions/OptimizedPermissionsList';
 import PermissionsHeader from '@/components/admin/permissions/PermissionsHeader';
-import PermissionsDialogs from '@/components/admin/permissions/PermissionsDialogs';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import PermissionGroupDelete from '@/components/admin/permissions/PermissionGroupDelete';
+import PermissionGroupUsers from '@/components/admin/permissions/PermissionGroupUsers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
@@ -22,22 +24,10 @@ const AdminPermissions = () => {
     refreshPermissionGroups,
   } = useOptimizedPermissions();
   
-  // Dialog states
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  // Dialog states - apenas para delete e users
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showUsersDialog, setShowUsersDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
-
-  const handleAdd = useCallback(() => {
-    setSelectedGroup(null);
-    setShowAddDialog(true);
-  }, []);
-
-  const handleEdit = useCallback((group: PermissionGroup) => {
-    setSelectedGroup(group);
-    setShowEditDialog(true);
-  }, []);
 
   const handleDelete = useCallback((group: PermissionGroup) => {
     setSelectedGroup(group);
@@ -83,7 +73,7 @@ const AdminPermissions = () => {
 
   return (
     <div className="p-8 space-y-6">
-      <PermissionsHeader onAdd={handleAdd} />
+      <PermissionsHeader />
       
       <OptimizedPermissionsList
         groups={permissionGroups}
@@ -94,23 +84,35 @@ const AdminPermissions = () => {
         isLoading={isLoading}
         onSearchChange={setSearchTerm}
         onClearSearch={clearSearch}
-        onEdit={handleEdit}
         onDelete={handleDelete}
         onViewUsers={handleViewUsers}
       />
 
-      <PermissionsDialogs
-        showAddDialog={showAddDialog}
-        setShowAddDialog={setShowAddDialog}
-        showEditDialog={showEditDialog}
-        setShowEditDialog={setShowEditDialog}
-        showDeleteDialog={showDeleteDialog}
-        setShowDeleteDialog={setShowDeleteDialog}
-        showUsersDialog={showUsersDialog}
-        setShowUsersDialog={setShowUsersDialog}
-        selectedGroup={selectedGroup}
-        onSuccess={handleSuccess}
-      />
+      {/* Delete Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          {selectedGroup && (
+            <PermissionGroupDelete
+              permissionGroup={selectedGroup}
+              onOpenChange={setShowDeleteDialog}
+              onSuccess={handleSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Users Dialog */}
+      <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-hidden">
+          {selectedGroup && (
+            <PermissionGroupUsers
+              permissionGroup={selectedGroup}
+              onOpenChange={setShowUsersDialog}
+              onSuccess={handleSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

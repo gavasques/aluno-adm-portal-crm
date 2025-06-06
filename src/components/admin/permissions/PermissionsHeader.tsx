@@ -1,51 +1,39 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MenuSyncManager from "./MenuSyncManager";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Shield, Plus } from 'lucide-react';
 
 interface PermissionsHeaderProps {
-  onAdd: () => void;
+  onAdd?: () => void;
 }
 
 const PermissionsHeader: React.FC<PermissionsHeaderProps> = ({ onAdd }) => {
-  const [showSyncDialog, setShowSyncDialog] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAddClick = () => {
+    if (onAdd) {
+      onAdd();
+    } else {
+      navigate('/admin/permissoes/criar');
+    }
+  };
 
   return (
-    <>
-      <div className="flex justify-between items-center">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Shield className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Grupos de Permissão</h1>
-          <p className="text-gray-600 mt-1">
-            Gerencie grupos de permissões e controle de acesso
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setShowSyncDialog(true)}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Sincronizar Menus
-          </Button>
-          <Button onClick={onAdd} className="bg-green-600 hover:bg-green-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Grupo
-          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">Sistema de Permissões</h1>
+          <p className="text-gray-600">Gerencie grupos de permissão e controle de acesso</p>
         </div>
       </div>
-
-      <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Sincronização de Menus</DialogTitle>
-          </DialogHeader>
-          <MenuSyncManager />
-        </DialogContent>
-      </Dialog>
-    </>
+      
+      <Button onClick={handleAddClick} className="flex items-center gap-2">
+        <Plus className="h-4 w-4" />
+        Novo Grupo
+      </Button>
+    </div>
   );
 };
 
