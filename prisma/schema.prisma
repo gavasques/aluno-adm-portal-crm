@@ -1,0 +1,907 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== AUTHENTICATION & USER MANAGEMENT ==============
+
+model Profile {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  updated_at               DateTime? @db.Timestamptz(6)
+  username                 String?   @unique
+  full_name                String?
+  avatar_url               String?
+  website                  String?
+  email                    String?
+  phone                    String?
+  is_mentor                Boolean   @default(false)
+  permission_group_id      String?   @db.Uuid
+  created_at               DateTime  @default(now()) @db.Timestamptz(6)
+  status                   String    @default("pending")
+  last_login               DateTime? @db.Timestamptz(6)
+  is_banned                Boolean   @default(false)
+  ban_reason               String?
+  storage_usage_mb         Int       @default(0)
+  storage_limit_mb         Int       @default(100)
+
+  // Relacionamentos
+  permissionGroup          PermissionGroup? @relation(fields: [permission_group_id], references: [id])
+  
+  // CRM relacionamentos
+  crmLeads                 CrmLead[]
+  crmNotifications         CrmNotification[]
+  crmComments              CrmLeadComment[]
+  
+  // Mentoring relacionamentos
+  mentoringEnrollments     MentoringEnrollment[]
+  mentoringSessions        MentoringSession[] @relation("MentoringSessionMentor")
+  studentSessions          MentoringSession[] @relation("MentoringSessionStudent")
+  mentoringMaterials       MentoringMaterial[]
+  
+  // Credits relacionamentos
+  userCredits              UserCredit[]
+  creditTransactions       CreditTransaction[]
+  creditSubscriptions      CreditSubscription[]
+  
+  // Suppliers relacionamentos
+  mySuppliers              MySupplier[]
+  supplierComments         MySupplierComment[]
+  supplierRatings          MySupplierRating[]
+  
+  // Audit relacionamentos
+  auditLogs                AuditLog[]
+  
+  // Livi AI relacionamentos
+  liviAiSessions           LiviAiSession[]
+  liviAiMessages           LiviAiMessage[]
+  
+  // Bonus relacionamentos
+  bonusComments            BonusComment[]
+  
+  // Tasks relacionamentos
+  tasks                    Task[]
+
+  @@map("profiles")
+}
+
+model PermissionGroup {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String    @unique
+  description           String?
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+  can_manage_users     Boolean   @default(false)
+  can_manage_content   Boolean   @default(false)
+  can_manage_system    Boolean   @default(false)
+  
+  // Relacionamentos
+  profiles             Profile[]
+  menuPermissions      PermissionGroupMenu[]
+
+  @@map("permission_groups")
+}
+
+model PermissionGroupMenu {
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  permission_group_id  String          @db.Uuid
+  menu_id             String          @db.Uuid
+  can_view            Boolean         @default(false)
+  can_create          Boolean         @default(false)
+  can_edit            Boolean         @default(false)
+  can_delete          Boolean         @default(false)
+  created_at          DateTime        @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  permissionGroup     PermissionGroup @relation(fields: [permission_group_id], references: [id], onDelete: Cascade)
+  systemMenu          SystemMenu      @relation(fields: [menu_id], references: [id], onDelete: Cascade)
+
+  @@unique([permission_group_id, menu_id])
+  @@map("permission_group_menus")
+}
+
+model SystemMenu {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String                @unique
+  label              String
+  path               String?
+  parent_id          String?               @db.Uuid
+  order_index        Int                   @default(0)
+  icon               String?
+  is_active          Boolean               @default(true)
+  created_at         DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime              @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  parent             SystemMenu?           @relation("MenuHierarchy", fields: [parent_id], references: [id])
+  children           SystemMenu[]          @relation("MenuHierarchy")
+  permissions        PermissionGroupMenu[]
+
+  @@map("system_menus")
+}
+
+// ============== CRM SYSTEM ==============
+
+model CrmLead {
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  email                 String?
+  phone                 String?
+  company               String?
+  status                String           @default("novo")
+  pipeline_id           String?          @db.Uuid
+  column_id             String?          @db.Uuid
+  responsible_id        String?          @db.Uuid
+  source                String?
+  value                 Decimal?         @db.Decimal(10,2)
+  notes                 String?
+  created_at           DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime         @default(now()) @db.Timestamptz(6)
+  tags                 String[]         @default([])
+  custom_fields        Json?
+  
+  // Amazon específico
+  amazon_store_name    String?
+  amazon_revenue       Decimal?         @db.Decimal(12,2)
+  amazon_acos          Decimal?         @db.Decimal(5,2)
+  amazon_experience    String?
+  
+  // Business específico  
+  business_type        String?
+  monthly_revenue      Decimal?         @db.Decimal(12,2)
+  employees_count      Int?
+  
+  // Qualificação
+  budget               Decimal?         @db.Decimal(10,2)
+  decision_maker       Boolean?
+  timeline             String?
+  pain_points          String?
+  
+  // Relacionamentos
+  pipeline             CrmPipeline?     @relation(fields: [pipeline_id], references: [id])
+  column               CrmPipelineColumn? @relation(fields: [column_id], references: [id])
+  responsible          Profile?         @relation(fields: [responsible_id], references: [id])
+  comments             CrmLeadComment[]
+  attachments          CrmLeadAttachment[]
+  contacts             CrmLeadContact[]
+  history              CrmLeadHistory[]
+
+  @@map("crm_leads")
+}
+
+model CrmPipeline {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  is_active   Boolean             @default(true)
+  created_at  DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime            @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  columns     CrmPipelineColumn[]
+  leads       CrmLead[]
+
+  @@map("crm_pipelines")
+}
+
+model CrmPipelineColumn {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pipeline_id String      @db.Uuid
+  name        String
+  order_index Int
+  color       String?
+  is_final    Boolean     @default(false)
+  created_at  DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime    @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  pipeline    CrmPipeline @relation(fields: [pipeline_id], references: [id], onDelete: Cascade)
+  leads       CrmLead[]
+
+  @@map("crm_pipeline_columns")
+}
+
+model CrmTag {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @unique
+  color      String   @default("#3B82F6")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("crm_tags")
+}
+
+model CrmNotification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  title      String
+  message    String
+  type       String   @default("info")
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user       Profile  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_notifications")
+}
+
+model CrmLeadComment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  lead       CrmLead  @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  user       Profile  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_lead_comments")
+}
+
+model CrmLeadAttachment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id    String   @db.Uuid
+  file_name  String
+  file_url   String
+  file_size  Int?
+  file_type  String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  lead       CrmLead  @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_lead_attachments")
+}
+
+model CrmLeadContact {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id    String   @db.Uuid
+  type       String   // "call", "email", "meeting", "whatsapp"
+  subject    String?
+  notes      String?
+  datetime   DateTime @db.Timestamptz(6)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  lead       CrmLead  @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_lead_contacts")
+}
+
+model CrmLeadHistory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id    String   @db.Uuid
+  action     String   // "created", "updated", "moved", "status_changed"
+  old_value  String?
+  new_value  String?
+  field_name String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  lead       CrmLead  @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_lead_history")
+}
+
+// ============== MENTORING SYSTEM ==============
+
+model MentoringCatalog {
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                 String
+  description           String?
+  type                  String                @default("individual") // "individual", "group"
+  duration_months       Int
+  price                 Decimal               @db.Decimal(10,2)
+  is_active            Boolean               @default(true)
+  max_students         Int?
+  sessions_per_month   Int                   @default(1)
+  session_duration     Int                   @default(60) // minutos
+  created_at           DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime              @default(now()) @db.Timestamptz(6)
+  checkout_url         String?
+  image_url            String?
+  
+  // Relacionamentos
+  enrollments          MentoringEnrollment[]
+  extensions           MentoringExtension[]
+
+  @@map("mentoring_catalogs")
+}
+
+model MentoringEnrollment {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id           String                @db.Uuid
+  mentoring_id         String                @db.Uuid
+  start_date           DateTime              @db.Date
+  end_date             DateTime              @db.Date
+  status               String                @default("active") // "active", "completed", "cancelled"
+  payment_status       String                @default("pending") // "pending", "paid", "overdue"
+  created_at           DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime              @default(now()) @db.Timestamptz(6)
+  mentor_observations  String?
+  
+  // Relacionamentos
+  student              Profile               @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  mentoring            MentoringCatalog      @relation(fields: [mentoring_id], references: [id], onDelete: Cascade)
+  sessions             MentoringSession[]
+  extensions           MentoringExtension[]
+
+  @@map("mentoring_enrollments")
+}
+
+model MentoringSession {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enrollment_id String?             @db.Uuid
+  student_id    String              @db.Uuid
+  mentor_id     String?             @db.Uuid
+  title         String
+  description   String?
+  scheduled_at  DateTime            @db.Timestamptz(6)
+  duration      Int                 @default(60) // minutos
+  status        String              @default("scheduled") // "scheduled", "completed", "cancelled", "no_show"
+  type          String              @default("individual") // "individual", "group"
+  meeting_url   String?
+  notes         String?
+  created_at    DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime            @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  enrollment    MentoringEnrollment? @relation(fields: [enrollment_id], references: [id])
+  student       Profile             @relation("MentoringSessionStudent", fields: [student_id], references: [id], onDelete: Cascade)
+  mentor        Profile?            @relation("MentoringSessionMentor", fields: [mentor_id], references: [id])
+
+  @@map("mentoring_sessions")
+}
+
+model MentoringMaterial {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  description   String?
+  file_url      String
+  file_type     String?
+  file_size     Int?
+  category      String?
+  uploaded_by   String   @db.Uuid
+  is_public     Boolean  @default(false)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  uploader      Profile  @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
+
+  @@map("mentoring_materials")
+}
+
+model MentoringExtension {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enrollment_id String?             @db.Uuid
+  catalog_id    String?             @db.Uuid
+  months        Int
+  price         Decimal             @db.Decimal(10,2)
+  is_active     Boolean             @default(true)
+  created_at    DateTime            @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  enrollment    MentoringEnrollment? @relation(fields: [enrollment_id], references: [id])
+  catalog       MentoringCatalog?   @relation(fields: [catalog_id], references: [id])
+
+  @@map("mentoring_extensions")
+}
+
+// ============== CREDITS SYSTEM ==============
+
+model UserCredit {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  balance    Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user       Profile  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id])
+  @@map("user_credits")
+}
+
+model CreditPackage {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  credits      Int
+  price        Decimal  @db.Decimal(10,2)
+  bonus_credits Int     @default(0)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  transactions CreditTransaction[]
+
+  @@map("credit_packages")
+}
+
+model CreditTransaction {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String        @db.Uuid
+  type       String        // "purchase", "consumption", "bonus", "refund"
+  amount     Int
+  balance_before Int
+  balance_after Int
+  description String?
+  package_id String?       @db.Uuid
+  created_at DateTime      @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user       Profile       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  package    CreditPackage? @relation(fields: [package_id], references: [id])
+
+  @@map("credit_transactions")
+}
+
+model CreditSubscription {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  plan_name       String
+  credits_per_month Int
+  price_per_month Decimal  @db.Decimal(10,2)
+  status          String   @default("active") // "active", "cancelled", "expired"
+  next_billing    DateTime @db.Date
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user            Profile  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("credit_subscriptions")
+}
+
+model CreditSetting {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key   String @unique
+  value String
+  description String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("credit_settings")
+}
+
+// ============== SUPPLIERS SYSTEM ==============
+
+model MySupplier {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String   @db.Uuid
+  name        String
+  category    String?
+  cnpj        String?
+  email       String?
+  phone       String?
+  website     String?
+  address     String?
+  type        String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user        Profile           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  brands      MySupplierBrand[]
+  branches    MySupplierBranch[]
+  contacts    MySupplierContact[]
+  communications MySupplierCommunication[]
+  ratings     MySupplierRating[]
+  comments    MySupplierComment[]
+
+  @@map("my_suppliers")
+}
+
+model MySupplierBrand {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String     @db.Uuid
+  name        String
+  description String?
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  supplier    MySupplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+
+  @@map("my_supplier_brands")
+}
+
+model MySupplierBranch {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String     @db.Uuid
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  supplier    MySupplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+
+  @@map("my_supplier_branches")
+}
+
+model MySupplierContact {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String     @db.Uuid
+  name        String
+  role        String?
+  phone       String?
+  email       String?
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  supplier    MySupplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+
+  @@map("my_supplier_contacts")
+}
+
+model MySupplierCommunication {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String     @db.Uuid
+  type        String     // "email", "call", "meeting", "whatsapp"
+  subject     String?
+  content     String?
+  date        DateTime   @db.Timestamptz(6)
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  supplier    MySupplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+
+  @@map("my_supplier_communications")
+}
+
+model MySupplierRating {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String     @db.Uuid
+  user_id     String     @db.Uuid
+  rating      Int        // 1-5
+  comment     String?
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  supplier    MySupplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  user        Profile    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("my_supplier_ratings")
+}
+
+model MySupplierComment {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String     @db.Uuid
+  user_id     String     @db.Uuid
+  content     String
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  supplier    MySupplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  user        Profile    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("my_supplier_comments")
+}
+
+// ============== GENERAL SUPPLIERS ==============
+
+model Supplier {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  category    String?
+  description String?
+  website     String?
+  email       String?
+  phone       String?
+  address     String?
+  logo_url    String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("suppliers")
+}
+
+// ============== PARTNERS SYSTEM ==============
+
+model Partner {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  type_id     String?     @db.Uuid
+  description String?
+  website     String?
+  email       String?
+  phone       String?
+  address     String?
+  logo_url    String?
+  is_active   Boolean     @default(true)
+  created_at  DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime    @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  type        PartnerType? @relation(fields: [type_id], references: [id])
+
+  @@map("partners")
+}
+
+model PartnerType {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @unique
+  description String?
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  partners    Partner[]
+
+  @@map("partner_types")
+}
+
+// ============== TOOLS SYSTEM ==============
+
+model Tool {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  type_id     String?       @db.Uuid
+  description String?
+  website     String?
+  pricing     String?
+  logo_url    String?
+  is_active   Boolean       @default(true)
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime      @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  type        SoftwareType? @relation(fields: [type_id], references: [id])
+
+  @@map("tools")
+}
+
+model SoftwareType {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  tools       Tool[]
+
+  @@map("software_types")
+}
+
+// ============== CATEGORIES SYSTEM ==============
+
+model Category {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  description String?
+  type        String   // "supplier", "partner", "tool", "general"
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("categories")
+}
+
+// ============== BONUS SYSTEM ==============
+
+model Bonus {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String?
+  content     String?
+  category    String?
+  is_active   Boolean       @default(true)
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime      @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  comments    BonusComment[]
+  files       BonusFile[]
+
+  @@map("bonuses")
+}
+
+model BonusComment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bonus_id   String   @db.Uuid
+  user_id    String   @db.Uuid
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  bonus      Bonus    @relation(fields: [bonus_id], references: [id], onDelete: Cascade)
+  user       Profile  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("bonus_comments")
+}
+
+model BonusFile {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bonus_id   String   @db.Uuid
+  file_name  String
+  file_url   String
+  file_size  Int?
+  file_type  String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  bonus      Bonus    @relation(fields: [bonus_id], references: [id], onDelete: Cascade)
+
+  @@map("bonus_files")
+}
+
+// ============== TASKS SYSTEM ==============
+
+model Task {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String?
+  status      String   @default("pending") // "pending", "in_progress", "completed", "cancelled"
+  priority    String   @default("medium") // "low", "medium", "high", "urgent"
+  due_date    DateTime? @db.Timestamptz(6)
+  assigned_to String?  @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  assignee    Profile? @relation(fields: [assigned_to], references: [id])
+
+  @@map("tasks")
+}
+
+// ============== NEWS SYSTEM ==============
+
+model News {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  content     String
+  summary     String?
+  image_url   String?
+  is_published Boolean @default(false)
+  published_at DateTime? @db.Timestamptz(6)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("news")
+}
+
+// ============== CALENDLY INTEGRATION ==============
+
+model CalendlyConfig {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  calendly_url String
+  description String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("calendly_configs")
+}
+
+model CalendlyEvent {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  calendly_uuid    String   @unique
+  name             String
+  email            String
+  event_type       String
+  scheduled_at     DateTime @db.Timestamptz(6)
+  status           String
+  meeting_url      String?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("calendly_events")
+}
+
+// ============== LIVI AI SYSTEM ==============
+
+model LiviAiSession {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String          @db.Uuid
+  title      String          @default("Nova Conversa")
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at DateTime        @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user       Profile         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages   LiviAiMessage[]
+
+  @@map("livi_ai_sessions")
+}
+
+model LiviAiMessage {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id String        @db.Uuid
+  user_id    String        @db.Uuid
+  content    String
+  role       String        // "user", "assistant"
+  credits_used Int         @default(0)
+  created_at DateTime      @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  session    LiviAiSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  user       Profile       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("livi_ai_messages")
+}
+
+model LiviAiCredit {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  balance    Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("livi_ai_credits")
+}
+
+// ============== YOUTUBE INTEGRATION ==============
+
+model YoutubeVideo {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  video_id    String   @unique
+  title       String
+  description String?
+  thumbnail   String?
+  duration    String?
+  published_at DateTime? @db.Timestamptz(6)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("youtube_videos")
+}
+
+model YoutubeChannel {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  channel_id  String   @unique
+  name        String
+  description String?
+  thumbnail   String?
+  subscribers Int?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("youtube_channels")
+}
+
+// ============== AUDIT & SECURITY ==============
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?  @db.Uuid
+  action      String
+  table_name  String?
+  record_id   String?
+  old_values  Json?
+  new_values  Json?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  
+  // Relacionamentos
+  user        Profile? @relation(fields: [user_id], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SecurityAlert {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type        String   // "login_failure", "permission_violation", "data_breach"
+  severity    String   @default("medium") // "low", "medium", "high", "critical"
+  message     String
+  details     Json?
+  ip_address  String?
+  user_agent  String?
+  resolved    Boolean  @default(false)
+  resolved_at DateTime? @db.Timestamptz(6)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("security_alerts")
+}
