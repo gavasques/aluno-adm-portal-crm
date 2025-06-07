@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { useSimpleAuth } from "./useSimpleAuth";
+import { useRobustAuth } from "./useRobustAuth";
 import { useBasicAuth } from "./useBasicAuth";
 import { useSocialAuth } from "./useSocialAuth";
 
@@ -10,6 +10,8 @@ interface AuthContextProps {
   session: Session | null;
   loading: boolean;
   error: string | null;
+  isInitialized: boolean;
+  retryCount: number;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -26,9 +28,9 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   console.log('🏠 AuthProvider: Renderizando...');
   
-  const { user, session, loading, error } = useSimpleAuth();
+  const robustAuth = useRobustAuth();
   const { signIn, signUp, signOut, resetPassword, updateUserPassword } = useBasicAuth();
-  const { linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(user);
+  const { linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(robustAuth.user);
 
   const setRecoveryMode = (enabled: boolean) => {
     console.log('🔄 AuthProvider: setRecoveryMode:', enabled);
@@ -40,10 +42,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const contextValue = {
-    user,
-    session,
-    loading,
-    error,
+    user: robustAuth.user,
+    session: robustAuth.session,
+    loading: robustAuth.loading,
+    error: robustAuth.error,
+    isInitialized: robustAuth.isInitialized,
+    retryCount: robustAuth.retryCount,
     signIn,
     signUp,
     signOut,
@@ -56,10 +60,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   console.log('🏠 AuthProvider: Estado do contexto:', { 
-    hasUser: !!user, 
-    loading, 
-    error,
-    userEmail: user?.email 
+    hasUser: !!robustAuth.user, 
+    loading: robustAuth.loading, 
+    error: robustAuth.error,
+    isInitialized: robustAuth.isInitialized,
+    retryCount: robustAuth.retryCount,
+    userEmail: robustAuth.user?.email 
   });
 
   return (
