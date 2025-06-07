@@ -1,53 +1,47 @@
 
 import React, { useState, useEffect } from 'react';
-import { ResourceBlockingDetector } from '@/utils/resourceBlockingDetector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { X, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const BlockingDetectionBanner: React.FC = () => {
   const [showBanner, setShowBanner] = useState(false);
-  const [blockingResult, setBlockingResult] = useState<any>(null);
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Verificar se já foi dispensado anteriormente
+    // Banner muito conservador - só mostrar em casos extremos
     const waseDismissed = localStorage.getItem('blocking_banner_dismissed') === 'true';
     if (waseDismissed) {
-      setDismissed(true);
       return;
     }
 
-    // Verificar bloqueios após um delay maior para evitar falsos positivos
+    // Só verificar após muito tempo e apenas se houver evidência real
     const checkTimer = setTimeout(() => {
       try {
-        const result = ResourceBlockingDetector.detectBlocking();
-        setBlockingResult(result);
+        const hasRealBlocking = window.location.href.includes('ERR_BLOCKED_BY_CLIENT') ||
+                               document.querySelector('[data-adblock-key]') !== null;
         
-        if (result.isBlocked && !dismissed) {
+        if (hasRealBlocking) {
           setShowBanner(true);
         }
       } catch (error) {
-        console.warn('Erro ao verificar bloqueios:', error);
+        // Ignorar erros de verificação
       }
-    }, 5000);
+    }, 15000); // Aguardar 15 segundos
 
     return () => clearTimeout(checkTimer);
-  }, [dismissed]);
+  }, []);
 
   const handleDismiss = () => {
     setShowBanner(false);
-    setDismissed(true);
     localStorage.setItem('blocking_banner_dismissed', 'true');
   };
 
   const handleReload = () => {
-    // Limpar flag de dispensado antes de recarregar
     localStorage.removeItem('blocking_banner_dismissed');
     window.location.reload();
   };
 
-  if (!showBanner || !blockingResult?.isBlocked) {
+  if (!showBanner) {
     return null;
   }
 
@@ -57,15 +51,10 @@ export const BlockingDetectionBanner: React.FC = () => {
       <AlertDescription className="flex-1">
         <div className="flex items-center justify-between">
           <div>
-            <strong className="text-orange-800">Recursos bloqueados detectados</strong>
+            <strong className="text-orange-800">Possível bloqueio detectado</strong>
             <p className="text-sm text-orange-700 mt-1">
-              Extensões do navegador podem estar interferindo. Sugestões:
+              Se a aplicação não estiver funcionando, tente desativar extensões de bloqueio.
             </p>
-            <ul className="text-xs text-orange-600 mt-1 ml-4">
-              {blockingResult.suggestions.map((suggestion: string, index: number) => (
-                <li key={index}>• {suggestion}</li>
-              ))}
-            </ul>
           </div>
           <div className="flex gap-2 ml-4">
             <Button 

@@ -2,6 +2,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/hooks/auth';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -31,9 +32,11 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {children}
-        <Toaster />
-        <SonnerToaster position="top-right" />
+        <NotificationsProvider>
+          {children}
+          <Toaster />
+          <SonnerToaster position="top-right" />
+        </NotificationsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

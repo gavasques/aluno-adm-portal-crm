@@ -1,6 +1,5 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ResourceBlockingDetector } from '@/utils/resourceBlockingDetector';
 
 interface Props {
   children: ReactNode;
@@ -20,17 +19,23 @@ export class AppErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error) {
     console.error('🚨 ErrorBoundary: Erro capturado:', error);
+    console.error('🚨 ErrorBoundary: Stack completo:', error.stack);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('🚨 ErrorBoundary: Detalhes do erro:', error, errorInfo);
-    console.error('🚨 ErrorBoundary: Stack trace completo:', errorInfo.componentStack);
+    console.error('🚨 ErrorBoundary: Detalhes completos do erro:');
+    console.error('- Mensagem:', error.message);
+    console.error('- Stack:', error.stack);
+    console.error('- Component Stack:', errorInfo.componentStack);
+    console.error('- Error Info:', errorInfo);
     
-    // Verificar se é erro relacionado a bloqueio
-    if (error.message.includes('blocked') || error.message.includes('ERR_BLOCKED_BY_CLIENT')) {
-      ResourceBlockingDetector.createFallbackMode();
-    }
+    // Log adicional para debug
+    console.error('🚨 ErrorBoundary: Estado da aplicação:', {
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString()
+    });
     
     this.setState({ errorInfo });
   }
@@ -40,46 +45,28 @@ export class AppErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center p-8 max-w-lg">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Ops! Algo deu errado</h1>
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Erro na Aplicação</h1>
             <p className="text-gray-600 mb-4">
-              {this.state.error?.message.includes('blocked') 
-                ? 'Recursos bloqueados por extensões do navegador detectados.'
-                : 'Ocorreu um erro inesperado na aplicação.'
-              }
+              Ocorreu um erro inesperado. Verifique o console para mais detalhes.
             </p>
             
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="bg-gray-100 p-3 rounded text-sm mb-4">
+              <details className="bg-gray-100 p-3 rounded text-sm mb-4 text-left">
                 <summary className="cursor-pointer font-medium text-gray-700 mb-2">
-                  Detalhes do erro (desenvolvimento)
+                  Detalhes do erro
                 </summary>
-                <pre className="text-xs text-red-600 overflow-auto whitespace-pre-wrap">
+                <div className="text-xs text-red-600 overflow-auto whitespace-pre-wrap max-h-40">
                   <strong>Erro:</strong> {this.state.error.message}
-                  {this.state.error.stack && (
-                    <>
-                      <br /><br />
-                      <strong>Stack:</strong> {this.state.error.stack}
-                    </>
-                  )}
+                  <br /><br />
+                  <strong>Stack:</strong> {this.state.error.stack}
                   {this.state.errorInfo?.componentStack && (
                     <>
                       <br /><br />
                       <strong>Component Stack:</strong> {this.state.errorInfo.componentStack}
                     </>
                   )}
-                </pre>
+                </div>
               </details>
-            )}
-            
-            {this.state.error?.message.includes('blocked') && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-sm text-yellow-800">
-                <p className="font-semibold mb-2">Soluções:</p>
-                <ul className="text-left space-y-1">
-                  <li>• Desative extensões de bloqueio (AdBlock, uBlock)</li>
-                  <li>• Use modo incógnito</li>
-                  <li>• Adicione o site às exceções</li>
-                </ul>
-              </div>
             )}
             
             <div className="space-x-3">

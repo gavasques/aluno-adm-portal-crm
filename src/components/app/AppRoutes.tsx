@@ -19,59 +19,77 @@ export const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
 
       {/* Rotas Admin */}
-      <Route path="/admin" element={
-        <OptimizedProtectedRoute requireAdmin={true}>
-          <UnifiedOptimizedLayout isAdmin={true}>
-            <AdminDashboard />
-          </UnifiedOptimizedLayout>
-        </OptimizedProtectedRoute>
-      } />
-      <Route path="/admin/users" element={
-        <OptimizedProtectedRoute requireAdmin={true}>
-          <UnifiedOptimizedLayout isAdmin={true}>
-            <AdminUsers />
-          </UnifiedOptimizedLayout>
-        </OptimizedProtectedRoute>
-      } />
+      <Route 
+        path="/admin" 
+        element={
+          <OptimizedProtectedRoute requireAdmin={true}>
+            <UnifiedOptimizedLayout isAdmin={true}>
+              <AdminDashboard />
+            </UnifiedOptimizedLayout>
+          </OptimizedProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/users" 
+        element={
+          <OptimizedProtectedRoute requireAdmin={true}>
+            <UnifiedOptimizedLayout isAdmin={true}>
+              <AdminUsers />
+            </UnifiedOptimizedLayout>
+          </OptimizedProtectedRoute>
+        } 
+      />
 
       {/* Rotas Aluno */}
-      <Route path="/aluno" element={
-        <OptimizedProtectedRoute>
-          <UnifiedOptimizedLayout isAdmin={false}>
-            <StudentDashboard />
-          </UnifiedOptimizedLayout>
-        </OptimizedProtectedRoute>
-      } />
-      <Route path="/aluno/meus-fornecedores" element={
-        <OptimizedProtectedRoute>
-          <UnifiedOptimizedLayout isAdmin={false}>
-            <StudentMySuppliers />
-          </UnifiedOptimizedLayout>
-        </OptimizedProtectedRoute>
-      } />
-      <Route path="/aluno/mentoria" element={
-        <OptimizedProtectedRoute>
-          <UnifiedOptimizedLayout isAdmin={false}>
-            <StudentMentoring />
-          </UnifiedOptimizedLayout>
-        </OptimizedProtectedRoute>
-      } />
+      <Route 
+        path="/aluno" 
+        element={
+          <OptimizedProtectedRoute>
+            <UnifiedOptimizedLayout isAdmin={false}>
+              <StudentDashboard />
+            </UnifiedOptimizedLayout>
+          </OptimizedProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/aluno/meus-fornecedores" 
+        element={
+          <OptimizedProtectedRoute>
+            <UnifiedOptimizedLayout isAdmin={false}>
+              <StudentMySuppliers />
+            </UnifiedOptimizedLayout>
+          </OptimizedProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/aluno/mentoria" 
+        element={
+          <OptimizedProtectedRoute>
+            <UnifiedOptimizedLayout isAdmin={false}>
+              <StudentMentoring />
+            </UnifiedOptimizedLayout>
+          </OptimizedProtectedRoute>
+        } 
+      />
 
       {/* 404 */}
-      <Route path="*" element={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900">404</h1>
-            <p className="text-gray-600">Página não encontrada</p>
-            <button 
-              onClick={() => window.history.back()}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Voltar
-            </button>
+      <Route 
+        path="*" 
+        element={
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900">404</h1>
+              <p className="text-gray-600">Página não encontrada</p>
+              <button 
+                onClick={() => window.history.back()}
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Voltar
+              </button>
+            </div>
           </div>
-        </div>
-      } />
+        } 
+      />
     </Routes>
   );
 };
