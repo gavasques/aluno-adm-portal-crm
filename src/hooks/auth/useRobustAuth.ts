@@ -23,23 +23,25 @@ export const useRobustAuth = () => {
 
   const initTimeoutRef = useRef<NodeJS.Timeout>();
   const retryCountRef = useRef(0);
-  const maxRetries = 3;
+  const maxRetries = 2; // Reduzir tentativas
 
   const initializeAuth = async (attempt = 1) => {
     try {
       console.log(`🔐 Inicializando autenticação (tentativa ${attempt}/${maxRetries})`);
       
-      // Verificar se há bloqueios
-      const blockingResult = ResourceBlockingDetector.detectBlocking();
-      if (blockingResult.isBlocked && attempt === 1) {
-        console.warn('⚠️ Recursos bloqueados detectados:', blockingResult.suggestions);
-        ResourceBlockingDetector.createFallbackMode();
+      // Verificar se há bloqueios apenas se necessário
+      if (attempt === 1) {
+        const blockingResult = ResourceBlockingDetector.detectBlocking();
+        if (blockingResult.isBlocked) {
+          console.warn('⚠️ Recursos bloqueados detectados');
+          ResourceBlockingDetector.createFallbackMode();
+        }
       }
 
-      // Tentar obter sessão com timeout
+      // Tentar obter sessão com timeout menor
       const sessionPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout na autenticação')), 5000)
+        setTimeout(() => reject(new Error('Timeout na autenticação')), 3000)
       );
 
       const { data: { session }, error } = await Promise.race([
@@ -61,14 +63,14 @@ export const useRobustAuth = () => {
         isInitialized: true
       });
 
-      retryCountRef.current = 0; // Reset contador em caso de sucesso
+      retryCountRef.current = 0;
 
     } catch (error: any) {
       console.error(`❌ Erro na inicialização (tentativa ${attempt}):`, error);
       
       if (attempt < maxRetries) {
         retryCountRef.current = attempt;
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        const delay = 1000 * attempt; // Delay linear mais simples
         console.log(`🔄 Reagendando tentativa ${attempt + 1} em ${delay}ms`);
         
         setTimeout(() => {
@@ -79,7 +81,7 @@ export const useRobustAuth = () => {
         setAuthState(prev => ({
           ...prev,
           loading: false,
-          error: 'Erro na inicialização da autenticação. Verifique sua conexão.',
+          error: 'Erro na inicialização da autenticação. Tente recarregar a página.',
           isInitialized: true
         }));
       }
@@ -115,18 +117,18 @@ export const useRobustAuth = () => {
         );
         subscription = authSubscription;
 
-        // Timeout de emergência
+        // Timeout de emergência menor
         initTimeoutRef.current = setTimeout(() => {
           if (mounted && !authState.isInitialized) {
             console.warn('⚠️ Timeout de emergência atingido');
             setAuthState(prev => ({
               ...prev,
               loading: false,
-              error: 'Timeout na inicialização',
+              error: null, // Não tratar timeout como erro crítico
               isInitialized: true
             }));
           }
-        }, 10000);
+        }, 6000);
 
         // Inicializar autenticação
         await initializeAuth();

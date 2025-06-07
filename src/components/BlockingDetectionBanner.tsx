@@ -11,15 +11,26 @@ export const BlockingDetectionBanner: React.FC = () => {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Verificar bloqueios após um delay
+    // Verificar se já foi dispensado anteriormente
+    const waseDismissed = localStorage.getItem('blocking_banner_dismissed') === 'true';
+    if (waseDismissed) {
+      setDismissed(true);
+      return;
+    }
+
+    // Verificar bloqueios após um delay maior para evitar falsos positivos
     const checkTimer = setTimeout(() => {
-      const result = ResourceBlockingDetector.detectBlocking();
-      setBlockingResult(result);
-      
-      if (result.isBlocked && !dismissed) {
-        setShowBanner(true);
+      try {
+        const result = ResourceBlockingDetector.detectBlocking();
+        setBlockingResult(result);
+        
+        if (result.isBlocked && !dismissed) {
+          setShowBanner(true);
+        }
+      } catch (error) {
+        console.warn('Erro ao verificar bloqueios:', error);
       }
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(checkTimer);
   }, [dismissed]);
@@ -31,6 +42,8 @@ export const BlockingDetectionBanner: React.FC = () => {
   };
 
   const handleReload = () => {
+    // Limpar flag de dispensado antes de recarregar
+    localStorage.removeItem('blocking_banner_dismissed');
     window.location.reload();
   };
 

@@ -18,7 +18,7 @@ export class ResourceBlockingDetector {
     const blockedResources: string[] = [];
     const suggestions: string[] = [];
 
-    // Verificar se há erros de rede no console
+    // Verificar se há erros de rede no console de forma mais conservadora
     const hasNetworkErrors = this.hasRecentNetworkErrors();
     
     if (hasNetworkErrors) {
@@ -35,19 +35,29 @@ export class ResourceBlockingDetector {
   }
 
   private static hasRecentNetworkErrors(): boolean {
-    // Verificar se há indicadores de bloqueio
-    return window.location.href.includes('lovable') || 
-           document.querySelector('script[src*="ingest"]') === null;
+    // Verificação mais conservadora - apenas detecta se realmente há bloqueio
+    try {
+      // Verificar se algum recurso crítico foi bloqueado
+      const scripts = document.querySelectorAll('script[src]');
+      const hasBlockedScripts = Array.from(scripts).some(script => {
+        const src = (script as HTMLScriptElement).src;
+        return this.blockedPatterns.some(pattern => src.includes(pattern));
+      });
+      
+      // Só retorna true se realmente detectar bloqueio específico
+      return hasBlockedScripts && window.location.href.includes('lovable');
+    } catch (error) {
+      // Em caso de erro na detecção, não assumir bloqueio
+      return false;
+    }
   }
 
   static createFallbackMode(): void {
-    // Definir modo de fallback global
-    (window as any).__FALLBACK_MODE__ = true;
-    
-    // Desabilitar analytics problemáticos
-    (window as any).__DISABLE_ANALYTICS__ = true;
-    
-    console.log('🛡️ Modo fallback ativado - recursos externos desabilitados');
+    // Definir modo de fallback global apenas se necessário
+    if (!this.isFallbackMode()) {
+      (window as any).__FALLBACK_MODE__ = true;
+      console.log('🛡️ Modo fallback ativado - recursos externos desabilitados');
+    }
   }
 
   static isFallbackMode(): boolean {

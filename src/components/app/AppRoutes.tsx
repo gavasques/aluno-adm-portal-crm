@@ -19,26 +19,40 @@ export const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
 
       {/* Rotas Admin */}
-      <Route path="/admin/*" element={
+      <Route path="/admin" element={
         <OptimizedProtectedRoute requireAdmin={true}>
           <UnifiedOptimizedLayout isAdmin={true}>
-            <Routes>
-              <Route path="/" element={<AdminDashboard />} />
-              <Route path="/users" element={<AdminUsers />} />
-            </Routes>
+            <AdminDashboard />
+          </UnifiedOptimizedLayout>
+        </OptimizedProtectedRoute>
+      } />
+      <Route path="/admin/users" element={
+        <OptimizedProtectedRoute requireAdmin={true}>
+          <UnifiedOptimizedLayout isAdmin={true}>
+            <AdminUsers />
           </UnifiedOptimizedLayout>
         </OptimizedProtectedRoute>
       } />
 
       {/* Rotas Aluno */}
-      <Route path="/aluno/*" element={
+      <Route path="/aluno" element={
         <OptimizedProtectedRoute>
           <UnifiedOptimizedLayout isAdmin={false}>
-            <Routes>
-              <Route path="/" element={<StudentDashboard />} />
-              <Route path="/meus-fornecedores" element={<StudentMySuppliers />} />
-              <Route path="/mentoria" element={<StudentMentoring />} />
-            </Routes>
+            <StudentDashboard />
+          </UnifiedOptimizedLayout>
+        </OptimizedProtectedRoute>
+      } />
+      <Route path="/aluno/meus-fornecedores" element={
+        <OptimizedProtectedRoute>
+          <UnifiedOptimizedLayout isAdmin={false}>
+            <StudentMySuppliers />
+          </UnifiedOptimizedLayout>
+        </OptimizedProtectedRoute>
+      } />
+      <Route path="/aluno/mentoria" element={
+        <OptimizedProtectedRoute>
+          <UnifiedOptimizedLayout isAdmin={false}>
+            <StudentMentoring />
           </UnifiedOptimizedLayout>
         </OptimizedProtectedRoute>
       } />
