@@ -1,10 +1,10 @@
 
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // URL base do site que será usado para redirecionamentos
-const BASE_URL = "https://titan.guilhermevasques.club";
+const BASE_URL = window.location.origin;
 
 export function useSocialAuth(user: User | null) {
   // Função para login com Google
@@ -24,11 +24,7 @@ export function useSocialAuth(user: User | null) {
       if (error) throw error;
     } catch (error: any) {
       console.error("Erro ao fazer login com Google:", error);
-      toast({
-        title: "Erro ao fazer login com Google",
-        description: error.message || "Ocorreu um erro ao tentar fazer login com o Google.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao fazer login com Google");
       throw error;
     }
   };
@@ -42,23 +38,15 @@ export function useSocialAuth(user: User | null) {
       
       if (error) throw error;
       
-      toast({
-        title: "Conta vinculada com sucesso",
-        description: `Sua conta foi vinculada ao provedor ${provider}.`,
-        variant: "default",
-      });
+      toast.success(`Conta vinculada ao ${provider} com sucesso`);
     } catch (error: any) {
       console.error(`Erro ao vincular conta com ${provider}:`, error);
-      toast({
-        title: "Erro ao vincular conta",
-        description: error.message || "Ocorreu um erro ao tentar vincular sua conta.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao vincular conta");
       throw error;
     }
   };
 
-  // Função para desvincular identidade - corrigida para usar o objeto UserIdentity completo
+  // Função para desvincular identidade
   const unlinkIdentity = async (provider: string, identity_id: string) => {
     try {
       // Obtém todas as identidades do usuário
@@ -73,23 +61,15 @@ export function useSocialAuth(user: User | null) {
         throw new Error("Identidade não encontrada para desvinculação");
       }
       
-      // Usa o objeto de identidade completo que atende ao tipo UserIdentity
+      // Usa o objeto de identidade completo
       const { error } = await supabase.auth.unlinkIdentity(identityToUnlink);
       
       if (error) throw error;
       
-      toast({
-        title: "Conta desvinculada com sucesso",
-        description: `Conta desvinculada.`,
-        variant: "default",
-      });
+      toast.success("Conta desvinculada com sucesso");
     } catch (error: any) {
       console.error(`Erro ao desvincular identidade:`, error);
-      toast({
-        title: "Erro ao desvincular conta",
-        description: error.message || "Ocorreu um erro ao tentar desvincular sua conta.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao desvincular conta");
       throw error;
     }
   };
