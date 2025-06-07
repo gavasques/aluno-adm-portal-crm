@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import AdminSidebar from './AdminSidebar';
 import StudentSidebar from './StudentSidebar';
@@ -10,13 +10,22 @@ interface UnifiedOptimizedLayoutProps {
   children: React.ReactNode;
 }
 
-const UnifiedOptimizedLayout = memo(({ isAdmin, children }: UnifiedOptimizedLayoutProps) => {
+const UnifiedOptimizedLayout: React.FC<UnifiedOptimizedLayoutProps> = ({ 
+  isAdmin, 
+  children 
+}) => {
   const { user, loading } = useAuth();
 
-  console.log('🏗️ UnifiedOptimizedLayout:', { isAdmin, hasUser: !!user, loading });
+  console.log('🏗️ Layout renderizando:', { 
+    isAdmin, 
+    hasUser: !!user, 
+    userEmail: user?.email,
+    loading 
+  });
 
-  // Loading state
+  // Se ainda carregando auth, mostrar loading
   if (loading) {
+    console.log('⏳ Layout aguardando auth...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
@@ -27,17 +36,13 @@ const UnifiedOptimizedLayout = memo(({ isAdmin, children }: UnifiedOptimizedLayo
     );
   }
 
-  // No user - show children (probably login)
+  // Se não há usuário, renderizar children (normalmente será redirecionado)
   if (!user) {
-    console.log('🚫 No user in layout');
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {children}
-      </div>
-    );
+    console.log('🚫 Layout sem usuário');
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
   }
 
-  console.log('✅ Rendering layout with user:', user.email);
+  console.log('✅ Layout renderizando com usuário autenticado');
 
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
@@ -46,7 +51,7 @@ const UnifiedOptimizedLayout = memo(({ isAdmin, children }: UnifiedOptimizedLayo
         {isAdmin ? <AdminSidebar /> : <StudentSidebar />}
       </div>
       
-      {/* Main Content */}
+      {/* Conteúdo Principal */}
       <div className="flex-1 overflow-auto ml-64">
         <main className="w-full">
           <div className="max-w-full">
@@ -58,8 +63,6 @@ const UnifiedOptimizedLayout = memo(({ isAdmin, children }: UnifiedOptimizedLayo
       <PendingValidationOverlay />
     </div>
   );
-});
-
-UnifiedOptimizedLayout.displayName = 'UnifiedOptimizedLayout';
+};
 
 export default UnifiedOptimizedLayout;

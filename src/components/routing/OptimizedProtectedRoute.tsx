@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useSimplePermissions } from '@/hooks/useSimplePermissions';
 import Login from '@/pages/Login';
@@ -9,20 +9,25 @@ interface OptimizedProtectedRouteProps {
   requireAdmin?: boolean;
 }
 
-const OptimizedProtectedRoute = memo(({ children, requireAdmin = false }: OptimizedProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+const OptimizedProtectedRoute: React.FC<OptimizedProtectedRouteProps> = ({ 
+  children, 
+  requireAdmin = false 
+}) => {
+  const { user, loading: authLoading } = useAuth();
   const { hasAdminAccess, loading: permissionsLoading } = useSimplePermissions();
 
-  console.log('🛡️ ProtectedRoute:', { 
+  console.log('🛡️ ProtectedRoute verificando:', { 
     hasUser: !!user, 
-    loading, 
+    userEmail: user?.email,
+    authLoading, 
     requireAdmin, 
     hasAdminAccess, 
     permissionsLoading 
   });
 
-  // Show loading while checking auth
-  if (loading || permissionsLoading) {
+  // Mostrar loading enquanto verifica
+  if (authLoading || (user && permissionsLoading)) {
+    console.log('⏳ ProtectedRoute aguardando...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -30,15 +35,15 @@ const OptimizedProtectedRoute = memo(({ children, requireAdmin = false }: Optimi
     );
   }
 
-  // Redirect to login if not authenticated
+  // Redirecionar para login se não autenticado
   if (!user) {
-    console.log('🔒 No user, showing login');
+    console.log('🔒 Redirecionando para login');
     return <Login />;
   }
 
-  // Check admin access if required
+  // Verificar acesso admin se necessário
   if (requireAdmin && !hasAdminAccess) {
-    console.log('❌ Admin required but user has no admin access');
+    console.log('❌ Acesso admin negado');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -49,10 +54,8 @@ const OptimizedProtectedRoute = memo(({ children, requireAdmin = false }: Optimi
     );
   }
 
-  console.log('✅ Access granted, rendering children');
+  console.log('✅ Acesso permitido');
   return <>{children}</>;
-});
-
-OptimizedProtectedRoute.displayName = 'OptimizedProtectedRoute';
+};
 
 export default OptimizedProtectedRoute;

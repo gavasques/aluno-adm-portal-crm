@@ -10,77 +10,54 @@ export const useSimpleAuth = () => {
   const [error, setError] = useState<string | null>(null);
   
   const initialized = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
-    console.log('🔧 Inicializando autenticação...');
-
-    // Timeout de segurança para evitar travamento
-    timeoutRef.current = setTimeout(() => {
-      console.log('⚠️ Timeout na inicialização, continuando sem autenticação');
-      setLoading(false);
-    }, 5000);
+    console.log('🔧 Inicializando autenticação simples...');
 
     const initAuth = async () => {
       try {
-        // Verificar sessão existente com timeout
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 3000)
-        );
-
-        const { data: { session: currentSession }, error: sessionError } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as any;
+        // Verificar sessão existente
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError && sessionError.message !== 'Timeout') {
+        if (sessionError) {
           console.error('❌ Erro ao obter sessão:', sessionError);
           setError(sessionError.message);
-        } else if (currentSession) {
-          console.log('✅ Sessão encontrada:', currentSession?.user?.email);
+        } else {
+          console.log('✅ Sessão verificada:', currentSession?.user?.email || 'Nenhuma sessão');
           setSession(currentSession);
           setUser(currentSession?.user || null);
-        } else {
-          console.log('ℹ️ Nenhuma sessão encontrada');
         }
       } catch (err) {
-        console.warn('⚠️ Erro na inicialização (continuando):', err);
-        // Não definir erro aqui, apenas continuar
+        console.error('❌ Erro na inicialização:', err);
+        setError('Erro ao inicializar autenticação');
       } finally {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
         setLoading(false);
       }
     };
 
-    // Configurar listener simples
+    // Configurar listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log('🔄 Auth event:', event);
+        console.log('🔄 Auth event:', event, currentSession?.user?.email);
         
         setSession(currentSession);
         setUser(currentSession?.user || null);
         setError(null);
-        setLoading(false);
+        
+        if (!loading) setLoading(false);
       }
     );
 
     initAuth();
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
       subscription.unsubscribe();
       initialized.current = false;
     };
-  }, []);
+  }, [loading]);
 
   return {
     user,

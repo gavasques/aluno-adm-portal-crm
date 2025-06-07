@@ -1,24 +1,19 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/hooks/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
-import { useSimplePermissions } from '@/hooks/useSimplePermissions';
 
-// Static imports for critical pages
+// Imports diretos para páginas críticas
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
-
-// Lazy imports with simple fallback
-import { Suspense, lazy } from 'react';
-
-const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
-const AdminUsers = lazy(() => import('@/pages/admin/Users'));
-const StudentDashboard = lazy(() => import('@/pages/student/Dashboard'));
-const StudentMySuppliers = lazy(() => import('@/pages/student/MySuppliers'));
-const StudentMentoring = lazy(() => import('@/pages/student/Mentoring'));
+import AdminDashboard from '@/pages/admin/Dashboard';
+import AdminUsers from '@/pages/admin/Users';
+import StudentDashboard from '@/pages/student/Dashboard';
+import StudentMySuppliers from '@/pages/student/MySuppliers';
+import StudentMentoring from '@/pages/student/Mentoring';
 
 import UnifiedOptimizedLayout from '@/layout/UnifiedOptimizedLayout';
 import OptimizedProtectedRoute from '@/components/routing/OptimizedProtectedRoute';
@@ -34,8 +29,8 @@ const queryClient = new QueryClient({
   },
 });
 
-// Simple loading component
-const PageLoading = () => (
+// Componente de loading simples
+const SimpleLoading = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
     <div className="flex flex-col items-center space-y-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -45,62 +40,44 @@ const PageLoading = () => (
 );
 
 function App() {
+  console.log('🚀 App iniciando...');
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
           <div className="App">
             <Routes>
-              {/* Public Routes */}
+              {/* Rotas Públicas */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
 
-              {/* Admin Routes */}
+              {/* Rotas Admin */}
               <Route path="/admin/*" element={
                 <OptimizedProtectedRoute requireAdmin={true}>
                   <UnifiedOptimizedLayout isAdmin={true}>
                     <Routes>
-                      <Route path="/" element={
-                        <Suspense fallback={<PageLoading />}>
-                          <AdminDashboard />
-                        </Suspense>
-                      } />
-                      <Route path="/users" element={
-                        <Suspense fallback={<PageLoading />}>
-                          <AdminUsers />
-                        </Suspense>
-                      } />
+                      <Route path="/" element={<AdminDashboard />} />
+                      <Route path="/users" element={<AdminUsers />} />
                     </Routes>
                   </UnifiedOptimizedLayout>
                 </OptimizedProtectedRoute>
               } />
 
-              {/* Student Routes */}
+              {/* Rotas Aluno */}
               <Route path="/aluno/*" element={
                 <OptimizedProtectedRoute>
                   <UnifiedOptimizedLayout isAdmin={false}>
                     <Routes>
-                      <Route path="/" element={
-                        <Suspense fallback={<PageLoading />}>
-                          <StudentDashboard />
-                        </Suspense>
-                      } />
-                      <Route path="/meus-fornecedores" element={
-                        <Suspense fallback={<PageLoading />}>
-                          <StudentMySuppliers />
-                        </Suspense>
-                      } />
-                      <Route path="/mentoria" element={
-                        <Suspense fallback={<PageLoading />}>
-                          <StudentMentoring />
-                        </Suspense>
-                      } />
+                      <Route path="/" element={<StudentDashboard />} />
+                      <Route path="/meus-fornecedores" element={<StudentMySuppliers />} />
+                      <Route path="/mentoria" element={<StudentMentoring />} />
                     </Routes>
                   </UnifiedOptimizedLayout>
                 </OptimizedProtectedRoute>
               } />
 
-              {/* 404 Route */}
+              {/* 404 */}
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">
