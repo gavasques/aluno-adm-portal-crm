@@ -1,38 +1,35 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ClipboardCheck, Search, Filter, Shield, Activity, AlertCircle } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-const Audit = () => {
-  const auditLogs = [
+const CrmWebhookLogs = () => {
+  const logs = [
     {
       id: 1,
       timestamp: "2024-01-20 14:30:25",
-      user: "admin@example.com",
-      action: "USER_CREATED",
-      resource: "User ID: 12345",
-      ip: "192.168.1.100",
-      status: "success"
+      endpoint: "/api/crm/lead-created",
+      status: "success",
+      responseTime: "145ms",
+      payload: "Lead ID: 12345"
     },
     {
       id: 2,
       timestamp: "2024-01-20 14:25:12",
-      user: "manager@example.com",
-      action: "PERMISSION_UPDATED",
-      resource: "Permission Group: Mentors",
-      ip: "192.168.1.101",
-      status: "success"
+      endpoint: "/api/crm/deal-updated",
+      status: "error",
+      responseTime: "2.1s",
+      payload: "Deal ID: 67890"
     },
     {
       id: 3,
       timestamp: "2024-01-20 14:20:08",
-      user: "user@example.com",
-      action: "LOGIN_FAILED",
-      resource: "Authentication",
-      ip: "192.168.1.102",
-      status: "error"
+      endpoint: "/api/crm/contact-updated",
+      status: "success",
+      responseTime: "89ms",
+      payload: "Contact ID: 54321"
     }
   ];
 
@@ -40,14 +37,14 @@ const Audit = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Auditoria</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Logs Webhook CRM</h1>
           <p className="text-muted-foreground">
-            Monitor de atividades e logs de segurança
+            Monitore os webhooks e integrações do sistema CRM
           </p>
         </div>
         <Button>
-          <ClipboardCheck className="h-4 w-4 mr-2" />
-          Exportar Logs
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
         </Button>
       </div>
 
@@ -56,13 +53,13 @@ const Audit = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Activity className="h-5 w-5 mr-2" />
-              Atividades Hoje
+              Total Hoje
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,234</div>
             <p className="text-xs text-muted-foreground">
-              Ações registradas
+              Webhooks processados
             </p>
           </CardContent>
         </Card>
@@ -70,8 +67,8 @@ const Audit = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Shield className="h-5 w-5 mr-2 text-green-600" />
-              Logins Válidos
+              <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+              Sucessos
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -85,8 +82,8 @@ const Audit = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-              Tentativas Falhadas
+              <XCircle className="h-5 w-5 mr-2 text-red-600" />
+              Erros
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -99,12 +96,15 @@ const Audit = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Usuários Únicos</CardTitle>
+            <CardTitle className="flex items-center">
+              <Clock className="h-5 w-5 mr-2" />
+              Tempo Médio
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">567</div>
+            <div className="text-2xl font-bold">156ms</div>
             <p className="text-xs text-muted-foreground">
-              Atividade hoje
+              Resposta média
             </p>
           </CardContent>
         </Card>
@@ -112,48 +112,34 @@ const Audit = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Logs de Auditoria</CardTitle>
+          <CardTitle>Logs Recentes</CardTitle>
           <CardDescription>
-            Histórico completo de atividades do sistema
+            Últimas atividades dos webhooks CRM
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                placeholder="Buscar nos logs..."
-                className="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
-          </div>
-          
           <div className="space-y-4">
-            {auditLogs.map((log) => (
+            {logs.map((log) => (
               <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     {log.status === 'success' ? (
-                      <Shield className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-4 w-4 text-green-600" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-red-600" />
+                      <XCircle className="h-4 w-4 text-red-600" />
                     )}
                     <span className="font-mono text-sm">{log.timestamp}</span>
                   </div>
                   <div>
-                    <p className="font-medium">{log.action}</p>
-                    <p className="text-sm text-muted-foreground">{log.user} - {log.resource}</p>
+                    <p className="font-medium">{log.endpoint}</p>
+                    <p className="text-sm text-muted-foreground">{log.payload}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
                     {log.status}
                   </Badge>
-                  <span className="text-sm text-muted-foreground">{log.ip}</span>
+                  <span className="text-sm text-muted-foreground">{log.responseTime}</span>
                 </div>
               </div>
             ))}
@@ -164,4 +150,4 @@ const Audit = () => {
   );
 };
 
-export default Audit;
+export default CrmWebhookLogs;
