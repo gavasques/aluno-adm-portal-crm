@@ -18,7 +18,7 @@ export const useBasicAuth = () => {
       }
 
       console.log('✅ Login realizado com sucesso');
-      // Não fazer redirecionamento aqui, deixar o AuthTabs gerenciar
+      // Não fazer redirecionamento aqui, deixar o Index gerenciar
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       throw error;
@@ -86,6 +86,7 @@ export const useBasicAuth = () => {
       }
 
       console.log('✅ Email de reset enviado');
+      toast.success('Email de redefinição enviado!');
     } catch (error: any) {
       console.error('❌ Erro no reset:', error);
       throw error;
@@ -130,10 +131,12 @@ export const useBasicAuth = () => {
       }
 
       console.log('✅ Magic link enviado');
+      toast.success('Magic link enviado! Verifique seu email.');
       return true;
     } catch (error: any) {
       console.error('❌ Erro ao enviar magic link:', error);
-      throw error;
+      toast.error('Erro ao enviar magic link');
+      return false;
     }
   };
 

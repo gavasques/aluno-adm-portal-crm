@@ -1,25 +1,16 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PerformanceOptimizedUserProvider } from '@/contexts/PerformanceOptimizedUserContext';
+import ModernUnifiedUserPage from '@/features/users/components/ModernUnifiedUserPage';
 
-const AdminUsers = () => {
+const Users = () => {
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestão de Usuários</h1>
-        <p className="text-gray-600">Gerencie usuários, permissões e acessos do sistema</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Usuários</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">Funcionalidade em desenvolvimento...</p>
-        </CardContent>
-      </Card>
+    <div className="p-8">
+      <PerformanceOptimizedUserProvider>
+        <ModernUnifiedUserPage />
+      </PerformanceOptimizedUserProvider>
     </div>
   );
 };
 
-export default AdminUsers;
+export default Users;

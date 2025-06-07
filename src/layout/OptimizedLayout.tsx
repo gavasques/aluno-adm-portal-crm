@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useOptimizedAuth } from '@/hooks/auth/useOptimizedAuth';
 import AdminSidebar from './AdminSidebar';
@@ -14,16 +14,11 @@ interface OptimizedLayoutProps {
 const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
   const { user, loading } = useOptimizedAuth();
   const location = useLocation();
-  const [isStudentSidebarCollapsed, setIsStudentSidebarCollapsed] = useState(false);
-
-  const handleStudentSidebarToggle = () => {
-    setIsStudentSidebarCollapsed(!isStudentSidebarCollapsed);
-  };
 
   // Memoize the sidebar width calculation
   const sidebarWidth = useMemo(() => {
-    return isAdmin ? 256 : (isStudentSidebarCollapsed ? 64 : 256);
-  }, [isAdmin, isStudentSidebarCollapsed]);
+    return isAdmin ? 256 : 256; // Default width, can be made dynamic if needed
+  }, [isAdmin]);
 
   // Memoize loading state
   const loadingComponent = useMemo(() => (
@@ -37,8 +32,8 @@ const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
 
   // Memoize the main content area styles
   const mainContentStyles = useMemo(() => ({
-    marginLeft: `${sidebarWidth}px`
-  }), [sidebarWidth]);
+    marginLeft: isAdmin ? `${sidebarWidth + 4}px` : undefined
+  }), [isAdmin, sidebarWidth]);
 
   // Early returns for loading and unauthenticated states
   if (loading) {
@@ -61,16 +56,13 @@ const OptimizedLayout = memo(({ isAdmin, children }: OptimizedLayoutProps) => {
           <AdminSidebar />
         </div>
       ) : (
-        <StudentSidebar 
-          isCollapsed={isStudentSidebarCollapsed} 
-          onToggle={handleStudentSidebarToggle} 
-        />
+        <StudentSidebar />
       )}
       
       {/* Main content area - optimized styling */}
       <div 
-        className="flex-1 overflow-auto transition-all duration-300"
-        style={mainContentStyles}
+        className={`flex-1 overflow-auto ${!isAdmin ? 'ml-64' : ''}`}
+        style={isAdmin ? mainContentStyles : undefined}
       >
         <main className="w-full">
           <div className="max-w-full">

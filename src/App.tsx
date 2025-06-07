@@ -1,185 +1,53 @@
-
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import RouteGuard from './components/RouteGuard';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import AdminLayout from './layout/AdminLayout';
-import StudentLayout from './layout/StudentLayout';
+import AuthRoutes from './AuthRoutes';
+import PublicRoute from './PublicRoute';
+import PrivateRoute from './PrivateRoute';
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Admin from './pages/Admin';
+import Credits from './pages/student/Credits';
+import Pricing from './pages/Pricing';
+import NotFound from './pages/NotFound';
+import { useAuth } from '@/hooks/auth';
 
 // Lazy load das páginas de créditos
 const CreditSuccess = lazy(() => import('./pages/student/credits/Success'));
 const CreditCancelled = lazy(() => import('./pages/student/credits/Cancelled'));
-const StudentCredits = lazy(() => import('./pages/student/Credits'));
-
-// Lazy load páginas administrativas
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
-const AdminUsers = lazy(() => import('./pages/admin/Users'));
-const AdminStudents = lazy(() => import('./pages/admin/Students'));
-const AdminSuppliers = lazy(() => import('./pages/admin/Suppliers'));
-const AdminPartners = lazy(() => import('./pages/admin/Partners'));
-const AdminTools = lazy(() => import('./pages/admin/Tools'));
-const AdminNews = lazy(() => import('./pages/admin/News'));
-const AdminMentoring = lazy(() => import('./pages/admin/Mentoring'));
-const AdminCredits = lazy(() => import('./pages/admin/Credits'));
-const AdminSettings = lazy(() => import('./pages/admin/Settings'));
-
-// Lazy load páginas do estudante
-const StudentDashboard = lazy(() => import('./pages/student/Dashboard'));
-const StudentSuppliers = lazy(() => import('./pages/student/Suppliers'));
-const StudentPartners = lazy(() => import('./pages/student/Partners'));
-const StudentTools = lazy(() => import('./pages/student/Tools'));
-const StudentMySuppliers = lazy(() => import('./pages/student/MySuppliers'));
-const StudentMentoring = lazy(() => import('./pages/student/Mentoring'));
-const StudentLiviAI = lazy(() => import('./pages/student/LiviAI'));
-const StudentConfiguration = lazy(() => import('./pages/student/Configuration'));
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* Página inicial */}
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
+          <Route path="/pricing" element={<PublicRoute><Pricing /></PublicRoute>} />
+          <Route path="/auth/*" element={<AuthRoutes />} />
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+          <Route path="/aluno/creditos" element={<PrivateRoute><Credits /></PrivateRoute>} />
           
-          {/* Login */}
-          <Route path="/login" element={<Login />} />
-          
-          {/* Área Administrativa */}
-          <Route path="/admin" element={
-            <RouteGuard>
-              <AdminLayout />
-            </RouteGuard>
-          }>
-            <Route index element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminDashboard />
-              </Suspense>
-            } />
-            <Route path="usuarios" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminUsers />
-              </Suspense>
-            } />
-            <Route path="alunos" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminStudents />
-              </Suspense>
-            } />
-            <Route path="fornecedores" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminSuppliers />
-              </Suspense>
-            } />
-            <Route path="parceiros" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminPartners />
-              </Suspense>
-            } />
-            <Route path="ferramentas" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminTools />
-              </Suspense>
-            } />
-            <Route path="noticias" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminNews />
-              </Suspense>
-            } />
-            <Route path="mentorias" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminMentoring />
-              </Suspense>
-            } />
-            <Route path="creditos" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminCredits />
-              </Suspense>
-            } />
-            <Route path="configuracoes" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <AdminSettings />
-              </Suspense>
-            } />
-          </Route>
-          
-          {/* Área do Aluno */}
-          <Route path="/aluno" element={
-            <RouteGuard>
-              <StudentLayout />
-            </RouteGuard>
-          }>
-            <Route index element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentDashboard />
-              </Suspense>
-            } />
-            <Route path="fornecedores" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentSuppliers />
-              </Suspense>
-            } />
-            <Route path="parceiros" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentPartners />
-              </Suspense>
-            } />
-            <Route path="ferramentas" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentTools />
-              </Suspense>
-            } />
-            <Route path="meus-fornecedores" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentMySuppliers />
-              </Suspense>
-            } />
-            <Route path="mentoria" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentMentoring />
-              </Suspense>
-            } />
-            <Route path="livi-ai" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentLiviAI />
-              </Suspense>
-            } />
-            <Route path="creditos" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentCredits />
-              </Suspense>
-            } />
-            <Route path="configuracoes" element={
-              <Suspense fallback={<div className="p-8">Carregando...</div>}>
-                <StudentConfiguration />
-              </Suspense>
-            } />
-          </Route>
-          
-          {/* Rotas de retorno do Stripe */}
+          {/* Rotas de créditos */}
           <Route 
             path="/aluno/creditos/sucesso" 
             element={
-              <RouteGuard>
-                <Suspense fallback={<div>Carregando...</div>}>
-                  <CreditSuccess />
-                </Suspense>
-              </RouteGuard>
+              <Suspense fallback={<div>Carregando...</div>}>
+                <CreditSuccess />
+              </Suspense>
             } 
           />
           <Route 
             path="/aluno/creditos/cancelado" 
             element={
-              <RouteGuard>
-                <Suspense fallback={<div>Carregando...</div>}>
-                  <CreditCancelled />
-                </Suspense>
-              </RouteGuard>
+              <Suspense fallback={<div>Carregando...</div>}>
+                <CreditCancelled />
+              </Suspense>
             } 
           />
           
-          {/* Rota 404 - redirecionar para home */}
-          <Route path="*" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </Router>

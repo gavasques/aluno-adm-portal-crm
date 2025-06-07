@@ -4,31 +4,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowLeft } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export function AuthTabs() {
   const navigate = useNavigate();
-  const { signIn, signUp, resetPassword, sendMagicLink } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Estados para modais
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showMagicLink, setShowMagicLink] = useState(false);
-  const [recoveryEmail, setRecoveryEmail] = useState("");
-  const [recoveryLoading, setRecoveryLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +27,7 @@ export function AuthTabs() {
     try {
       await signIn(email, password);
       toast.success("Login realizado com sucesso!");
-      // Redirecionar para a página inicial onde o usuário pode escolher a área
-      navigate("/", { replace: true });
+      // O redirecionamento será feito automaticamente pelo AuthProvider
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login");
     } finally {
@@ -65,46 +50,6 @@ export function AuthTabs() {
       toast.error(error.message || "Erro ao criar conta");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!recoveryEmail.trim()) {
-      toast.error("Digite seu email");
-      return;
-    }
-
-    setRecoveryLoading(true);
-    try {
-      await resetPassword(recoveryEmail);
-      toast.success("Email de recuperação enviado!");
-      setShowForgotPassword(false);
-      setRecoveryEmail("");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao enviar email de recuperação");
-    } finally {
-      setRecoveryLoading(false);
-    }
-  };
-
-  const handleMagicLink = async () => {
-    if (!recoveryEmail.trim()) {
-      toast.error("Digite seu email");
-      return;
-    }
-
-    setRecoveryLoading(true);
-    try {
-      const success = await sendMagicLink(recoveryEmail);
-      if (success) {
-        toast.success("Magic Link enviado! Verifique seu email.");
-        setShowMagicLink(false);
-        setRecoveryEmail("");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao enviar Magic Link");
-    } finally {
-      setRecoveryLoading(false);
     }
   };
 
@@ -144,7 +89,6 @@ export function AuthTabs() {
                       value={email} 
                       onChange={e => setEmail(e.target.value)} 
                       required 
-                      disabled={isLoading}
                     />
                   </div>
                   <div className="relative">
@@ -156,30 +100,9 @@ export function AuthTabs() {
                       value={password} 
                       onChange={e => setPassword(e.target.value)} 
                       required 
-                      disabled={isLoading}
                     />
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-center text-sm">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowForgotPassword(true)} 
-                    className="text-blue-300 hover:text-blue-200 hover:underline"
-                    disabled={isLoading}
-                  >
-                    Esqueci a senha
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowMagicLink(true)} 
-                    className="text-blue-300 hover:text-blue-200 hover:underline"
-                    disabled={isLoading}
-                  >
-                    Magic Link
-                  </button>
-                </div>
-                
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white" disabled={isLoading}>
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
@@ -197,7 +120,6 @@ export function AuthTabs() {
                       value={name} 
                       onChange={e => setName(e.target.value)} 
                       required 
-                      disabled={isLoading}
                     />
                   </div>
                   <div className="relative">
@@ -209,7 +131,6 @@ export function AuthTabs() {
                       value={email} 
                       onChange={e => setEmail(e.target.value)} 
                       required 
-                      disabled={isLoading}
                     />
                   </div>
                   <div className="relative">
@@ -221,7 +142,6 @@ export function AuthTabs() {
                       value={password} 
                       onChange={e => setPassword(e.target.value)} 
                       required 
-                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -233,94 +153,6 @@ export function AuthTabs() {
           </Tabs>
         </div>
       </div>
-
-      {/* Modal Esqueci a Senha */}
-      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
-        <DialogContent className="sm:max-w-[425px] bg-blue-950 text-white border-blue-800">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
-              <Mail className="h-5 w-5" />
-              Recuperar senha
-            </DialogTitle>
-            <DialogDescription className="text-blue-200">
-              Digite seu email para receber as instruções de recuperação
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Input 
-                type="email" 
-                placeholder="seu@email.com" 
-                value={recoveryEmail} 
-                onChange={e => setRecoveryEmail(e.target.value)} 
-                className="bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300" 
-                disabled={recoveryLoading}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowForgotPassword(false)}
-              disabled={recoveryLoading}
-              className="border-blue-700 text-blue-300 hover:bg-blue-800/50"
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleForgotPassword} 
-              className="bg-blue-600 hover:bg-blue-500"
-              disabled={recoveryLoading || !recoveryEmail.trim()}
-            >
-              {recoveryLoading ? "Enviando..." : "Enviar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Magic Link */}
-      <Dialog open={showMagicLink} onOpenChange={setShowMagicLink}>
-        <DialogContent className="sm:max-w-[425px] bg-blue-950 text-white border-blue-800">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
-              <Mail className="h-5 w-5" />
-              Enviar Magic Link
-            </DialogTitle>
-            <DialogDescription className="text-blue-200">
-              Digite seu email para receber um link de acesso direto
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Input 
-                type="email" 
-                placeholder="seu@email.com" 
-                value={recoveryEmail} 
-                onChange={e => setRecoveryEmail(e.target.value)} 
-                className="bg-blue-900/30 border-blue-700/50 text-white placeholder-blue-300" 
-                disabled={recoveryLoading}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowMagicLink(false)}
-              disabled={recoveryLoading}
-              className="border-blue-700 text-blue-300 hover:bg-blue-800/50"
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleMagicLink} 
-              className="bg-blue-600 hover:bg-blue-500"
-              disabled={recoveryLoading || !recoveryEmail.trim()}
-            >
-              {recoveryLoading ? "Enviando..." : "Enviar Magic Link"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
