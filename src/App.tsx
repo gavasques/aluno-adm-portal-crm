@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,8 +11,15 @@ import { useSimplePermissions } from '@/hooks/useSimplePermissions';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 
-// Optimized imports
-import { AdminRoutes, StudentRoutes, preloadCriticalRoutes } from '@/utils/performance/optimized-routes';
+// Lazy imports with simple fallback
+import { Suspense, lazy } from 'react';
+
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+const AdminUsers = lazy(() => import('@/pages/admin/Users'));
+const StudentDashboard = lazy(() => import('@/pages/student/Dashboard'));
+const StudentMySuppliers = lazy(() => import('@/pages/student/MySuppliers'));
+const StudentMentoring = lazy(() => import('@/pages/student/Mentoring'));
+
 import UnifiedOptimizedLayout from '@/layout/UnifiedOptimizedLayout';
 import OptimizedProtectedRoute from '@/components/routing/OptimizedProtectedRoute';
 
@@ -20,49 +28,20 @@ const queryClient = new QueryClient({
     queries: {
       retry: false,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
   },
 });
 
-// Preload Manager Component
-const PreloadManager = () => {
-  const { hasAdminAccess, loading } = useSimplePermissions();
-
-  useEffect(() => {
-    if (!loading) {
-      preloadCriticalRoutes(hasAdminAccess);
-    }
-  }, [hasAdminAccess, loading]);
-
-  return null;
-};
-
-// Route Groups for better organization
-const AdminRouteGroup = () => (
-  <Routes>
-    <Route path="/" element={<AdminRoutes.Dashboard />} />
-    <Route path="/users" element={<AdminRoutes.Users />} />
-    <Route path="/news" element={<AdminRoutes.News />} />
-    <Route path="/mentoring" element={<AdminRoutes.Mentoring />} />
-    <Route path="/settings" element={<AdminRoutes.Settings />} />
-    <Route path="/partners" element={<AdminRoutes.Partners />} />
-    <Route path="/tools" element={<AdminRoutes.Tools />} />
-  </Routes>
-);
-
-const StudentRouteGroup = () => (
-  <Routes>
-    <Route path="/" element={<StudentRoutes.Dashboard />} />
-    <Route path="/creditos" element={<StudentRoutes.Credits />} />
-    <Route path="/meus-fornecedores" element={<StudentRoutes.MySuppliers />} />
-    <Route path="/mentoria" element={<StudentRoutes.Mentoring />} />
-    <Route path="/parceiros" element={<StudentRoutes.Partners />} />
-    <Route path="/ferramentas" element={<StudentRoutes.Tools />} />
-    <Route path="/fornecedores" element={<StudentRoutes.Suppliers />} />
-    <Route path="/livi-ai" element={<StudentRoutes.LiviAI />} />
-  </Routes>
+// Simple loading component
+const PageLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex flex-col items-center space-y-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <p className="text-gray-600">Carregando...</p>
+    </div>
+  </div>
 );
 
 function App() {
@@ -71,8 +50,6 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App">
-            <PreloadManager />
-            
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
@@ -82,7 +59,18 @@ function App() {
               <Route path="/admin/*" element={
                 <OptimizedProtectedRoute requireAdmin={true}>
                   <UnifiedOptimizedLayout isAdmin={true}>
-                    <AdminRouteGroup />
+                    <Routes>
+                      <Route path="/" element={
+                        <Suspense fallback={<PageLoading />}>
+                          <AdminDashboard />
+                        </Suspense>
+                      } />
+                      <Route path="/users" element={
+                        <Suspense fallback={<PageLoading />}>
+                          <AdminUsers />
+                        </Suspense>
+                      } />
+                    </Routes>
                   </UnifiedOptimizedLayout>
                 </OptimizedProtectedRoute>
               } />
@@ -91,7 +79,23 @@ function App() {
               <Route path="/aluno/*" element={
                 <OptimizedProtectedRoute>
                   <UnifiedOptimizedLayout isAdmin={false}>
-                    <StudentRouteGroup />
+                    <Routes>
+                      <Route path="/" element={
+                        <Suspense fallback={<PageLoading />}>
+                          <StudentDashboard />
+                        </Suspense>
+                      } />
+                      <Route path="/meus-fornecedores" element={
+                        <Suspense fallback={<PageLoading />}>
+                          <StudentMySuppliers />
+                        </Suspense>
+                      } />
+                      <Route path="/mentoria" element={
+                        <Suspense fallback={<PageLoading />}>
+                          <StudentMentoring />
+                        </Suspense>
+                      } />
+                    </Routes>
                   </UnifiedOptimizedLayout>
                 </OptimizedProtectedRoute>
               } />

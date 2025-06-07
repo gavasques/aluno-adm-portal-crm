@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo } from 'react';
+import React, { memo } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useSimplePermissions } from '@/hooks/useSimplePermissions';
 import Login from '@/pages/Login';
@@ -13,38 +13,43 @@ const OptimizedProtectedRoute = memo(({ children, requireAdmin = false }: Optimi
   const { user, loading } = useAuth();
   const { hasAdminAccess, loading: permissionsLoading } = useSimplePermissions();
 
-  // Memoize loading state
-  const loadingComponent = useMemo(() => (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-    </div>
-  ), []);
+  console.log('🛡️ ProtectedRoute:', { 
+    hasUser: !!user, 
+    loading, 
+    requireAdmin, 
+    hasAdminAccess, 
+    permissionsLoading 
+  });
 
-  // Memoize access denied component
-  const accessDeniedComponent = useMemo(() => (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
-        <p className="text-gray-600">Você não tem permissão para acessar esta área.</p>
-      </div>
-    </div>
-  ), []);
-
-  // Show loading while auth or permissions are loading
+  // Show loading while checking auth
   if (loading || permissionsLoading) {
-    return loadingComponent;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   // Redirect to login if not authenticated
   if (!user) {
+    console.log('🔒 No user, showing login');
     return <Login />;
   }
 
   // Check admin access if required
   if (requireAdmin && !hasAdminAccess) {
-    return accessDeniedComponent;
+    console.log('❌ Admin required but user has no admin access');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
+          <p className="text-gray-600">Você não tem permissão para acessar esta área.</p>
+        </div>
+      </div>
+    );
   }
 
+  console.log('✅ Access granted, rendering children');
   return <>{children}</>;
 });
 
