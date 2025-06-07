@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 const Index = () => {
   const { user, loading: authLoading, error } = useAuth();
   const { hasAdminAccess, loading: permissionsLoading } = useSimplePermissions();
-  const [timeoutReached, setTimeoutReached] = useState(false);
+  const [forceRender, setForceRender] = useState(false);
 
   console.log("=== INDEX PAGE DEBUG ===");
   console.log("Auth state:", {
@@ -23,47 +23,60 @@ const Index = () => {
   });
   console.log("========================");
 
-  // Timeout de segurança para evitar loading infinito
+  // Timeout de emergência para evitar loading infinito
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.log('⚠️ Timeout alcançado, forçando carregamento');
-      setTimeoutReached(true);
-    }, 8000);
+    const emergencyTimeout = setTimeout(() => {
+      console.log('⚠️ Index: Timeout de emergência alcançado, forçando renderização');
+      setForceRender(true);
+    }, 10000); // 10 segundos
 
-    return () => clearTimeout(timeout);
-  }, []);
+    const normalTimeout = setTimeout(() => {
+      if (authLoading || permissionsLoading) {
+        console.log('⚠️ Index: Timeout normal alcançado, ainda carregando');
+        setForceRender(true);
+      }
+    }, 5000); // 5 segundos
 
-  // Se timeout foi alcançado, mostrar página mesmo se ainda carregando
-  const shouldShowPage = timeoutReached || (!authLoading && !permissionsLoading);
+    return () => {
+      clearTimeout(emergencyTimeout);
+      clearTimeout(normalTimeout);
+    };
+  }, [authLoading, permissionsLoading]);
 
-  // Mostrar loading apenas por um tempo limitado
-  if (!shouldShowPage && (authLoading || (user && permissionsLoading))) {
+  // Condições para mostrar loading
+  const shouldShowLoading = !forceRender && (authLoading || (user && permissionsLoading));
+
+  // Loading state com timeout
+  if (shouldShowLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-800 to-black">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p>Carregando aplicação...</p>
           <p className="text-sm text-blue-200 mt-2">
             {authLoading ? 'Verificando autenticação...' : 'Carregando permissões...'}
           </p>
+          <div className="mt-4 text-xs text-blue-300">
+            Se demorar muito, pode ser um problema de extensão do navegador
+          </div>
         </div>
       </div>
     );
   }
 
   // Redirecionar usuário logado (apenas se não houve timeout)
-  if (user && !timeoutReached && shouldShowPage) {
-    console.log("🔄 Redirecionando usuário logado");
+  if (user && !forceRender) {
+    console.log("🔄 Index: Redirecionando usuário logado");
     if (hasAdminAccess) {
-      console.log("➡️ Redirecionando para admin");
+      console.log("➡️ Index: Redirecionando para admin");
       return <Navigate to="/admin" replace />;
     } else {
-      console.log("➡️ Redirecionando para aluno");
+      console.log("➡️ Index: Redirecionando para aluno");
       return <Navigate to="/aluno" replace />;
     }
   }
 
-  // Página de boas-vindas para usuários não logados ou em caso de timeout
+  // Página de boas-vindas
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-800 to-black flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-8">
@@ -73,6 +86,10 @@ const Index = () => {
             src="/lovable-uploads/ac3223f2-8f29-482c-a887-ed1bcabecec0.png" 
             alt="Guilherme Vasques Logo" 
             className="h-20 md:h-24 mx-auto object-cover" 
+            onError={(e) => {
+              console.log('❌ Index: Erro ao carregar logo');
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
           />
         </div>
 
@@ -99,33 +116,26 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Erro ou timeout */}
-        {(error || timeoutReached) && (
-          <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-200 p-3 rounded">
-            <p className="text-sm">
-              {error || 'Carregamento demorou mais que o esperado. Você pode tentar fazer login.'}
+        {/* Informações de debug */}
+        {(error || forceRender) && (
+          <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-200 p-3 rounded text-sm">
+            {error && <p>Erro: {error}</p>}
+            {forceRender && <p>Timeout alcançado - renderização forçada</p>}
+            <p className="mt-2">
+              Se você está logado, tente os links abaixo:
             </p>
+            <div className="flex gap-2 mt-2">
+              <Link to="/admin" className="text-blue-200 underline">Admin</Link>
+              <Link to="/aluno" className="text-blue-200 underline">Aluno</Link>
+            </div>
           </div>
         )}
 
-        {/* Modo de recuperação para usuários logados com timeout */}
-        {user && timeoutReached && (
-          <div className="space-y-2">
-            <p className="text-blue-300 text-sm">
-              Você está logado como: {user.email}
-            </p>
-            <div className="flex gap-2">
-              <Link to="/admin" className="flex-1">
-                <Button variant="outline" className="w-full text-sm">
-                  Área Admin
-                </Button>
-              </Link>
-              <Link to="/aluno" className="flex-1">
-                <Button variant="outline" className="w-full text-sm">
-                  Área Aluno
-                </Button>
-              </Link>
-            </div>
+        {/* Debug info em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-xs text-blue-300 mt-4 p-2 bg-black/20 rounded">
+            Debug: user={user?.email || 'none'}, authLoading={authLoading.toString()}, 
+            permissionsLoading={permissionsLoading.toString()}, forceRender={forceRender.toString()}
           </div>
         )}
       </div>

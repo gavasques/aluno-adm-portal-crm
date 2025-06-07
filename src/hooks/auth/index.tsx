@@ -24,12 +24,14 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  console.log('🏠 AuthProvider: Renderizando...');
+  
   const { user, session, loading, error } = useSimpleAuth();
   const { signIn, signUp, signOut, resetPassword, updateUserPassword } = useBasicAuth();
   const { linkIdentity, unlinkIdentity, getLinkedIdentities } = useSocialAuth(user);
 
   const setRecoveryMode = (enabled: boolean) => {
-    // Implementação simples do recovery mode
+    console.log('🔄 AuthProvider: setRecoveryMode:', enabled);
     if (enabled) {
       localStorage.setItem("recovery_mode", "true");
     } else {
@@ -37,7 +39,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  console.log('🏠 AuthProvider state:', { 
+  const contextValue = {
+    user,
+    session,
+    loading,
+    error,
+    signIn,
+    signUp,
+    signOut,
+    resetPassword,
+    updateUserPassword,
+    linkIdentity,
+    unlinkIdentity,
+    getLinkedIdentities,
+    setRecoveryMode
+  };
+
+  console.log('🏠 AuthProvider: Estado do contexto:', { 
     hasUser: !!user, 
     loading, 
     error,
@@ -45,23 +63,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        error,
-        signIn,
-        signUp,
-        signOut,
-        resetPassword,
-        updateUserPassword,
-        linkIdentity,
-        unlinkIdentity,
-        getLinkedIdentities,
-        setRecoveryMode
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -71,6 +73,7 @@ export const useAuth = () => {
   const context = useContext(AuthContext);
   
   if (context === undefined) {
+    console.error('❌ useAuth: Deve ser usado dentro de um AuthProvider');
     throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   
