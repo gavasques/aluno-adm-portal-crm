@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { BlockingDetectionBanner } from '@/components/BlockingDetectionBanner';
 import { ResourceBlockingDetector } from '@/utils/resourceBlockingDetector';
+import { runCORSDiagnostics } from '@/utils/cors-diagnostics';
 
 // Imports diretos - sem lazy loading para evitar problemas
 import Index from '@/pages/Index';
@@ -109,8 +110,8 @@ function App() {
   console.log('🚀 App: Iniciando aplicação...');
 
   useEffect(() => {
-    const checkResources = () => {
-      console.log('🔍 App: Verificando recursos da aplicação...');
+    const initializeDiagnostics = async () => {
+      console.log('🔍 App: Executando diagnósticos CORS...');
       
       // Interceptar erros de console para detectar bloqueios
       const originalConsoleError = console.error;
@@ -124,9 +125,16 @@ function App() {
         }
         originalConsoleError.apply(console, args);
       };
+
+      // Executar diagnósticos CORS
+      try {
+        await runCORSDiagnostics();
+      } catch (error) {
+        console.error('❌ App: Erro ao executar diagnósticos CORS:', error);
+      }
     };
 
-    checkResources();
+    initializeDiagnostics();
 
     // Verificar bloqueios após carregamento
     const blockingCheckTimer = setTimeout(() => {
