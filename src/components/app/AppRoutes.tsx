@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AdminLayout } from '@/layout/AdminLayout';
-import { StudentLayout } from '@/layout/StudentLayout';
+import AdminLayout from '@/layout/AdminLayout';
+import StudentLayout from '@/layout/StudentLayout';
 
 // Admin Pages - Principal
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -15,7 +15,7 @@ import CRMDashboard from '@/pages/admin/crm/Dashboard';
 import CRMLeads from '@/pages/admin/crm/Leads';
 import CRMReports from '@/pages/admin/crm/Reports';
 import CRMSettings from '@/pages/admin/crm/Settings';
-import CRMWebhookLogs from '@/pages/admin/CrmWebhookLogs';
+import CRMWebhookLogs from '@/pages/admin/CRMWebhookLogs';
 
 // Admin Pages - Mentoria
 import AdminMentoring from '@/pages/admin/Mentoring';
