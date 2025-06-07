@@ -200,6 +200,17 @@ const AdminSidebar = () => {
       <nav className="flex-1 px-4 space-y-1">
         {menuItems.map(renderMenuItem)}
       </nav>
+
+      {/* Link para área do aluno */}
+      <div className="p-4 border-t border-gray-200">
+        <Link
+          to="/aluno"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+        >
+          <GraduationCap className="h-4 w-4" />
+          <span>Área do Aluno</span>
+        </Link>
+      </div>
     </div>
   );
 };

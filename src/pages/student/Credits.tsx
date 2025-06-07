@@ -1,135 +1,95 @@
-import React, { useState } from 'react';
+
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { CreditStatusCard } from '@/components/credits/CreditStatusCard';
-import { CreditActionsGrid } from '@/components/credits/CreditActionsGrid';
-import { CreditInfoCard } from '@/components/credits/CreditInfoCard';
-import { PurchaseModal } from '@/components/credits/PurchaseModal';
-import { SubscriptionModal } from '@/components/credits/SubscriptionModal';
-import { CreditHistory } from '@/components/credits/CreditHistory';
-import { useCreditStatus } from '@/hooks/credits/useCreditStatus';
-import { useSubscriptions } from '@/hooks/credits/useSubscriptions';
-import { toast } from 'sonner';
-import { PaymentStatus } from '@/components/credits/PaymentStatus';
+import { CreditCard, Plus, History, Zap } from 'lucide-react';
 
-const StudentCredits = () => {
-  const { 
-    creditStatus, 
-    isLoading, 
-    error, 
-    refreshCredits
-  } = useCreditStatus();
-
-  const { createSubscription } = useSubscriptions();
-
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-
-  console.log("=== STUDENT CREDITS DEBUG ===");
-  console.log("Credit Status:", creditStatus);
-  console.log("Is Loading:", isLoading);
-  console.log("Error:", error);
-  console.log("=============================");
-
-  const handleRefresh = async () => {
-    try {
-      await refreshCredits();
-      toast.success('Informações atualizadas com sucesso!');
-    } catch (err) {
-      console.error('Erro ao atualizar créditos:', err);
-      toast.error('Erro ao atualizar informações');
-    }
-  };
-
-  const handlePurchaseSuccess = () => {
-    console.log('📈 Compra realizada com sucesso, atualizando créditos...');
-    refreshCredits();
-  };
-
-  const handleSubscriptionSuccess = () => {
-    console.log('📱 Assinatura realizada com sucesso, atualizando créditos...');
-    refreshCredits();
-  };
-
-  const handlePaymentConfirmed = () => {
-    console.log('💳 Pagamento confirmado, atualizando créditos...');
-    refreshCredits();
-  };
-
-  const safeCredits = creditStatus?.credits || {
-    current: 0,
-    used: 0,
-    limit: 50,
-    renewalDate: new Date().toISOString().split('T')[0],
-    usagePercentage: 0
-  };
-
-  const safeTransactions = creditStatus?.transactions || [];
-  const safeSubscription = creditStatus?.subscription || null;
-
+const Credits = () => {
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Payment Status Alert */}
-      <PaymentStatus onPaymentConfirmed={handlePaymentConfirmed} />
-
-      {/* Header */}
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Meus Créditos</h1>
-          <p className="text-gray-600">Gerencie seus créditos e assinaturas</p>
+          <h1 className="text-3xl font-bold text-gray-900">Meus Créditos</h1>
+          <p className="text-gray-600">Gerencie seus créditos e histórico de uso</p>
         </div>
-        <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Atualizar
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Comprar Créditos
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Coluna Principal */}
-        <div className="xl:col-span-2 space-y-6">
-          {/* Status de Créditos */}
-          <CreditStatusCard
-            creditStatus={creditStatus}
-            isLoading={isLoading}
-            error={error}
-            onRefresh={handleRefresh}
-          />
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Saldo Atual</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,250</div>
+            <p className="text-xs text-muted-foreground">créditos disponíveis</p>
+          </CardContent>
+        </Card>
 
-          {/* Ações de Compra */}
-          <CreditActionsGrid
-            subscription={safeSubscription}
-            onOpenPurchaseModal={() => setShowPurchaseModal(true)}
-            onOpenSubscriptionModal={() => setShowSubscriptionModal(true)}
-          />
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usados Este Mês</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">320</div>
+            <p className="text-xs text-muted-foreground">de 1,000 créditos</p>
+          </CardContent>
+        </Card>
 
-        {/* Coluna Lateral - Histórico */}
-        <div className="xl:col-span-1">
-          <CreditHistory transactions={safeTransactions} />
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <Badge variant="default">Ativo</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Premium</div>
+            <p className="text-xs text-muted-foreground">renovação em 15 dias</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Informações Adicionais */}
-      <CreditInfoCard 
-        creditLimit={safeCredits.limit}
-        renewalDate={safeCredits.renewalDate}
-      />
-
-      {/* Modais */}
-      <PurchaseModal
-        isOpen={showPurchaseModal}
-        onClose={() => setShowPurchaseModal(false)}
-        onSuccess={handlePurchaseSuccess}
-      />
-
-      <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        onSubscribe={handleSubscriptionSuccess}
-        currentSubscription={safeSubscription}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Histórico de Transações
+          </CardTitle>
+          <CardDescription>Últimas movimentações dos seus créditos</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <p className="font-medium">Uso do Livi AI</p>
+                <p className="text-sm text-gray-600">Hoje, 14:30</p>
+              </div>
+              <Badge variant="destructive">-15 créditos</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <p className="font-medium">Compra de Créditos</p>
+                <p className="text-sm text-gray-600">Ontem, 09:15</p>
+              </div>
+              <Badge variant="default">+500 créditos</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <p className="font-medium">Uso do Livi AI</p>
+                <p className="text-sm text-gray-600">2 dias atrás, 16:45</p>
+              </div>
+              <Badge variant="destructive">-25 créditos</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default StudentCredits;
+export default Credits;
