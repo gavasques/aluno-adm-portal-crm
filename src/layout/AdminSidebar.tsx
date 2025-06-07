@@ -21,7 +21,17 @@ import {
   Award,
   BookOpen,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Wrench,
+  Newspaper,
+  Activity,
+  Handshake,
+  Building2,
+  Database,
+  Cog,
+  ClipboardCheck,
+  UserCog,
+  Zap
 } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { Button } from '@/components/ui/button';
@@ -43,8 +53,8 @@ const AdminSidebar = () => {
       exact: true
     },
     {
-      title: 'Usuários',
-      href: '/admin/users',
+      title: 'Gestão de Usuários',
+      href: '/admin/usuarios',
       icon: Users
     },
     {
@@ -61,38 +71,100 @@ const AdminSidebar = () => {
       ]
     },
     {
+      title: 'Logs Webhook CRM',
+      href: '/admin/crm-webhook-logs',
+      icon: Activity
+    },
+    {
+      title: 'Lista de Tarefas',
+      href: '/admin/tarefas',
+      icon: FileText
+    },
+    {
       title: 'Mentoria',
       icon: GraduationCap,
       isCollapsible: true,
       isOpen: mentoringOpen,
       setIsOpen: setMentoringOpen,
       children: [
-        { title: 'Dashboard', href: '/admin/mentoria', icon: LayoutDashboard },
-        { title: 'Catálogo', href: '/admin/mentoria/catalogo', icon: BookOpen },
-        { title: 'Inscrições', href: '/admin/mentoria/inscricoes', icon: UserCheck },
-        { title: 'Sessões', href: '/admin/mentoria/sessoes', icon: Calendar },
-        { title: 'Materiais', href: '/admin/mentoria/materiais', icon: Bookmark }
+        { title: 'Dashboard', href: '/admin/mentorias', icon: LayoutDashboard },
+        { title: 'Catálogo', href: '/admin/mentorias/catalogo', icon: BookOpen },
+        { title: 'Inscrições Individuais', href: '/admin/inscricoes-individuais', icon: UserCheck },
+        { title: 'Inscrições em Grupo', href: '/admin/inscricoes-grupo', icon: Users },
+        { title: 'Sessões Individuais', href: '/admin/sessoes-individuais', icon: Calendar },
+        { title: 'Sessões em Grupo', href: '/admin/sessoes-grupo', icon: Users },
+        { title: 'Central de Materiais', href: '/admin/mentorias/materiais', icon: Bookmark }
       ]
     },
     {
-      title: 'Fornecedores',
-      href: '/admin/suppliers',
-      icon: Building
+      title: 'Gestão de Alunos',
+      href: '/admin/alunos',
+      icon: UserCog
     },
     {
-      title: 'Parceiros',
-      href: '/admin/partners',
-      icon: Package
+      title: 'Cadastro de Cursos',
+      href: '/admin/cursos',
+      icon: GraduationCap
     },
     {
-      title: 'Tarefas',
-      href: '/admin/tasks',
-      icon: FileText
+      title: 'Cadastro de Bônus',
+      href: '/admin/bonus',
+      icon: Zap
     },
     {
-      title: 'Créditos',
-      href: '/admin/credits',
+      title: 'Gestão de Créditos',
+      href: '/admin/creditos',
       icon: CreditCard
+    },
+    {
+      title: 'Notícias',
+      href: '/admin/noticias',
+      icon: Newspaper
+    },
+    {
+      title: 'Fornecedores ADM',
+      href: '/admin/fornecedores',
+      icon: Building2
+    },
+    {
+      title: 'Parceiros ADM',
+      href: '/admin/parceiros',
+      icon: Handshake
+    },
+    {
+      title: 'Ferramentas ADM',
+      href: '/admin/ferramentas',
+      icon: Wrench
+    },
+    {
+      title: 'Categorias',
+      href: '/admin/categorias',
+      icon: Database
+    },
+    {
+      title: 'Tipos de Ferramentas',
+      href: '/admin/tipos-softwares',
+      icon: Cog
+    },
+    {
+      title: 'Tipos de Parceiros',
+      href: '/admin/tipos-parceiros',
+      icon: Users
+    },
+    {
+      title: 'Permissões',
+      href: '/admin/permissoes',
+      icon: ShieldCheck
+    },
+    {
+      title: 'Auditoria',
+      href: '/admin/auditoria',
+      icon: ClipboardCheck
+    },
+    {
+      title: 'Config. Calendly',
+      href: '/admin/calendly-config',
+      icon: Calendar
     },
     {
       title: 'Notificações',
@@ -101,13 +173,8 @@ const AdminSidebar = () => {
       badge: unreadCount > 0 ? unreadCount : undefined
     },
     {
-      title: 'Permissões',
-      href: '/admin/permissions',
-      icon: ShieldCheck
-    },
-    {
       title: 'Configurações',
-      href: '/admin/settings',
+      href: '/admin/configuracoes',
       icon: Settings
     }
   ];
@@ -185,7 +252,7 @@ const AdminSidebar = () => {
   };
 
   return (
-    <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto">
       <div className="p-6">
         <Link to="/admin" className="flex items-center gap-2">
           <img 
@@ -197,7 +264,7 @@ const AdminSidebar = () => {
         </Link>
       </div>
       
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-4 space-y-1 pb-4">
         {menuItems.map(renderMenuItem)}
       </nav>
 
