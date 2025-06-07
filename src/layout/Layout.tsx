@@ -20,6 +20,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ isAdmin, children }) => {
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isStudentSidebarCollapsed, setIsStudentSidebarCollapsed] = useState(false);
 
   const handleMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -27,6 +28,10 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin, children }) => {
 
   const handleMenuClose = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const handleStudentSidebarToggle = () => {
+    setIsStudentSidebarCollapsed(!isStudentSidebarCollapsed);
   };
 
   if (isMobile) {
@@ -84,11 +89,18 @@ const Layout: React.FC<LayoutProps> = ({ isAdmin, children }) => {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
           {/* Sidebar */}
           <div className="fixed left-0 top-0 h-full z-40">
-            {isAdmin ? <ModernAdminSidebar /> : <StudentSidebar />}
+            {isAdmin ? (
+              <ModernAdminSidebar />
+            ) : (
+              <StudentSidebar 
+                isCollapsed={isStudentSidebarCollapsed} 
+                onToggle={handleStudentSidebarToggle} 
+              />
+            )}
           </div>
           
           {/* Main Content - Padding padronizado */}
-          <div className="ml-64 min-h-screen">
+          <div className={isAdmin ? "ml-64 min-h-screen" : `${isStudentSidebarCollapsed ? 'ml-16' : 'ml-64'} min-h-screen transition-all duration-300`}>
             <motion.main 
               className="w-full h-screen p-8"
               initial={{ opacity: 0, y: 20 }}
