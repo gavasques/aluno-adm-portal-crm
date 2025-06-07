@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AppErrorBoundary } from '@/components/app/AppErrorBoundary';
 import { AppProviders } from '@/components/app/AppProviders';
-import { AppRoutes } from '@/components/app/AppRoutes';
+import AppRoutes from '@/components/app/AppRoutes';
 import { BlockingDetectionBanner } from '@/components/BlockingDetectionBanner';
 import { useAppInitialization } from '@/hooks/app/useAppInitialization';
 
