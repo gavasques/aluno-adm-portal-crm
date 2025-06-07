@@ -10,8 +10,8 @@ import AdminUsers from '@/pages/admin/Users';
 import AdminModernUsers from '@/pages/admin/ModernUsers';
 import AdminTasks from '@/pages/admin/Tasks';
 
-// Admin Pages - CRM
-import CRMDashboard from '@/pages/admin/crm/Dashboard';
+// Admin Pages - CRM - Usar página CRM real
+import CRM from '@/pages/admin/CRM';
 import CRMLeads from '@/pages/admin/crm/Leads';
 import CRMReports from '@/pages/admin/crm/Reports';
 import CRMSettings from '@/pages/admin/crm/Settings';
@@ -33,10 +33,10 @@ import AdminBonus from '@/pages/admin/Bonus';
 import AdminCredits from '@/pages/admin/Credits';
 import AdminNews from '@/pages/admin/News';
 
-// Admin Pages - Recursos
-import AdminSuppliers from '@/pages/admin/Suppliers';
-import AdminPartners from '@/pages/admin/Partners';
-import AdminTools from '@/pages/admin/Tools';
+// Admin Pages - Recursos - Criar páginas completas
+import AdminSuppliersPage from '@/pages/admin/SuppliersPage';
+import AdminPartnersPage from '@/pages/admin/PartnersPage';
+import AdminToolsPage from '@/pages/admin/ToolsPage';
 
 // Admin Pages - Configurações
 import AdminCategories from '@/pages/admin/Categories';
@@ -78,9 +78,9 @@ const AppRoutes = () => {
         <Route path="usuarios-moderno" element={<AdminModernUsers />} />
         <Route path="tarefas" element={<AdminTasks />} />
         
-        {/* CRM */}
-        <Route path="crm" element={<CRMDashboard />} />
-        <Route path="crm/dashboard" element={<CRMDashboard />} />
+        {/* CRM - Usar página CRM real */}
+        <Route path="crm" element={<CRM />} />
+        <Route path="crm/dashboard" element={<CRM />} />
         <Route path="crm/leads" element={<CRMLeads />} />
         <Route path="crm/reports" element={<CRMReports />} />
         <Route path="crm/settings" element={<CRMSettings />} />
@@ -102,10 +102,10 @@ const AppRoutes = () => {
         <Route path="creditos" element={<AdminCredits />} />
         <Route path="noticias" element={<AdminNews />} />
         
-        {/* Recursos */}
-        <Route path="fornecedores" element={<AdminSuppliers />} />
-        <Route path="parceiros" element={<AdminPartners />} />
-        <Route path="ferramentas" element={<AdminTools />} />
+        {/* Recursos - Usar páginas completas */}
+        <Route path="fornecedores" element={<AdminSuppliersPage />} />
+        <Route path="parceiros" element={<AdminPartnersPage />} />
+        <Route path="ferramentas" element={<AdminToolsPage />} />
         
         {/* Configurações */}
         <Route path="categorias" element={<AdminCategories />} />
