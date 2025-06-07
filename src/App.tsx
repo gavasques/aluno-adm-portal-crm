@@ -1,76 +1,70 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/hooks/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import AdminDashboard from '@/pages/admin/Dashboard';
-import StudentDashboard from '@/pages/student/Dashboard';
-import Layout from '@/layout/Layout';
-import AdminLayout from '@/layout/AdminLayout';
-import StudentLayout from '@/layout/StudentLayout';
-import { useAuth } from '@/hooks/auth';
 import { useSimplePermissions } from '@/hooks/useSimplePermissions';
 
-// Admin Pages
-import AdminUsers from '@/pages/admin/Users';
-import AdminNews from '@/pages/admin/News';
-import AdminMentoring from '@/pages/admin/Mentoring';
-import AdminSettings from '@/pages/admin/Settings';
-import AdminPartners from '@/pages/admin/Partners';
-import AdminTools from '@/pages/admin/Tools';
+// Static imports for critical pages
+import Index from '@/pages/Index';
+import Login from '@/pages/Login';
 
-// Student Pages
-import StudentCredits from '@/pages/student/Credits';
-import StudentMySuppliers from '@/pages/student/MySuppliers';
-import StudentMentoring from '@/pages/student/Mentoring';
-import StudentPartners from '@/pages/student/Partners';
-import StudentTools from '@/pages/student/Tools';
-import StudentSuppliers from '@/pages/student/Suppliers';
-import LiviAI from '@/pages/student/LiviAI';
+// Optimized imports
+import { AdminRoutes, StudentRoutes, preloadCriticalRoutes } from '@/utils/performance/optimized-routes';
+import UnifiedOptimizedLayout from '@/layout/UnifiedOptimizedLayout';
+import OptimizedProtectedRoute from '@/components/routing/OptimizedProtectedRoute';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
     },
   },
 });
 
-// Route Guard Component
-const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode; requireAdmin?: boolean }) => {
-  const { user, loading } = useAuth();
-  const { hasAdminAccess, loading: permissionsLoading } = useSimplePermissions();
+// Preload Manager Component
+const PreloadManager = () => {
+  const { hasAdminAccess, loading } = useSimplePermissions();
 
-  if (loading || permissionsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!loading) {
+      preloadCriticalRoutes(hasAdminAccess);
+    }
+  }, [hasAdminAccess, loading]);
 
-  if (!user) {
-    return <Login />;
-  }
-
-  if (requireAdmin && !hasAdminAccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
-          <p className="text-gray-600">Você não tem permissão para acessar esta área.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+  return null;
 };
+
+// Route Groups for better organization
+const AdminRouteGroup = () => (
+  <Routes>
+    <Route path="/" element={<AdminRoutes.Dashboard />} />
+    <Route path="/users" element={<AdminRoutes.Users />} />
+    <Route path="/news" element={<AdminRoutes.News />} />
+    <Route path="/mentoring" element={<AdminRoutes.Mentoring />} />
+    <Route path="/settings" element={<AdminRoutes.Settings />} />
+    <Route path="/partners" element={<AdminRoutes.Partners />} />
+    <Route path="/tools" element={<AdminRoutes.Tools />} />
+  </Routes>
+);
+
+const StudentRouteGroup = () => (
+  <Routes>
+    <Route path="/" element={<StudentRoutes.Dashboard />} />
+    <Route path="/creditos" element={<StudentRoutes.Credits />} />
+    <Route path="/meus-fornecedores" element={<StudentRoutes.MySuppliers />} />
+    <Route path="/mentoria" element={<StudentRoutes.Mentoring />} />
+    <Route path="/parceiros" element={<StudentRoutes.Partners />} />
+    <Route path="/ferramentas" element={<StudentRoutes.Tools />} />
+    <Route path="/fornecedores" element={<StudentRoutes.Suppliers />} />
+    <Route path="/livi-ai" element={<StudentRoutes.LiviAI />} />
+  </Routes>
+);
 
 function App() {
   return (
@@ -78,118 +72,29 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App">
+            <PreloadManager />
+            
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
 
               {/* Admin Routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/users" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminUsers />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/news" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminNews />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/mentoring" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminMentoring />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminSettings />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/partners" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminPartners />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/tools" element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Layout isAdmin={true}>
-                    <AdminTools />
-                  </Layout>
-                </ProtectedRoute>
+              <Route path="/admin/*" element={
+                <OptimizedProtectedRoute requireAdmin={true}>
+                  <UnifiedOptimizedLayout isAdmin={true}>
+                    <AdminRouteGroup />
+                  </UnifiedOptimizedLayout>
+                </OptimizedProtectedRoute>
               } />
 
               {/* Student Routes */}
-              <Route path="/aluno" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/creditos" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentCredits />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/meus-fornecedores" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentMySuppliers />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/mentoria" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentMentoring />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/parceiros" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentPartners />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/ferramentas" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentTools />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/fornecedores" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <StudentSuppliers />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/aluno/livi-ai" element={
-                <ProtectedRoute>
-                  <Layout isAdmin={false}>
-                    <LiviAI />
-                  </Layout>
-                </ProtectedRoute>
+              <Route path="/aluno/*" element={
+                <OptimizedProtectedRoute>
+                  <UnifiedOptimizedLayout isAdmin={false}>
+                    <StudentRouteGroup />
+                  </UnifiedOptimizedLayout>
+                </OptimizedProtectedRoute>
               } />
 
               {/* 404 Route */}
