@@ -17,21 +17,30 @@ import {
   Package
 } from 'lucide-react';
 import PartnersTable from '@/components/admin/partners/PartnersTable';
+import { Partner } from '@/types/partner.types';
 
-// Mock data para demonstração
-const mockPartners = [
+// Mock data para demonstração ajustado para Partner
+const mockPartners: Partner[] = [
   {
     id: 1,
     name: "EduTech Academy",
     category: "Educacional",
     type: "Instituição",
     contact: "contato@edutech.com",
+    phone: "(11) 9999-0001",
+    email: "contato@edutech.com",
+    address: "Av. Paulista, 1000, São Paulo - SP",
     description: "Plataforma de cursos online com foco em tecnologia",
     website: "www.edutech.com",
-    benefits: ["20% desconto em cursos", "Acesso antecipado", "Certificados gratuitos"],
-    ratings: [{ rating: 4.9, user: "user1" }, { rating: 4.8, user: "user2" }],
     recommended: true,
-    status: "Ativo"
+    ratings: [
+      { id: 1, rating: 4.9, user: "user1", comment: "Ótimo parceiro", likes: 2 },
+      { id: 2, rating: 4.8, user: "user2", comment: "Muito boa experiência", likes: 1 },
+    ],
+    comments: [],
+    contacts: [],
+    files: [],
+    history: [],
   },
   {
     id: 2,
@@ -39,12 +48,20 @@ const mockPartners = [
     category: "Networking",
     type: "Comunidade",
     contact: "info@businesshub.com",
+    phone: "(21) 4000-2000",
+    email: "contato@businesshub.com",
+    address: "Rua da Inovação, 123, Rio de Janeiro - RJ",
     description: "Rede de networking para empreendedores",
     website: "www.businesshub.com",
-    benefits: ["Eventos exclusivos", "Mentoring gratuito", "Acesso ao coworking"],
-    ratings: [{ rating: 4.7, user: "user3" }, { rating: 4.6, user: "user4" }],
     recommended: false,
-    status: "Ativo"
+    ratings: [
+      { id: 3, rating: 4.7, user: "user3", comment: "Boa rede de contatos", likes: 0 },
+      { id: 4, rating: 4.6, user: "user4", comment: "Ótimos eventos", likes: 1 },
+    ],
+    comments: [],
+    contacts: [],
+    files: [],
+    history: [],
   },
   {
     id: 3,
@@ -52,17 +69,25 @@ const mockPartners = [
     category: "Tecnologia",
     type: "Software",
     contact: "vendas@innovatools.com",
+    phone: "(31) 3555-6565",
+    email: "vendas@innovatools.com",
+    address: "Av. do Software, 789, BH - MG",
     description: "Suite de ferramentas para gestão empresarial",
     website: "www.innovatools.com",
-    benefits: ["50% desconto no primeiro ano", "Suporte prioritário", "Treinamento gratuito"],
-    ratings: [{ rating: 4.8, user: "user5" }, { rating: 4.9, user: "user6" }],
     recommended: true,
-    status: "Ativo"
+    ratings: [
+      { id: 5, rating: 4.8, user: "user5", comment: "Ferramenta muito útil", likes: 3 },
+      { id: 6, rating: 4.9, user: "user6", comment: "Suporte excelente", likes: 2 },
+    ],
+    comments: [],
+    contacts: [],
+    files: [],
+    history: [],
   }
 ];
 
 const PartnersPage = () => {
-  const [partners, setPartners] = useState(mockPartners);
+  const [partners, setPartners] = useState<Partner[]>(mockPartners);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -86,12 +111,14 @@ const PartnersPage = () => {
 
   // Stats
   const totalPartners = partners.length;
-  const activePartners = partners.filter(p => p.status === "Ativo").length;
+  const activePartners = partners.length; // Se tiver campo status, pode filtrar por 'Ativo'
   const recommendedPartners = partners.filter(p => p.recommended).length;
   const averageRating = partners.reduce((acc, p) => {
-    const partnerAvg = p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length;
+    const partnerAvg = p.ratings.length
+      ? p.ratings.reduce((sum, r) => sum + r.rating, 0) / p.ratings.length
+      : 0;
     return acc + partnerAvg;
-  }, 0) / partners.length;
+  }, 0) / (partners.length || 1);
 
   const calculateAverageRating = (ratings: any[]) => {
     if (!ratings || ratings.length === 0) return "0.0";
@@ -249,3 +276,4 @@ const PartnersPage = () => {
 };
 
 export default PartnersPage;
+
